@@ -7,6 +7,10 @@ import axios from "axios";
 import type { Currency, CounterValuesPairing, Histoday } from "../types";
 import { formatCounterValueDayUTC } from "../helpers/countervalue";
 
+console.warn(
+  "@ledgerhq/live-common/lib/api/countervalue is deprecated. switch to @ledgerhq/live-common/lib/countervalues"
+);
+
 const convertToCentPerSat = (
   from: Currency,
   to: Currency,
