@@ -3,6 +3,10 @@
  * @flow
  */
 
+console.warn(
+  "@ledgerhq/live-common/lib/helpers/countervalue is deprecated. switch to @ledgerhq/live-common/lib/countervalues"
+);
+
 import type {
   GetPairRate,
   GetCounterValueRate,
