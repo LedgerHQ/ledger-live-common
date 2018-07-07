@@ -9,6 +9,7 @@ export const defaultExplorers: CryptoCurrencyConfig<Explorer> = {
   bitcoin_gold: hash => `https://btgexplorer.com/tx/${hash}`,
   bitcoin_testnet: hash => `https://testnet.blockchain.info/tx/${hash}`,
   bitcoin: hash => `https://blockchain.info/tx/${hash}`,
+  clubcoin: () => null,
   dash: hash => `https://explorer.dash.org/tx/${hash}`,
   digibyte: hash => `https://digiexplorer.info/tx/${hash}`,
   dogecoin: hash => `https://dogechain.info/tx/${hash}`,
@@ -17,6 +18,7 @@ export const defaultExplorers: CryptoCurrencyConfig<Explorer> = {
   ethereum: hash => `https://etherscan.io/tx/${hash}`,
   hcash: hash => `http://explorer.h.cash/tx/${hash}`,
   komodo: hash => `https://kmdexplorer.io/tx/${hash}`,
+  lbry_credits: hash => `https://explorer.lbry.io/tx/${hash}`,
   litecoin: hash => `http://explorer.litecoin.net/tx/${hash}`,
   peercoin: hash => `https://explorer.peercoin.net/tx/${hash}`,
   pivx: () => null, // FIXME can't find a reliable/official explorer
@@ -28,8 +30,7 @@ export const defaultExplorers: CryptoCurrencyConfig<Explorer> = {
   vertcoin: hash => `http://explorer.vertcoin.info/tx/${hash}`,
   viacoin: hash => `https://explorer.viacoin.org/tx/${hash}`,
   zcash: hash => `https://explorer.zcha.in/transactions/${hash}`,
-  zencash: hash => `https://explorer.zensystem.io/tx/${hash}`,
-  clubcoin: () => null
+  zencash: hash => `https://explorer.zensystem.io/tx/${hash}`
 };
 
 export const getAccountOperationExplorer = (
