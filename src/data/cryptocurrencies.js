@@ -683,8 +683,8 @@ const cryptocurrenciesById = {
         magnitude: 9
       },
       {
-        name: "mLBC"
-        code: "mLBC"
+        name: "mLBC",
+        code: "mLBC",
         magnitude: 6
       }
       {
