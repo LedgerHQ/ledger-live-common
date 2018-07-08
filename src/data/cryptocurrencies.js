@@ -661,6 +661,39 @@ const cryptocurrenciesById = {
       }
     ]
   },
+  lbry_credits: {
+    id: "lbry_credits",
+    coinType: 140,
+    name: "LBRY Credits",
+    ticker: "LBC",
+    scheme: "lbry_credits",
+    color: "#049090",
+    supportsSegwit: false,
+    family: "bitcoin",
+    ledgerExplorerId: "lbc",
+    blockAvgTime: 150,
+    bitcoinLikeInfo: {
+      P2PKH: 125,
+      P2SH: 172
+    },
+    units: [
+      {
+        name: "lbry_credits",
+        code: "LBC",
+        magnitude: 8
+      },
+      {
+        name: "mLBC",
+        code: "mLBC",
+        magnitude: 5
+      },
+      {
+        name: "satoshi",
+        code: "sat",
+        magnitude: 0
+      }
+    ]
+  },
   stealthcoin: {
     id: "stealthcoin",
     coinType: 125,
