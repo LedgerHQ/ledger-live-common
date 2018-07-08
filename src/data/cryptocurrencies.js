@@ -680,12 +680,12 @@ const cryptocurrenciesById = {
       {
         name: "lbry_credits",
         code: "LBC",
-        magnitude: 9
+        magnitude: 8
       },
       {
         name: "mLBC",
         code: "mLBC",
-        magnitude: 6
+        magnitude: 5
       },
       {
         name: "satoshi",
