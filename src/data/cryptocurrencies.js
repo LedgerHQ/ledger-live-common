@@ -686,7 +686,7 @@ const cryptocurrenciesById = {
         name: "mLBC",
         code: "mLBC",
         magnitude: 6
-      }
+      },
       {
         name: "satoshi",
         code: "sat",
