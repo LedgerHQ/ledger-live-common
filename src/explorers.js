@@ -18,6 +18,7 @@ export const defaultExplorers: CryptoCurrencyConfig<Explorer> = {
   ethereum_classic: hash => `https://gastracker.io/tx/${hash}`,
   ethereum_testnet: hash => `https://ropsten.etherscan.io/tx/${hash}`,
   ethereum: hash => `https://etherscan.io/tx/${hash}`,
+  ethersocial: hash => `https://ethersocial.net/tx/${hash}`,
   expanse: hash => `https://gander.tech/tx/${hash}`,
   hcash: hash => `http://explorer.h.cash/tx/${hash}`,
   icon: () => null,
