@@ -428,6 +428,26 @@ const cryptocurrenciesById = {
     ledgerExplorerId: "ethc",
     blockAvgTime: 15
   },
+  ethersocial: {
+    id: "ethersocial",
+    coinType: 31102,
+    name: "EtherSocial Network",
+    managerAppName: "EtherSocial Network",
+    ticker: "ESN",
+    scheme: "ethersocial",
+    color: "#8273b3",
+    family: "ethereum",
+    ledgerExplorerId: "ethersocial",
+    blockAvgTime: 13,
+    units: [
+      {
+        name: "ESN",
+        code: "ESN",
+        symbol: "Ξ",
+        magnitude: 18
+      }
+    ]
+  },
   expanse: {
     id: "expanse",
     coinType: 40,

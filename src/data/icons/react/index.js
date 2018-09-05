@@ -7,6 +7,7 @@ export { default as decred } from "./decred";
 export { default as digibyte } from "./digibyte";
 export { default as dogecoin } from "./dogecoin";
 export { default as ethereumClassic } from "./ethereumClassic";
+export { default as ethersocial } from "./ethersocial";
 export { default as expanse } from "./expanse";
 export { default as hcash } from "./hcash";
 export { default as komodo } from "./komodo";
