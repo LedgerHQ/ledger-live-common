@@ -3,7 +3,7 @@
 import lzw from "node-lzw";
 import type { Account } from "../types/account";
 import type { DataIn, AccountData } from "./types";
-import { makeChunks as qrStreamMakeChunks } from "../qrstream/exporter";
+import { makeFrames as qrStreamMakeChunks } from "../qrstream/exporter";
 
 export function accountToAccountData({
   id,
@@ -25,12 +25,13 @@ export function accountToAccountData({
  * export data into a chunk of string
  * @memberof bridgestream/exporter
  */
-export function makeChunks({
+export function makeFrames({
   accounts,
   settings,
   exporterName,
   exporterVersion,
-  chunkSize = 120
+  dataSize = 100,
+  variants = 1
 }: DataIn): string[] {
   return qrStreamMakeChunks(
     lzw.encode(
@@ -40,6 +41,7 @@ export function makeChunks({
         settings
       })
     ),
-    chunkSize
+    dataSize,
+    variants
   );
 }

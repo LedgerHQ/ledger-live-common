@@ -1,11 +1,12 @@
 // @flow
-import { makeChunks } from "../../bridgestream/exporter";
-import shuffle from "lodash/shuffle"
+import { makeFrames } from "../../bridgestream/exporter";
+import shuffle from "lodash/shuffle";
+import { decodeFrames } from "../../bridgestream/importer";
 import {
-  parseChunksReducer,
-  areChunksComplete,
-  chunksToResult
-} from "../../bridgestream/importer";
+  areFramesComplete,
+  parseFramesReducer,
+  currentNumberOfFrames
+} from "../../qrstream/importer";
 import { genAccount } from "../../mock/account";
 
 test("import", () => {
@@ -19,33 +20,34 @@ test("import", () => {
       counterValueExchange: "KRAKEN",
       currenciesSettings: {
         bitcoin: {
-          exchange: "KRAKEN",
+          exchange: "KRAKEN"
         }
       }
     },
     exporterName: "test",
     exporterVersion: "0.0.0",
-    chunkSize: 100
+    chunkSize: 100,
+    variants: 1
   };
-  const chunks = makeChunks(arg);
+  const frames = makeFrames(arg);
 
   let data = [];
-  shuffle(chunks).forEach((chunk, i) => {
-    expect(areChunksComplete(data)).toBe(false);
-    data = parseChunksReducer(data, chunk, console);
-    expect(data.length).toBe(i + 1);
-    data = parseChunksReducer(data, chunk, console);
-    expect(data.length).toBe(i + 1); // chunk already existed
+  shuffle(frames).forEach((chunk, i) => {
+    expect(areFramesComplete(data)).toBe(false);
+    data = parseFramesReducer(data, chunk, console);
+    expect(currentNumberOfFrames(data)).toBe(i + 1);
+    data = parseFramesReducer(data, chunk, console);
+    expect(currentNumberOfFrames(data)).toBe(i + 1); // chunk already existed
   });
-  expect(areChunksComplete(data)).toBe(true);
-  const res = chunksToResult(data);
+  expect(areFramesComplete(data)).toBe(true);
+  const res = decodeFrames(data);
   expect(res.accounts).toMatchObject(
     accounts.map(a => ({
       balance: a.balance.toString(),
       currencyId: a.currency.id,
       id: a.id,
       name: a.name,
-      index: a.index,
+      index: a.index
     }))
   );
   expect(res.settings).toMatchObject({
@@ -53,9 +55,9 @@ test("import", () => {
     counterValueExchange: "KRAKEN",
     currenciesSettings: {
       bitcoin: {
-        exchange: "KRAKEN",
+        exchange: "KRAKEN"
       }
     }
-  })
+  });
   expect(res).toMatchSnapshot();
 });

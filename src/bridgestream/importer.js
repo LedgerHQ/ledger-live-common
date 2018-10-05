@@ -2,7 +2,7 @@
 
 import lzw from "node-lzw";
 import type { AccountData, Settings } from "./types";
-import * as qrstreamImporter from "../qrstream/importer";
+import { framesToResult } from "../qrstream/importer";
 
 export type Result = {
   accounts: AccountData[],
@@ -13,11 +13,7 @@ export type Result = {
   }
 };
 
-export const parseChunksReducer = qrstreamImporter.parseChunksReducer;
-
-export const areChunksComplete = qrstreamImporter.areChunksComplete;
-
-export function chunksToResult(rawChunks: *): Result {
-  const result = qrstreamImporter.chunksToResult(rawChunks);
+export function decodeFrames(rawFrames: *): Result {
+  const result = framesToResult(rawFrames);
   return JSON.parse(lzw.decode(result));
 }
