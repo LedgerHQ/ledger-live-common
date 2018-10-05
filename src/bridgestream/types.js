@@ -33,5 +33,7 @@ export type DataIn = {
   // the version of the exporter. e.g. the desktop app version
   exporterVersion: string,
 
-  chunkSize?: number
+  dataSize?: number,
+
+  variants?: number
 };

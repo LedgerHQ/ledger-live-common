@@ -2,70 +2,75 @@
 
 import { Buffer } from "buffer";
 
-type Chunk = {
-  chunksCount: number,
+type Frame = {
+  framesCount: number,
   index: number,
   data: string
 };
 
 /**
- * reduce chunks data array to add on more chunk to it
+ * reduce frames data array to add on more chunk to it.
+ * As a user of this function, consider the frames to be a black box and use the available functions to extract things.
  * @memberof bridgestream/importer
  */
-export function parseChunksReducer(
-  chunks: Chunk[],
+export function parseFramesReducer(
+  framesOrNull: ?(Frame[]),
   chunkStr: string,
   logger?: ?typeof console
-): Chunk[] {
+): Frame[] {
+  const frames = framesOrNull || [];
   try {
     const chunk = Buffer.from(chunkStr, "base64");
     const head = chunk.slice(0, 5);
-    const version = head.readUInt8(0);
-    const chunksCount = head.readUInt16BE(1);
+    const framesCount = head.readUInt16BE(1);
     const index = head.readUInt16BE(3);
     const data = chunk.slice(5).toString();
-    if (version !== 1) {
-      throw new Error(`qrstream version not supported. Got: ${version}`);
+    if (framesCount <= 0) {
+      throw new Error("invalid framesCount");
     }
-    if (chunksCount <= 0) {
-      throw new Error("invalid chunksCount");
-    }
-    if (index < 0 || index >= chunksCount) {
+    if (index < 0 || index >= framesCount) {
       throw new Error("invalid index");
     }
-    if (chunks.length > 0 && chunksCount !== chunks[0].chunksCount) {
+    if (frames.length > 0 && framesCount !== frames[0].framesCount) {
       throw new Error(
-        `different dataLength. Got: ${chunksCount}, Expected: ${
-          chunks[0].chunksCount
+        `different dataLength. Got: ${framesCount}, Expected: ${
+          frames[0].framesCount
         }`
       );
     }
-    if (chunks.some(c => c.index === index)) {
+    if (frames.some(c => c.index === index)) {
       // chunk already exists. we are just ignoring
-      return chunks;
+      return frames;
     }
-    return chunks.concat({ chunksCount, index, data });
+    return frames.concat({ framesCount, index, data });
   } catch (e) {
     if (logger) logger.warn(`Invalid chunk ${e.message}`);
-    return chunks;
+    return frames;
   }
 }
 
-/**
- * check if the chunks have all been retrieved
- * @memberof bridgestream/importer
- */
-export const areChunksComplete = (chunks: Chunk[]): boolean =>
-  chunks.length > 0 && chunks[0].chunksCount === chunks.length;
+// retrieve the total number of frames
+export const totalNumberOfFrames = (frames: Frame[]): ?number =>
+  frames.length > 0 ? frames[0].framesCount : null;
+
+// get the currently captured number of frames
+export const currentNumberOfFrames = (frames: Frame[]): number => frames.length;
 
 /**
- * return final result of the chunks. assuming you have checked `areChunksComplete`
+ * check if the frames have all been retrieved
  * @memberof bridgestream/importer
  */
-export function chunksToResult(rawChunks: Chunk[]): string {
-  return rawChunks
+export const areFramesComplete = (frames: Frame[]): boolean =>
+  totalNumberOfFrames(frames) === currentNumberOfFrames(frames);
+
+/**
+ * return final result of the frames. assuming you have checked `areFramesComplete`
+ * @memberof bridgestream/importer
+ */
+export function framesToResult(frames: Frame[]): string {
+  return frames
     .slice(0)
     .sort((a, b) => a.index - b.index)
-    .map(chunk => chunk.data)
+    .map(frame => frame.data)
     .join("");
 }

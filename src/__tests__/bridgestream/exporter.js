@@ -1,5 +1,5 @@
 // @flow
-import { makeChunks } from "../../bridgestream/exporter";
+import { makeFrames } from "../../bridgestream/exporter";
 import { genAccount } from "../../mock/account";
 
 test("basic export", () => {
@@ -11,7 +11,7 @@ test("basic export", () => {
     settings: {
       currenciesSettings: {
         bitcoin: {
-          exchange: "KRAKEN",
+          exchange: "KRAKEN"
         }
       }
     },
@@ -19,6 +19,6 @@ test("basic export", () => {
     exporterVersion: "0.0.0",
     chunkSize: 100
   };
-  const chunks = makeChunks(arg);
+  const chunks = makeFrames(arg);
   expect(chunks).toMatchSnapshot();
 });
