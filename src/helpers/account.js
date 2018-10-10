@@ -186,3 +186,29 @@ export function getWalletName({
 }) {
   return `${seedIdentifier}_${currency.id}_${derivationMode}`;
 }
+
+const MAX_ACCOUNT_NAME_SIZE = 50;
+
+export const getAccountPlaceholderName = ({
+  currency,
+  index,
+  derivationMode
+}: {
+  currency: CryptoCurrency,
+  index: number,
+  derivationMode: string
+}) =>
+  `${currency.name} ${index + 1}${
+    derivationMode.indexOf("segwit") === -1 && currency.supportsSegwit
+      ? " (legacy)"
+      : ""
+  }${derivationMode.indexOf("unsplit") !== -1 ? " (unsplit)" : ""}`;
+
+export const getNewAccountPlaceholderName = getAccountPlaceholderName; // same naming
+
+export const validateNameEdition = (account: Account, name: ?string): string =>
+  (
+    (name || account.name || "").replace(/\s+/g, " ").trim() ||
+    account.name ||
+    getAccountPlaceholderName(account)
+  ).slice(0, MAX_ACCOUNT_NAME_SIZE);
