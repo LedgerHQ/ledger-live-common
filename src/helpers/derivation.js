@@ -5,6 +5,12 @@ import { getCryptoCurrencyById } from "./currencies";
 export const getMandatoryEmptyAccountSkip = (derivationMode: string): number =>
   derivationMode === "ethM" || derivationMode === "etcM" ? 10 : 0;
 
+export const isSegwitDerivationMode = (derivationMode: string): boolean =>
+  derivationMode === "segwit" || derivationMode === "segwit_unsplit";
+
+export const isUnsplitDerivationMode = (derivationMode: string): boolean =>
+  derivationMode === "unsplit" || derivationMode === "segwit_unsplit";
+
 /**
  * return a ledger-lib-core compatible DerivationScheme format
  * for a given currency and derivationMode (you can pass an Account because same shape)
