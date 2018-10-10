@@ -1,5 +1,6 @@
 // @flow
 
+import lzw from "node-lzw";
 import type { Account, CryptoCurrencyIds } from "../types";
 
 export type AccountData = {
@@ -35,3 +36,47 @@ export type DataIn = {
 
   chunkSize?: number
 };
+
+export type Result = {
+  accounts: AccountData[],
+  settings: Settings,
+  meta: {
+    exporterName: string,
+    exporterVersion: string
+  }
+};
+
+export function encode({
+  accounts,
+  settings,
+  exporterName,
+  exporterVersion
+}: DataIn): string {
+  return lzw.encode(
+    JSON.stringify({
+      meta: { exporterName, exporterVersion },
+      accounts: accounts.map(accountToAccountData),
+      settings
+    })
+  );
+}
+
+export function decode(bytes: string): Result {
+  return JSON.parse(lzw.decode(bytes));
+}
+
+export function accountToAccountData({
+  id,
+  name,
+  currency,
+  index,
+  balance
+}: Account): AccountData {
+  return {
+    id,
+    name,
+    currencyId: currency.id,
+    index,
+    balance: balance.toString()
+  };
+}

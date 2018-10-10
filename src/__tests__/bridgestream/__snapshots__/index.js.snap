@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`import 1`] = `
+exports[`encode/decode 1`] = `
 Object {
   "accounts": Array [
     Object {
