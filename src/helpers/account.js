@@ -9,7 +9,8 @@ import type {
   AccountIdParams,
   Operation,
   BalanceHistory,
-  DailyOperations
+  DailyOperations,
+  CryptoCurrency
 } from "../types";
 import { getOperationAmountNumber } from "./operation";
 
@@ -160,19 +161,28 @@ export function groupAccountOperationsByDay(
   return groupAccountsOperationsByDay([account], count);
 }
 
-export function encodeAccountId({
-  type,
-  version,
-  xpub,
-  walletName
-}: AccountIdParams) {
-  return `${type}:${version}:${xpub}:${walletName}`;
+export function encodeAccountId({ type, version, uniqueID }: AccountIdParams) {
+  return `${type}:${version}:${uniqueID}`;
 }
 
 export function decodeAccountId(accountId: string): AccountIdParams {
   invariant(typeof accountId === "string", "accountId is not a string");
   const splitted = accountId.split(":");
-  invariant(splitted.length === 4, "invalid size for accountId");
-  const [type, version, xpub, walletName] = splitted;
-  return { type, version, xpub, walletName };
+  invariant(splitted.length === 3, "invalid size for accountId");
+  const [type, version, uniqueID] = splitted;
+  return { type, version, uniqueID };
+}
+
+// you can pass account because type is shape of Account
+// wallet name is a lib-core concept that usually identify a pool of accounts with the same (seed, cointype, derivation scheme) config.
+export function getWalletName({
+  seedIdentifier,
+  derivationMode,
+  currency
+}: {
+  seedIdentifier: string,
+  derivationMode: string,
+  currency: CryptoCurrency
+}) {
+  return `${seedIdentifier}_${currency.id}_${derivationMode}`;
 }

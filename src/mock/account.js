@@ -7,6 +7,10 @@ import { listCryptoCurrencies } from "../helpers/currencies";
 import Prando from "prando";
 import type { Account, Operation, CryptoCurrency } from "../types";
 import { getOperationAmountNumber } from "../helpers/operation";
+import {
+  getDerivationScheme,
+  runDerivationScheme
+} from "../helpers/derivation";
 
 const currencies = listCryptoCurrencies();
 
@@ -130,11 +134,15 @@ export function genAccount(
   const operationsSize = opts.operationsSize || rng.nextInt(1, 200);
   const address = genAddress(currency, rng);
   const account = {
-    id: `mock_account_${id}`,
+    id: `mock:1:${id}`,
+    seedIdentifier: "mock",
+    derivationMode: "",
     xpub: genHex(64, rng),
     index: 1,
     freshAddress: address,
-    freshAddressPath: "49'/1'/1'/0/2",
+    freshAddressPath: runDerivationScheme(
+      getDerivationScheme({ currency, derivationMode: "" })
+    ),
     name: rng.nextString(rng.nextInt(4, 34)),
     balance: BigNumber(0),
     blockHeight: rng.nextInt(100000, 200000),
