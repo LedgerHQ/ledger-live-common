@@ -45,7 +45,8 @@ export type { Currency, Unit, FiatCurrency, CryptoCurrency };
 export type AccountIdParams = {
   type: string,
   version: string,
-  uniqueID: string
+  xpubOrAddress: string,
+  derivationMode: string
 };
 
 export type DailyOperationsSection = {

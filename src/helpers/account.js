@@ -161,16 +161,21 @@ export function groupAccountOperationsByDay(
   return groupAccountsOperationsByDay([account], count);
 }
 
-export function encodeAccountId({ type, version, uniqueID }: AccountIdParams) {
-  return `${type}:${version}:${uniqueID}`;
+export function encodeAccountId({
+  type,
+  version,
+  xpubOrAddress,
+  derivationMode
+}: AccountIdParams) {
+  return `${type}:${version}:${xpubOrAddress}:${derivationMode}`;
 }
 
 export function decodeAccountId(accountId: string): AccountIdParams {
   invariant(typeof accountId === "string", "accountId is not a string");
   const splitted = accountId.split(":");
-  invariant(splitted.length === 3, "invalid size for accountId");
-  const [type, version, uniqueID] = splitted;
-  return { type, version, uniqueID };
+  invariant(splitted.length === 4, "invalid size for accountId");
+  const [type, version, xpubOrAddress, derivationMode] = splitted;
+  return { type, version, xpubOrAddress, derivationMode };
 }
 
 // you can pass account because type is shape of Account
@@ -203,6 +208,14 @@ export const getAccountPlaceholderName = ({
       ? " (legacy)"
       : ""
   }${derivationMode.indexOf("unsplit") !== -1 ? " (unsplit)" : ""}`;
+
+// An account is empty if there is no operations AND balance is zero.
+// balance can be non-zero in edgecases, for instance:
+// - Ethereum contract only funds (api limitations)
+// - Ripple node that don't show all ledgers and if you have very old txs
+
+export const isAccountEmpty = (a: Account): boolean =>
+  a.operations.length === 0 && a.balance.isZero();
 
 export const getNewAccountPlaceholderName = getAccountPlaceholderName; // same naming
 
