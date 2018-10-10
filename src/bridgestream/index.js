@@ -6,6 +6,8 @@ import type { Account, CryptoCurrencyIds } from "../types";
 export type AccountData = {
   id: string,
   currencyId: string,
+  seedIdentifier: string,
+  derivationMode: string,
   name: string,
   index: number,
   balance: string
@@ -68,6 +70,8 @@ export function decode(bytes: string): Result {
 export function accountToAccountData({
   id,
   name,
+  seedIdentifier,
+  derivationMode,
   currency,
   index,
   balance
@@ -75,6 +79,8 @@ export function accountToAccountData({
   return {
     id,
     name,
+    seedIdentifier,
+    derivationMode,
     currencyId: currency.id,
     index,
     balance: balance.toString()
