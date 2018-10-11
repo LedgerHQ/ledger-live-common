@@ -13,6 +13,7 @@ import type {
   CryptoCurrency
 } from "../types";
 import { getOperationAmountNumber } from "./operation";
+import { isSegwitDerivationMode, isUnsplitDerivationMode } from "./derivation";
 
 function startOfDay(t) {
   return new Date(t.getFullYear(), t.getMonth(), t.getDate());
@@ -195,6 +196,8 @@ export function getWalletName({
 
 const MAX_ACCOUNT_NAME_SIZE = 50;
 
+const alwaysConsideredLegacy = ["ethM", "etcM", "rip"];
+
 export const getAccountPlaceholderName = ({
   currency,
   index,
@@ -205,10 +208,11 @@ export const getAccountPlaceholderName = ({
   derivationMode: string
 }) =>
   `${currency.name} ${index + 1}${
-    derivationMode.indexOf("segwit") === -1 && currency.supportsSegwit
+    (!isSegwitDerivationMode(derivationMode) && currency.supportsSegwit) ||
+    alwaysConsideredLegacy.includes(derivationMode)
       ? " (legacy)"
       : ""
-  }${derivationMode.indexOf("unsplit") !== -1 ? " (unsplit)" : ""}`;
+  }${isUnsplitDerivationMode(derivationMode) ? " (unsplit)" : ""}`;
 
 // An account is empty if there is no operations AND balance is zero.
 // balance can be non-zero in edgecases, for instance:

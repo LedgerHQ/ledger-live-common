@@ -23,11 +23,11 @@ export const getDerivationScheme = ({
   currency: CryptoCurrency
 }): string => {
   const splitFrom =
-    derivationMode.indexOf("_unsplit") !== -1 ? currency.forkedFrom : undefined;
+    isUnsplitDerivationMode(derivationMode) && currency.forkedFrom;
   const coinType = splitFrom
     ? getCryptoCurrencyById(splitFrom).coinType
     : "<coin_type>";
-  const purpose = derivationMode === "segwit" ? "49" : "44";
+  const purpose = isSegwitDerivationMode(derivationMode) ? "49" : "44";
   if (derivationMode === "ethM") {
     // old MEW derivation scheme
     return "44'/60'/0'/<account>";
