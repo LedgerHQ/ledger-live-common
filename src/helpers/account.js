@@ -164,18 +164,19 @@ export function groupAccountOperationsByDay(
 export function encodeAccountId({
   type,
   version,
+  currencyId,
   xpubOrAddress,
   derivationMode
 }: AccountIdParams) {
-  return `${type}:${version}:${xpubOrAddress}:${derivationMode}`;
+  return `${type}:${version}:${currencyId}:${xpubOrAddress}:${derivationMode}`;
 }
 
 export function decodeAccountId(accountId: string): AccountIdParams {
   invariant(typeof accountId === "string", "accountId is not a string");
   const splitted = accountId.split(":");
-  invariant(splitted.length === 4, "invalid size for accountId");
-  const [type, version, xpubOrAddress, derivationMode] = splitted;
-  return { type, version, xpubOrAddress, derivationMode };
+  invariant(splitted.length === 5, "invalid size for accountId");
+  const [type, version, currencyId, xpubOrAddress, derivationMode] = splitted;
+  return { type, version, currencyId, xpubOrAddress, derivationMode };
 }
 
 // you can pass account because type is shape of Account

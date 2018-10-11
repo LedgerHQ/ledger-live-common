@@ -134,7 +134,7 @@ export function genAccount(
   const operationsSize = opts.operationsSize || rng.nextInt(1, 200);
   const address = genAddress(currency, rng);
   const account = {
-    id: `mock:1:${id}:`,
+    id: `mock:1:${currency.id}:${id}:`,
     seedIdentifier: "mock",
     derivationMode: "",
     xpub: genHex(64, rng),
