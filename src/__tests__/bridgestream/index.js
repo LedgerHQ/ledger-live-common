@@ -1,5 +1,5 @@
 // @flow
-import { encode, decode } from "../../bridgestream";
+import { encode, decode } from "../../cross";
 import shuffle from "lodash/shuffle"
 import { genAccount } from "../../mock/account";
 

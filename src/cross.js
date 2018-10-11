@@ -1,7 +1,12 @@
 // @flow
+// cross helps dealing with cross-project feature like export/import & cross project conversions
 
+import { BigNumber } from "bignumber.js";
 import lzw from "node-lzw";
-import type { Account, CryptoCurrencyIds } from "../types";
+import type { Account, CryptoCurrencyIds } from "./types";
+import { runDerivationScheme, getDerivationScheme } from "./derivation";
+import { decodeAccountId } from "./account";
+import { getCryptoCurrencyById } from "./currencies";
 
 export type AccountData = {
   id: string,
@@ -86,3 +91,51 @@ export function accountToAccountData({
     balance: balance.toString()
   };
 }
+
+// reverse the account data to an account.
+// this restore the essential data of an account and the result of the fields
+// are assumed to be restored during first sync
+export const accountDataToAccount = ({
+  id,
+  currencyId,
+  name,
+  index,
+  balance,
+  derivationMode,
+  seedIdentifier
+}: AccountData): Account => {
+  const { xpubOrAddress } = decodeAccountId(id); // TODO rename in AccountId xpubOrAddress
+  const currency = getCryptoCurrencyById(currencyId);
+  let xpub = "";
+  let freshAddress = "";
+  let freshAddressPath = "";
+  if (currency.family === "bitcoin") {
+    xpub = xpubOrAddress;
+  } else {
+    freshAddress = xpubOrAddress;
+    freshAddressPath = runDerivationScheme(
+      getDerivationScheme({ currency, derivationMode }),
+      { account: index }
+    );
+  }
+
+  const account: $Exact<Account> = {
+    id,
+    derivationMode,
+    seedIdentifier,
+    xpub,
+    name,
+    currency,
+    index,
+    freshAddress,
+    freshAddressPath,
+    // these fields will be completed as we will sync
+    blockHeight: 0,
+    balance: BigNumber(balance),
+    operations: [],
+    pendingOperations: [],
+    unit: currency.units[0],
+    lastSyncDate: new Date(0)
+  };
+  return account;
+};

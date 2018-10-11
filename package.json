@@ -17,7 +17,8 @@
   "files": [
     "lib",
     "src",
-    "flow"
+    "flow",
+    "*.js"
   ],
   "jest": {
     "setupFiles": [

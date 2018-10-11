@@ -3,14 +3,11 @@
  * @flow
  */
 import { BigNumber } from "bignumber.js";
-import { listCryptoCurrencies } from "../helpers/currencies";
+import { listCryptoCurrencies } from "../currencies";
 import Prando from "prando";
 import type { Account, Operation, CryptoCurrency } from "../types";
-import { getOperationAmountNumber } from "../helpers/operation";
-import {
-  getDerivationScheme,
-  runDerivationScheme
-} from "../helpers/derivation";
+import { getOperationAmountNumber } from "../operation";
+import { getDerivationScheme, runDerivationScheme } from "../derivation";
 
 const currencies = listCryptoCurrencies();
 

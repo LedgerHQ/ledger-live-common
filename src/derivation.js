@@ -1,5 +1,5 @@
 // @flow
-import type { CryptoCurrency } from "../types";
+import type { CryptoCurrency } from "./types";
 import { getCryptoCurrencyById } from "./currencies";
 
 export const getMandatoryEmptyAccountSkip = (derivationMode: string): number =>
