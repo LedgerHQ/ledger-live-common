@@ -18,7 +18,8 @@
     "lib",
     "src",
     "flow",
-    "*.js"
+    "*.js",
+    ".flowconfig"
   ],
   "jest": {
     "setupFiles": [
@@ -35,6 +36,7 @@
     "numeral": "^2.0.6",
     "prando": "^3.0.1",
     "react": "^16.4.0",
+    "react-i18next": "^8.0.7",
     "react-redux": "^5.0.7",
     "redux": "^4.0.0",
     "reselect": "^3.0.1"

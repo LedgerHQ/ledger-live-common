@@ -138,7 +138,8 @@ export function genAccount(
     index: 1,
     freshAddress: address,
     freshAddressPath: runDerivationScheme(
-      getDerivationScheme({ currency, derivationMode: "" })
+      getDerivationScheme({ currency, derivationMode: "" }),
+      currency
     ),
     name: rng.nextString(rng.nextInt(4, 34)),
     balance: BigNumber(0),

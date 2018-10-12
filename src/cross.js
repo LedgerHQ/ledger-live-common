@@ -115,6 +115,7 @@ export const accountDataToAccount = ({
     freshAddress = xpubOrAddress;
     freshAddressPath = runDerivationScheme(
       getDerivationScheme({ currency, derivationMode }),
+      currency,
       { account: index }
     );
   }
