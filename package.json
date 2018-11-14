@@ -32,22 +32,22 @@
     "react": "*"
   },
   "dependencies": {
-    "@ledgerhq/hw-app-btc": "^4.24.0",
+    "@ledgerhq/hw-app-btc": "^4.30.0",
     "@ledgerhq/hw-app-eth": "^4.24.0",
     "@ledgerhq/hw-app-xrp": "^4.24.0",
     "@ledgerhq/hw-transport": "^4.24.0",
-    "bignumber.js": "^7.2.1",
+    "bignumber.js": "^8.0.1",
     "compressjs": "gre/compressjs#hermit",
     "eip55": "^1.0.3",
     "invariant": "^2.2.2",
-    "lodash": "^4.17.4",
+    "lodash": "^4.17.11",
     "numeral": "^2.0.6",
-    "prando": "^3.0.1",
+    "prando": "^5.0.0",
     "react": "*",
-    "react-i18next": "^8.0.7",
-    "react-redux": "^5.0.7",
-    "redux": "^4.0.0",
-    "reselect": "^3.0.1"
+    "react-i18next": "^8.3.8",
+    "react-redux": "^5.1.1",
+    "redux": "^4.0.1",
+    "reselect": "^4.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
