@@ -1545,7 +1545,7 @@ const cryptocurrenciesById = {
     managerAppName: "Unobtanium",
     ticker: "UNO",
     scheme: "unobtanium",
-    color: "#65d196",
+    color: "#000000",
     family: "bitcoin",
     ledgerExplorerId: "uno",
     blockAvgTime: 600,
