@@ -68,6 +68,7 @@ export const defaultExplorers: CryptoCurrencyConfig<Explorer> = {
   tezos: hash => `https://tzscan.io/${hash}`,
   tron: hash => `https://tronscan.org/#/transaction/${hash}`,
   ubiq: hash => `https://ubiqscan.io/tx/${hash}`,
+  unobtanium: hash => `https://chainz.cryptoid.info/uno/block.dws?${hash}`,
   vechain: hash => `https://explore.veforge.com/transactions/${hash}`,
   vertcoin: hash => `https://www.coinexplorer.net/VTC/transaction/${hash}`,
   viacoin: hash => `https://explorer.viacoin.org/tx/${hash}`,
