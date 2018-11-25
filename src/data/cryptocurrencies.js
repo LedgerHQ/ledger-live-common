@@ -1538,6 +1538,35 @@ const cryptocurrenciesById = {
       }
     ]
   },
+   unobtanium: {
+    id: "unobtanium",
+    coinType: 92,
+    name: "Unobtanium",
+    managerAppName: "Unobtanium",
+    ticker: "UNO",
+    scheme: "unobtanium",
+    color: "#65d196",
+    family: "bitcoin",
+    ledgerExplorerId: "uno",
+    blockAvgTime: 600,
+    bitcoinLikeInfo: {
+      P2PKH: 130,
+      P2SH: 30
+    },
+    units: [
+      {
+        name: "unobtanium",
+        code: "UNO",
+        symbol: "Ʊ",
+        magnitude: 8
+      },
+      {
+        name: "unoshi",
+        code: "un",
+        magnitude: 0
+      }
+    ]
+  },
   vechain: {
     id: "vechain",
     coinType: 818,
