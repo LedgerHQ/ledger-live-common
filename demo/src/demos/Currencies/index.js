@@ -9,27 +9,47 @@ const Section = styled.div`
   padding: 20px 40px;
 `;
 
+const Intro = styled.div`
+  margin-top: 20px;
+  padding: 0 40px;
+  font-size: 16px;
+`;
+
 const SectionHeader = styled.h1``;
 
 const CryptoList = styled.div`
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-direction: column;
 `;
 
 const CryptoCell = styled.div`
   color: ${p => p.color};
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   margin: 10px;
 `;
 
+const Problem = styled.div`
+  width: 50px;
+  color: red;
+  text-decoration: underline;
+`;
+const NoProblem = styled.div`
+  width: 50px;
+  color: green;
+`;
+
 const CryptoName = styled.div`
   padding: 6px;
-  max-width: 80px;
-  font-size: 12px;
-  text-align: center;
+  font-size: 14px;
+`;
+
+const CryptoInfo = styled.div`
+  padding: 6px;
+  font-size: 14px;
+  color: #999;
+  flex: 1;
 `;
 
 const AltIcon = styled.div`
@@ -37,27 +57,75 @@ const AltIcon = styled.div`
 `;
 
 const IconWrapper = styled.div`
-  color: white;
-  background-color: ${p => p.color};
+  color: ${p => p.color};
+  background-color: ${p => p.bg};
   border-radius: 8px;
   display: flex;
+  overflow: hidden;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 80px;
-  height: 80px;
+  width: ${p => p.size}px;
+  height: ${p => p.size}px;
+  margin-right: 10px;
 `;
 
 class Crypto extends Component<*> {
   render() {
     const { crypto } = this.props;
     const Icon = getCryptoCurrencyIcon(crypto);
+    const validationErrors = [
+      Icon ? null : "icon is missing",
+      crypto.family === "bitcoin" && !crypto.bitcoinLikeInfo
+        ? "bitcoin family coins must provide bitcoinLikeInfo"
+        : null,
+      crypto.family === "ethereum" && !crypto.ethereumLikeInfo
+        ? "ethereum family coins must provide ethereumLikeInfo"
+        : null,
+      crypto.units.length === 0
+        ? "at least one unit must be provided in units"
+        : null
+    ].filter(o => o);
     return (
       <CryptoCell color={crypto.color}>
-        <IconWrapper color={crypto.color}>
-          {Icon ? <Icon size={40} /> : <AltIcon>{crypto.ticker}</AltIcon>}
+        {validationErrors.length ? (
+          <Problem title={validationErrors.join("\n")}>KO</Problem>
+        ) : (
+          <NoProblem>OK</NoProblem>
+        )}
+        <IconWrapper size={60} bg={crypto.color} color="white">
+          {Icon ? <Icon size={30} /> : <AltIcon>{crypto.ticker}</AltIcon>}
         </IconWrapper>
-        <CryptoName>{crypto.name}</CryptoName>
+        <IconWrapper size={60} color={crypto.color} bg="white">
+          {Icon ? <Icon size={30} /> : <AltIcon>{crypto.ticker}</AltIcon>}
+        </IconWrapper>
+        <CryptoName>
+          {crypto.name} ({crypto.ticker})
+        </CryptoName>
+        <CryptoInfo>
+          {[
+            "#" + crypto.id + "(" + crypto.coinType + ")",
+            "belongs to " + crypto.family + " family",
+            crypto.isTestnetFor &&
+              "is testnet of '" + crypto.isTestnetFor + "'",
+            crypto.supportsSegwit && "supports segwit",
+            crypto.forkedFrom && "forked " + crypto.forkedFrom,
+            crypto.managerAppName &&
+              "on Manager '" + crypto.managerAppName + "'",
+            crypto.ledgerExplorerId &&
+              "ledger explorer '" + crypto.ledgerExplorerId + "'",
+            crypto.blockAvgTime && "blockAvgTime=" + crypto.blockAvgTime,
+            crypto.scheme && "scheme=" + crypto.scheme,
+            crypto.bitcoinLikeInfo &&
+              "bitcoinLikeInfo=" + JSON.stringify(crypto.bitcoinLikeInfo),
+            crypto.ethereumLikeInfo &&
+              "ethereumLikeInfo=" + JSON.stringify(crypto.ethereumLikeInfo),
+            "units are " +
+              crypto.units.map(u => u.code + "(^" + u.magnitude + ")").join(" ")
+          ]
+            .filter(o => o)
+            .join(", ")}
+        </CryptoInfo>
       </CryptoCell>
     );
   }
@@ -80,13 +148,17 @@ class Currencies extends Component<*, *> {
 
   render() {
     const { tickers } = this.state;
-    const all = listCryptoCurrencies();
+    const all = listCryptoCurrencies(true);
     const available = tickers
       .map(ticker => all.find(a => a.ticker === ticker))
       .filter(Boolean);
     const unavailable = all.filter(a => !available.includes(a));
     return (
       <div>
+        <Intro>
+          This shows <code>@ledgerhq/live-common</code> database (Disclaimer:
+          regardless if a given crypto-asset is supported)
+        </Intro>
         <Section>
           <SectionHeader>Crypto assets</SectionHeader>
           <CryptoList>
@@ -94,6 +166,7 @@ class Currencies extends Component<*, *> {
               <Crypto crypto={a} key={a.id} />
             ))}
           </CryptoList>
+          <SectionHeader>no countervalues yet</SectionHeader>
           <CryptoList>
             {unavailable.map(a => (
               <Crypto crypto={a} key={a.id} />
