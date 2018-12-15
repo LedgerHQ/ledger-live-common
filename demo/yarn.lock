@@ -2,6 +2,13 @@
 # yarn lockfile v1
 
 
+"@aeternity/ledger-app-api@0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@aeternity/ledger-app-api/-/ledger-app-api-0.0.4.tgz#79d253b46cc6b0b18ef7cb57c3684bbe7e723c51"
+  integrity sha512-aXvCJX9fdT/EJbRKBdc2mu8fvvWu80A8JyFdfvS4bsaDOGjBaIfFFYbEpxaXef8TBE5zV8u7RN1PaXDPGeDUZg==
+  dependencies:
+    "@ledgerhq/hw-transport" "^4.21.0"
+
 "@babel/code-frame@7.0.0", "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.0.0-beta.35":
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.0.0.tgz#06e2ab19bdb535385559aabb5ba59729482800f8"
@@ -870,16 +877,39 @@
     "@ledgerhq/hw-transport" "^4.24.0"
     u2f-api "0.2.7"
 
-"@ledgerhq/hw-transport@^4.24.0":
+"@ledgerhq/hw-transport-web-ble@^4.32.0":
+  version "4.32.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-transport-web-ble/-/hw-transport-web-ble-4.32.0.tgz#5bb8d4e4d62bd0f8ec2f10775831d64c70f8350f"
+  integrity sha512-RZxllrRCGcYd6A5Oo/ctUOmF883/51YU/bl4nBO/+ukQvUUdbwN7mBIyy5wouZWKvRjGn1HxexpyB0mtSRCwDA==
+  dependencies:
+    "@ledgerhq/hw-transport" "^4.32.0"
+    rxjs "^6.3.3"
+
+"@ledgerhq/hw-transport-webusb@^4.32.0":
+  version "4.32.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-transport-webusb/-/hw-transport-webusb-4.32.0.tgz#e0954e1bb69f5a7b1c5ab2158f6ec6e28530f739"
+  integrity sha512-G0aku8U0TsNJLHVnBq3gJmCxI6XP31kcZ72AfU/Jh/fq8jgYNG9DJ3XWt7epbkSMzXQ1moAG8h/GI4s2pCHNMA==
+  dependencies:
+    "@ledgerhq/hw-transport" "^4.32.0"
+
+"@ledgerhq/hw-transport@^4.21.0", "@ledgerhq/hw-transport@^4.24.0":
   version "4.24.0"
   resolved "https://registry.yarnpkg.com/@ledgerhq/hw-transport/-/hw-transport-4.24.0.tgz#8def925d8c2e1f73d15128d9e27ead729870be58"
   integrity sha512-L34TG1Ss7goRB+5BxtvBwUuu0CmDSIxS33oUqkpEy6rCs31k7XicV48iUGAnRnt8hNY2DvJ9WFyaOroUE9h6wQ==
   dependencies:
     events "^3.0.0"
 
-"@ledgerhq/live-common@file:..":
-  version "4.4.3"
+"@ledgerhq/hw-transport@^4.32.0":
+  version "4.32.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-transport/-/hw-transport-4.32.0.tgz#592b9dc51459cb1cd31ce9444cf943f627bc4beb"
+  integrity sha512-Wgsk9UHC4RShqYoDeIEeKgHZOvNCtB0WWIG0xqlVPzS+IcKDkIxtXQw7hTA7GQSuDuGeauVtlbTQ5yat6+2/BA==
   dependencies:
+    events "^3.0.0"
+
+"@ledgerhq/live-common@file:..":
+  version "4.7.0"
+  dependencies:
+    "@aeternity/ledger-app-api" "0.0.4"
     "@ledgerhq/hw-app-btc" "^4.24.0"
     "@ledgerhq/hw-app-eth" "^4.24.0"
     "@ledgerhq/hw-app-xrp" "^4.24.0"
@@ -896,6 +926,7 @@
     react-redux "^5.0.7"
     redux "^4.0.0"
     reselect "^3.0.1"
+    rxjs "^6.3.3"
 
 "@svgr/core@^2.4.1":
   version "2.4.1"
@@ -9147,7 +9178,7 @@ run-queue@^1.0.0, run-queue@^1.0.3:
   dependencies:
     aproba "^1.1.1"
 
-rxjs@^6.1.0:
+rxjs@^6.1.0, rxjs@^6.3.3:
   version "6.3.3"
   resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-6.3.3.tgz#3c6a7fa420e844a81390fb1158a9ec614f4bad55"
   integrity sha512-JTWmoY9tWCs7zvIk/CvRjhjGaOd+OVBM987mxFo+OW66cGpdKjZcpmc74ES1sB//7Kl/PAe8+wEakuhG4pcgOw==
