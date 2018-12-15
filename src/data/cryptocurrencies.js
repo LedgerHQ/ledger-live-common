@@ -1618,13 +1618,23 @@ const cryptocurrenciesById = {
       {
         name: "unobtanium",
         code: "UNO",
-        symbol: "Ʊ",
+        symbol: "UNO",
         magnitude: 8
       },
       {
         name: "unoshi",
         code: "un",
         magnitude: 0
+      },
+      {
+        name: "milli-Unobtanium",
+        code: "mUNO",
+        magnitude: 5
+      },
+      {
+        name: "micro-unobtanium",
+        code: "μUNO",
+        magnitude: 2
       }
     ],
     txExplorers: ["https://chainz.cryptoid.info/uno/block.dws?hash"]
