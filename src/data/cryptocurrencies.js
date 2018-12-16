@@ -1637,7 +1637,7 @@ const cryptocurrenciesById = {
         magnitude: 0
       }
     ],
-    txExplorers: ["https://chainz.cryptoid.info/uno/block.dws?$hash"]
+    txExplorers: ["https://chainz.cryptoid.info/uno/tx.dws?$hash.htm"]
   },
   vechain: {
     id: "vechain",
