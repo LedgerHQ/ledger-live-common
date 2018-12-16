@@ -1622,11 +1622,6 @@ const cryptocurrenciesById = {
         magnitude: 8
       },
       {
-        name: "unoshi",
-        code: "un",
-        magnitude: 0
-      },
-      {
         name: "milli-Unobtanium",
         code: "mUNO",
         magnitude: 5
@@ -1635,9 +1630,14 @@ const cryptocurrenciesById = {
         name: "micro-unobtanium",
         code: "μUNO",
         magnitude: 2
+      },
+      {
+        name: "unoshi",
+        code: "un",
+        magnitude: 0
       }
     ],
-    txExplorers: ["https://chainz.cryptoid.info/uno/block.dws?hash"]
+    txExplorers: ["https://chainz.cryptoid.info/uno/block.dws?$hash"]
   },
   vechain: {
     id: "vechain",
