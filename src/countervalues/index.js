@@ -127,7 +127,7 @@ function createCounterValues<State>({
 
   const getRate = (store, pair, date) => {
     if (pair.from.ticker === pair.to.ticker) return 1;
-    if (pair.from.ticker === currency.isTestnetFor) return 0;
+    if (pair.from.ticker === pair.to.isTestnetFor) return 0;
     const rates = lenseRatesInMap(store.rates, pair);
     return (
       rates && ((date && rates[formatCounterValueDay(date)]) || rates.latest)
