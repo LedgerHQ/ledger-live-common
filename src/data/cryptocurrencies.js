@@ -1617,6 +1617,36 @@ const cryptocurrenciesById = {
     ],
     txExplorers: ["https://explore.veforge.com/transactions/$hash"]
   },
+  verge: {
+    id: "verge",
+    coinType: 77,
+    name: "Verge",
+    managerAppName: "Verge",
+    ticker: "XVG",
+    scheme: "verge",
+    color: "#0095C1",
+    supportsSegwit: false,
+    family: "bitcoin",
+    "ledgerExplorerId": "xvg",
+    blockAvgTime: 30,
+    bitcoinLikeInfo: {
+      P2PKH: 30,
+      P2SH: 33
+    }, 
+    units: [
+      {
+        name: "Verge",
+        code: "XVG",
+        magnitude: 8,
+      },
+      {
+        name: "satoshi",
+        code: "sat",
+        magnitude: 0
+      }
+    ],
+    txExplorers: ["https://verge-blockchain.info/tx/$hash"]
+  },
   vertcoin: {
     id: "vertcoin",
     coinType: 28,
