@@ -29,6 +29,7 @@ export { default as stealthcoin } from "./stealthcoin";
 export { default as stellar } from "./stellar";
 export { default as stratis } from "./stratis";
 export { default as ubiq } from "./ubiq";
+export { default as verge } from "./verge";
 export { default as vertcoin } from "./vertcoin";
 export { default as viacoin } from "./viacoin";
 export { default as zcash } from "./zcash";
