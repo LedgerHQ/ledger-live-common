@@ -221,7 +221,6 @@ const cryptocurrenciesById = {
     scheme: "bitcloud",
     color: "#00d2ff",
     family: "bitcoin",
-    ledgerExplorerId: "btdx",
     blockAvgTime: 300,
     bitcoinLikeInfo: {
       P2PKH: 25,
@@ -369,7 +368,6 @@ const cryptocurrenciesById = {
     scheme: "btcp",
     color: "#2F2D63",
     family: "bitcoin",
-    ledgerExplorerId: "btcp",
     blockAvgTime: 2.5 * 60,
     units: [
       {
@@ -409,7 +407,6 @@ const cryptocurrenciesById = {
     scheme: "btx",
     color: "#fb2d84",
     family: "bitcoin",
-    ledgerExplorerId: "btx",
     blockAvgTime: 2.5 * 60,
     bitcoinLikeInfo: {
       P2PKH: 3,
@@ -452,7 +449,6 @@ const cryptocurrenciesById = {
     scheme: "bitsend",
     color: "#5fb7ff",
     family: "bitcoin",
-    ledgerExplorerId: "bsd",
     blockAvgTime: 200,
     bitcoinLikeInfo: {
       P2PKH: 102,
@@ -1047,7 +1043,6 @@ const cryptocurrenciesById = {
     scheme: "mec",
     color: "#ed0012",
     family: "bitcoin",
-    ledgerExplorerId: "mec",
     blockAvgTime: 2.5 * 60,
     bitcoinLikeInfo: {
       P2PKH: 50,
@@ -1170,7 +1165,6 @@ const cryptocurrenciesById = {
     color: "#344cff",
     supportsSegwit: true,
     family: "bitcoin",
-    ledgerExplorerId: "nix",
     blockAvgTime: 120,
     bitcoinLikeInfo: {
       P2PKH: 38,
@@ -1563,7 +1557,6 @@ const cryptocurrenciesById = {
     ethereumLikeInfo: {
       chainId: 8
     },
-    ledgerExplorerId: "ubq",
     blockAvgTime: 88,
     units: [
       {
@@ -1841,18 +1834,18 @@ const cryptocurrenciesById = {
     },
     txExplorers: ["https://testnet.blockchain.info/tx/$hash"]
   },
-  ethereum_testnet: {
-    id: "ethereum_testnet",
+  ethereum_ropsten: {
+    id: "ethereum_ropsten",
     coinType: 1,
-    name: "Ethereum Testnet",
+    name: "Ethereum Ropsten",
     managerAppName: "Ethereum",
     ticker: "ETH",
-    scheme: "ethereum_testnet",
+    scheme: "ethereum_ropsten",
     color: "#00ff00",
     units: ethereumUnits("ether", "ETH").map(makeTestnetUnit),
     isTestnetFor: "ethereum",
     family: "ethereum",
-    ledgerExplorerId: "eth_testnet",
+    ledgerExplorerId: "eth_ropsten",
     blockAvgTime: 15,
     ethereumLikeInfo: {
       chainId: 3 // ropsten
