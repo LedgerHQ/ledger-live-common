@@ -10,6 +10,7 @@ export { default as dash } from "./dash";
 export { default as decred } from "./decred";
 export { default as digibyte } from "./digibyte";
 export { default as dogecoin } from "./dogecoin";
+export { default as energi } from "./energi";
 export { default as ethereumClassic } from "./ethereumClassic";
 export { default as expanse } from "./expanse";
 export { default as hcash } from "./hcash";

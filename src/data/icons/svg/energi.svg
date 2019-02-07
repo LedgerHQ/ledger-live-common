@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="32" height="32">
+  <path
+    fill="#0bc98d"
+    d="M53 53 V203 H203 V53 H169 V171 H85 V88 H110 V145 H143 V53 Z"
+    transform="rotate(45 128 128)"
+    />
+</svg>

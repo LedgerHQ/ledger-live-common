@@ -650,6 +650,46 @@ const cryptocurrenciesById = {
     ],
     txExplorers: []
   },
+  energi: {
+    id: "energi",
+    coinType: 9797,
+    name: "Energi",
+    managerAppName: "Energi",
+    ticker: "NRG",
+    scheme: "energi",
+    color: "#0bc98d",
+    family: "bitcoin",
+    //ledgerExplorerId: "energi",
+    //ledgerExplorerVersion: "v2",
+    blockAvgTime: 60,
+    bitcoinLikeInfo: {
+      P2PKH: 33,
+      P2SH: 53
+    },
+    units: [
+      {
+        name: "energi",
+        code: "NRG",
+        magnitude: 8
+      },
+      {
+        name: "milli-energi",
+        code: "mNRG",
+        magnitude: 5
+      },
+      {
+        name: "micro-energi",
+        code: "μNRG",
+        magnitude: 2
+      },
+      {
+        name: "atoms",
+        code: "atom",
+        magnitude: 0
+      }
+    ],
+    txExplorers: ["https://explorer.energi.network/tx/$hash"]
+  },
   eos: {
     id: "eos",
     coinType: 194,
