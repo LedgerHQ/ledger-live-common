@@ -1700,6 +1700,32 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
       }
     ]
   },
+  thundercore: {
+    id: "thundercore",
+    coinType: 1001,
+    name: "ThunderCore",
+    managerAppName: "ThunderCore",
+    ticker: "TT",
+    scheme: "thundercore",
+    color: "#FFC000",
+    family: "ethereum",
+    ethereumLikeInfo: {
+      chainId: 108
+    },
+    blockAvgTime: 1,
+    units: [
+      {
+        name: "TT",
+        code: "TT",
+        magnitude: 8
+      }
+    ],
+    explorerViews: [
+      {
+        tx: "https://scan.thundercore.com/transactions/$hash"
+      }
+    ]
+  },
   tomo: {
     id: "tomo",
     coinType: 889,
