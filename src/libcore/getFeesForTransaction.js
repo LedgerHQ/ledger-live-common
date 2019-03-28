@@ -3,7 +3,7 @@
 import { BigNumber } from "bignumber.js";
 import { getWalletName } from "../account";
 import type { Account } from "../types";
-import { InvalidAddress } from "../errors";
+import { InvalidAddress } from "@ledgerhq/errors";
 import { withLibcoreF } from "./access";
 import { remapLibcoreErrors } from "./errors";
 import { getOrCreateWallet } from "./getOrCreateWallet";
@@ -19,7 +19,7 @@ type F = ({ account: Account, transaction: * }) => Promise<BigNumber>;
 export const getFeesForTransaction: F = withLibcoreF(
   core => async ({ account, transaction }) => {
     try {
-      const { derivationMode, currency, xpub, index } = account;
+      const { derivationMode, currency } = account;
       const walletName = getWalletName(account);
 
       const coreWallet = await getOrCreateWallet({
@@ -32,8 +32,7 @@ export const getFeesForTransaction: F = withLibcoreF(
       const coreAccount = await getOrCreateAccount({
         core,
         coreWallet,
-        index,
-        xpub
+        account
       });
 
       const bitcoinLikeAccount = await coreAccount.asBitcoinLikeAccount();
@@ -77,7 +76,7 @@ export const getFeesForTransaction: F = withLibcoreF(
         throw new Error("getFeesForTransaction: fees should not be undefined");
       }
 
-      let fees = await libcoreAmountToBigNumber(core, feesAmount);
+      let fees = await libcoreAmountToBigNumber(feesAmount);
       if (fees.isLessThan(0)) {
         fees = BigNumber(0);
       }

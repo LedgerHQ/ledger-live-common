@@ -369,11 +369,11 @@ export const currencyBridge: CurrencyBridge = {
                 }
               );
 
-              const { address } = await getAddress(
-                transport,
+              const { address } = await getAddress(transport, {
                 currency,
-                freshAddressPath
-              );
+                path: freshAddressPath,
+                derivationMode
+              });
 
               if (finished) return;
 

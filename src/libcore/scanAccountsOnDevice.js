@@ -5,8 +5,8 @@ import Transport from "@ledgerhq/hw-transport";
 import { getCryptoCurrencyById } from "../currencies";
 import {
   getDerivationModesForCurrency,
-  isSegwitDerivationMode,
-  isUnsplitDerivationMode
+  isUnsplitDerivationMode,
+  getPurposeDerivationMode
 } from "../derivation";
 import { getWalletName } from "../account";
 import type { Account, CryptoCurrency, DerivationMode } from "../types";
@@ -24,7 +24,8 @@ import type { Core, CoreWallet } from "./types";
 
 export const scanAccountsOnDevice = (
   currency: CryptoCurrency,
-  deviceId: string
+  deviceId: string,
+  filterDerivationMode?: DerivationMode => boolean
 ): Observable<Account> =>
   Observable.create(o => {
     let finished = false;
@@ -37,24 +38,27 @@ export const scanAccountsOnDevice = (
         transport = await open(deviceId);
         if (isUnsubscribed()) return;
 
-        const derivationModes = getDerivationModesForCurrency(currency);
+        let derivationModes = getDerivationModesForCurrency(currency);
+        if (filterDerivationMode) {
+          derivationModes = derivationModes.filter(filterDerivationMode);
+        }
         for (let i = 0; i < derivationModes.length; i++) {
           const derivationMode = derivationModes[i];
 
-          const isSegwit = isSegwitDerivationMode(derivationMode);
           const unsplitFork = isUnsplitDerivationMode(derivationMode)
             ? currency.forkedFrom
             : null;
+          const purpose = getPurposeDerivationMode(derivationMode);
           const { coinType } = unsplitFork
             ? getCryptoCurrencyById(unsplitFork)
             : currency;
-          const path = `${isSegwit ? "49" : "44"}'/${coinType}'`;
+          const path = `${purpose}'/${coinType}'`;
 
-          const { publicKey: seedIdentifier } = await getAddress(
-            transport,
+          const { publicKey: seedIdentifier } = await getAddress(transport, {
             currency,
-            path
-          );
+            path,
+            derivationMode
+          });
 
           if (isUnsubscribed()) return;
 
@@ -134,7 +138,14 @@ async function scanNextAccount(props: {
   try {
     coreAccount = await wallet.getAccount(accountIndex);
   } catch (err) {
-    coreAccount = await createAccountFromDevice({ core, wallet, transport });
+    coreAccount = await createAccountFromDevice({
+      core,
+      wallet,
+      transport,
+      currency,
+      index: accountIndex,
+      derivationMode
+    });
   }
 
   if (isUnsubscribed()) return;
@@ -146,8 +157,7 @@ async function scanNextAccount(props: {
     currency,
     accountIndex,
     derivationMode,
-    seedIdentifier,
-    existingOperations: []
+    seedIdentifier
   });
 
   if (isUnsubscribed()) return;

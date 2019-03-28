@@ -56,6 +56,7 @@ export type CryptoCurrency = CurrencyCommon & {
   family: string,
   blockAvgTime?: number, // in seconds
   supportsSegwit?: boolean,
+  supportsNativeSegwit?: boolean,
   // if defined this coin is a testnet for another crypto (id)};
   isTestnetFor?: string,
   // TODO later we could express union of types with mandatory bitcoinLikeInfo for "bitcoin" family...

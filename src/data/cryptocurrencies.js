@@ -263,6 +263,7 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     symbol: "Ƀ",
     units: bitcoinUnits,
     supportsSegwit: true,
+    supportsNativeSegwit: true,
     family: "bitcoin",
     blockAvgTime: 15 * 60,
     bitcoinLikeInfo: {

@@ -4,7 +4,7 @@ import { Observable } from "rxjs";
 import { BigNumber } from "bignumber.js";
 import { genAccount, genOperation } from "../mock/account";
 import { getOperationAmountNumber } from "../operation";
-import { SyncError } from "../errors";
+import { SyncError } from "@ledgerhq/errors";
 import { validateNameEdition } from "../account";
 import type { Operation } from "../types";
 import type { AccountBridge, CurrencyBridge } from "./types";

@@ -3,13 +3,8 @@
 import { Observable, from, defer } from "rxjs";
 import { map } from "rxjs/operators";
 import { getWalletName } from "../account";
-import type {
-  Account,
-  Operation,
-  CryptoCurrency,
-  DerivationMode
-} from "../types";
-import { SyncError } from "../errors";
+import type { Account, CryptoCurrency, DerivationMode } from "../types";
+import { SyncError } from "@ledgerhq/errors";
 import { withLibcore } from "./access";
 import { buildAccount } from "./buildAccount";
 import { getOrCreateWallet } from "./getOrCreateWallet";
@@ -23,7 +18,7 @@ const OperationOrderKey = {
 
 async function getCoreObjects(core, account: Account) {
   const walletName = getWalletName(account);
-  const { currency, derivationMode, index, xpub } = account;
+  const { currency, derivationMode } = account;
 
   const coreWallet = await getOrCreateWallet({
     core,
@@ -32,11 +27,11 @@ async function getCoreObjects(core, account: Account) {
     derivationMode
   });
 
+  // $FlowFixMe wat
   const coreAccount = await getOrCreateAccount({
     core,
     coreWallet,
-    index,
-    xpub
+    account
   });
 
   return { coreWallet, coreAccount, walletName };
@@ -45,12 +40,7 @@ async function getCoreObjects(core, account: Account) {
 export function syncAccount(
   account: Account
 ): Observable<(Account) => Account> {
-  const {
-    derivationMode,
-    seedIdentifier,
-    currency,
-    operations: existingOperations
-  } = account;
+  const { derivationMode, seedIdentifier, currency } = account;
   return defer(() =>
     from(
       withLibcore(core =>
@@ -65,7 +55,7 @@ export function syncAccount(
               accountIndex: account.index,
               derivationMode,
               seedIdentifier,
-              existingOperations
+              account
             })
         )
       )
@@ -80,6 +70,7 @@ export function syncAccount(
       blockHeight: syncedAccount.blockHeight,
       lastSyncDate: new Date(),
       operations: syncedAccount.operations,
+      tokenAccounts: syncedAccount.tokenAccounts, // TODO patch?
       pendingOperations: []
     }))
   );
@@ -93,7 +84,7 @@ export async function syncCoreAccount({
   accountIndex,
   derivationMode,
   seedIdentifier,
-  existingOperations
+  existingAccount
 }: {
   core: *,
   coreWallet: *,
@@ -102,7 +93,7 @@ export async function syncCoreAccount({
   accountIndex: number,
   derivationMode: DerivationMode,
   seedIdentifier: string,
-  existingOperations: Operation[]
+  existingAccount?: ?Account
 }): Promise<Account> {
   let coreOperations;
   try {
@@ -127,7 +118,6 @@ export async function syncCoreAccount({
   }
 
   const account = await buildAccount({
-    core,
     coreWallet,
     coreAccount,
     coreOperations,
@@ -135,7 +125,7 @@ export async function syncCoreAccount({
     accountIndex,
     derivationMode,
     seedIdentifier,
-    existingOperations
+    existingAccount
   });
 
   return account;

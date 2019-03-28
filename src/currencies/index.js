@@ -25,6 +25,7 @@ import {
   listTokensForCryptoCurrency,
   findTokenByTicker,
   findTokenById,
+  findTokenByAddress,
   hasTokenId,
   getTokenById
 } from "../data/tokens";
@@ -59,6 +60,7 @@ export {
   hasFiatCurrencyTicker,
   listTokens,
   listTokensForCryptoCurrency,
+  findTokenByAddress,
   findTokenByTicker,
   findTokenById,
   hasTokenId,

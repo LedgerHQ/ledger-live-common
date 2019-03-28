@@ -10,7 +10,7 @@ import type {
 } from "./types/manager";
 import { listCryptoCurrencies } from "./currencies";
 import ManagerAPI from "./api/Manager";
-import { UnknownMCU } from "./errors";
+import { UnknownMCU } from "@ledgerhq/errors";
 
 const ICONS_FALLBACK = {
   bitcoin_testnet: "bitcoin"

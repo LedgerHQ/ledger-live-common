@@ -5,9 +5,13 @@ import { StatusCodes } from "@ledgerhq/hw-transport";
 import Btc from "@ledgerhq/hw-app-btc";
 import { Observable } from "rxjs";
 import { isSegwitDerivationMode } from "../derivation";
-import { FeeNotLoaded, UpdateYourApp } from "../errors";
-import { getCryptoCurrencyById } from "../currencies";
-import type { Operation, CryptoCurrency, DerivationMode } from "../types";
+import { FeeNotLoaded, UpdateYourApp } from "@ledgerhq/errors";
+import type {
+  Account,
+  Operation,
+  CryptoCurrency,
+  DerivationMode
+} from "../types";
 import { getWalletName } from "../account";
 import { open } from "../hw";
 import type { SignAndBroadcastEvent } from "../bridge/types";
@@ -32,40 +36,21 @@ type Transaction = {
 };
 
 type Input = {
-  accountId: string,
-  blockHeight: number,
-  currencyId: string,
-  derivationMode: DerivationMode,
-  seedIdentifier: string,
-  xpub: string,
-  index: number,
+  account: Account,
   transaction: Transaction,
   deviceId: string
 };
 
 export default ({
-  accountId,
-  blockHeight,
-  currencyId,
-  derivationMode,
-  seedIdentifier,
-  xpub,
-  index,
+  account,
   transaction,
   deviceId
 }: Input): Observable<SignAndBroadcastEvent> =>
   Observable.create(o => {
     let unsubscribed = false;
-    const currency = getCryptoCurrencyById(currencyId);
     const isCancelled = () => unsubscribed;
     doSignAndBroadcast({
-      accountId,
-      currency,
-      blockHeight,
-      derivationMode,
-      seedIdentifier,
-      xpub,
-      index,
+      account,
       transaction,
       deviceId,
       isCancelled,
@@ -230,13 +215,7 @@ async function signTransaction({
 
 const doSignAndBroadcast = withLibcoreF(
   core => async ({
-    accountId,
-    derivationMode,
-    blockHeight,
-    seedIdentifier,
-    currency,
-    xpub,
-    index,
+    account,
     transaction,
     deviceId,
     isCancelled,
@@ -244,13 +223,7 @@ const doSignAndBroadcast = withLibcoreF(
     onSigned,
     onOperationBroadcasted
   }: {
-    accountId: string,
-    derivationMode: DerivationMode,
-    seedIdentifier: string,
-    blockHeight: number,
-    currency: CryptoCurrency,
-    xpub: string,
-    index: number,
+    account: Account,
     transaction: Transaction,
     deviceId: string,
     isCancelled: () => boolean,
@@ -261,6 +234,14 @@ const doSignAndBroadcast = withLibcoreF(
     const { feePerByte } = transaction;
     if (!feePerByte) throw FeeNotLoaded();
     if (isCancelled()) return;
+    const {
+      id: accountId,
+      currency,
+      blockHeight,
+      derivationMode,
+      seedIdentifier,
+      index
+    } = account;
 
     const walletName = getWalletName({
       currency,
@@ -350,7 +331,7 @@ const doSignAndBroadcast = withLibcoreF(
 
     onSigned();
 
-    log("libcore", "signed transaction " + String(signTransaction));
+    log("libcore", "signed transaction " + String(signedTransaction));
     const txHash = await bitcoinLikeAccount.broadcastRawTransaction(
       signedTransaction
     );
@@ -379,12 +360,12 @@ const doSignAndBroadcast = withLibcoreF(
       throw new Error("signAndBroadcast: fees should not be undefined");
     }
 
-    const fee = await libcoreAmountToBigNumber(core, coreAmountFees);
+    const fee = await libcoreAmountToBigNumber(coreAmountFees);
     if (isCancelled()) return;
 
     // NB we don't check isCancelled() because the broadcast is not cancellable now!
     const op: $Exact<Operation> = {
-      id: `${xpub}-${txHash}-OUT`,
+      id: `${accountId}-${txHash}-OUT`,
       hash: txHash,
       type: "OUT",
       value: BigNumber(transaction.amount).plus(fee),

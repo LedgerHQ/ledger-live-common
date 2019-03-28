@@ -27,7 +27,7 @@ import {
   FeeNotLoaded,
   ETHAddressNonEIP,
   InvalidAddress
-} from "../errors";
+} from "@ledgerhq/errors";
 import { open } from "../hw";
 import { apiForCurrency } from "../api/Ethereum";
 import { getEstimatedFees } from "../api/Fees";
@@ -328,11 +328,11 @@ export const currencyBridge: CurrencyBridge = {
                   account: index
                 }
               );
-              const res = await getAddress(
-                transport,
+              const res = await getAddress(transport, {
                 currency,
-                freshAddressPath
-              );
+                path: freshAddressPath,
+                derivationMode
+              });
               const r = await stepAddress(
                 index,
                 res,

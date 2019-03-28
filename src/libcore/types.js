@@ -1,5 +1,8 @@
 // @flow
 
+// NB this is a tradeoff that for now, we maintain ourself the types interface AND the JS declaration of them.
+// this allow to do wrapping on top of the different libcore interfaces
+
 declare class CoreWalletPool {
   static newInstance(
     name: string,
@@ -21,6 +24,7 @@ declare class CoreWalletPool {
     config: CoreDynamicObject
   ): Promise<CoreWallet>;
   freshResetAll(): Promise<void>;
+  changePassword(oldPassword: string, newPassword: string): Promise<void>;
 }
 
 declare class CoreWallet {
@@ -35,15 +39,18 @@ declare class CoreWallet {
     index: number
   ): Promise<CoreExtendedKeyAccountCreationInfo>;
   newAccountWithExtendedKeyInfo(
-    keys: CoreExtendedKeyAccountCreationInfo
+    keys?: CoreExtendedKeyAccountCreationInfo
   ): Promise<CoreAccount>;
 }
+
+// TODO
 
 declare class CoreAccount {
   getBalance(): Promise<CoreAmount>;
   getLastBlock(): Promise<CoreBlock>;
   getFreshPublicAddresses(): Promise<CoreAddress[]>;
   getRestoreKey(): Promise<string>;
+  asEthereumLikeAccount(): Promise<CoreEthereumLikeAccount>;
   asBitcoinLikeAccount(): Promise<CoreBitcoinLikeAccount>;
   synchronize(): Promise<CoreEventBus>;
   queryOperations(): Promise<CoreOperationQuery>;
@@ -168,6 +175,34 @@ declare class CoreBitcoinLikeAccount {
   broadcastRawTransaction(signed: string): Promise<string>;
 }
 
+declare class CoreEthereumLikeAccount {
+  getERC20Accounts(): Promise<CoreERC20LikeAccount[]>;
+}
+
+declare class CoreERC20Token {
+  getContractAddress(): Promise<string>;
+}
+
+declare class CoreERC20LikeAccount {
+  getBalance(): Promise<CoreBigInt>;
+  getAddress(): Promise<string>;
+  getToken(): Promise<CoreERC20Token>;
+  getOperations(): Promise<CoreERC20LikeOperation[]>;
+}
+
+declare class CoreERC20LikeOperation {
+  getHash(): Promise<string>;
+  getGasPrice(): Promise<CoreBigInt>;
+  getGasLimit(): Promise<CoreBigInt>;
+  getUsedGas(): Promise<CoreBigInt>;
+  getSender(): Promise<string>;
+  getReceiver(): Promise<string>;
+  getValue(): Promise<CoreBigInt>;
+  getTime(): Promise<string>;
+  getOperationType(): Promise<OperationType>;
+  getStatus(): Promise<number>;
+}
+
 declare class CoreOperationQuery {
   complete(): Promise<CoreOperationQuery>;
   addOrder(number, boolean): Promise<CoreOperationQuery>;
@@ -250,6 +285,10 @@ export interface CoreStatics {
   BitcoinLikeOutput: Class<CoreBitcoinLikeOutput>;
   BitcoinLikeTransaction: Class<CoreBitcoinLikeTransaction>;
   BitcoinLikeTransactionBuilder: Class<CoreBitcoinLikeTransactionBuilder>;
+  EthereumLikeAccount: Class<CoreEthereumLikeAccount>;
+  ERC20LikeAccount: Class<CoreERC20LikeAccount>;
+  ERC20LikeOperation: Class<CoreERC20LikeOperation>;
+  ERC20Token: Class<CoreERC20Token>;
   Block: Class<CoreBlock>;
   Currency: Class<CoreCurrency>;
   DatabaseBackend: Class<CoreDatabaseBackend>;
@@ -285,6 +324,10 @@ export type {
   CoreBitcoinLikeOutput,
   CoreBitcoinLikeTransaction,
   CoreBitcoinLikeTransactionBuilder,
+  CoreEthereumLikeAccount,
+  CoreERC20LikeAccount,
+  CoreERC20LikeOperation,
+  CoreERC20Token,
   CoreBlock,
   CoreCurrency,
   CoreDatabaseBackend,
@@ -305,4 +348,493 @@ export type {
   CoreWallet,
   CoreWalletPool,
   CoreWebSocketClient
+};
+
+type SpecMapF = {
+  params?: Array<?string | string[]>,
+  returns?: string | string[],
+  njsField?: string,
+  njsInstanciateClass?: Array<Object>,
+  njsBuggyMethodIsNotStatic?: boolean
+};
+
+type Spec = {
+  njsUsesPlainObject?: boolean,
+  statics?: {
+    [_: string]: SpecMapF
+  },
+  methods?: {
+    [_: string]: SpecMapF
+  }
+};
+
+// To make the above contract possible with current libcore bindings,
+// we need to define the code below and build-up abstraction wrappings on top of the lower level bindings.
+// We do this at runtime but ideally in the future, it will be at build time (generated code).
+
+export const reflect = (declare: (string, Spec) => void) => {
+  declare("WalletPool", {
+    statics: {
+      freshResetAll: {},
+      newInstance: {
+        params: [
+          null,
+          null,
+          "HttpClient",
+          "WebSocketClient",
+          "PathResolver",
+          "LogPrinter",
+          "ThreadDispatcher",
+          "RandomNumberGenerator",
+          "DatabaseBackend",
+          "DynamicObject"
+        ],
+        returns: "WalletPool"
+      }
+    },
+    methods: {
+      getWallet: {
+        returns: "Wallet"
+      },
+      getCurrency: {
+        returns: "Currency"
+      },
+      createWallet: {
+        params: [null, "Currency", "DynamicObject"],
+        returns: "Wallet"
+      }
+    }
+  });
+
+  declare("Wallet", {
+    methods: {
+      getAccountCreationInfo: {
+        returns: "AccountCreationInfo"
+      },
+      getNextAccountCreationInfo: {
+        returns: "AccountCreationInfo"
+      },
+      newAccountWithInfo: {
+        params: ["AccountCreationInfo"],
+        returns: "Account"
+      },
+      getCurrency: {
+        returns: "Currency"
+      },
+      getAccount: {
+        returns: "Account"
+      },
+      getExtendedKeyAccountCreationInfo: {
+        returns: "ExtendedKeyAccountCreationInfo"
+      },
+      newAccountWithExtendedKeyInfo: {
+        params: ["ExtendedKeyAccountCreationInfo"],
+        returns: "Account"
+      }
+    }
+  });
+
+  declare("Account", {
+    methods: {
+      getBalance: {
+        returns: "Amount"
+      },
+      getLastBlock: {
+        returns: "Block"
+      },
+      getFreshPublicAddresses: {
+        returns: ["Address"]
+      },
+      getRestoreKey: {},
+      asBitcoinLikeAccount: {
+        returns: "BitcoinLikeAccount"
+      },
+      asEthereumLikeAccount: {
+        returns: "EthereumLikeAccount"
+      },
+      synchronize: {
+        returns: "EventBus"
+      },
+      queryOperations: {
+        returns: "OperationQuery"
+      }
+    }
+  });
+
+  declare("Operation", {
+    methods: {
+      getDate: {},
+      asBitcoinLikeOperation: {
+        returns: "BitcoinLikeOperation"
+      },
+      getOperationType: {},
+      getAmount: { returns: "Amount" },
+      getFees: { returns: "Amount" },
+      getBlockHeight: {},
+      getRecipients: {},
+      getSenders: {}
+    }
+  });
+
+  declare("Currency", {
+    njsUsesPlainObject: true,
+    methods: {
+      getBitcoinLikeNetworkParameters: {
+        returns: "BitcoinLikeNetworkParameters",
+        njsField: "bitcoinLikeNetworkParameters"
+      }
+    }
+  });
+
+  declare("BigInt", {
+    methods: {
+      toString: {}
+    }
+  });
+
+  declare("Amount", {
+    statics: {
+      fromHex: {
+        params: ["Currency"],
+        returns: "Amount",
+        njsBuggyMethodIsNotStatic: true
+      }
+    },
+    methods: {
+      toBigInt: {
+        returns: "BigInt"
+      }
+    }
+  });
+
+  declare("Block", {
+    njsUsesPlainObject: true,
+    methods: {
+      getHeight: {
+        njsField: "height"
+      }
+    }
+  });
+
+  declare("DerivationPath", {
+    methods: {
+      toString: {},
+      isNull: {}
+    }
+  });
+
+  declare("BitcoinLikeInput", {
+    methods: {
+      getPreviousTransaction: {
+        returns: "hex"
+      },
+      getPreviousOutputIndex: {},
+      getSequence: {},
+      getDerivationPath: { returns: ["DerivationPath"] },
+      getAddress: {}
+    }
+  });
+
+  declare("BitcoinLikeOutput", {
+    methods: {
+      getDerivationPath: {
+        returns: "DerivationPath"
+      },
+      getAddress: {}
+    }
+  });
+
+  declare("BitcoinLikeTransaction", {
+    methods: {
+      getHash: {},
+      getFees: {
+        returns: "Amount"
+      },
+      getInputs: {
+        returns: ["BitcoinLikeInput"]
+      },
+      getOutputs: {
+        returns: ["BitcoinLikeOutput"]
+      },
+      serializeOutputs: {
+        returns: "hex"
+      },
+      getTimestamp: {}
+    }
+  });
+
+  declare("BitcoinLikeOperation", {
+    methods: {
+      getTransaction: {
+        returns: "BitcoinLikeTransaction"
+      }
+    }
+  });
+
+  declare("Address", {
+    statics: {
+      isValid: {
+        params: [null, "Currency"],
+        njsBuggyMethodIsNotStatic: true
+      }
+    },
+    methods: {
+      toString: {},
+      getDerivationPath: {}
+    }
+  });
+
+  declare("BitcoinLikeTransactionBuilder", {
+    methods: {
+      sendToAddress: {
+        params: ["Amount"]
+      },
+      pickInputs: {},
+      setFeesPerByte: {
+        params: ["Amount"]
+      },
+      build: { returns: "BitcoinLikeTransaction" }
+    }
+  });
+
+  declare("BitcoinLikeAccount", {
+    methods: {
+      buildTransaction: {
+        returns: "BitcoinLikeTransactionBuilder"
+      },
+      broadcastRawTransaction: {
+        params: ["hex"]
+      }
+    }
+  });
+
+  declare("EthereumLikeAccount", {
+    methods: {
+      getERC20Accounts: {
+        returns: ["ERC20LikeAccount"]
+      }
+    }
+  });
+
+  declare("OperationQuery", {
+    methods: {
+      complete: { returns: "OperationQuery" },
+      addOrder: { returns: "OperationQuery" },
+      execute: { returns: ["Operation"] }
+    }
+  });
+
+  declare("AccountCreationInfo", {
+    njsUsesPlainObject: true,
+    statics: {
+      init: {
+        params: [null, null, null, ["hex"], ["hex"]],
+        returns: "AccountCreationInfo",
+        njsInstanciateClass: [
+          {
+            index: 0,
+            owners: 1,
+            derivations: 2,
+            publicKeys: 3,
+            chainCodes: 4
+          }
+        ]
+      }
+    },
+    methods: {
+      getDerivations: { njsField: "derivations" },
+      getChainCodes: { njsField: "chainCodes", returns: ["hex"] },
+      getPublicKeys: { njsField: "publicKeys", returns: ["hex"] },
+      getOwners: { njsField: "owners" },
+      getIndex: { njsField: "index" }
+    }
+  });
+
+  declare("BitcoinLikeNetworkParameters", {
+    njsUsesPlainObject: true,
+    methods: {
+      getSigHash: {
+        returns: "hex",
+        njsField: "SigHash"
+      },
+      getUsesTimestampedTransaction: {
+        njsField: "UsesTimestampedTransaction"
+      }
+    }
+  });
+
+  declare("ExtendedKeyAccountCreationInfo", {
+    njsUsesPlainObject: true,
+    statics: {
+      init: {
+        returns: "ExtendedKeyAccountCreationInfo",
+        njsInstanciateClass: [
+          {
+            index: 0,
+            owners: 1,
+            derivations: 2,
+            extendedKeys: 3
+          }
+        ]
+      }
+    },
+    methods: {
+      getIndex: { njsField: "index" },
+      getExtendedKeys: { njsField: "extendedKeys" },
+      getOwners: { njsField: "owners" },
+      getDerivations: { njsField: "derivations" }
+    }
+  });
+
+  declare("DynamicObject", {
+    statics: {
+      flush: {},
+      newInstance: {
+        returns: "DynamicObject",
+        njsInstanciateClass: []
+      }
+    },
+    methods: {
+      putString: {}
+    }
+  });
+
+  declare("SerialContext", {});
+
+  declare("ThreadDispatcher", {
+    statics: {
+      newInstance: {
+        returns: "ThreadDispatcher"
+      }
+    },
+    methods: {
+      getMainExecutionContext: {
+        returns: "SerialContext"
+      }
+    }
+  });
+
+  declare("EventBus", {
+    methods: {
+      subscribe: {
+        params: ["SerialContext", "EventReceiver"]
+      }
+    }
+  });
+
+  declare("EventReceiver", {
+    statics: {
+      newInstance: {
+        returns: "EventReceiver"
+      }
+    }
+  });
+
+  declare("HttpClient", {
+    statics: {
+      newInstance: {
+        returns: "HttpClient"
+      },
+      flush: {}
+    }
+  });
+
+  declare("WebSocketClient", {
+    statics: {
+      newInstance: {
+        returns: "WebSocketClient"
+      },
+      flush: {}
+    }
+  });
+
+  declare("PathResolver", {
+    statics: {
+      newInstance: {
+        returns: "PathResolver"
+      },
+      flush: {}
+    }
+  });
+
+  declare("LogPrinter", {
+    statics: {
+      newInstance: {
+        returns: "LogPrinter"
+      },
+      flush: {}
+    }
+  });
+
+  declare("RandomNumberGenerator", {
+    statics: {
+      newInstance: {
+        returns: "RandomNumberGenerator"
+      },
+      flush: {}
+    }
+  });
+
+  declare("DatabaseBackend", {
+    statics: {
+      flush: {},
+      getSqlite3Backend: {
+        returns: "DatabaseBackend"
+      }
+    }
+  });
+
+  declare("EthereumLikeAccount", {
+    methods: {
+      getERC20Accounts: {
+        returns: ["ERC20LikeAccount"]
+      }
+    }
+  });
+
+  declare("ERC20LikeAccount", {
+    methods: {
+      getBalance: { returns: "BigInt" },
+      getAddress: {},
+      getToken: { returns: "ERC20Token" },
+      getOperations: { returns: ["ERC20LikeOperation"] }
+    }
+  });
+
+  declare("ERC20LikeOperation", {
+    methods: {
+      getHash: {},
+      getGasPrice: { returns: "BigInt" },
+      getGasLimit: { returns: "BigInt" },
+      getUsedGas: { returns: "BigInt" },
+      getSender: {},
+      getReceiver: {},
+      getValue: { returns: "BigInt" },
+      getTime: {},
+      getOperationType: { returns: "OperationType" },
+      getStatus: {}
+    }
+  });
+
+  declare("ERC20Token", {
+    njsUsesPlainObject: true,
+    methods: {
+      getContractAddress: {
+        njsField: "contractAddress"
+      }
+    }
+  });
+
+  declare("LedgerCore", {
+    statics: {
+      newInstance: {
+        returns: "LedgerCore",
+        njsInstanciateClass: []
+      }
+    },
+    methods: {
+      getStringVersion: {},
+      getIntVersion: {}
+    }
+  });
 };

@@ -21,6 +21,8 @@ const stringParser = (v: mixed): ?string =>
 // This define the available environments
 const envParsers = {
   MANAGER_DEV_MODE: boolParser,
+  SCAN_FOR_INVALID_PATHS: boolParser,
+  EXPERIMENTAL_NATIVE_SEGWIT: boolParser,
   SHOW_LEGACY_NEW_ACCOUNT: boolParser,
   WITH_DEVICE_POLLING_DELAY: floatParser,
   FORCE_PROVIDER: intParser,
@@ -33,12 +35,15 @@ const envParsers = {
   EXPERIMENTAL_USB: boolParser,
   SYNC_MAX_CONCURRENT: intParser,
   MOCK: boolParser,
-  LEDGER_DEBUG_ALL_LANGS: boolParser
+  LEDGER_DEBUG_ALL_LANGS: boolParser,
+  LIBCORE_PASSWORD: stringParser
 };
 
 // This define the default values
 const defaults: $ObjMap<EnvParsers, ExtractEnvValue> = {
   MANAGER_DEV_MODE: false,
+  SCAN_FOR_INVALID_PATHS: true,
+  EXPERIMENTAL_NATIVE_SEGWIT: false,
   SHOW_LEGACY_NEW_ACCOUNT: false,
   WITH_DEVICE_POLLING_DELAY: 500,
   FORCE_PROVIDER: 1,
@@ -53,7 +58,8 @@ const defaults: $ObjMap<EnvParsers, ExtractEnvValue> = {
   EXPERIMENTAL_USB: false,
   SYNC_MAX_CONCURRENT: 4,
   MOCK: false,
-  LEDGER_DEBUG_ALL_LANGS: false
+  LEDGER_DEBUG_ALL_LANGS: false,
+  LIBCORE_PASSWORD: ""
 };
 
 // private local state
