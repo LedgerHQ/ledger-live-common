@@ -21,6 +21,7 @@ declare class CoreWalletPool {
     config: CoreDynamicObject
   ): Promise<CoreWallet>;
   freshResetAll(): Promise<void>;
+  changePassword(oldPassword: string, newPassword: string): Promise<void>;
 }
 
 declare class CoreWallet {
