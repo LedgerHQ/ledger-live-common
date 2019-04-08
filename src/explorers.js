@@ -101,6 +101,12 @@ const ledgerExplorers = {
       version: "v2"
     }
   },
+  dogecash: {
+    default: {
+      id: "dogec",
+      version: "v2"
+    }
+  },
   ethereum: {
     default: {
       id: "eth",

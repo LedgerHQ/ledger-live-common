@@ -683,6 +683,39 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
       }
     ]
   },
+  dogecash: {
+    id: "dogecash",
+    coinType: 188,
+    name: "DogeCash",
+    managerAppName: "DogeCash",
+    ticker: "DOGEC",
+    scheme: "dogecash",
+    color: "#C1974F",
+    family: "bitcoin",
+    blockAvgTime: 150,
+    bitcoinLikeInfo: {
+      P2PKH: 30,
+      P2SH: 19
+    },
+    units: [
+      {
+        name: "dogec",
+        code: "DOGEC",
+        magnitude: 8
+      },
+      {
+        name: "satoshi",
+        code: "sat",
+        magnitude: 0
+      }
+    ],
+    explorerViews: [
+      {
+        tx: "https://explorer.dogec.io/#/tx/$hash",
+        address: "https://explorer.dogec.io/#/address/$address"
+      }
+    ]
+  },
   ellaism: {
     id: "ellaism",
     coinType: 163,
