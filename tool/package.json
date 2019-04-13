@@ -1,10 +1,10 @@
 {
   "name": "ledger-live",
-  "version": "0.1.0",
+  "version": "5.0.0-alpha.1",
   "dependencies": {
     "@ledgerhq/hw-transport-node-hid": "^4.50.0",
     "@ledgerhq/ledger-core": "2.2.1-rc",
-    "@ledgerhq/live-common": "file:..",
+    "@ledgerhq/live-common": "5.0.0-alpha.1",
     "axios": "^0.18.0",
     "babel-polyfill": "^6.26.0",
     "bignumber.js": "^7.2.1",
