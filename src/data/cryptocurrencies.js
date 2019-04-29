@@ -1976,7 +1976,7 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     id: "bitcoin_testnet",
     coinType: 1,
     name: "Bitcoin Testnet",
-    managerAppName: "Bitcoin testnet",
+    managerAppName: "Bitcoin Test",
     ticker: "BTC",
     scheme: "testnet",
     color: "#00ff00",
