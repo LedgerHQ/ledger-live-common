@@ -2284,6 +2284,43 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
       }
     ]
   },
+  navcoin: {
+    id: "navcoin",
+    coinType: 130,
+    name: "NavCoin",
+    managerAppName: "NavCoin",
+    ticker: "NAV",
+    scheme: "navcoin",
+    color: "#B553FC",
+    family: "bitcoin",
+    blockAvgTime: 30,
+    bitcoinLikeInfo: {
+      P2PKH: 53,
+      P2SH: 85
+    },
+    units: [
+      {
+        name: "navcoin",
+        code: "NAV",
+        magnitude: 8
+      },
+      {
+        name: "satoshi",
+        code: "sat",
+        magnitude: 0
+      }
+    ],
+    explorerViews: [
+      {
+        tx: "https://www.navexplorer.com/tx/$hash",
+        address: "https://www.navexplorer.com/address/$address"
+      },
+      {
+        tx: "https://chainz.cryptoid.info/nav/tx.dws?$hash.htm",
+        address: "https://chainz.cryptoid.info/nav/address.dws?$address.htm"
+      }
+    ]
+  },
 
   // Testnets
   bitcoin_testnet: {
