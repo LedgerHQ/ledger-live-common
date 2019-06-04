@@ -256,25 +256,23 @@ export function getAssetsDistribution(
     ...opts
   };
   let sum = BigNumber(0);
-  const tickerBalances = {};
-  const tickerCurrencies = {};
+  const idBalances = {};
+  const idCurrencies = {};
   for (let i = 0; i < accounts.length; i++) {
     const account = accounts[i];
-    const ticker = account.currency.ticker;
-    tickerCurrencies[ticker] = account.currency;
-    tickerBalances[ticker] = (tickerBalances[ticker] || BigNumber(0)).plus(
-      account.balance
-    );
+    const id = account.currency.id;
+    idCurrencies[id] = account.currency;
+    idBalances[id] = (idBalances[id] || BigNumber(0)).plus(account.balance);
   }
 
-  const tickerCountervalues = {};
-  for (const ticker in tickerBalances) {
+  const idCountervalues = {};
+  for (const id in idBalances) {
     const countervalue = calculateCountervalue(
-      tickerCurrencies[ticker],
-      tickerBalances[ticker]
+      idCurrencies[id],
+      idBalances[id]
     );
     if (countervalue) {
-      tickerCountervalues[ticker] = countervalue;
+      idCountervalues[id] = countervalue;
       sum = sum.plus(countervalue);
     }
   }
@@ -283,11 +281,11 @@ export function getAssetsDistribution(
     return { isAvailable: false, list: [], showFirst: 0, sum };
   }
 
-  const list = Object.keys(tickerCurrencies)
-    .map(ticker => {
-      const currency = tickerCurrencies[ticker];
-      const amount = tickerBalances[ticker];
-      const countervalue = tickerCountervalues[ticker] || BigNumber(0);
+  const list = Object.keys(idCurrencies)
+    .map(id => {
+      const currency = idCurrencies[id];
+      const amount = idBalances[id];
+      const countervalue = idCountervalues[id] || BigNumber(0);
       return {
         currency,
         countervalue,
