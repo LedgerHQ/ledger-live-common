@@ -1756,6 +1756,7 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
       P2PKH: 58,
       P2SH: 50
     },
+    supportsSegwit: true,
     units: [
       {
         name: "qtum",
