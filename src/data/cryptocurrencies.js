@@ -844,7 +844,7 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     managerAppName: "Ethereum",
     ticker: "ETH",
     scheme: "ethereum",
-    color: "#0ebdcd",
+    color: "#1c1ce1",
     symbol: "Ξ",
     units: ethereumUnits("ether", "ETH"),
     family: "ethereum",
