@@ -598,7 +598,9 @@ function createCounterValues<State>({
       if (prevProps.pairsKey !== this.props.pairsKey) {
         if (log)
           log(
-            `pairsKey changed:\n    ${prevProps.pairsKey}\n => ${this.props.pairsKey}`
+            `pairsKey changed:\n    ${prevProps.pairsKey}\n => ${
+              this.props.pairsKey
+            }`
           );
         this.poll();
       }

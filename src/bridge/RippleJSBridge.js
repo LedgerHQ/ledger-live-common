@@ -102,8 +102,8 @@ async function signAndBroadcast({
       onSigned();
       const submittedPayment = await api.submit(transaction);
 
-      if (submittedPayment.resultCode !== "tesSUCCESS") {
-        throw new Error(submittedPayment.resultMessage);
+      if (submittedPayment.engine_result !== "tesSUCCESS") {
+        throw new Error(submittedPayment.engine_result_message);
       }
 
       const hash = computeBinaryTransactionHash(transaction);
@@ -300,7 +300,7 @@ const recipientIsNew = async (endpointConfig, recipient) => {
       await api.getAccountInfo(recipient);
       return false;
     } catch (e) {
-      if (e.message !== "actNotFound") {
+      if (e.data.error !== "actNotFound") {
         throw e;
       }
       return true;
@@ -375,13 +375,15 @@ export const currencyBridge: CurrencyBridge = {
 
               if (finished) return;
 
-              const accountId = `ripplejs:2:${currency.id}:${address}:${derivationMode}`;
+              const accountId = `ripplejs:2:${
+                currency.id
+              }:${address}:${derivationMode}`;
 
               let info;
               try {
                 info = await api.getAccountInfo(address);
               } catch (e) {
-                if (e.message !== "actNotFound") {
+                if (e.data.error !== "actNotFound") {
                   throw e;
                 }
               }
@@ -505,7 +507,7 @@ export const accountBridge: AccountBridge<Transaction> = {
           try {
             info = await api.getAccountInfo(freshAddress);
           } catch (e) {
-            if (e.message !== "actNotFound") {
+            if (e.data.error !== "actNotFound") {
               throw e;
             }
           }
