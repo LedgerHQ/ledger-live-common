@@ -4,6 +4,7 @@ import type { CryptoCurrency, Account } from "../types";
 import type { CurrencyBridge, AccountBridge } from "./types";
 import { decodeAccountId } from "../account";
 import { getEnv } from "../env";
+import * as ArkJSBridge from "./ArkJSBridge";
 import * as RippleJSBridge from "./RippleJSBridge";
 import * as EthereumJSBridge from "./EthereumJSBridge";
 import LibcoreCurrencyBridge from "./LibcoreCurrencyBridge";
@@ -23,6 +24,8 @@ const mockAccountBridge = makeMockAccountBridge();
 export const getCurrencyBridge = (currency: CryptoCurrency): CurrencyBridge => {
   if (getEnv("MOCK")) return mockCurrencyBridge;
   switch (currency.family) {
+    case "ark":
+      return ArkJSBridge.currencyBridge;
     case "ripple":
       return RippleJSBridge.currencyBridge;
     case "ethereum":
@@ -44,6 +47,8 @@ export const getAccountBridge = (account: Account): AccountBridge<any> => {
     return LibcoreBitcoinAccountBridge;
   }
   switch (account.currency.family) {
+    case "ark":
+      return ArkJSBridge.accountBridge;
     case "ripple":
       return RippleJSBridge.accountBridge;
     case "ethereum":

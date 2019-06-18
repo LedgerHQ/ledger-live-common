@@ -39,6 +39,9 @@
     "react": "*"
   },
   "dependencies": {
+    "@arkecosystem/client": "^0.1.25",
+    "@arkecosystem/crypto": "^2.4.12",
+    "@arkecosystem/ledger-transport": "^0.1.1",
     "@ledgerhq/errors": "4.62.0",
     "@ledgerhq/hw-app-btc": "4.62.0",
     "@ledgerhq/hw-app-eth": "4.62.0",
