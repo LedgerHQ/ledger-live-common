@@ -1987,6 +1987,44 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
       }
     ]
   },
+  terracoin: {
+    type: "CryptoCurrency",
+    id: "terracoin",
+    coinType: 83,
+    name: "Terracoin",
+    managerAppName: "Terracoin",
+    ticker: "TRC",
+    scheme: "terracoin",
+    color: "#0E8843",
+    family: "bitcoin",
+    blockAvgTime: 2 * 60,
+    bitcoinLikeInfo: {
+      P2PKH: 0,
+      P2SH: 5
+    },
+    units: [
+      {
+        name: "terracoin",
+        code: "TRC",
+        magnitude: 8
+      },
+      {
+        name: "satoshi",
+        code: "sat",
+        magnitude: 0
+      }
+    ],
+    explorerViews: [
+      {
+        tx: "https://insight.terracoin.io/tx/$hash",
+        address: "https://insight.terracoin.io/address/$address"
+      },
+      {
+        tx: "https://explorer.terracoin.io/tx/$hash",
+        address: "https://explorer.terracoin.io/address/$address"
+      }
+    ]
+  },
   tezos: {
     type: "CryptoCurrency",
     id: "tezos",
