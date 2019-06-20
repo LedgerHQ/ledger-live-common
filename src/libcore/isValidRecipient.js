@@ -1,6 +1,6 @@
 // @flow
 
-import { InvalidAddress } from "@ledgerhq/errors";
+import { InvalidAddress, CashAddrNotSupported } from "@ledgerhq/errors";
 import type { CryptoCurrency } from "../types";
 import { withLibcoreF } from "./access";
 import customAddressValidationByFamily from "../generated/customAddressValidation";
@@ -17,6 +17,11 @@ export const isValidRecipient: F = withLibcoreF(core => async arg => {
     return res;
   }
   const { currency, recipient } = arg;
+
+  if (recipient.startsWith("bitcoincash:")) {
+    return Promise.reject(new CashAddrNotSupported());
+  }
+
   const poolInstance = core.getPoolInstance();
   const currencyCore = await poolInstance.getCurrency(currency.id);
   const value = await core.Address.isValid(recipient, currencyCore);
