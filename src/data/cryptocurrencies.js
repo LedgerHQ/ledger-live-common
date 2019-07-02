@@ -1752,6 +1752,7 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     color: "#2e9ad0",
     family: "bitcoin",
     blockAvgTime: 2 * 60,
+    supportsSegwit: true,
     bitcoinLikeInfo: {
       P2PKH: 58,
       P2SH: 50
