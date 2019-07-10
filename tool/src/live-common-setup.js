@@ -4,6 +4,7 @@ import winston from "winston";
 import axios from "axios";
 import WebSocket from "ws";
 import { Observable } from "rxjs";
+import { first, switchMap, map } from "rxjs/operators";
 import { setEnvUnsafe } from "@ledgerhq/live-common/lib/env";
 import {
   setNetwork,
@@ -18,7 +19,37 @@ import {
 import { retry } from "@ledgerhq/live-common/lib/promise";
 import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
 import "@ledgerhq/live-common/lib/load/tokens/ethereum/erc20";
-import { first, switchMap, map } from "rxjs/operators";
+import { setSupportedCurrencies } from "@ledgerhq/live-common/lib/data/cryptocurrencies";
+
+setSupportedCurrencies([
+  "bitcoin",
+  "ethereum",
+  "ripple",
+  "bitcoin_cash",
+  "litecoin",
+  "dash",
+  "ethereum_classic",
+  "qtum",
+  "zcash",
+  "bitcoin_gold",
+  "stratis",
+  "dogecoin",
+  "digibyte",
+  "hcash",
+  "komodo",
+  "pivx",
+  "zencash",
+  "vertcoin",
+  "peercoin",
+  "viacoin",
+  "stakenet",
+  "stealthcoin",
+  "poswallet",
+  "clubcoin",
+  "decred",
+  "bitcoin_testnet",
+  "ethereum_ropsten"
+]);
 
 for (const k in process.env) setEnvUnsafe(k, process.env[k]);
 
@@ -80,10 +111,11 @@ const cacheBle = {};
 if (!process.env.CI) {
   const {
     default: TransportNodeBle
-    // eslint-disable-next-line global-require
   } = require("@ledgerhq/hw-transport-node-ble");
   const openBleByQuery = async query => {
-    const [, q] = query.match(/^ble:?(.*)/);
+    const m = query.match(/^ble:?(.*)/);
+    if (!m) throw new Error("ble regexp should match");
+    const [, q] = m;
     if (cacheBle[query]) return cacheBle[query];
     const t = await (!q
       ? TransportNodeBle.create()
@@ -132,7 +164,6 @@ if (!process.env.CI) {
   registerTransportModule({
     id: "hid",
     open: devicePath =>
-      // $FlowFixMe
       retry(() => TransportNodeHid.open(devicePath), {
         context: "open-hid"
       }),

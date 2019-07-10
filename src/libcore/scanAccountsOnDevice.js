@@ -122,7 +122,7 @@ async function scanNextAccount(props: {
 export const scanAccountsOnDevice = (
   currency: CryptoCurrency,
   deviceId: string,
-  filterDerivationMode?: DerivationMode => boolean
+  scheme?: ?DerivationMode
 ): Observable<Account> =>
   withDevice(deviceId)(transport =>
     Observable.create(o => {
@@ -135,8 +135,8 @@ export const scanAccountsOnDevice = (
       const main = withLibcoreF(core => async () => {
         try {
           let derivationModes = getDerivationModesForCurrency(currency);
-          if (filterDerivationMode) {
-            derivationModes = derivationModes.filter(filterDerivationMode);
+          if (scheme !== undefined) {
+            derivationModes = derivationModes.filter(mode => mode === scheme);
           }
           for (let i = 0; i < derivationModes.length; i++) {
             const derivationMode = derivationModes[i];

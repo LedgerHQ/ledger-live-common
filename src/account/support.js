@@ -7,6 +7,7 @@ import { getAllDerivationModes } from "../derivation";
 import { isCurrencySupported } from "../currencies";
 
 export const libcoreNoGo = [
+  "ripple", // still WIP
   "ethereum_classic" // LLC-308
 ];
 

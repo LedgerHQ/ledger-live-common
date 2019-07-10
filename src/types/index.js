@@ -36,7 +36,9 @@ import type {
   AssetsDistribution
 } from "./portfolio";
 
-import type { Transaction } from "./transaction";
+export * from "./transaction";
+export * from "../generated/types";
+export * from "./bridge";
 
 export type {
   DerivationMode,
@@ -62,7 +64,6 @@ export type {
   BalanceHistoryWithCountervalue,
   PortfolioRange,
   Portfolio,
-  Transaction,
   AssetsDistribution
 };
 

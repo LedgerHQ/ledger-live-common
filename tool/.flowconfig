@@ -1,0 +1,14 @@
+[ignore]
+<PROJECT_ROOT>/demo
+<PROJECT_ROOT>/tool
+<PROJECT_ROOT>/scripts
+
+[include]
+
+[libs]
+flow-typed
+flow
+
+[lints]
+
+[options]

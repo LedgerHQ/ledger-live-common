@@ -11,22 +11,28 @@ import {
 import { genAccount, genOperation } from "../mock/account";
 import { getOperationAmountNumber } from "../operation";
 import { validateNameEdition } from "../account";
-import type { Operation, Account } from "../types";
-import type { AccountBridge, CurrencyBridge } from "./types";
+import type {
+  Operation,
+  Account,
+  Transaction,
+  AccountBridge,
+  CurrencyBridge
+} from "../types";
 import { getFeeItems } from "../api/FeesBitcoin";
 import { getEstimatedFees } from "../api/Fees";
 import { getCryptoCurrencyById } from "../data/cryptocurrencies";
+import { inferDeprecatedMethods } from "./deprecationUtils";
 
 const MOCK_DATA_SEED = process.env.MOCK_DATA_SEED || Math.random();
 
 export const defaultGetFees = (a: Account, t: *) => {
-  switch (a.currency.family) {
+  switch (t.family) {
     case "ethereum":
-      return t.gasPrice.times(t.gasLimit);
+      return (t.gasPrice || BigNumber(0)).times(t.gasLimit);
     case "bitcoin":
-      return t.feePerByte.times(250);
+      return (t.feePerByte || BigNumber(0)).times(250);
     case "ripple":
-      return t.fee;
+      return t.fee || BigNumber(0);
     default:
       return BigNumber(0);
   }
@@ -41,28 +47,159 @@ const delay = ms => new Promise(success => setTimeout(success, ms));
 
 type Opts = typeof defaultOpts;
 
-export function makeMockAccountBridge(_opts?: Opts): AccountBridge<*> {
-  const getTotalSpent = (a, t) =>
-    Promise.resolve(t.amount.plus(defaultGetFees(a, t)));
+export function makeMockAccountBridge(
+  _opts?: Opts
+): AccountBridge<Transaction> {
+  const createTransaction = (account: Account): Transaction => {
+    switch (account.currency.family) {
+      case "bitcoin":
+        return {
+          family: account.currency.family,
+          amount: BigNumber(0),
+          recipient: "",
+          feePerByte: BigNumber(10),
+          networkInfo: null,
+          useAllAmount: false
+        };
 
-  const getMaxAmount = (a, t) =>
-    Promise.resolve(a.balance.minus(defaultGetFees(a, t)));
+      case "ethereum":
+        return {
+          family: account.currency.family,
+          amount: BigNumber(0),
+          recipient: "",
+          gasPrice: BigNumber(10000000000),
+          gasLimit: BigNumber(21000),
+          feeCustomUnit: getCryptoCurrencyById("ethereum").units[1],
+          networkInfo: null,
+          useAllAmount: false,
+          tokenAccountId: null
+        };
 
-  const checkValidTransaction = async (a, t) => {
-    if (t.amount.isGreaterThan(a.balance)) throw new NotEnoughBalance();
-    if (
-      a.currency.family === "ripple" &&
-      t.amount
-        .plus(t.fee || 0)
-        .plus(10 ** a.currency.units[0].magnitude * 20)
-        .isGreaterThanOrEqualTo(a.balance)
-    ) {
-      throw new NotEnoughBalance();
+      case "ripple":
+        return {
+          family: account.currency.family,
+          amount: BigNumber(0),
+          recipient: "",
+          fee: BigNumber(10),
+          feeCustomUnit: getCryptoCurrencyById("ethereum").units[1],
+          tag: undefined,
+          networkInfo: null,
+          useAllAmount: false
+        };
+
+      default:
+        throw new Error(
+          "mock bridge does not support currency family " +
+            account.currency.family
+        );
     }
-    return null;
   };
 
-  const getTransactionExtra = (a, t, field) => t[field];
+  const getTransactionStatus = (a, t) => {
+    const tokenAccount = !t.tokenAccountId
+      ? null
+      : a.tokenAccounts &&
+        a.tokenAccounts.find(ta => ta.id === t.tokenAccountId);
+    const account = tokenAccount || a;
+
+    const denySameDestination = a.currency.family === "ripple";
+
+    const minimalBaseAmount =
+      a.currency.family === "ripple"
+        ? 10 ** a.currency.units[0].magnitude * 20
+        : 0;
+
+    const useAllAmount = !!t.useAllAmount;
+
+    const estimatedFees = defaultGetFees(a, t);
+
+    const totalSpent = useAllAmount
+      ? account.balance
+      : tokenAccount
+      ? BigNumber(t.amount)
+      : BigNumber(t.amount).plus(estimatedFees);
+
+    const amount = useAllAmount
+      ? tokenAccount
+        ? BigNumber(t.amount)
+        : account.balance.minus(estimatedFees)
+      : BigNumber(t.amount);
+
+    const showFeeWarning = tokenAccount
+      ? false
+      : amount.gt(0) && estimatedFees.times(10).gt(amount);
+
+    // Fill up transaction errors...
+    let transactionError;
+    if (totalSpent.gt(account.balance)) {
+      transactionError = new NotEnoughBalance();
+    } else if (
+      minimalBaseAmount &&
+      account.balance.minus(totalSpent).lt(minimalBaseAmount)
+    ) {
+      // minimal amount not respected
+      transactionError = new NotEnoughBalance();
+    } else if (
+      minimalBaseAmount &&
+      t.recipient.includes("new") &&
+      amount.lt(minimalBaseAmount)
+    ) {
+      // mimic XRP base minimal for new addresses
+      transactionError = new NotEnoughBalanceBecauseDestinationNotCreated(
+        null,
+        {
+          minimalAmount: `XRP Minimum reserve`
+        }
+      );
+    }
+
+    // Fill up recipient errors...
+    let recipientError;
+    let recipientWarning;
+    if (t.recipient.length <= 3) {
+      recipientError = new Error("invalid recipient");
+    } else if (denySameDestination && a.freshAddress === t.recipient) {
+      recipientError = new InvalidAddressBecauseDestinationIsAlsoSource();
+    }
+
+    return Promise.resolve({
+      transactionError,
+      recipientError,
+      recipientWarning,
+      showFeeWarning,
+      estimatedFees,
+      amount,
+      totalSpent,
+      useAllAmount
+    });
+  };
+
+  const prepareTransaction = async (a, t) => {
+    if (!t.networkInfo) {
+      switch (t.family) {
+        case "ripple":
+          return {
+            ...t,
+            networkInfo: { serverFee: BigNumber(10) }
+          };
+
+        case "ethereum":
+          const { gas_price } = await getEstimatedFees(a.currency);
+          return {
+            ...t,
+            networkInfo: { gas_price }
+          };
+
+        case "bitcoin":
+          const feeItems = await getFeeItems(a.currency);
+          return {
+            ...t,
+            networkInfo: { feeItems }
+          };
+      }
+    }
+    return t;
+  };
 
   const broadcasted: { [_: string]: Operation[] } = {};
 
@@ -109,74 +246,6 @@ export function makeMockAccountBridge(_opts?: Opts): AccountBridge<*> {
       };
     });
 
-  const checkValidRecipient = (account, recipient) => {
-    if (account.freshAddress === recipient) {
-      switch (account.currency.family) {
-        case "ethereum":
-        case "ripple":
-          throw new InvalidAddressBecauseDestinationIsAlsoSource();
-      }
-    }
-
-    if (account.currency.family === "ripple" && recipient.includes("new")) {
-      throw new NotEnoughBalanceBecauseDestinationNotCreated("", {
-        minimalAmount: `XRP Minimum reserve`
-      });
-    }
-
-    if (recipient.length <= 3) throw new Error("invalid recipient");
-    return Promise.resolve(null);
-  };
-
-  const createTransaction = () => ({
-    amount: BigNumber(0),
-    recipient: "",
-    feePerByte: BigNumber(10),
-    fee: BigNumber(10),
-    gasPrice: BigNumber(10000000000),
-    gasLimit: BigNumber(21000),
-    feeCustomUnit: getCryptoCurrencyById("ethereum").units[1],
-    tag: undefined,
-    networkInfo: null
-  });
-
-  const fetchTransactionNetworkInfo = async ({ currency }) => {
-    if (currency.id === "ripple") return { serverFee: 10 };
-    if (currency.family === "ethereum") {
-      const serverFees = await getEstimatedFees(currency);
-      return { serverFees };
-    }
-    const feeItems = await getFeeItems(currency);
-    return { feeItems };
-  };
-
-  const applyTransactionNetworkInfo = (account, transaction, networkInfo) => ({
-    ...transaction,
-    networkInfo,
-    fee: transaction.fee || networkInfo.serverFee
-  });
-
-  const getTransactionNetworkInfo = (account, transaction) =>
-    transaction.networkInfo;
-
-  const editTransactionAmount = (account, t, amount) => ({
-    ...t,
-    amount
-  });
-  const getTransactionAmount = (a, t) => t.amount;
-
-  const editTransactionRecipient = (account, t, recipient) => ({
-    ...t,
-    recipient
-  });
-
-  const getTransactionRecipient = (a, t) => t.recipient;
-
-  const editTransactionExtra = (a, t, field, value) => ({
-    ...t,
-    [field]: value
-  });
-
   const signAndBroadcast = (account, t, _deviceId) =>
     Observable.create(o => {
       let timeout = setTimeout(() => {
@@ -202,28 +271,18 @@ export function makeMockAccountBridge(_opts?: Opts): AccountBridge<*> {
       };
     });
 
-  const prepareTransaction = (account, transaction) =>
-    Promise.resolve(transaction);
-
-  // TODO add optimistic update
   return {
-    startSync,
-    checkValidRecipient,
     createTransaction,
-    fetchTransactionNetworkInfo,
-    getTransactionNetworkInfo,
-    applyTransactionNetworkInfo,
-    editTransactionAmount,
-    getTransactionAmount,
-    editTransactionRecipient,
-    getTransactionRecipient,
-    editTransactionExtra,
-    getTransactionExtra,
-    checkValidTransaction,
-    getTotalSpent,
-    getMaxAmount,
+    getTransactionStatus,
+    prepareTransaction,
+    startSync,
     signAndBroadcast,
-    prepareTransaction
+    ...inferDeprecatedMethods({
+      name: "MockBridge",
+      createTransaction,
+      getTransactionStatus,
+      prepareTransaction
+    })
   };
 }
 

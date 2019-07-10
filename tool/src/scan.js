@@ -1,12 +1,19 @@
 // @flow
 
 import { BigNumber } from "bignumber.js";
-import { from, defer, of, throwError } from "rxjs";
+import { Observable, from, defer, of, throwError } from "rxjs";
 import { skip, take, reduce, mergeMap, map, concatMap } from "rxjs/operators";
-import type { Account } from "@ledgerhq/live-common/lib/types";
-import { fromAccountRaw } from "@ledgerhq/live-common/lib/account";
-import { syncAccount } from "@ledgerhq/live-common/lib/libcore/syncAccount";
-import { scanAccountsOnDevice } from "@ledgerhq/live-common/lib/libcore/scanAccountsOnDevice";
+import type { Account, CryptoCurrency } from "@ledgerhq/live-common/lib/types";
+import { getEnv } from "@ledgerhq/live-common/lib/env";
+import {
+  fromAccountRaw,
+  encodeAccountId
+} from "@ledgerhq/live-common/lib/account";
+import { asDerivationMode } from "@ledgerhq/live-common/lib/derivation";
+import {
+  getAccountBridge,
+  getCurrencyBridge
+} from "@ledgerhq/live-common/lib/bridge";
 import { findCryptoCurrency } from "@ledgerhq/live-common/lib/currencies";
 import getAppAndVersion from "@ledgerhq/live-common/lib/hw/getAppAndVersion";
 import { withDevice } from "@ledgerhq/live-common/lib/hw/deviceAccess";
@@ -28,6 +35,17 @@ export const currencyOpt = {
   desc:
     "Currency name or ticker. If not provided, it will be inferred from the device."
 };
+
+export type ScanCommonOpts = $Shape<{
+  device: string,
+  xpub: string[],
+  file: string,
+  appjsonFile: string,
+  currency: string,
+  scheme: string,
+  index: number,
+  length: number
+}>;
 
 export const scanCommonOpts = [
   deviceOpt,
@@ -72,7 +90,7 @@ export const scanCommonOpts = [
   }
 ];
 
-const getCurrencyByKeyword = keyword => {
+const getCurrencyByKeyword = (keyword: string): CryptoCurrency => {
   const r = findCryptoCurrency(c => {
     const search = keyword.replace(/ /, "").toLowerCase();
     return (
@@ -89,7 +107,7 @@ const getCurrencyByKeyword = keyword => {
   return r;
 };
 
-export const inferManagerApp = keyword => {
+export const inferManagerApp = (keyword: string): string => {
   try {
     const currency = getCurrencyByKeyword(keyword);
     if (!currency || !currency.managerAppName) return keyword;
@@ -99,7 +117,19 @@ export const inferManagerApp = keyword => {
   }
 };
 
-export const inferCurrency = ({ device, currency, file, xpub }) => {
+export const inferCurrency = <
+  T: {
+    device: string,
+    currency: string,
+    file: string,
+    xpub: string[]
+  }
+>({
+  device,
+  currency,
+  file,
+  xpub
+}: $Shape<T>) => {
   if (currency) {
     return defer(() => of(getCurrencyByKeyword(currency)));
   }
@@ -116,7 +146,7 @@ export const inferCurrency = ({ device, currency, file, xpub }) => {
   );
 };
 
-export function scan(arg) {
+export function scan(arg: ScanCommonOpts): Observable<Account> {
   const {
     device,
     xpub: xpubArray,
@@ -149,7 +179,9 @@ export function scan(arg) {
     return jsonFromFile(file).pipe(
       map(fromAccountRaw),
       concatMap(account =>
-        syncAccount(account).pipe(reduce((a, f) => f(a), account))
+        getAccountBridge(account, null)
+          .startSync(account, false)
+          .pipe(reduce((a, f) => f(a), account))
       )
     );
   }
@@ -172,13 +204,20 @@ export function scan(arg) {
                 shortAddressPreview(xpub),
               xpub,
               seedIdentifier: xpub,
-              id: `libcore:1:bitcoin:${xpub}:${derivationMode}`,
-              derivationMode,
+              id: encodeAccountId({
+                type: getEnv("BRIDGE_FORCE_IMPLEMENTATION") || "libcore",
+                version: "1",
+                currencyId: cur.id,
+                xpubOrAddress: xpub,
+                derivationMode: asDerivationMode(derivationMode || "")
+              }),
+              derivationMode: asDerivationMode(derivationMode),
               currency: cur,
               unit: cur.units[0],
               index: 0,
-              freshAddress: "",
+              freshAddress: xpub, // HACK for JS impl force mode that would only support address version
               freshAddressPath: "",
+              freshAddresses: [],
               lastSyncDate: new Date(0),
               blockHeight: 0,
               balance: new BigNumber(0),
@@ -189,15 +228,16 @@ export function scan(arg) {
           })
         ).pipe(
           concatMap(account =>
-            syncAccount(account).pipe(
-              reduce((a: Account, f: *) => f(a), account)
-            )
+            getAccountBridge(account, null)
+              .startSync(account, false)
+              .pipe(reduce((a: Account, f: *) => f(a), account))
           )
         );
       }
-
-      return scanAccountsOnDevice(cur, device || "", mode =>
-        scheme !== undefined ? scheme === mode : true
+      return getCurrencyBridge(cur).scanAccountsOnDevice(
+        cur,
+        device || "",
+        scheme && asDerivationMode(scheme)
       );
     }),
     skip(index || 0),

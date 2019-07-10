@@ -1,8 +1,8 @@
 // @flow
 
 import { BigNumber } from "bignumber.js";
-import type { Operation, Transaction, Account } from "../../types";
-import type { CoreEthereumLikeTransaction } from "./types";
+import type { Operation, Account } from "../../types";
+import type { CoreEthereumLikeTransaction, Transaction } from "./types";
 import type { CoreAccount } from "../../libcore/types";
 import { libcoreAmountToBigNumber } from "../../libcore/buildBigNumber";
 import { getEnv } from "../../env";

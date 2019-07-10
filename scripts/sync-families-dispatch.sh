@@ -3,7 +3,7 @@
 set -e
 cd $(dirname $0)
 
-targets="customAddressValidation hw-getAddress libcore-buildOperation libcore-buildTransaction libcore-hw-signTransaction libcore-signAndBroadcast libcore-buildTokenAccounts libcore-getFeesForTransaction libcore-postSyncPatch libcore-getFees"
+targets="customAddressValidation hw-getAddress libcore-buildOperation libcore-buildTransaction libcore-hw-signTransaction libcore-signAndBroadcast libcore-buildTokenAccounts libcore-getFeesForTransaction libcore-postSyncPatch libcore-getFees transaction"
 
 cd ../src
 
@@ -43,6 +43,8 @@ genTypesFile () {
     echo 'import type { CoreAccountSpecifics as CoreAccountSpecifics_'$family' } from "../families/'$family'/types";'
     echo 'import type { CoreOperationSpecifics as CoreOperationSpecifics_'$family' } from "../families/'$family'/types";'
     echo 'import type { CoreCurrencySpecifics as CoreCurrencySpecifics_'$family' } from "../families/'$family'/types";'
+    echo 'import type { Transaction as '$family'Transaction } from "../families/'$family'/types";'
+    echo 'import type { TransactionRaw as '$family'TransactionRaw } from "../families/'$family'/types";'
   done
   echo
   echo 'export type SpecificStatics = {}'
@@ -60,6 +62,14 @@ genTypesFile () {
   echo 'export type CoreCurrencySpecifics = {}'
   for family in *; do
     echo '& CoreCurrencySpecifics_'$family
+  done
+  echo 'export type Transaction ='
+  for family in *; do
+    echo '  | '$family'Transaction'
+  done
+  echo 'export type TransactionRaw ='
+  for family in *; do
+    echo '  | '$family'TransactionRaw'
   done
   echo 'export const reflectSpecifics = (declare: *) => {'
   for family in *; do

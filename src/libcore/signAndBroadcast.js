@@ -4,10 +4,14 @@ import { Observable, from } from "rxjs";
 import { StatusCodes } from "@ledgerhq/hw-transport";
 import { UpdateYourApp } from "@ledgerhq/errors";
 import { log } from "@ledgerhq/logs";
-import type { Account, Operation, Transaction } from "../types";
+import type {
+  Account,
+  Operation,
+  Transaction,
+  SignAndBroadcastEvent
+} from "../types";
 import { getWalletName } from "../account";
 import { withDevice } from "../hw/deviceAccess";
-import type { SignAndBroadcastEvent } from "../bridge/types";
 import { getOrCreateWallet } from "./getOrCreateWallet";
 import { remapLibcoreErrors } from "./errors";
 import { withLibcoreF } from "./access";

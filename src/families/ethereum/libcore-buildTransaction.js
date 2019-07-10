@@ -4,11 +4,11 @@ import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import eip55 from "eip55";
 import { FeeNotLoaded, NotEnoughGas, NotEnoughBalance } from "@ledgerhq/errors";
-import type { Account, Transaction } from "../../types";
+import type { Account } from "../../types";
 import { isValidRecipient } from "../../libcore/isValidRecipient";
 import { bigNumberToLibcoreAmount } from "../../libcore/buildBigNumber";
 import type { Core, CoreCurrency, CoreAccount } from "../../libcore/types";
-import type { CoreEthereumLikeTransaction } from "./types";
+import type { CoreEthereumLikeTransaction, Transaction } from "./types";
 
 const ethereumTransferMethodID = Buffer.from("a9059cbb", "hex");
 

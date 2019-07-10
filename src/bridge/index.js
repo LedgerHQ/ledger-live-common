@@ -1,14 +1,19 @@
 // @flow
 import { CurrencyNotSupported } from "@ledgerhq/errors";
-import type { CryptoCurrency, Account, TokenAccount } from "../types";
-import type { CurrencyBridge, AccountBridge } from "./types";
+import type {
+  CryptoCurrency,
+  Account,
+  TokenAccount,
+  CurrencyBridge,
+  AccountBridge
+} from "../types";
 import { decodeAccountId, getMainAccount } from "../account";
 import { getEnv } from "../env";
-import * as RippleJSBridge from "./RippleJSBridge";
-import * as EthereumJSBridge from "./EthereumJSBridge";
+import * as RippleJSBridge from "../families/ripple/RippleJSBridge";
+import * as EthereumJSBridge from "../families/ethereum/EthereumJSBridge";
 import LibcoreCurrencyBridge from "./LibcoreCurrencyBridge";
-import LibcoreBitcoinAccountBridge from "./LibcoreBitcoinAccountBridge";
-import LibcoreEthereumAccountBridge from "./LibcoreEthereumAccountBridge";
+import LibcoreBitcoinAccountBridge from "../families/bitcoin/LibcoreBitcoinAccountBridge";
+import LibcoreEthereumAccountBridge from "../families/ethereum/LibcoreEthereumAccountBridge";
 import {
   makeMockCurrencyBridge,
   makeMockAccountBridge
@@ -18,21 +23,25 @@ import { checkAccountSupported, libcoreNoGo } from "../account/support";
 const mockCurrencyBridge = makeMockCurrencyBridge();
 const mockAccountBridge = makeMockAccountBridge();
 
+const currencyBridgeJSImplFallback = {
+  ripple: RippleJSBridge.currencyBridge,
+  ethereum: EthereumJSBridge.currencyBridge
+};
+
 export const getCurrencyBridge = (currency: CryptoCurrency): CurrencyBridge => {
-  if (getEnv("MOCK")) return mockCurrencyBridge;
-  switch (currency.family) {
-    case "ripple":
-      return RippleJSBridge.currencyBridge;
-    case "ethereum":
-      if (libcoreNoGo.includes(currency.id)) {
-        return EthereumJSBridge.currencyBridge;
+  const forceImpl = getEnv("BRIDGE_FORCE_IMPLEMENTATION");
+  if (getEnv("MOCK") || forceImpl === "mock") return mockCurrencyBridge;
+  if (forceImpl === "js" || (!forceImpl && libcoreNoGo.includes(currency.id))) {
+    const jsImpl = currencyBridgeJSImplFallback[currency.family];
+    if (jsImpl) return jsImpl;
+    throw new CurrencyNotSupported(
+      "no implementation available for currency " + currency.id,
+      {
+        currencyName: currency.name
       }
-      return LibcoreCurrencyBridge;
-    case "bitcoin":
-      return LibcoreCurrencyBridge;
-    default:
-      return mockCurrencyBridge; // fallback mock until we implement it all!
+    );
   }
+  return LibcoreCurrencyBridge;
 };
 
 export const getAccountBridge = (

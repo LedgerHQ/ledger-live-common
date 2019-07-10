@@ -2,18 +2,7 @@
 import { BigNumber } from "bignumber.js";
 import type { CryptoCurrency } from "../types";
 import { getEstimatedFees } from "./Fees";
-
-export type FeeItem = {
-  key: string,
-  speed: string,
-  blockCount: number,
-  feePerByte: BigNumber
-};
-
-export type FeeItems = {
-  items: FeeItem[],
-  defaultFeePerByte: BigNumber
-};
+import type { FeeItems } from "../families/bitcoin/types";
 
 export const speeds = {
   "1": "high",

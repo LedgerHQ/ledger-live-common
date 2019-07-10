@@ -1,5 +1,11 @@
 // @flow
 
+import type { BigNumber } from "bignumber.js";
+import type { Unit } from "../../types";
+import type {
+  TransactionCommon,
+  TransactionCommonRaw
+} from "../../types/transaction";
 import type { CoreAmount, CoreBigInt, Spec } from "../../libcore/types";
 
 declare class CoreRippleLikeAddress {
@@ -60,6 +66,24 @@ export type CoreOperationSpecifics = {
 };
 
 export type CoreCurrencySpecifics = {};
+
+export type Transaction = {|
+  ...TransactionCommon,
+  family: "ripple",
+  fee: ?BigNumber,
+  networkInfo: ?{ serverFee: BigNumber },
+  tag: ?number,
+  feeCustomUnit: ?Unit
+|};
+
+export type TransactionRaw = {|
+  ...TransactionCommonRaw,
+  family: "ripple",
+  fee: ?string,
+  networkInfo: ?{ serverFee: string },
+  tag: ?number,
+  feeCustomUnit: ?Unit
+|};
 
 export const reflect = (declare: (string, Spec) => void) => {
   declare("RippleLikeAddress", {

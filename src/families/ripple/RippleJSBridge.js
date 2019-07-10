@@ -16,40 +16,33 @@ import {
   NetworkDown,
   InvalidAddressBecauseDestinationIsAlsoSource
 } from "@ledgerhq/errors";
-import type { Account, Operation, Unit } from "../types";
+import { inferDeprecatedMethods } from "../../bridge/deprecationUtils";
+import type { Account, Operation } from "../../types";
 import {
   getDerivationModesForCurrency,
   getDerivationScheme,
   runDerivationScheme,
   isIterableDerivationMode,
   derivationModeSupportsIndex
-} from "../derivation";
+} from "../../derivation";
 import {
   getAccountPlaceholderName,
   getNewAccountPlaceholderName
-} from "../account";
-import getAddress from "../hw/getAddress";
-import { open } from "../hw";
+} from "../../account";
+import getAddress from "../../hw/getAddress";
+import { open } from "../../hw";
 import {
   apiForEndpointConfig,
   defaultEndpoint,
   parseAPIValue,
   parseAPICurrencyObject,
   formatAPICurrencyXRP
-} from "../api/Ripple";
-import type { CurrencyBridge, AccountBridge } from "./types";
-import signTransaction from "../hw/signTransaction";
+} from "../../api/Ripple";
+import type { CurrencyBridge, AccountBridge } from "../../types/bridge";
+import signTransaction from "../../hw/signTransaction";
+import type { Transaction } from "./types";
 
-export type Transaction = {
-  amount: BigNumber,
-  recipient: string,
-  fee: ?BigNumber,
-  networkInfo: ?{ serverFee: BigNumber },
-  tag: ?number,
-  feeCustomUnit: ?Unit
-};
-
-async function signAndBroadcast({
+async function doSignAndBroadcast({
   a,
   t,
   deviceId,
@@ -148,21 +141,6 @@ function isRecipientValid(recipient) {
     return true;
   } catch (e) {
     return false;
-  }
-}
-
-function checkValidRecipient(account, recipient) {
-  if (account.freshAddress === recipient) {
-    return Promise.reject(new InvalidAddressBecauseDestinationIsAlsoSource());
-  }
-
-  try {
-    bs58check.decode(recipient);
-    return Promise.resolve(null);
-  } catch (e) {
-    return Promise.reject(
-      new InvalidAddress("", { currencyName: account.currency.name })
-    );
   }
 }
 
@@ -489,124 +467,151 @@ export const currencyBridge: CurrencyBridge = {
     })
 };
 
-export const accountBridge: AccountBridge<Transaction> = {
-  startSync: ({
-    endpointConfig,
-    freshAddress,
-    blockHeight,
-    operations: { length: currentOpsLength }
-  }) =>
-    Observable.create(o => {
-      let finished = false;
-      const unsubscribe = () => {
-        finished = true;
-      };
+const startSync = ({
+  endpointConfig,
+  freshAddress,
+  blockHeight,
+  operations: { length: currentOpsLength }
+}) =>
+  Observable.create(o => {
+    let finished = false;
+    const unsubscribe = () => {
+      finished = true;
+    };
 
-      async function main() {
-        const api = apiForEndpointConfig(RippleAPI, endpointConfig);
+    async function main() {
+      const api = apiForEndpointConfig(RippleAPI, endpointConfig);
+      try {
+        await api.connect();
+        if (finished) return;
+        const serverInfo = await getServerInfo(endpointConfig);
+        if (finished) return;
+        const ledgers = serverInfo.completeLedgers.split("-");
+        const minLedgerVersion = Number(ledgers[0]);
+        const maxLedgerVersion = Number(ledgers[1]);
+
+        let info;
         try {
-          await api.connect();
-          if (finished) return;
-          const serverInfo = await getServerInfo(endpointConfig);
-          if (finished) return;
-          const ledgers = serverInfo.completeLedgers.split("-");
-          const minLedgerVersion = Number(ledgers[0]);
-          const maxLedgerVersion = Number(ledgers[1]);
-
-          let info;
-          try {
-            info = await api.getAccountInfo(freshAddress);
-          } catch (e) {
-            if (e.message !== "actNotFound") {
-              throw e;
-            }
-          }
-          if (finished) return;
-
-          if (!info) {
-            // account does not exist, we have nothing to sync but to update the last sync date
-            o.next(a => ({
-              ...a,
-              lastSyncDate: new Date()
-            }));
-            o.complete();
-            return;
-          }
-
-          const balance = parseAPIValue(info.xrpBalance);
-          invariant(
-            !balance.isNaN() && balance.isFinite(),
-            `Ripple: invalid balance=${balance.toString()} for address ${freshAddress}`
-          );
-
-          const transactions = await api.getTransactions(freshAddress, {
-            minLedgerVersion: Math.max(
-              currentOpsLength === 0 ? 0 : blockHeight, // if there is no ops, it might be after a clear and we prefer to pull from the oldest possible history
-              minLedgerVersion
-            ),
-            maxLedgerVersion,
-            types: ["payment"]
-          });
-
-          if (finished) return;
-
-          o.next(a => {
-            const newOps = transactions.map(txToOperation(a));
-            const operations = mergeOps(a.operations, newOps);
-            const [last] = operations;
-            const pendingOperations = a.pendingOperations.filter(
-              oo =>
-                !operations.some(op => oo.hash === op.hash) &&
-                last &&
-                last.transactionSequenceNumber &&
-                oo.transactionSequenceNumber &&
-                oo.transactionSequenceNumber > last.transactionSequenceNumber
-            );
-            return {
-              ...a,
-              balance,
-              operations,
-              pendingOperations,
-              blockHeight: maxLedgerVersion,
-              lastSyncDate: new Date()
-            };
-          });
-
-          o.complete();
+          info = await api.getAccountInfo(freshAddress);
         } catch (e) {
-          o.error(remapError(e));
-        } finally {
-          api.disconnect();
+          if (e.message !== "actNotFound") {
+            throw e;
+          }
         }
+        if (finished) return;
+
+        if (!info) {
+          // account does not exist, we have nothing to sync but to update the last sync date
+          o.next(a => ({
+            ...a,
+            lastSyncDate: new Date()
+          }));
+          o.complete();
+          return;
+        }
+
+        const balance = parseAPIValue(info.xrpBalance);
+        invariant(
+          !balance.isNaN() && balance.isFinite(),
+          `Ripple: invalid balance=${balance.toString()} for address ${freshAddress}`
+        );
+
+        const transactions = await api.getTransactions(freshAddress, {
+          minLedgerVersion: Math.max(
+            currentOpsLength === 0 ? 0 : blockHeight, // if there is no ops, it might be after a clear and we prefer to pull from the oldest possible history
+            minLedgerVersion
+          ),
+          maxLedgerVersion,
+          types: ["payment"]
+        });
+
+        if (finished) return;
+
+        o.next(a => {
+          const newOps = transactions.map(txToOperation(a));
+          const operations = mergeOps(a.operations, newOps);
+          const [last] = operations;
+          const pendingOperations = a.pendingOperations.filter(
+            oo =>
+              !operations.some(op => oo.hash === op.hash) &&
+              last &&
+              last.transactionSequenceNumber &&
+              oo.transactionSequenceNumber &&
+              oo.transactionSequenceNumber > last.transactionSequenceNumber
+          );
+          return {
+            ...a,
+            balance,
+            operations,
+            pendingOperations,
+            blockHeight: maxLedgerVersion,
+            lastSyncDate: new Date()
+          };
+        });
+
+        o.complete();
+      } catch (e) {
+        o.error(remapError(e));
+      } finally {
+        api.disconnect();
       }
+    }
 
-      main();
+    main();
 
-      return unsubscribe;
-    }),
+    return unsubscribe;
+  });
 
-  pullMoreOperations: () => Promise.resolve(a => a), // FIXME not implemented
+const createTransaction = () => ({
+  family: "ripple",
+  amount: BigNumber(0),
+  recipient: "",
+  fee: null,
+  tag: undefined,
+  networkInfo: null,
+  feeCustomUnit: null
+});
 
-  checkValidRecipient,
+const signAndBroadcast = (a, t, deviceId) =>
+  Observable.create(o => {
+    delete cacheRecipientsNew[t.recipient];
+    let cancelled = false;
+    const isCancelled = () => cancelled;
+    const onSigned = () => {
+      o.next({ type: "signed" });
+    };
+    const onOperationBroadcasted = operation => {
+      o.next({ type: "broadcasted", operation });
+    };
+    doSignAndBroadcast({
+      a,
+      t,
+      deviceId,
+      isCancelled,
+      onSigned,
+      onOperationBroadcasted
+    }).then(
+      () => {
+        o.complete();
+      },
+      e => {
+        o.error(e);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  });
 
-  getRecipientWarning: () => Promise.resolve(null),
-
-  createTransaction: () => ({
-    amount: BigNumber(0),
-    recipient: "",
-    fee: null,
-    tag: undefined,
-    networkInfo: null,
-    feeCustomUnit: null
-  }),
-
-  fetchTransactionNetworkInfo: async account => {
-    const api = apiForEndpointConfig(RippleAPI, account.endpointConfig);
+const prepareTransaction = async (a, t) => {
+  let networkInfo = t.networkInfo;
+  if (!networkInfo) {
+    const api = apiForEndpointConfig(RippleAPI, a.endpointConfig);
     try {
       await api.connect();
       const info = await api.getServerInfo();
       const serverFee = parseAPIValue(info.validatedLedger.baseFeeXRP);
-      return {
+      networkInfo = {
         serverFee
       };
     } catch (e) {
@@ -614,137 +619,85 @@ export const accountBridge: AccountBridge<Transaction> = {
     } finally {
       api.disconnect();
     }
-  },
+  }
 
-  getTransactionNetworkInfo: (account, transaction) => transaction.networkInfo,
+  return { ...t, networkInfo };
+};
 
-  applyTransactionNetworkInfo: (account, transaction, networkInfo) => ({
-    ...transaction,
-    networkInfo,
-    fee: transaction.fee || networkInfo.serverFee
+const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
+  fee: t.fee || networkInfo.serverFee
+});
+
+const getTransactionStatus = async (a, t) => {
+  const r = await getServerInfo(a.endpointConfig);
+  const reserveBaseXRP = parseAPIValue(r.validatedLedger.reserveBaseXRP);
+
+  const estimatedFees = BigNumber(t.fee || 0);
+
+  const totalSpent = BigNumber(t.amount).plus(estimatedFees);
+
+  const amount = BigNumber(t.amount);
+
+  const showFeeWarning = amount.gt(0) && estimatedFees.times(10).gt(amount);
+
+  // Fill up transaction errors...
+  let transactionError;
+  if (!t.fee) {
+    transactionError = new FeeNotLoaded();
+  } else if (totalSpent.gt(a.balance.minus(reserveBaseXRP))) {
+    transactionError = new NotEnoughBalance();
+  } else if (
+    t.recipient &&
+    (await cachedRecipientIsNew(a.endpointConfig, t.recipient)) &&
+    t.amount.lt(reserveBaseXRP)
+  ) {
+    const f = formatAPICurrencyXRP(reserveBaseXRP);
+    throw new NotEnoughBalanceBecauseDestinationNotCreated("", {
+      minimalAmount: `${f.currency} ${BigNumber(f.value).toFixed()}`
+    });
+  }
+
+  // Fill up recipient errors...
+  let recipientError;
+  let recipientWarning = null;
+
+  if (a.freshAddress === t.recipient) {
+    recipientError = new InvalidAddressBecauseDestinationIsAlsoSource();
+  } else {
+    try {
+      bs58check.decode(t.recipient);
+    } catch (e) {
+      recipientError = new InvalidAddress("", {
+        currencyName: a.currency.name
+      });
+    }
+  }
+
+  return Promise.resolve({
+    transactionError,
+    recipientError,
+    recipientWarning,
+    showFeeWarning,
+    estimatedFees,
+    amount,
+    totalSpent,
+    useAllAmount: false
+  });
+};
+
+export const accountBridge: AccountBridge<Transaction> = {
+  createTransaction,
+  prepareTransaction,
+  getTransactionStatus,
+  startSync,
+  signAndBroadcast,
+  ...inferDeprecatedMethods({
+    name: "RippleJSBridge",
+    createTransaction,
+    getTransactionStatus,
+    prepareTransaction,
+    fillUpExtraFieldToApplyTransactionNetworkInfo
   }),
-
-  editTransactionAmount: (account, t, amount) => ({
-    ...t,
-    amount
-  }),
-
-  getTransactionAmount: (a, t) => t.amount,
-
-  editTransactionRecipient: (account, t, recipient) =>
-    // TODO add back the same code as in desktop
-    ({
-      ...t,
-      recipient
-    }),
-
-  getTransactionRecipient: (a, t) => t.recipient,
-
-  editTransactionExtra: (a, t, field, value) => {
-    switch (field) {
-      case "fee":
-        invariant(
-          !value || BigNumber.isBigNumber(value),
-          "editTransactionExtra(a,t,'fee',value): BigNumber value expected"
-        );
-        return { ...t, fee: value };
-
-      case "tag":
-        invariant(
-          !value || typeof value === "number",
-          "editTransactionExtra(a,t,'tag',value): number value expected"
-        );
-        return { ...t, tag: value };
-
-      case "feeCustomUnit":
-        invariant(
-          value,
-          "editTransactionExtra(a,t,'feeCustomUnit',value): value is expected"
-        );
-        return { ...t, feeCustomUnit: value };
-
-      default:
-        return t;
-    }
-  },
-
-  getTransactionExtra: (a, t, field) => {
-    switch (field) {
-      case "fee":
-        return t.fee;
-
-      case "tag":
-        return t.tag;
-
-      case "feeCustomUnit":
-        return t.feeCustomUnit;
-
-      default:
-        return undefined;
-    }
-  },
-
-  checkValidTransaction: async (a, t) => {
-    if (!t.fee) throw new FeeNotLoaded();
-    const r = await getServerInfo(a.endpointConfig);
-    const reserveBaseXRP = parseAPIValue(r.validatedLedger.reserveBaseXRP);
-    if (t.recipient) {
-      if (await cachedRecipientIsNew(a.endpointConfig, t.recipient)) {
-        if (t.amount.lt(reserveBaseXRP)) {
-          const f = formatAPICurrencyXRP(reserveBaseXRP);
-          throw new NotEnoughBalanceBecauseDestinationNotCreated("", {
-            minimalAmount: `${f.currency} ${BigNumber(f.value).toFixed()}`
-          });
-        }
-      }
-    }
-    if (
-      t.amount
-        .plus(t.fee || 0)
-        .plus(reserveBaseXRP)
-        .isLessThanOrEqualTo(a.balance)
-    ) {
-      return null;
-    }
-    throw new NotEnoughBalance();
-  },
-
-  getTotalSpent: (a, t) => Promise.resolve(t.amount.plus(t.fee || 0)),
-
-  getMaxAmount: (a, t) => Promise.resolve(a.balance.minus(t.fee || 0)),
-
-  signAndBroadcast: (a, t, deviceId) =>
-    Observable.create(o => {
-      delete cacheRecipientsNew[t.recipient];
-      let cancelled = false;
-      const isCancelled = () => cancelled;
-      const onSigned = () => {
-        o.next({ type: "signed" });
-      };
-      const onOperationBroadcasted = operation => {
-        o.next({ type: "broadcasted", operation });
-      };
-      signAndBroadcast({
-        a,
-        t,
-        deviceId,
-        isCancelled,
-        onSigned,
-        onOperationBroadcasted
-      }).then(
-        () => {
-          o.complete();
-        },
-        e => {
-          o.error(e);
-        }
-      );
-      return () => {
-        cancelled = true;
-      };
-    }),
-
-  prepareTransaction: (account, transaction) => Promise.resolve(transaction),
 
   getDefaultEndpointConfig: () => defaultEndpoint,
 

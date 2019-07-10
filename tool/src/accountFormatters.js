@@ -5,6 +5,7 @@ import {
   toAccountRaw,
   getAccountCurrency
 } from "@ledgerhq/live-common/lib/account";
+import type { Account } from "@ledgerhq/live-common/lib/types";
 import { getOperationAmountNumberWithInternals } from "@ledgerhq/live-common/lib/operation";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/lib/currencies";
 import { getOperationAmountNumber } from "@ledgerhq/live-common/lib/operation";
@@ -26,7 +27,7 @@ const formatOp = unitByAccountId => {
     const spaces = Array((level + 1) * 2)
       .fill(" ")
       .join("");
-    const extra = level > 0 ? "" : ` ${op.hash}     ${op.date.toGMTString()}`;
+    const extra = level > 0 ? "" : ` ${op.hash}     ${op.date.toISOString()}`;
     const head = `${(spaces + amount).padEnd(26)} ${extra}`;
     const sub = (op.subOperations || [])
       .concat(op.internalOperations || [])
@@ -55,16 +56,18 @@ const cliFormat = (account, summaryOnly) => {
   const opsCount = `${operations.length} operations`;
   const freshInfo = `${freshAddress} on ${freshAddressPath}`;
   const derivationInfo = `${derivationMode}#${index}`;
-  const head = `${name}: ${balance} (${opsCount}) (${freshInfo}) (${derivationInfo} ${xpub})`;
+  const head = `${name}: ${balance} (${opsCount}) (${freshInfo}) (${derivationInfo} ${xpub ||
+    ""})`;
 
   const tokenAccounts = account.tokenAccounts || [];
   const ops = operations
     .map(
-      formatOp(id =>
-        account.id === id
-          ? account.unit
-          : tokenAccounts.find(a => a.id === id).token.units[0]
-      )
+      formatOp(id => {
+        if (account.id === id) return account.unit;
+        const ta = tokenAccounts.find(a => a.id === id);
+        if (ta) return ta.token.units[0];
+        throw new Error("unexpected missing token account");
+      })
     )
     .join("");
 
@@ -91,7 +94,7 @@ const stats = account => {
   const { tokenAccounts, operations } = account;
 
   const sumOfAllOpsNumber = operations.reduce(
-    (sum, op) => sum.plus(getOperationAmountNumberWithInternals(op)),
+    (sum: BigNumber, op) => sum.plus(getOperationAmountNumberWithInternals(op)),
     BigNumber(0)
   );
 
@@ -111,7 +114,7 @@ const stats = account => {
   };
 };
 
-export default {
+const all: { [_: string]: (Account) => any } = {
   json: account => JSON.stringify(toAccountRaw(account)),
   default: account => cliFormat(account),
   summary: account => cliFormat(account, true),
@@ -122,3 +125,5 @@ export default {
       .map(ta => ta.token.ticker)
       .join("\n")
 };
+
+export default all;

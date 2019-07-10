@@ -5,7 +5,6 @@ import { BigNumber } from "bignumber.js";
 import throttle from "lodash/throttle";
 import flatMap from "lodash/flatMap";
 import uniqBy from "lodash/uniqBy";
-import invariant from "invariant";
 import eip55 from "eip55";
 import {
   NotEnoughBalance,
@@ -13,6 +12,7 @@ import {
   ETHAddressNonEIP,
   InvalidAddress
 } from "@ledgerhq/errors";
+import { inferDeprecatedMethods } from "../../bridge/deprecationUtils";
 import {
   getDerivationModesForCurrency,
   getDerivationScheme,
@@ -20,29 +20,21 @@ import {
   isIterableDerivationMode,
   derivationModeSupportsIndex,
   getMandatoryEmptyAccountSkip
-} from "../derivation";
+} from "../../derivation";
 import {
   getAccountPlaceholderName,
   getNewAccountPlaceholderName
-} from "../account";
-import { getCryptoCurrencyById } from "../currencies";
-import type { Account, Operation, Unit } from "../types";
-import getAddress from "../hw/getAddress";
-import { open } from "../hw";
-import { apiForCurrency } from "../api/Ethereum";
-import { getEstimatedFees } from "../api/Fees";
-import type { Tx } from "../api/Ethereum";
-import signTransaction from "../hw/signTransaction";
-import type { CurrencyBridge, AccountBridge } from "./types";
-
-export type Transaction = {
-  recipient: string,
-  amount: BigNumber,
-  gasPrice: ?BigNumber,
-  gasLimit: BigNumber,
-  feeCustomUnit: ?Unit,
-  networkInfo: ?{ serverFees: { gas_price: number } }
-};
+} from "../../account";
+import { getCryptoCurrencyById } from "../../currencies";
+import type { Account, Operation } from "../../types";
+import type { Transaction } from "./types";
+import getAddress from "../../hw/getAddress";
+import { open } from "../../hw";
+import { apiForCurrency } from "../../api/Ethereum";
+import { getEstimatedFees } from "../../api/Fees";
+import type { Tx } from "../../api/Ethereum";
+import signTransaction from "../../hw/signTransaction";
+import type { CurrencyBridge, AccountBridge } from "../../types/bridge";
 
 const serializeTransaction = t => ({
   recipient: t.recipient,
@@ -134,7 +126,7 @@ function mergeOps(existing: Operation[], newFetched: Operation[]) {
   return uniqBy(all.sort((a, b) => b.date - a.date), "id");
 }
 
-const signAndBroadcast = async ({
+const doSignAndBroadcast = async ({
   a,
   t,
   deviceId,
@@ -388,219 +380,181 @@ export const currencyBridge: CurrencyBridge = {
     })
 };
 
-export const accountBridge: AccountBridge<Transaction> = {
-  startSync: ({ freshAddress, blockHeight, currency, operations }) =>
-    Observable.create(o => {
-      let unsubscribed = false;
-      const api = apiForCurrency(currency);
-      async function main() {
-        try {
-          const block = await fetchCurrentBlock(currency);
-          if (unsubscribed) return;
-          if (block.height === blockHeight) {
-            o.complete();
-          } else {
-            const filterConfirmedOperations = op =>
-              op.blockHeight &&
-              blockHeight - op.blockHeight > SAFE_REORG_THRESHOLD;
-
-            operations = operations.filter(filterConfirmedOperations);
-            const blockHash =
-              operations.length > 0 ? operations[0].blockHash : undefined;
-            const { txs } = await api.getTransactions(freshAddress, blockHash);
-            if (unsubscribed) return;
-            const balance = await api.getAccountBalance(freshAddress);
-            if (unsubscribed) return;
-            if (txs.length === 0) {
-              o.next(a => ({
-                ...a,
-                balance,
-                blockHeight: block.height,
-                lastSyncDate: new Date()
-              }));
-              o.complete();
-              return;
-            }
-            const nonce = await api.getAccountNonce(freshAddress);
-            if (unsubscribed) return;
-            o.next(a => {
-              const currentOps = a.operations.filter(filterConfirmedOperations);
-              const newOps = flatMap(txs, txToOps(a));
-              const ops = mergeOps(currentOps, newOps);
-              const pendingOperations = a.pendingOperations.filter(
-                op =>
-                  op.transactionSequenceNumber &&
-                  op.transactionSequenceNumber >= nonce &&
-                  !operations.some(op2 => op2.hash === op.hash)
-              );
-              return {
-                ...a,
-                pendingOperations,
-                operations: ops,
-                balance,
-                blockHeight: block.height,
-                lastSyncDate: new Date()
-              };
-            });
-            o.complete();
-          }
-        } catch (e) {
-          o.error(e);
-        }
-      }
-      main();
-
-      return () => {
-        unsubscribed = true;
-      };
-    }),
-
-  fetchTransactionNetworkInfo: async account => {
-    const serverFees = await getEstimatedFees(account.currency);
-    return {
-      serverFees
-    };
-  },
-
-  getTransactionNetworkInfo: (account, transaction) => transaction.networkInfo,
-
-  applyTransactionNetworkInfo: (account, transaction, networkInfo) => ({
-    ...transaction,
-    networkInfo,
-    gasPrice:
-      transaction.gasPrice ||
-      (networkInfo.serverFees.gas_price
-        ? BigNumber(networkInfo.serverFees.gas_price)
-        : null)
-  }),
-
-  checkValidRecipient: (account, recipient) =>
-    isRecipientValid(account.currency, recipient)
-      ? Promise.resolve(getRecipientWarning(account.currency, recipient))
-      : Promise.reject(
-          new InvalidAddress("", { currencyName: account.currency.name })
-        ),
-
-  createTransaction: () => ({
-    amount: BigNumber(0),
-    recipient: "",
-    gasPrice: null,
-    gasLimit: BigNumber(0x5208),
-    networkInfo: null,
-    feeCustomUnit: getCryptoCurrencyById("ethereum").units[1]
-  }),
-
-  editTransactionAmount: (account, t, amount) => ({
-    ...t,
-    amount
-  }),
-
-  getTransactionAmount: (a, t) => t.amount,
-
-  editTransactionRecipient: (account, t, recipient) => ({
-    ...t,
-    recipient
-  }),
-
-  getTransactionRecipient: (a, t) => t.recipient,
-
-  editTransactionExtra: (a, t, field, value) => {
-    switch (field) {
-      case "gasLimit":
-        invariant(
-          value && BigNumber.isBigNumber(value),
-          "editTransactionExtra(a,t,'gasLimit',value): BigNumber value expected"
-        );
-        return { ...t, gasLimit: value };
-
-      case "gasPrice":
-        invariant(
-          !value || BigNumber.isBigNumber(value),
-          "editTransactionExtra(a,t,'gasPrice',value): BigNumber value expected"
-        );
-        return { ...t, gasPrice: value };
-
-      case "feeCustomUnit":
-        invariant(
-          value,
-          "editTransactionExtra(a,t,'feeCustomUnit',value): value is expected"
-        );
-        return { ...t, feeCustomUnit: value };
-
-      default:
-        return t;
-    }
-  },
-
-  getTransactionExtra: (a, t, field) => {
-    switch (field) {
-      case "gasLimit":
-        return t.gasLimit;
-
-      case "gasPrice":
-        return t.gasPrice;
-
-      case "feeCustomUnit":
-        return t.feeCustomUnit;
-
-      default:
-        return undefined;
-    }
-  },
-
-  checkValidTransaction: (a, t) =>
-    !t.gasPrice
-      ? Promise.reject(new FeeNotLoaded())
-      : t.amount.isLessThanOrEqualTo(a.balance)
-      ? Promise.resolve(null)
-      : Promise.reject(new NotEnoughBalance()),
-
-  getTotalSpent: (a, t) =>
-    t.amount.isGreaterThan(0) &&
-    t.gasPrice &&
-    t.gasPrice.isGreaterThan(0) &&
-    t.gasLimit.isGreaterThan(0)
-      ? Promise.resolve(t.amount.plus(t.gasPrice.times(t.gasLimit)))
-      : Promise.resolve(BigNumber(0)),
-
-  getMaxAmount: (a, t) =>
-    Promise.resolve(
-      a.balance.minus((t.gasPrice || BigNumber(0)).times(t.gasLimit))
-    ),
-
-  signAndBroadcast: (a, t, deviceId) =>
-    Observable.create(o => {
-      let cancelled = false;
-      const isCancelled = () => cancelled;
-      const onSigned = () => {
-        o.next({ type: "signed" });
-      };
-      const onOperationBroadcasted = operation => {
-        o.next({ type: "broadcasted", operation });
-      };
-      signAndBroadcast({
-        a,
-        t,
-        deviceId,
-        isCancelled,
-        onSigned,
-        onOperationBroadcasted
-      }).then(
-        () => {
+const startSync = ({ freshAddress, blockHeight, currency, operations }) =>
+  Observable.create(o => {
+    let unsubscribed = false;
+    const api = apiForCurrency(currency);
+    async function main() {
+      try {
+        const block = await fetchCurrentBlock(currency);
+        if (unsubscribed) return;
+        if (block.height === blockHeight) {
           o.complete();
-        },
-        e => {
-          o.error(e);
-        }
-      );
-      return () => {
-        cancelled = true;
-      };
-    }),
+        } else {
+          const filterConfirmedOperations = op =>
+            op.blockHeight &&
+            blockHeight - op.blockHeight > SAFE_REORG_THRESHOLD;
 
-  prepareTransaction: (a, t) => {
-    const api = apiForCurrency(a.currency);
-    const o = api.estimateGasLimitForERC20(t.recipient);
-    return o.then(gasLimit => ({ ...t, gasLimit: BigNumber(gasLimit) }));
+          operations = operations.filter(filterConfirmedOperations);
+          const blockHash =
+            operations.length > 0 ? operations[0].blockHash : undefined;
+          const { txs } = await api.getTransactions(freshAddress, blockHash);
+          if (unsubscribed) return;
+          const balance = await api.getAccountBalance(freshAddress);
+          if (unsubscribed) return;
+          if (txs.length === 0) {
+            o.next(a => ({
+              ...a,
+              balance,
+              blockHeight: block.height,
+              lastSyncDate: new Date()
+            }));
+            o.complete();
+            return;
+          }
+          const nonce = await api.getAccountNonce(freshAddress);
+          if (unsubscribed) return;
+          o.next(a => {
+            const currentOps = a.operations.filter(filterConfirmedOperations);
+            const newOps = flatMap(txs, txToOps(a));
+            const ops = mergeOps(currentOps, newOps);
+            const pendingOperations = a.pendingOperations.filter(
+              op =>
+                op.transactionSequenceNumber &&
+                op.transactionSequenceNumber >= nonce &&
+                !operations.some(op2 => op2.hash === op.hash)
+            );
+            return {
+              ...a,
+              pendingOperations,
+              operations: ops,
+              balance,
+              blockHeight: block.height,
+              lastSyncDate: new Date()
+            };
+          });
+          o.complete();
+        }
+      } catch (e) {
+        o.error(e);
+      }
+    }
+    main();
+
+    return () => {
+      unsubscribed = true;
+    };
+  });
+
+const createTransaction = () => ({
+  family: "ethereum",
+  amount: BigNumber(0),
+  recipient: "",
+  gasPrice: null,
+  gasLimit: BigNumber(0x5208),
+  networkInfo: null,
+  feeCustomUnit: getCryptoCurrencyById("ethereum").units[1]
+});
+
+const getTransactionStatus = (a, t) => {
+  const estimatedFees = (t.gasPrice || BigNumber(0)).times(t.gasLimit || 0);
+
+  const totalSpent = BigNumber(t.amount || 0).plus(estimatedFees);
+
+  const amount = BigNumber(t.amount || 0);
+
+  const showFeeWarning = amount.gt(0) && estimatedFees.times(10).gt(amount);
+
+  // Fill up transaction errors...
+  let transactionError;
+  if (!t.gasPrice) {
+    transactionError = new FeeNotLoaded();
+  } else if (totalSpent.gt(a.balance)) {
+    transactionError = new NotEnoughBalance();
   }
+
+  // Fill up recipient errors...
+  let recipientError;
+  let recipientWarning = getRecipientWarning(a.currency, t.recipient);
+  if (!isRecipientValid(a.currency, t.recipient)) {
+    recipientError = new InvalidAddress("", {
+      currencyName: a.currency.name
+    });
+  }
+
+  return Promise.resolve({
+    transactionError,
+    recipientError,
+    recipientWarning,
+    showFeeWarning,
+    estimatedFees,
+    amount,
+    totalSpent,
+    useAllAmount: false
+  });
+};
+
+const signAndBroadcast = (a, t, deviceId) =>
+  Observable.create(o => {
+    let cancelled = false;
+    const isCancelled = () => cancelled;
+    const onSigned = () => {
+      o.next({ type: "signed" });
+    };
+    const onOperationBroadcasted = operation => {
+      o.next({ type: "broadcasted", operation });
+    };
+    doSignAndBroadcast({
+      a,
+      t,
+      deviceId,
+      isCancelled,
+      onSigned,
+      onOperationBroadcasted
+    }).then(
+      () => {
+        o.complete();
+      },
+      e => {
+        o.error(e);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  });
+
+const prepareTransaction = async (a, t) => {
+  const api = apiForCurrency(a.currency);
+  const networkInfo = t.networkInfo || (await getEstimatedFees(a.currency));
+  const gasLimit = BigNumber(await api.estimateGasLimitForERC20(t.recipient));
+  return {
+    ...t,
+    networkInfo,
+    gasLimit,
+    gasPrice:
+      t.gasPrice ||
+      (networkInfo.gas_price ? BigNumber(networkInfo.gas_price) : null)
+  };
+};
+
+const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
+  gasPrice:
+    t.gasPrice ||
+    (networkInfo.gas_price ? BigNumber(networkInfo.gas_price) : null)
+});
+
+export const accountBridge: AccountBridge<Transaction> = {
+  createTransaction,
+  prepareTransaction,
+  getTransactionStatus,
+  startSync,
+  signAndBroadcast,
+  ...inferDeprecatedMethods({
+    name: "EthereumJSBridge",
+    createTransaction,
+    getTransactionStatus,
+    prepareTransaction,
+    fillUpExtraFieldToApplyTransactionNetworkInfo
+  })
 };

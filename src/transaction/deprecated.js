@@ -1,10 +1,9 @@
 // @flow
-import type { BigNumber } from "bignumber.js";
-import type { Account, Transaction } from "./types";
-import type { AccountBridge } from "./bridge/types";
+import { BigNumber } from "bignumber.js";
+import type { Account, Transaction, AccountBridge } from "../types";
 
 export async function getTransactionStatus(
-  bridge: AccountBridge<any>,
+  bridge: AccountBridge<*>,
   account: Account,
   transaction: Transaction
 ): Promise<{
@@ -15,6 +14,10 @@ export async function getTransactionStatus(
   useAllAmount: boolean,
   maxAmount: ?BigNumber
 }> {
+  console.warn(
+    "live-common/lib/transaction: deprecated! use bridge.getTransactionStatus"
+  );
+
   const totalSpent = await bridge.getTotalSpent(account, transaction);
   const amount = bridge.getTransactionAmount(account, transaction);
   const useAllAmount = bridge.getTransactionExtra(
