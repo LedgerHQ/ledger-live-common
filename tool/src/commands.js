@@ -500,32 +500,39 @@ const all = {
   },
 
   signMessage: {
-    description: "Sign a message with the device on specific derivations (advanced)",
+    description:
+      "Sign a message with the device on specific derivations (advanced)",
     args: [
       currencyOpt,
       { name: "path", type: String, desc: "HDD derivation path" },
-      { name: "derivationMode", type: String, desc: "derivationMode to use" },
-      { name: "message", type: String, desc: "the message to sign" },
+      {
+        name: "derivationMode",
+        alias: "s",
+        type: String,
+        desc: "derivationMode to use"
+      },
+      { name: "message", type: String, desc: "the message to sign" }
     ],
-    job: arg => inferCurrency(arg).pipe(
-      mergeMap(currency => {
-        if (!currency) {
-          throw new Error("no currency provided");
-        }
-        if (!arg.path) {
-          throw new Error("--path is required");
-        }
-        asDerivationMode(arg.derivationMode);
-        return withDevice(arg.device || "")(t =>
-          from(
-            signMessage(t, {
-              ...arg,
-              currency
-            })
-          )
-        );
-      })
-    )
+    job: arg =>
+      inferCurrency(arg).pipe(
+        mergeMap(currency => {
+          if (!currency) {
+            throw new Error("no currency provided");
+          }
+          if (!arg.path) {
+            throw new Error("--path is required");
+          }
+          return withDevice(arg.device || "")(t =>
+            from(
+              signMessage(t, {
+                ...arg,
+                derivationMode: asDerivationMode(arg.derivationMode || ""),
+                currency
+              })
+            )
+          );
+        })
+      )
   },
 
   getAddress: {
