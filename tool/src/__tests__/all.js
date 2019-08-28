@@ -2,7 +2,7 @@
 
 import "babel-polyfill";
 import { BigNumber } from "bignumber.js";
-import { InvalidAddress, FeeNotLoaded } from "@ledgerhq/errors";
+import { InvalidAddress, FeeNotLoaded, NotEnoughBalance } from "@ledgerhq/errors";
 import type { Account, Transaction } from "@ledgerhq/live-common/lib/types";
 import { fromAccountRaw } from "@ledgerhq/live-common/lib/account";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
@@ -64,7 +64,7 @@ const doge1: Account = fromAccountRaw({
     "dgub8rBqrhN2grbuDNuFBCu9u9KQKgQmkKaa15Yvnf4YznmvqFZByDPJypigogDKanefhrjj129Ek1W13zvtyQSD6HDpzxyskJvU6xmhD29S9eF"
 });
 
-test("empty recipient have a recipientError", async () => {
+test("invalid recipient have a recipientError", async () => {
   const bridge = getAccountBridge(bitcoin1, null);
   await bridge.startSync(bitcoin1, false).toPromise();
   const t: Transaction = {
@@ -75,7 +75,7 @@ test("empty recipient have a recipientError", async () => {
   expect(status.recipientError).toEqual(new InvalidAddress());
 });
 
-test("empty recipient have a recipientError", async () => {
+test("valid recipient should succeed", async () => {
   const bridge = getAccountBridge(doge1, null);
   await bridge.startSync(doge1, false).toPromise();
   let t = {
@@ -89,4 +89,40 @@ test("empty recipient have a recipientError", async () => {
   status = await bridge.getTransactionStatus(doge1, t);
   expect(status.transactionError).toEqual(null);
   expect(status.recipientError).toEqual(null);
+});
+
+test("insufficient balance have an error", async () => {
+  const bridge = getAccountBridge(bitcoin1, null);
+  await bridge.startSync(bitcoin1, false).toPromise();
+  let t = {
+    ...bridge.createTransaction(bitcoin1),
+    amount: BigNumber(1),
+    recipient: "1ATftUjdUKXQX6bBPzARUqongDWjNCLMhH"
+  };
+  let status = await bridge.getTransactionStatus(bitcoin1, t);
+  expect(status.transactionError).toEqual(new FeeNotLoaded());
+  t = await bridge.prepareTransaction(bitcoin1, t);
+  status = await bridge.getTransactionStatus(bitcoin1, t);
+  expect(status.transactionError).toEqual(new NotEnoughBalance());
+});
+
+test("fees amount to high have an error", async () => {
+  const bridge = getAccountBridge(doge1, null);
+  await bridge.startSync(doge1, false).toPromise();
+  let t = {
+    ...bridge.createTransaction(doge1),
+    amount: BigNumber(10000),
+    recipient: "DCovDUyAFueFmK2QVuW5XDtaUNLa2LP72n"
+  };
+  let status = await bridge.getTransactionStatus(doge1, t);
+  expect(status.transactionError).toEqual(new FeeNotLoaded());
+  t = {
+    ...bridge.createTransaction(doge1),
+    amount: BigNumber(10000),
+    recipient: "DCovDUyAFueFmK2QVuW5XDtaUNLa2LP72n",
+    feePerByte: BigNumber(999999999)
+  };
+  t = await bridge.prepareTransaction(doge1, t);
+  status = await bridge.getTransactionStatus(doge1, t);
+  expect(status.transactionError).toEqual(new NotEnoughBalance());
 });
