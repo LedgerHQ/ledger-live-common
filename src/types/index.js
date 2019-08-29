@@ -33,6 +33,7 @@ import type {
   PortfolioRange,
   ValueChange,
   Portfolio,
+  CurrencyPortfolio,
   AssetsDistribution
 } from "./portfolio";
 
@@ -64,6 +65,7 @@ export type {
   BalanceHistoryWithCountervalue,
   PortfolioRange,
   Portfolio,
+  CurrencyPortfolio,
   AssetsDistribution
 };
 
