@@ -11,6 +11,7 @@ import {
 } from "../portfolio";
 import { genAccount } from "../mock/account";
 import { baseMockBTCRates } from "../countervalues/mock";
+import { flattenAccounts } from "../../lib/account";
 
 const accounts = Array(100)
   .fill(null)
@@ -163,7 +164,7 @@ test("getPortfolio calculateCounterValue can complete fails", () => {
   const account = genAccount("seed_6", { tokenAccountsCount: 0 });
   const account2 = genAccount("seed_7", { tokenAccountsCount: 0 });
   const portfolio = getPortfolio(
-    [account, account2],
+    flattenAccounts([account, account2]),
     "month",
     (c, value, date) => null
   );
@@ -172,7 +173,7 @@ test("getPortfolio calculateCounterValue can complete fails", () => {
 
 test("getPortfolio with lot of accounts", () => {
   const portfolio = getPortfolio(
-    accounts,
+    flattenAccounts(accounts),
     "week",
     (c, value, date) => value // using identity, at any time, 1 token = 1 USD
   );

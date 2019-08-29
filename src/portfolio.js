@@ -272,11 +272,10 @@ const portfolioMemo: { [_: *]: Portfolio } = {};
  * @memberof account
  */
 export function getPortfolio(
-  topAccounts: Account[],
+  accounts: Account[],
   range: PortfolioRange,
   calc: (TokenCurrency | CryptoCurrency, BigNumber, Date) => ?BigNumber
 ): Portfolio {
-  const accounts = flattenAccounts(topAccounts);
   const availableAccounts = [];
   const unavailableAccounts = [];
   const histories: BalanceHistoryWithCountervalue[] = [];
