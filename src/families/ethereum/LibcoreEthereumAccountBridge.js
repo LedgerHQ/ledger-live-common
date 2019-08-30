@@ -86,7 +86,7 @@ const getTransactionStatus = async (a, t) => {
     : amount.gt(0) && estimatedFees.times(10).gt(amount);
 
   // Fill up transaction errors...
-  let transactionError;
+  let transactionError = null;
   if (!t.gasPrice) {
     transactionError = new FeeNotLoaded();
   } else if (amount.gt(account.balance)) {

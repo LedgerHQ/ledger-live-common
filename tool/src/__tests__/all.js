@@ -64,14 +64,20 @@ const doge1: Account = fromAccountRaw({
     "dgub8rBqrhN2grbuDNuFBCu9u9KQKgQmkKaa15Yvnf4YznmvqFZByDPJypigogDKanefhrjj129Ek1W13zvtyQSD6HDpzxyskJvU6xmhD29S9eF"
 });
 
-test("invalid recipient have a recipientError", async () => {
+test("invalid recipient OR valid recipient lowercase have a recipientError", async () => {
   const bridge = getAccountBridge(bitcoin1, null);
   await bridge.startSync(bitcoin1, false).toPromise();
-  const t: Transaction = {
+  let t: Transaction = {
     ...bridge.createTransaction(bitcoin1),
     recipient: "invalidADDRESS"
   };
-  const status = await bridge.getTransactionStatus(bitcoin1, t);
+  let status = await bridge.getTransactionStatus(bitcoin1, t);
+  expect(status.recipientError).toEqual(new InvalidAddress());
+  t = {
+    ...bridge.createTransaction(bitcoin1),
+    recipient: "dcovduyafuefmk2qvuw5xdtaunla2lp72n"
+  };
+  status = await bridge.getTransactionStatus(bitcoin1, t);
   expect(status.recipientError).toEqual(new InvalidAddress());
 });
 
