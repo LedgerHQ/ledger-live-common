@@ -621,7 +621,16 @@ const prepareTransaction = async (a, t) => {
     }
   }
 
-  return { ...t, networkInfo };
+  const fee = t.fee || networkInfo.serverFee;
+  if (fee === t.feePerBye || fee.eq(t.fee || 0)) {
+    return t;
+  }
+
+  return {
+    ...t,
+    networkInfo,
+    fee
+  };
 };
 
 const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({

@@ -446,12 +446,14 @@ const startSync = ({ freshAddress, blockHeight, currency, operations }) =>
     };
   });
 
+const defaultGasLimit = BigNumber(0x5208);
+
 const createTransaction = () => ({
   family: "ethereum",
   amount: BigNumber(0),
   recipient: "",
   gasPrice: null,
-  gasLimit: BigNumber(0x5208),
+  gasLimit: defaultGasLimit,
   networkInfo: null,
   feeCustomUnit: getCryptoCurrencyById("ethereum").units[1]
 });
@@ -526,15 +528,31 @@ const signAndBroadcast = (a, t, deviceId) =>
 
 const prepareTransaction = async (a, t) => {
   const api = apiForCurrency(a.currency);
+
   const networkInfo = t.networkInfo || (await getEstimatedFees(a.currency));
-  const gasLimit = BigNumber(await api.estimateGasLimitForERC20(t.recipient));
+
+  const gasLimit = t.recipient
+    ? BigNumber(await api.estimateGasLimitForERC20(t.recipient))
+    : defaultGasLimit;
+
+  const gasPrice =
+    t.gasPrice ||
+    (networkInfo.gas_price ? BigNumber(networkInfo.gas_price) : null);
+
+  if (
+    gasLimit.eq(t.gasLimit) &&
+    t.networkInfo === networkInfo &&
+    (gasPrice === t.gasPrice ||
+      (gasPrice && t.gasPrice && gasPrice.eq(t.gasPrice)))
+  ) {
+    return t;
+  }
+
   return {
     ...t,
     networkInfo,
     gasLimit,
-    gasPrice:
-      t.gasPrice ||
-      (networkInfo.gas_price ? BigNumber(networkInfo.gas_price) : null)
+    gasPrice
   };
 };
 

@@ -1,14 +1,84 @@
+/* eslint-disable no-console */
 // @flow
 
 import "babel-polyfill";
 import { BigNumber } from "bignumber.js";
-import { InvalidAddress, FeeNotLoaded, NotEnoughBalance } from "@ledgerhq/errors";
-import type { Account, Transaction } from "@ledgerhq/live-common/lib/types";
+import axios from "axios";
+import {
+  InvalidAddress,
+  FeeNotLoaded,
+  NotEnoughBalance
+} from "@ledgerhq/errors";
+import type {
+  Account,
+  AccountBridge,
+  Transaction
+} from "@ledgerhq/live-common/lib/types";
+import { setEnv } from "@ledgerhq/live-common/lib/env";
 import { fromAccountRaw } from "@ledgerhq/live-common/lib/account";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import "../live-common-setup";
 
+axios.interceptors.response.use(
+  r => r,
+  error => {
+    console.log("http error", error.response.status, error.request.path);
+    return Promise.reject(error);
+  }
+);
+
 jest.setTimeout(120000);
+
+const ethereum1: Account = fromAccountRaw({
+  id:
+    "libcore:1:ethereum:xpub6BemYiVNp19ZzH73tAbE9guoQcyygwpWgmrch2J2WsbJhxUSnjZXpMnAKru6wXK3AWxU2fywYBCdojmwnFL6qiH3ByqXpDJ2PKGijdaNvAb:",
+  seedIdentifier:
+    "046575fa4cc4274a90599226af2493b8bdaf978674dc777bac4c3ef1667792d7339ef42ce783c0c4d83306720015473897508ef6029e7400869ea515526f4394c9",
+  name: "Ethereum 1",
+  derivationMode: "",
+  index: 0,
+  freshAddress: "0x519192a437e6aeb895Cec72828A73B11b698dE3a",
+  freshAddressPath: "44'/60'/0'/0/0",
+  pendingOperations: [],
+  currencyId: "ethereum",
+  unitMagnitude: 18,
+  balance: "48167391707119",
+  xpub:
+    "xpub6BemYiVNp19ZzH73tAbE9guoQcyygwpWgmrch2J2WsbJhxUSnjZXpMnAKru6wXK3AWxU2fywYBCdojmwnFL6qiH3ByqXpDJ2PKGijdaNvAb",
+  tokenAccounts: [],
+  operations: [],
+  freshAddresses: [
+    {
+      address: "0x519192a437e6aeb895Cec72828A73B11b698dE3a",
+      derivationPath: "44'/60'/0'/0/0"
+    }
+  ],
+  lastSyncDate: "",
+  blockHeight: 0
+});
+
+const xrp1: Account = fromAccountRaw({
+  id: "ripplejs:2:ripple:rJfzRJHcM9qGuMdULGM7mU4RikqRY47FxR:",
+  seedIdentifier: "rJfzRJHcM9qGuMdULGM7mU4RikqRY47FxR",
+  name: "XRP 1",
+  derivationMode: "",
+  index: 0,
+  freshAddress: "rJfzRJHcM9qGuMdULGM7mU4RikqRY47FxR",
+  freshAddressPath: "44'/144'/0'/0/0",
+  freshAddresses: [
+    {
+      address: "rJfzRJHcM9qGuMdULGM7mU4RikqRY47FxR",
+      derivationPath: "44'/144'/0'/0/0"
+    }
+  ],
+  pendingOperations: [],
+  currencyId: "ripple",
+  unitMagnitude: 6,
+  balance: "20000000",
+  operations: [],
+  lastSyncDate: "",
+  blockHeight: 0
+});
 
 const bitcoin1: Account = fromAccountRaw({
   id:
@@ -62,6 +132,46 @@ const doge1: Account = fromAccountRaw({
   balance: "286144149366",
   xpub:
     "dgub8rBqrhN2grbuDNuFBCu9u9KQKgQmkKaa15Yvnf4YznmvqFZByDPJypigogDKanefhrjj129Ek1W13zvtyQSD6HDpzxyskJvU6xmhD29S9eF"
+});
+
+const bridgeImplementations = {
+  bitcoin: ["mock", ""],
+  ethereum: ["mock", "js", "libcore"],
+  xrp: ["mock", "js"]
+};
+
+// utility to test common behaviors shared on all bridges
+const forEachDifferentBridge = async (
+  f: (
+    Account,
+    AccountBridge<any>,
+    { family: string, impl: string }
+  ) => Promise<any>
+) => {
+  for (let account of [ethereum1, xrp1, bitcoin1]) {
+    const { family } = account.currency;
+    const impls = bridgeImplementations[family] || [""];
+    for (let impl of impls) {
+      setEnv("BRIDGE_FORCE_IMPLEMENTATION", impl);
+      const bridge = getAccountBridge(account, null);
+      console.log(family, impl);
+      await f(account, bridge, { family, impl });
+    }
+  }
+};
+
+beforeEach(() => {
+  setEnv("BRIDGE_FORCE_IMPLEMENTATION", "");
+});
+
+test("prepareTransaction called twice will return the same object reference", async () => {
+  await forEachDifferentBridge(async (account, bridge) => {
+    await bridge.startSync(account, false).toPromise();
+    const t = bridge.createTransaction(account);
+    const t2 = await bridge.prepareTransaction(account, t);
+    const t3 = await bridge.prepareTransaction(account, t2);
+    expect(t2).toBe(t3);
+  });
 });
 
 test("invalid recipient have a recipientError", async () => {

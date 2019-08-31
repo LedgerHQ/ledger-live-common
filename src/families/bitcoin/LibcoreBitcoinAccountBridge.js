@@ -94,10 +94,14 @@ const prepareTransaction = async (a, t) => {
   if (t.networkInfo) return t;
   const feeItems = await getFeeItems(a.currency);
   const networkInfo = { feeItems };
+  const feePerByte = t.feePerByte || networkInfo.feeItems.defaultFeePerByte;
+  if (feePerByte === t.feePerBye || feePerByte.eq(t.feePerByte || 0)) {
+    return t;
+  }
   return {
     ...t,
     networkInfo,
-    feePerByte: t.feePerByte || networkInfo.feeItems.defaultFeePerByte
+    feePerByte
   };
 };
 

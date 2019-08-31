@@ -175,6 +175,7 @@ export function makeMockAccountBridge(
   };
 
   const prepareTransaction = async (a, t) => {
+    // TODO it needs to set the fee if not in t as well
     if (!t.networkInfo) {
       switch (t.family) {
         case "ripple":

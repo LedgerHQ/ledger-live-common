@@ -26,12 +26,14 @@ const getTransactionAccount = (a, t): Account | TokenAccount => {
 
 const startSync = (initialAccount, _observation) => syncAccount(initialAccount);
 
+const defaultGasLimit = BigNumber(0x5208);
+
 const createTransaction = a => ({
   family: "ethereum",
   amount: BigNumber(0),
   recipient: "",
   gasPrice: null,
-  gasLimit: BigNumber(0x5208),
+  gasLimit: defaultGasLimit,
   networkInfo: null,
   feeCustomUnit: a.currency.units[1] || a.currency.units[0],
   useAllAmount: false
@@ -125,14 +127,25 @@ const prepareTransaction = async (a, t) => {
       ? BigNumber(
           await api.estimateGasLimitForERC20(tAccount.token.contractAddress)
         )
-      : BigNumber(await api.estimateGasLimitForERC20(t.recipient));
+      : t.recipient
+      ? BigNumber(await api.estimateGasLimitForERC20(t.recipient))
+      : defaultGasLimit;
+  const gasPrice =
+    t.gasPrice ||
+    (networkInfo.gas_price ? BigNumber(networkInfo.gas_price) : null);
+  if (
+    gasLimit.eq(t.gasLimit) &&
+    t.networkInfo === networkInfo &&
+    (gasPrice === t.gasPrice ||
+      (gasPrice && t.gasPrice && gasPrice.eq(t.gasPrice)))
+  ) {
+    return t;
+  }
   return {
     ...t,
     networkInfo,
     gasLimit,
-    gasPrice:
-      t.gasPrice ||
-      (networkInfo.gas_price ? BigNumber(networkInfo.gas_price) : null)
+    gasPrice
   };
 };
 

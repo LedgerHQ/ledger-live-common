@@ -52,6 +52,7 @@ export interface AccountBridge<T: Transaction> {
   // prepare the remaining missing part of a transaction and returns a Transaction potentially filled with more info
   // Beware that transaction data can be changed by user so this can be called more than once in concurrency.
   // typically we use it to fill up the gas limit, we might also use it to fetch network info if they are not yet,...
+  // transaction reference MUST be returned if nothing needs to be changed in transaction so it "stabilize"
   prepareTransaction(account: Account, transaction: T): Promise<T>;
 
   // TODO doc
