@@ -1,6 +1,6 @@
 // @flow
 import { BigNumber } from "bignumber.js";
-import { FeeNotLoaded } from "@ledgerhq/errors";
+import { FeeNotLoaded, FeeRequired } from "@ledgerhq/errors";
 import { validateRecipient } from "../../bridge/shared";
 import type { AccountBridge } from "../../types/bridge";
 import { getFeeItems } from "../../api/FeesBitcoin";
@@ -51,6 +51,11 @@ const getTransactionStatus = async (a, t) => {
   if (!t.feePerByte) {
     feesResult = {
       transactionError: new FeeNotLoaded(),
+      estimatedFees: BigNumber(0)
+    };
+  } else if (t.feePerByte.eq(0)) {
+    feesResult = {
+      transactionError: new FeeRequired(),
       estimatedFees: BigNumber(0)
     };
   } else {

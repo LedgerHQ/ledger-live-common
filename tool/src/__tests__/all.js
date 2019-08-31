@@ -17,7 +17,13 @@ import type {
 import { setEnv } from "@ledgerhq/live-common/lib/env";
 import { fromAccountRaw } from "@ledgerhq/live-common/lib/account";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
-import "../live-common-setup";
+import "../live-common-setup-without-libcore";
+
+import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
+implementLibcore({
+  lib: () => require("@ledgerhq/ledger-core"), // eslint-disable-line global-require
+  dbPath: process.env.LIBCORE_DB_PATH || "./libcoredb/all"
+});
 
 axios.interceptors.response.use(
   r => r,
@@ -174,14 +180,20 @@ test("prepareTransaction called twice will return the same object reference", as
   });
 });
 
-test("invalid recipient have a recipientError", async () => {
+test("invalid recipient OR valid recipient lowercase have a recipientError", async () => {
   const bridge = getAccountBridge(bitcoin1, null);
   await bridge.startSync(bitcoin1, false).toPromise();
-  const t: Transaction = {
+  let t: Transaction = {
     ...bridge.createTransaction(bitcoin1),
     recipient: "invalidADDRESS"
   };
-  const status = await bridge.getTransactionStatus(bitcoin1, t);
+  let status = await bridge.getTransactionStatus(bitcoin1, t);
+  expect(status.recipientError).toEqual(new InvalidAddress());
+  t = {
+    ...bridge.createTransaction(bitcoin1),
+    recipient: "dcovduyafuefmk2qvuw5xdtaunla2lp72n"
+  };
+  status = await bridge.getTransactionStatus(bitcoin1, t);
   expect(status.recipientError).toEqual(new InvalidAddress());
 });
 

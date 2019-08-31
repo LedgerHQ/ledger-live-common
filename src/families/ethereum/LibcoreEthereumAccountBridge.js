@@ -2,7 +2,6 @@
 import { BigNumber } from "bignumber.js";
 import {
   FeeNotLoaded,
-  NotEnoughBalance,
   InvalidAddressBecauseDestinationIsAlsoSource
 } from "@ledgerhq/errors";
 import type { TokenAccount, Account } from "../../types";
@@ -69,7 +68,19 @@ const getTransactionStatus = async (a, t) => {
 
   const useAllAmount = !!t.useAllAmount;
 
-  const estimatedFees = await calculateFees(a, t).catch(() => BigNumber(0));
+  let feesResult;
+  if (!t.gasPrice) {
+    feesResult = {
+      transactionError: new FeeNotLoaded(),
+      estimatedFees: BigNumber(0)
+    };
+  } else {
+    feesResult = await calculateFees(a, t).then(
+      estimatedFees => ({ transactionError: null, estimatedFees }),
+      transactionError => ({ transactionError, estimatedFees: BigNumber(0) })
+    );
+  }
+  const { estimatedFees, transactionError } = feesResult;
 
   const totalSpent = useAllAmount
     ? account.balance
@@ -86,14 +97,6 @@ const getTransactionStatus = async (a, t) => {
   const showFeeWarning = tokenAccount
     ? false
     : amount.gt(0) && estimatedFees.times(10).gt(amount);
-
-  // Fill up transaction errors...
-  let transactionError;
-  if (!t.gasPrice) {
-    transactionError = new FeeNotLoaded();
-  } else if (amount.gt(account.balance)) {
-    transactionError = new NotEnoughBalance();
-  }
 
   // Fill up recipient errors...
 

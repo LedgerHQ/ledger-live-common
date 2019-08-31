@@ -44,7 +44,7 @@
     "prepublishOnly": "rm -rf lib && babel --ignore __tests__ -d lib src",
     "watch": "babel -wsd lib src",
     "flow": "flow",
-    "test-jest": "rm -rf dbdata && jest",
+    "test-jest": "rm -rf libcoredb && mkdir libcoredb && jest",
     "test": "yarn run test-jest && ./scripts/tests.sh",
     "testOne": "./scripts/testOne.sh",
     "createTest": "./scripts/createTest.sh"
