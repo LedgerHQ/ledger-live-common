@@ -1,6 +1,6 @@
 // @flow
 
-import "./live-common-setup-without-libcore";
+export * from "./live-common-setup-without-libcore";
 
 import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
 implementLibcore({
