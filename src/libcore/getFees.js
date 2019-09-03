@@ -26,7 +26,8 @@ export type Output =
   | {
       // ripple?
       type: "fee",
-      value: BigNumber,
+      serverFee: BigNumber,
+      baseReserve: BigNumber,
       unit: Unit
     };
 

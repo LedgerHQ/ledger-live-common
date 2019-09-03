@@ -20,6 +20,8 @@ declare class CoreRippleLikeTransaction {
   serialize(): Promise<string>;
   setSignature(string, string): Promise<void>;
   setDERSignature(string): Promise<void>;
+  getDestinationTag(): Promise<?number>;
+  getSequence(): Promise<CoreBigInt>;
 }
 
 declare class CoreRippleLikeOperation {
@@ -71,7 +73,7 @@ export type Transaction = {|
   ...TransactionCommon,
   family: "ripple",
   fee: ?BigNumber,
-  networkInfo: ?{ serverFee: BigNumber },
+  networkInfo: ?{ serverFee: BigNumber, baseReserve: BigNumber },
   tag: ?number,
   feeCustomUnit: ?Unit
 |};
@@ -103,6 +105,8 @@ export const reflect = (declare: (string, Spec) => void) => {
   declare("RippleLikeTransaction", {
     methods: {
       getHash: {},
+      getDestinationTag: {},
+      getSequence: { returns: "BigInt" },
       getFees: { returns: "Amount" },
       getReceiver: { returns: "RippleLikeAddress" },
       getSender: { returns: "RippleLikeAddress" },

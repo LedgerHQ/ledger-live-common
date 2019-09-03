@@ -11,17 +11,22 @@ type Input = {
 
 type Output = Promise<{
   type: "fee",
-  value: BigNumber,
+  serverFee: BigNumber,
+  baseReserve: BigNumber,
   unit: Unit
 }>;
 
 async function ripple({ coreAccount, account }: Input): Output {
   const rippleLikeAccount = await coreAccount.asRippleLikeAccount();
-  const fees = await rippleLikeAccount.getFees();
-  const value = await libcoreAmountToBigNumber(fees);
+  const feesRaw = await rippleLikeAccount.getFees();
+  const baseReserveRaw = await rippleLikeAccount.getBaseReserve();
+  const baseReserve = await libcoreAmountToBigNumber(baseReserveRaw);
+  const serverFee = await libcoreAmountToBigNumber(feesRaw);
+
   return {
     type: "fee",
-    value,
+    serverFee,
+    baseReserve,
     unit: account.currency.units[0]
   };
 }

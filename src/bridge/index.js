@@ -19,6 +19,7 @@ import {
   makeMockAccountBridge
 } from "./makeMockBridge";
 import { checkAccountSupported, libcoreNoGo } from "../account/support";
+import LibcoreRippleAccountBridge from "../families/ripple/LibcoreRippleAccountBridge";
 
 const mockCurrencyBridge = makeMockCurrencyBridge();
 const mockAccountBridge = makeMockAccountBridge();
@@ -59,7 +60,12 @@ export const getAccountBridge = (
     if (mainAccount.currency.family === "ethereum") {
       return LibcoreEthereumAccountBridge;
     }
-    return LibcoreBitcoinAccountBridge;
+    if (mainAccount.currency.family === "ripple") {
+      return LibcoreRippleAccountBridge;
+    }
+    if (mainAccount.currency.family === "bitcoin") {
+      return LibcoreBitcoinAccountBridge;
+    }
   }
   switch (mainAccount.currency.family) {
     case "ripple":
