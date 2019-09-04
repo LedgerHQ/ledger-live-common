@@ -2,6 +2,8 @@
 <PROJECT_ROOT>/demo
 <PROJECT_ROOT>/tool
 <PROJECT_ROOT>/scripts
+<PROJECT_ROOT>/.yalc
+<PROJECT_ROOT>/tests
 
 [include]
 
