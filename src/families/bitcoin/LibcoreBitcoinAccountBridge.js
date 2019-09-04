@@ -32,7 +32,7 @@ const createTransaction = () => ({
   family: "bitcoin",
   amount: BigNumber(0),
   recipient: "",
-  feePerByte: undefined,
+  feePerByte: null,
   networkInfo: null,
   useAllAmount: false
 });

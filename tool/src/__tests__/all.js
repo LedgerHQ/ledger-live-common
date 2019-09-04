@@ -10,6 +10,10 @@ import {
   fromAccountRaw,
   toAccountRaw
 } from "@ledgerhq/live-common/lib/account";
+import {
+  fromTransactionRaw,
+  toTransactionRaw
+} from "@ledgerhq/live-common/lib/transaction";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import "../live-common-setup-without-libcore";
 
@@ -148,13 +152,44 @@ mapDifferentBridge((account, bridge, meta) => [
     .toPromise()
     .then(f => f(account)),
   bridge,
+  account,
   meta
-]).forEach(([accountPromise, bridge, { family, impl }]) => {
+]).forEach(([accountPromise, bridge, initialAccount, { family, impl }]) => {
   describe("shared properties on: " + family + " " + impl, () => {
-    describe("basic", () => {
-      test("sync succeed", async () => {
+    describe("startSync", () => {
+      test("succeed", async () => {
         const account = await accountPromise;
         expect(fromAccountRaw(toAccountRaw(account))).toBeDefined();
+      });
+    });
+
+    describe("createTransaction", () => {
+      test("empty transaction is an object with empty recipient and zero amount", () => {
+        expect(bridge.createTransaction(initialAccount)).toMatchObject({
+          amount: BigNumber(0),
+          recipient: ""
+        });
+      });
+
+      test("empty transaction is equals to itself", () => {
+        expect(bridge.createTransaction(initialAccount)).toEqual(
+          bridge.createTransaction(initialAccount)
+        );
+      });
+
+      test("empty transaction correctly serialize", () => {
+        const t = bridge.createTransaction(initialAccount);
+        expect(fromTransactionRaw(toTransactionRaw(t))).toEqual(t);
+      });
+
+      test("transaction with amount and recipient correctly serialize", async () => {
+        const account = await accountPromise;
+        const t = {
+          ...bridge.createTransaction(account),
+          amount: BigNumber(1000),
+          recipient: account.freshAddress
+        };
+        expect(fromTransactionRaw(toTransactionRaw(t))).toEqual(t);
       });
     });
 
@@ -166,12 +201,12 @@ mapDifferentBridge((account, bridge, meta) => [
         expect(t2).toBe(t3);
       }
 
-      test("stability on empty transaction", async () => {
+      test("ref stability on empty transaction", async () => {
         const account = await accountPromise;
         await expectStability(account, bridge.createTransaction(account));
       });
 
-      test("stability on self transaction", async () => {
+      test("ref stability on self transaction", async () => {
         const account = await accountPromise;
         await expectStability(account, {
           ...bridge.createTransaction(account),
