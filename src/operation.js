@@ -56,7 +56,7 @@ export function getOperationAmountNumberWithInternals(
   op: Operation
 ): BigNumber {
   return flattenOperationWithInternals(op).reduce(
-    (amount, op) => amount.plus(getOperationAmountNumber(op)),
+    (amount: BigNumber, op) => amount.plus(getOperationAmountNumber(op)),
     BigNumber(0)
   );
 }
