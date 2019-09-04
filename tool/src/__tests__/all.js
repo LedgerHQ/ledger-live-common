@@ -2,18 +2,8 @@
 // @flow
 
 import "babel-polyfill";
-import { BigNumber } from "bignumber.js";
 import axios from "axios";
-import {
-  InvalidAddress,
-  FeeNotLoaded,
-  NotEnoughBalance
-} from "@ledgerhq/errors";
-import type {
-  Account,
-  AccountBridge,
-  Transaction
-} from "@ledgerhq/live-common/lib/types";
+import type { Account, AccountBridge } from "@ledgerhq/live-common/lib/types";
 import { setEnv } from "@ledgerhq/live-common/lib/env";
 import { fromAccountRaw } from "@ledgerhq/live-common/lib/account";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
@@ -113,6 +103,7 @@ const bitcoin1: Account = fromAccountRaw({
     "xpub6Bm5P7Xyx2UYrVBAgb54gEswXhbZaryZSWsPjeJ1jpb9K9S5UTD5z5cXW4EREkTqkNjSHQHxwHKZJVE7TFvftySnKabMAXAQCMSVJBdJxMC"
 });
 
+/*
 const doge1: Account = fromAccountRaw({
   id:
     "libcore:1:dogecoin:dgub8rBqrhN2grbuDNuFBCu9u9KQKgQmkKaa15Yvnf4YznmvqFZByDPJypigogDKanefhrjj129Ek1W13zvtyQSD6HDpzxyskJvU6xmhD29S9eF:",
@@ -139,112 +130,46 @@ const doge1: Account = fromAccountRaw({
   xpub:
     "dgub8rBqrhN2grbuDNuFBCu9u9KQKgQmkKaa15Yvnf4YznmvqFZByDPJypigogDKanefhrjj129Ek1W13zvtyQSD6HDpzxyskJvU6xmhD29S9eF"
 });
+*/
 
-const bridgeImplementations = {
-  bitcoin: ["mock", ""],
-  ethereum: ["mock", "js", "libcore"],
-  xrp: ["mock", "js"]
-};
+describe("properties shared accross all bridges", () => {
+  const bridgeImplementations = {
+    bitcoin: ["mock", ""],
+    ethereum: ["mock", "js", "libcore"],
+    xrp: ["mock", "js", "libcore"]
+  };
 
-// utility to test common behaviors shared on all bridges
-const forEachDifferentBridge = async (
-  f: (
-    Account,
-    AccountBridge<any>,
-    { family: string, impl: string }
-  ) => Promise<any>
-) => {
-  for (let account of [ethereum1, xrp1, bitcoin1]) {
-    const { family } = account.currency;
-    const impls = bridgeImplementations[family] || [""];
-    for (let impl of impls) {
-      setEnv("BRIDGE_FORCE_IMPLEMENTATION", impl);
-      const bridge = getAccountBridge(account, null);
-      console.log(family, impl);
-      await f(account, bridge, { family, impl });
+  // utility to test common behaviors shared on all bridges
+  const forEachDifferentBridge = async (
+    f: (
+      Account,
+      AccountBridge<any>,
+      { family: string, impl: string }
+    ) => Promise<any>
+  ) => {
+    for (let account of [ethereum1, xrp1, bitcoin1]) {
+      const { family } = account.currency;
+      const impls = bridgeImplementations[family] || [""];
+      for (let impl of impls) {
+        setEnv("BRIDGE_FORCE_IMPLEMENTATION", impl);
+        const bridge = getAccountBridge(account, null);
+        console.log(family, impl);
+        await f(account, bridge, { family, impl });
+      }
     }
-  }
-};
+  };
 
-beforeEach(() => {
-  setEnv("BRIDGE_FORCE_IMPLEMENTATION", "");
-});
-
-test("prepareTransaction called twice will return the same object reference", async () => {
-  await forEachDifferentBridge(async (account, bridge) => {
-    await bridge.startSync(account, false).toPromise();
-    const t = bridge.createTransaction(account);
-    const t2 = await bridge.prepareTransaction(account, t);
-    const t3 = await bridge.prepareTransaction(account, t2);
-    expect(t2).toBe(t3);
+  beforeEach(() => {
+    setEnv("BRIDGE_FORCE_IMPLEMENTATION", "");
   });
-});
 
-test("invalid recipient OR valid recipient lowercase have a recipientError", async () => {
-  const bridge = getAccountBridge(bitcoin1, null);
-  await bridge.startSync(bitcoin1, false).toPromise();
-  let t: Transaction = {
-    ...bridge.createTransaction(bitcoin1),
-    recipient: "invalidADDRESS"
-  };
-  let status = await bridge.getTransactionStatus(bitcoin1, t);
-  expect(status.recipientError).toEqual(new InvalidAddress());
-  t = {
-    ...bridge.createTransaction(bitcoin1),
-    recipient: "dcovduyafuefmk2qvuw5xdtaunla2lp72n"
-  };
-  status = await bridge.getTransactionStatus(bitcoin1, t);
-  expect(status.recipientError).toEqual(new InvalidAddress());
-});
-
-test("valid recipient should succeed", async () => {
-  const bridge = getAccountBridge(doge1, null);
-  await bridge.startSync(doge1, false).toPromise();
-  let t = {
-    ...bridge.createTransaction(doge1),
-    amount: BigNumber(10000),
-    recipient: "DCovDUyAFueFmK2QVuW5XDtaUNLa2LP72n"
-  };
-  let status = await bridge.getTransactionStatus(doge1, t);
-  expect(status.transactionError).toEqual(new FeeNotLoaded());
-  t = await bridge.prepareTransaction(doge1, t);
-  status = await bridge.getTransactionStatus(doge1, t);
-  expect(status.transactionError).toEqual(null);
-  expect(status.recipientError).toEqual(null);
-});
-
-test("insufficient balance have an error", async () => {
-  const bridge = getAccountBridge(bitcoin1, null);
-  await bridge.startSync(bitcoin1, false).toPromise();
-  let t = {
-    ...bridge.createTransaction(bitcoin1),
-    amount: BigNumber(1),
-    recipient: "1ATftUjdUKXQX6bBPzARUqongDWjNCLMhH"
-  };
-  let status = await bridge.getTransactionStatus(bitcoin1, t);
-  expect(status.transactionError).toEqual(new FeeNotLoaded());
-  t = await bridge.prepareTransaction(bitcoin1, t);
-  status = await bridge.getTransactionStatus(bitcoin1, t);
-  expect(status.transactionError).toEqual(new NotEnoughBalance());
-});
-
-test("fees amount to high have an error", async () => {
-  const bridge = getAccountBridge(doge1, null);
-  await bridge.startSync(doge1, false).toPromise();
-  let t = {
-    ...bridge.createTransaction(doge1),
-    amount: BigNumber(10000),
-    recipient: "DCovDUyAFueFmK2QVuW5XDtaUNLa2LP72n"
-  };
-  let status = await bridge.getTransactionStatus(doge1, t);
-  expect(status.transactionError).toEqual(new FeeNotLoaded());
-  t = {
-    ...bridge.createTransaction(doge1),
-    amount: BigNumber(10000),
-    recipient: "DCovDUyAFueFmK2QVuW5XDtaUNLa2LP72n",
-    feePerByte: BigNumber(999999999)
-  };
-  t = await bridge.prepareTransaction(doge1, t);
-  status = await bridge.getTransactionStatus(doge1, t);
-  expect(status.transactionError).toEqual(new NotEnoughBalance());
+  test("prepareTransaction called twice will return the same object reference", async () => {
+    await forEachDifferentBridge(async (account, bridge) => {
+      await bridge.startSync(account, false).toPromise();
+      const t = bridge.createTransaction(account);
+      const t2 = await bridge.prepareTransaction(account, t);
+      const t3 = await bridge.prepareTransaction(account, t2);
+      expect(t2).toBe(t3);
+    });
+  });
 });
