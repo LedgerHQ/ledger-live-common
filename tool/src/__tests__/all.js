@@ -6,7 +6,10 @@ import axios from "axios";
 import { BigNumber } from "bignumber.js";
 import type { Account, AccountBridge } from "@ledgerhq/live-common/lib/types";
 import { setEnv } from "@ledgerhq/live-common/lib/env";
-import { fromAccountRaw } from "@ledgerhq/live-common/lib/account";
+import {
+  fromAccountRaw,
+  toAccountRaw
+} from "@ledgerhq/live-common/lib/account";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import "../live-common-setup-without-libcore";
 
@@ -136,7 +139,7 @@ const doge1: Account = fromAccountRaw({
 const bridgeImplementations = {
   bitcoin: ["mock", ""],
   ethereum: ["mock", "js", "libcore"],
-  xrp: ["mock", "js", "libcore"]
+  ripple: ["mock", "js", "libcore"]
 };
 
 mapDifferentBridge((account, bridge, meta) => [
@@ -148,29 +151,33 @@ mapDifferentBridge((account, bridge, meta) => [
   meta
 ]).forEach(([accountPromise, bridge, { family, impl }]) => {
   describe("shared properties on: " + family + " " + impl, () => {
+    describe("basic", () => {
+      test("sync succeed", async () => {
+        const account = await accountPromise;
+        expect(fromAccountRaw(toAccountRaw(account))).toBeDefined();
+      });
+    });
+
     describe("prepareTransaction", () => {
       // stability: function called twice will return the same object reference (=== convergence so we can stop looping, typically because transaction will be a hook effect dependency of prepareTransaction)
+      async function expectStability(account, t) {
+        const t2 = await bridge.prepareTransaction(account, t);
+        const t3 = await bridge.prepareTransaction(account, t2);
+        expect(t2).toBe(t3);
+      }
 
       test("stability on empty transaction", async () => {
         const account = await accountPromise;
-        const t = bridge.createTransaction(account);
-        const t2 = await bridge.prepareTransaction(account, t);
-        const t3 = await bridge.prepareTransaction(account, t2);
-        expect(t2).toBe(t3);
+        await expectStability(account, bridge.createTransaction(account));
       });
-
-      // stability: function called twice will return the same object reference (=== convergence so we can stop looping, typically because transaction will be a hook effect dependency of prepareTransaction)
 
       test("stability on self transaction", async () => {
         const account = await accountPromise;
-        const t = {
+        await expectStability(account, {
           ...bridge.createTransaction(account),
           amount: BigNumber(1000),
           recipient: account.freshAddress
-        };
-        const t2 = await bridge.prepareTransaction(account, t);
-        const t3 = await bridge.prepareTransaction(account, t2);
-        expect(t2).toBe(t3);
+        });
       });
     });
   });
