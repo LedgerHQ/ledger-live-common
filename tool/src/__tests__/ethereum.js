@@ -6,38 +6,13 @@ import { InvalidAddress, NotEnoughBalance } from "@ledgerhq/errors";
 import type { Account, Transaction } from "@ledgerhq/live-common/lib/types";
 import { fromAccountRaw } from "@ledgerhq/live-common/lib/account";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
-import "../live-common-setup";
+import setupTest from "../live-common-setup-test";
+import accountsJSON from "./libcoreAccounts.json";
 
-import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
-implementLibcore({
-  lib: () => require("@ledgerhq/ledger-core"), // eslint-disable-line global-require
-  dbPath: process.env.LIBCORE_DB_PATH || "./libcoredb/ethereum"
-});
-
-jest.setTimeout(120000);
+setupTest("ethereum");
 
 describe("ethereum transaction tests", () => {
-  let account: Account = fromAccountRaw({
-    id:
-      "libcore:1:ethereum:xpub6BemYiVNp19a1XgWqLcpWd1pBDZTgzPEcVvhR15cpXPVQjuEnrU7fa3TUatX2NbRWNkqx51jmyukisqGokHq5dyK5uYcbwQBF7nJyAdpYZy:",
-    seedIdentifier:
-      "xpub6BemYiVNp19a1XgWqLcpWd1pBDZTgzPEcVvhR15cpXPVQjuEnrU7fa3TUatX2NbRWNkqx51jmyukisqGokHq5dyK5uYcbwQBF7nJyAdpYZy",
-    name: "Ethereum legacy xpub6Bem...JyAdpYZy",
-    derivationMode: "",
-    index: 0,
-    freshAddress: "0x0E3F0bb9516F01f2C34c25E0957518b8aC9414c5",
-    freshAddressPath: "44'/60'/0'/0/0",
-    freshAddresses: [],
-    pendingOperations: [],
-    operations: [],
-    currencyId: "ethereum",
-    unitMagnitude: 18,
-    balance: "",
-    blockHeight: 0,
-    lastSyncDate: "",
-    xpub:
-      "xpub6BemYiVNp19a1XgWqLcpWd1pBDZTgzPEcVvhR15cpXPVQjuEnrU7fa3TUatX2NbRWNkqx51jmyukisqGokHq5dyK5uYcbwQBF7nJyAdpYZy"
-  });
+  let account: Account = fromAccountRaw(accountsJSON.ethereum2);
 
   const bridge = getAccountBridge(account, null);
 

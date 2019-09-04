@@ -11,43 +11,13 @@ import {
 import type { Account } from "@ledgerhq/live-common/lib/types";
 import { fromAccountRaw } from "@ledgerhq/live-common/lib/account";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
-import "../live-common-setup";
+import setupTest from "../live-common-setup-test";
+import accountsJSON from "./libcoreAccounts.json";
 
-import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
-implementLibcore({
-  lib: () => require("@ledgerhq/ledger-core"), // eslint-disable-line global-require
-  dbPath: process.env.LIBCORE_DB_PATH || "./libcoredb/bitcoin"
-});
-
-jest.setTimeout(120000);
+setupTest("bitcoin");
 
 describe("bitcoin transaction tests", () => {
-  let account: Account = fromAccountRaw({
-    id:
-      "libcore:1:bitcoin:xpub6DEHKg8fgKcb9at2u9Xhjtx4tXGyWqUPQAx2zNCzr41gQRyCqpCn7onSoJU4VS96GXyCtAhhFxErnG2pGVvVexaqF7DEfqGGnGk7Havn7C2:native_segwit",
-    seedIdentifier:
-      "043188c7e9e184aa3f6c2967b9b2b19a5966efe88c526ac091687642540573ecfb4c988261e7b0b876c6aec0b393518676232b34289a5bfc0cc78cc2ef735fa512",
-    name: "Bitcoin 2 (native segwit)",
-    derivationMode: "native_segwit",
-    index: 1,
-    freshAddress: "bc1qwqfns0rs5zxrrwf80k4xlp4lpnuyc69feh2r3d",
-    freshAddressPath: "84'/0'/1'/0/24",
-    freshAddresses: [
-      {
-        address: "bc1qwqfns0rs5zxrrwf80k4xlp4lpnuyc69feh2r3d",
-        derivationPath: "84'/0'/1'/0/24"
-      }
-    ],
-    blockHeight: 0,
-    operations: [],
-    pendingOperations: [],
-    currencyId: "bitcoin",
-    unitMagnitude: 8,
-    lastSyncDate: "",
-    balance: "150084",
-    xpub:
-      "xpub6DEHKg8fgKcb9at2u9Xhjtx4tXGyWqUPQAx2zNCzr41gQRyCqpCn7onSoJU4VS96GXyCtAhhFxErnG2pGVvVexaqF7DEfqGGnGk7Havn7C2"
-  });
+  let account: Account = fromAccountRaw(accountsJSON.bitcoin2);
 
   const bridge = getAccountBridge(account, null);
 
