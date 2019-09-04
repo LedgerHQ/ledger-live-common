@@ -18,7 +18,7 @@ import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import setupTest from "../live-common-setup-test";
 import accountsJSON from "./libcoreAccounts.json";
 
-setupTest("all");
+setupTest("accountBridges");
 const ethereum1: Account = fromAccountRaw(accountsJSON.ethereum1);
 const xrp1: Account = fromAccountRaw(accountsJSON.xrp1);
 const bitcoin1: Account = fromAccountRaw(accountsJSON.bitcoin1);
@@ -103,6 +103,79 @@ const bitcoin1: Account = fromAccountRaw(accountsJSON.bitcoin1);
             recipient: account.freshAddress
           });
         });
+
+        test("can be run in parallel and all yield same results", async () => {
+          const account = await accountPromise;
+          const t = {
+            ...bridge.createTransaction(account),
+            amount: BigNumber(1000),
+            recipient: account.freshAddress
+          };
+          const first = await bridge.prepareTransaction(account, t);
+          const concur = await Promise.all(
+            Array(3)
+              .fill(null)
+              .map(() => bridge.prepareTransaction(account, t))
+          );
+          concur.forEach(r => {
+            expect(r).toEqual(first);
+          });
+        });
+      });
+
+      describe("getTransactionStatus", () => {
+        test("can be called on an empty transaction", async () => {
+          const account = await accountPromise;
+          const t = bridge.createTransaction(account);
+          const s = await bridge.getTransactionStatus(account, t);
+          expect(s).toBeDefined();
+          expect(s).toHaveProperty("recipientError");
+          expect(s).toHaveProperty("recipientWarning");
+          expect(s).toHaveProperty("showFeeWarning");
+          expect(s).toHaveProperty("transactionError");
+          expect(typeof s.showFeeWarning).toBe("boolean");
+          expect(s).toHaveProperty("totalSpent");
+          expect(s.totalSpent).toBeInstanceOf(BigNumber);
+          expect(s).toHaveProperty("estimatedFees");
+          expect(s.estimatedFees).toBeInstanceOf(BigNumber);
+          expect(s).toHaveProperty("amount");
+          expect(s.amount).toBeInstanceOf(BigNumber);
+          expect(s.amount).toEqual(BigNumber(0));
+          expect(s).toHaveProperty("useAllAmount");
+          expect(typeof s.useAllAmount).toBe("boolean");
+          expect(s.useAllAmount).toBe(false);
+        });
+
+        test("can be called on an empty prepared transaction", async () => {
+          const account = await accountPromise;
+          const t = await bridge.prepareTransaction(
+            account,
+            bridge.createTransaction(account)
+          );
+          const s = await bridge.getTransactionStatus(account, t);
+          expect(s).toBeDefined();
+          // FIXME i'm not sure if we can establish more shared properties
+        });
+
+        test("can be called on a prepared self transaction", async () => {
+          const account = await accountPromise;
+          const t = await bridge.prepareTransaction(account, {
+            ...bridge.createTransaction(account),
+            amount: BigNumber(1000),
+            recipient: account.freshAddress
+          });
+          const s = await bridge.getTransactionStatus(account, t);
+          expect(s).toBeDefined();
+          // FIXME i'm not sure if we can establish more shared properties
+        });
+      });
+
+      describe("signAndBroadcast", () => {
+        test("method is available on bridge", async () => {
+          expect(typeof bridge.signAndBroadcast).toBe("function");
+        });
+
+        // NB for now we are not going farther because most is covered by bash tests
       });
     });
   });

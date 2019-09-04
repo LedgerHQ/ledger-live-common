@@ -33,7 +33,7 @@ export interface CurrencyBridge {
 // Abstraction related to an account
 export interface AccountBridge<T: Transaction> {
   // synchronizes an account continuously to update with latest blochchains state.
-  // if used with observation=true, it will keep the Observable opened and emit to it new updates.
+  // (NOT YET SUPPORTED) if used with observation=true, it will keep the Observable opened and emit to it new updates.
   // if used with observation=false, it stops at first sync and you will have to call it again.
   // The function emits updater functions each time there are data changes (e.g. blockchains updates)
   // an update function is just a Account => Account that perform the changes (to avoid race condition issues)
@@ -49,13 +49,11 @@ export interface AccountBridge<T: Transaction> {
   // it needs to be a serializable JS object
   createTransaction(account: Account): T;
 
-  // prepare the remaining missing part of a transaction and returns a Transaction potentially filled with more info
-  // Beware that transaction data can be changed by user so this can be called more than once in concurrency.
-  // typically we use it to fill up the gas limit, we might also use it to fetch network info if they are not yet,...
-  // transaction reference MUST be returned if nothing needs to be changed in transaction so it "stabilize"
+  // prepare the remaining missing part of a transaction typically from network (e.g. fees)
+  // and fulfill it in a new transaction object that is returned (async)
   prepareTransaction(account: Account, transaction: T): Promise<T>;
 
-  // TODO doc
+  // calculate / get derived state of the Transaction, useful to display summary / errors / warnings. tell if the transaction is ready.
   getTransactionStatus(
     account: Account,
     transaction: T
