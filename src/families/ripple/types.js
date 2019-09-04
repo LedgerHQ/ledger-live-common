@@ -82,7 +82,7 @@ export type TransactionRaw = {|
   ...TransactionCommonRaw,
   family: "ripple",
   fee: ?string,
-  networkInfo: ?{ serverFee: string },
+  networkInfo: ?{ serverFee: string, baseReserve: string },
   tag: ?number,
   feeCustomUnit: ?Unit
 |};

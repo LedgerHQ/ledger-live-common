@@ -1,4 +1,5 @@
 // @flow
+import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import { validateRecipient } from "../../bridge/shared";
 import type { AccountBridge } from "../../types/bridge";
@@ -82,7 +83,9 @@ const getTransactionStatus = async (a, t) => {
 const prepareTransaction = async (a, t) => {
   let networkInfo = t.networkInfo;
   if (!networkInfo) {
-    const { serverFee, baseReserve } = await getFees(a);
+    const r = await getFees(a);
+    invariant(r.type === "fee", "ripple fee expected"); // FIXME @gre will refactor further soon
+    const { serverFee, baseReserve } = r;
     networkInfo = {
       serverFee,
       baseReserve

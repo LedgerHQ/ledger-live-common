@@ -612,7 +612,8 @@ const prepareTransaction = async (a, t) => {
       const info = await api.getServerInfo();
       const serverFee = parseAPIValue(info.validatedLedger.baseFeeXRP);
       networkInfo = {
-        serverFee
+        serverFee,
+        baseReserve: BigNumber(0) // NOT USED. will refactor later.
       };
     } catch (e) {
       throw remapError(e);

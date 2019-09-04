@@ -181,7 +181,10 @@ export function makeMockAccountBridge(
         case "ripple":
           return {
             ...t,
-            networkInfo: { serverFee: BigNumber(10) }
+            networkInfo: {
+              serverFee: BigNumber(10),
+              baseReserve: BigNumber(20)
+            }
           };
 
         case "ethereum":
