@@ -3,6 +3,7 @@
 
 import "babel-polyfill";
 import { BigNumber } from "bignumber.js";
+import { reduce } from "rxjs/operators";
 import type { Account } from "@ledgerhq/live-common/lib/types";
 import {
   fromAccountRaw,
@@ -23,6 +24,13 @@ const ethereum1: Account = fromAccountRaw(accountsJSON.ethereum1);
 const xrp1: Account = fromAccountRaw(accountsJSON.xrp1);
 const bitcoin1: Account = fromAccountRaw(accountsJSON.bitcoin1);
 
+function syncAccount(bridge, account) {
+  return bridge
+    .startSync(account, false)
+    .pipe(reduce((a, f) => f(a), account))
+    .toPromise();
+}
+
 // covers all bridges through many different accounts
 // to test the common shared properties of bridges.
 [
@@ -37,10 +45,7 @@ const bitcoin1: Account = fromAccountRaw(accountsJSON.bitcoin1);
 ]
   .map(account => {
     const bridge = getAccountBridge(account, null);
-    const accountSyncedPromise = bridge
-      .startSync(account, false)
-      .toPromise()
-      .then(f => f(account));
+    const accountSyncedPromise = syncAccount(bridge, account);
     return [accountSyncedPromise, bridge, account];
   })
   .forEach(([accountPromise, bridge, initialAccount]) => {
@@ -49,6 +54,42 @@ const bitcoin1: Account = fromAccountRaw(accountsJSON.bitcoin1);
         test("succeed", async () => {
           const account = await accountPromise;
           expect(fromAccountRaw(toAccountRaw(account))).toBeDefined();
+        });
+
+        test("existing operations object refs are preserved", async () => {
+          const account = await accountPromise;
+          const count = Math.floor(account.operations.length / 2);
+          const operations = account.operations.slice(count);
+          const copy = { ...account, operations, blockHeight: 0 };
+          const synced = await syncAccount(bridge, copy);
+
+          expect(synced.operations.length).toBe(account.operations.length);
+
+          // same ops are restored
+          expect(synced.operations).toEqual(account.operations);
+
+          if (initialAccount.id.startsWith("ethereumjs")) return; // ethereumjs seems to have a bug on this, we ignore because the impl will be dropped.
+          // existing ops are keeping refs
+          synced.operations.slice(count).forEach((op, i) => {
+            expect(op).toBe(operations[i]);
+          });
+        });
+
+        test("pendingOperations are cleaned up", async () => {
+          const account = await accountPromise;
+          const operations = account.operations.slice(1);
+          const pendingOperations = [account.operations[0]];
+          const copy = {
+            ...account,
+            operations,
+            pendingOperations,
+            blockHeight: 0
+          };
+          const synced = await syncAccount(bridge, copy);
+          // same ops are restored
+          expect(synced.operations).toEqual(account.operations);
+          // pendingOperations is empty
+          expect(synced.pendingOperations).toEqual([]);
         });
       });
 

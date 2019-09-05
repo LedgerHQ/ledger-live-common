@@ -220,21 +220,17 @@ export function makeMockAccountBridge(
         }
         const ops = broadcasted[accountId] || [];
         broadcasted[accountId] = [];
-        o.next(acc => {
-          const account = { ...acc };
-          account.lastSyncDate = new Date();
-          account.blockHeight++;
-          for (const op of ops) {
-            account.balance = account.balance.plus(
-              getOperationAmountNumber(op)
-            );
-            account.operations = ops.concat(
-              account.operations.slice(0).reverse()
-            );
-            account.pendingOperations = [];
-          }
-          return account;
-        });
+        o.next(acc => ({
+          ...acc,
+          blockHeight: acc.blockHeight + 1,
+          lastSyncDate: new Date(),
+          operations: ops.concat(acc.operations.slice(0)),
+          pendingOperations: [],
+          balance: ops.reduce(
+            (sum, op) => sum.plus(getOperationAmountNumber(op)),
+            acc.balance
+          )
+        }));
         if (observation) {
           syncTimeouts[accountId] = setTimeout(sync, 20000);
         } else {
