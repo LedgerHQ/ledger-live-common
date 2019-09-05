@@ -129,8 +129,31 @@
     "pendingOperations": [],
     "currencyId": "dogecoin",
     "unitMagnitude": 8,
-    "lastSyncDate": "2019-08-27T15:32:24.159Z",
+    "lastSyncDate": "",
     "balance": "286144149366",
     "xpub": "dgub8rBqrhN2grbuDNuFBCu9u9KQKgQmkKaa15Yvnf4YznmvqFZByDPJypigogDKanefhrjj129Ek1W13zvtyQSD6HDpzxyskJvU6xmhD29S9eF"
+  },
+  "zcash1": {
+    "id": "libcore:1:zcash:xpub6DXuLL97nvCs14Ashf3u8N2X9BLBpxN3HKCQWnLzn61o6CqME3Jm1hZ6oBeXcMhkqGDaziTGmw19w5iRstuXJrKLX6khbDt1rEatozTkf97:",
+    "seedIdentifier": "04ccf669020e2e315fb2ffdb98e6f60fed7b4abed8a013f5fd1bd604f7742207feef8cffcf1aca7f08628dea1abbcf1170b80ccf3809aa560996e5a5baaef4da33",
+    "name": "Zcash 1",
+    "derivationMode": "",
+    "index": 0,
+    "freshAddress": "t1gJ5fydzJKsTUkykzcVw1yDhHSc8FkULEB",
+    "freshAddressPath": "44'/133'/0'/0/43",
+    "freshAddresses": [
+      {
+        "address": "t1gJ5fydzJKsTUkykzcVw1yDhHSc8FkULEB",
+        "derivationPath": "44'/133'/0'/0/43"
+      }
+    ],
+    "blockHeight": 597238,
+    "operations": [],
+    "pendingOperations": [],
+    "currencyId": "zcash",
+    "unitMagnitude": 8,
+    "lastSyncDate": "",
+    "balance": "11000000",
+    "xpub": "xpub6DXuLL97nvCs14Ashf3u8N2X9BLBpxN3HKCQWnLzn61o6CqME3Jm1hZ6oBeXcMhkqGDaziTGmw19w5iRstuXJrKLX6khbDt1rEatozTkf97"
   }
 }
