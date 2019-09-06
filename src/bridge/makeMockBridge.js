@@ -194,7 +194,7 @@ export function makeMockAccountBridge(
             ...t,
             networkInfo: {
               family: "ethereum",
-              gas_price
+              gasPrice: BigNumber(gas_price)
             }
           };
 
