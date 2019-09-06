@@ -69,11 +69,23 @@ export type CoreOperationSpecifics = {
 
 export type CoreCurrencySpecifics = {};
 
+export type NetworkInfo = {|
+  family: "ripple",
+  serverFee: BigNumber,
+  baseReserve: BigNumber
+|};
+
+export type NetworkInfoRaw = {|
+  family: "ripple",
+  serverFee: string,
+  baseReserve: string
+|};
+
 export type Transaction = {|
   ...TransactionCommon,
   family: "ripple",
   fee: ?BigNumber,
-  networkInfo: ?{ serverFee: BigNumber, baseReserve: BigNumber },
+  networkInfo: ?NetworkInfo,
   tag: ?number,
   feeCustomUnit: ?Unit
 |};
@@ -82,7 +94,7 @@ export type TransactionRaw = {|
   ...TransactionCommonRaw,
   family: "ripple",
   fee: ?string,
-  networkInfo: ?{ serverFee: string, baseReserve: string },
+  networkInfo: ?NetworkInfoRaw,
   tag: ?number,
   feeCustomUnit: ?Unit
 |};

@@ -1,12 +1,13 @@
 // @flow
 import { BigNumber } from "bignumber.js";
+import invariant from "invariant";
 import {
   FeeNotLoaded,
   InvalidAddressBecauseDestinationIsAlsoSource
 } from "@ledgerhq/errors";
 import type { TokenAccount, Account } from "../../types";
 import type { AccountBridge } from "../../types/bridge";
-import { getEstimatedFees } from "../../api/Fees";
+import { getAccountNetworkInfo } from "../../libcore/getAccountNetworkInfo";
 import { syncAccount } from "../../libcore/syncAccount";
 import { getFeesForTransaction } from "../../libcore/getFeesForTransaction";
 import libcoreSignAndBroadcast from "../../libcore/signAndBroadcast";
@@ -120,10 +121,16 @@ const getTransactionStatus = async (a, t) => {
   });
 };
 
-const prepareTransaction = async (a, t) => {
+const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
   const api = apiForCurrency(a.currency);
   const tAccount = getTransactionAccount(a, t);
-  const networkInfo = t.networkInfo || (await getEstimatedFees(a.currency));
+  let networkInfo = t.networkInfo;
+  if (!networkInfo) {
+    const ni = await getAccountNetworkInfo(a);
+    invariant(ni.family === "ethereum", "bitcoin networkInfo expected");
+    networkInfo = ni;
+  }
+
   const gasLimit =
     // TODO uses new getFees function!
     tAccount.type === "TokenAccount"
@@ -135,7 +142,7 @@ const prepareTransaction = async (a, t) => {
       : defaultGasLimit;
   const gasPrice =
     t.gasPrice ||
-    (networkInfo.gas_price ? BigNumber(networkInfo.gas_price) : null);
+    (networkInfo.gasPrice ? BigNumber(networkInfo.gasPrice) : null);
   if (
     gasLimit.eq(t.gasLimit) &&
     t.networkInfo === networkInfo &&

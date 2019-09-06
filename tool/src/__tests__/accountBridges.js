@@ -49,6 +49,8 @@ function syncAccount(bridge, account) {
     return [accountSyncedPromise, bridge, account];
   })
   .forEach(([accountPromise, bridge, initialAccount]) => {
+    // TODO mock disabling network to test properties when this happen...
+
     describe("shared properties on: " + initialAccount.id, () => {
       describe("startSync", () => {
         test("succeed", async () => {

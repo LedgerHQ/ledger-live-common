@@ -15,7 +15,6 @@ const fromFeeItemsRaw = (fir: FeeItemsRaw): FeeItems => ({
   items: fir.items.map(fi => ({
     key: fi.key,
     speed: fi.speed,
-    blockCount: fi.blockCount,
     feePerByte: BigNumber(fi.feePerByte)
   })),
   defaultFeePerByte: BigNumber(fir.defaultFeePerByte)
@@ -25,7 +24,6 @@ const toFeeItemsRaw = (fir: FeeItems): FeeItemsRaw => ({
   items: fir.items.map(fi => ({
     key: fi.key,
     speed: fi.speed,
-    blockCount: fi.blockCount,
     feePerByte: fi.feePerByte.toString()
   })),
   defaultFeePerByte: fir.defaultFeePerByte.toString()
@@ -38,6 +36,7 @@ const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     family: tr.family,
     feePerByte: tr.feePerByte ? BigNumber(tr.feePerByte) : null,
     networkInfo: tr.networkInfo && {
+      family: tr.networkInfo.family,
       feeItems: fromFeeItemsRaw(tr.networkInfo.feeItems)
     }
   };
@@ -50,6 +49,7 @@ const toTransactionRaw = (t: Transaction): TransactionRaw => {
     family: t.family,
     feePerByte: t.feePerByte ? t.feePerByte.toString() : null,
     networkInfo: t.networkInfo && {
+      family: t.networkInfo.family,
       feeItems: toFeeItemsRaw(t.networkInfo.feeItems)
     }
   };

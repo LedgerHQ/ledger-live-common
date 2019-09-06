@@ -16,6 +16,7 @@ const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     fee: tr.fee ? BigNumber(tr.fee) : null,
     feeCustomUnit: tr.feeCustomUnit, // FIXME remove this field. this is not good.. we're dereferencing here. we should instead store an index (to lookup in currency.units on UI)
     networkInfo: networkInfo && {
+      family: networkInfo.family,
       serverFee: BigNumber(networkInfo.serverFee),
       baseReserve: BigNumber(networkInfo.baseReserve)
     }
@@ -32,6 +33,7 @@ const toTransactionRaw = (t: Transaction): TransactionRaw => {
     fee: t.fee ? t.fee.toString() : null,
     feeCustomUnit: t.feeCustomUnit, // FIXME remove this field. this is not good.. we're dereferencing here. we should instead store an index (to lookup in currency.units on UI)
     networkInfo: networkInfo && {
+      family: networkInfo.family,
       serverFee: networkInfo.serverFee.toString(),
       baseReserve: networkInfo.baseReserve.toString()
     }

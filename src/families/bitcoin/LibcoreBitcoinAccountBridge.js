@@ -1,11 +1,13 @@
 // @flow
 import { BigNumber } from "bignumber.js";
+import invariant from "invariant";
 import { FeeNotLoaded, FeeRequired } from "@ledgerhq/errors";
 import { validateRecipient } from "../../bridge/shared";
 import type { AccountBridge } from "../../types/bridge";
-import { getFeeItems } from "../../api/FeesBitcoin";
+import type { Account } from "../../types/account";
 import type { Transaction } from "./types";
 import { syncAccount } from "../../libcore/syncAccount";
+import { getAccountNetworkInfo } from "../../libcore/getAccountNetworkInfo";
 import { getFeesForTransaction } from "../../libcore/getFeesForTransaction";
 import libcoreSignAndBroadcast from "../../libcore/signAndBroadcast";
 import { makeLRUCache } from "../../cache";
@@ -95,12 +97,15 @@ const getTransactionStatus = async (a, t) => {
   });
 };
 
-const prepareTransaction = async (a, t) => {
+const prepareTransaction = async (
+  a: Account,
+  t: Transaction
+): Promise<Transaction> => {
   if (t.networkInfo) return t;
-  const feeItems = await getFeeItems(a.currency);
-  const networkInfo = { feeItems };
+  const networkInfo = await getAccountNetworkInfo(a);
+  invariant(networkInfo.family === "bitcoin", "bitcoin networkInfo expected");
   const feePerByte = t.feePerByte || networkInfo.feeItems.defaultFeePerByte;
-  if (feePerByte === t.feePerBye || feePerByte.eq(t.feePerByte || 0)) {
+  if (feePerByte === t.feePerByte || feePerByte.eq(t.feePerByte || 0)) {
     return t;
   }
   return {

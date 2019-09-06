@@ -182,6 +182,7 @@ export function makeMockAccountBridge(
           return {
             ...t,
             networkInfo: {
+              family: "ripple",
               serverFee: BigNumber(10),
               baseReserve: BigNumber(20)
             }
@@ -191,14 +192,20 @@ export function makeMockAccountBridge(
           const { gas_price } = await getEstimatedFees(a.currency);
           return {
             ...t,
-            networkInfo: { gas_price }
+            networkInfo: {
+              family: "ethereum",
+              gas_price
+            }
           };
 
         case "bitcoin":
           const feeItems = await getFeeItems(a.currency);
           return {
             ...t,
-            networkInfo: { feeItems }
+            networkInfo: {
+              family: "bitcoin",
+              feeItems
+            }
           };
       }
     }

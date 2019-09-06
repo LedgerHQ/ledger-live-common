@@ -28,7 +28,7 @@ import { dataToFrames } from "qrloop/exporter";
 import { getEnv } from "@ledgerhq/live-common/lib/env";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import { isValidRecipient } from "@ledgerhq/live-common/lib/libcore/isValidRecipient";
-import { getFees } from "@ledgerhq/live-common/lib/libcore/getFees";
+import { getAccountNetworkInfo } from "@ledgerhq/live-common/lib/libcore/getAccountNetworkInfo";
 import { withLibcore } from "@ledgerhq/live-common/lib/libcore/access";
 import { formatCurrencyUnit } from "@ledgerhq/live-common/lib/currencies";
 import { encode } from "@ledgerhq/live-common/lib/cross";
@@ -66,30 +66,8 @@ import { apdusFromFile } from "./stream";
 import { toAccountRaw } from "@ledgerhq/live-common/lib/account/serialization";
 import { Buffer } from "buffer";
 
-const getFeesFormatters = {
-  raw: e => e,
-  json: e => ({
-    type: e.type,
-    value: Array.isArray(e.value)
-      ? e.value.map(bn => bn.toNumber())
-      : e.value.toNumber()
-  }),
-  summary: e => {
-    switch (e.type) {
-      case "feePerBytes":
-        return "feePerBytes: " + e.value.map(bn => bn.toString());
-      case "gasPrice":
-        return (
-          "gasPrice: " + formatCurrencyUnit(e.unit, e.value, { showCode: true })
-        );
-      case "fee":
-        return (
-          "fee: " + formatCurrencyUnit(e.unit, e.value, { showCode: true })
-        );
-      default:
-        return e;
-    }
-  }
+const getAccountNetworkInfoFormatters = {
+  json: e => JSON.stringify(e)
 };
 
 const asQR = str =>
@@ -544,32 +522,34 @@ const all = {
   },
 
   signMessage: {
-    description: "Sign a message with the device on specific derivations (advanced)",
+    description:
+      "Sign a message with the device on specific derivations (advanced)",
     args: [
       currencyOpt,
       { name: "path", type: String, desc: "HDD derivation path" },
       { name: "derivationMode", type: String, desc: "derivationMode to use" },
-      { name: "message", type: String, desc: "the message to sign" },
+      { name: "message", type: String, desc: "the message to sign" }
     ],
-    job: arg => inferCurrency(arg).pipe(
-      mergeMap(currency => {
-        if (!currency) {
-          throw new Error("no currency provided");
-        }
-        if (!arg.path) {
-          throw new Error("--path is required");
-        }
-        asDerivationMode(arg.derivationMode);
-        return withDevice(arg.device || "")(t =>
-          from(
-            signMessage(t, {
-              ...arg,
-              currency
-            })
-          )
-        );
-      })
-    )
+    job: (arg: *) =>
+      inferCurrency(arg).pipe(
+        mergeMap(currency => {
+          if (!currency) {
+            throw new Error("no currency provided");
+          }
+          if (!arg.path) {
+            throw new Error("--path is required");
+          }
+          asDerivationMode(arg.derivationMode);
+          return withDevice(arg.device || "")(t =>
+            from(
+              signMessage(t, {
+                ...arg,
+                currency
+              })
+            )
+          );
+        })
+      )
   },
 
   getAddress: {
@@ -673,25 +653,28 @@ const all = {
       )
   },
 
-  getFees: {
-    description: "Get the currency fees for accounts",
+  getAccountNetworkInfo: {
+    description: "Get the currency network info for accounts",
     args: [
       ...scanCommonOpts,
       {
         name: "format",
         alias: "f",
         type: String,
-        typeDesc: Object.keys(getFeesFormatters).join(" | "),
+        typeDesc: Object.keys(getAccountNetworkInfoFormatters).join(" | "),
         desc: "how to display the data"
       }
     ],
     job: (opts: ScanCommonOpts & { format: string }) =>
       scan(opts).pipe(
-        mergeMap(account => from(getFees(account))),
+        mergeMap(account => from(getAccountNetworkInfo(account))),
         map(e => {
-          const f = getFeesFormatters[opts.format || "summary"];
-          if (!f)
-            throw new Error("getFees: no such formatter '" + opts.format + "'");
+          const f = getAccountNetworkInfoFormatters[opts.format || "json"];
+          if (!f) {
+            throw new Error(
+              "getAccountNetworkInfo: no such formatter '" + opts.format + "'"
+            );
+          }
           return f(e);
         })
       )

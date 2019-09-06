@@ -121,13 +121,23 @@ export type CoreOperationSpecifics = {
 
 export type CoreCurrencySpecifics = {};
 
+export type NetworkInfo = {|
+  family: "ethereum",
+  gasPrice: BigNumber
+|};
+
+export type NetworkInfoRaw = {|
+  family: "ethereum",
+  gasPrice: string
+|};
+
 export type Transaction = {|
   ...TransactionCommon,
   family: "ethereum",
   gasPrice: ?BigNumber,
   gasLimit: BigNumber,
   feeCustomUnit: ?Unit,
-  networkInfo: ?{ gas_price: number }
+  networkInfo: ?NetworkInfo
 |};
 
 export type TransactionRaw = {|
@@ -136,7 +146,7 @@ export type TransactionRaw = {|
   gasPrice: ?string,
   gasLimit: string,
   feeCustomUnit: ?Unit,
-  networkInfo: ?{ gas_price: number }
+  networkInfo: ?NetworkInfoRaw
 |};
 
 export const reflect = (declare: (string, Spec) => void) => {

@@ -1,6 +1,6 @@
 // @flow
-import type { BigNumber } from "bignumber.js";
-import type { Account, Unit } from "../../types";
+import type { Account } from "../../types";
+import type { NetworkInfo } from "./types";
 import type { CoreAccount } from "../../libcore/types";
 import { libcoreBigIntToBigNumber } from "../../libcore/buildBigNumber";
 
@@ -9,20 +9,15 @@ type Input = {
   account: Account
 };
 
-type Output = Promise<{
-  type: "gasPrice",
-  value: BigNumber,
-  unit: Unit
-}>;
+type Output = Promise<NetworkInfo>;
 
-async function ethereum({ coreAccount, account }: Input): Output {
+async function ethereum({ coreAccount }: Input): Output {
   const ethereumLikeAccount = await coreAccount.asEthereumLikeAccount();
   const bigInt = await ethereumLikeAccount.getGasPrice();
-  const bigNum = await libcoreBigIntToBigNumber(bigInt);
+  const gasPrice = await libcoreBigIntToBigNumber(bigInt);
   return {
-    type: "gasPrice",
-    value: bigNum,
-    unit: account.currency.units[1]
+    family: "ethereum",
+    gasPrice
   };
 }
 

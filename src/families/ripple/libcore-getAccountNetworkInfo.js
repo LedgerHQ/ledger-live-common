@@ -1,6 +1,6 @@
 // @flow
-import type { BigNumber } from "bignumber.js";
-import type { Account, Unit } from "../../types";
+import type { Account } from "../../types";
+import type { NetworkInfo } from "./types";
 import type { CoreAccount } from "../../libcore/types";
 import { libcoreAmountToBigNumber } from "../../libcore/buildBigNumber";
 
@@ -9,14 +9,9 @@ type Input = {
   account: Account
 };
 
-type Output = Promise<{
-  type: "fee",
-  serverFee: BigNumber,
-  baseReserve: BigNumber,
-  unit: Unit
-}>;
+type Output = Promise<NetworkInfo>;
 
-async function ripple({ coreAccount, account }: Input): Output {
+async function ripple({ coreAccount }: Input): Output {
   const rippleLikeAccount = await coreAccount.asRippleLikeAccount();
   const feesRaw = await rippleLikeAccount.getFees();
   const baseReserveRaw = await rippleLikeAccount.getBaseReserve();
@@ -24,10 +19,9 @@ async function ripple({ coreAccount, account }: Input): Output {
   const serverFee = await libcoreAmountToBigNumber(feesRaw);
 
   return {
-    type: "fee",
+    family: "ripple",
     serverFee,
-    baseReserve,
-    unit: account.currency.units[0]
+    baseReserve
   };
 }
 

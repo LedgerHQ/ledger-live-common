@@ -526,10 +526,15 @@ const signAndBroadcast = (a, t, deviceId) =>
     };
   });
 
-const prepareTransaction = async (a, t) => {
+const getNetworkInfo = async c => {
+  const { gas_price } = await getEstimatedFees(c);
+  return { family: "ethereum", gasPrice: BigNumber(gas_price) };
+};
+
+const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
   const api = apiForCurrency(a.currency);
 
-  const networkInfo = t.networkInfo || (await getEstimatedFees(a.currency));
+  const networkInfo = t.networkInfo || (await getNetworkInfo(a.currency));
 
   const gasLimit = t.recipient
     ? BigNumber(await api.estimateGasLimitForERC20(t.recipient))
@@ -537,7 +542,7 @@ const prepareTransaction = async (a, t) => {
 
   const gasPrice =
     t.gasPrice ||
-    (networkInfo.gas_price ? BigNumber(networkInfo.gas_price) : null);
+    (networkInfo.gasPrice ? BigNumber(networkInfo.gasPrice) : null);
 
   if (
     gasLimit.eq(t.gasLimit) &&

@@ -7,7 +7,7 @@ import type { Transaction } from "./types";
 import { syncAccount } from "../../libcore/syncAccount";
 import libcoreSignAndBroadcast from "../../libcore/signAndBroadcast";
 import { inferDeprecatedMethods } from "../../bridge/deprecationUtils";
-import { getFees } from "../../libcore/getFees";
+import { getAccountNetworkInfo } from "../../libcore/getAccountNetworkInfo";
 import {
   FeeNotLoaded,
   InvalidAddressBecauseDestinationIsAlsoSource,
@@ -83,13 +83,9 @@ const getTransactionStatus = async (a, t) => {
 const prepareTransaction = async (a, t) => {
   let networkInfo = t.networkInfo;
   if (!networkInfo) {
-    const r = await getFees(a);
-    invariant(r.type === "fee", "ripple fee expected"); // FIXME @gre will refactor further soon
-    const { serverFee, baseReserve } = r;
-    networkInfo = {
-      serverFee,
-      baseReserve
-    };
+    const r = await getAccountNetworkInfo(a);
+    invariant(r.family === "ripple", "ripple getAccountNetworkInfo expected");
+    networkInfo = r;
   }
 
   const fee = t.fee || networkInfo.serverFee;

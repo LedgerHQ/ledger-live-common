@@ -94,7 +94,6 @@ export type CoreCurrencySpecifics = {
 export type FeeItem = {
   key: string,
   speed: string,
-  blockCount: number,
   feePerByte: BigNumber
 };
 
@@ -106,7 +105,6 @@ export type FeeItems = {
 export type FeeItemRaw = {
   key: string,
   speed: string,
-  blockCount: number,
   feePerByte: string
 };
 
@@ -115,18 +113,28 @@ export type FeeItemsRaw = {
   defaultFeePerByte: string
 };
 
+export type NetworkInfo = {|
+  family: "bitcoin",
+  feeItems: FeeItems
+|};
+
+export type NetworkInfoRaw = {|
+  family: "bitcoin",
+  feeItems: FeeItemsRaw
+|};
+
 export type Transaction = {|
   ...TransactionCommon,
   family: "bitcoin",
   feePerByte: ?BigNumber,
-  networkInfo: ?{ feeItems: FeeItems }
+  networkInfo: ?NetworkInfo
 |};
 
 export type TransactionRaw = {|
   ...TransactionCommonRaw,
   family: "bitcoin",
   feePerByte: ?string,
-  networkInfo: ?{ feeItems: FeeItemsRaw }
+  networkInfo: ?NetworkInfoRaw
 |};
 
 export const reflect = (declare: (string, Spec) => void) => {
