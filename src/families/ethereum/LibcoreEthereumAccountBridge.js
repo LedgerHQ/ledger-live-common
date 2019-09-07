@@ -140,6 +140,7 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
       : t.recipient
       ? BigNumber(await api.estimateGasLimitForERC20(t.recipient))
       : defaultGasLimit;
+
   const gasPrice =
     t.gasPrice ||
     (networkInfo.gasPrice ? BigNumber(networkInfo.gasPrice) : null);

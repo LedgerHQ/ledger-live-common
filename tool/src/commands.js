@@ -30,7 +30,7 @@ import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import { isValidRecipient } from "@ledgerhq/live-common/lib/libcore/isValidRecipient";
 import { getAccountNetworkInfo } from "@ledgerhq/live-common/lib/libcore/getAccountNetworkInfo";
 import { withLibcore } from "@ledgerhq/live-common/lib/libcore/access";
-import { formatCurrencyUnit } from "@ledgerhq/live-common/lib/currencies";
+import { toTransactionStatusRaw } from "@ledgerhq/live-common/lib/transaction";
 import { encode } from "@ledgerhq/live-common/lib/cross";
 import manager from "@ledgerhq/live-common/lib/manager";
 import { asDerivationMode } from "@ledgerhq/live-common/lib/derivation";
@@ -68,6 +68,10 @@ import { Buffer } from "buffer";
 
 const getAccountNetworkInfoFormatters = {
   json: e => JSON.stringify(e)
+};
+
+const getTransactionStatusFormatters = {
+  json: e => JSON.stringify(toTransactionStatusRaw(e))
 };
 
 const asQR = str =>
@@ -598,10 +602,21 @@ const all = {
       )
   },
 
-  feesForTransaction: {
-    description: "Calculate how much fees a given transaction is going to cost",
-    args: [...scanCommonOpts, ...inferTransactionsOpts],
-    job: (opts: ScanCommonOpts & InferTransactionsOpts) =>
+  getTransactionStatus: {
+    description:
+      "Prepare a transaction and returns 'TransactionStatus' meta information",
+    args: [
+      ...scanCommonOpts,
+      ...inferTransactionsOpts,
+      {
+        name: "format",
+        alias: "f",
+        type: String,
+        typeDesc: Object.keys(getTransactionStatusFormatters).join(" | "),
+        desc: "how to display the data"
+      }
+    ],
+    job: (opts: ScanCommonOpts & InferTransactionsOpts & { format: string }) =>
       scan(opts).pipe(
         concatMap(account =>
           from(inferTransactions(account, opts)).pipe(
@@ -612,22 +627,27 @@ const all = {
                     acc,
                     from(
                       defer(() =>
-                        // TODO command shall get generalized as fees is just a specific info
-                        getAccountBridge(account)
-                          .getTransactionStatus(account, t)
-                          .then(r => r.estimatedFees)
+                        getAccountBridge(account).getTransactionStatus(
+                          account,
+                          t
+                        )
                       )
                     )
                   ),
                 empty()
               )
             ),
-            map(n =>
-              formatCurrencyUnit(account.unit, n, {
-                showCode: true,
-                disableRounding: true
-              })
-            )
+            map(e => {
+              const f = getTransactionStatusFormatters[opts.format || "json"];
+              if (!f) {
+                throw new Error(
+                  "getTransactionStatusFormatters: no such formatter '" +
+                    opts.format +
+                    "'"
+                );
+              }
+              return f(e);
+            })
           )
         )
       )
