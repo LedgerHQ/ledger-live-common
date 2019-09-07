@@ -2369,6 +2369,44 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
       }
     ]
   },
+  galilel: {
+    type: "CryptoCurrency",
+    id: "galilel",
+    coinType: 402,
+    name: "Galilel",
+    managerAppName: "Galilel",
+    ticker: "GALI",
+    scheme: "galilel",
+    color: "#795548",
+    family: "bitcoin",
+    blockAvgTime: 60,
+    bitcoinLikeInfo: {
+      P2PKH: 68,
+      P2SH: 16
+    },
+    units: [
+      {
+        name: "galiel",
+        code: "GALI",
+        magnitude: 8
+      },
+      {
+        name: "satoshi",
+        code: "sat",
+        magnitude: 0
+      }
+    ],
+    explorerViews: [
+      {
+        tx: "https://explorer.galilel.org/#/tx/$hash",
+        address: "https://explorer.galilel.org/#/address/$address"
+      },
+      {
+        tx: "https://chainz.cryptoid.info/gali/tx.dws?$hash.htm",
+        address: "https://chainz.cryptoid.info/gali/address.dws?$address.htm"
+      }
+    ]
+  },
 
   // Testnets
   bitcoin_testnet: {
