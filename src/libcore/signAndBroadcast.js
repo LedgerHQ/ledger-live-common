@@ -10,9 +10,8 @@ import type {
   Transaction,
   SignAndBroadcastEvent
 } from "../types";
-import { getWalletName } from "../account";
 import { withDevice } from "../hw/deviceAccess";
-import { getOrCreateWallet } from "./getOrCreateWallet";
+import { getCoreAccount } from "./getCoreAccount";
 import { remapLibcoreErrors } from "./errors";
 import { withLibcoreF } from "./access";
 import signTransaction from "./signTransaction";
@@ -47,23 +46,11 @@ const doSignAndBroadcast = withLibcoreF(
     onOperationBroadcasted: (optimisticOp: Operation) => void
   }): Promise<void> => {
     if (isCancelled()) return;
-    const { currency, derivationMode, seedIdentifier, index } = account;
+    const { currency, derivationMode } = account;
 
-    const walletName = getWalletName({
-      currency,
-      seedIdentifier,
-      derivationMode
-    });
+    const { coreAccount, coreWallet } = await getCoreAccount(core, account);
+    if (isCancelled()) return;
 
-    const coreWallet = await getOrCreateWallet({
-      core,
-      walletName,
-      currency,
-      derivationMode
-    });
-    if (isCancelled()) return;
-    const coreAccount = await coreWallet.getAccount(index);
-    if (isCancelled()) return;
     const coreCurrency = await coreWallet.getCurrency();
     if (isCancelled()) return;
 

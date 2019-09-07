@@ -8,11 +8,13 @@ import {
 import type { TokenAccount, Account } from "../../types";
 import type { AccountBridge } from "../../types/bridge";
 import { getAccountNetworkInfo } from "../../libcore/getAccountNetworkInfo";
+import { withLibcore } from "../../libcore/access";
+import { getCoreAccount } from "../../libcore/getCoreAccount";
 import { syncAccount } from "../../libcore/syncAccount";
 import { getFeesForTransaction } from "../../libcore/getFeesForTransaction";
+import { libcoreBigIntToBigNumber } from "../../libcore/buildBigNumber";
 import libcoreSignAndBroadcast from "../../libcore/signAndBroadcast";
 import { makeLRUCache } from "../../cache";
-import { apiForCurrency } from "../../api/Ethereum";
 import { inferDeprecatedMethods } from "../../bridge/deprecationUtils";
 import { validateRecipient } from "../../bridge/shared";
 import type { Transaction } from "./types";
@@ -121,8 +123,19 @@ const getTransactionStatus = async (a, t) => {
   });
 };
 
+const estimateGasLimitForERC20 = makeLRUCache(
+  (account: Account, addr: string) =>
+    withLibcore(async core => {
+      const { coreAccount } = await getCoreAccount(core, account);
+      const ethereumLikeAccount = await coreAccount.asEthereumLikeAccount();
+      const r = await ethereumLikeAccount.getEstimatedGasLimit(addr);
+      const bn = await libcoreBigIntToBigNumber(r);
+      return bn;
+    }),
+  (a, addr) => a.id + "|" + addr
+);
+
 const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
-  const api = apiForCurrency(a.currency);
   const tAccount = getTransactionAccount(a, t);
   let networkInfo = t.networkInfo;
   if (!networkInfo) {
@@ -132,13 +145,10 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
   }
 
   const gasLimit =
-    // TODO uses new getFees function!
     tAccount.type === "TokenAccount"
-      ? BigNumber(
-          await api.estimateGasLimitForERC20(tAccount.token.contractAddress)
-        )
+      ? await estimateGasLimitForERC20(a, tAccount.token.contractAddress)
       : t.recipient
-      ? BigNumber(await api.estimateGasLimitForERC20(t.recipient))
+      ? await estimateGasLimitForERC20(a, t.recipient)
       : defaultGasLimit;
 
   const gasPrice =
