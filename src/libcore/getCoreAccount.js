@@ -3,6 +3,7 @@ import type { Account } from "../types";
 import type { Core, CoreWallet, CoreAccount } from "./types";
 import { getWalletName } from "../account";
 import { getOrCreateWallet } from "./getOrCreateWallet";
+import { getOrCreateAccount } from "./getOrCreateAccount";
 
 export const getCoreAccount = async (
   core: Core,
@@ -12,7 +13,7 @@ export const getCoreAccount = async (
   coreAccount: CoreAccount,
   walletName: string
 }> => {
-  const { currency, derivationMode, seedIdentifier, index } = account;
+  const { currency, derivationMode, seedIdentifier } = account;
 
   const walletName = getWalletName({
     currency,
@@ -27,7 +28,11 @@ export const getCoreAccount = async (
     derivationMode
   });
 
-  const coreAccount = await coreWallet.getAccount(index);
+  const coreAccount = await getOrCreateAccount({
+    core,
+    coreWallet,
+    account
+  });
 
   return { walletName, coreWallet, coreAccount };
 };
