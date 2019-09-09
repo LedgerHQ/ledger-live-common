@@ -7,24 +7,38 @@ import type { Node } from "./runner";
 
 const Header = () => <Text style={styles.title}>Ledger Live Common Tests</Text>;
 
-const bgColors = {
+const colors = {
   pending: "#eee",
   running: "#ccc",
   failure: "#faa",
   success: "#0f0"
 };
 
-const ViewNode = ({ node }: { node: Node }) => {
+const ViewNode = ({ node, topLevel }: { node: Node, topLevel: boolean }) => {
   return (
     <View
       style={{
         flexDirection: "column",
-        padding: 5,
-        backgroundColor: bgColors[node.status]
+        padding: 5
       }}
     >
-      <Text style={{ fontWeight: "bold" }}>{node.name}</Text>
-      <Text>{node.status}</Text>
+      <Text
+        style={{
+          fontWeight: "bold",
+          color:
+            node.status === "success"
+              ? "#0C0"
+              : node.status === "done"
+              ? "#bbb"
+              : node.status === "failure"
+              ? "#C00"
+              : node.status === "pending"
+              ? "#888"
+              : "#333"
+        }}
+      >
+        {node.name}
+      </Text>
       <Text style={{ color: "#c22" }}>
         {node.error ? String(node.error) : null}
       </Text>
@@ -32,8 +46,6 @@ const ViewNode = ({ node }: { node: Node }) => {
         <View
           style={{
             flexDirection: "column",
-            borderLeftColor: "#eee",
-            borderLeftWidth: 1,
             paddingLeft: 5
           }}
         >
@@ -60,7 +72,9 @@ const App = ({ testFiles }: *) => {
       });
   }, [testFiles, dispatch]);
 
-  const renderItem = useCallback(({ item }) => <ViewNode node={item} />);
+  const renderItem = useCallback(({ item }) => (
+    <ViewNode topLevel node={item} />
+  ));
 
   return (
     <SafeAreaView style={{ flex: 1 }}>

@@ -2,7 +2,7 @@
 
 export type Node = {
   name: string,
-  status: "pending" | "running" | "failure" | "success",
+  status: "pending" | "running" | "failure" | "success" | "done",
   error: ?Error,
   children: Node[]
 };
@@ -42,14 +42,21 @@ const updatePath = (nodes, path, updater) => {
 };
 
 export const reducer = (state: State, action): State => {
-  console.log(state, action);
   switch (action.type) {
-    case "run-enter":
+    case "run-start":
       return {
         ...state,
         tree: updatePath(state.tree, action.path, n => ({
           ...n,
           status: "running"
+        }))
+      };
+    case "run-done":
+      return {
+        ...state,
+        tree: updatePath(state.tree, action.path, n => ({
+          ...n,
+          status: "done"
         }))
       };
     case "run-success":
@@ -86,13 +93,15 @@ export const runTests = (testFiles, dispatch) => {
       try {
         const { children, beforeAll, testFunction } = nodes[i];
         for (let j = 0; j < beforeAll.length; j++) {
-          await beforeAll();
+          await beforeAll[j]();
         }
         if (testFunction) {
           await testFunction();
+          dispatch({ type: "run-success", path });
+        } else {
+          await rec(children, path);
+          dispatch({ type: "run-done", path });
         }
-        await rec(children, path);
-        dispatch({ type: "run-success", path });
       } catch (error) {
         dispatch({ type: "run-failure", path, error });
       }
