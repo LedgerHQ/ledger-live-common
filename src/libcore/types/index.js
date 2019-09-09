@@ -360,11 +360,15 @@ export const reflect = (declare: (string, Spec) => void) => {
         returns: ["Address"]
       },
       getRestoreKey: {},
+      // FIXME this part is not split in families
       asBitcoinLikeAccount: {
         returns: "BitcoinLikeAccount"
       },
       asEthereumLikeAccount: {
         returns: "EthereumLikeAccount"
+      },
+      asRippleLikeAccount: {
+        returns: "RippleLikeAccount"
       },
       synchronize: {
         returns: "EventBus"
@@ -383,6 +387,9 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
       asEthereumLikeOperation: {
         returns: "EthereumLikeOperation"
+      },
+      asRippleLikeOperation: {
+        returns: "RippleLikeOperation"
       },
       getOperationType: {},
       getAmount: { returns: "Amount" },

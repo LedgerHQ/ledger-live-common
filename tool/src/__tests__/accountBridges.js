@@ -45,21 +45,25 @@ function syncAccount(bridge, account) {
 ]
   .map(account => {
     const bridge = getAccountBridge(account, null);
-    const accountSyncedPromise = syncAccount(bridge, account);
-    return [accountSyncedPromise, bridge, account];
+    let accountSyncedPromise;
+    // lazy eval so we don't run this yet
+    const getSynced = () =>
+      accountSyncedPromise ||
+      (accountSyncedPromise = syncAccount(bridge, account));
+    return [getSynced, bridge, account];
   })
-  .forEach(([accountPromise, bridge, initialAccount]) => {
+  .forEach(([getSynced, bridge, initialAccount]) => {
     // TODO mock disabling network to test properties when this happen...
 
     describe("shared properties on: " + initialAccount.id, () => {
       describe("startSync", () => {
         test("succeed", async () => {
-          const account = await accountPromise;
+          const account = await getSynced();
           expect(fromAccountRaw(toAccountRaw(account))).toBeDefined();
         });
 
         test("existing operations object refs are preserved", async () => {
-          const account = await accountPromise;
+          const account = await getSynced();
           const count = Math.floor(account.operations.length / 2);
           const operations = account.operations.slice(count);
           const copy = { ...account, operations, blockHeight: 0 };
@@ -78,7 +82,7 @@ function syncAccount(bridge, account) {
         });
 
         test("pendingOperations are cleaned up", async () => {
-          const account = await accountPromise;
+          const account = await getSynced();
           const operations = account.operations.slice(1);
           const pendingOperations = [account.operations[0]];
           const copy = {
@@ -115,7 +119,7 @@ function syncAccount(bridge, account) {
         });
 
         test("transaction with amount and recipient correctly serialize", async () => {
-          const account = await accountPromise;
+          const account = await getSynced();
           const t = {
             ...bridge.createTransaction(account),
             amount: BigNumber(1000),
@@ -134,12 +138,12 @@ function syncAccount(bridge, account) {
         }
 
         test("ref stability on empty transaction", async () => {
-          const account = await accountPromise;
+          const account = await getSynced();
           await expectStability(account, bridge.createTransaction(account));
         });
 
         test("ref stability on self transaction", async () => {
-          const account = await accountPromise;
+          const account = await getSynced();
           await expectStability(account, {
             ...bridge.createTransaction(account),
             amount: BigNumber(1000),
@@ -148,7 +152,7 @@ function syncAccount(bridge, account) {
         });
 
         test("can be run in parallel and all yield same results", async () => {
-          const account = await accountPromise;
+          const account = await getSynced();
           const t = {
             ...bridge.createTransaction(account),
             amount: BigNumber(1000),
@@ -168,7 +172,7 @@ function syncAccount(bridge, account) {
 
       describe("getTransactionStatus", () => {
         test("can be called on an empty transaction", async () => {
-          const account = await accountPromise;
+          const account = await getSynced();
           const t = bridge.createTransaction(account);
           const s = await bridge.getTransactionStatus(account, t);
           expect(s).toBeDefined();
@@ -190,7 +194,7 @@ function syncAccount(bridge, account) {
         });
 
         test("can be called on an empty prepared transaction", async () => {
-          const account = await accountPromise;
+          const account = await getSynced();
           const t = await bridge.prepareTransaction(
             account,
             bridge.createTransaction(account)
@@ -201,7 +205,7 @@ function syncAccount(bridge, account) {
         });
 
         test("can be called on a prepared self transaction", async () => {
-          const account = await accountPromise;
+          const account = await getSynced();
           const t = await bridge.prepareTransaction(account, {
             ...bridge.createTransaction(account),
             amount: BigNumber(1000),

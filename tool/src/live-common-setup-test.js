@@ -1,10 +1,13 @@
 // @flow
 
-export * from "./live-common-setup-without-libcore";
+export * from "./live-common-setup-base";
 import axios from "axios";
 import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
 
+let setupCalled = false;
 export default (testId: string) => {
+  if (setupCalled) return;
+  setupCalled = true;
   implementLibcore({
     lib: () => require("@ledgerhq/ledger-core"), // eslint-disable-line global-require
     dbPath: "./libcoredb/" + testId
