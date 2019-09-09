@@ -26,17 +26,26 @@ const allStatuses = node => {
 
 const groupStatus = node => {
   const all = allStatuses(node);
-  if (all.includes("pending")) return "pending";
-  if (all.includes("failure")) return "failure";
-  return all[0];
+  const pending = all.filter(a => a === "pending").length;
+  const failure = all.filter(a => a === "failure").length;
+  const success = all.filter(a => a === "success").length;
+  const status = pending > 0 ? "pending" : failure > 0 ? "failure" : all[0];
+  return {
+    status,
+    total: all.length,
+    pending,
+    failure,
+    success
+  };
 };
 
-const generalStatus = nodes => groupStatus({ children: nodes });
+const generalStatus = nodes => groupStatus({ children: nodes }).status;
 
 const ViewNode = ({ node, topLevel }: { node: Node, topLevel: boolean }) => {
   const [collapsed, setCollapsed] = useState(false);
 
-  const status = groupStatus(node);
+  const stats = groupStatus(node);
+  const status = stats.status;
 
   useEffect(() => {
     if (!collapsed && status === "success") {
@@ -48,22 +57,54 @@ const ViewNode = ({ node, topLevel }: { node: Node, topLevel: boolean }) => {
     <View
       style={{
         flexDirection: "column",
-        padding: 5
+        marginTop: 1,
+        padding: topLevel ? 10 : 5
       }}
     >
       <TouchableOpacity
+        style={{
+          paddingBottom: 4,
+          borderBottomWidth: topLevel ? 2 : 0,
+          borderBottomColor: colors[status]
+        }}
         onPress={() => {
           setCollapsed(!collapsed);
         }}
       >
-        <Text
-          style={{
-            fontWeight: "bold",
-            color: colors[status]
-          }}
-        >
-          {node.name}
-        </Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text
+            style={{
+              fontWeight: "bold",
+              color: colors[status]
+            }}
+          >
+            {node.name}
+          </Text>
+          {!topLevel ? null : (
+            <View style={{ flexDirection: "row" }}>
+              {!stats.failure ? null : (
+                <Text
+                  style={{
+                    fontWeight: "bold",
+                    color: colors.failure,
+                    marginRight: 5
+                  }}
+                >
+                  {stats.failure} errors
+                </Text>
+              )}
+
+              <Text
+                style={{
+                  fontWeight: "bold",
+                  color: colors[status]
+                }}
+              >
+                {stats.success} / {stats.total}
+              </Text>
+            </View>
+          )}
+        </View>
       </TouchableOpacity>
       <Text style={{ color: "#c22" }}>
         {node.error ? String(node.error) : null}
@@ -105,25 +146,29 @@ const App = ({ testFiles }: *) => {
   const status = generalStatus(state.tree) || "pending";
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <FlatList
-        style={{ flex: 1 }}
-        data={state.tree}
-        ListHeaderComponent={
-          <View
-            style={{
-              padding: 20,
-              alignItems: "center",
-              backgroundColor: colors[status]
-            }}
-          >
-            <Text>{status}</Text>
-          </View>
-        }
-        renderItem={renderItem}
-        keyExtractor={t => t.name}
-      />
-    </SafeAreaView>
+    <View style={{ flex: 1 }}>
+      <View
+        style={{
+          padding: 20,
+          alignItems: "center",
+          backgroundColor: colors[status]
+        }}
+      >
+        <SafeAreaView>
+          <Text style={{ fontWeight: "bold", color: "#fff", fontSize: 18 }}>
+            {status} OVERALL
+          </Text>
+        </SafeAreaView>
+      </View>
+      <SafeAreaView style={{ flex: 1 }}>
+        <FlatList
+          style={{ flex: 1 }}
+          data={state.tree}
+          renderItem={renderItem}
+          keyExtractor={t => t.name}
+        />
+      </SafeAreaView>
+    </View>
   );
 };
 
