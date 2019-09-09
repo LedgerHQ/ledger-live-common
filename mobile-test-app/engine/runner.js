@@ -1,9 +1,5 @@
 // @flow
 
-import React from "react";
-
-const Header = () => <Text style={styles.title}>Ledger Live Common Tests</Text>;
-
 export type Node = {
   name: string,
   status: "pending" | "running" | "failure" | "success",
@@ -88,30 +84,13 @@ export const runTests = (testFiles, dispatch) => {
       const path = rootPath.concat([i]);
       dispatch({ type: "run-start", path });
       try {
-        const { tests, children, beforeAll, testFunction } = nodes[i];
+        const { children, beforeAll, testFunction } = nodes[i];
         for (let j = 0; j < beforeAll.length; j++) {
           await beforeAll();
         }
         if (testFunction) {
           await testFunction();
         }
-        /*
-        for (let j = 0; j < tests.length; j++) {
-          const testPath = path.concat([j]);
-          dispatch({ type: "run-start", path: testPath });
-          try {
-            const { f } = tests[j];
-            for (let j = 0; j < beforeEach.length; j++) {
-              await beforeEach();
-            }
-            await f();
-            dispatch({ type: "run-success", path: testPath });
-          } catch (error) {
-            dispatch({ type: "run-failure", path: testPath, error });
-          }
-        }
-        */
-
         await rec(children, path);
         dispatch({ type: "run-success", path });
       } catch (error) {
