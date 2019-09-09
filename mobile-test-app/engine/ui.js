@@ -1,20 +1,49 @@
 // @flow
 
-import React, { useEffect, useReducer, useCallback } from "react";
-import { StyleSheet, Text, View, FlatList, SafeAreaView } from "react-native";
+import React, { useEffect, useState, useReducer, useCallback } from "react";
+import {
+  Text,
+  View,
+  FlatList,
+  SafeAreaView,
+  TouchableOpacity
+} from "react-native";
 import { initialState, reducer, runTests } from "./runner";
 import type { Node } from "./runner";
 
-const Header = () => <Text style={styles.title}>Ledger Live Common Tests</Text>;
-
 const colors = {
-  pending: "#eee",
-  running: "#ccc",
-  failure: "#faa",
-  success: "#0f0"
+  success: "#0C0",
+  done: "#bbb",
+  failure: "#C00",
+  pending: "#888",
+  running: "#333"
 };
 
+const allStatuses = node => {
+  if (node.children.length === 0) return [node.status];
+  return node.children.map(allStatuses).flat();
+};
+
+const groupStatus = node => {
+  const all = allStatuses(node);
+  if (all.includes("pending")) return "pending";
+  if (all.includes("failure")) return "failure";
+  return all[0];
+};
+
+const generalStatus = nodes => groupStatus({ children: nodes });
+
 const ViewNode = ({ node, topLevel }: { node: Node, topLevel: boolean }) => {
+  const [collapsed, setCollapsed] = useState(false);
+
+  const status = groupStatus(node);
+
+  useEffect(() => {
+    if (!collapsed && status === "success") {
+      setCollapsed(true);
+    }
+  }, [status]);
+
   return (
     <View
       style={{
@@ -22,23 +51,20 @@ const ViewNode = ({ node, topLevel }: { node: Node, topLevel: boolean }) => {
         padding: 5
       }}
     >
-      <Text
-        style={{
-          fontWeight: "bold",
-          color:
-            node.status === "success"
-              ? "#0C0"
-              : node.status === "done"
-              ? "#bbb"
-              : node.status === "failure"
-              ? "#C00"
-              : node.status === "pending"
-              ? "#888"
-              : "#333"
+      <TouchableOpacity
+        onPress={() => {
+          setCollapsed(!collapsed);
         }}
       >
-        {node.name}
-      </Text>
+        <Text
+          style={{
+            fontWeight: "bold",
+            color: colors[status]
+          }}
+        >
+          {node.name}
+        </Text>
+      </TouchableOpacity>
       <Text style={{ color: "#c22" }}>
         {node.error ? String(node.error) : null}
       </Text>
@@ -46,7 +72,8 @@ const ViewNode = ({ node, topLevel }: { node: Node, topLevel: boolean }) => {
         <View
           style={{
             flexDirection: "column",
-            paddingLeft: 5
+            paddingLeft: 5,
+            display: collapsed ? "none" : "flex"
           }}
         >
           {node.children.map((node, i) => (
@@ -60,7 +87,6 @@ const ViewNode = ({ node, topLevel }: { node: Node, topLevel: boolean }) => {
 
 const App = ({ testFiles }: *) => {
   const [state, dispatch] = useReducer(reducer, initialState);
-
   useEffect(() => {
     dispatch({ type: "begin", testFiles });
     runTests(testFiles, dispatch)
@@ -76,12 +102,24 @@ const App = ({ testFiles }: *) => {
     <ViewNode topLevel node={item} />
   ));
 
+  const status = generalStatus(state.tree) || "pending";
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <FlatList
-        style={styles.container}
+        style={{ flex: 1 }}
         data={state.tree}
-        ListHeaderComponent={Header}
+        ListHeaderComponent={
+          <View
+            style={{
+              padding: 20,
+              alignItems: "center",
+              backgroundColor: colors[status]
+            }}
+          >
+            <Text>{status}</Text>
+          </View>
+        }
         renderItem={renderItem}
         keyExtractor={t => t.name}
       />
@@ -90,15 +128,3 @@ const App = ({ testFiles }: *) => {
 };
 
 export default App;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff"
-  },
-  title: {
-    fontSize: 20,
-    textAlign: "center",
-    margin: 10
-  }
-});
