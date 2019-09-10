@@ -20,7 +20,9 @@ const colors = {
 };
 
 const allStatuses = node => {
+  // $FlowFixMe
   if (node.children.length === 0) return [node.status];
+  // $FlowFixMe
   return node.children.map(allStatuses).flat();
 };
 
@@ -41,7 +43,7 @@ const groupStatus = node => {
 
 const generalStatus = nodes => groupStatus({ children: nodes }).status;
 
-const ViewNode = ({ node, topLevel }: { node: Node, topLevel: boolean }) => {
+const ViewNode = ({ node, topLevel }: { node: Node, topLevel?: boolean }) => {
   const [collapsed, setCollapsed] = useState(false);
 
   const stats = groupStatus(node);

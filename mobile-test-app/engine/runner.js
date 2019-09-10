@@ -41,7 +41,7 @@ const updatePath = (nodes, path, updater) => {
   return newNodes;
 };
 
-export const reducer = (state: State, action): State => {
+export const reducer = (state: State, action: *): State => {
   switch (action.type) {
     case "run-start":
       return {
@@ -76,16 +76,16 @@ export const reducer = (state: State, action): State => {
           error: action.error
         }))
       };
-      return state;
     case "begin":
       return { tree: makeTree(action.testFiles), running: true };
     case "finish":
       return { ...state, running: false };
+    default:
+      return state;
   }
-  return state;
 };
 
-export const runTests = (testFiles, dispatch) => {
+export const runTests = (testFiles: *, dispatch: *) => {
   async function rec(nodes, rootPath) {
     for (let i = 0; i < nodes.length; i++) {
       const path = rootPath.concat([i]);
