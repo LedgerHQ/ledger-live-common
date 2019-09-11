@@ -270,4 +270,17 @@ export const reflect = (declare: (string, Spec) => void) => {
       }
     }
   });
+
+  return {
+    OperationMethods: {
+      asEthereumLikeOperation: {
+        returns: "EthereumLikeOperation"
+      }
+    },
+    AccountMethods: {
+      asEthereumLikeAccount: {
+        returns: "EthereumLikeAccount"
+      }
+    }
+  };
 };

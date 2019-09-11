@@ -283,6 +283,14 @@ export type Spec = {
 // We do this at runtime but ideally in the future, it will be at build time (generated code).
 
 export const reflect = (declare: (string, Spec) => void) => {
+  const { AccountMethods, OperationMethods } = reflectSpecifics(declare).reduce(
+    (all, extra) => ({
+      AccountMethods: { ...all.AccountMethods, ...extra.AccountMethods },
+      OperationMethods: { ...all.OperationMethods, ...extra.OperationMethods }
+    }),
+    {}
+  );
+
   declare("WalletPool", {
     statics: {
       newInstance: {
@@ -351,6 +359,7 @@ export const reflect = (declare: (string, Spec) => void) => {
 
   declare("Account", {
     methods: {
+      ...AccountMethods,
       getBalance: {
         returns: "Amount"
       },
@@ -361,16 +370,6 @@ export const reflect = (declare: (string, Spec) => void) => {
         returns: ["Address"]
       },
       getRestoreKey: {},
-      // FIXME this part is not split in families
-      asBitcoinLikeAccount: {
-        returns: "BitcoinLikeAccount"
-      },
-      asEthereumLikeAccount: {
-        returns: "EthereumLikeAccount"
-      },
-      asRippleLikeAccount: {
-        returns: "RippleLikeAccount"
-      },
       synchronize: {
         returns: "EventBus"
       },
@@ -382,16 +381,8 @@ export const reflect = (declare: (string, Spec) => void) => {
 
   declare("Operation", {
     methods: {
+      ...OperationMethods,
       getDate: {},
-      asBitcoinLikeOperation: {
-        returns: "BitcoinLikeOperation"
-      },
-      asEthereumLikeOperation: {
-        returns: "EthereumLikeOperation"
-      },
-      asRippleLikeOperation: {
-        returns: "RippleLikeOperation"
-      },
       getOperationType: {},
       getAmount: { returns: "Amount" },
       getFees: { returns: "Amount" },
@@ -628,6 +619,4 @@ export const reflect = (declare: (string, Spec) => void) => {
       }
     }
   });
-
-  reflectSpecifics(declare);
 };

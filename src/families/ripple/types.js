@@ -163,4 +163,17 @@ export const reflect = (declare: (string, Spec) => void) => {
       }
     }
   });
+
+  return {
+    OperationMethods: {
+      asRippleLikeOperation: {
+        returns: "RippleLikeOperation"
+      }
+    },
+    AccountMethods: {
+      asRippleLikeAccount: {
+        returns: "RippleLikeAccount"
+      }
+    }
+  };
 };

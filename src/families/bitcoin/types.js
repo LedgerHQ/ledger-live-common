@@ -226,4 +226,17 @@ export const reflect = (declare: (string, Spec) => void) => {
       }
     }
   });
+
+  return {
+    OperationMethods: {
+      asBitcoinLikeOperation: {
+        returns: "BitcoinLikeOperation"
+      }
+    },
+    AccountMethods: {
+      asBitcoinLikeAccount: {
+        returns: "BitcoinLikeAccount"
+      }
+    }
+  };
 };

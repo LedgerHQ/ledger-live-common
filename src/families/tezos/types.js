@@ -169,4 +169,17 @@ export const reflect = (declare: (string, Spec) => void) => {
       }
     }
   });
+
+  return {
+    OperationMethods: {
+      asTezosLikeOperation: {
+        returns: "TezosLikeOperation"
+      }
+    },
+    AccountMethods: {
+      asTezosLikeAccount: {
+        returns: "TezosLikeAccount"
+      }
+    }
+  };
 };

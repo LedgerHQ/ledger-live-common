@@ -81,11 +81,11 @@ genTypesFile () {
   for family in *; do
     echo '  | '$family'NetworkInfoRaw'
   done
-  echo 'export const reflectSpecifics = (declare: *) => {'
+  echo 'export const reflectSpecifics = (declare: *) => ['
   for family in *; do
-    echo $family'Reflect(declare);'
+    echo '  '$family'Reflect(declare),'
   done
-  echo '};'
+  echo '];'
 }
 
 genTypesFile > ../generated/types.js

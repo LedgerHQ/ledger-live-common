@@ -76,9 +76,9 @@ export type NetworkInfoRaw =
   | ethereumNetworkInfoRaw
   | rippleNetworkInfoRaw
   | tezosNetworkInfoRaw
-export const reflectSpecifics = (declare: *) => {
-bitcoinReflect(declare);
-ethereumReflect(declare);
-rippleReflect(declare);
-tezosReflect(declare);
-};
+export const reflectSpecifics = (declare: *) => [
+  bitcoinReflect(declare),
+  ethereumReflect(declare),
+  rippleReflect(declare),
+  tezosReflect(declare),
+];
