@@ -2,6 +2,8 @@
 
 global.Buffer = require("buffer").Buffer;
 
+console.log("Buffer.of", typeof Buffer.of);
+
 if (!console.assert) {
   console.assert = () => {};
 }
