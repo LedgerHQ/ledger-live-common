@@ -64,6 +64,12 @@ const modes = Object.freeze({
   aeternity: {
     overridesDerivation: "<account>"
   },
+  // default derivation of tezbox offerred to users
+  tezbox: {
+    tag: "tezbox",
+    overridesDerivation: "44'/1729'/0'/0'",
+    isNonIterable: true
+  },
   native_segwit: {
     purpose: 84,
     keychainEngine: "BIP173_P2WPKH",
@@ -110,7 +116,8 @@ const legacyDerivations: $Shape<CryptoCurrencyConfig<DerivationMode[]>> = {
   bitcoin: ["legacy_on_bch"],
   vertcoin: ["vertcoin_128", "vertcoin_128_segwit"],
   ethereum: ["ethM", "ethMM"],
-  ethereum_classic: ["ethM", "etcM", "ethMM"]
+  ethereum_classic: ["ethM", "etcM", "ethMM"],
+  tezos: ["tezbox"]
 };
 
 export const asDerivationMode = (derivationMode: string): DerivationMode => {
