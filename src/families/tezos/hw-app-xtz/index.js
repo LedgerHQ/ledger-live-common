@@ -211,14 +211,14 @@ type CurveData = {
 
 const compressPublicKeySECP256 = (publicKey: Buffer, curve: Curve) =>
   Buffer.concat([
-    Buffer.of(curve, 0x02 + (publicKey[64] & 0x01)),
+    Buffer.from([curve, 0x02 + (publicKey[64] & 0x01)]),
     publicKey.slice(1, 33)
   ]);
 
 const curves: Array<CurveData> = [
   {
-    pkB58Prefix: Buffer.of(13, 15, 37, 217),
-    pkhB58Prefix: Buffer.of(6, 161, 159),
+    pkB58Prefix: Buffer.from([13, 15, 37, 217]),
+    pkhB58Prefix: Buffer.from([6, 161, 159]),
     compressPublicKey: (publicKey: Buffer, curve: Curve) => {
       publicKey = publicKey.slice(0);
       publicKey[0] = curve;
@@ -226,13 +226,13 @@ const curves: Array<CurveData> = [
     }
   },
   {
-    pkB58Prefix: Buffer.of(3, 254, 226, 86),
-    pkhB58Prefix: Buffer.of(6, 161, 161),
+    pkB58Prefix: Buffer.from([3, 254, 226, 86]),
+    pkhB58Prefix: Buffer.from([6, 161, 161]),
     compressPublicKey: compressPublicKeySECP256
   },
   {
-    pkB58Prefix: Buffer.of(3, 178, 139, 127),
-    pkhB58Prefix: Buffer.of(6, 161, 164),
+    pkB58Prefix: Buffer.from([3, 178, 139, 127]),
+    pkhB58Prefix: Buffer.from([6, 161, 164]),
     compressPublicKey: compressPublicKeySECP256
   }
 ];
