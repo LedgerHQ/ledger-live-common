@@ -111,10 +111,14 @@ export default class Tezos {
 
     let publicKeyLength = payload[0];
     let publicKey = payload.slice(1, 1 + publicKeyLength);
-    const res: GetAddressResult = encodePublicKey(publicKey, p2);
+    const res: GetAddressResult = {
+      publicKey: publicKey.toString("hex"),
+      address: encodeAddress(publicKey, p2)
+    };
     if (options.askChainCode) {
+      let chainCodeLength = payload[1 + publicKeyLength];
       res.chainCode = payload
-        .slice(1 + publicKeyLength, payload.length - 2)
+        .slice(2 + publicKeyLength, 2 + publicKeyLength + chainCodeLength)
         .toString("hex");
     }
     return res;
@@ -237,18 +241,12 @@ const curves: Array<CurveData> = [
   }
 ];
 
-const encodePublicKey = (publicKeyUncompressed: Buffer, curve: Curve) => {
+const encodeAddress = (publicKey: Buffer, curve: Curve) => {
   const curveData = curves[curve];
   invariant(curveData, "%s curve not supported", curve);
 
-  const publicKeyBuf = curveData.compressPublicKey(
-    publicKeyUncompressed,
-    curve
-  );
+  const publicKeyBuf = curveData.compressPublicKey(publicKey, curve);
   const key = publicKeyBuf.slice(1);
-  const publicKey = bs58check.encode(
-    Buffer.concat([curveData.pkB58Prefix, key])
-  );
 
   const keyHashSize = 20;
   let hash = blake2b(keyHashSize);
@@ -258,5 +256,5 @@ const encodePublicKey = (publicKeyUncompressed: Buffer, curve: Curve) => {
     Buffer.concat([curveData.pkhB58Prefix, hash])
   );
 
-  return { publicKey, address };
+  return address;
 };
