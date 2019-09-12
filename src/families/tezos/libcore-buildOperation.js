@@ -10,9 +10,9 @@ async function tezosBuildOperation({
 }) {
   const tezosLikeOperation = await coreOperation.asTezosLikeOperation();
   const tezosLikeTransaction = await tezosLikeOperation.getTransaction();
-  const type = await tezosLikeTransaction.getType();
+  // const type = await tezosLikeTransaction.getType();
   // eslint-disable-next-line no-console
-  console.log("tezos", { type });
+  // console.log("tezos", { type });
   const hash = await tezosLikeTransaction.getHash();
   const out: $Shape<Operation> = { hash };
   return out;

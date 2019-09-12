@@ -21,6 +21,7 @@ setSupportedCurrencies([
   "litecoin",
   "dash",
   "ethereum_classic",
+  "tezos",
   "qtum",
   "zcash",
   "bitcoin_gold",

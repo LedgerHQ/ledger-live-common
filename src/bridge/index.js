@@ -13,6 +13,7 @@ import * as RippleJSBridge from "../families/ripple/RippleJSBridge";
 import * as EthereumJSBridge from "../families/ethereum/EthereumJSBridge";
 import LibcoreCurrencyBridge from "./LibcoreCurrencyBridge";
 import LibcoreBitcoinAccountBridge from "../families/bitcoin/LibcoreBitcoinAccountBridge";
+import LibcoreTezosAccountBridge from "../families/tezos/LibcoreTezosAccountBridge";
 import LibcoreEthereumAccountBridge from "../families/ethereum/LibcoreEthereumAccountBridge";
 import {
   makeMockCurrencyBridge,
@@ -45,6 +46,13 @@ export const getCurrencyBridge = (currency: CryptoCurrency): CurrencyBridge => {
   return LibcoreCurrencyBridge;
 };
 
+const libcoreAccountBridges = {
+  ethereum: LibcoreEthereumAccountBridge,
+  ripple: LibcoreRippleAccountBridge,
+  bitcoin: LibcoreBitcoinAccountBridge,
+  tezos: LibcoreTezosAccountBridge
+};
+
 export const getAccountBridge = (
   account: Account | TokenAccount,
   parentAccount: ?Account
@@ -57,15 +65,8 @@ export const getAccountBridge = (
   }
   if (type === "mock") return mockAccountBridge;
   if (type === "libcore") {
-    if (mainAccount.currency.family === "ethereum") {
-      return LibcoreEthereumAccountBridge;
-    }
-    if (mainAccount.currency.family === "ripple") {
-      return LibcoreRippleAccountBridge;
-    }
-    if (mainAccount.currency.family === "bitcoin") {
-      return LibcoreBitcoinAccountBridge;
-    }
+    const maybeBridge = libcoreAccountBridges[mainAccount.currency.family];
+    if (maybeBridge) return maybeBridge;
   }
   switch (mainAccount.currency.family) {
     case "ripple":

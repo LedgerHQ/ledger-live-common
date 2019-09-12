@@ -54,6 +54,7 @@ export interface AccountBridge<T: Transaction> {
   prepareTransaction(account: Account, transaction: T): Promise<T>;
 
   // calculate / get derived state of the Transaction, useful to display summary / errors / warnings. tell if the transaction is ready.
+  // ? MUST not fail even without network
   getTransactionStatus(
     account: Account,
     transaction: T
