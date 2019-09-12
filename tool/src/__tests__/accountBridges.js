@@ -16,10 +16,11 @@ import {
   toTransactionRaw
 } from "@ledgerhq/live-common/lib/transaction";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
-import setupTest from "../live-common-setup-test";
+import { setup } from "../live-common-setup-test";
 import accountsJSON from "./libcoreAccounts.json";
+import recipientsJSON from "./recipients.json";
 
-setupTest("accountBridges");
+setup("accountBridges");
 const ethereum1: Account = fromAccountRaw(accountsJSON.ethereum1);
 const xrp1: Account = fromAccountRaw(accountsJSON.xrp1);
 const bitcoin1: Account = fromAccountRaw(accountsJSON.bitcoin1);
@@ -60,6 +61,11 @@ function syncAccount(bridge, account) {
         test("succeed", async () => {
           const account = await getSynced();
           expect(fromAccountRaw(toAccountRaw(account))).toBeDefined();
+        });
+
+        test("bridge ref equality", async () => {
+          const account = await getSynced();
+          expect(bridge).toBe(getAccountBridge(account, null));
         });
 
         test("existing operations object refs are preserved", async () => {
@@ -206,14 +212,19 @@ function syncAccount(bridge, account) {
 
         test("can be called on a prepared self transaction", async () => {
           const account = await getSynced();
-          const t = await bridge.prepareTransaction(account, {
-            ...bridge.createTransaction(account),
-            amount: BigNumber(1000),
-            recipient: account.freshAddress
-          });
-          const s = await bridge.getTransactionStatus(account, t);
-          expect(s).toBeDefined();
-          // FIXME i'm not sure if we can establish more shared properties
+          const recipients = recipientsJSON[account.currency.id] || [
+            account.freshAddress
+          ];
+          for (const recipient of recipients) {
+            const t = await bridge.prepareTransaction(account, {
+              ...bridge.createTransaction(account),
+              amount: BigNumber(1000),
+              recipient
+            });
+            const s = await bridge.getTransactionStatus(account, t);
+            expect(s).toBeDefined();
+            // FIXME i'm not sure if we can establish more shared properties
+          }
         });
       });
 

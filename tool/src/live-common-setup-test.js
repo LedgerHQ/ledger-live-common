@@ -5,7 +5,7 @@ import axios from "axios";
 import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
 
 let setupCalled = false;
-export default (testId: string) => {
+export const setup = (testId: string) => {
   if (setupCalled) return;
   setupCalled = true;
   implementLibcore({
@@ -22,4 +22,8 @@ export default (testId: string) => {
   );
 
   jest.setTimeout(120000);
+};
+
+export const simulateNetwork = (_enabled: boolean) => {
+  // TODO
 };

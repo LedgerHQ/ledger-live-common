@@ -54,6 +54,10 @@ setNetwork(axios);
 
 setWebSocketImplementation(WebSocket);
 
-export default (testName: string) => {
+export const setup = (testName: string) => {
   setTestFile(testName);
+};
+
+export const simulateNetwork = (_enabled: boolean) => {
+  // TODO
 };

@@ -6,10 +6,10 @@ import { InvalidAddress, NotEnoughBalance } from "@ledgerhq/errors";
 import type { Account, Transaction } from "@ledgerhq/live-common/lib/types";
 import { fromAccountRaw } from "@ledgerhq/live-common/lib/account";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
-import setupTest from "../live-common-setup-test";
+import { setup } from "../live-common-setup-test";
 import accountsJSON from "./libcoreAccounts.json";
 
-setupTest("ethereum");
+setup("ethereum");
 
 describe("ethereum transaction tests", () => {
   let account: Account = fromAccountRaw(accountsJSON.ethereum2);

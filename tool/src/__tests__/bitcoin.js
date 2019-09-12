@@ -11,10 +11,10 @@ import {
 import type { Account } from "@ledgerhq/live-common/lib/types";
 import { fromAccountRaw } from "@ledgerhq/live-common/lib/account";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
-import setupTest from "../live-common-setup-test";
+import { setup } from "../live-common-setup-test";
 import accountsJSON from "./libcoreAccounts.json";
 
-setupTest("bitcoin");
+setup("bitcoin");
 
 describe("bitcoin transaction tests", () => {
   let account: Account = fromAccountRaw(accountsJSON.bitcoin2);
