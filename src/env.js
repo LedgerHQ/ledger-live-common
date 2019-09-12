@@ -1,6 +1,6 @@
 // @flow
 // set and get environment & config variables
-import { Subject } from "rxjs";
+ import { Subject } from "rxjs";
 
 const intParser = (v: mixed): ?number => {
   if (!Number.isNaN(v)) return parseInt(v, 10);
