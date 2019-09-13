@@ -24,6 +24,7 @@ setup("accountBridges");
 const ethereum1: Account = fromAccountRaw(accountsJSON.ethereum1);
 const xrp1: Account = fromAccountRaw(accountsJSON.xrp1);
 const bitcoin1: Account = fromAccountRaw(accountsJSON.bitcoin1);
+const tezos1: Account = fromAccountRaw(accountsJSON.tezos1);
 
 function syncAccount(bridge, account) {
   return bridge
@@ -38,6 +39,7 @@ function syncAccount(bridge, account) {
   ethereum1,
   xrp1,
   bitcoin1,
+  tezos1,
   switchAccountBridge(ethereum1, "ethereumjs"),
   switchAccountBridge(xrp1, "ripplejs", "2"),
   switchAccountBridge(ethereum1, "mock"),
