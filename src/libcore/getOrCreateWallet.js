@@ -6,6 +6,7 @@ import { atomicQueue } from "../promise";
 import type { Core, CoreWallet } from "./types";
 import { findCurrencyExplorer } from "../api/Ledger";
 import { getEnv } from "../env";
+import { isNonExistingWalletError } from "./errors";
 
 type F = ({
   core: Core,
@@ -53,6 +54,9 @@ export const getOrCreateWallet: F = atomicQueue(
       // check if wallet exists yet
       wallet = await poolInstance.getWallet(walletName);
     } catch (err) {
+      if (!isNonExistingWalletError(err)) {
+        throw err;
+      }
       // create it with the config
       const currencyCore = await poolInstance.getCurrency(currency.id);
       wallet = await poolInstance.createWallet(

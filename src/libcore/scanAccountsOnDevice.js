@@ -25,7 +25,7 @@ import { withLibcoreF } from "./access";
 import { syncCoreAccount } from "./syncAccount";
 import { getOrCreateWallet } from "./getOrCreateWallet";
 import { createAccountFromDevice } from "./createAccountFromDevice";
-import { remapLibcoreErrors } from "./errors";
+import { remapLibcoreErrors, isNonExistingAccountError } from "./errors";
 import type { Core, CoreWallet } from "./types";
 
 async function scanNextAccount(props: {
@@ -58,6 +58,9 @@ async function scanNextAccount(props: {
   try {
     coreAccount = await wallet.getAccount(accountIndex);
   } catch (err) {
+    if (isNonExistingAccountError(err)) {
+      throw err;
+    }
     if (isUnsubscribed()) return;
     coreAccount = await createAccountFromDevice({
       core,
