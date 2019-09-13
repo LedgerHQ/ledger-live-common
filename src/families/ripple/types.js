@@ -31,6 +31,7 @@ declare class CoreRippleLikeOperation {
 declare class CoreRippleLikeTransactionBuilder {
   wipeToAddress(address: string): Promise<void>;
   sendToAddress(amount: CoreAmount, recipient: string): Promise<void>;
+  setDestinationTag(tag: number): Promise<void>;
   setFees(fees: CoreAmount): Promise<void>;
   build(): Promise<CoreRippleLikeTransaction>;
 }
@@ -141,6 +142,7 @@ export const reflect = (declare: (string, Spec) => void) => {
       setFees: {
         params: ["Amount"]
       },
+      setDestinationTag: {},
       build: {
         returns: "RippleLikeTransaction"
       }

@@ -35,7 +35,7 @@ async function rippleBuildTransaction({
     throw new InvalidAddress("", { currencyName: account.currency.name });
   }
 
-  const { fee } = transaction;
+  const { fee, tag } = transaction;
   if (!fee) throw new FeeNotLoaded();
 
   const fees = await bigNumberToLibcoreAmount(
@@ -46,6 +46,11 @@ async function rippleBuildTransaction({
   if (isCancelled()) return;
   const transactionBuilder = await rippleLikeAccount.buildTransaction();
   if (isCancelled()) return;
+
+  if (tag) {
+    await transactionBuilder.setDestinationTag(tag);
+    if (isCancelled()) return;
+  }
 
   if (transaction.useAllAmount) {
     await transactionBuilder.wipeToAddress(transaction.recipient);
