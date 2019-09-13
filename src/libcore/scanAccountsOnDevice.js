@@ -58,7 +58,7 @@ async function scanNextAccount(props: {
   try {
     coreAccount = await wallet.getAccount(accountIndex);
   } catch (err) {
-    if (isNonExistingAccountError(err)) {
+    if (!isNonExistingAccountError(err)) {
       throw err;
     }
     if (isUnsubscribed()) return;
