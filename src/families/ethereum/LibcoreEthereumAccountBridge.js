@@ -93,7 +93,7 @@ const getTransactionStatus = async (a, t) => {
 
   const amount = useAllAmount
     ? tokenAccount
-      ? BigNumber(t.amount || 0)
+      ? tokenAccount.balance
       : account.balance.minus(estimatedFees)
     : BigNumber(t.amount || 0);
 
