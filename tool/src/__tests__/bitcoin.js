@@ -12,7 +12,7 @@ import type { Account } from "@ledgerhq/live-common/lib/types";
 import { fromAccountRaw } from "@ledgerhq/live-common/lib/account";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import { setup } from "../live-common-setup-test";
-import dataset from "@ledgerhq/live-common/lib/generated/dataset.test";
+import dataset from "@ledgerhq/live-common/lib/generated/test-dataset";
 
 setup("bitcoin");
 

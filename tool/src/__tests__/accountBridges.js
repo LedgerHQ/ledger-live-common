@@ -15,7 +15,7 @@ import {
   toTransactionRaw
 } from "@ledgerhq/live-common/lib/transaction";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
-import dataset from "@ledgerhq/live-common/lib/generated/dataset.test";
+import dataset from "@ledgerhq/live-common/lib/generated/test-dataset";
 import { setup } from "../live-common-setup-test";
 
 setup("accountBridges");

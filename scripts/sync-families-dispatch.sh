@@ -19,7 +19,7 @@ transaction.js \
 bridge/js.js \
 bridge/libcore.js \
 bridge/mock.js \
-dataset.test.js \
+test-dataset.js \
 "
 
 cd ../src
