@@ -2,7 +2,15 @@
 
 import { BigNumber } from "bignumber.js";
 import { Observable, from, defer, of, throwError } from "rxjs";
-import { skip, take, reduce, mergeMap, map, concatMap } from "rxjs/operators";
+import {
+  skip,
+  take,
+  reduce,
+  mergeMap,
+  map,
+  filter,
+  concatMap
+} from "rxjs/operators";
 import type { Account, CryptoCurrency } from "@ledgerhq/live-common/lib/types";
 import { getEnv } from "@ledgerhq/live-common/lib/env";
 import {
@@ -90,7 +98,7 @@ export const scanCommonOpts = [
   }
 ];
 
-const getCurrencyByKeyword = (keyword: string): CryptoCurrency => {
+export const getCurrencyByKeyword = (keyword: string): CryptoCurrency => {
   const r = findCryptoCurrency(c => {
     const search = keyword.replace(/ /, "").toLowerCase();
     return (
@@ -234,11 +242,16 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
           )
         );
       }
-      return getCurrencyBridge(cur).scanAccountsOnDevice(
-        cur,
-        device || "",
-        scheme && asDerivationMode(scheme)
-      );
+      return getCurrencyBridge(cur)
+        .scanAccountsOnDevice(
+          cur,
+          device || "",
+          scheme && asDerivationMode(scheme)
+        )
+        .pipe(
+          filter(e => e.type === "discovered"),
+          map(e => e.account)
+        );
     }),
     skip(index || 0),
     take(length === undefined ? (index !== undefined ? 1 : Infinity) : length)

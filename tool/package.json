@@ -44,7 +44,7 @@
     "prepublishOnly": "rm -rf lib && babel --ignore __tests__ -d lib src",
     "watch": "babel -wsd lib src",
     "flow": "flow",
-    "test-jest": "rm -rf libcoredb && mkdir libcoredb && jest",
+    "test-jest": "rm -rf libcoredb && mkdir libcoredb && jest --maxWorkers 10",
     "test": "yarn run test-jest && ./scripts/tests.sh",
     "testOne": "./scripts/testOne.sh",
     "createTest": "./scripts/createTest.sh"
@@ -59,7 +59,8 @@
   },
   "jest": {
     "testPathIgnorePatterns": [
-      ".yalc"
+      ".yalc",
+      "lib/"
     ]
   }
 }

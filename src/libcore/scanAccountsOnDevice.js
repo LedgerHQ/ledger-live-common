@@ -18,7 +18,12 @@ import {
   shouldShowNewAccount,
   isAccountEmpty
 } from "../account";
-import type { Account, CryptoCurrency, DerivationMode } from "../types";
+import type {
+  Account,
+  CryptoCurrency,
+  DerivationMode,
+  ScanAccountEvent
+} from "../types";
 import { withDevice } from "../hw/deviceAccess";
 import getAddress from "../hw/getAddress";
 import { withLibcoreF } from "./access";
@@ -126,7 +131,7 @@ export const scanAccountsOnDevice = (
   currency: CryptoCurrency,
   deviceId: string,
   scheme?: ?DerivationMode
-): Observable<Account> =>
+): Observable<ScanAccountEvent> =>
   withDevice(deviceId)(transport =>
     Observable.create(o => {
       let finished = false;
@@ -197,7 +202,8 @@ export const scanAccountsOnDevice = (
             });
             if (isUnsubscribed()) return;
 
-            const onAccountScanned = account => o.next(account);
+            const onAccountScanned = account =>
+              o.next({ type: "discovered", account });
 
             // recursively scan all accounts on device on the given app
             // new accounts will be created in sqlite, existing ones will be updated

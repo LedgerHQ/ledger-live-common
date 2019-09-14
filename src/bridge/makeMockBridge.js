@@ -333,7 +333,7 @@ export function makeMockCurrencyBridge(opts?: Opts): CurrencyBridge {
             account.balance = BigNumber(0);
           }
 
-          if (!unsubscribed) o.next(account);
+          if (!unsubscribed) o.next({ type: "discovered", account });
         }
         if (!unsubscribed) o.complete();
       }

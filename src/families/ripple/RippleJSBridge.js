@@ -372,32 +372,35 @@ export const currencyBridge: CurrencyBridge = {
                 // we are generating a new account locally
                 if (derivationMode === "") {
                   o.next({
-                    type: "Account",
-                    id: accountId,
-                    seedIdentifier: freshAddress,
-                    derivationMode,
-                    name: getNewAccountPlaceholderName({
-                      currency,
+                    type: "discovered",
+                    account: {
+                      type: "Account",
+                      id: accountId,
+                      seedIdentifier: freshAddress,
+                      derivationMode,
+                      name: getNewAccountPlaceholderName({
+                        currency,
+                        index,
+                        derivationMode
+                      }),
+                      freshAddress,
+                      freshAddressPath,
+                      freshAddresses: [
+                        {
+                          address: freshAddress,
+                          derivationPath: freshAddressPath
+                        }
+                      ],
+                      balance: BigNumber(0),
+                      blockHeight: maxLedgerVersion,
                       index,
-                      derivationMode
-                    }),
-                    freshAddress,
-                    freshAddressPath,
-                    freshAddresses: [
-                      {
-                        address: freshAddress,
-                        derivationPath: freshAddressPath
-                      }
-                    ],
-                    balance: BigNumber(0),
-                    blockHeight: maxLedgerVersion,
-                    index,
-                    currency,
-                    operations: [],
-                    pendingOperations: [],
-                    unit: currency.units[0],
-                    archived: false,
-                    lastSyncDate: new Date()
+                      currency,
+                      operations: [],
+                      pendingOperations: [],
+                      unit: currency.units[0],
+                      archived: false,
+                      lastSyncDate: new Date()
+                    }
                   });
                 }
                 break;
@@ -447,7 +450,7 @@ export const currencyBridge: CurrencyBridge = {
               account.operations = transactions
                 .map(txToOperation(account))
                 .filter(Boolean);
-              o.next(account);
+              o.next({ type: "discovered", account });
             }
           }
           o.complete();

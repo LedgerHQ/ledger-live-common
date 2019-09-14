@@ -357,7 +357,7 @@ export const currencyBridge: CurrencyBridge = {
                 /* eslint-enable no-console */
               }
               if (r.account) {
-                o.next(r.account);
+                o.next({ type: "discovered", account: r.account });
               } else {
                 emptyCount++;
               }
