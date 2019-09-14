@@ -1,8 +1,8 @@
 // @flow
-import bitcoin from "../families/bitcoin/hw-getAddress";
-import ethereum from "../families/ethereum/hw-getAddress";
-import ripple from "../families/ripple/hw-getAddress";
-import tezos from "../families/tezos/hw-getAddress";
+import bitcoin from "../families/bitcoin/hw-getAddress.js";
+import ethereum from "../families/ethereum/hw-getAddress.js";
+import ripple from "../families/ripple/hw-getAddress.js";
+import tezos from "../families/tezos/hw-getAddress.js";
 
 export default {
   bitcoin,

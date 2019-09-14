@@ -177,7 +177,7 @@ const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
     (networkInfo.gas_price ? BigNumber(networkInfo.gas_price) : null)
 });
 
-export const accountBridge: AccountBridge<Transaction> = {
+const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   prepareTransaction,
   getTransactionStatus,
@@ -192,6 +192,8 @@ export const accountBridge: AccountBridge<Transaction> = {
   })
 };
 
-export const currencyBridge: CurrencyBridge = {
+const currencyBridge: CurrencyBridge = {
   scanAccountsOnDevice
 };
+
+export default { currencyBridge, accountBridge };

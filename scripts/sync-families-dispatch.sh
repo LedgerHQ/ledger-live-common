@@ -3,25 +3,51 @@
 set -e
 cd $(dirname $0)
 
-targets="customAddressValidation hw-getAddress hw-signMessage libcore-buildOperation libcore-buildTransaction libcore-hw-signTransaction libcore-signAndBroadcast libcore-buildTokenAccounts libcore-getFeesForTransaction libcore-postSyncPatch libcore-getAccountNetworkInfo transaction"
+targets="\
+customAddressValidation.js \
+hw-getAddress.js \
+hw-signMessage.js \
+libcore-buildOperation.js \
+libcore-buildTransaction.js \
+libcore-hw-signTransaction.js \
+libcore-signAndBroadcast.js \
+libcore-buildTokenAccounts.js \
+libcore-getFeesForTransaction.js \
+libcore-postSyncPatch.js \
+libcore-getAccountNetworkInfo.js \
+transaction.js \
+bridge/js.js \
+bridge/libcore.js \
+bridge/mock.js \
+dataset.test.js \
+"
 
 cd ../src
 
 rm -rf generated
 mkdir generated
+mkdir generated/bridge
 
 genTarget () {
   t=$1
   echo '// @flow'
-  for family in *; do
-    if [ -f $family/$t.js ]; then
-      echo 'import '$family' from "../families/'$family/$t'";'
+  for family in $families; do
+    if [ -f $family/$t ]; then
+      echo -n 'import '$family' from "'
+      OIFS=$IFS
+      IFS="/"
+      for f in $t; do
+        echo -n '../'
+      done
+      IFS=$OIFS
+      echo -n 'families/'$family/$t'";'
+      echo
     fi
   done
   echo
   echo 'export default {'
-  for family in *; do
-    if [ -f $family/$t.js ]; then
+  for family in $families; do
+    if [ -f $family/$t ]; then
       echo '  '$family','
     fi
   done
@@ -29,15 +55,27 @@ genTarget () {
 }
 
 cd families
+
+families=""
+for f in *; do
+  if [ -d $f ]; then
+    families="$families $f"
+  fi
+done
+
 for t in $targets; do
-  genTarget $t > ../generated/$t.js
+  out=../generated/$t
+  if [[ "$out" != *.js ]]; then
+    out=$out.js
+  fi
+  genTarget $t > $out
 done
 
 # types
 
 genTypesFile () {
   echo '// @flow'
-  for family in *; do
+  for family in $families; do
     echo 'import { reflect as '$family'Reflect } from "../families/'$family'/types";'
     echo 'import type { CoreStatics as CoreStatics_'$family' } from "../families/'$family'/types";'
     echo 'import type { CoreAccountSpecifics as CoreAccountSpecifics_'$family' } from "../families/'$family'/types";'
@@ -50,39 +88,39 @@ genTypesFile () {
   done
   echo
   echo 'export type SpecificStatics = {}'
-  for family in *; do
+  for family in $families; do
     echo '& CoreStatics_'$family
   done
   echo 'export type CoreAccountSpecifics = {}'
-  for family in *; do
+  for family in $families; do
     echo '& CoreAccountSpecifics_'$family
   done
   echo 'export type CoreOperationSpecifics = {}'
-  for family in *; do
+  for family in $families; do
     echo '& CoreOperationSpecifics_'$family
   done
   echo 'export type CoreCurrencySpecifics = {}'
-  for family in *; do
+  for family in $families; do
     echo '& CoreCurrencySpecifics_'$family
   done
   echo 'export type Transaction ='
-  for family in *; do
+  for family in $families; do
     echo '  | '$family'Transaction'
   done
   echo 'export type TransactionRaw ='
-  for family in *; do
+  for family in $families; do
     echo '  | '$family'TransactionRaw'
   done
   echo 'export type NetworkInfo ='
-  for family in *; do
+  for family in $families; do
     echo '  | '$family'NetworkInfo'
   done
   echo 'export type NetworkInfoRaw ='
-  for family in *; do
+  for family in $families; do
     echo '  | '$family'NetworkInfoRaw'
   done
   echo 'export const reflectSpecifics = (declare: *) => ['
-  for family in *; do
+  for family in $families; do
     echo '  '$family'Reflect(declare),'
   done
   echo '];'

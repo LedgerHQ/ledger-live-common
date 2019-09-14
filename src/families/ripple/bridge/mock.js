@@ -102,7 +102,7 @@ const prepareTransaction = async (a, t) => {
   return t;
 };
 
-export const accountBridge: AccountBridge<Transaction> = {
+const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   getTransactionStatus,
   prepareTransaction,
@@ -116,6 +116,8 @@ export const accountBridge: AccountBridge<Transaction> = {
   })
 };
 
-export const currencyBridge: CurrencyBridge = {
+const currencyBridge: CurrencyBridge = {
   scanAccountsOnDevice
 };
+
+export default { currencyBridge, accountBridge };

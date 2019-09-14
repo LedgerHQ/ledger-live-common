@@ -309,7 +309,7 @@ const cachedRecipientIsNew = (endpointConfig, recipient) => {
   return cacheRecipientsNew[recipient];
 };
 
-export const currencyBridge: CurrencyBridge = {
+const currencyBridge: CurrencyBridge = {
   scanAccountsOnDevice: (currency, deviceId) =>
     Observable.create(o => {
       let finished = false;
@@ -699,7 +699,7 @@ const getTransactionStatus = async (a, t) => {
   });
 };
 
-export const accountBridge: AccountBridge<Transaction> = {
+const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   prepareTransaction,
   getTransactionStatus,
@@ -720,3 +720,5 @@ export const accountBridge: AccountBridge<Transaction> = {
     await api.connect();
   }
 };
+
+export default { currencyBridge, accountBridge };

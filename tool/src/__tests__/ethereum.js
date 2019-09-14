@@ -7,12 +7,14 @@ import type { Account, Transaction } from "@ledgerhq/live-common/lib/types";
 import { fromAccountRaw } from "@ledgerhq/live-common/lib/account";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import { setup } from "../live-common-setup-test";
-import accountsJSON from "./libcoreAccounts.json";
+import dataset from "@ledgerhq/live-common/lib/generated/dataset.test";
 
 setup("ethereum");
 
 describe("ethereum transaction tests", () => {
-  let account: Account = fromAccountRaw(accountsJSON.ethereum2);
+  let account: Account = fromAccountRaw(
+    dataset.ethereum.currencies.ethereum.accounts[1].raw
+  );
 
   const bridge = getAccountBridge(account, null);
 

@@ -4,7 +4,6 @@
 import "babel-polyfill";
 import { BigNumber } from "bignumber.js";
 import { reduce } from "rxjs/operators";
-import type { Account } from "@ledgerhq/live-common/lib/types";
 import {
   fromAccountRaw,
   toAccountRaw,
@@ -16,15 +15,10 @@ import {
   toTransactionRaw
 } from "@ledgerhq/live-common/lib/transaction";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
+import dataset from "@ledgerhq/live-common/lib/generated/dataset.test";
 import { setup } from "../live-common-setup-test";
-import accountsJSON from "./libcoreAccounts.json";
-import recipientsJSON from "./recipients.json";
 
 setup("accountBridges");
-const ethereum1: Account = fromAccountRaw(accountsJSON.ethereum1);
-const xrp1: Account = fromAccountRaw(accountsJSON.xrp1);
-const bitcoin1: Account = fromAccountRaw(accountsJSON.bitcoin1);
-const tezos1: Account = fromAccountRaw(accountsJSON.tezos1);
 
 function syncAccount(bridge, account) {
   return bridge
@@ -35,30 +29,48 @@ function syncAccount(bridge, account) {
 
 // covers all bridges through many different accounts
 // to test the common shared properties of bridges.
-[
-  ethereum1,
-  xrp1,
-  bitcoin1,
-  tezos1,
-  switchAccountBridge(ethereum1, "ethereumjs"),
-  switchAccountBridge(xrp1, "ripplejs", "2"),
-  switchAccountBridge(ethereum1, "mock"),
-  switchAccountBridge(xrp1, "mock"),
-  switchAccountBridge(bitcoin1, "mock")
-]
-  .map(account => {
+const all = [];
+Object.keys(dataset).forEach(family => {
+  const data = dataset[family];
+  const { implementations, currencies } = data;
+  Object.keys(currencies).forEach(currencyId => {
+    const currencyData = currencies[currencyId];
+    currencyData.accounts.slice(0, 1).forEach(accountData =>
+      implementations.forEach(impl => {
+        const account = fromAccountRaw({
+          ...accountData.raw,
+          id: encodeAccountId({
+            ...decodeAccountId(accountData.raw.id),
+            type: impl
+          })
+        });
+        all.push({
+          currencyData,
+          account,
+          impl
+        });
+      })
+    );
+  });
+
+  return all;
+});
+
+all
+  .map(({ account, ...rest }) => {
     const bridge = getAccountBridge(account, null);
+    if (!bridge) throw new Error("no bridge for " + account.id);
     let accountSyncedPromise;
     // lazy eval so we don't run this yet
     const getSynced = () =>
       accountSyncedPromise ||
       (accountSyncedPromise = syncAccount(bridge, account));
-    return [getSynced, bridge, account];
+    return { getSynced, bridge, initialAccount: account, ...rest };
   })
-  .forEach(([getSynced, bridge, initialAccount]) => {
+  .forEach(arg => {
+    const { getSynced, bridge, initialAccount, currencyData, impl } = arg;
     // TODO mock disabling network to test properties when this happen...
-
-    describe("shared properties on: " + initialAccount.id, () => {
+    describe(impl + " bridge on account " + initialAccount.name, () => {
       describe("startSync", () => {
         test("succeed", async () => {
           const account = await getSynced();
@@ -214,18 +226,16 @@ function syncAccount(bridge, account) {
 
         test("can be called on a prepared self transaction", async () => {
           const account = await getSynced();
-          const recipients = recipientsJSON[account.currency.id] || [
-            account.freshAddress
-          ];
-          for (const recipient of recipients) {
+          const recipients = currencyData.recipients || [];
+          for (const { address, isValid } of recipients) {
+            if (!isValid) continue;
             const t = await bridge.prepareTransaction(account, {
               ...bridge.createTransaction(account),
               amount: BigNumber(1000),
-              recipient
+              recipient: address
             });
             const s = await bridge.getTransactionStatus(account, t);
             expect(s).toBeDefined();
-            // FIXME i'm not sure if we can establish more shared properties
           }
         });
       });
@@ -239,14 +249,3 @@ function syncAccount(bridge, account) {
       });
     });
   });
-
-function switchAccountBridge(account, type, version = "1") {
-  return {
-    ...account,
-    id: encodeAccountId({
-      ...decodeAccountId(account.id),
-      type,
-      version
-    })
-  };
-}

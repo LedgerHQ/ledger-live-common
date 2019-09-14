@@ -11,35 +11,9 @@ import { decodeAccountId, getMainAccount } from "../account";
 import { getEnv } from "../env";
 import { checkAccountSupported, libcoreNoGo } from "../account/support";
 
-import * as EthereumJSBridge from "../families/ethereum/bridge/js";
-import * as RippleJSBridge from "../families/ripple/bridge/js";
-
-import * as LibcoreBitcoinBridge from "../families/bitcoin/bridge/libcore";
-import * as LibcoreEthereumBridge from "../families/ethereum/bridge/libcore";
-import * as LibcoreRippleBridge from "../families/ripple/bridge/libcore";
-import * as LibcoreTezosBridge from "../families/tezos/bridge/libcore";
-
-import * as MockBitcoinBridge from "../families/bitcoin/bridge/mock";
-import * as MockEthereumBridge from "../families/ethereum/bridge/mock";
-import * as MockRippleBridge from "../families/ripple/bridge/mock";
-
-const jsBridges = {
-  ripple: RippleJSBridge,
-  ethereum: EthereumJSBridge
-};
-
-const libcoreBridges = {
-  bitcoin: LibcoreBitcoinBridge,
-  ethereum: LibcoreEthereumBridge,
-  ripple: LibcoreRippleBridge,
-  tezos: LibcoreTezosBridge
-};
-
-const mockBridges = {
-  bitcoin: MockBitcoinBridge,
-  ethereum: MockEthereumBridge,
-  ripple: MockRippleBridge
-};
+import jsBridges from "../generated/bridge/js";
+import mockBridges from "../generated/bridge/mock";
+import libcoreBridges from "../generated/bridge/libcore";
 
 export const getCurrencyBridge = (currency: CryptoCurrency): CurrencyBridge => {
   const forceImpl = getEnv("BRIDGE_FORCE_IMPLEMENTATION");

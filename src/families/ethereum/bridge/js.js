@@ -193,7 +193,7 @@ const fetchCurrentBlock = (perCurrencyId => currency => {
   return f();
 })({});
 
-export const currencyBridge: CurrencyBridge = {
+const currencyBridge: CurrencyBridge = {
   scanAccountsOnDevice: (currency, deviceId) =>
     Observable.create(o => {
       let finished = false;
@@ -567,7 +567,7 @@ const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
     (networkInfo.gas_price ? BigNumber(networkInfo.gas_price) : null)
 });
 
-export const accountBridge: AccountBridge<Transaction> = {
+const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   prepareTransaction,
   getTransactionStatus,
@@ -581,3 +581,5 @@ export const accountBridge: AccountBridge<Transaction> = {
     fillUpExtraFieldToApplyTransactionNetworkInfo
   })
 };
+
+export default { currencyBridge, accountBridge };

@@ -1,8 +1,8 @@
 // @flow
-import bitcoin from "../families/bitcoin/transaction";
-import ethereum from "../families/ethereum/transaction";
-import ripple from "../families/ripple/transaction";
-import tezos from "../families/tezos/transaction";
+import bitcoin from "../families/bitcoin/transaction.js";
+import ethereum from "../families/ethereum/transaction.js";
+import ripple from "../families/ripple/transaction.js";
+import tezos from "../families/tezos/transaction.js";
 
 export default {
   bitcoin,

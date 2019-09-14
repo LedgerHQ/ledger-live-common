@@ -71,11 +71,11 @@ const fillUpExtraFieldToApplyTransactionNetworkInfo = (
   _networkInfo
 ) => ({});
 
-export const currencyBridge: CurrencyBridge = {
+const currencyBridge: CurrencyBridge = {
   scanAccountsOnDevice
 };
 
-export const accountBridge: AccountBridge<Transaction> = {
+const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   prepareTransaction,
   getTransactionStatus,
@@ -89,3 +89,5 @@ export const accountBridge: AccountBridge<Transaction> = {
     fillUpExtraFieldToApplyTransactionNetworkInfo
   })
 };
+
+export default { currencyBridge, accountBridge };
