@@ -26,13 +26,13 @@ describe("libcore access", () => {
     let count = 0;
     let gcjob = 0;
 
-    const p1 = withLibcore(async core => {
+    withLibcore(async () => {
       console.log("job1");
       await sleep(100);
       ++count;
     });
 
-    const p2 = withLibcore(async core => {
+    withLibcore(async () => {
       console.log("job2");
       await sleep(100);
       ++count;
@@ -45,7 +45,7 @@ describe("libcore access", () => {
         console.log("after");
         expect(count).toBe(2);
         await sleep(100);
-        p3 = withLibcore(async core => {
+        p3 = withLibcore(async () => {
           console.log("job3");
           await sleep(400);
           ++count;
