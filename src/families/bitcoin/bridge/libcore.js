@@ -2,12 +2,12 @@
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
 import { FeeNotLoaded, FeeRequired } from "@ledgerhq/errors";
-import LibcoreCurrencyBridge from "../../../bridge/LibcoreCurrencyBridge";
 import { validateRecipient } from "../../../bridge/shared";
-import type { AccountBridge } from "../../../types/bridge";
+import type { AccountBridge, CurrencyBridge } from "../../../types/bridge";
 import type { Account } from "../../../types/account";
 import type { Transaction } from "../types";
 import { syncAccount } from "../../../libcore/syncAccount";
+import { scanAccountsOnDevice } from "../../../libcore/scanAccountsOnDevice";
 import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
 import { getFeesForTransaction } from "../../../libcore/getFeesForTransaction";
 import libcoreSignAndBroadcast from "../../../libcore/signAndBroadcast";
@@ -120,7 +120,9 @@ const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
   feePerByte: t.feePerByte || networkInfo.feeItems.defaultFeePerByte
 });
 
-export const currencyBridge = LibcoreCurrencyBridge;
+export const currencyBridge: CurrencyBridge = {
+  scanAccountsOnDevice
+};
 
 export const accountBridge: AccountBridge<Transaction> = {
   createTransaction,

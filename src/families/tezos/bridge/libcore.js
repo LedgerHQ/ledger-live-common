@@ -1,8 +1,8 @@
 // @flow
 import { BigNumber } from "bignumber.js";
-import LibcoreCurrencyBridge from "../../../bridge/LibcoreCurrencyBridge";
+import { scanAccountsOnDevice } from "../../../libcore/scanAccountsOnDevice";
 import { validateRecipient } from "../../../bridge/shared";
-import type { AccountBridge } from "../../../types/bridge";
+import type { AccountBridge, CurrencyBridge } from "../../../types/bridge";
 import type { Transaction } from "../types";
 import { syncAccount } from "../../../libcore/syncAccount";
 import libcoreSignAndBroadcast from "../../../libcore/signAndBroadcast";
@@ -71,7 +71,9 @@ const fillUpExtraFieldToApplyTransactionNetworkInfo = (
   _networkInfo
 ) => ({});
 
-export const currencyBridge = LibcoreCurrencyBridge;
+export const currencyBridge: CurrencyBridge = {
+  scanAccountsOnDevice
+};
 
 export const accountBridge: AccountBridge<Transaction> = {
   createTransaction,

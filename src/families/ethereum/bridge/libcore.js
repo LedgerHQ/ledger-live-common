@@ -6,8 +6,8 @@ import {
   InvalidAddressBecauseDestinationIsAlsoSource
 } from "@ledgerhq/errors";
 import type { TokenAccount, Account } from "../../../types";
-import type { AccountBridge } from "../../../types/bridge";
-import LibcoreCurrencyBridge from "../../../bridge/LibcoreCurrencyBridge";
+import type { AccountBridge, CurrencyBridge } from "../../../types/bridge";
+import { scanAccountsOnDevice } from "../../../libcore/scanAccountsOnDevice";
 import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
 import { withLibcore } from "../../../libcore/access";
 import { getCoreAccount } from "../../../libcore/getCoreAccount";
@@ -192,4 +192,6 @@ export const accountBridge: AccountBridge<Transaction> = {
   })
 };
 
-export const currencyBridge = LibcoreCurrencyBridge;
+export const currencyBridge: CurrencyBridge = {
+  scanAccountsOnDevice
+};
