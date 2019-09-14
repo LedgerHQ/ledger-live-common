@@ -1,11 +1,12 @@
 // @flow
 import { BigNumber } from "bignumber.js";
-import { validateRecipient } from "../../bridge/shared";
-import type { AccountBridge } from "../../types/bridge";
-import type { Transaction } from "./types";
-import { syncAccount } from "../../libcore/syncAccount";
-import libcoreSignAndBroadcast from "../../libcore/signAndBroadcast";
-import { inferDeprecatedMethods } from "../../bridge/deprecationUtils";
+import LibcoreCurrencyBridge from "../../../bridge/LibcoreCurrencyBridge";
+import { validateRecipient } from "../../../bridge/shared";
+import type { AccountBridge } from "../../../types/bridge";
+import type { Transaction } from "../types";
+import { syncAccount } from "../../../libcore/syncAccount";
+import libcoreSignAndBroadcast from "../../../libcore/signAndBroadcast";
+import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
 import { FeeNotLoaded, NotEnoughBalance } from "@ledgerhq/errors";
 
 const startSync = (initialAccount, _observation) => syncAccount(initialAccount);
@@ -70,7 +71,9 @@ const fillUpExtraFieldToApplyTransactionNetworkInfo = (
   _networkInfo
 ) => ({});
 
-const bridge: AccountBridge<Transaction> = {
+export const currencyBridge = LibcoreCurrencyBridge;
+
+export const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   prepareTransaction,
   getTransactionStatus,
@@ -84,5 +87,3 @@ const bridge: AccountBridge<Transaction> = {
     fillUpExtraFieldToApplyTransactionNetworkInfo
   })
 };
-
-export default bridge;

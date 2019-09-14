@@ -5,19 +5,20 @@ import {
   FeeNotLoaded,
   InvalidAddressBecauseDestinationIsAlsoSource
 } from "@ledgerhq/errors";
-import type { TokenAccount, Account } from "../../types";
-import type { AccountBridge } from "../../types/bridge";
-import { getAccountNetworkInfo } from "../../libcore/getAccountNetworkInfo";
-import { withLibcore } from "../../libcore/access";
-import { getCoreAccount } from "../../libcore/getCoreAccount";
-import { syncAccount } from "../../libcore/syncAccount";
-import { getFeesForTransaction } from "../../libcore/getFeesForTransaction";
-import { libcoreBigIntToBigNumber } from "../../libcore/buildBigNumber";
-import libcoreSignAndBroadcast from "../../libcore/signAndBroadcast";
-import { makeLRUCache } from "../../cache";
-import { inferDeprecatedMethods } from "../../bridge/deprecationUtils";
-import { validateRecipient } from "../../bridge/shared";
-import type { Transaction } from "./types";
+import type { TokenAccount, Account } from "../../../types";
+import type { AccountBridge } from "../../../types/bridge";
+import LibcoreCurrencyBridge from "../../../bridge/LibcoreCurrencyBridge";
+import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
+import { withLibcore } from "../../../libcore/access";
+import { getCoreAccount } from "../../../libcore/getCoreAccount";
+import { syncAccount } from "../../../libcore/syncAccount";
+import { getFeesForTransaction } from "../../../libcore/getFeesForTransaction";
+import { libcoreBigIntToBigNumber } from "../../../libcore/buildBigNumber";
+import libcoreSignAndBroadcast from "../../../libcore/signAndBroadcast";
+import { makeLRUCache } from "../../../cache";
+import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
+import { validateRecipient } from "../../../bridge/shared";
+import type { Transaction } from "../types";
 
 const getTransactionAccount = (a, t): Account | TokenAccount => {
   const { tokenAccountId } = t;
@@ -176,7 +177,7 @@ const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
     (networkInfo.gas_price ? BigNumber(networkInfo.gas_price) : null)
 });
 
-const bridge: AccountBridge<Transaction> = {
+export const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   prepareTransaction,
   getTransactionStatus,
@@ -191,4 +192,4 @@ const bridge: AccountBridge<Transaction> = {
   })
 };
 
-export default bridge;
+export const currencyBridge = LibcoreCurrencyBridge;

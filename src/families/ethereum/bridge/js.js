@@ -12,7 +12,7 @@ import {
   ETHAddressNonEIP,
   InvalidAddress
 } from "@ledgerhq/errors";
-import { inferDeprecatedMethods } from "../../bridge/deprecationUtils";
+import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
 import {
   getDerivationModesForCurrency,
   getDerivationScheme,
@@ -20,21 +20,21 @@ import {
   isIterableDerivationMode,
   derivationModeSupportsIndex,
   getMandatoryEmptyAccountSkip
-} from "../../derivation";
+} from "../../../derivation";
 import {
   getAccountPlaceholderName,
   getNewAccountPlaceholderName
-} from "../../account";
-import { getCryptoCurrencyById } from "../../currencies";
-import type { Account, Operation } from "../../types";
-import type { Transaction } from "./types";
-import getAddress from "../../hw/getAddress";
-import { open } from "../../hw";
-import { apiForCurrency } from "../../api/Ethereum";
-import { getEstimatedFees } from "../../api/Fees";
-import type { Tx } from "../../api/Ethereum";
-import signTransaction from "../../hw/signTransaction";
-import type { CurrencyBridge, AccountBridge } from "../../types/bridge";
+} from "../../../account";
+import { getCryptoCurrencyById } from "../../../currencies";
+import type { Account, Operation } from "../../../types";
+import type { Transaction } from "../types";
+import getAddress from "../../../hw/getAddress";
+import { open } from "../../../hw";
+import { apiForCurrency } from "../../../api/Ethereum";
+import { getEstimatedFees } from "../../../api/Fees";
+import type { Tx } from "../../../api/Ethereum";
+import signTransaction from "../../../hw/signTransaction";
+import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
 
 const serializeTransaction = t => ({
   recipient: t.recipient,

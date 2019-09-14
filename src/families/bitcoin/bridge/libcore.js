@@ -2,16 +2,17 @@
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
 import { FeeNotLoaded, FeeRequired } from "@ledgerhq/errors";
-import { validateRecipient } from "../../bridge/shared";
-import type { AccountBridge } from "../../types/bridge";
-import type { Account } from "../../types/account";
-import type { Transaction } from "./types";
-import { syncAccount } from "../../libcore/syncAccount";
-import { getAccountNetworkInfo } from "../../libcore/getAccountNetworkInfo";
-import { getFeesForTransaction } from "../../libcore/getFeesForTransaction";
-import libcoreSignAndBroadcast from "../../libcore/signAndBroadcast";
-import { makeLRUCache } from "../../cache";
-import { inferDeprecatedMethods } from "../../bridge/deprecationUtils";
+import LibcoreCurrencyBridge from "../../../bridge/LibcoreCurrencyBridge";
+import { validateRecipient } from "../../../bridge/shared";
+import type { AccountBridge } from "../../../types/bridge";
+import type { Account } from "../../../types/account";
+import type { Transaction } from "../types";
+import { syncAccount } from "../../../libcore/syncAccount";
+import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
+import { getFeesForTransaction } from "../../../libcore/getFeesForTransaction";
+import libcoreSignAndBroadcast from "../../../libcore/signAndBroadcast";
+import { makeLRUCache } from "../../../cache";
+import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
 
 const startSync = (initialAccount, _observation) => syncAccount(initialAccount);
 
@@ -119,7 +120,9 @@ const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
   feePerByte: t.feePerByte || networkInfo.feeItems.defaultFeePerByte
 });
 
-const bridge: AccountBridge<Transaction> = {
+export const currencyBridge = LibcoreCurrencyBridge;
+
+export const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   prepareTransaction,
   getTransactionStatus,
@@ -133,5 +136,3 @@ const bridge: AccountBridge<Transaction> = {
     fillUpExtraFieldToApplyTransactionNetworkInfo
   })
 };
-
-export default bridge;

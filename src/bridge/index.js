@@ -9,48 +9,51 @@ import type {
 } from "../types";
 import { decodeAccountId, getMainAccount } from "../account";
 import { getEnv } from "../env";
-import * as RippleJSBridge from "../families/ripple/RippleJSBridge";
-import * as EthereumJSBridge from "../families/ethereum/EthereumJSBridge";
-import LibcoreCurrencyBridge from "./LibcoreCurrencyBridge";
-import LibcoreBitcoinAccountBridge from "../families/bitcoin/LibcoreBitcoinAccountBridge";
-import LibcoreTezosAccountBridge from "../families/tezos/LibcoreTezosAccountBridge";
-import LibcoreEthereumAccountBridge from "../families/ethereum/LibcoreEthereumAccountBridge";
+import * as RippleJSBridge from "../families/ripple/bridge/js";
+import * as EthereumJSBridge from "../families/ethereum/bridge/js";
+import * as LibcoreBitcoinBridge from "../families/bitcoin/bridge/libcore";
+import * as LibcoreTezosBridge from "../families/tezos/bridge/libcore";
+import * as LibcoreEthereumBridge from "../families/ethereum/bridge/libcore";
+import * as LibcoreRippleBridge from "../families/ripple/bridge/libcore";
 import {
   makeMockCurrencyBridge,
   makeMockAccountBridge
 } from "./makeMockBridge";
 import { checkAccountSupported, libcoreNoGo } from "../account/support";
-import LibcoreRippleAccountBridge from "../families/ripple/LibcoreRippleAccountBridge";
 
 const mockCurrencyBridge = makeMockCurrencyBridge();
 const mockAccountBridge = makeMockAccountBridge();
 
-const currencyBridgeJSImplFallback = {
-  ripple: RippleJSBridge.currencyBridge,
-  ethereum: EthereumJSBridge.currencyBridge
+const jsBridges = {
+  ripple: RippleJSBridge,
+  ethereum: EthereumJSBridge
+};
+
+const libcoreBridges = {
+  ethereum: LibcoreEthereumBridge,
+  ripple: LibcoreRippleBridge,
+  bitcoin: LibcoreBitcoinBridge,
+  tezos: LibcoreTezosBridge
 };
 
 export const getCurrencyBridge = (currency: CryptoCurrency): CurrencyBridge => {
   const forceImpl = getEnv("BRIDGE_FORCE_IMPLEMENTATION");
   if (getEnv("MOCK") || forceImpl === "mock") return mockCurrencyBridge;
   if (forceImpl === "js" || (!forceImpl && libcoreNoGo.includes(currency.id))) {
-    const jsImpl = currencyBridgeJSImplFallback[currency.family];
-    if (jsImpl) return jsImpl;
-    throw new CurrencyNotSupported(
-      "no implementation available for currency " + currency.id,
-      {
-        currencyName: currency.name
-      }
-    );
+    const jsBridge = jsBridges[currency.family];
+    if (jsBridge) return jsBridge.currencyBridge;
+  } else {
+    const bridge = libcoreBridges[currency.family];
+    if (bridge) {
+      return bridge.currencyBridge;
+    }
   }
-  return LibcoreCurrencyBridge;
-};
-
-const libcoreAccountBridges = {
-  ethereum: LibcoreEthereumAccountBridge,
-  ripple: LibcoreRippleAccountBridge,
-  bitcoin: LibcoreBitcoinAccountBridge,
-  tezos: LibcoreTezosAccountBridge
+  throw new CurrencyNotSupported(
+    "no implementation available for currency " + currency.id,
+    {
+      currencyName: currency.name
+    }
+  );
 };
 
 export const getAccountBridge = (
@@ -64,18 +67,16 @@ export const getAccountBridge = (
     throw supportedError;
   }
   if (type === "mock") return mockAccountBridge;
+  const { family } = mainAccount.currency;
   if (type === "libcore") {
-    const maybeBridge = libcoreAccountBridges[mainAccount.currency.family];
-    if (maybeBridge) return maybeBridge;
+    const libcoreBridge = libcoreBridges[family];
+    if (libcoreBridge) return libcoreBridge.accountBridge;
   }
-  switch (mainAccount.currency.family) {
-    case "ripple":
-      return RippleJSBridge.accountBridge;
-    case "ethereum":
-      return EthereumJSBridge.accountBridge;
-    default:
-      throw new CurrencyNotSupported("currency not supported", {
-        currencyName: mainAccount.currency.name
-      });
+  const jsBridge = libcoreBridges[family];
+  if (jsBridge) {
+    return jsBridge.accountBridge;
   }
+  throw new CurrencyNotSupported("currency not supported", {
+    currencyName: mainAccount.currency.name
+  });
 };

@@ -16,31 +16,31 @@ import {
   NetworkDown,
   InvalidAddressBecauseDestinationIsAlsoSource
 } from "@ledgerhq/errors";
-import { inferDeprecatedMethods } from "../../bridge/deprecationUtils";
-import type { Account, Operation } from "../../types";
+import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
+import type { Account, Operation } from "../../../types";
 import {
   getDerivationModesForCurrency,
   getDerivationScheme,
   runDerivationScheme,
   isIterableDerivationMode,
   derivationModeSupportsIndex
-} from "../../derivation";
+} from "../../../derivation";
 import {
   getAccountPlaceholderName,
   getNewAccountPlaceholderName
-} from "../../account";
-import getAddress from "../../hw/getAddress";
-import { open } from "../../hw";
+} from "../../../account";
+import getAddress from "../../../hw/getAddress";
+import { open } from "../../../hw";
 import {
   apiForEndpointConfig,
   defaultEndpoint,
   parseAPIValue,
   parseAPICurrencyObject,
   formatAPICurrencyXRP
-} from "../../api/Ripple";
-import type { CurrencyBridge, AccountBridge } from "../../types/bridge";
-import signTransaction from "../../hw/signTransaction";
-import type { Transaction } from "./types";
+} from "../../../api/Ripple";
+import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
+import signTransaction from "../../../hw/signTransaction";
+import type { Transaction } from "../types";
 
 async function doSignAndBroadcast({
   a,
