@@ -1,6 +1,11 @@
 // @flow
 
-import type { CryptoCurrencyIds, AccountRaw } from "../types";
+import type {
+  CryptoCurrencyIds,
+  AccountRaw,
+  TransactionRaw,
+  TransactionStatusRaw
+} from "../types";
 
 export type CurrenciesData = {|
   recipients?: Array<{|
@@ -8,7 +13,11 @@ export type CurrenciesData = {|
     isValid: boolean
   |}>,
   accounts: Array<{|
-    raw: AccountRaw
+    raw: AccountRaw,
+    transactions?: Array<{|
+      transaction: TransactionRaw,
+      expectedStatus: $Shape<TransactionStatusRaw>
+    |}>
   |}>
 |};
 

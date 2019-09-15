@@ -1,9 +1,9 @@
-/* eslint-disable no-console */
 // @flow
 
 import "babel-polyfill";
 import { BigNumber } from "bignumber.js";
 import { reduce } from "rxjs/operators";
+import { InvalidAddress } from "@ledgerhq/errors";
 import {
   fromAccountRaw,
   toAccountRaw,
@@ -16,6 +16,7 @@ import {
 } from "@ledgerhq/live-common/lib/transaction";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import dataset from "@ledgerhq/live-common/lib/generated/test-dataset";
+import specifics from "@ledgerhq/live-common/lib/generated/test-specifics";
 import { setup } from "../live-common-setup-test";
 
 setup("accountBridges");
@@ -224,6 +225,25 @@ all
           // FIXME i'm not sure if we can establish more shared properties
         });
 
+        test("Missing recipient should have a recipientError", async () => {
+          const account = await getSynced();
+          let t = {
+            ...bridge.createTransaction(account)
+          };
+          let status = await bridge.getTransactionStatus(account, t);
+          expect(status.recipientError).toEqual(new InvalidAddress());
+        });
+
+        test("Invalid recipient should have a recipientError", async () => {
+          const account = await getSynced();
+          let t = {
+            ...bridge.createTransaction(account),
+            recipient: "invalidADDRESS"
+          };
+          let status = await bridge.getTransactionStatus(account, t);
+          expect(status.recipientError).toEqual(new InvalidAddress());
+        });
+
         test("can be called on a prepared self transaction", async () => {
           const account = await getSynced();
           const recipients = currencyData.recipients || [];
@@ -249,3 +269,7 @@ all
       });
     });
   });
+
+Object.values(specifics).forEach(specific => {
+  specific();
+});

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 // @flow
 
 import "babel-polyfill";
@@ -27,13 +26,11 @@ describe("libcore access", () => {
     let gcjob = 0;
 
     withLibcore(async () => {
-      console.log("job1");
       await sleep(100);
       ++count;
     });
 
     withLibcore(async () => {
-      console.log("job2");
       await sleep(100);
       ++count;
     });
@@ -42,11 +39,9 @@ describe("libcore access", () => {
 
     await sleep(20).then(() =>
       afterLibcoreGC(async () => {
-        console.log("after");
         expect(count).toBe(2);
         await sleep(100);
         p3 = withLibcore(async () => {
-          console.log("job3");
           await sleep(400);
           ++count;
         });

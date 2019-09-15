@@ -96,6 +96,9 @@ export const signAndBroadcast = (
     };
   });
 
+export const isInvalidRecipient = (recipient: string) =>
+  recipient.includes("invalid") || recipient.length <= 3;
+
 const substractOneYear = date =>
   new Date(new Date(date).setFullYear(new Date(date).getFullYear() - 1));
 

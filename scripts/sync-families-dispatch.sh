@@ -20,6 +20,7 @@ bridge/js.js \
 bridge/libcore.js \
 bridge/mock.js \
 test-dataset.js \
+test-specifics.js \
 "
 
 cd ../src

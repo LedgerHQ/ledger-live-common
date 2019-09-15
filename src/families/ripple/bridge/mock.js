@@ -3,7 +3,8 @@ import { BigNumber } from "bignumber.js";
 import {
   NotEnoughBalance,
   NotEnoughBalanceBecauseDestinationNotCreated,
-  InvalidAddressBecauseDestinationIsAlsoSource
+  InvalidAddressBecauseDestinationIsAlsoSource,
+  InvalidAddress
 } from "@ledgerhq/errors";
 import type { Transaction } from "../types";
 import type { Account, AccountBridge, CurrencyBridge } from "../../../types";
@@ -12,7 +13,8 @@ import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
 import {
   scanAccountsOnDevice,
   signAndBroadcast,
-  startSync
+  startSync,
+  isInvalidRecipient
 } from "../../../bridge/mockHelpers";
 
 const defaultGetFees = (a: Account, t: *) => t.fee || BigNumber(0);
@@ -69,8 +71,8 @@ const getTransactionStatus = (a, t) => {
   // Fill up recipient errors...
   let recipientError;
   let recipientWarning;
-  if (t.recipient.length <= 3) {
-    recipientError = new Error("invalid recipient");
+  if (isInvalidRecipient(t.recipient)) {
+    recipientError = new InvalidAddress("");
   } else if (a.freshAddress === t.recipient) {
     recipientError = new InvalidAddressBecauseDestinationIsAlsoSource();
   }

@@ -1,6 +1,6 @@
 // @flow
 import { BigNumber } from "bignumber.js";
-import { NotEnoughBalance } from "@ledgerhq/errors";
+import { NotEnoughBalance, InvalidAddress } from "@ledgerhq/errors";
 import type { Transaction } from "../types";
 import type { AccountBridge, CurrencyBridge } from "../../../types";
 import { getFeeItems } from "../../../api/FeesBitcoin";
@@ -8,7 +8,8 @@ import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
 import {
   scanAccountsOnDevice,
   signAndBroadcast,
-  startSync
+  startSync,
+  isInvalidRecipient
 } from "../../../bridge/mockHelpers";
 
 const defaultGetFees = (a, t: *) => (t.feePerByte || BigNumber(0)).times(250);
@@ -46,8 +47,8 @@ const getTransactionStatus = (account, t) => {
   // Fill up recipient errors...
   let recipientError;
   let recipientWarning;
-  if (t.recipient.length <= 3) {
-    recipientError = new Error("invalid recipient");
+  if (isInvalidRecipient(t.recipient)) {
+    recipientError = new InvalidAddress("");
   }
 
   return Promise.resolve({
