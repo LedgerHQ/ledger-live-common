@@ -10,3 +10,5 @@ if (!console.assert) {
 
 process.browser = true; // for readable-stream/lib/_stream_writable.js
 // FIXME shim want to set it to false tho...
+
+require("react-native").YellowBox.ignoreWarnings(["act(...)"]);

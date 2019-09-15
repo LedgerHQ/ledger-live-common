@@ -60,12 +60,11 @@ const ViewNode = ({ node, topLevel }: { node: Node, topLevel?: boolean }) => {
       style={{
         flexDirection: "column",
         marginTop: 1,
-        padding: topLevel ? 10 : 5
+        padding: topLevel ? 8 : 2
       }}
     >
       <TouchableOpacity
         style={{
-          paddingBottom: 4,
           borderBottomWidth: topLevel ? 2 : 0,
           borderBottomColor: colors[status]
         }}
@@ -76,11 +75,11 @@ const ViewNode = ({ node, topLevel }: { node: Node, topLevel?: boolean }) => {
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
           <Text
             style={{
-              fontWeight: "bold",
+              fontWeight: topLevel ? "bold" : "normal",
               color: colors[status]
             }}
           >
-            {node.name}
+            {collapsed ? "+" : "-"} {node.name}
           </Text>
           {!topLevel ? null : (
             <View style={{ flexDirection: "row" }}>
@@ -89,7 +88,7 @@ const ViewNode = ({ node, topLevel }: { node: Node, topLevel?: boolean }) => {
                   style={{
                     fontWeight: "bold",
                     color: colors.failure,
-                    marginRight: 5
+                    marginRight: 4
                   }}
                 >
                   {stats.failure} errors
@@ -115,7 +114,8 @@ const ViewNode = ({ node, topLevel }: { node: Node, topLevel?: boolean }) => {
         <View
           style={{
             flexDirection: "column",
-            paddingLeft: 5,
+            paddingLeft: 10,
+            paddingBottom: 10,
             display: collapsed ? "none" : "flex"
           }}
         >
