@@ -19,7 +19,7 @@ import dataset from "@ledgerhq/live-common/lib/generated/test-dataset";
 import specifics from "@ledgerhq/live-common/lib/generated/test-specifics";
 import { setup } from "../live-common-setup-test";
 
-setup("accountBridges");
+setup("bridges");
 
 function syncAccount(bridge, account) {
   return bridge
