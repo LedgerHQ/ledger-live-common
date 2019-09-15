@@ -5,22 +5,70 @@ const dataset: DatasetTest = {
   implementations: ["libcore", "mock"],
   currencies: {
     bitcoin: {
-      recipients: [
-        {
-          address: "1Cz2ZXb6Y6AacXJTpo4RBjQMLEmscuxD8e",
-          isValid: true
-        },
-        {
-          address: "34N7XoKANmM66ZQDyQf2j8hPaTo6v5X8eA",
-          isValid: true
-        },
-        {
-          address: "bc1qqmxqdrkxgx6swrvjl9l2e6szvvkg45all5u4fl",
-          isValid: true
-        }
-      ],
       accounts: [
         {
+          transactions: [
+            {
+              name: "legacy recipient",
+              transaction: {
+                family: "bitcoin",
+                recipient: "1Cz2ZXb6Y6AacXJTpo4RBjQMLEmscuxD8e",
+                amount: "1000",
+                feePerByte: "1",
+                networkInfo: null
+              },
+              expectedStatus: {
+                amount: "1000",
+                // estimatedFees: "250",
+                recipientError: null,
+                recipientWarning: null,
+                showFeeWarning: true,
+                // totalSpent: "1250",
+                transactionError: null,
+                useAllAmount: false
+              }
+            },
+            {
+              name: "segwit recipient",
+              transaction: {
+                family: "bitcoin",
+                recipient: "34N7XoKANmM66ZQDyQf2j8hPaTo6v5X8eA",
+                amount: "1000",
+                feePerByte: "1",
+                networkInfo: null
+              },
+              expectedStatus: {
+                amount: "1000",
+                // estimatedFees: "250",
+                recipientError: null,
+                recipientWarning: null,
+                showFeeWarning: true,
+                // totalSpent: "1250",
+                transactionError: null,
+                useAllAmount: false
+              }
+            },
+            {
+              name: "native segwit recipient",
+              transaction: {
+                family: "bitcoin",
+                recipient: "bc1qqmxqdrkxgx6swrvjl9l2e6szvvkg45all5u4fl",
+                amount: "1000",
+                feePerByte: "1",
+                networkInfo: null
+              },
+              expectedStatus: {
+                amount: "1000",
+                // estimatedFees: "250",
+                recipientError: null,
+                recipientWarning: null,
+                showFeeWarning: true,
+                // totalSpent: "1250",
+                transactionError: null,
+                useAllAmount: false
+              }
+            }
+          ],
           raw: {
             id:
               "libcore:1:bitcoin:xpub6Bm5P7Xyx2UYrVBAgb54gEswXhbZaryZSWsPjeJ1jpb9K9S5UTD5z5cXW4EREkTqkNjSHQHxwHKZJVE7TFvftySnKabMAXAQCMSVJBdJxMC:",

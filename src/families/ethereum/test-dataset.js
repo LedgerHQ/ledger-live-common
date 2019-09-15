@@ -5,18 +5,32 @@ const dataset: DatasetTest = {
   implementations: ["libcore", "mock", "ethereumjs"],
   currencies: {
     ethereum: {
-      recipients: [
-        {
-          address: "0x17733CAb76d9A2112576443F21735789733B1ca3",
-          isValid: true
-        },
-        {
-          address: "0x519192a437e6aeb895Cec72828A73B11b698dE3a",
-          isValid: true
-        }
-      ],
       accounts: [
         {
+          transactions: [
+            {
+              name: "success1",
+              transaction: {
+                family: "ethereum",
+                recipient: "0x17733CAb76d9A2112576443F21735789733B1ca3",
+                amount: "10000000000000",
+                gasPrice: "100000000",
+                gasLimit: "21000",
+                feeCustomUnit: null,
+                networkInfo: null
+              },
+              expectedStatus: {
+                amount: "10000000000000",
+                // estimatedFees: "2100000000000", // FIXME
+                recipientError: null,
+                recipientWarning: null,
+                showFeeWarning: true,
+                // totalSpent: "12100000000000", // FIXME
+                transactionError: null,
+                useAllAmount: false
+              }
+            }
+          ],
           raw: {
             id:
               "libcore:1:ethereum:xpub6BemYiVNp19ZzH73tAbE9guoQcyygwpWgmrch2J2WsbJhxUSnjZXpMnAKru6wXK3AWxU2fywYBCdojmwnFL6qiH3ByqXpDJ2PKGijdaNvAb:",

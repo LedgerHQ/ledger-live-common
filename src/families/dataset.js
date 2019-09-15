@@ -8,13 +8,10 @@ import type {
 } from "../types";
 
 export type CurrenciesData = {|
-  recipients?: Array<{|
-    address: string,
-    isValid: boolean
-  |}>,
   accounts: Array<{|
     raw: AccountRaw,
     transactions?: Array<{|
+      name: string,
       transaction: TransactionRaw,
       expectedStatus: $Shape<TransactionStatusRaw>
     |}>

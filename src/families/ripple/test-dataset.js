@@ -5,14 +5,34 @@ const dataset: DatasetTest = {
   implementations: ["libcore", "mock", "ripplejs"],
   currencies: {
     ripple: {
-      recipients: [
-        {
-          address: "rMLgQYP7up5xP3f9o51F9k1q1JEf9doaAi",
-          isValid: true
-        }
-      ],
       accounts: [
         {
+          transactions: [
+            /*
+            {
+              name: "success1",
+              transaction: {
+                family: "ripple",
+                recipient: "rMLgQYP7up5xP3f9o51F9k1q1JEf9doaAi",
+                amount: "1000",
+                tag: null,
+                fee: "1",
+                feeCustomUnit: null,
+                networkInfo: null
+              },
+              expectedStatus: {
+                amount: "1000",
+                estimatedFees: "1",
+                recipientError: null,
+                recipientWarning: null,
+                showFeeWarning: false,
+                totalSpent: "1001",
+                transactionError: null,
+                useAllAmount: false
+              }
+            }
+            */
+          ],
           raw: {
             id:
               "libcore:1:ripple:xpub6BemYiVNp19a2SqH5MuUUuMUsiMU4ZLcXQgfoFxbRSRjPEuzcwcjx5SXezUhwcmgCTKGzuGAqHxRFSCn6YLAqydEdq11LVYENwxNC6ctwrv:",

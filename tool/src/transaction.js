@@ -47,6 +47,8 @@ export type InferTransactionsOpts = $Shape<{
   fee: BigNumber
 }>;
 
+// TODO split code per family so it works generically
+
 export const inferTransactionsOpts = [
   {
     name: "self-transaction",

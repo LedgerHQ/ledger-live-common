@@ -12,7 +12,8 @@ import {
 } from "@ledgerhq/live-common/lib/account";
 import {
   fromTransactionRaw,
-  toTransactionRaw
+  toTransactionRaw,
+  toTransactionStatusRaw
 } from "@ledgerhq/live-common/lib/transaction";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import dataset from "@ledgerhq/live-common/lib/generated/test-dataset";
@@ -47,6 +48,7 @@ Object.keys(dataset).forEach(family => {
         });
         all.push({
           currencyData,
+          accountData,
           account,
           impl
         });
@@ -69,8 +71,7 @@ all
     return { getSynced, bridge, initialAccount: account, ...rest };
   })
   .forEach(arg => {
-    const { getSynced, bridge, initialAccount, currencyData, impl } = arg;
-    // TODO mock disabling network to test properties when this happen...
+    const { getSynced, bridge, initialAccount, accountData, impl } = arg;
     describe(impl + " bridge on account " + initialAccount.name, () => {
       describe("startSync", () => {
         test("succeed", async () => {
@@ -225,7 +226,7 @@ all
           // FIXME i'm not sure if we can establish more shared properties
         });
 
-        test("Missing recipient should have a recipientError", async () => {
+        test("Default empty recipient have a recipientError", async () => {
           const account = await getSynced();
           let t = {
             ...bridge.createTransaction(account)
@@ -234,7 +235,7 @@ all
           expect(status.recipientError).toEqual(new InvalidAddress());
         });
 
-        test("Invalid recipient should have a recipientError", async () => {
+        test("invalid recipient have a recipientError", async () => {
           const account = await getSynced();
           let t = {
             ...bridge.createTransaction(account),
@@ -244,20 +245,22 @@ all
           expect(status.recipientError).toEqual(new InvalidAddress());
         });
 
-        test("can be called on a prepared self transaction", async () => {
-          const account = await getSynced();
-          const recipients = currencyData.recipients || [];
-          for (const { address, isValid } of recipients) {
-            if (!isValid) continue;
-            const t = await bridge.prepareTransaction(account, {
-              ...bridge.createTransaction(account),
-              amount: BigNumber(1000),
-              recipient: address
+        (accountData.transactions || []).forEach(
+          ({ name, transaction, expectedStatus }) => {
+            describe("transaction " + name, () => {
+              test("matches expected status", async () => {
+                const account = await getSynced();
+                const t = await bridge.prepareTransaction(
+                  account,
+                  fromTransactionRaw(transaction)
+                );
+                const s = await bridge.getTransactionStatus(account, t);
+                const raw = toTransactionStatusRaw(s);
+                expect(raw).toMatchObject({ ...raw, ...expectedStatus });
+              });
             });
-            const s = await bridge.getTransactionStatus(account, t);
-            expect(s).toBeDefined();
           }
-        });
+        );
       });
 
       describe("signAndBroadcast", () => {
