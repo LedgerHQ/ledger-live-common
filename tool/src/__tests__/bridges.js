@@ -270,6 +270,6 @@ all
     });
   });
 
-Object.values(specifics).forEach(specific => {
+Object.values(specifics).forEach((specific: Function) => {
   specific();
 });
