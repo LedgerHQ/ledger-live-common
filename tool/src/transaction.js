@@ -7,7 +7,8 @@ import { BigNumber } from "bignumber.js";
 import type {
   Transaction,
   TokenAccount,
-  Account
+  Account,
+  AccountBridge
 } from "@ledgerhq/live-common/lib/types";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import { getAccountCurrency } from "@ledgerhq/live-common/lib/account";
@@ -123,7 +124,7 @@ export function inferTransactions(
 
   return Promise.all(
     pairs.map(async ([token, recipient]) => {
-      const transaction = await inferTransaction(token, recipient);
+      const transaction = await inferTransaction(token, recipient, bridge);
       const prepared = await bridge.prepareTransaction(account, transaction);
       return prepared;
     })
@@ -131,7 +132,8 @@ export function inferTransactions(
 
   async function inferTransaction(
     token: ?string,
-    recipientArg: ?string
+    recipientArg: ?string,
+    bridge: AccountBridge<any>
   ): Promise<Transaction> {
     const recipient = opts["self-transaction"]
       ? account.freshAddress
@@ -207,6 +209,16 @@ export function inferTransactions(
           tag: opts.tag,
           feeCustomUnit: null,
           networkInfo: null,
+          useAllAmount
+        };
+      }
+
+      case "tezos": {
+        return {
+          ...bridge.createTransaction(account),
+          family: "tezos",
+          recipient,
+          amount,
           useAllAmount
         };
       }

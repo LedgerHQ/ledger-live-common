@@ -1,5 +1,6 @@
 // @flow
 
+import { log } from "@ledgerhq/logs";
 import { getKeychainEngine, getDerivationScheme } from "../derivation";
 import type { CryptoCurrency, DerivationMode } from "../types";
 import { atomicQueue } from "../promise";
@@ -50,6 +51,7 @@ export const getOrCreateWallet: F = atomicQueue(
       );
     }
 
+    log("libcore", "getOrCreateWallet " + walletName);
     try {
       // check if wallet exists yet
       wallet = await poolInstance.getWallet(walletName);
