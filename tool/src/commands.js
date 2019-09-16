@@ -30,7 +30,10 @@ import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import { isValidRecipient } from "@ledgerhq/live-common/lib/libcore/isValidRecipient";
 import { getAccountNetworkInfo } from "@ledgerhq/live-common/lib/libcore/getAccountNetworkInfo";
 import { withLibcore } from "@ledgerhq/live-common/lib/libcore/access";
-import { toTransactionStatusRaw } from "@ledgerhq/live-common/lib/transaction";
+import {
+  toTransactionStatusRaw,
+  toTransactionRaw
+} from "@ledgerhq/live-common/lib/transaction";
 import { encode } from "@ledgerhq/live-common/lib/cross";
 import manager from "@ledgerhq/live-common/lib/manager";
 import { asDerivationMode } from "@ledgerhq/live-common/lib/derivation";
@@ -71,7 +74,10 @@ const getAccountNetworkInfoFormatters = {
 };
 
 const getTransactionStatusFormatters = {
-  json: e => JSON.stringify(toTransactionStatusRaw(e))
+  json: ({ status, transaction }) => ({
+    status: JSON.stringify(toTransactionStatusRaw(status)),
+    transaction: JSON.stringify(toTransactionRaw(transaction))
+  })
 };
 
 const asQR = str =>
@@ -622,15 +628,14 @@ const all = {
           from(inferTransactions(account, opts)).pipe(
             mergeMap(inferred =>
               inferred.reduce(
-                (acc, t) =>
+                (acc, transaction) =>
                   concat(
                     acc,
                     from(
                       defer(() =>
-                        getAccountBridge(account).getTransactionStatus(
-                          account,
-                          t
-                        )
+                        getAccountBridge(account)
+                          .getTransactionStatus(account, transaction)
+                          .then(status => ({ transaction, status }))
                       )
                     )
                   ),

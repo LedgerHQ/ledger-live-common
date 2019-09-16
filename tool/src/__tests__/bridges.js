@@ -33,6 +33,7 @@ function syncAccount(bridge, account) {
 // to test the common shared properties of bridges.
 const all = [];
 Object.keys(dataset).forEach(family => {
+  if (process.env.FAMILY && process.env.FAMILY !== family) return;
   const data = dataset[family];
   const { implementations, currencies } = data;
   Object.keys(currencies).forEach(currencyId => {

@@ -1,5 +1,18 @@
 // @flow
 import type { DatasetTest } from "../dataset";
+import type { NetworkInfoRaw } from "./types";
+
+const networkInfo: NetworkInfoRaw = {
+  family: "bitcoin",
+  feeItems: {
+    items: [
+      { key: "0", speed: "high", feePerByte: "3" },
+      { key: "1", speed: "standard", feePerByte: "2" },
+      { key: "2", speed: "low", feePerByte: "1" }
+    ],
+    defaultFeePerByte: "1"
+  }
+};
 
 const dataset: DatasetTest = {
   implementations: ["libcore", "mock"],
@@ -9,61 +22,61 @@ const dataset: DatasetTest = {
         {
           transactions: [
             {
-              name: "legacy recipient",
+              name: "on legacy recipient",
               transaction: {
                 family: "bitcoin",
                 recipient: "1Cz2ZXb6Y6AacXJTpo4RBjQMLEmscuxD8e",
-                amount: "1000",
+                amount: "999",
                 feePerByte: "1",
-                networkInfo: null
+                networkInfo
               },
               expectedStatus: {
-                amount: "1000",
-                // estimatedFees: "250",
+                amount: "999",
+                //estimatedFees: "250", // FIXME something is off
                 recipientError: null,
                 recipientWarning: null,
                 showFeeWarning: true,
-                // totalSpent: "1250",
+                //totalSpent: "1249", // FIXME something is off
                 transactionError: null,
                 useAllAmount: false
               }
             },
             {
-              name: "segwit recipient",
+              name: "on segwit recipient",
               transaction: {
                 family: "bitcoin",
                 recipient: "34N7XoKANmM66ZQDyQf2j8hPaTo6v5X8eA",
-                amount: "1000",
+                amount: "998",
                 feePerByte: "1",
-                networkInfo: null
+                networkInfo
               },
               expectedStatus: {
-                amount: "1000",
-                // estimatedFees: "250",
+                amount: "998",
+                //estimatedFees: "250", // FIXME something is off
                 recipientError: null,
                 recipientWarning: null,
                 showFeeWarning: true,
-                // totalSpent: "1250",
+                //totalSpent: "1248", // FIXME something is off
                 transactionError: null,
                 useAllAmount: false
               }
             },
             {
-              name: "native segwit recipient",
+              name: "on native segwit recipient",
               transaction: {
                 family: "bitcoin",
                 recipient: "bc1qqmxqdrkxgx6swrvjl9l2e6szvvkg45all5u4fl",
-                amount: "1000",
+                amount: "997",
                 feePerByte: "1",
-                networkInfo: null
+                networkInfo
               },
               expectedStatus: {
-                amount: "1000",
-                // estimatedFees: "250",
+                amount: "997",
+                //estimatedFees: "250", // FIXME something is off
                 recipientError: null,
                 recipientWarning: null,
                 showFeeWarning: true,
-                // totalSpent: "1250",
+                //totalSpent: "1247", // FIXME something is off
                 transactionError: null,
                 useAllAmount: false
               }
