@@ -221,6 +221,7 @@ all
             account,
             bridge.createTransaction(account)
           );
+          expect(t.networkInfo).toBeDefined();
           const s = await bridge.getTransactionStatus(account, t);
           expect(s).toBeDefined();
           // FIXME i'm not sure if we can establish more shared properties
@@ -254,6 +255,7 @@ all
                   account,
                   fromTransactionRaw(transaction)
                 );
+                expect(t.networkInfo).toBeDefined();
                 const s = await bridge.getTransactionStatus(account, t);
                 const raw = toTransactionStatusRaw(s);
                 expect(raw).toMatchObject({ ...raw, ...expectedStatus });

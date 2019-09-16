@@ -69,13 +69,9 @@ const getTransactionStatus = async (a, t) => {
   }
   const { estimatedFees, transactionError } = feesResult;
 
-  const totalSpent = useAllAmount
-    ? a.balance
-    : BigNumber(t.amount || 0).plus(estimatedFees);
+  const totalSpent = useAllAmount ? a.balance : t.amount.plus(estimatedFees);
 
-  const amount = useAllAmount
-    ? a.balance.minus(estimatedFees)
-    : BigNumber(t.amount || 0);
+  const amount = useAllAmount ? a.balance.minus(estimatedFees) : t.amount;
 
   const showFeeWarning = amount.gt(0) && estimatedFees.times(10).gt(amount);
 
@@ -102,11 +98,17 @@ const prepareTransaction = async (
   a: Account,
   t: Transaction
 ): Promise<Transaction> => {
-  if (t.networkInfo) return t;
-  const networkInfo = await getAccountNetworkInfo(a);
-  invariant(networkInfo.family === "bitcoin", "bitcoin networkInfo expected");
+  let networkInfo = t.networkInfo;
+  if (!networkInfo) {
+    networkInfo = await getAccountNetworkInfo(a);
+    invariant(networkInfo.family === "bitcoin", "bitcoin networkInfo expected");
+  }
   const feePerByte = t.feePerByte || networkInfo.feeItems.defaultFeePerByte;
-  if (feePerByte === t.feePerByte || feePerByte.eq(t.feePerByte || 0)) {
+  if (
+    t.networkInfo === networkInfo &&
+    (feePerByte === t.feePerByte || feePerByte.eq(t.feePerByte || 0))
+    // nothing changed
+  ) {
     return t;
   }
   return {

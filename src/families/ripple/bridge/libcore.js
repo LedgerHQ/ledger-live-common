@@ -90,7 +90,8 @@ const prepareTransaction = async (a, t) => {
   }
 
   const fee = t.fee || networkInfo.serverFee;
-  if (fee === t.fee || fee.eq(t.fee || 0)) {
+  if (networkInfo && (fee === t.fee || fee.eq(t.fee || 0))) {
+    // nothing changes
     return t;
   }
 
