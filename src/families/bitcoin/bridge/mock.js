@@ -78,12 +78,18 @@ const prepareTransaction = async (a, t) => {
   return t;
 };
 
+const getCapabilities = () => ({
+  canSync: true,
+  canSend: true
+});
+
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   getTransactionStatus,
   prepareTransaction,
   startSync,
   signAndBroadcast,
+  getCapabilities,
   ...inferDeprecatedMethods({
     name: "BitcoinMockBridge",
     createTransaction,

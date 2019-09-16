@@ -35,6 +35,11 @@ export interface CurrencyBridge {
   ): Observable<ScanAccountEvent>;
 }
 
+export type Capabilities = {
+  canSync: boolean,
+  canSend: boolean
+};
+
 // Abstraction related to an account
 export interface AccountBridge<T: Transaction> {
   // synchronizes an account continuously to update with latest blochchains state.
@@ -48,6 +53,8 @@ export interface AccountBridge<T: Transaction> {
     initialAccount: Account,
     observation: boolean
   ): Observable<(Account) => Account>;
+
+  getCapabilities(account: Account): Capabilities;
 
   // a Transaction object is created on UI side as a black box to put all temporary information to build the transaction at the end.
   // There are a bunch of edit and get functions to edit and extract information out ot this black box.

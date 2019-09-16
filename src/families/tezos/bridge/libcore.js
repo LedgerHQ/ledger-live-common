@@ -75,12 +75,18 @@ const currencyBridge: CurrencyBridge = {
   scanAccountsOnDevice
 };
 
+const getCapabilities = () => ({
+  canSync: true,
+  canSend: true
+});
+
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   prepareTransaction,
   getTransactionStatus,
   startSync,
   signAndBroadcast,
+  getCapabilities,
   ...inferDeprecatedMethods({
     name: "LibcoreTezosAccountBridge",
     createTransaction,

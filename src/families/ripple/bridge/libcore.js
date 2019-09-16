@@ -107,6 +107,11 @@ const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
   unit: networkInfo.unit
 });
 
+const getCapabilities = () => ({
+  canSync: true,
+  canSend: true
+});
+
 const currencyBridge: CurrencyBridge = {
   scanAccountsOnDevice
 };
@@ -117,6 +122,7 @@ const accountBridge: AccountBridge<Transaction> = {
   getTransactionStatus,
   startSync,
   signAndBroadcast,
+  getCapabilities,
   ...inferDeprecatedMethods({
     name: "LibcoreRippleAccountBridge",
     createTransaction,

@@ -177,12 +177,18 @@ const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
     (networkInfo.gas_price ? BigNumber(networkInfo.gas_price) : null)
 });
 
+const getCapabilities = () => ({
+  canSync: true,
+  canSend: true
+});
+
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   prepareTransaction,
   getTransactionStatus,
   startSync,
   signAndBroadcast,
+  getCapabilities,
   ...inferDeprecatedMethods({
     name: "LibcoreEthereumAccountBridge",
     createTransaction,

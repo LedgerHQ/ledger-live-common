@@ -699,12 +699,18 @@ const getTransactionStatus = async (a, t) => {
   });
 };
 
+const getCapabilities = () => ({
+  canSync: true,
+  canSend: true
+});
+
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   prepareTransaction,
   getTransactionStatus,
   startSync,
   signAndBroadcast,
+  getCapabilities,
   ...inferDeprecatedMethods({
     name: "RippleJSBridge",
     createTransaction,

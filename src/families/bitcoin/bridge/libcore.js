@@ -120,6 +120,11 @@ const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
   feePerByte: t.feePerByte || networkInfo.feeItems.defaultFeePerByte
 });
 
+const getCapabilities = () => ({
+  canSync: true,
+  canSend: true
+});
+
 const currencyBridge: CurrencyBridge = {
   scanAccountsOnDevice
 };
@@ -130,6 +135,7 @@ const accountBridge: AccountBridge<Transaction> = {
   getTransactionStatus,
   startSync,
   signAndBroadcast,
+  getCapabilities,
   ...inferDeprecatedMethods({
     name: "LibcoreBitcoinAccountBridge",
     createTransaction,
