@@ -64,6 +64,13 @@ export const createAccountFromDevice: F = async ({
   );
   if (isUnsubscribed()) return;
 
+  log("libcore", "AccountCreationInfo.init", {
+    index,
+    owners,
+    derivations,
+    publicKeys,
+    chainCodes
+  });
   const newAccountCreationInfos = await core.AccountCreationInfo.init(
     index,
     owners,
