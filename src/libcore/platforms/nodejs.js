@@ -163,7 +163,13 @@ export default (arg: {
         } catch (err) {
           const libcoreError = {
             code: lib.ERROR_CODE.HTTP_ERROR,
-            message: JSON.stringify(serializeError(err))
+            message: JSON.stringify(
+              serializeError({
+                message: err.message,
+                name: err.name,
+                stack: err.stack
+              })
+            )
           };
           const urlConnection = createHttpConnection(res, libcoreError);
           r.complete(urlConnection, libcoreError);

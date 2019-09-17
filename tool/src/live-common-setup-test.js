@@ -16,7 +16,8 @@ export const setup = (testId: string) => {
   axios.interceptors.response.use(
     r => r,
     error => {
-      console.warn("http error", error.response.status, error.request.path);
+      error.response &&
+        console.warn("http error", error.response.status, error.request.path);
       return Promise.reject(error);
     }
   );
