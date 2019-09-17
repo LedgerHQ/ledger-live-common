@@ -90,6 +90,7 @@ export type Account = {
   lastSyncDate: Date,
 
   // A configuration for the endpoint to use. (usecase: Ripple node)
+  // FIXME drop and introduce a config{} object
   endpointConfig?: ?string,
 
   // An account can have sub accounts, in that case they are called "token accounts".

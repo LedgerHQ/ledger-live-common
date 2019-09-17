@@ -13,6 +13,7 @@ export type CurrenciesData = {|
     transactions?: Array<{|
       name: string,
       transaction: TransactionRaw,
+      // introduce possibility to impl a test function: (expect, Account, TransactionStatus)=>void
       expectedStatus: $Shape<TransactionStatusRaw>
     |}>
   |}>
