@@ -1,10 +1,5 @@
 // @flow
-import type {
-  Account,
-  TokenAccount,
-  Operation,
-  DailyOperations
-} from "../types";
+import type { AccountLike, Operation, DailyOperations } from "../types";
 import { flattenAccounts } from "./helpers";
 import { flattenOperationWithInternals } from "../operation";
 
@@ -23,7 +18,7 @@ type GroupOpsByDayOpts = {
  * @memberof account
  */
 export function groupAccountsOperationsByDay(
-  inputAccounts: Account[] | TokenAccount[] | (Account | TokenAccount)[],
+  inputAccounts: AccountLike[],
   { count, withTokenAccounts }: GroupOpsByDayOpts
 ): DailyOperations {
   const accounts = withTokenAccounts
@@ -97,9 +92,9 @@ export function groupAccountsOperationsByDay(
  * @memberof account
  */
 export function groupAccountOperationsByDay(
-  account: Account | TokenAccount,
+  account: AccountLike,
   arg: GroupOpsByDayOpts
 ): DailyOperations {
-  const accounts: (Account | TokenAccount)[] = [account];
+  const accounts: AccountLike[] = [account];
   return groupAccountsOperationsByDay(accounts, arg);
 }

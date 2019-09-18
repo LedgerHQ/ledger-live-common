@@ -13,7 +13,7 @@ import {
   addPendingOperation,
   shortAddressPreview,
   findTokenAccountById,
-  listTokenAccounts
+  listSubAccounts
 } from "./helpers";
 import { groupAddAccounts, addAccounts, migrateAccounts } from "./addAccounts";
 import {
@@ -34,6 +34,10 @@ import {
   fromOperationRaw,
   toTokenAccountRaw,
   fromTokenAccountRaw,
+  toChildAccountRaw,
+  fromChildAccountRaw,
+  toSubAccountRaw,
+  fromSubAccountRaw,
   toAccountRaw,
   fromAccountRaw
 } from "./serialization";
@@ -79,6 +83,10 @@ export {
   fromOperationRaw,
   toTokenAccountRaw,
   fromTokenAccountRaw,
+  toChildAccountRaw,
+  fromChildAccountRaw,
+  toSubAccountRaw,
+  fromSubAccountRaw,
   toAccountRaw,
   fromAccountRaw,
   encodeAccountId,
@@ -98,6 +106,6 @@ export {
   importAccountsMakeItems,
   importAccountsReduce,
   checkAccountSupported,
-  listTokenAccounts,
+  listSubAccounts,
   findTokenAccountById
 };

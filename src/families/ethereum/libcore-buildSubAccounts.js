@@ -66,11 +66,13 @@ async function ethereumBuildTokenAccounts({
 
   const existingAccountByTicker = {}; // used for fast lookup
   const existingAccountTickers = []; // used to keep track of ordering
-  if (existingAccount && existingAccount.tokenAccounts) {
-    for (const existingTokenAccount of existingAccount.tokenAccounts) {
-      const { ticker } = existingTokenAccount.token;
-      existingAccountTickers.push(ticker);
-      existingAccountByTicker[ticker] = existingTokenAccount;
+  if (existingAccount && existingAccount.subAccounts) {
+    for (const existingSubAccount of existingAccount.subAccounts) {
+      if (existingSubAccount.type === "TokenAccount") {
+        const { ticker } = existingSubAccount.token;
+        existingAccountTickers.push(ticker);
+        existingAccountByTicker[ticker] = existingSubAccount;
+      }
     }
   }
 

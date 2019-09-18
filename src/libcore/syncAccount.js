@@ -109,7 +109,7 @@ export function syncAccount(
         blockHeight: syncedAccount.blockHeight,
         lastSyncDate: new Date(),
         operations: syncedAccount.operations,
-        tokenAccounts: syncedAccount.tokenAccounts,
+        subAccounts: syncedAccount.subAccounts,
         pendingOperations: []
       })
     )

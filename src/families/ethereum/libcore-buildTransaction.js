@@ -31,9 +31,9 @@ export async function ethereumBuildTransaction({
   isCancelled: () => boolean
 }): Promise<?CoreEthereumLikeTransaction> {
   const { tokenAccountId } = transaction;
-  const tokenAccount = tokenAccountId
-    ? account.tokenAccounts &&
-      account.tokenAccounts.find(t => t.id === tokenAccountId)
+  const subAccount = tokenAccountId
+    ? account.subAccounts &&
+      account.subAccounts.find(t => t.id === tokenAccountId)
     : null;
   const ethereumLikeAccount = await coreAccount.asEthereumLikeAccount();
 
@@ -64,15 +64,15 @@ export async function ethereumBuildTransaction({
   const transactionBuilder = await ethereumLikeAccount.buildTransaction();
   if (isCancelled()) return;
 
-  if (tokenAccount) {
-    const { balance, token } = tokenAccount;
+  if (subAccount && subAccount.type === "TokenAccount") {
+    const { balance, token } = subAccount;
     let amount;
     if (transaction.useAllAmount) {
       amount = balance;
     } else {
       if (!transaction.amount) throw new Error("amount is missing");
       amount = BigNumber(transaction.amount);
-      if (amount.gt(tokenAccount.balance)) {
+      if (amount.gt(subAccount.balance)) {
         throw new NotEnoughBalance();
       }
     }
@@ -129,7 +129,7 @@ export async function ethereumBuildTransaction({
 
     return builded;
   } catch (e) {
-    if (tokenAccount && e.message === "Cannot gather enough funds.") {
+    if (subAccount && e.message === "Cannot gather enough funds.") {
       // FIXME e.message usage: we need a universal error code way. not yet the case with diff bindings
       throw new NotEnoughGas();
     }

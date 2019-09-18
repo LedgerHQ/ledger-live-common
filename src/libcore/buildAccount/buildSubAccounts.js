@@ -1,15 +1,15 @@
 // @flow
 
-import type { TokenAccount, Account, CryptoCurrency } from "../../types";
+import type { SubAccount, Account, CryptoCurrency } from "../../types";
 import type { CoreAccount } from "../types";
-import byFamily from "../../generated/libcore-buildTokenAccounts";
+import byFamily from "../../generated/libcore-buildSubAccounts";
 
-export async function buildTokenAccounts(arg: {
+export async function buildSubAccounts(arg: {
   currency: CryptoCurrency,
   coreAccount: CoreAccount,
   accountId: string,
   existingAccount: ?Account
-}): Promise<?(TokenAccount[])> {
+}): Promise<?(SubAccount[])> {
   const f = byFamily[arg.currency.family];
   if (f) {
     const res = await f(arg);

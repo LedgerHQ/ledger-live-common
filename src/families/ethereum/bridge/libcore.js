@@ -5,7 +5,7 @@ import {
   FeeNotLoaded,
   InvalidAddressBecauseDestinationIsAlsoSource
 } from "@ledgerhq/errors";
-import type { TokenAccount, Account } from "../../../types";
+import type { Account, AccountLike } from "../../../types";
 import type { AccountBridge, CurrencyBridge } from "../../../types/bridge";
 import { scanAccountsOnDevice } from "../../../libcore/scanAccountsOnDevice";
 import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
@@ -20,10 +20,10 @@ import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
 import { validateRecipient } from "../../../bridge/shared";
 import type { Transaction } from "../types";
 
-const getTransactionAccount = (a, t): Account | TokenAccount => {
+const getTransactionAccount = (a, t): AccountLike => {
   const { tokenAccountId } = t;
   return tokenAccountId
-    ? (a.tokenAccounts || []).find(ta => ta.id === tokenAccountId) || a
+    ? (a.subAccounts || []).find(ta => ta.id === tokenAccountId) || a
     : a;
 };
 
@@ -67,7 +67,7 @@ const calculateFees = makeLRUCache(
 const getTransactionStatus = async (a, t) => {
   const tokenAccount = !t.tokenAccountId
     ? null
-    : a.tokenAccounts && a.tokenAccounts.find(ta => ta.id === t.tokenAccountId);
+    : a.subAccounts && a.subAccounts.find(ta => ta.id === t.tokenAccountId);
   const account = tokenAccount || a;
 
   const useAllAmount = !!t.useAllAmount;

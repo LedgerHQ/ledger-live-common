@@ -18,7 +18,13 @@ import type {
 import type { DerivationMode } from "../derivation";
 
 import type {
+  SubAccount,
+  SubAccountRaw,
+  AccountLike,
+  AccountRawLike,
   Account,
+  ChildAccount,
+  ChildAccountRaw,
   AccountRaw,
   TokenAccount,
   TokenAccountRaw
@@ -47,7 +53,13 @@ export type {
   CryptoCurrencyObjMap,
   CryptoCurrencyIds,
   Account,
+  ChildAccount,
+  ChildAccountRaw,
   AccountRaw,
+  SubAccount,
+  SubAccountRaw,
+  AccountLike,
+  AccountRawLike,
   TokenAccount,
   TokenAccountRaw,
   Operation,

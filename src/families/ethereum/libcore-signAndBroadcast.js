@@ -8,7 +8,7 @@ import { libcoreAmountToBigNumber } from "../../libcore/buildBigNumber";
 import { getEnv } from "../../env";
 
 async function ethereum({
-  account: { id: accountId, freshAddress, balance, tokenAccounts },
+  account: { id: accountId, freshAddress, balance, subAccounts },
   signedTransaction,
   builded,
   coreAccount,
@@ -55,9 +55,7 @@ async function ethereum({
 
   const { tokenAccountId } = transaction;
   if (tokenAccountId) {
-    const tokenAccount = (tokenAccounts || []).find(
-      a => a.id === tokenAccountId
-    );
+    const subAccount = (subAccounts || []).find(a => a.id === tokenAccountId);
     op.subOperations = [
       {
         id: `${tokenAccountId}-${txHash}-OUT`,
@@ -65,8 +63,8 @@ async function ethereum({
         transactionSequenceNumber,
         type: "OUT",
         value:
-          transaction.useAllAmount && tokenAccount
-            ? tokenAccount.balance
+          transaction.useAllAmount && subAccount
+            ? subAccount.balance
             : BigNumber(transaction.amount || 0),
         fee,
         blockHash: null,

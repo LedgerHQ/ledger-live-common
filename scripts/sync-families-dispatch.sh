@@ -11,7 +11,7 @@ libcore-buildOperation.js \
 libcore-buildTransaction.js \
 libcore-hw-signTransaction.js \
 libcore-signAndBroadcast.js \
-libcore-buildTokenAccounts.js \
+libcore-buildSubAccounts.js \
 libcore-getFeesForTransaction.js \
 libcore-postSyncPatch.js \
 libcore-getAccountNetworkInfo.js \

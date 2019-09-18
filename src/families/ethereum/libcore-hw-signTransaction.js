@@ -23,13 +23,13 @@ export async function ethereumSignTransaction({
   coreTransaction: CoreEthereumLikeTransaction
 }) {
   const hwApp = new Eth(transport);
-  const tokenAccount = tokenAccountId
-    ? account.tokenAccounts &&
-      account.tokenAccounts.find(t => t.id === tokenAccountId)
+  const subAccount = tokenAccountId
+    ? account.subAccounts &&
+      account.subAccounts.find(t => t.id === tokenAccountId)
     : null;
 
-  if (tokenAccount) {
-    const { token } = tokenAccount;
+  if (subAccount && subAccount.type === "TokenAccount") {
+    const { token } = subAccount;
     const tokenInfo = byContractAddress(token.contractAddress);
     invariant(
       tokenInfo,

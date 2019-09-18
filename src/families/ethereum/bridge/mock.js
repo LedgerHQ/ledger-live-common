@@ -30,7 +30,7 @@ const createTransaction = (account): Transaction => ({
 const getTransactionStatus = (a, t) => {
   const tokenAccount = !t.tokenAccountId
     ? null
-    : a.tokenAccounts && a.tokenAccounts.find(ta => ta.id === t.tokenAccountId);
+    : a.subAccounts && a.subAccounts.find(ta => ta.id === t.tokenAccountId);
   const account = tokenAccount || a;
 
   const useAllAmount = !!t.useAllAmount;

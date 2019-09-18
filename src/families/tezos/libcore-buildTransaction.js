@@ -32,24 +32,28 @@ export async function tezosBuildTransaction({
   const { recipient, fees, gasLimit, storageLimit } = transaction;
 
   const tezosLikeAccount = await coreAccount.asTezosLikeAccount();
+  if (isCancelled()) return;
 
   await isValidRecipient({ currency, recipient });
+  if (isCancelled()) return;
 
   if (!fees || !gasLimit || !storageLimit || !BigNumber(gasLimit).gt(0)) {
     throw new FeeNotLoaded();
   }
 
   const feesAmount = await bigNumberToLibcoreAmount(core, coreCurrency, fees);
+  if (isCancelled()) return;
 
   const gasLimitAmount = await bigNumberToLibcoreAmount(
     core,
     coreCurrency,
     gasLimit
   );
+  if (isCancelled()) return;
 
   const storageBigInt = await bigNumberToLibcoreBigInt(core, storageLimit);
-
   if (isCancelled()) return;
+
   const transactionBuilder = await tezosLikeAccount.buildTransaction();
   if (isCancelled()) return;
 
@@ -67,6 +71,7 @@ export async function tezosBuildTransaction({
       BigNumber(transaction.amount)
     );
     if (isCancelled()) return;
+
     await transactionBuilder.sendToAddress(amount, recipient);
     if (isCancelled()) return;
   }

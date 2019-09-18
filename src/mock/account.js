@@ -244,10 +244,10 @@ export function genOperation(
   };
 
   if (account.type === "Account") {
-    const { tokenAccounts } = account;
-    if (tokenAccounts) {
+    const { subAccounts } = account;
+    if (subAccounts) {
       // TODO make sure tokenAccounts sometimes reuse an existing op hash from main account
-      op.subOperations = inferSubOperations(hash, tokenAccounts);
+      op.subOperations = inferSubOperations(hash, subAccounts);
     }
   }
 
@@ -353,7 +353,7 @@ export function genAccount(
       typeof opts.tokenAccountsCount === "number"
         ? opts.tokenAccountsCount
         : rng.nextInt(0, 8);
-    account.tokenAccounts = Array(tokenCount)
+    account.subAccounts = Array(tokenCount)
       .fill(null)
       .map((_, i) => genTokenAccount(i, account));
   }

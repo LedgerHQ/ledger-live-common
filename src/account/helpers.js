@@ -1,6 +1,12 @@
 // @flow
 import invariant from "invariant";
-import type { Account, TokenAccount, Operation } from "../types";
+import type {
+  AccountLike,
+  Account,
+  TokenAccount,
+  Operation,
+  SubAccount
+} from "../types";
 import { getEnv } from "../env";
 
 // by convention, a main account is the top level account
@@ -15,22 +21,47 @@ export const getMainAccount = (
   return mainAccount;
 };
 
-export const getAccountCurrency = (account: Account | TokenAccount) =>
-  account.type === "Account" ? account.currency : account.token;
+export const getAccountCurrency = (account: AccountLike) => {
+  switch (account.type) {
+    case "Account":
+    case "ChildAccount":
+      return account.currency;
+    case "TokenAccount":
+      return account.token;
+    default:
+      throw new Error("invalid account.type" + account.type);
+  }
+};
 
-export const getAccountUnit = (account: Account | TokenAccount) =>
-  account.type === "Account" ? account.unit : account.token.units[0];
+export const getAccountUnit = (account: AccountLike) => {
+  switch (account.type) {
+    case "Account":
+      return account.unit;
+    case "TokenAccount":
+      return account.token.units[0];
+    case "ChildAccount":
+      return account.currency.units[0];
+  }
+};
 
-export const isAccountEmpty = (a: Account | TokenAccount): boolean => {
-  const hasTokens =
-    a.type === "Account" && a.tokenAccounts && a.tokenAccounts.length;
-  return a.operations.length === 0 && a.balance.isZero() && !hasTokens;
+export const isAccountEmpty = (a: AccountLike): boolean => {
+  const hasSubAccounts =
+    a.type === "Account" && a.subAccounts && a.subAccounts.length;
+  return a.operations.length === 0 && a.balance.isZero() && !hasSubAccounts;
 };
 
 // clear account to a bare minimal version that can be restored via sync
 // will preserve the balance to avoid user panic
-export function clearAccount<T: Account | TokenAccount>(account: T): T {
+export function clearAccount<T: AccountLike>(account: T): T {
   if (account.type === "TokenAccount") {
+    return {
+      ...account,
+      operations: [],
+      pendingOperations: []
+    };
+  }
+
+  if (account.type === "ChildAccount") {
     return {
       ...account,
       operations: [],
@@ -43,21 +74,20 @@ export function clearAccount<T: Account | TokenAccount>(account: T): T {
     lastSyncDate: new Date(0),
     operations: [],
     pendingOperations: [],
-    tokenAccounts:
-      account.tokenAccounts && account.tokenAccounts.map(clearAccount)
+    subAccounts: account.subAccounts && account.subAccounts.map(clearAccount)
   };
 }
 
 export function findTokenAccountById(
   account: Account,
   id: string
-): ?TokenAccount {
-  return (account.tokenAccounts || []).find(a => a.id === id);
+): ?SubAccount {
+  return (account.subAccounts || []).find(a => a.id === id);
 }
 
 // get the token accounts of an account, ignoring those that are zero IF user don't want them
-export function listTokenAccounts(account: Account): TokenAccount[] {
-  const accounts = account.tokenAccounts || [];
+export function listSubAccounts(account: Account): SubAccount[] {
+  const accounts = account.subAccounts || [];
   if (getEnv("HIDE_EMPTY_TOKEN_ACCOUNTS")) {
     return accounts.filter(a => !a.balance.isZero());
   }
@@ -69,19 +99,19 @@ export type FlattenAccountsOptions = {
 };
 
 export function flattenAccounts(
-  topAccounts: Account[] | TokenAccount[] | (Account | TokenAccount)[],
+  topAccounts: AccountLike[],
   o: FlattenAccountsOptions = {}
-): (Account | TokenAccount)[] {
+): AccountLike[] {
   const accounts = [];
   for (let i = 0; i < topAccounts.length; i++) {
     const account = topAccounts[i];
     accounts.push(account);
     if (account.type === "Account") {
-      const tokenAccounts = o.enforceHideEmptyTokenAccounts
-        ? listTokenAccounts(account)
-        : account.tokenAccounts || [];
-      for (let j = 0; j < tokenAccounts.length; j++) {
-        accounts.push(tokenAccounts[j]);
+      const subAccounts = o.enforceHideEmptyTokenAccounts
+        ? listSubAccounts(account)
+        : account.subAccounts || [];
+      for (let j = 0; j < subAccounts.length; j++) {
+        accounts.push(subAccounts[j]);
       }
     }
   }
@@ -99,19 +129,19 @@ const appendPendingOp = (ops: Operation[], op: Operation) => {
 export const addPendingOperation = (account: Account, operation: Operation) => {
   const accountCopy = { ...account };
   const { subOperations } = operation;
-  const { tokenAccounts } = account;
-  if (subOperations && tokenAccounts) {
-    const taCopy: TokenAccount[] = tokenAccounts.slice(0);
+  const { subAccounts } = account;
+  if (subOperations && subAccounts) {
+    const taCopy: SubAccount[] = subAccounts.slice(0);
     subOperations.forEach(op => {
       const acc = taCopy.find(ta => ta.id === op.accountId);
       if (acc) {
-        taCopy[taCopy.indexOf(acc)] = {
-          ...acc,
-          pendingOperations: appendPendingOp(acc.pendingOperations, op)
-        };
+        // $FlowFixMe
+        const copy: SubAccount = { ...acc };
+        copy.pendingOperations = appendPendingOp(acc.pendingOperations, op);
+        taCopy[taCopy.indexOf(acc)] = copy;
       }
     });
-    accountCopy.tokenAccounts = taCopy;
+    accountCopy.subAccounts = taCopy;
   }
   accountCopy.pendingOperations = appendPendingOp(
     accountCopy.pendingOperations,
