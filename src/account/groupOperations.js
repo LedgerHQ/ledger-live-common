@@ -1,7 +1,19 @@
 // @flow
-import type { AccountLike, Operation, DailyOperations } from "../types";
+import type { AccountLikeArray, AccountLike, Operation } from "../types";
 import { flattenAccounts } from "./helpers";
 import { flattenOperationWithInternals } from "../operation";
+
+export type DailyOperationsSection = {
+  day: Date,
+  data: Operation[]
+};
+
+export type DailyOperations = {
+  // operations grouped by day
+  sections: DailyOperationsSection[],
+  // Is the sections complete? means there is no more operations to pull
+  completed: boolean
+};
 
 function startOfDay(t) {
   return new Date(t.getFullYear(), t.getMonth(), t.getDate());
@@ -11,17 +23,17 @@ const emptyDailyOperations = { sections: [], completed: true };
 
 type GroupOpsByDayOpts = {
   count: number,
-  withTokenAccounts?: boolean
+  withSubAccounts?: boolean
 };
 
 /**
  * @memberof account
  */
 export function groupAccountsOperationsByDay(
-  inputAccounts: AccountLike[],
-  { count, withTokenAccounts }: GroupOpsByDayOpts
+  inputAccounts: AccountLikeArray,
+  { count, withSubAccounts }: GroupOpsByDayOpts
 ): DailyOperations {
-  const accounts = withTokenAccounts
+  const accounts = withSubAccounts
     ? flattenAccounts(inputAccounts)
     : inputAccounts;
   // Track indexes of account.operations[] for each account

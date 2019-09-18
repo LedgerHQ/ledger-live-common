@@ -6,7 +6,7 @@ import shuffle from "lodash/shuffle";
 import { BigNumber } from "bignumber.js";
 import type {
   Transaction,
-  TokenAccount,
+  AccountLike,
   Account,
   AccountBridge
 } from "@ledgerhq/live-common/lib/types";
@@ -14,10 +14,7 @@ import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import { getAccountCurrency } from "@ledgerhq/live-common/lib/account";
 import { parseCurrencyUnit } from "@ledgerhq/live-common/lib/currencies";
 
-const inferAmount = (
-  account: Account | TokenAccount,
-  str: string
-): BigNumber => {
+const inferAmount = (account: AccountLike, str: string): BigNumber => {
   const currency = getAccountCurrency(account);
   const { units } = currency;
   if (str.endsWith("%")) {

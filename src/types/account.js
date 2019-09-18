@@ -121,13 +121,20 @@ export type Account = {
   // These are two valid examples:
   // I'm inside a ZRX token account of Ethereum 1: { parentAccount: Ethereum 1, account: ZRX }
   // I'm just inside the Ethereum 1: { account: Ethereum 1, parentAccount: undefined }
-  // "account" is the primary account that you use/select/view. It is a `Account | TokenAccount`.
+  // "account" is the primary account that you use/select/view. It is a `AccountLike`.
   // "parentAccount", if available, is the contextual account. It is a `?Account`.
   subAccounts?: SubAccount[]
 };
 
 export type SubAccount = TokenAccount | ChildAccount;
 export type AccountLike = Account | SubAccount;
+
+// Damn it flow. can't you support covariance.
+export type AccountLikeArray =
+  | AccountLike[]
+  | TokenAccount[]
+  | ChildAccount[]
+  | Account[];
 
 export type TokenAccountRaw = {
   type: "TokenAccountRaw",

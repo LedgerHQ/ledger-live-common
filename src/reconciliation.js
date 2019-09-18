@@ -155,17 +155,17 @@ export function patchAccount(
   let subAccounts;
   if (updatedRaw.subAccounts) {
     const existingSubAccounts = account.subAccounts || [];
-    let tokenAccountsChanged =
+    let subAccountsChanged =
       updatedRaw.subAccounts.length !== existingSubAccounts.length;
     subAccounts = updatedRaw.subAccounts.map(ta => {
       const existing = existingSubAccounts.find(t => t.id === ta.id);
-      const patched = patchTokenAccount(existing, ta);
+      const patched = patchSubAccount(existing, ta);
       if (patched !== existing) {
-        tokenAccountsChanged = true;
+        subAccountsChanged = true;
       }
       return patched;
     });
-    if (!tokenAccountsChanged) {
+    if (!subAccountsChanged) {
       subAccounts = existingSubAccounts;
     }
   }
@@ -235,7 +235,7 @@ export function patchAccount(
   return next;
 }
 
-export function patchTokenAccount(
+export function patchSubAccount(
   account: ?SubAccount,
   updatedRaw: SubAccountRaw
 ): SubAccount {

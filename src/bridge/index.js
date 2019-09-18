@@ -3,7 +3,7 @@ import { CurrencyNotSupported } from "@ledgerhq/errors";
 import type {
   CryptoCurrency,
   Account,
-  TokenAccount,
+  AccountLike,
   CurrencyBridge,
   AccountBridge
 } from "../types";
@@ -47,7 +47,7 @@ export const getCurrencyBridge = (currency: CryptoCurrency): CurrencyBridge => {
 };
 
 export const getAccountBridge = (
-  account: Account | TokenAccount,
+  account: AccountLike,
   parentAccount: ?Account
 ): AccountBridge<any> => {
   const mainAccount = getMainAccount(account, parentAccount);

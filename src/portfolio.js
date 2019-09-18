@@ -7,9 +7,8 @@ import memoize from "lodash/memoize";
 import last from "lodash/last";
 import find from "lodash/find";
 import type {
-  TokenAccount,
-  SubAccount,
   Operation,
+  AccountLikeArray,
   AccountLike,
   Account,
   BalanceHistory,
@@ -64,7 +63,7 @@ export function getDates(r: PortfolioRange): Date[] {
 }
 
 type GetBalanceHistory = (
-  account: Account | TokenAccount,
+  account: AccountLike,
   r: PortfolioRange
 ) => { history: BalanceHistory, operations: Operation[] };
 
@@ -144,7 +143,7 @@ const meaningfulPercentage = (
 
 const getBHWCV: GetBalanceHistoryWithCountervalue = (account, r, calc) => {
   const { history, operations } = getBalanceHistory(account, r);
-  const cur = account.type === "Account" ? account.currency : account.token;
+  const cur = getAccountCurrency(account);
   // a high enough value so we can compare if something changes
   const cacheReferenceValue = BigNumber("10").pow(3 + cur.units[0].magnitude);
   // pick a stable countervalue point in time to hash for the cache
@@ -414,7 +413,7 @@ const currencyPortfolioMemo: { [_: *]: CurrencyPortfolio } = {};
  * @memberof account
  */
 export function getCurrencyPortfolio(
-  accounts: AccountLike[] | Account[] | SubAccount[],
+  accounts: AccountLikeArray,
   range: PortfolioRange,
   calc: (TokenCurrency | CryptoCurrency, BigNumber, Date) => ?BigNumber
 ): CurrencyPortfolio {

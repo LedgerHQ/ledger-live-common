@@ -11,6 +11,7 @@ import {
 import type {
   TokenAccount,
   Account,
+  AccountLike,
   Operation,
   CryptoCurrency,
   TokenCurrency
@@ -200,7 +201,7 @@ export function genAddress(
  */
 export function genOperation(
   superAccount: Account,
-  account: Account | TokenAccount,
+  account: AccountLike,
   ops: *,
   rng: Prando
 ): $Exact<Operation> {
@@ -281,7 +282,7 @@ export function genAddingOperationsInAccount(
 type GenAccountOptions = {
   operationsSize?: number,
   currency?: CryptoCurrency,
-  tokenAccountsCount?: number
+  subAccountsCount?: number
 };
 
 function genTokenAccount(
@@ -350,8 +351,8 @@ export function genAccount(
 
   if (currency.id === "ethereum" || currency.id === "ethereum_ropsten") {
     const tokenCount =
-      typeof opts.tokenAccountsCount === "number"
-        ? opts.tokenAccountsCount
+      typeof opts.subAccountsCount === "number"
+        ? opts.subAccountsCount
         : rng.nextInt(0, 8);
     account.subAccounts = Array(tokenCount)
       .fill(null)

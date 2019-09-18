@@ -59,25 +59,25 @@ const cliFormat = (account, summaryOnly) => {
   const head = `${name}: ${balance} (${opsCount}) (${freshInfo}) (${derivationInfo} ${xpub ||
     ""})`;
 
-  const tokenAccounts = account.tokenAccounts || [];
+  const subAccounts = account.subAccounts || [];
   const ops = operations
     .map(
       formatOp(id => {
         if (account.id === id) return account.unit;
-        const ta = tokenAccounts.find(a => a.id === id);
-        if (ta) return ta.token.units[0];
+        const ta = subAccounts.find(a => a.id === id);
+        if (ta) return getAccountCurrency(ta).units[0];
         throw new Error("unexpected missing token account");
       })
     )
     .join("");
 
-  const tokens = tokenAccounts
+  const tokens = subAccounts
     .map(
       ta =>
         "\n  TOKEN " +
-        ta.token.name +
+        getAccountCurrency(ta).name +
         ": " +
-        formatCurrencyUnit(ta.token.units[0], ta.balance, {
+        formatCurrencyUnit(getAccountCurrency(ta).units[0], ta.balance, {
           showCode: true,
           disableRounding: true
         }) +
@@ -91,7 +91,7 @@ const cliFormat = (account, summaryOnly) => {
 };
 
 const stats = account => {
-  const { tokenAccounts, operations } = account;
+  const { subAccounts, operations } = account;
 
   const sumOfAllOpsNumber = operations.reduce(
     (sum: BigNumber, op) => sum.plus(getOperationAmountNumberWithInternals(op)),
@@ -110,7 +110,7 @@ const stats = account => {
     balance,
     sumOfAllOps,
     opsCount: operations.length,
-    tokenAccountsCount: (tokenAccounts || []).length
+    subAccountsCount: (subAccounts || []).length
   };
 };
 
@@ -120,9 +120,9 @@ const all: { [_: string]: (Account) => any } = {
   summary: account => cliFormat(account, true),
   stats: account => stats(account),
   significantTokenTickers: account =>
-    (account.tokenAccounts || [])
+    (account.subAccounts || [])
       .filter(isSignificantAccount)
-      .map(ta => ta.token.ticker)
+      .map(ta => getAccountCurrency(ta).ticker)
       .join("\n")
 };
 

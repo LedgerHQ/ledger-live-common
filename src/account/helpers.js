@@ -2,8 +2,8 @@
 import invariant from "invariant";
 import type {
   AccountLike,
+  AccountLikeArray,
   Account,
-  TokenAccount,
   Operation,
   SubAccount
 } from "../types";
@@ -13,7 +13,7 @@ import { getEnv } from "../env";
 // in case of an Account is the account itself
 // in case of a TokenAccount it's the parentAccount
 export const getMainAccount = (
-  account: Account | TokenAccount,
+  account: AccountLike,
   parentAccount: ?Account
 ): Account => {
   const mainAccount = account.type === "Account" ? account : parentAccount;
@@ -78,10 +78,7 @@ export function clearAccount<T: AccountLike>(account: T): T {
   };
 }
 
-export function findTokenAccountById(
-  account: Account,
-  id: string
-): ?SubAccount {
+export function findSubAccountById(account: Account, id: string): ?SubAccount {
   return (account.subAccounts || []).find(a => a.id === id);
 }
 
@@ -95,11 +92,11 @@ export function listSubAccounts(account: Account): SubAccount[] {
 }
 
 export type FlattenAccountsOptions = {
-  enforceHideEmptyTokenAccounts?: boolean
+  enforceHideEmptySubAccounts?: boolean
 };
 
 export function flattenAccounts(
-  topAccounts: AccountLike[],
+  topAccounts: AccountLikeArray,
   o: FlattenAccountsOptions = {}
 ): AccountLike[] {
   const accounts = [];
@@ -107,7 +104,7 @@ export function flattenAccounts(
     const account = topAccounts[i];
     accounts.push(account);
     if (account.type === "Account") {
-      const subAccounts = o.enforceHideEmptyTokenAccounts
+      const subAccounts = o.enforceHideEmptySubAccounts
         ? listSubAccounts(account)
         : account.subAccounts || [];
       for (let j = 0; j < subAccounts.length; j++) {

@@ -47,7 +47,7 @@ const dataset: DatasetTest = {
             balance: "48167391707119",
             xpub:
               "xpub6BemYiVNp19ZzH73tAbE9guoQcyygwpWgmrch2J2WsbJhxUSnjZXpMnAKru6wXK3AWxU2fywYBCdojmwnFL6qiH3ByqXpDJ2PKGijdaNvAb",
-            tokenAccounts: [],
+            subAccounts: [],
             operations: [],
             freshAddresses: [
               {
