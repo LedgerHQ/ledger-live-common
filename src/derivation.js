@@ -113,6 +113,7 @@ const modes = Object.freeze({
 (modes: { [_: DerivationMode]: ModeSpec }); // eslint-disable-line
 
 const legacyDerivations: $Shape<CryptoCurrencyConfig<DerivationMode[]>> = {
+  aeternity: ["aeternity"],
   bitcoin: ["legacy_on_bch"],
   vertcoin: ["vertcoin_128", "vertcoin_128_segwit"],
   ethereum: ["ethM", "ethMM"],
@@ -232,6 +233,11 @@ export const runDerivationScheme = (
     .replace("<node>", String(opts.node || 0))
     .replace("<address>", String(opts.address || 0));
 
+const disableBIP44 = {
+  aeternity: true,
+  tezos: true // current workaround, device app does not seem to support bip44
+};
+
 // return an array of ways to derivate, by convention the latest is the standard one.
 export const getDerivationModesForCurrency = (
   currency: CryptoCurrency
@@ -250,15 +256,14 @@ export const getDerivationModesForCurrency = (
     all.push("segwit_on_legacy");
     all.push("legacy_on_segwit");
   }
-  all.push("");
+  if (!disableBIP44[currency.id]) {
+    all.push("");
+  }
   if (currency.supportsSegwit) {
     all.push("segwit");
   }
   if (currency.supportsNativeSegwit) {
     all.push("native_segwit");
-  }
-  if (currency.id === "aeternity") {
-    return ["aeternity"];
   }
   if (!getEnv("SCAN_FOR_INVALID_PATHS")) {
     return all.filter(a => !isInvalidDerivationMode(a));
