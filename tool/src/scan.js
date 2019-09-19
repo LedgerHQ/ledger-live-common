@@ -25,6 +25,7 @@ import {
 import { findCryptoCurrency } from "@ledgerhq/live-common/lib/currencies";
 import getAppAndVersion from "@ledgerhq/live-common/lib/hw/getAppAndVersion";
 import { withDevice } from "@ledgerhq/live-common/lib/hw/deviceAccess";
+import { delay } from "@ledgerhq/live-common/lib/promise";
 import { jsonFromFile } from "./stream";
 import { shortAddressPreview } from "@ledgerhq/live-common/lib/account/helpers";
 import fs from "fs";
@@ -146,10 +147,9 @@ export const inferCurrency = <
   }
   return withDevice(device || "")(t =>
     from(
-      getAppAndVersion(t).then(
-        r => getCurrencyByKeyword(r.name),
-        () => undefined
-      )
+      getAppAndVersion(t)
+        .then(r => getCurrencyByKeyword(r.name), () => undefined)
+        .then(r => delay(500).then(() => r))
     )
   );
 };
