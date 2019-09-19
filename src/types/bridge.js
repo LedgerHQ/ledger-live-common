@@ -11,6 +11,7 @@ import type { Observable } from "rxjs";
 import type { BigNumber } from "bignumber.js";
 import type {
   Account,
+  AccountRaw,
   CryptoCurrency,
   TransactionStatus,
   Transaction,
@@ -22,6 +23,11 @@ export type ScanAccountEvent = {
   type: "discovered",
   account: Account
 }; // more events will come in the future
+
+export type ScanAccountEventRaw = {
+  type: "discovered",
+  account: AccountRaw
+};
 
 // unique identifier of a device. it will depends on the underlying implementation.
 export type DeviceId = string;

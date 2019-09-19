@@ -5,9 +5,16 @@ import type {
   Account,
   AccountLike,
   CurrencyBridge,
-  AccountBridge
+  AccountBridge,
+  ScanAccountEventRaw,
+  ScanAccountEvent
 } from "../types";
-import { decodeAccountId, getMainAccount } from "../account";
+import {
+  decodeAccountId,
+  getMainAccount,
+  fromAccountRaw,
+  toAccountRaw
+} from "../account";
 import { getEnv } from "../env";
 import { checkAccountSupported, libcoreNoGo } from "../account/support";
 
@@ -88,3 +95,31 @@ export const getAccountBridge = (
     currencyName: mainAccount.currency.name
   });
 };
+
+export function fromScanAccountEventRaw(
+  raw: ScanAccountEventRaw
+): ScanAccountEvent {
+  switch (raw.type) {
+    case "discovered":
+      return {
+        type: raw.type,
+        account: fromAccountRaw(raw.account)
+      };
+    default:
+      throw new Error("unsupported ScanAccountEvent " + raw.type);
+  }
+}
+
+export function toScanAccountEventRaw(
+  e: ScanAccountEvent
+): ScanAccountEventRaw {
+  switch (e.type) {
+    case "discovered":
+      return {
+        type: e.type,
+        account: toAccountRaw(e.account)
+      };
+    default:
+      throw new Error("unsupported ScanAccountEvent " + e.type);
+  }
+}
