@@ -8,7 +8,7 @@ export type ModeSpec = {
   mandatoryEmptyAccountSkip?: number,
   isNonIterable?: boolean,
   overridesDerivation?: string,
-  keychainEngine?: string,
+  libcoreConfig?: { [_: string]: mixed },
   isSegwit?: boolean, // TODO drop
   isUnsplit?: boolean, // TODO drop
   skipFirst?: true,
@@ -52,7 +52,9 @@ const modes = Object.freeze({
     overridesCoinType: 128,
     isSegwit: true,
     purpose: 49,
-    keychainEngine: "BIP49_P2SH",
+    libcoreConfig: {
+      KEYCHAIN_ENGINE: "BIP49_P2SH"
+    },
     addressFormat: "p2sh"
   },
   // MEW legacy derivation for eth
@@ -68,11 +70,16 @@ const modes = Object.freeze({
   tezbox: {
     tag: "tezbox",
     overridesDerivation: "44'/1729'/0'/0'",
-    isNonIterable: true
+    isNonIterable: true,
+    libcoreConfig: {
+      TEZOS_XPUB_CURVE: "ED25519"
+    }
   },
   native_segwit: {
     purpose: 84,
-    keychainEngine: "BIP173_P2WPKH",
+    libcoreConfig: {
+      KEYCHAIN_ENGINE: "BIP173_P2WPKH"
+    },
     addressFormat: "bech32",
     tag: "native segwit",
     isSegwit: true
@@ -80,26 +87,34 @@ const modes = Object.freeze({
   segwit: {
     isSegwit: true,
     purpose: 49,
-    keychainEngine: "BIP49_P2SH",
+    libcoreConfig: {
+      KEYCHAIN_ENGINE: "BIP49_P2SH"
+    },
     tag: "segwit",
     addressFormat: "p2sh"
   },
   segwit_on_legacy: {
     isSegwit: true,
     purpose: 44,
-    keychainEngine: "BIP49_P2SH",
+    libcoreConfig: {
+      KEYCHAIN_ENGINE: "BIP49_P2SH"
+    },
     addressFormat: "p2sh",
     isInvalid: true
   },
   legacy_on_segwit: {
     purpose: 49,
-    keychainEngine: "",
+    libcoreConfig: {
+      KEYCHAIN_ENGINE: ""
+    },
     isInvalid: true
   },
   segwit_unsplit: {
     isSegwit: true,
     purpose: 49,
-    keychainEngine: "BIP49_P2SH",
+    libcoreConfig: {
+      KEYCHAIN_ENGINE: "BIP49_P2SH"
+    },
     addressFormat: "p2sh",
     isUnsplit: true,
     tag: "segwit unsplit"
@@ -145,8 +160,9 @@ export const isSegwitDerivationMode = (
   derivationMode: DerivationMode
 ): boolean => modes[derivationMode].isSegwit || false;
 
-export const getKeychainEngine = (derivationMode: DerivationMode): ?string =>
-  modes[derivationMode].keychainEngine;
+export const getLibcoreConfig = (
+  derivationMode: DerivationMode
+): ?{ [_: string]: mixed } => modes[derivationMode].libcoreConfig;
 
 export const isUnsplitDerivationMode = (
   derivationMode: DerivationMode
