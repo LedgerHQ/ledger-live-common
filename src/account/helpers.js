@@ -4,6 +4,7 @@ import type {
   AccountLike,
   AccountLikeArray,
   Account,
+  Unit,
   Operation,
   SubAccount
 } from "../types";
@@ -29,11 +30,11 @@ export const getAccountCurrency = (account: AccountLike) => {
     case "TokenAccount":
       return account.token;
     default:
-      throw new Error("invalid account.type" + account.type);
+      throw new Error("invalid account.type=" + account.type);
   }
 };
 
-export const getAccountUnit = (account: AccountLike) => {
+export const getAccountUnit = (account: AccountLike): Unit => {
   switch (account.type) {
     case "Account":
       return account.unit;
@@ -41,6 +42,21 @@ export const getAccountUnit = (account: AccountLike) => {
       return account.token.units[0];
     case "ChildAccount":
       return account.currency.units[0];
+    default:
+      throw new Error("invalid account.type=" + account.type);
+  }
+};
+
+export const getAccountName = (account: AccountLike): string => {
+  switch (account.type) {
+    case "Account":
+      return account.name;
+    case "TokenAccount":
+      return account.token.name;
+    case "ChildAccount":
+      return account.currency.name;
+    default:
+      throw new Error("invalid account.type=" + account.type);
   }
 };
 
