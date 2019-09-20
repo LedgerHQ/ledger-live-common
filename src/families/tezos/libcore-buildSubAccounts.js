@@ -28,6 +28,9 @@ async function buildOriginatedAccount({
   const balance = await libcoreAmountToBigNumber(
     await coreOriginatedAccount.getBalance()
   );
+  const address = await coreOriginatedAccount.getAddress();
+  const isDelegatable = await coreOriginatedAccount.isDelegatable();
+  const isSpendable = await coreOriginatedAccount.isSpendable();
 
   const query = await coreOriginatedAccount.queryOperations();
   const completedQuery = await query.complete();
@@ -37,7 +40,7 @@ async function buildOriginatedAccount({
   );
   const coreOperations = await sortedQuery.execute();
 
-  const id = parentAccountId + "+" + currency.ticker; // TODO: change this
+  const id = `${parentAccountId}+${address}`;
 
   const operations = await minimalOperationsBuilder(
     (existingOriginatedAccount && existingOriginatedAccount.operations) || [],
@@ -49,10 +52,6 @@ async function buildOriginatedAccount({
         currency
       })
   );
-
-  const address = await coreOriginatedAccount.getAddress();
-  const isDelegatable = await coreOriginatedAccount.isDelegatable();
-  const isSpendable = await coreOriginatedAccount.isSpendable();
 
   const originatedAccount: $Exact<ChildAccount> = {
     type: "ChildAccount",
@@ -121,6 +120,8 @@ async function tezosBuildOriginatedAccount({
     if (j < 0) return -1;
     return i - j;
   });
+
+  return originatedAccounts;
 }
 
 export default tezosBuildOriginatedAccount;

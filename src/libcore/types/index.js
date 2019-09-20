@@ -113,7 +113,11 @@ declare class CoreRandomNumberGenerator {
 }
 
 declare class CoreBigInt {
-  static fromDecimalString(s: string, radix: number, sep: string): Promise<CoreBigInt>;
+  static fromDecimalString(
+    s: string,
+    radix: number,
+    sep: string
+  ): Promise<CoreBigInt>;
 
   toString(base: number): Promise<string>;
 }

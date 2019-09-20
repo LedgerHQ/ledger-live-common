@@ -73,13 +73,13 @@ declare class CoreTezosLikeAccount {
 }
 
 declare class CoreTezosLikeOriginatedAccount {
-  getAddress(): Promise<string>,
-  getPublicKey(): Promise<string>,
-  getBalance(): Promise<CoreAmount>,
-  isSpendable(): Promise<boolean>,
-  isDelegatable(): Promise<boolean>,
-  buildTransaction(): Promise<CoreTezosLikeTransactionBuilder>,
-  queryOperations(): Promise<CoreOperationQuery>
+  getAddress(): Promise<string>;
+  getPublicKey(): Promise<string>;
+  getBalance(): Promise<CoreAmount>;
+  isSpendable(): Promise<boolean>;
+  isDelegatable(): Promise<boolean>;
+  buildTransaction(): Promise<CoreTezosLikeTransactionBuilder>;
+  queryOperations(): Promise<CoreOperationQuery>;
 }
 
 export type CoreStatics = {
@@ -221,7 +221,7 @@ export const reflect = (declare: (string, Spec) => void) => {
 
   declare("TezosLikeOriginatedAccount", {
     methods: {
-      getAddres: {},
+      getAddress: {},
       getPublicKey: {},
       getBalance: {
         returns: "Amount"
@@ -232,7 +232,7 @@ export const reflect = (declare: (string, Spec) => void) => {
         returns: "TezosLikeTransactionBuilder"
       }
     }
-  })
+  });
 
   return {
     OperationMethods: {
