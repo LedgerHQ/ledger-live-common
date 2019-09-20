@@ -5,7 +5,8 @@ import type {
   CoreAmount,
   CoreBigInt,
   OperationType,
-  Spec
+  Spec,
+  CoreOperationQuery
 } from "../../libcore/types";
 import type {
   TransactionCommon,
@@ -68,7 +69,17 @@ declare class CoreTezosLikeAccount {
   buildTransaction(): Promise<CoreTezosLikeTransactionBuilder>;
   getEstimatedGasLimit(address: string): Promise<CoreBigInt>;
   getFees(): Promise<CoreBigInt>;
-  // declare function getOriginatedAccounts(): Array<NJSTezosLikeOriginatedAccount>;
+  getOriginatedAccounts(): Promise<CoreTezosLikeOriginatedAccount[]>;
+}
+
+declare class CoreTezosLikeOriginatedAccount {
+  getAddress(): Promise<string>,
+  getPublicKey(): Promise<string>,
+  getBalance(): Promise<CoreAmount>,
+  isSpendable(): Promise<boolean>,
+  isDelegatable(): Promise<boolean>,
+  buildTransaction(): Promise<CoreTezosLikeTransactionBuilder>,
+  queryOperations(): Promise<CoreOperationQuery>
 }
 
 export type CoreStatics = {
@@ -83,6 +94,7 @@ export type {
   CoreTezosLikeOperation,
   CoreTezosLikeAddress,
   CoreTezosLikeAccount,
+  CoreTezosLikeOriginatedAccount,
   CoreTezosLikeTransaction,
   CoreTezosLikeTransactionBuilder
 };
@@ -206,6 +218,21 @@ export const reflect = (declare: (string, Spec) => void) => {
       }
     }
   });
+
+  declare("TezosLikeOriginatedAccount", {
+    methods: {
+      getAddres: {},
+      getPublicKey: {},
+      getBalance: {
+        returns: "Amount"
+      },
+      isSpendable: {},
+      isDelegatable: {},
+      buildTransaction: {
+        returns: "TezosLikeTransactionBuilder"
+      }
+    }
+  })
 
   return {
     OperationMethods: {
