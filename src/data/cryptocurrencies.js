@@ -2496,16 +2496,12 @@ export function getCryptoCurrencyById(id: string): CryptoCurrency {
   return currency;
 }
 
-export function isCurrencySupported(currency: CryptoCurrency) {
-  return userSupportedCurrencies.includes(currency);
-}
-
 export function setSupportedCurrencies(ids: CryptoCurrencyIds[]) {
   userSupportedCurrencies = ids.map(id => getCryptoCurrencyById(id));
 }
 
-export function listSupportedCurrencies(): CryptoCurrency[] {
-  const experimentals = getEnv("EXPERIMENTAL_CURRENCIES")
+function getExperimentalSupports() {
+  return getEnv("EXPERIMENTAL_CURRENCIES")
     .split(",")
     .filter(
       id =>
@@ -2513,6 +2509,17 @@ export function listSupportedCurrencies(): CryptoCurrency[] {
         !userSupportedCurrencies.find(c => c.id === id)
     )
     .map(getCryptoCurrencyById);
+}
+
+export function isCurrencySupported(currency: CryptoCurrency) {
+  return (
+    userSupportedCurrencies.includes(currency) ||
+    getExperimentalSupports().includes(currency)
+  );
+}
+
+export function listSupportedCurrencies(): CryptoCurrency[] {
+  const experimentals = getExperimentalSupports();
   return experimentals.length === 0
     ? userSupportedCurrencies
     : userSupportedCurrencies.concat(experimentals);
