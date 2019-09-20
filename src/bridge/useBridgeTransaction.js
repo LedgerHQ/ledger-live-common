@@ -92,7 +92,7 @@ export default ({
         }
         dispatch({ type: "reset", transaction: t });
       } catch (e) {
-        dispatch({ type: "reset", transaction: null, errorAccount: e });
+        dispatch({ type: "reset", errorAccount: e });
       }
     } else {
       dispatch({ type: "reset" });
