@@ -1,5 +1,4 @@
 // @flow
-import { CurrencyNotSupported } from "@ledgerhq/errors";
 import type {
   CryptoCurrency,
   Account,
@@ -9,92 +8,33 @@ import type {
   ScanAccountEventRaw,
   ScanAccountEvent
 } from "../types";
-import {
-  decodeAccountId,
-  getMainAccount,
-  fromAccountRaw,
-  toAccountRaw
-} from "../account";
-import { getEnv } from "../env";
-import { checkAccountSupported, libcoreNoGo } from "../account/support";
+import { fromAccountRaw, toAccountRaw } from "../account";
 
-import jsBridges from "../generated/bridge/js";
-import mockBridges from "../generated/bridge/mock";
-import libcoreBridges from "../generated/bridge/libcore";
+import * as impl from "./impl";
 
-export const getCurrencyBridge = (currency: CryptoCurrency): CurrencyBridge => {
-  const forceImpl = getEnv("BRIDGE_FORCE_IMPLEMENTATION");
-  if (getEnv("MOCK") || forceImpl === "mock") {
-    const mockBridge = mockBridges[currency.family];
-    if (mockBridge) {
-      return mockBridge.currencyBridge;
-    }
-    throw new CurrencyNotSupported(
-      "no mock implementation available for currency " + currency.id,
-      {
-        currencyName: currency.name
-      }
+export type Proxy = {
+  getAccountBridge: typeof getAccountBridge,
+  getCurrencyBridge: typeof getCurrencyBridge
+};
+
+let proxy: ?Proxy;
+export const setBridgeProxy = (p: ?Proxy) => {
+  if (p && p.getAccountBridge === getAccountBridge) {
+    throw new Error(
+      "setBridgeProxy can't be called with same bridge functions!"
     );
   }
-  if (forceImpl === "js" || (!forceImpl && libcoreNoGo.includes(currency.id))) {
-    const jsBridge = jsBridges[currency.family];
-    if (jsBridge) return jsBridge.currencyBridge;
-  } else {
-    const bridge = libcoreBridges[currency.family];
-    if (bridge) {
-      return bridge.currencyBridge;
-    }
-  }
-  throw new CurrencyNotSupported(
-    "no implementation available for currency " + currency.id,
-    {
-      currencyName: currency.name
-    }
-  );
+  proxy = p;
 };
+
+export const getCurrencyBridge = (currency: CryptoCurrency): CurrencyBridge =>
+  (proxy || impl).getCurrencyBridge(currency);
 
 export const getAccountBridge = (
   account: AccountLike,
   parentAccount: ?Account
-): AccountBridge<any> => {
-  const mainAccount = getMainAccount(account, parentAccount);
-  const { currency } = mainAccount;
-  const { family } = currency;
-  const { type } = decodeAccountId(mainAccount.id);
-  const supportedError = checkAccountSupported(mainAccount);
-  if (supportedError) {
-    throw supportedError;
-  }
-  if (type === "mock") {
-    const mockBridge = mockBridges[currency.family];
-    if (mockBridge) {
-      return mockBridge.accountBridge;
-    }
-    throw new CurrencyNotSupported(
-      "no mock implementation available for currency " + currency.id,
-      {
-        currencyName: currency.name
-      }
-    );
-  }
-  if (type === "libcore") {
-    const libcoreBridge = libcoreBridges[family];
-    if (libcoreBridge) return libcoreBridge.accountBridge;
-    throw new CurrencyNotSupported(
-      "no libcore implementation available for currency " + currency.id,
-      {
-        currencyName: currency.name
-      }
-    );
-  }
-  const jsBridge = libcoreBridges[family];
-  if (jsBridge) {
-    return jsBridge.accountBridge;
-  }
-  throw new CurrencyNotSupported("currency not supported " + currency.id, {
-    currencyName: mainAccount.currency.name
-  });
-};
+): AccountBridge<any> =>
+  (proxy || impl).getAccountBridge(account, parentAccount);
 
 export function fromScanAccountEventRaw(
   raw: ScanAccountEventRaw
