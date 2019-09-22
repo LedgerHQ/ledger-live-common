@@ -88,11 +88,12 @@ export const makeScanAccountsOnDevice = (getAccountShape: GetAccountShape) => (
       if (finished) return { complete: true };
 
       const freshAddress = address;
+      const operations = accountShape.operations || [];
+      const balance = accountShape.balance || BigNumber(0);
 
-      if (
-        (accountShape.operations || []).length === 0 &&
-        (accountShape.balance || BigNumber(0)).isZero()
-      ) {
+      if (balance.isNaN()) throw new Error("invalid balance NaN");
+
+      if (operations.length === 0 && balance.isZero()) {
         // this is an empty account
         if (derivationMode === "") {
           // is standard derivation

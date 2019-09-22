@@ -109,13 +109,21 @@ const getAccountShape = async info => {
   if (tronAcc.length === 0) {
     return { balance: BigNumber(0) };
   }
+  // TODO introduce this concept back in the generic interface
+  const availableBalance = BigNumber(tronAcc[0].balance);
+  const balance = availableBalance.plus(
+    get(tronAcc[0], "frozen", []).reduce(
+      (sum, o) => sum.plus(o.frozen_balance),
+      BigNumber(0)
+    )
+  );
   const operations = await fetchTronAccountOps(
     info.address,
     txs => flatMap(txs, txToOps(info)),
     ops => ops.length < 200
   );
   return {
-    balance: BigNumber(tronAcc[0].balance),
+    balance,
     operations
   };
 };
