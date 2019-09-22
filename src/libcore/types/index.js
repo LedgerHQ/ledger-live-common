@@ -291,8 +291,14 @@ export type Spec = {
 export const reflect = (declare: (string, Spec) => void) => {
   const { AccountMethods, OperationMethods } = reflectSpecifics(declare).reduce(
     (all, extra) => ({
-      AccountMethods: { ...all.AccountMethods, ...extra.AccountMethods },
-      OperationMethods: { ...all.OperationMethods, ...extra.OperationMethods }
+      AccountMethods: {
+        ...all.AccountMethods,
+        ...(extra && extra.AccountMethods)
+      },
+      OperationMethods: {
+        ...all.OperationMethods,
+        ...(extra && extra.OperationMethods)
+      }
     }),
     {}
   );
