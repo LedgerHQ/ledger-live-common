@@ -31,4 +31,4 @@ export type TransactionRaw = {|
   family: "tron"
 |};
 
-export const reflect = () => {};
+export const reflect = (_declare: *) => {};
