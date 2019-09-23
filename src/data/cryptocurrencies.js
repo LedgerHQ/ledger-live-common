@@ -2511,16 +2511,13 @@ function getExperimentalSupports() {
     .map(getCryptoCurrencyById);
 }
 
-export function isCurrencySupported(currency: CryptoCurrency) {
-  return (
-    userSupportedCurrencies.includes(currency) ||
-    getExperimentalSupports().includes(currency)
-  );
-}
-
 export function listSupportedCurrencies(): CryptoCurrency[] {
   const experimentals = getExperimentalSupports();
   return experimentals.length === 0
     ? userSupportedCurrencies
     : userSupportedCurrencies.concat(experimentals);
+}
+
+export function isCurrencySupported(currency: CryptoCurrency) {
+  return listSupportedCurrencies().includes(currency);
 }

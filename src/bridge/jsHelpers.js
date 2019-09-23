@@ -50,7 +50,7 @@ export const makeStartSync = (getAccountShape: GetAccountShape) => (
           address: initial.freshAddress
         });
         o.next(a => ({
-          a,
+          ...a,
           ...shape,
           operations: mergeOps(a.operations, shape.operations || [])
         }));

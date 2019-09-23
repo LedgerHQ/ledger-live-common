@@ -80,7 +80,7 @@ export const getAccountBridge = (
       }
     );
   }
-  const jsBridge = libcoreBridges[family];
+  const jsBridge = jsBridges[family];
   if (jsBridge) {
     return jsBridge.accountBridge;
   }
