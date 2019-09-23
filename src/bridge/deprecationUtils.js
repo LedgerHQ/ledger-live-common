@@ -162,18 +162,18 @@ export const inferDeprecatedMethods = ({
   const editTokenAccountId = (
     a: Account,
     t: Transaction,
-    tokenAccountId: ?string
+    subAccountId: ?string
   ) => {
-    warn("bridge.editTokenAccountId", "directly inline {...t, tokenAccountId}");
+    warn("bridge.editTokenAccountId", "directly inline {...t, subAccountId}");
     return {
       ...t,
-      tokenAccountId
+      subAccountId
     };
   };
 
   const getTokenAccountId = (a: Account, t: Transaction) => {
-    warn("bridge.getTokenAccountId", "directly access t.tokenAccountId");
-    return t.tokenAccountId;
+    warn("bridge.getTokenAccountId", "directly access t.subAccountId");
+    return t.subAccountId;
   };
 
   return {

@@ -140,7 +140,7 @@ export function inferTransactions(
     const useAllAmount = !!opts["use-all-amount"];
 
     let acc;
-    let tokenAccountId;
+    let subAccountId;
     if (token) {
       const tkn = token.toLowerCase();
       const tokenAccounts = account.tokenAccounts || [];
@@ -156,7 +156,7 @@ export function inferTransactions(
         );
       }
       acc = tokenAccount;
-      tokenAccountId = tokenAccount.id;
+      subAccountId = tokenAccount.id;
     } else {
       acc = account;
     }
@@ -176,7 +176,7 @@ export function inferTransactions(
           family: "bitcoin",
           recipient,
           amount,
-          tokenAccountId,
+          subAccountId,
           feePerByte,
           networkInfo: null,
           useAllAmount
@@ -188,7 +188,7 @@ export function inferTransactions(
           family: "ethereum",
           recipient,
           amount,
-          tokenAccountId,
+          subAccountId,
           gasPrice: inferAmount(account, opts.gasPrice || "2gwei"),
           gasLimit: new BigNumber(opts.gasLimit),
           feeCustomUnit: null,

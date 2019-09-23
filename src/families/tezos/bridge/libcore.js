@@ -79,11 +79,15 @@ const getTransactionStatus = async (a, t) => {
     estimatedFees,
     amount,
     totalSpent,
-    useAllAmount: !!t.useAllAmount
+    useAllAmount: !!t.useAllAmount,
+    recipientIsReadOnly: !!t.subAccountId
   });
 };
 
 const prepareTransaction = async (a, t) => {
+  if (t.subAccountId && !t.recipient) {
+    return { ...t, recipient: a.freshAddress };
+  }
   return t;
 };
 

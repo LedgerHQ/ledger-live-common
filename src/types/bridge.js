@@ -123,7 +123,7 @@ export interface AccountBridge<T: Transaction> {
   editTokenAccountId?: (
     account: Account,
     transaction: T,
-    tokenAccountId: ?string
+    subAccountId: ?string
   ) => T;
 
   getTokenAccountId?: (account: Account, transaction: T) => ?string;

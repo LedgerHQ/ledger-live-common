@@ -21,9 +21,9 @@ import { validateRecipient } from "../../../bridge/shared";
 import type { Transaction } from "../types";
 
 const getTransactionAccount = (a, t): AccountLike => {
-  const { tokenAccountId } = t;
-  return tokenAccountId
-    ? (a.subAccounts || []).find(ta => ta.id === tokenAccountId) || a
+  const { subAccountId } = t;
+  return subAccountId
+    ? (a.subAccounts || []).find(ta => ta.id === subAccountId) || a
     : a;
 };
 
@@ -65,9 +65,9 @@ const calculateFees = makeLRUCache(
 );
 
 const getTransactionStatus = async (a, t) => {
-  const tokenAccount = !t.tokenAccountId
+  const tokenAccount = !t.subAccountId
     ? null
-    : a.subAccounts && a.subAccounts.find(ta => ta.id === t.tokenAccountId);
+    : a.subAccounts && a.subAccounts.find(ta => ta.id === t.subAccountId);
   const account = tokenAccount || a;
 
   const useAllAmount = !!t.useAllAmount;

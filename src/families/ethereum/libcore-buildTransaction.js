@@ -30,10 +30,10 @@ export async function ethereumBuildTransaction({
   isPartial: boolean,
   isCancelled: () => boolean
 }): Promise<?CoreEthereumLikeTransaction> {
-  const { tokenAccountId } = transaction;
-  const subAccount = tokenAccountId
+  const { subAccountId } = transaction;
+  const subAccount = subAccountId
     ? account.subAccounts &&
-      account.subAccounts.find(t => t.id === tokenAccountId)
+      account.subAccounts.find(t => t.id === subAccountId)
     : null;
   const ethereumLikeAccount = await coreAccount.asEthereumLikeAccount();
 

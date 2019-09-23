@@ -24,13 +24,13 @@ const createTransaction = (account): Transaction => ({
   feeCustomUnit: account.currency.units[1],
   networkInfo: null,
   useAllAmount: false,
-  tokenAccountId: null
+  subAccountId: null
 });
 
 const getTransactionStatus = (a, t) => {
-  const tokenAccount = !t.tokenAccountId
+  const tokenAccount = !t.subAccountId
     ? null
-    : a.subAccounts && a.subAccounts.find(ta => ta.id === t.tokenAccountId);
+    : a.subAccounts && a.subAccounts.find(ta => ta.id === t.subAccountId);
   const account = tokenAccount || a;
 
   const useAllAmount = !!t.useAllAmount;

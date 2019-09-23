@@ -1,9 +1,10 @@
 // @flow
-import { throwError } from "rxjs";
+import { never } from "rxjs";
 import { BigNumber } from "bignumber.js";
 import flatMap from "lodash/flatMap";
 import get from "lodash/get";
 import bs58check from "bs58check";
+import { CurrencyNotSupported } from "@ledgerhq/errors";
 import type { Operation } from "../../../types";
 import type { Transaction } from "../types";
 import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
@@ -142,11 +143,14 @@ const createTransaction = () => ({
   recipient: ""
 });
 
-const getTransactionStatus = () =>
-  Promise.reject(new Error("signAndBroadcast not supported"));
+const getTransactionStatus = a =>
+  Promise.reject(
+    new CurrencyNotSupported("tron currency not supported", {
+      currencyName: a.currency.name
+    })
+  );
 
-const signAndBroadcast = () =>
-  throwError(new Error("signAndBroadcast not supported"));
+const signAndBroadcast = () => never();
 
 const prepareTransaction = async (a, t: Transaction): Promise<Transaction> =>
   Promise.resolve(t);

@@ -118,10 +118,10 @@ export default ({
     if (account && mainAccount) {
       try {
         const bridge = getAccountBridge(mainAccount, null);
-        const tokenAccountId = account.type === "TokenAccount" && account.id;
+        const subAccountId = account.type !== "Account" && account.id;
         let t = bridge.createTransaction(mainAccount);
-        if (tokenAccountId) {
-          t = { ...t, tokenAccountId };
+        if (subAccountId) {
+          t = { ...t, subAccountId };
         }
         dispatch({ type: "reset", transaction: t });
       } catch (e) {

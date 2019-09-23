@@ -12,20 +12,20 @@ export async function ethereumSignTransaction({
   transport,
   account,
   coreTransaction,
-  tokenAccountId
+  subAccountId
 }: {
   isCancelled: () => boolean,
   transport: Transport<*>,
   account: Account,
   currency: CryptoCurrency,
-  tokenAccountId: ?string,
+  subAccountId: ?string,
   coreCurrency: CoreCurrency,
   coreTransaction: CoreEthereumLikeTransaction
 }) {
   const hwApp = new Eth(transport);
-  const subAccount = tokenAccountId
+  const subAccount = subAccountId
     ? account.subAccounts &&
-      account.subAccounts.find(t => t.id === tokenAccountId)
+      account.subAccounts.find(t => t.id === subAccountId)
     : null;
 
   if (subAccount && subAccount.type === "TokenAccount") {

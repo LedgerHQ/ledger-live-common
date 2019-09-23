@@ -19,14 +19,14 @@ export type TransactionCommon = {|
   amount: BigNumber,
   recipient: string,
   useAllAmount?: boolean,
-  tokenAccountId?: ?string // FIXME move to etherum family
+  subAccountId?: ?string // FIXME move to etherum family
 |};
 
 export type TransactionCommonRaw = {|
   amount: string,
   recipient: string,
   useAllAmount?: boolean,
-  tokenAccountId?: ?string
+  subAccountId?: ?string
 |};
 
 // TransactionStatus is a view of Transaction with general info to be used on the UI and status info.
@@ -46,7 +46,9 @@ export type TransactionStatus = {|
   // total amount that the sender will spend (in account currency)
   totalSpent: BigNumber,
   // ? will it wipe all possible amount of the account
-  useAllAmount: boolean
+  useAllAmount: boolean,
+  // should the recipient be non editable
+  recipientIsReadOnly?: boolean
 |};
 
 export type TransactionStatusRaw = {|
@@ -57,5 +59,6 @@ export type TransactionStatusRaw = {|
   estimatedFees: string,
   amount: string,
   totalSpent: string,
-  useAllAmount: boolean
+  useAllAmount: boolean,
+  recipientIsReadOnly?: boolean
 |};

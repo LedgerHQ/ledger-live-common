@@ -70,7 +70,7 @@ const doSignAndBroadcast = withLibcoreF(
       from(
         signTransaction({
           account,
-          tokenAccountId: transaction.tokenAccountId,
+          subAccountId: transaction.subAccountId,
           isCancelled,
           transport,
           currency,

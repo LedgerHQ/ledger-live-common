@@ -16,8 +16,8 @@ export const fromTransactionCommonRaw = (
   if ("useAllAmount" in raw) {
     common.useAllAmount = raw.useAllAmount;
   }
-  if ("tokenAccountId" in raw) {
-    common.tokenAccountId = raw.tokenAccountId;
+  if ("subAccountId" in raw) {
+    common.subAccountId = raw.subAccountId;
   }
   return common;
 };
@@ -32,8 +32,8 @@ export const toTransactionCommonRaw = (
   if ("useAllAmount" in raw) {
     common.useAllAmount = raw.useAllAmount;
   }
-  if ("tokenAccountId" in raw) {
-    common.tokenAccountId = raw.tokenAccountId;
+  if ("subAccountId" in raw) {
+    common.subAccountId = raw.subAccountId;
   }
   return common;
 };
