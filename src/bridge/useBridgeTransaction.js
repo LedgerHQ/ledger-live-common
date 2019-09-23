@@ -1,18 +1,43 @@
 // @flow
 
+import { BigNumber } from "bignumber.js";
 import { useEffect, useReducer, useCallback } from "react";
-import type { Transaction, Account, AccountLike } from "../types";
+import type {
+  Transaction,
+  TransactionStatus,
+  Account,
+  AccountLike
+} from "../types";
 import { getAccountBridge } from ".";
 import { getMainAccount } from "../account";
 
-const initial = {
+type State = {
+  transaction: ?Transaction,
+  status: TransactionStatus,
+  errorAccount: ?Error,
+  errorPrepare: ?Error,
+  errorStatus: ?Error,
+  pendingPrepare: boolean,
+  pendingStatus: boolean
+};
+
+const initial: State = {
   transaction: null,
-  status: null,
+  status: {
+    transactionError: null,
+    recipientError: null,
+    recipientWarning: null,
+    showFeeWarning: false,
+    estimatedFees: BigNumber(0),
+    amount: BigNumber(0),
+    totalSpent: BigNumber(0),
+    useAllAmount: false
+  },
   errorAccount: null,
   errorPrepare: null,
   errorStatus: null,
-  pendingPrepare: false,
-  pendingStatus: false
+  pendingPrepare: true,
+  pendingStatus: true
 };
 
 const reducer = (s, a) => {
@@ -52,13 +77,21 @@ const reducer = (s, a) => {
   }
 };
 
+type Result = [
+  ?Transaction,
+  (Transaction) => void,
+  TransactionStatus,
+  ?Error,
+  boolean
+];
+
 export default ({
   account,
   parentAccount
 }: {
   account: ?AccountLike,
   parentAccount: ?Account
-}) => {
+}): Result => {
   const [
     {
       transaction,
