@@ -9,7 +9,7 @@ import {
   setWebSocketImplementation
 } from "@ledgerhq/live-common/lib/network";
 import { implementCountervalues } from "@ledgerhq/live-common/lib/countervalues";
-import { listen } from "@ledgerhq/logs";
+import { log, listen } from "@ledgerhq/logs";
 import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
 import "@ledgerhq/live-common/lib/load/tokens/ethereum/erc20";
 import { setSupportedCurrencies } from "@ledgerhq/live-common/lib/data/cryptocurrencies";
@@ -89,6 +89,11 @@ listen(({ id, date, type, message, ...rest }) => {
 });
 
 setNetwork(axios);
+
+axios.interceptors.response.use(r => {
+  log("http", r.config.method + " " + r.config.url);
+  return r;
+});
 
 setWebSocketImplementation(WebSocket);
 
