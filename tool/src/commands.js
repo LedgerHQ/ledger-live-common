@@ -42,6 +42,7 @@ import getVersion from "@ledgerhq/live-common/lib/hw/getVersion";
 import getDeviceInfo from "@ledgerhq/live-common/lib/hw/getDeviceInfo";
 import getAppAndVersion from "@ledgerhq/live-common/lib/hw/getAppAndVersion";
 import genuineCheck from "@ledgerhq/live-common/lib/hw/genuineCheck";
+import listApps from "@ledgerhq/live-common/lib/hw/listApps";
 import openApp from "@ledgerhq/live-common/lib/hw/openApp";
 import quitApp from "@ledgerhq/live-common/lib/hw/quitApp";
 import installApp from "@ledgerhq/live-common/lib/hw/installApp";
@@ -387,13 +388,23 @@ const all = {
     job: ({ device, format }: $Shape<{ device: string, format: string }>) =>
       withDevice(device || "")(t =>
         from(getDeviceInfo(t)).pipe(
-          mergeMap(deviceInfo => from(manager.getAppsList(deviceInfo, true))),
+          mergeMap(deviceInfo => from(listApps(t, deviceInfo))),
           map(list =>
             format === "raw"
               ? list
               : format === "json"
               ? JSON.stringify(list)
-              : list.map(item => `- ${item.name} ${item.version}`).join("\n")
+              : list
+                  .map(
+                    item =>
+                      `- ${item.name} ${item.version}` +
+                      (item.installed
+                        ? item.updated
+                          ? " (installed)"
+                          : " (outdated!)"
+                        : "")
+                  )
+                  .join("\n")
           )
         )
       )

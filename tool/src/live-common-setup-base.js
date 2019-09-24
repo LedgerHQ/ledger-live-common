@@ -8,10 +8,18 @@ import {
   setNetwork,
   setWebSocketImplementation
 } from "@ledgerhq/live-common/lib/network";
+import { implementCountervalues } from "@ledgerhq/live-common/lib/countervalues";
 import { listen } from "@ledgerhq/logs";
 import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
 import "@ledgerhq/live-common/lib/load/tokens/ethereum/erc20";
 import { setSupportedCurrencies } from "@ledgerhq/live-common/lib/data/cryptocurrencies";
+
+implementCountervalues({
+  getAPIBaseURL: () => window.LEDGER_CV_API,
+  storeSelector: state => state.countervalues,
+  pairsSelector: () => [],
+  setExchangePairsAction: () => {}
+});
 
 setSupportedCurrencies([
   "bitcoin",
