@@ -22,6 +22,7 @@ import { getDerivationScheme, runDerivationScheme } from "../derivation";
 
 // if you use the mock, we need this
 import "../load/tokens/ethereum/erc20";
+import "../load/tokens/tron/trc10";
 
 function ensureNoNegative(operations) {
   let total = BigNumber(0);

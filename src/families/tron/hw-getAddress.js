@@ -12,7 +12,7 @@ const resolver: Resolver = async (
   return {
     path,
     address: r.address,
-    publicKey: r.publicKey,
+    publicKey: r.publicKey.toString("hex"),
     chainCode: r.chainCode
   };
 };

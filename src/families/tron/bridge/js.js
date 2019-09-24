@@ -4,10 +4,17 @@ import { BigNumber } from "bignumber.js";
 import flatMap from "lodash/flatMap";
 import get from "lodash/get";
 import bs58check from "bs58check";
+import { log } from "@ledgerhq/logs";
 import { CurrencyNotSupported } from "@ledgerhq/errors";
-import type { Operation } from "../../../types";
+import type {
+  Operation,
+  TokenCurrency,
+  TokenAccount,
+  SubAccount
+} from "../../../types";
 import type { Transaction } from "../types";
 import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
+import { findTokenById } from "../../../data/tokens";
 import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
 import network from "../../../network";
 import {
@@ -17,12 +24,20 @@ import {
 
 const b58 = hex => bs58check.encode(Buffer.from(hex, "hex"));
 
-const txToOps = ({ id, address }) => (tx: Object): Operation[] => {
+const txToOps = ({ id, address }, token: ?TokenCurrency) => (
+  tx: Object
+): Operation[] => {
   const ops = [];
   const hash = tx.txID;
   const date = new Date(tx.block_timestamp);
   get(tx, "raw_data.contract", []).forEach(contract => {
-    if (contract.type === "TransferContract") {
+    if (
+      token
+        ? contract.type === "TransferAssetContract" &&
+          "tron/trc10/" + get(contract, "parameter.value.asset_name") ===
+            token.id
+        : contract.type === "TransferContract"
+    ) {
       const { amount, owner_address, to_address } = get(
         contract,
         "parameter.value",
@@ -73,36 +88,37 @@ const txToOps = ({ id, address }) => (tx: Object): Operation[] => {
   return ops;
 };
 
-async function fetchTronAccount(addr: string) {
+async function fetch(url) {
   const { data } = await network({
     method: "GET",
-    url: `https://api.trongrid.io/v1/accounts/${addr}`
+    url
   });
+  log("http", url);
+  return data;
+}
+
+async function fetchTronAccount(addr: string) {
+  const data = await fetch(`https://api.trongrid.io/v1/accounts/${addr}`);
   return data.data;
 }
 
-async function fetchTronAccountOps(
+async function fetchTronAccountTxs(
   addr: string,
-  makeOps: (Array<any>) => Operation[],
-  shouldFetchMoreOps: (Operation[]) => boolean
+  shouldFetchMoreTxs: (Operation[]) => boolean
 ) {
-  let payload = await network({
-    method: "GET",
-    url: `https://api.trongrid.io/v1/accounts/${addr}/transactions`
-  });
-  let fetchedTxs = payload.data.data;
-  let ops = [];
-  while (fetchedTxs && Array.isArray(fetchedTxs) && shouldFetchMoreOps(ops)) {
-    ops = ops.concat(makeOps(fetchedTxs));
-    const next = get(payload.data, "meta.links.next");
-    if (!next) return ops;
-    payload = await network({
-      method: "GET",
-      url: next
-    });
-    fetchedTxs = payload.data.data;
+  let payload = await fetch(
+    `https://api.trongrid.io/v1/accounts/${addr}/transactions?limit=200`
+  );
+  let fetchedTxs = payload.data;
+  let txs = [];
+  while (fetchedTxs && Array.isArray(fetchedTxs) && shouldFetchMoreTxs(txs)) {
+    txs = txs.concat(fetchedTxs);
+    const next = get(payload, "meta.links.next");
+    if (!next) return txs;
+    payload = await fetch(next);
+    fetchedTxs = payload.data;
   }
-  return ops;
+  return txs;
 }
 
 const getAccountShape = async info => {
@@ -110,22 +126,42 @@ const getAccountShape = async info => {
   if (tronAcc.length === 0) {
     return { balance: BigNumber(0) };
   }
+  const acc = tronAcc[0];
   // TODO introduce this concept back in the generic interface
-  const availableBalance = BigNumber(tronAcc[0].balance);
+  const availableBalance = BigNumber(acc.balance);
   const balance = availableBalance.plus(
-    get(tronAcc[0], "frozen", []).reduce(
+    get(acc, "frozen", []).reduce(
       (sum, o) => sum.plus(o.frozen_balance),
       BigNumber(0)
     )
   );
-  const operations = await fetchTronAccountOps(
-    info.address,
-    txs => flatMap(txs, txToOps(info)),
-    ops => ops.length < 200
-  );
+
+  const txs = await fetchTronAccountTxs(info.address, txs => txs.length < 1000);
+
+  const operations = flatMap(txs, txToOps(info));
+
+  const subAccounts: SubAccount[] = [];
+
+  get(acc, "assetV2", []).forEach(({ key, value }) => {
+    const token = findTokenById(`tron/trc10/${key}`);
+    if (!token) return;
+    const id = info.id + "+" + key;
+    const sub: TokenAccount = {
+      type: "TokenAccount",
+      id,
+      parentId: info.id,
+      token,
+      balance: BigNumber(value),
+      operations: flatMap(txs, txToOps({ ...info, id }, token)),
+      pendingOperations: []
+    };
+    subAccounts.push(sub);
+  });
+
   return {
     balance,
-    operations
+    operations,
+    subAccounts
   };
 };
 

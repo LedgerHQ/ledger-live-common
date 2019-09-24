@@ -9,6 +9,7 @@ import {
 import { listen } from "@ledgerhq/logs";
 import { setSupportedCurrencies } from "@ledgerhq/live-common/lib/data/cryptocurrencies";
 import "@ledgerhq/live-common/lib/load/tokens/ethereum/erc20";
+import "@ledgerhq/live-common/lib/load/tokens/tron/trc10";
 import "./implement-react-native-libcore";
 import { setTestFile } from "../engine";
 
