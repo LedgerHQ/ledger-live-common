@@ -112,7 +112,10 @@ export const inferDeprecatedMethods = ({
     t: Transaction,
     amount: any
   ) => {
-    warn("bridge.editTransactionAmount", "directly inline {...t,amount}");
+    warn(
+      "bridge.editTransactionAmount",
+      "bridge.updateTransaction(t, { amount })"
+    );
     return {
       ...t,
       amount
@@ -129,7 +132,10 @@ export const inferDeprecatedMethods = ({
     t: Transaction,
     recipient: string
   ) => {
-    warn("bridge.editTransactionRecipient", "directly inline {...t,recipient}");
+    warn(
+      "bridge.editTransactionRecipient",
+      "bridge.updateTransaction(t, { recipient })"
+    );
     return {
       ...t,
       recipient
@@ -147,7 +153,10 @@ export const inferDeprecatedMethods = ({
     field: string,
     value: any
   ) => {
-    warn("bridge.editTansactionExtra", "directly inline {...t, field}");
+    warn(
+      "bridge.editTansactionExtra",
+      "bridge.updateTransaction(t, { field })"
+    );
     return {
       ...t,
       [field]: value
@@ -164,7 +173,10 @@ export const inferDeprecatedMethods = ({
     t: Transaction,
     subAccountId: ?string
   ) => {
-    warn("bridge.editTokenAccountId", "directly inline {...t, subAccountId}");
+    warn(
+      "bridge.editTokenAccountId",
+      "bridge.updateTransaction(t, { subAccountId })"
+    );
     return {
       ...t,
       subAccountId
