@@ -23,6 +23,8 @@ const createTransaction = (): Transaction => ({
   useAllAmount: false
 });
 
+const updateTransaction = (t, patch) => ({ ...t, ...patch });
+
 const getTransactionStatus = (account, t) => {
   const useAllAmount = !!t.useAllAmount;
 
@@ -85,6 +87,7 @@ const getCapabilities = () => ({
 
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
+  updateTransaction,
   getTransactionStatus,
   prepareTransaction,
   startSync,

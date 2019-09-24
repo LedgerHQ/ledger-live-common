@@ -67,6 +67,8 @@ export interface AccountBridge<T: Transaction> {
   // it needs to be a serializable JS object
   createTransaction(account: Account): T;
 
+  updateTransaction(t: T, patch: $Shape<T>): T;
+
   // prepare the remaining missing part of a transaction typically from network (e.g. fees)
   // and fulfill it in a new transaction object that is returned (async)
   prepareTransaction(account: Account, transaction: T): Promise<T>;

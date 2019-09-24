@@ -40,6 +40,8 @@ const createTransaction = () => ({
   networkInfo: null
 });
 
+const updateTransaction = (t, patch) => ({ ...t, ...patch });
+
 const signAndBroadcast = (account, transaction, deviceId) =>
   libcoreSignAndBroadcast({
     account,
@@ -108,6 +110,7 @@ const getCapabilities = () => ({
 
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
+  updateTransaction,
   prepareTransaction,
   getTransactionStatus,
   startSync,

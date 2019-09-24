@@ -30,6 +30,8 @@ const createTransaction = (): Transaction => ({
   useAllAmount: false
 });
 
+const updateTransaction = (t, patch) => ({ ...t, ...patch });
+
 const getTransactionStatus = (a, t) => {
   const minimalBaseAmount = 10 ** a.currency.units[0].magnitude * 20;
 
@@ -111,6 +113,7 @@ const getCapabilities = () => ({
 
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
+  updateTransaction,
   getTransactionStatus,
   prepareTransaction,
   startSync,

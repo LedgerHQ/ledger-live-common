@@ -575,6 +575,8 @@ const createTransaction = () => ({
   feeCustomUnit: null
 });
 
+const updateTransaction = (t, patch) => ({ ...t, ...patch });
+
 const signAndBroadcast = (a, t, deviceId) =>
   Observable.create(o => {
     delete cacheRecipientsNew[t.recipient];
@@ -706,6 +708,7 @@ const getCapabilities = () => ({
 
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
+  updateTransaction,
   prepareTransaction,
   getTransactionStatus,
   startSync,

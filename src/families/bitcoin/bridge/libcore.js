@@ -40,6 +40,8 @@ const createTransaction = () => ({
   useAllAmount: false
 });
 
+const updateTransaction = (t, patch) => ({ ...t, ...patch });
+
 const signAndBroadcast = (account, transaction, deviceId) =>
   libcoreSignAndBroadcast({
     account,
@@ -133,6 +135,7 @@ const currencyBridge: CurrencyBridge = {
 
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
+  updateTransaction,
   prepareTransaction,
   getTransactionStatus,
   startSync,

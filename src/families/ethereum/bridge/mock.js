@@ -27,6 +27,8 @@ const createTransaction = (account): Transaction => ({
   subAccountId: null
 });
 
+const updateTransaction = (t, patch) => ({ ...t, ...patch });
+
 const getTransactionStatus = (a, t) => {
   const tokenAccount = !t.subAccountId
     ? null
@@ -100,6 +102,7 @@ const getCapabilities = () => ({
 
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
+  updateTransaction,
   getTransactionStatus,
   prepareTransaction,
   startSync,

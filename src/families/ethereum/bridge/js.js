@@ -458,6 +458,8 @@ const createTransaction = () => ({
   feeCustomUnit: getCryptoCurrencyById("ethereum").units[1]
 });
 
+const updateTransaction = (t, patch) => ({ ...t, ...patch });
+
 const getTransactionStatus = (a, t) => {
   const estimatedFees = (t.gasPrice || BigNumber(0)).times(t.gasLimit || 0);
 
@@ -574,6 +576,7 @@ const getCapabilities = () => ({
 
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
+  updateTransaction,
   prepareTransaction,
   getTransactionStatus,
   startSync,

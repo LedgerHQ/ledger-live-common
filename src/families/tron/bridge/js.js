@@ -143,6 +143,8 @@ const createTransaction = () => ({
   recipient: ""
 });
 
+const updateTransaction = (t, patch) => ({ ...t, ...patch });
+
 const getTransactionStatus = a =>
   Promise.reject(
     new CurrencyNotSupported("tron currency not supported", {
@@ -162,6 +164,7 @@ const getCapabilities = () => ({
 
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
+  updateTransaction,
   prepareTransaction,
   getTransactionStatus,
   startSync,
