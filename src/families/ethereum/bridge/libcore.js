@@ -147,12 +147,19 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
     networkInfo = ni;
   }
 
-  const gasLimit =
-    tAccount.type === "TokenAccount"
-      ? await estimateGasLimitForERC20(a, tAccount.token.contractAddress)
-      : t.recipient
-      ? await estimateGasLimitForERC20(a, t.recipient)
-      : defaultGasLimit;
+  let gasLimit = defaultGasLimit;
+
+  if (tAccount.type === "TokenAccount") {
+    gasLimit = await estimateGasLimitForERC20(
+      a,
+      tAccount.token.contractAddress
+    );
+  } else if (!t.recipient) {
+    const { recipientError } = await validateRecipient(a.currency, t.recipient);
+    if (!recipientError) {
+      await estimateGasLimitForERC20(a, t.recipient);
+    }
+  }
 
   const gasPrice =
     t.gasPrice ||

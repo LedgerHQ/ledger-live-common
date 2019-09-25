@@ -11,7 +11,9 @@ import type {
 import { getAccountBridge } from ".";
 import { getMainAccount } from "../account";
 
-type State = {
+export type State = {
+  account: ?AccountLike,
+  parentAccount: ?Account,
   transaction: ?Transaction,
   status: TransactionStatus,
   errorAccount: ?Error,
@@ -21,7 +23,20 @@ type State = {
   pendingStatus: boolean
 };
 
+export type Result = {
+  transaction: ?Transaction,
+  setTransaction: Transaction => void,
+  account: ?AccountLike,
+  parentAccount: ?Account,
+  setAccount: (AccountLike, ?Account) => void,
+  status: TransactionStatus,
+  bridgeError: ?Error,
+  bridgePending: boolean
+};
+
 const initial: State = {
+  account: null,
+  parentAccount: null,
   transaction: null,
   status: {
     transactionError: null,
@@ -42,12 +57,31 @@ const initial: State = {
 
 const reducer = (s, a) => {
   switch (a.type) {
-    case "reset":
-      return {
-        ...initial,
-        transaction: a.transaction || null,
-        errorAccount: a.errorAccount || null
-      };
+    case "setAccount":
+      const { account, parentAccount } = a;
+      try {
+        const mainAccount = getMainAccount(account, parentAccount);
+        const bridge = getAccountBridge(account, parentAccount);
+        const subAccountId = account.type !== "Account" && account.id;
+        let t = bridge.createTransaction(mainAccount);
+        if (subAccountId) {
+          t = { ...t, subAccountId };
+        }
+        return {
+          ...initial,
+          account,
+          parentAccount,
+          transaction: t
+        };
+      } catch (e) {
+        return {
+          ...initial,
+          account,
+          parentAccount,
+          errorAccount: e
+        };
+      }
+
     case "setTransaction":
       return { ...s, transaction: a.transaction };
 
@@ -77,23 +111,11 @@ const reducer = (s, a) => {
   }
 };
 
-type Result = [
-  ?Transaction,
-  (Transaction) => void,
-  TransactionStatus,
-  ?Error,
-  boolean
-];
-
-export default ({
-  account,
-  parentAccount
-}: {
-  account: ?AccountLike,
-  parentAccount: ?Account
-}): Result => {
+export default (): Result => {
   const [
     {
+      account,
+      parentAccount,
       transaction,
       status,
       errorAccount,
@@ -105,32 +127,18 @@ export default ({
     dispatch
   ] = useReducer(reducer, initial);
 
+  const setAccount = useCallback(
+    (account, parentAccount) =>
+      dispatch({ type: "setAccount", account, parentAccount }),
+    [dispatch]
+  );
+
   const setTransaction = useCallback(
-    (transaction: Transaction) =>
-      dispatch({ type: "setTransaction", transaction }),
+    transaction => dispatch({ type: "setTransaction", transaction }),
     [dispatch]
   );
 
   const mainAccount = account ? getMainAccount(account, parentAccount) : null;
-
-  // when account changes, regenerate the transaction
-  useEffect(() => {
-    if (account && mainAccount) {
-      try {
-        const bridge = getAccountBridge(mainAccount, null);
-        const subAccountId = account.type !== "Account" && account.id;
-        let t = bridge.createTransaction(mainAccount);
-        if (subAccountId) {
-          t = { ...t, subAccountId };
-        }
-        dispatch({ type: "reset", transaction: t });
-      } catch (e) {
-        dispatch({ type: "reset", errorAccount: e });
-      }
-    } else {
-      dispatch({ type: "reset" });
-    }
-  }, [account, mainAccount, dispatch]);
 
   // when transaction changes, prepare the transaction
   useEffect(() => {
@@ -180,11 +188,14 @@ export default ({
     };
   }, [mainAccount, transaction, dispatch]);
 
-  return [
+  return {
     transaction,
     setTransaction,
     status,
-    errorAccount || errorPrepare || errorStatus,
-    pendingPrepare || pendingStatus
-  ];
+    account,
+    parentAccount,
+    setAccount,
+    bridgeError: errorAccount || errorPrepare || errorStatus,
+    bridgePending: pendingPrepare || pendingStatus
+  };
 };

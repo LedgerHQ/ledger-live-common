@@ -40,7 +40,7 @@ import {
 } from "../../../api/Ripple";
 import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
 import signTransaction from "../../../hw/signTransaction";
-import type { Transaction } from "../types";
+import type { Transaction, NetworkInfo } from "../types";
 
 async function doSignAndBroadcast({
   a,
@@ -608,8 +608,8 @@ const signAndBroadcast = (a, t, deviceId) =>
     };
   });
 
-const prepareTransaction = async (a, t) => {
-  let networkInfo = t.networkInfo;
+const prepareTransaction = async (a: Account, t: Transaction) => {
+  let networkInfo: ?NetworkInfo = t.networkInfo;
   if (!networkInfo) {
     const api = apiForEndpointConfig(RippleAPI, a.endpointConfig);
     try {
@@ -629,7 +629,7 @@ const prepareTransaction = async (a, t) => {
   }
 
   const fee = t.fee || networkInfo.serverFee;
-  if (fee === t.feePerBye || fee.eq(t.fee || 0)) {
+  if (fee.eq(t.fee || 0)) {
     return t;
   }
 
