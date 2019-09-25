@@ -5,6 +5,7 @@ import { BigNumber } from "bignumber.js";
 import eip55 from "eip55";
 import { FeeNotLoaded, NotEnoughGas, NotEnoughBalance } from "@ledgerhq/errors";
 import type { Account } from "../../types";
+import { getGasLimit } from "./transaction";
 import { isValidRecipient } from "../../libcore/isValidRecipient";
 import { bigNumberToLibcoreAmount } from "../../libcore/buildBigNumber";
 import type { Core, CoreCurrency, CoreAccount } from "../../libcore/types";
@@ -44,7 +45,8 @@ export async function ethereumBuildTransaction({
 
   const recipient = eip55.encode(transaction.recipient);
 
-  const { gasPrice, gasLimit } = transaction;
+  const { gasPrice } = transaction;
+  const gasLimit = getGasLimit(transaction);
   if (!gasPrice || !gasLimit || !BigNumber(gasLimit).gt(ZERO)) {
     throw new FeeNotLoaded();
   }

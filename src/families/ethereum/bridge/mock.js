@@ -11,16 +11,18 @@ import {
   startSync,
   isInvalidRecipient
 } from "../../../bridge/mockHelpers";
+import { getGasLimit } from "../transaction";
 
 const defaultGetFees = (a, t: *) =>
-  (t.gasPrice || BigNumber(0)).times(t.gasLimit);
+  (t.gasPrice || BigNumber(0)).times(getGasLimit(t));
 
 const createTransaction = (account): Transaction => ({
   family: "ethereum",
   amount: BigNumber(0),
   recipient: "",
   gasPrice: BigNumber(10000000000),
-  gasLimit: BigNumber(21000),
+  userGasLimit: BigNumber(21000),
+  estimatedGasLimit: BigNumber(21000),
   feeCustomUnit: account.currency.units[1],
   networkInfo: null,
   useAllAmount: false,

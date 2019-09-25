@@ -171,6 +171,9 @@ export default (): Result => {
     };
   }, [transaction, mainAccount, dispatch]);
 
+  // FIXME maybe the two effects should be merged. prepre+status together to minimize re-render...
+  // also worth considering if we should EQUALS on the status object to know if the whole thing worth a reflow. at the end it might minimize events to just the transaction changes.
+
   // always keep a status in sync
   useEffect(() => {
     let ignore = false;

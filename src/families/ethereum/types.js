@@ -135,7 +135,8 @@ export type Transaction = {|
   ...TransactionCommon,
   family: "ethereum",
   gasPrice: ?BigNumber,
-  gasLimit: BigNumber,
+  userGasLimit: ?BigNumber,
+  estimatedGasLimit: ?BigNumber,
   feeCustomUnit: ?Unit,
   networkInfo: ?NetworkInfo
 |};
@@ -144,7 +145,8 @@ export type TransactionRaw = {|
   ...TransactionCommonRaw,
   family: "ethereum",
   gasPrice: ?string,
-  gasLimit: string,
+  userGasLimit: ?string,
+  estimatedGasLimit: ?string,
   feeCustomUnit: ?Unit,
   networkInfo: ?NetworkInfoRaw
 |};

@@ -37,19 +37,6 @@ export const estimateGasLimitAndStorage: EstimateGasLimitAndStorage = makeLRUCac
   (a, addr) => a.id + "|" + addr
 );
 
-type GetStorage = (Account, string) => Promise<BigNumber>;
-export const getStorage: GetStorage = makeLRUCache(
-  (account, addr) =>
-    withLibcore(async core => {
-      const { coreAccount } = await getCoreAccount(core, account);
-      const tezosLikeAccount = await coreAccount.asTezosLikeAccount();
-      const r = await tezosLikeAccount.getStorage(addr);
-      const bn = await libcoreBigIntToBigNumber(r);
-      return bn;
-    }),
-  (a, addr) => a.id + "|" + addr
-);
-
 const calculateFees = makeLRUCache(
   async (a, t) => {
     const { recipientError } = await validateRecipient(a.currency, t.recipient);
@@ -159,12 +146,9 @@ const prepareTransaction = async (a, t) => {
   let fees = t.fees || networkInfo.fees;
 
   let recipient = t.recipient;
-  // FIXME force sending to parent?
-  /*
   if (t.subAccountId && !t.recipient) {
     recipient = a.freshAddress;
   }
-  */
 
   if (
     t.networkInfo !== networkInfo ||
@@ -178,12 +162,6 @@ const prepareTransaction = async (a, t) => {
 
   return t;
 };
-
-const fillUpExtraFieldToApplyTransactionNetworkInfo = (
-  _a,
-  _t,
-  _networkInfo
-) => ({});
 
 const currencyBridge: CurrencyBridge = {
   scanAccountsOnDevice
@@ -206,8 +184,7 @@ const accountBridge: AccountBridge<Transaction> = {
     name: "LibcoreTezosAccountBridge",
     createTransaction,
     getTransactionStatus,
-    prepareTransaction,
-    fillUpExtraFieldToApplyTransactionNetworkInfo
+    prepareTransaction
   })
 };
 

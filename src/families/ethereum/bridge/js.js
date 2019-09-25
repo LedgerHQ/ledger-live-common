@@ -28,6 +28,7 @@ import {
 import { getCryptoCurrencyById } from "../../../currencies";
 import type { Account, Operation } from "../../../types";
 import type { Transaction } from "../types";
+import { getGasLimit } from "../transaction";
 import getAddress from "../../../hw/getAddress";
 import { open } from "../../../hw";
 import { apiForCurrency } from "../../../api/Ethereum";
@@ -40,7 +41,7 @@ const serializeTransaction = t => ({
   recipient: t.recipient,
   amount: `0x${BigNumber(t.amount).toString(16)}`,
   gasPrice: !t.gasPrice ? "0x00" : `0x${BigNumber(t.gasPrice).toString(16)}`,
-  gasLimit: `0x${BigNumber(t.gasLimit).toString(16)}`
+  gasLimit: `0x${BigNumber(getGasLimit(t)).toString(16)}`
 });
 
 // in case of a SELF send, 2 ops are returned.
@@ -134,7 +135,8 @@ const doSignAndBroadcast = async ({
   onSigned,
   onOperationBroadcasted
 }) => {
-  const { gasPrice, amount, gasLimit } = t;
+  const { gasPrice, amount } = t;
+  const gasLimit = getGasLimit(t);
   if (!gasPrice) throw new FeeNotLoaded();
   const api = apiForCurrency(a.currency);
 
@@ -446,22 +448,26 @@ const startSync = ({ freshAddress, blockHeight, currency, operations }) =>
     };
   });
 
-const defaultGasLimit = BigNumber(0x5208);
-
 const createTransaction = () => ({
   family: "ethereum",
   amount: BigNumber(0),
   recipient: "",
   gasPrice: null,
-  gasLimit: defaultGasLimit,
+  userGasLimit: null,
+  estimatedGasLimit: null,
   networkInfo: null,
   feeCustomUnit: getCryptoCurrencyById("ethereum").units[1]
 });
 
-const updateTransaction = (t, patch) => ({ ...t, ...patch });
+const updateTransaction = (t, patch) => {
+  if ("recipient" in patch && patch.recipient !== t.recipient) {
+    return { ...t, ...patch, userGasLimit: null, estimatedGasLimit: null };
+  }
+  return { ...t, ...patch };
+};
 
 const getTransactionStatus = (a, t) => {
-  const estimatedFees = (t.gasPrice || BigNumber(0)).times(t.gasLimit || 0);
+  const estimatedFees = (t.gasPrice || BigNumber(0)).times(getGasLimit(t));
 
   const totalSpent = BigNumber(t.amount || 0).plus(estimatedFees);
 
@@ -538,16 +544,19 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
 
   const networkInfo = t.networkInfo || (await getNetworkInfo(a.currency));
 
-  const gasLimit = t.recipient
+  const estimatedGasLimit = t.recipient
     ? BigNumber(await api.estimateGasLimitForERC20(t.recipient))
-    : defaultGasLimit;
+    : null;
 
   const gasPrice =
     t.gasPrice ||
     (networkInfo.gasPrice ? BigNumber(networkInfo.gasPrice) : null);
 
   if (
-    gasLimit.eq(t.gasLimit) &&
+    (!estimatedGasLimit === !estimatedGasLimit ||
+      (estimatedGasLimit &&
+        t.estimatedGasLimit &&
+        estimatedGasLimit.eq(t.estimatedGasLimit))) &&
     t.networkInfo === networkInfo &&
     (gasPrice === t.gasPrice ||
       (gasPrice && t.gasPrice && gasPrice.eq(t.gasPrice)))
@@ -558,7 +567,7 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
   return {
     ...t,
     networkInfo,
-    gasLimit,
+    estimatedGasLimit,
     gasPrice
   };
 };

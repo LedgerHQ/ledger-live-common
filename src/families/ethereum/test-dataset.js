@@ -15,7 +15,8 @@ const dataset: DatasetTest = {
                 recipient: "0x17733CAb76d9A2112576443F21735789733B1ca3",
                 amount: "10000000000000",
                 gasPrice: "100000000",
-                gasLimit: "21000",
+                userGasLimit: "21000",
+                estimatedGasLimit: null,
                 feeCustomUnit: null,
                 networkInfo: null
               },

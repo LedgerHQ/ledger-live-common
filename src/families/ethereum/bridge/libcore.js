@@ -10,6 +10,7 @@ import type { AccountBridge, CurrencyBridge } from "../../../types/bridge";
 import { scanAccountsOnDevice } from "../../../libcore/scanAccountsOnDevice";
 import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
 import { withLibcore } from "../../../libcore/access";
+import { getGasLimit } from "../transaction";
 import { getCoreAccount } from "../../../libcore/getCoreAccount";
 import { syncAccount } from "../../../libcore/syncAccount";
 import { getFeesForTransaction } from "../../../libcore/getFeesForTransaction";
@@ -29,20 +30,24 @@ const getTransactionAccount = (a, t): AccountLike => {
 
 const startSync = (initialAccount, _observation) => syncAccount(initialAccount);
 
-const defaultGasLimit = BigNumber(0x5208);
-
 const createTransaction = a => ({
   family: "ethereum",
   amount: BigNumber(0),
   recipient: "",
   gasPrice: null,
-  gasLimit: defaultGasLimit,
+  userGasLimit: null,
+  estimatedGasLimit: null,
   networkInfo: null,
   feeCustomUnit: a.currency.units[1] || a.currency.units[0],
   useAllAmount: false
 });
 
-const updateTransaction = (t, patch) => ({ ...t, ...patch });
+const updateTransaction = (t, patch) => {
+  if ("recipient" in patch && patch.recipient !== t.recipient) {
+    return { ...t, ...patch, userGasLimit: null, estimatedGasLimit: null };
+  }
+  return { ...t, ...patch };
+};
 
 const signAndBroadcast = (account, transaction, deviceId) =>
   libcoreSignAndBroadcast({
@@ -61,9 +66,9 @@ const calculateFees = makeLRUCache(
     });
   },
   (a, t) =>
-    `${a.id}_${a.blockHeight || 0}_${t.amount.toString()}_${t.recipient}_${
-      t.gasLimit ? t.gasLimit.toString() : ""
-    }_${t.gasPrice ? t.gasPrice.toString() : ""}`
+    `${a.id}_${a.blockHeight || 0}_${t.amount.toString()}_${
+      t.recipient
+    }_${getGasLimit(t).toString()}_${t.gasPrice ? t.gasPrice.toString() : ""}`
 );
 
 const getTransactionStatus = async (a, t) => {
@@ -147,37 +152,39 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
     networkInfo = ni;
   }
 
-  let gasLimit = defaultGasLimit;
-
+  let estimatedGasLimit;
   if (tAccount.type === "TokenAccount") {
-    gasLimit = await estimateGasLimitForERC20(
+    estimatedGasLimit = await estimateGasLimitForERC20(
       a,
       tAccount.token.contractAddress
     );
   } else if (t.recipient) {
     const { recipientError } = await validateRecipient(a.currency, t.recipient);
     if (!recipientError) {
-      await estimateGasLimitForERC20(a, t.recipient);
+      estimatedGasLimit = await estimateGasLimitForERC20(a, t.recipient);
     }
+  }
+  if (
+    estimatedGasLimit &&
+    t.estimatedGasLimit &&
+    t.estimatedGasLimit.eq(estimatedGasLimit)
+  ) {
+    estimatedGasLimit = t.estimatedGasLimit;
   }
 
   const gasPrice =
     t.gasPrice ||
     (networkInfo.gasPrice ? BigNumber(networkInfo.gasPrice) : null);
+
   if (
-    gasLimit.eq(t.gasLimit) &&
-    t.networkInfo === networkInfo &&
-    (gasPrice === t.gasPrice ||
-      (gasPrice && t.gasPrice && gasPrice.eq(t.gasPrice)))
+    t.gasPrice !== gasPrice ||
+    t.estimatedGasLimit !== estimatedGasLimit ||
+    t.networkInfo !== networkInfo
   ) {
-    return t;
+    return { ...t, networkInfo, estimatedGasLimit, gasPrice };
   }
-  return {
-    ...t,
-    networkInfo,
-    gasLimit,
-    gasPrice
-  };
+
+  return t;
 };
 
 const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
