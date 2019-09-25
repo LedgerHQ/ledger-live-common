@@ -11,6 +11,7 @@ import type {
   SignAndBroadcastEvent
 } from "../types";
 import { withDevice } from "../hw/deviceAccess";
+import { toTransactionRaw } from "../transaction";
 import { getCoreAccount } from "./getCoreAccount";
 import { remapLibcoreErrors } from "./errors";
 import { withLibcoreF } from "./access";
@@ -54,6 +55,8 @@ const doSignAndBroadcast = withLibcoreF(
     const coreCurrency = await coreWallet.getCurrency();
     if (isCancelled()) return;
 
+    log("libcore", "buildTransaction", toTransactionRaw(transaction));
+
     const builded = await buildTransaction({
       account,
       core,
@@ -66,6 +69,7 @@ const doSignAndBroadcast = withLibcoreF(
 
     if (isCancelled() || !builded) return;
 
+    log("libcore", "signing transaction...");
     const signedTransaction = await withDevice(deviceId)(transport =>
       from(
         signTransaction({
@@ -87,6 +91,8 @@ const doSignAndBroadcast = withLibcoreF(
       )
     ).toPromise();
 
+    log("libcore", "signed transaction: " + signedTransaction);
+
     if (isCancelled()) return;
 
     if (!signedTransaction) return;
@@ -107,6 +113,8 @@ const doSignAndBroadcast = withLibcoreF(
       coreAccount,
       transaction
     });
+
+    log("libcore", "op builded: " + op.id);
 
     if (!op) return;
 

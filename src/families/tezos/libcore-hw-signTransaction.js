@@ -1,5 +1,6 @@
 // @flow
 
+import { log } from "@ledgerhq/logs";
 import Xtz from "./hw-app-xtz";
 import Transport from "@ledgerhq/hw-transport";
 import type { CryptoCurrency, DerivationMode, Account } from "../../types";
@@ -20,14 +21,16 @@ export async function tezosSignTransaction({
   derivationMode: DerivationMode
 }) {
   const hwApp = new Xtz(transport);
-  const result = await hwApp.signOperation(
+
+  const { signature } = await hwApp.signOperation(
     account.freshAddressPath,
     await coreTransaction.serialize()
   );
 
-  await coreTransaction.setDERSignature(result.signature);
+  await coreTransaction.setDERSignature(signature);
 
   const raw = await coreTransaction.serialize();
+
   return raw;
 }
 

@@ -158,9 +158,9 @@ const prepareTransaction = async (a, t) => {
 
   let fees = t.fees || networkInfo.fees;
 
+  let recipient = t.recipient;
   // FIXME force sending to parent?
   /*
-  let recipient = t.recipient;
   if (t.subAccountId && !t.recipient) {
     recipient = a.freshAddress;
   }
