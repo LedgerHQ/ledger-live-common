@@ -16,11 +16,10 @@ export type State = {
   parentAccount: ?Account,
   transaction: ?Transaction,
   status: TransactionStatus,
+  statusOnTransaction: ?Transaction,
   errorAccount: ?Error,
   errorPrepare: ?Error,
-  errorStatus: ?Error,
-  pendingPrepare: boolean,
-  pendingStatus: boolean
+  errorStatus: ?Error
 };
 
 export type Result = {
@@ -48,11 +47,10 @@ const initial: State = {
     totalSpent: BigNumber(0),
     useAllAmount: false
   },
+  statusOnTransaction: null,
   errorAccount: null,
   errorPrepare: null,
-  errorStatus: null,
-  pendingPrepare: true,
-  pendingStatus: true
+  errorStatus: null
 };
 
 const reducer = (s, a) => {
@@ -83,28 +81,39 @@ const reducer = (s, a) => {
       }
 
     case "setTransaction":
+      if (s.transaction === a.transaction) return s;
       return { ...s, transaction: a.transaction };
-
-    case "onStatusStart":
-      return { ...s, pendingStatus: true };
 
     case "onStatus":
       return {
         ...s,
-        pendingStatus: false,
-        errorStatus: a.error || null,
-        status: a.status || s.status
+        errorStatus: null,
+        status: a.status,
+        statusOnTransaction: a.statusOnTransaction
       };
 
-    case "onPrepareStart":
-      return { ...s, pendingPrepare: true };
-
-    case "onPrepare":
+    case "onStatusError":
+      if (a.error === s.errorStatus) return s;
       return {
         ...s,
-        pendingPrepare: false,
-        errorPrepare: a.error || null,
-        transaction: a.transaction || s.transaction
+        errorStatus: a.error
+      };
+
+    case "onPrepare":
+      if (a.transaction === s.transaction && !s.errorPrepare) {
+        return s;
+      }
+      return {
+        ...s,
+        errorPrepare: null,
+        transaction: a.transaction
+      };
+
+    case "onPrepareError":
+      if (a.error === s.errorPrepare) return s;
+      return {
+        ...s,
+        errorPrepare: a.error
       };
     default:
       return s;
@@ -118,11 +127,10 @@ export default (): Result => {
       parentAccount,
       transaction,
       status,
+      statusOnTransaction,
       errorAccount,
       errorPrepare,
-      errorStatus,
-      pendingPrepare,
-      pendingStatus
+      errorStatus
     },
     dispatch
   ] = useReducer(reducer, initial);
@@ -144,7 +152,6 @@ export default (): Result => {
   useEffect(() => {
     let ignore = false;
     if (mainAccount && transaction) {
-      dispatch({ type: "onPrepareStart" });
       Promise.resolve()
         .then(() => getAccountBridge(mainAccount, null))
         .then(bridge => bridge.prepareTransaction(mainAccount, transaction))
@@ -155,7 +162,7 @@ export default (): Result => {
           },
           e => {
             if (ignore) return;
-            dispatch({ type: "onPrepare", error: e });
+            dispatch({ type: "onPrepareError", error: e });
           }
         );
     }
@@ -168,18 +175,21 @@ export default (): Result => {
   useEffect(() => {
     let ignore = false;
     if (mainAccount && transaction) {
-      dispatch({ type: "onStatusStart" });
       Promise.resolve()
         .then(() => getAccountBridge(mainAccount, null))
         .then(bridge => bridge.getTransactionStatus(mainAccount, transaction))
         .then(
           s => {
             if (ignore) return;
-            dispatch({ type: "onStatus", status: s });
+            dispatch({
+              type: "onStatus",
+              status: s,
+              statusOnTransaction: transaction
+            });
           },
           e => {
             if (ignore) return;
-            dispatch({ type: "onStatus", error: e });
+            dispatch({ type: "onStatusError", error: e });
           }
         );
     }
@@ -196,6 +206,6 @@ export default (): Result => {
     parentAccount,
     setAccount,
     bridgeError: errorAccount || errorPrepare || errorStatus,
-    bridgePending: pendingPrepare || pendingStatus
+    bridgePending: transaction !== statusOnTransaction
   };
 };
