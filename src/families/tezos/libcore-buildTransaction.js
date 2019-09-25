@@ -1,5 +1,6 @@
 // @flow
 
+import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import { FeeNotLoaded } from "@ledgerhq/errors";
 import type { Account } from "../../types";
@@ -9,7 +10,12 @@ import {
   bigNumberToLibcoreBigInt
 } from "../../libcore/buildBigNumber";
 import type { Core, CoreCurrency, CoreAccount } from "../../libcore/types";
-import type { CoreTezosLikeTransaction, Transaction } from "./types";
+import type {
+  CoreTezosLikeOriginatedAccount,
+  CoreTezosLikeAccount,
+  CoreTezosLikeTransaction,
+  Transaction
+} from "./types";
 
 // TODO NotEnoughGas, NotEnoughBalance ?
 export async function tezosBuildTransaction({
@@ -29,10 +35,30 @@ export async function tezosBuildTransaction({
   isCancelled: () => boolean
 }): Promise<?CoreTezosLikeTransaction> {
   const { currency } = account;
-  const { recipient, fees, gasLimit, storageLimit } = transaction;
+  const { recipient, fees, gasLimit, storageLimit, subAccountId } = transaction;
 
+  const subAccount = subAccountId
+    ? account.subAccounts &&
+      account.subAccounts.find(t => t.id === subAccountId)
+    : null;
+
+  let tezosAccount: ?CoreTezosLikeAccount | ?CoreTezosLikeOriginatedAccount;
   const tezosLikeAccount = await coreAccount.asTezosLikeAccount();
   if (isCancelled()) return;
+
+  if (subAccount && subAccount.type === "ChildAccount") {
+    const accounts = await tezosLikeAccount.getOriginatedAccounts();
+    for (const a of accounts) {
+      const addr = await a.getAddress();
+      if (addr === subAccount.address) {
+        tezosAccount = a;
+        break;
+      }
+    }
+    invariant(tezosAccount, "sub account not found " + subAccount.id);
+  } else {
+    tezosAccount = tezosLikeAccount;
+  }
 
   await isValidRecipient({ currency, recipient });
   if (isCancelled()) return;
@@ -54,7 +80,7 @@ export async function tezosBuildTransaction({
   const storageBigInt = await bigNumberToLibcoreBigInt(core, storageLimit);
   if (isCancelled()) return;
 
-  const transactionBuilder = await tezosLikeAccount.buildTransaction();
+  const transactionBuilder = await tezosAccount.buildTransaction();
   if (isCancelled()) return;
 
   await transactionBuilder.setType(transaction.type);

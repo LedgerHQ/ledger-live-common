@@ -143,7 +143,7 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
   let networkInfo = t.networkInfo;
   if (!networkInfo) {
     const ni = await getAccountNetworkInfo(a);
-    invariant(ni.family === "ethereum", "bitcoin networkInfo expected");
+    invariant(ni.family === "ethereum", "ethereum networkInfo expected");
     networkInfo = ni;
   }
 
@@ -154,7 +154,7 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
       a,
       tAccount.token.contractAddress
     );
-  } else if (!t.recipient) {
+  } else if (t.recipient) {
     const { recipientError } = await validateRecipient(a.currency, t.recipient);
     if (!recipientError) {
       await estimateGasLimitForERC20(a, t.recipient);

@@ -67,6 +67,7 @@ declare class CoreTezosLikeTransactionBuilder {
 declare class CoreTezosLikeAccount {
   broadcastRawTransaction(signed: string): Promise<string>;
   buildTransaction(): Promise<CoreTezosLikeTransactionBuilder>;
+  getStorage(address: string): Promise<CoreBigInt>;
   getEstimatedGasLimit(address: string): Promise<CoreBigInt>;
   getFees(): Promise<CoreBigInt>;
   getOriginatedAccounts(): Promise<CoreTezosLikeOriginatedAccount[]>;
@@ -209,6 +210,9 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
       buildTransaction: {
         returns: "TezosLikeTransactionBuilder"
+      },
+      getStorage: {
+        returns: "BigInt"
       },
       getEstimatedGasLimit: {
         returns: "BigInt"

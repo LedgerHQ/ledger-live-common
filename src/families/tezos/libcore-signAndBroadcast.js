@@ -7,7 +7,7 @@ import type { CoreTezosLikeTransaction, Transaction } from "./types";
 import type { CoreAccount } from "../../libcore/types";
 
 async function tezos({
-  account: { id: accountId, balance },
+  account: { id, balance },
   signedTransaction,
   builded,
   coreAccount,
@@ -35,6 +35,9 @@ async function tezos({
 
   const fee = fees.times(gasLimit);
 
+  const accountId = transaction.subAccountId || id;
+
+  // FIXME we do not correctly handle subAccount
   const op: $Exact<Operation> = {
     id: `${accountId}-${txHash}-OUT`,
     hash: txHash,
