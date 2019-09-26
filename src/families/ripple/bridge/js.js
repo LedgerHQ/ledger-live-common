@@ -629,15 +629,16 @@ const prepareTransaction = async (a: Account, t: Transaction) => {
   }
 
   const fee = t.fee || networkInfo.serverFee;
-  if (fee.eq(t.fee || 0)) {
-    return t;
+
+  if (t.networkInfo !== networkInfo || t.fee !== fee) {
+    return {
+      ...t,
+      networkInfo,
+      fee
+    };
   }
 
-  return {
-    ...t,
-    networkInfo,
-    fee
-  };
+  return t;
 };
 
 const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({

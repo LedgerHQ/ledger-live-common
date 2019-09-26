@@ -1,5 +1,6 @@
 // @flow
 import type { DatasetTest } from "../dataset";
+// import { NotEnoughBalance } from "@ledgerhq/errors";
 
 const dataset: DatasetTest = {
   implementations: ["libcore", "mock", "ripplejs"],
@@ -8,9 +9,8 @@ const dataset: DatasetTest = {
       accounts: [
         {
           transactions: [
-            /*
             {
-              name: "success1",
+              name: "not enough balance with base reserve",
               transaction: {
                 family: "ripple",
                 recipient: "rMLgQYP7up5xP3f9o51F9k1q1JEf9doaAi",
@@ -27,11 +27,10 @@ const dataset: DatasetTest = {
                 recipientWarning: null,
                 showFeeWarning: false,
                 totalSpent: "1001",
-                transactionError: null,
+                // transactionError: new NotEnoughBalance(), // <- how to match?
                 useAllAmount: false
               }
             }
-            */
           ],
           raw: {
             id:
