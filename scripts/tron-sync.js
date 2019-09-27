@@ -11,7 +11,7 @@ const convertTRC10 = ({ name, abbr, id, owner_address, precision }) => [
   abbr,
   name,
   b58(owner_address),
-  precision
+  precision || 0
 ];
 
 async function fetch(url) {
