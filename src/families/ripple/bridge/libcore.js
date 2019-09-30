@@ -11,6 +11,7 @@ import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
 import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
 import {
   FeeNotLoaded,
+  FeeRequired,
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughBalance
 } from "@ledgerhq/errors";
@@ -53,6 +54,8 @@ const getTransactionStatus = async (a, t) => {
   let transactionError;
   if (!t.fee) {
     transactionError = new FeeNotLoaded();
+  } else if (t.fee.eq(0)) {
+    transactionError = new FeeRequired();
   } else if (totalSpent.gt(a.balance.minus(baseReserve))) {
     transactionError = new NotEnoughBalance();
   }

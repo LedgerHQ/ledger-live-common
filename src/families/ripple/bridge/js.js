@@ -570,7 +570,7 @@ const createTransaction = () => ({
   amount: BigNumber(0),
   recipient: "",
   fee: null,
-  tag: undefined,
+  tag: null,
   networkInfo: null,
   feeCustomUnit: null
 });
