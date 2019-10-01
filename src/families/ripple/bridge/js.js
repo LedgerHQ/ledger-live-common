@@ -14,7 +14,8 @@ import {
   InvalidAddress,
   FeeNotLoaded,
   NetworkDown,
-  InvalidAddressBecauseDestinationIsAlsoSource
+  InvalidAddressBecauseDestinationIsAlsoSource,
+  FeeRequired
 } from "@ledgerhq/errors";
 import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
 import type { Account, Operation } from "../../../types";
@@ -661,6 +662,8 @@ const getTransactionStatus = async (a, t) => {
   let transactionError;
   if (!t.fee) {
     transactionError = new FeeNotLoaded();
+  } else if (t.fee.eq(0)) {
+    transactionError = new FeeRequired();
   } else if (totalSpent.gt(a.balance.minus(reserveBaseXRP))) {
     transactionError = new NotEnoughBalance();
   } else if (
