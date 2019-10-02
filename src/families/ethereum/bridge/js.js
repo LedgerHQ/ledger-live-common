@@ -9,6 +9,7 @@ import eip55 from "eip55";
 import {
   NotEnoughBalance,
   FeeNotLoaded,
+  FeeTooHigh,
   ETHAddressNonEIP,
   InvalidAddress
 } from "@ledgerhq/errors";
@@ -467,36 +468,35 @@ const updateTransaction = (t, patch) => {
 };
 
 const getTransactionStatus = (a, t) => {
+  const errors = {};
+  const warnings = {};
   const estimatedFees = (t.gasPrice || BigNumber(0)).times(getGasLimit(t));
-
   const totalSpent = BigNumber(t.amount || 0).plus(estimatedFees);
-
   const amount = BigNumber(t.amount || 0);
 
-  const showFeeWarning = amount.gt(0) && estimatedFees.times(10).gt(amount);
-
-  // Fill up transaction errors...
-  let transactionError;
-  if (!t.gasPrice) {
-    transactionError = new FeeNotLoaded();
-  } else if (totalSpent.gt(a.balance)) {
-    transactionError = new NotEnoughBalance();
+  if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
+    warnings.feeTooHigh = new FeeTooHigh();
   }
 
-  // Fill up recipient errors...
-  let recipientError;
+  if (!t.gasPrice) {
+    errors.fee = new FeeNotLoaded();
+  } else if (totalSpent.gt(a.balance)) {
+    errors.fee = new NotEnoughBalance();
+  }
+
   let recipientWarning = getRecipientWarning(a.currency, t.recipient);
+  if (recipientWarning) {
+    warnings.recipient = recipientWarning;
+  }
   if (!isRecipientValid(a.currency, t.recipient)) {
-    recipientError = new InvalidAddress("", {
+    errors.recipient = new InvalidAddress("", {
       currencyName: a.currency.name
     });
   }
 
   return Promise.resolve({
-    transactionError,
-    recipientError,
-    recipientWarning,
-    showFeeWarning,
+    errors,
+    warnings,
     estimatedFees,
     amount,
     totalSpent,

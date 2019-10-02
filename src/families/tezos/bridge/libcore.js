@@ -1,7 +1,7 @@
 // @flow
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
-import { FeeNotLoaded } from "@ledgerhq/errors";
+import { FeeNotLoaded, FeeTooHigh } from "@ledgerhq/errors";
 import { validateRecipient } from "../../../bridge/shared";
 import type { Account, AccountBridge, CurrencyBridge } from "../../../types";
 import type { Transaction } from "../types";
@@ -77,24 +77,30 @@ const signAndBroadcast = (account, transaction, deviceId) =>
   });
 
 const getTransactionStatus = async (a, t) => {
+  const errors = {};
+  const warnings = {};
   const subAcc = !t.subAccountId
     ? null
     : a.subAccounts && a.subAccounts.find(ta => ta.id === t.subAccountId);
   const account = subAcc || a;
 
-  let feesResult;
+  let estimatedFees = BigNumber(0);
   if (!t.fees) {
-    feesResult = {
-      transactionError: new FeeNotLoaded(),
-      estimatedFees: BigNumber(0)
-    };
+    errors.fees = new FeeNotLoaded();
   } else {
-    feesResult = await calculateFees(a, t).then(
+    await calculateFees(a, t).then(
       estimatedFees => ({ transactionError: null, estimatedFees }),
-      transactionError => ({ transactionError, estimatedFees: BigNumber(0) })
+      error => {
+        if (error.message === "NotEnoughBalance") {
+          // FIXME this is not smart
+          errors.amount = error;
+        } else {
+          // FIXME What do we do with the rest of the errors?
+          errors.transaction = error;
+        }
+      }
     );
   }
-  const { estimatedFees, transactionError } = feesResult;
 
   const totalSpent = !t.useAllAmount
     ? t.amount.plus(estimatedFees)
@@ -104,18 +110,26 @@ const getTransactionStatus = async (a, t) => {
     ? account.balance.minus(estimatedFees)
     : t.amount;
 
-  const showFeeWarning = amount.gt(0) && estimatedFees.times(10).gt(amount);
+  if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
+    warnings.feeTooHigh = new FeeTooHigh();
+  }
 
   const { recipientError, recipientWarning } = await validateRecipient(
     a.currency,
     t.recipient
   );
 
+  if (recipientError) {
+    errors.recipient = recipientError;
+  }
+
+  if (recipientWarning) {
+    warnings.recipient = recipientWarning;
+  }
+
   return Promise.resolve({
-    transactionError,
-    recipientError,
-    recipientWarning,
-    showFeeWarning,
+    errors,
+    warnings,
     estimatedFees,
     amount,
     totalSpent,

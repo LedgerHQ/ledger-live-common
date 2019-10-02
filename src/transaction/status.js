@@ -17,13 +17,33 @@ const toErrorRaw = (raw: ?Error): ?string => {
   return JSON.stringify(serializeError(raw));
 };
 
+export const cleanErrorsAndWarnings = (ts: any) => ({
+  ...ts,
+  errors: Object.keys(ts.errors).reduce((result, key) => {
+    if (!ts.errors[key]) {
+      return result;
+    }
+    return {
+      ...result,
+      [key]: { name: ts.errors[key].name, message: ts.errors[key].message }
+    };
+  }, {}),
+  warnings: Object.keys(ts.warnings).reduce((result, key) => {
+    if (!ts.warnings[key]) {
+      return result;
+    }
+    return {
+      ...result,
+      [key]: { name: ts.warnings[key].name, message: ts.warnings[key].message }
+    };
+  }, {}),
+});
+
 export const fromTransactionStatusRaw = (
   ts: TransactionStatusRaw
 ): TransactionStatus => ({
-  transactionError: fromErrorRaw(ts.transactionError),
-  recipientError: fromErrorRaw(ts.recipientError),
-  recipientWarning: fromErrorRaw(ts.recipientWarning),
-  showFeeWarning: ts.showFeeWarning,
+  errors: ts.errors, //FIXME, not going back like this
+  warnings: ts.warnings,
   estimatedFees: BigNumber(ts.estimatedFees),
   amount: BigNumber(ts.amount),
   totalSpent: BigNumber(ts.totalSpent),
@@ -33,14 +53,13 @@ export const fromTransactionStatusRaw = (
 
 export const toTransactionStatusRaw = (
   ts: TransactionStatus
-): TransactionStatusRaw => ({
-  transactionError: toErrorRaw(ts.transactionError),
-  recipientError: toErrorRaw(ts.recipientError),
-  recipientWarning: toErrorRaw(ts.recipientWarning),
-  showFeeWarning: ts.showFeeWarning,
-  estimatedFees: ts.estimatedFees.toString(),
-  amount: ts.amount.toString(),
-  totalSpent: ts.totalSpent.toString(),
-  useAllAmount: ts.useAllAmount,
-  recipientIsReadOnly: ts.recipientIsReadOnly
-});
+): TransactionStatusRaw =>
+  cleanErrorsAndWarnings({
+    errors: ts.errors,
+    warnings: ts.warnings,
+    estimatedFees: ts.estimatedFees.toString(),
+    amount: ts.amount.toString(),
+    totalSpent: ts.totalSpent.toString(),
+    useAllAmount: ts.useAllAmount,
+    recipientIsReadOnly: ts.recipientIsReadOnly
+  });

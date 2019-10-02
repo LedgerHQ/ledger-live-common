@@ -1,5 +1,6 @@
 // @flow
 import type { DatasetTest } from "../dataset";
+import { FeeTooHigh } from "@ledgerhq/errors";
 
 const networkInfo = {
   family: "tezos",
@@ -27,10 +28,10 @@ const dataset: DatasetTest = {
                 storageLimit: "300"
               },
               expectedStatus: {
-                transactionError: null,
-                recipientError: null,
-                recipientWarning: null,
-                showFeeWarning: true,
+                errors: {},
+                warnings: {
+                  feeTooHigh: new FeeTooHigh()
+                },
                 estimatedFees: "14626000",
                 amount: "1000000",
                 totalSpent: "15626000",

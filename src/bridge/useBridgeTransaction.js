@@ -38,10 +38,8 @@ const initial: State = {
   parentAccount: null,
   transaction: null,
   status: {
-    transactionError: null,
-    recipientError: null,
-    recipientWarning: null,
-    showFeeWarning: false,
+    errors: {},
+    warnings: {},
     estimatedFees: BigNumber(0),
     amount: BigNumber(0),
     totalSpent: BigNumber(0),

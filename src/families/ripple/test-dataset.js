@@ -1,6 +1,5 @@
 // @flow
 import type { DatasetTest } from "../dataset";
-// import { NotEnoughBalance } from "@ledgerhq/errors";
 
 const dataset: DatasetTest = {
   implementations: ["libcore", "mock", "ripplejs"],
@@ -23,11 +22,11 @@ const dataset: DatasetTest = {
               expectedStatus: {
                 amount: "1000",
                 estimatedFees: "1",
-                recipientError: null,
-                recipientWarning: null,
-                showFeeWarning: false,
+                errors: {
+                  // amount: new NotEnoughBalance() // <- how to match? FIXME not implemented for libcore
+                },
+                warnings: {},
                 totalSpent: "1001",
-                // transactionError: new NotEnoughBalance(), // <- how to match?
                 useAllAmount: false
               }
             }

@@ -1,6 +1,6 @@
 // @flow
 import { BigNumber } from "bignumber.js";
-import { NotEnoughBalance, InvalidAddress } from "@ledgerhq/errors";
+import { NotEnoughBalance, InvalidAddress, FeeTooHigh } from "@ledgerhq/errors";
 import type { Transaction } from "../types";
 import type { AccountBridge, CurrencyBridge } from "../../../types";
 import { getFeeItems } from "../../../api/FeesBitcoin";
@@ -26,6 +26,8 @@ const createTransaction = (): Transaction => ({
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
 const getTransactionStatus = (account, t) => {
+  const errors = {};
+  const warnings = {};
   const useAllAmount = !!t.useAllAmount;
 
   const estimatedFees = defaultGetFees(account, t);
@@ -38,26 +40,23 @@ const getTransactionStatus = (account, t) => {
     ? account.balance.minus(estimatedFees)
     : BigNumber(t.amount);
 
-  const showFeeWarning = amount.gt(0) && estimatedFees.times(10).gt(amount);
+  if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
+    warnings.feeTooHigh = new FeeTooHigh();
+  }
 
   // Fill up transaction errors...
-  let transactionError;
   if (totalSpent.gt(account.balance)) {
-    transactionError = new NotEnoughBalance();
+    errors.amount = new NotEnoughBalance();
   }
 
   // Fill up recipient errors...
-  let recipientError;
-  let recipientWarning;
   if (isInvalidRecipient(t.recipient)) {
-    recipientError = new InvalidAddress("");
+    errors.recipient = new InvalidAddress("");
   }
 
   return Promise.resolve({
-    transactionError,
-    recipientError,
-    recipientWarning,
-    showFeeWarning,
+    errors,
+    warnings,
     estimatedFees,
     amount,
     totalSpent,

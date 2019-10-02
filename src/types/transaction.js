@@ -31,14 +31,10 @@ export type TransactionCommonRaw = {|
 
 // TransactionStatus is a view of Transaction with general info to be used on the UI and status info.
 export type TransactionStatus = {|
-  // summarize if the transaction is good to go or have validation error
-  transactionError: ?Error,
-  // null if recipient is valid, otherwise it will be an error, likely InvalidAddress error
-  recipientError: ?Error,
-  // null if recipient have no warning. recipient can be valid but have warning to display (e.g. ETH EIP55)
-  recipientWarning: ?Error,
-  // ? should UI show a warning about fees being high (currently have been hardcoded to be if fee>10% of amount)
-  showFeeWarning: boolean,
+  // array of field based error messages for a transaction
+  errors: { [string]: Error },
+  // array of field based warning messages for a transaction
+  warnings: { [string]: Error },
   // estimated total fees the tx is going to cost. (in the mainAccount currency)
   estimatedFees: BigNumber,
   // actual amount that the recipient will receive (in account currency)
@@ -52,10 +48,8 @@ export type TransactionStatus = {|
 |};
 
 export type TransactionStatusRaw = {|
-  transactionError: ?string,
-  recipientError: ?string,
-  recipientWarning: ?string,
-  showFeeWarning: boolean,
+  errors: { [string]: { name: string } },
+  warnings: { [string]: { name: string } },
   estimatedFees: string,
   amount: string,
   totalSpent: string,

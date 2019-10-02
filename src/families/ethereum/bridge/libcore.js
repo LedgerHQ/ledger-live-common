@@ -3,6 +3,7 @@ import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
 import {
   FeeNotLoaded,
+  FeeTooHigh,
   InvalidAddressBecauseDestinationIsAlsoSource
 } from "@ledgerhq/errors";
 import type { Account, AccountLike } from "../../../types";
@@ -72,6 +73,8 @@ const calculateFees = makeLRUCache(
 );
 
 const getTransactionStatus = async (a, t) => {
+  const errors = {};
+  const warnings = {};
   const tokenAccount = !t.subAccountId
     ? null
     : a.subAccounts && a.subAccounts.find(ta => ta.id === t.subAccountId);
@@ -79,19 +82,23 @@ const getTransactionStatus = async (a, t) => {
 
   const useAllAmount = !!t.useAllAmount;
 
-  let feesResult;
+  let estimatedFees = BigNumber(0);
   if (!t.gasPrice) {
-    feesResult = {
-      transactionError: new FeeNotLoaded(),
-      estimatedFees: BigNumber(0)
-    };
+    errors.gasLimit = new FeeNotLoaded(); // FIXME why gaslimit, where is the error for gasPrice?
   } else {
-    feesResult = await calculateFees(a, t).then(
-      estimatedFees => ({ transactionError: null, estimatedFees }),
-      transactionError => ({ transactionError, estimatedFees: BigNumber(0) })
+    await calculateFees(a, t).then(
+      _estimatedFees => (estimatedFees = _estimatedFees),
+      error => {
+        if (error.message === "NotEnoughBalance") {
+          // FIXME this is not smart
+          errors.amount = error;
+        } else if (error) {
+          //FIXME What do we do with the rest of the errors?
+          errors.transaction = error;
+        }
+      }
     );
   }
-  const { estimatedFees, transactionError } = feesResult;
 
   const totalSpent = useAllAmount
     ? account.balance
@@ -105,25 +112,30 @@ const getTransactionStatus = async (a, t) => {
       : account.balance.minus(estimatedFees)
     : BigNumber(t.amount || 0);
 
-  const showFeeWarning = tokenAccount
-    ? false
-    : amount.gt(0) && estimatedFees.times(10).gt(amount);
-
-  // Fill up recipient errors...
+  if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
+    warnings.feeTooHigh = new FeeTooHigh();
+  }
 
   let { recipientError, recipientWarning } = await validateRecipient(
     a.currency,
     t.recipient
   );
+
+  if (recipientError) {
+    errors.recipient = recipientError;
+  }
+
+  if (recipientWarning) {
+    warnings.recipient = recipientWarning;
+  }
+
   if (tokenAccount && a.freshAddress === t.recipient) {
-    recipientError = new InvalidAddressBecauseDestinationIsAlsoSource();
+    errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
   }
 
   return Promise.resolve({
-    transactionError,
-    recipientError,
-    recipientWarning,
-    showFeeWarning,
+    errors,
+    warnings,
     estimatedFees,
     amount,
     totalSpent,

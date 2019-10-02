@@ -36,7 +36,7 @@ export default () => {
         recipient: "dcovduyafuefmk2qvuw5xdtaunla2lp72n"
       };
       let status = await bridge.getTransactionStatus(account, t);
-      expect(status.recipientError).toEqual(new InvalidAddress());
+      expect(status.errors.recipient.name).toEqual(new InvalidAddress().name);
     });
 
     test("Valid recipient address should Succeed", async () => {
@@ -45,7 +45,7 @@ export default () => {
         recipient: "39KaU7ksuQqmEGzLUCZzb9VYMm2H5yQ3QL"
       };
       let status = await bridge.getTransactionStatus(account, t);
-      expect(status.recipientError).toEqual(null);
+      expect(status.errors.recipient).toBeUndefined();
     });
 
     test("Missing Fees should have a FeeError", async () => {
@@ -54,7 +54,7 @@ export default () => {
         recipient: "bc1qwqfns0rs5zxrrwf80k4xlp4lpnuyc69feh2r3d"
       };
       let status = await bridge.getTransactionStatus(account, t);
-      expect(status.transactionError).toEqual(new FeeNotLoaded());
+      expect(status.errors.feePerByte.name).toEqual(new FeeNotLoaded().name);
     });
 
     test("fees", async () => {
@@ -65,20 +65,20 @@ export default () => {
         feePerByte: null
       };
       let status = await bridge.getTransactionStatus(account, t);
-      expect(status.recipientError).toEqual(null);
-      expect(status.transactionError).toEqual(new FeeNotLoaded());
+      expect(status.errors.recipient).toBeUndefined();
+      expect(status.errors.feePerByte.name).toEqual(new FeeNotLoaded().name);
       t = await bridge.prepareTransaction(account, t);
       expect(t.feePerByte).toBeInstanceOf(BigNumber);
       t.feePerByte = BigNumber(1); // for predictible tests
       status = await bridge.getTransactionStatus(account, t);
-      expect(status.transactionError).toEqual(null);
+      expect(status.errors.feePerByte).toBeUndefined();
       t = {
         ...t,
         feePerByte: BigNumber(0)
       };
       t = await bridge.prepareTransaction(account, t);
       status = await bridge.getTransactionStatus(account, t);
-      expect(status.transactionError).toEqual(new FeeRequired());
+      expect(status.errors.feePerByte.name).toEqual(new FeeRequired().name);
     });
 
     test("Amount to high should have a balanceError", async () => {
@@ -89,19 +89,19 @@ export default () => {
         amount: BigNumber(979079019)
       };
       let status = await bridge.getTransactionStatus(account, t);
-      expect(status.recipientError).toEqual(null);
+      expect(status.errors.recipient).toBeUndefined();
       let transaction = await bridge.prepareTransaction(account, t);
       status = await bridge.getTransactionStatus(account, transaction);
-      expect(status.transactionError).toEqual(new NotEnoughBalance());
+      expect(status.errors.amount.name).toEqual(new NotEnoughBalance().name);
       t = {
         ...t,
         feePerByte: BigNumber(9999999),
         amount: BigNumber(300)
       };
-      status = await bridge.getTransactionStatus(account, t);
+      status = await bridge.getTransactionStatus(account, t); //NB not used?
       transaction = await bridge.prepareTransaction(account, t);
       status = await bridge.getTransactionStatus(account, transaction);
-      expect(status.transactionError).toEqual(new NotEnoughBalance());
+      expect(status.errors.amount.name).toEqual(new NotEnoughBalance().name);
     });
 
     test("Valid amount should Succeed", async () => {
@@ -112,10 +112,10 @@ export default () => {
         amount: BigNumber(2489)
       };
       let status = await bridge.getTransactionStatus(account, t);
-      expect(status.recipientError).toEqual(null);
+      expect(status.errors.recipient).toBeUndefined();
       let transaction = await bridge.prepareTransaction(account, t);
       status = await bridge.getTransactionStatus(account, transaction);
-      expect(status.transactionError).toEqual(null);
+      expect(status.errors.amount).toBeUndefined();
     });
   });
 };

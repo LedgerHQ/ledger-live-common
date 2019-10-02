@@ -31,7 +31,7 @@ export default () => {
         recipient: "invalidADDRESS"
       };
       const status = await bridge.getTransactionStatus(account, t);
-      expect(status.recipientError).toEqual(new InvalidAddress());
+      expect(status.errors.recipient.name).toEqual(new InvalidAddress().name);
     });
 
     test("valid recipient OR valid recipient lowercase should succeed", async () => {
@@ -42,16 +42,16 @@ export default () => {
       let status = await bridge.getTransactionStatus(account, t);
       t = await bridge.prepareTransaction(account, t);
       status = await bridge.getTransactionStatus(account, t);
-      expect(status.transactionError).toEqual(null);
-      expect(status.recipientError).toEqual(null);
+      expect(status.errors.amount).toBeUndefined();
+      expect(status.errors.recipient).toBeUndefined();
       t = {
         ...bridge.createTransaction(account),
         recipient: "0x5df0c369641b8af3c7e9ae076e5466ef678319cd"
       };
       t = await bridge.prepareTransaction(account, t);
       status = await bridge.getTransactionStatus(account, t);
-      expect(status.transactionError).toEqual(null);
-      expect(status.recipientError).toEqual(null);
+      expect(status.errors.amount).toBeUndefined();
+      expect(status.errors.recipient).toBeUndefined();
     });
 
     test("insufficient balance have an error", async () => {
@@ -64,7 +64,7 @@ export default () => {
       };
       t = await bridge.prepareTransaction(account, t);
       let status = await bridge.getTransactionStatus(account, t);
-      expect(status.transactionError).toEqual(new NotEnoughBalance());
+      expect(status.errors.amount.name).toEqual(new NotEnoughBalance().name);
     });
   });
 };

@@ -1,7 +1,7 @@
 // @flow
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
-import { FeeNotLoaded, FeeRequired } from "@ledgerhq/errors";
+import { FeeNotLoaded, FeeRequired, FeeTooHigh } from "@ledgerhq/errors";
 import { validateRecipient } from "../../../bridge/shared";
 import type { AccountBridge, CurrencyBridge } from "../../../types/bridge";
 import type { Account } from "../../../types/account";
@@ -50,45 +50,53 @@ const signAndBroadcast = (account, transaction, deviceId) =>
   });
 
 const getTransactionStatus = async (a, t) => {
+  const errors = {};
+  const warnings = {};
   const useAllAmount = !!t.useAllAmount;
 
-  let feesResult;
+  let estimatedFees = BigNumber(0);
   if (!t.feePerByte) {
-    feesResult = {
-      transactionError: new FeeNotLoaded(),
-      estimatedFees: BigNumber(0)
-    };
+    errors.feePerByte = new FeeNotLoaded();
   } else if (t.feePerByte.eq(0)) {
-    feesResult = {
-      transactionError: new FeeRequired(),
-      estimatedFees: BigNumber(0)
-    };
+    errors.feePerByte = new FeeRequired();
   } else {
-    feesResult = await calculateFees(a, t).then(
-      estimatedFees => ({ transactionError: null, estimatedFees }),
-      transactionError => ({ transactionError, estimatedFees: BigNumber(0) })
+    await calculateFees(a, t).then(
+      _estimatedFees => (estimatedFees = _estimatedFees),
+      error => {
+        if (error.message === "NotEnoughBalance") {
+          // FIXME this is not smart
+          errors.amount = error;
+        } else {
+          //FIXME What do we do with the rest of the errors?
+          errors.transaction = error;
+        }
+      }
     );
   }
-  const { estimatedFees, transactionError } = feesResult;
 
   const totalSpent = useAllAmount ? a.balance : t.amount.plus(estimatedFees);
-
   const amount = useAllAmount ? a.balance.minus(estimatedFees) : t.amount;
 
-  const showFeeWarning = amount.gt(0) && estimatedFees.times(10).gt(amount);
-
-  // Fill up recipient errors...
+  if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
+    warnings.feeTooHigh = new FeeTooHigh();
+  }
 
   let { recipientError, recipientWarning } = await validateRecipient(
     a.currency,
     t.recipient
   );
 
+  if (recipientError) {
+    errors.recipient = recipientError;
+  }
+
+  if (recipientWarning) {
+    warnings.recipient = recipientWarning;
+  }
+
   return Promise.resolve({
-    transactionError,
-    recipientError,
-    recipientWarning,
-    showFeeWarning,
+    errors,
+    warnings,
     estimatedFees,
     amount,
     totalSpent,

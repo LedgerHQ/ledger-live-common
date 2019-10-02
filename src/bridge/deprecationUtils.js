@@ -50,8 +50,8 @@ export const inferDeprecatedMethods = ({
       "bridge.checkValidTransaction",
       "{transactionError} =await getTransactionStatus(a, t)"
     );
-    const { transactionError } = await getTransactionStatus(a, t);
-    if (transactionError) throw transactionError;
+    const { errors } = await getTransactionStatus(a, t);
+    if (errors) throw errors[0]; // FIXME perhaps not best to throw first
     return null;
   };
 
@@ -62,8 +62,13 @@ export const inferDeprecatedMethods = ({
     );
     return getTransactionStatus(a, { ...createTransaction(a), recipient }).then(
       r => {
-        if (r.recipientError) throw r.recipientError;
-        if (r.recipientWarning) return r.recipientWarning;
+        if (r.errors) {
+          const recipientError = r.errors.find(e => e.field === "recipient");
+          if (recipientError) throw recipientError;
+
+          const recipientWarning = r.errors.find(e => e.field === "recipient");
+          if (recipientWarning) throw recipientWarning;
+        }
         return null;
       }
     );

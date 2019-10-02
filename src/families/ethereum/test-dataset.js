@@ -1,5 +1,6 @@
 // @flow
 import type { DatasetTest } from "../dataset";
+import { FeeTooHigh } from "@ledgerhq/errors";
 
 const dataset: DatasetTest = {
   implementations: ["libcore", "mock", "ethereumjs"],
@@ -23,11 +24,11 @@ const dataset: DatasetTest = {
               expectedStatus: {
                 amount: "10000000000000",
                 // estimatedFees: "2100000000000", // FIXME
-                recipientError: null,
-                recipientWarning: null,
-                showFeeWarning: true,
+                errors: {},
+                warnings: {
+                  feeTooHigh: new FeeTooHigh()
+                },
                 // totalSpent: "12100000000000", // FIXME
-                transactionError: null,
                 useAllAmount: false
               }
             }

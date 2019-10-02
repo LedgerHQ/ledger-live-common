@@ -4,7 +4,8 @@ import {
   NotEnoughBalance,
   NotEnoughBalanceBecauseDestinationNotCreated,
   InvalidAddressBecauseDestinationIsAlsoSource,
-  InvalidAddress
+  InvalidAddress,
+  FeeTooHigh
 } from "@ledgerhq/errors";
 import type { Transaction } from "../types";
 import type { Account, AccountBridge, CurrencyBridge } from "../../../types";
@@ -34,6 +35,8 @@ const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
 const getTransactionStatus = (a, t) => {
   const minimalBaseAmount = 10 ** a.currency.units[0].magnitude * 20;
+  const errors = {};
+  const warnings = {};
 
   const useAllAmount = !!t.useAllAmount;
 
@@ -47,43 +50,37 @@ const getTransactionStatus = (a, t) => {
     ? a.balance.minus(estimatedFees)
     : BigNumber(t.amount);
 
-  const showFeeWarning = amount.gt(0) && estimatedFees.times(10).gt(amount);
+  if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
+    warnings.feeTooHigh = new FeeTooHigh();
+  }
 
-  // Fill up transaction errors...
-  let transactionError;
   if (totalSpent.gt(a.balance)) {
-    transactionError = new NotEnoughBalance();
+    errors.amount = new NotEnoughBalance();
   } else if (
     minimalBaseAmount &&
     a.balance.minus(totalSpent).lt(minimalBaseAmount)
   ) {
-    // minimal amount not respected
-    transactionError = new NotEnoughBalance();
+    errors.amount = new NotEnoughBalance();
   } else if (
     minimalBaseAmount &&
     t.recipient.includes("new") &&
     amount.lt(minimalBaseAmount)
   ) {
     // mimic XRP base minimal for new addresses
-    transactionError = new NotEnoughBalanceBecauseDestinationNotCreated(null, {
+    errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated(null, {
       minimalAmount: `XRP Minimum reserve`
     });
   }
 
-  // Fill up recipient errors...
-  let recipientError;
-  let recipientWarning;
   if (isInvalidRecipient(t.recipient)) {
-    recipientError = new InvalidAddress("");
+    errors.recipient = new InvalidAddress("");
   } else if (a.freshAddress === t.recipient) {
-    recipientError = new InvalidAddressBecauseDestinationIsAlsoSource();
+    errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
   }
 
   return Promise.resolve({
-    transactionError,
-    recipientError,
-    recipientWarning,
-    showFeeWarning,
+    errors,
+    warnings,
     estimatedFees,
     amount,
     totalSpent,

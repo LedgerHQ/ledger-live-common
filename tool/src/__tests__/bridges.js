@@ -13,7 +13,8 @@ import {
 import {
   fromTransactionRaw,
   toTransactionRaw,
-  toTransactionStatusRaw
+  toTransactionStatusRaw,
+  cleanErrorsAndWarnings
 } from "@ledgerhq/live-common/lib/transaction";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import dataset from "@ledgerhq/live-common/lib/generated/test-dataset";
@@ -199,11 +200,7 @@ all
           const t = bridge.createTransaction(account);
           const s = await bridge.getTransactionStatus(account, t);
           expect(s).toBeDefined();
-          expect(s).toHaveProperty("recipientError");
-          expect(s).toHaveProperty("recipientWarning");
-          expect(s).toHaveProperty("showFeeWarning");
-          expect(s).toHaveProperty("transactionError");
-          expect(typeof s.showFeeWarning).toBe("boolean");
+          expect(s.errors).toHaveProperty("recipient");
           expect(s).toHaveProperty("totalSpent");
           expect(s.totalSpent).toBeInstanceOf(BigNumber);
           expect(s).toHaveProperty("estimatedFees");
@@ -234,7 +231,7 @@ all
             ...bridge.createTransaction(account)
           };
           let status = await bridge.getTransactionStatus(account, t);
-          expect(status.recipientError).toEqual(new InvalidAddress());
+          expect(status.errors.recipient.name).toEqual(new InvalidAddress().name);
         });
 
         test("invalid recipient have a recipientError", async () => {
@@ -244,7 +241,7 @@ all
             recipient: "invalidADDRESS"
           };
           let status = await bridge.getTransactionStatus(account, t);
-          expect(status.recipientError).toEqual(new InvalidAddress());
+          expect(status.errors.recipient.name).toEqual(new InvalidAddress().name);
         });
 
         (accountData.transactions || []).forEach(
@@ -259,7 +256,7 @@ all
                 expect(t.networkInfo).toBeDefined();
                 const s = await bridge.getTransactionStatus(account, t);
                 const raw = toTransactionStatusRaw(s);
-                expect(raw).toMatchObject({ ...raw, ...expectedStatus });
+                expect(raw).toMatchObject({ ...raw, ...cleanErrorsAndWarnings(expectedStatus)});
               });
             });
           }

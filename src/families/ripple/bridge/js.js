@@ -13,6 +13,7 @@ import {
   NotEnoughBalance,
   InvalidAddress,
   FeeNotLoaded,
+  FeeTooHigh,
   NetworkDown,
   InvalidAddressBecauseDestinationIsAlsoSource,
   FeeRequired
@@ -647,6 +648,8 @@ const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
 });
 
 const getTransactionStatus = async (a, t) => {
+  const errors = {};
+  const warnings = {};
   const r = await getServerInfo(a.endpointConfig);
   const reserveBaseXRP = parseAPIValue(r.validatedLedger.reserveBaseXRP);
 
@@ -656,48 +659,42 @@ const getTransactionStatus = async (a, t) => {
 
   const amount = BigNumber(t.amount);
 
-  const showFeeWarning = amount.gt(0) && estimatedFees.times(10).gt(amount);
+  if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
+    warnings.feeTooHigh = new FeeTooHigh();
+  }
 
-  // Fill up transaction errors...
-  let transactionError;
   if (!t.fee) {
-    transactionError = new FeeNotLoaded();
+    errors.fee = new FeeNotLoaded();
   } else if (t.fee.eq(0)) {
-    transactionError = new FeeRequired();
+    errors.fee = new FeeRequired();
   } else if (totalSpent.gt(a.balance.minus(reserveBaseXRP))) {
-    transactionError = new NotEnoughBalance();
+    errors.amount = new NotEnoughBalance();
   } else if (
     t.recipient &&
     (await cachedRecipientIsNew(a.endpointConfig, t.recipient)) &&
     t.amount.lt(reserveBaseXRP)
   ) {
     const f = formatAPICurrencyXRP(reserveBaseXRP);
-    throw new NotEnoughBalanceBecauseDestinationNotCreated("", {
+    errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {
       minimalAmount: `${f.currency} ${BigNumber(f.value).toFixed()}`
     });
   }
 
-  // Fill up recipient errors...
-  let recipientError;
-  let recipientWarning = null;
-
   if (a.freshAddress === t.recipient) {
-    recipientError = new InvalidAddressBecauseDestinationIsAlsoSource();
+    errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
   } else {
     try {
       bs58check.decode(t.recipient);
     } catch (e) {
-      recipientError = new InvalidAddress("", {
+      errors.recipient = new InvalidAddress("", {
         currencyName: a.currency.name
       });
     }
   }
 
   return Promise.resolve({
-    transactionError,
-    recipientError,
-    recipientWarning,
-    showFeeWarning,
+    errors,
+    warnings,
     estimatedFees,
     amount,
     totalSpent,

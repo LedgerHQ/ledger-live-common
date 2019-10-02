@@ -12,6 +12,7 @@ import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
 import {
   FeeNotLoaded,
   FeeRequired,
+  FeeTooHigh,
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughBalance
 } from "@ledgerhq/errors";
@@ -38,6 +39,8 @@ const signAndBroadcast = (account, transaction, deviceId) =>
   });
 
 const getTransactionStatus = async (a, t) => {
+  const errors = {};
+  const warnings = {};
   const baseReserve = t.networkInfo ? t.networkInfo.baseReserve : BigNumber(0);
 
   const estimatedFees = t.fee || BigNumber(0);
@@ -48,37 +51,40 @@ const getTransactionStatus = async (a, t) => {
 
   const amount = t.useAllAmount ? a.balance.minus(estimatedFees) : t.amount;
 
-  const showFeeWarning = amount.gt(0) && estimatedFees.times(10).gt(amount);
+  if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
+    warnings.feeTooHigh = new FeeTooHigh();
+  }
 
-  // Fill up transaction errors...
-  let transactionError;
   if (!t.fee) {
-    transactionError = new FeeNotLoaded();
+    errors.fee = new FeeNotLoaded();
   } else if (t.fee.eq(0)) {
-    transactionError = new FeeRequired();
+    errors.fee = new FeeRequired();
+    totalSpent.gt(a.balance.minus(baseReserve));
   } else if (totalSpent.gt(a.balance.minus(baseReserve))) {
-    transactionError = new NotEnoughBalance();
+    errors.amount = new NotEnoughBalance();
   }
   // TODO take care of account not created ; NotEnoughBalanceBecauseDestinationNotCreated
 
-  // Fill up recipient errors...
-  let recipientError;
-  let recipientWarning = null;
-
   if (a.freshAddress === t.recipient) {
-    recipientError = new InvalidAddressBecauseDestinationIsAlsoSource();
+    errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
   } else {
-    const result = await validateRecipient(a.currency, t.recipient);
+    let { recipientError, recipientWarning } = await validateRecipient(
+      a.currency,
+      t.recipient
+    );
 
-    recipientError = result.recipientError;
-    recipientWarning = result.recipientWarning;
+    if (recipientError) {
+      errors.recipient = recipientError;
+    }
+
+    if (recipientWarning) {
+      warnings.recipient = recipientWarning;
+    }
   }
 
   return Promise.resolve({
-    transactionError,
-    recipientError,
-    recipientWarning,
-    showFeeWarning,
+    errors,
+    warnings,
     estimatedFees,
     amount,
     totalSpent,

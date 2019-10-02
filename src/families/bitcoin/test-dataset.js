@@ -1,6 +1,7 @@
 // @flow
 import type { DatasetTest } from "../dataset";
 import type { NetworkInfoRaw } from "./types";
+import { FeeTooHigh } from "@ledgerhq/errors";
 
 const networkInfo: NetworkInfoRaw = {
   family: "bitcoin",
@@ -33,11 +34,11 @@ const dataset: DatasetTest = {
               expectedStatus: {
                 amount: "999",
                 //estimatedFees: "250", // FIXME something is off
-                recipientError: null,
-                recipientWarning: null,
-                showFeeWarning: true,
+                errors: {},
+                warnings: {
+                  feeTooHigh: new FeeTooHigh()
+                },
                 //totalSpent: "1249", // FIXME something is off
-                transactionError: null,
                 useAllAmount: false
               }
             },
@@ -53,11 +54,11 @@ const dataset: DatasetTest = {
               expectedStatus: {
                 amount: "998",
                 //estimatedFees: "250", // FIXME something is off
-                recipientError: null,
-                recipientWarning: null,
-                showFeeWarning: true,
+                errors: {},
+                warnings: {
+                  feeTooHigh: new FeeTooHigh()
+                },
                 //totalSpent: "1248", // FIXME something is off
-                transactionError: null,
                 useAllAmount: false
               }
             },
@@ -73,11 +74,11 @@ const dataset: DatasetTest = {
               expectedStatus: {
                 amount: "997",
                 //estimatedFees: "250", // FIXME something is off
-                recipientError: null,
-                recipientWarning: null,
-                showFeeWarning: true,
+                errors: {},
+                warnings: {
+                  feeTooHigh: new FeeTooHigh()
+                },
                 //totalSpent: "1247", // FIXME something is off
-                transactionError: null,
                 useAllAmount: false
               }
             }
