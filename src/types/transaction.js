@@ -42,7 +42,7 @@ export type TransactionStatus = {|
   // total amount that the sender will spend (in account currency)
   totalSpent: BigNumber,
   // ? will it wipe all possible amount of the account
-  useAllAmount: boolean,
+  useAllAmount?: boolean,
   // should the recipient be non editable
   recipientIsReadOnly?: boolean
 |};
@@ -53,6 +53,6 @@ export type TransactionStatusRaw = {|
   estimatedFees: string,
   amount: string,
   totalSpent: string,
-  useAllAmount: boolean,
+  useAllAmount?: boolean,
   recipientIsReadOnly?: boolean
 |};

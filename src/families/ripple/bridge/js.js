@@ -698,7 +698,7 @@ const getTransactionStatus = async (a, t) => {
     estimatedFees,
     amount,
     totalSpent,
-    useAllAmount: false
+    useAllAmount: undefined // NB js implementation doesn't do useAllAmount
   });
 };
 
