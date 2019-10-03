@@ -7,11 +7,11 @@
     "url": "git://github.com/LedgerHQ/ledger-live-common"
   },
   "dependencies": {
-    "@ledgerhq/errors": "^4.70.2",
-    "@ledgerhq/hw-transport-http": "^4.70.2",
-    "@ledgerhq/hw-transport-mocker": "^4.70.2",
-    "@ledgerhq/hw-transport-node-ble": "^4.70.2",
-    "@ledgerhq/hw-transport-node-hid": "^4.70.2",
+    "@ledgerhq/errors": "^4.70.3",
+    "@ledgerhq/hw-transport-http": "^4.70.3",
+    "@ledgerhq/hw-transport-mocker": "^4.70.3",
+    "@ledgerhq/hw-transport-node-ble": "^4.70.3",
+    "@ledgerhq/hw-transport-node-hid": "^4.70.3",
     "@ledgerhq/ledger-core": "^3.1.7",
     "@ledgerhq/live-common": "file:.yalc/@ledgerhq/live-common",
     "@ledgerhq/logs": "^4.70.0",

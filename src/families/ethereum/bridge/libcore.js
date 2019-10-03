@@ -3,7 +3,9 @@ import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
 import {
   FeeNotLoaded,
+  FeeRequired,
   FeeTooHigh,
+  GasLessThanEstimate,
   InvalidAddressBecauseDestinationIsAlsoSource
 } from "@ledgerhq/errors";
 import type { Account, AccountLike } from "../../../types";
@@ -83,8 +85,12 @@ const getTransactionStatus = async (a, t) => {
   const useAllAmount = !!t.useAllAmount;
 
   let estimatedFees = BigNumber(0);
+  const gasLimit = getGasLimit(t);
+
   if (!t.gasPrice) {
     errors.gasLimit = new FeeNotLoaded(); // FIXME why gaslimit, where is the error for gasPrice?
+  } else if (gasLimit.eq(0)) {
+    errors.gasLimit = new FeeRequired();
   } else {
     await calculateFees(a, t).then(
       _estimatedFees => (estimatedFees = _estimatedFees),
@@ -98,6 +104,10 @@ const getTransactionStatus = async (a, t) => {
         }
       }
     );
+  }
+
+  if (t.estimatedGasLimit && gasLimit.lt(t.estimatedGasLimit)) {
+    warnings.gasLimit = new GasLessThanEstimate();
   }
 
   const totalSpent = useAllAmount

@@ -11,7 +11,9 @@ import {
   FeeNotLoaded,
   FeeTooHigh,
   ETHAddressNonEIP,
-  InvalidAddress
+  InvalidAddress,
+  FeeRequired,
+  GasLessThanEstimate
 } from "@ledgerhq/errors";
 import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
 import {
@@ -478,10 +480,17 @@ const getTransactionStatus = (a, t) => {
     warnings.feeTooHigh = new FeeTooHigh();
   }
 
+  const gasLimit = getGasLimit(t);
   if (!t.gasPrice) {
-    errors.fee = new FeeNotLoaded();
+    errors.gasLimit = new FeeNotLoaded();
+  } else if (gasLimit.eq(0)) {
+    errors.gasLimit = new FeeRequired();
   } else if (totalSpent.gt(a.balance)) {
-    errors.fee = new NotEnoughBalance();
+    errors.amount = new NotEnoughBalance();
+  }
+
+  if (t.estimatedGasLimit && gasLimit.lt(t.estimatedGasLimit)) {
+    warnings.gasLimit = new GasLessThanEstimate();
   }
 
   let recipientWarning = getRecipientWarning(a.currency, t.recipient);
