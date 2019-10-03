@@ -190,7 +190,8 @@ export function inferTransactions(
           amount,
           subAccountId,
           gasPrice: inferAmount(account, opts.gasPrice || "2gwei"),
-          gasLimit: new BigNumber(opts.gasLimit),
+          userGasLimit: new BigNumber(opts.gasLimit),
+          estimatedGasLimit: null,
           feeCustomUnit: null,
           networkInfo: null,
           useAllAmount
