@@ -1,6 +1,5 @@
 // @flow
 
-import { log } from "@ledgerhq/logs";
 import Xtz from "./hw-app-xtz";
 import Transport from "@ledgerhq/hw-transport";
 import type { CryptoCurrency, DerivationMode, Account } from "../../types";

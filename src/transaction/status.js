@@ -1,5 +1,6 @@
 // @flow
 
+import mapValues from "lodash/mapValues";
 import { BigNumber } from "bignumber.js";
 import { deserializeError, serializeError } from "@ledgerhq/errors";
 import type {
@@ -36,14 +37,14 @@ export const cleanErrorsAndWarnings = (ts: any) => ({
       ...result,
       [key]: { name: ts.warnings[key].name, message: ts.warnings[key].message }
     };
-  }, {}),
+  }, {})
 });
 
 export const fromTransactionStatusRaw = (
   ts: TransactionStatusRaw
 ): TransactionStatus => ({
-  errors: ts.errors, //FIXME, not going back like this
-  warnings: ts.warnings,
+  errors: mapValues(ts.errors, fromErrorRaw),
+  warnings: mapValues(ts.warnings, fromErrorRaw),
   estimatedFees: BigNumber(ts.estimatedFees),
   amount: BigNumber(ts.amount),
   totalSpent: BigNumber(ts.totalSpent),
@@ -55,8 +56,8 @@ export const toTransactionStatusRaw = (
   ts: TransactionStatus
 ): TransactionStatusRaw =>
   cleanErrorsAndWarnings({
-    errors: ts.errors,
-    warnings: ts.warnings,
+    errors: mapValues(ts.errors, toErrorRaw),
+    warnings: mapValues(ts.warnings, toErrorRaw),
     estimatedFees: ts.estimatedFees.toString(),
     amount: ts.amount.toString(),
     totalSpent: ts.totalSpent.toString(),
