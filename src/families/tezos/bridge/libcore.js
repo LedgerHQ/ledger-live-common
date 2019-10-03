@@ -91,7 +91,7 @@ const getTransactionStatus = async (a, t) => {
     await calculateFees(a, t).then(
       estimatedFees => ({ transactionError: null, estimatedFees }),
       error => {
-        if (error.message === "NotEnoughBalance") {
+        if (error.name === "NotEnoughBalance") {
           // FIXME this is not smart
           errors.amount = error;
         } else {

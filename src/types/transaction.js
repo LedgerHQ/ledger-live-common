@@ -19,7 +19,7 @@ export type TransactionCommon = {|
   amount: BigNumber,
   recipient: string,
   useAllAmount?: boolean,
-  subAccountId?: ?string // FIXME move to etherum family
+  subAccountId?: ?string
 |};
 
 export type TransactionCommonRaw = {|
