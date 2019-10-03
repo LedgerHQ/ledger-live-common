@@ -39,9 +39,8 @@ const dataset: DatasetTest = {
                 errors: {},
                 warnings: {
                   feeTooHigh: new FeeTooHigh()
-                },
+                }
                 //totalSpent: "1249", // FIXME something is off
-                useAllAmount: false
               }
             },
             {
@@ -59,9 +58,8 @@ const dataset: DatasetTest = {
                 errors: {},
                 warnings: {
                   feeTooHigh: new FeeTooHigh()
-                },
+                }
                 //totalSpent: "1248", // FIXME something is off
-                useAllAmount: false
               }
             },
             {
@@ -79,9 +77,8 @@ const dataset: DatasetTest = {
                 errors: {},
                 warnings: {
                   feeTooHigh: new FeeTooHigh()
-                },
+                }
                 //totalSpent: "1247", // FIXME something is off
-                useAllAmount: false
               }
             }
           ],

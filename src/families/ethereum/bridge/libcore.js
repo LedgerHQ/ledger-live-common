@@ -148,8 +148,7 @@ const getTransactionStatus = async (a, t) => {
     warnings,
     estimatedFees,
     amount,
-    totalSpent,
-    useAllAmount
+    totalSpent
   });
 };
 

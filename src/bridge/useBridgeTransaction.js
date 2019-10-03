@@ -18,7 +18,6 @@ export type State = {
   status: TransactionStatus,
   statusOnTransaction: ?Transaction,
   errorAccount: ?Error,
-  errorPrepare: ?Error,
   errorStatus: ?Error
 };
 
@@ -42,12 +41,10 @@ const initial: State = {
     warnings: {},
     estimatedFees: BigNumber(0),
     amount: BigNumber(0),
-    totalSpent: BigNumber(0),
-    useAllAmount: false
+    totalSpent: BigNumber(0)
   },
   statusOnTransaction: null,
   errorAccount: null,
-  errorPrepare: null,
   errorStatus: null
 };
 
@@ -83,11 +80,15 @@ const reducer = (s, a) => {
       return { ...s, transaction: a.transaction };
 
     case "onStatus":
+      // if (a.transaction === s.transaction && !s.errorStatus) {
+      //   return s;
+      // }
       return {
         ...s,
         errorStatus: null,
+        transaction: a.transaction,
         status: a.status,
-        statusOnTransaction: a.statusOnTransaction
+        statusOnTransaction: a.transaction
       };
 
     case "onStatusError":
@@ -97,22 +98,6 @@ const reducer = (s, a) => {
         errorStatus: a.error
       };
 
-    case "onPrepare":
-      if (a.transaction === s.transaction && !s.errorPrepare) {
-        return s;
-      }
-      return {
-        ...s,
-        errorPrepare: null,
-        transaction: a.transaction
-      };
-
-    case "onPrepareError":
-      if (a.error === s.errorPrepare) return s;
-      return {
-        ...s,
-        errorPrepare: a.error
-      };
     default:
       return s;
   }
@@ -127,7 +112,6 @@ export default (): Result => {
       status,
       statusOnTransaction,
       errorAccount,
-      errorPrepare,
       errorStatus
     },
     dispatch
@@ -152,40 +136,28 @@ export default (): Result => {
     if (mainAccount && transaction) {
       Promise.resolve()
         .then(() => getAccountBridge(mainAccount, null))
-        .then(bridge => bridge.prepareTransaction(mainAccount, transaction))
-        .then(
-          t => {
-            if (ignore) return;
-            dispatch({ type: "onPrepare", transaction: t });
-          },
-          e => {
-            if (ignore) return;
-            dispatch({ type: "onPrepareError", error: e });
-          }
-        );
-    }
-    return () => {
-      ignore = true;
-    };
-  }, [transaction, mainAccount, dispatch]);
+        .then(async bridge => {
+          const preparedTransaction = await bridge.prepareTransaction(
+            mainAccount,
+            transaction
+          );
+          const status = await bridge.getTransactionStatus(
+            mainAccount,
+            preparedTransaction
+          );
 
-  // FIXME maybe the two effects should be merged. prepre+status together to minimize re-render...
-  // also worth considering if we should EQUALS on the status object to know if the whole thing worth a reflow. at the end it might minimize events to just the transaction changes.
-
-  // always keep a status in sync
-  useEffect(() => {
-    let ignore = false;
-    if (mainAccount && transaction) {
-      Promise.resolve()
-        .then(() => getAccountBridge(mainAccount, null))
-        .then(bridge => bridge.getTransactionStatus(mainAccount, transaction))
+          return {
+            preparedTransaction,
+            status
+          };
+        })
         .then(
-          s => {
+          ({ preparedTransaction, status }) => {
             if (ignore) return;
             dispatch({
               type: "onStatus",
-              status: s,
-              statusOnTransaction: transaction
+              status,
+              transaction: preparedTransaction
             });
           },
           e => {
@@ -197,7 +169,7 @@ export default (): Result => {
     return () => {
       ignore = true;
     };
-  }, [mainAccount, transaction, dispatch]);
+  }, [transaction, mainAccount, dispatch]);
 
   return {
     transaction,
@@ -206,7 +178,7 @@ export default (): Result => {
     account,
     parentAccount,
     setAccount,
-    bridgeError: errorAccount || errorPrepare || errorStatus,
+    bridgeError: errorAccount || errorStatus,
     bridgePending: transaction !== statusOnTransaction
   };
 };

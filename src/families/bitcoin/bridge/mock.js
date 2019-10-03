@@ -59,8 +59,7 @@ const getTransactionStatus = (account, t) => {
     warnings,
     estimatedFees,
     amount,
-    totalSpent,
-    useAllAmount
+    totalSpent
   });
 };
 

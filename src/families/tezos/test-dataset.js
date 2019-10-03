@@ -21,7 +21,6 @@ const dataset: DatasetTest = {
               transaction: fromTransactionRaw({
                 amount: "1000000",
                 recipient: "tz1bd2A1bdafn7kKTNFd8gPjnFiEWJUsVB39",
-                useAllAmount: false,
                 family: "tezos",
                 type: 8,
                 networkInfo,
@@ -37,7 +36,6 @@ const dataset: DatasetTest = {
                 estimatedFees: BigNumber("14626000"),
                 amount: BigNumber("1000000"),
                 totalSpent: BigNumber("15626000"),
-                useAllAmount: false,
                 recipientIsReadOnly: false
               }
             }

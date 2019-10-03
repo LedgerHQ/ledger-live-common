@@ -23,7 +23,6 @@ export const fromTransactionStatusRaw = (
   estimatedFees: BigNumber(ts.estimatedFees),
   amount: BigNumber(ts.amount),
   totalSpent: BigNumber(ts.totalSpent),
-  useAllAmount: ts.useAllAmount,
   recipientIsReadOnly: ts.recipientIsReadOnly
 });
 
@@ -35,6 +34,5 @@ export const toTransactionStatusRaw = (
   estimatedFees: ts.estimatedFees.toString(),
   amount: ts.amount.toString(),
   totalSpent: ts.totalSpent.toString(),
-  useAllAmount: ts.useAllAmount,
   recipientIsReadOnly: ts.recipientIsReadOnly
 });

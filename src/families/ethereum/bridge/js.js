@@ -508,8 +508,7 @@ const getTransactionStatus = (a, t) => {
     warnings,
     estimatedFees,
     amount,
-    totalSpent,
-    useAllAmount: false
+    totalSpent
   });
 };
 

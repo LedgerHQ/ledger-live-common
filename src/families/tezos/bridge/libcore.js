@@ -133,7 +133,6 @@ const getTransactionStatus = async (a, t) => {
     estimatedFees,
     amount,
     totalSpent,
-    useAllAmount: !!t.useAllAmount,
     recipientIsReadOnly: !!t.subAccountId
   });
 };

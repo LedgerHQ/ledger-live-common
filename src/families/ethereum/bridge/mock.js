@@ -74,8 +74,7 @@ const getTransactionStatus = (a, t) => {
     warnings,
     estimatedFees,
     amount,
-    totalSpent,
-    useAllAmount
+    totalSpent
   });
 };
 

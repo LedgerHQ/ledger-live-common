@@ -29,9 +29,8 @@ const dataset: DatasetTest = {
                 errors: {},
                 warnings: {
                   feeTooHigh: new FeeTooHigh()
-                },
+                }
                 // totalSpent: "12100000000000", // FIXME
-                useAllAmount: false
               }
             }
           ],

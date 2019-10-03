@@ -41,8 +41,6 @@ export type TransactionStatus = {|
   amount: BigNumber,
   // total amount that the sender will spend (in account currency)
   totalSpent: BigNumber,
-  // ? will it wipe all possible amount of the account
-  useAllAmount?: boolean,
   // should the recipient be non editable
   recipientIsReadOnly?: boolean
 |};

@@ -28,8 +28,7 @@ const dataset: DatasetTest = {
                   // amount: new NotEnoughBalance() // <- how to match? FIXME not implemented for libcore
                 },
                 warnings: {},
-                totalSpent: BigNumber("1001"),
-                useAllAmount: false
+                totalSpent: BigNumber("1001")
               }
             }
           ],

@@ -87,8 +87,7 @@ const getTransactionStatus = async (a, t) => {
     warnings,
     estimatedFees,
     amount,
-    totalSpent,
-    useAllAmount: !!t.useAllAmount //TODO does the libcore implementation have this?
+    totalSpent
   });
 };
 
