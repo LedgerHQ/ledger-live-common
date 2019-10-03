@@ -1,5 +1,7 @@
 // @flow
+import { BigNumber } from "bignumber.js";
 import type { DatasetTest } from "../dataset";
+import { fromTransactionRaw } from "../../transaction";
 
 const dataset: DatasetTest = {
   implementations: ["libcore", "mock", "ripplejs"],
@@ -10,7 +12,7 @@ const dataset: DatasetTest = {
           transactions: [
             {
               name: "not enough balance with base reserve",
-              transaction: {
+              transaction: fromTransactionRaw({
                 family: "ripple",
                 recipient: "rMLgQYP7up5xP3f9o51F9k1q1JEf9doaAi",
                 amount: "1000",
@@ -18,15 +20,15 @@ const dataset: DatasetTest = {
                 fee: "1",
                 feeCustomUnit: null,
                 networkInfo: null
-              },
+              }),
               expectedStatus: {
-                amount: "1000",
-                estimatedFees: "1",
+                amount: BigNumber("1000"),
+                estimatedFees: BigNumber("1"),
                 errors: {
                   // amount: new NotEnoughBalance() // <- how to match? FIXME not implemented for libcore
                 },
                 warnings: {},
-                totalSpent: "1001",
+                totalSpent: BigNumber("1001"),
                 useAllAmount: false
               }
             }

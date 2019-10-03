@@ -48,8 +48,8 @@ export type TransactionStatus = {|
 |};
 
 export type TransactionStatusRaw = {|
-  errors: { [string]: { name: string } },
-  warnings: { [string]: { name: string } },
+  errors: { [string]: string },
+  warnings: { [string]: string },
   estimatedFees: string,
   amount: string,
   totalSpent: string,

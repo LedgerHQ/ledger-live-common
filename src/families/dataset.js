@@ -3,8 +3,8 @@
 import type {
   CryptoCurrencyIds,
   AccountRaw,
-  TransactionRaw,
-  TransactionStatusRaw
+  Transaction,
+  TransactionStatus
 } from "../types";
 
 export type CurrenciesData = {|
@@ -12,9 +12,9 @@ export type CurrenciesData = {|
     raw: AccountRaw,
     transactions?: Array<{|
       name: string,
-      transaction: TransactionRaw,
+      transaction: Transaction,
       // introduce possibility to impl a test function: (expect, Account, TransactionStatus)=>void
-      expectedStatus: $Shape<TransactionStatusRaw>
+      expectedStatus: $Shape<TransactionStatus>
     |}>
   |}>
 |};

@@ -1,6 +1,8 @@
 // @flow
-import type { DatasetTest } from "../dataset";
+import { BigNumber } from "bignumber.js";
 import { FeeTooHigh } from "@ledgerhq/errors";
+import { fromTransactionRaw } from "../../transaction";
+import type { DatasetTest } from "../dataset";
 
 const networkInfo = {
   family: "tezos",
@@ -16,7 +18,7 @@ const dataset: DatasetTest = {
           transactions: [
             {
               name: "success1",
-              transaction: {
+              transaction: fromTransactionRaw({
                 amount: "1000000",
                 recipient: "tz1bd2A1bdafn7kKTNFd8gPjnFiEWJUsVB39",
                 useAllAmount: false,
@@ -26,15 +28,15 @@ const dataset: DatasetTest = {
                 fees: "1420",
                 gasLimit: "10300",
                 storageLimit: "300"
-              },
+              }),
               expectedStatus: {
                 errors: {},
                 warnings: {
                   feeTooHigh: new FeeTooHigh()
                 },
-                estimatedFees: "14626000",
-                amount: "1000000",
-                totalSpent: "15626000",
+                estimatedFees: BigNumber("14626000"),
+                amount: BigNumber("1000000"),
+                totalSpent: BigNumber("15626000"),
                 useAllAmount: false,
                 recipientIsReadOnly: false
               }

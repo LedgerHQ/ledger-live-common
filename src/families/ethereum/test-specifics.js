@@ -31,7 +31,7 @@ export default () => {
         recipient: "invalidADDRESS"
       };
       const status = await bridge.getTransactionStatus(account, t);
-      expect(status.errors.recipient.name).toEqual(new InvalidAddress().name);
+      expect(status.errors.recipient).toEqual(new InvalidAddress());
     });
 
     test("valid recipient OR valid recipient lowercase should succeed", async () => {
@@ -64,7 +64,7 @@ export default () => {
       };
       t = await bridge.prepareTransaction(account, t);
       let status = await bridge.getTransactionStatus(account, t);
-      expect(status.errors.amount.name).toEqual(new NotEnoughBalance().name);
+      expect(status.errors.amount).toEqual(new NotEnoughBalance());
     });
   });
 };

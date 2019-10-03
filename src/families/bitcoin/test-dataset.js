@@ -1,7 +1,9 @@
 // @flow
+import { BigNumber } from "bignumber.js";
+import { FeeTooHigh } from "@ledgerhq/errors";
 import type { DatasetTest } from "../dataset";
 import type { NetworkInfoRaw } from "./types";
-import { FeeTooHigh } from "@ledgerhq/errors";
+import { fromTransactionRaw } from "../../transaction";
 
 const networkInfo: NetworkInfoRaw = {
   family: "bitcoin",
@@ -24,15 +26,15 @@ const dataset: DatasetTest = {
           transactions: [
             {
               name: "on legacy recipient",
-              transaction: {
+              transaction: fromTransactionRaw({
                 family: "bitcoin",
                 recipient: "1Cz2ZXb6Y6AacXJTpo4RBjQMLEmscuxD8e",
                 amount: "999",
                 feePerByte: "1",
                 networkInfo
-              },
+              }),
               expectedStatus: {
-                amount: "999",
+                amount: BigNumber("999"),
                 //estimatedFees: "250", // FIXME something is off
                 errors: {},
                 warnings: {
@@ -44,15 +46,15 @@ const dataset: DatasetTest = {
             },
             {
               name: "on segwit recipient",
-              transaction: {
+              transaction: fromTransactionRaw({
                 family: "bitcoin",
                 recipient: "34N7XoKANmM66ZQDyQf2j8hPaTo6v5X8eA",
                 amount: "998",
                 feePerByte: "1",
                 networkInfo
-              },
+              }),
               expectedStatus: {
-                amount: "998",
+                amount: BigNumber("998"),
                 //estimatedFees: "250", // FIXME something is off
                 errors: {},
                 warnings: {
@@ -64,15 +66,15 @@ const dataset: DatasetTest = {
             },
             {
               name: "on native segwit recipient",
-              transaction: {
+              transaction: fromTransactionRaw({
                 family: "bitcoin",
                 recipient: "bc1qqmxqdrkxgx6swrvjl9l2e6szvvkg45all5u4fl",
                 amount: "997",
                 feePerByte: "1",
                 networkInfo
-              },
+              }),
               expectedStatus: {
-                amount: "997",
+                amount: BigNumber("997"),
                 //estimatedFees: "250", // FIXME something is off
                 errors: {},
                 warnings: {

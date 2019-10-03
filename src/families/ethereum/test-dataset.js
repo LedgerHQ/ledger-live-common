@@ -1,6 +1,8 @@
 // @flow
+import { BigNumber } from "bignumber.js";
 import type { DatasetTest } from "../dataset";
 import { FeeTooHigh } from "@ledgerhq/errors";
+import { fromTransactionRaw } from "../../transaction";
 
 const dataset: DatasetTest = {
   implementations: ["libcore", "mock", "ethereumjs"],
@@ -11,7 +13,7 @@ const dataset: DatasetTest = {
           transactions: [
             {
               name: "success1",
-              transaction: {
+              transaction: fromTransactionRaw({
                 family: "ethereum",
                 recipient: "0x17733CAb76d9A2112576443F21735789733B1ca3",
                 amount: "10000000000000",
@@ -20,9 +22,9 @@ const dataset: DatasetTest = {
                 estimatedGasLimit: null,
                 feeCustomUnit: null,
                 networkInfo: null
-              },
+              }),
               expectedStatus: {
-                amount: "10000000000000",
+                amount: BigNumber("10000000000000"),
                 // estimatedFees: "2100000000000", // FIXME
                 errors: {},
                 warnings: {

@@ -12,9 +12,7 @@ import {
 } from "@ledgerhq/live-common/lib/account";
 import {
   fromTransactionRaw,
-  toTransactionRaw,
-  toTransactionStatusRaw,
-  cleanErrorsAndWarnings
+  toTransactionRaw
 } from "@ledgerhq/live-common/lib/transaction";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import dataset from "@ledgerhq/live-common/lib/generated/test-dataset";
@@ -231,7 +229,7 @@ all
             ...bridge.createTransaction(account)
           };
           let status = await bridge.getTransactionStatus(account, t);
-          expect(status.errors.recipient.name).toEqual(new InvalidAddress().name);
+          expect(status.errors.recipient).toEqual(new InvalidAddress());
         });
 
         test("invalid recipient have a recipientError", async () => {
@@ -241,7 +239,7 @@ all
             recipient: "invalidADDRESS"
           };
           let status = await bridge.getTransactionStatus(account, t);
-          expect(status.errors.recipient.name).toEqual(new InvalidAddress().name);
+          expect(status.errors.recipient).toEqual(new InvalidAddress());
         });
 
         (accountData.transactions || []).forEach(
@@ -249,14 +247,16 @@ all
             describe("transaction " + name, () => {
               test("matches expected status", async () => {
                 const account = await getSynced();
-                const t = await bridge.prepareTransaction(
-                  account,
-                  fromTransactionRaw(transaction)
-                );
+                const t = await bridge.prepareTransaction(account, transaction);
                 expect(t.networkInfo).toBeDefined();
                 const s = await bridge.getTransactionStatus(account, t);
+                expect(s).toMatchObject(expectedStatus);
+                /*
                 const raw = toTransactionStatusRaw(s);
-                expect(raw).toMatchObject({ ...raw, ...cleanErrorsAndWarnings(expectedStatus)});
+                expect(raw).toMatchObject({
+                  ...raw
+                });
+                */
               });
             });
           }
