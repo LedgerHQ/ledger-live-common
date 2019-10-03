@@ -15,7 +15,7 @@ const convertTRC10 = ([
   id: "tron/trc10/" + id,
   contractAddress,
   parentCurrency: getCryptoCurrencyById("tron"),
-  tokenType: "erc20",
+  tokenType: "trc10",
   name,
   ticker: abbr,
   delisted: true, // not yet supported
