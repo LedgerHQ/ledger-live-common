@@ -1,4 +1,5 @@
 // @flow
+import invariant from "invariant";
 import type { Account } from "../../types";
 import type { NetworkInfo, CoreTezosLikeAccount } from "./types";
 import type { CoreAccount } from "../../libcore/types";
@@ -15,6 +16,7 @@ async function tezos({ coreAccount }: Input): Output {
   const tezosLikeAccount: CoreTezosLikeAccount = await coreAccount.asTezosLikeAccount();
   const bigInt = await tezosLikeAccount.getFees();
   const fees = await libcoreBigIntToBigNumber(bigInt);
+  invariant(fees.gt(0), "unexpected tezos fees = 0");
   return {
     family: "tezos",
     fees
