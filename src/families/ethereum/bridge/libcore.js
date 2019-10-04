@@ -88,7 +88,7 @@ const getTransactionStatus = async (a, t) => {
   const gasLimit = getGasLimit(t);
 
   if (!t.gasPrice) {
-    errors.gasLimit = new FeeNotLoaded(); // FIXME why gaslimit, where is the error for gasPrice?
+    errors.gasPrice = new FeeNotLoaded();
   } else if (gasLimit.eq(0)) {
     errors.gasLimit = new FeeRequired();
   } else {

@@ -482,7 +482,7 @@ const getTransactionStatus = (a, t) => {
 
   const gasLimit = getGasLimit(t);
   if (!t.gasPrice) {
-    errors.gasLimit = new FeeNotLoaded();
+    errors.gasPrice = new FeeNotLoaded();
   } else if (gasLimit.eq(0)) {
     errors.gasLimit = new FeeRequired();
   } else if (totalSpent.gt(a.balance)) {
