@@ -12,7 +12,8 @@ import { isCurrencySupported } from "../currencies";
 export const libcoreNoGo = [
   "ripple", // still WIP
   "ethereum_classic", // LLC-308
-  "tron"
+  "tron",
+  "neo"
 ];
 
 export const shouldShowNewAccount = (

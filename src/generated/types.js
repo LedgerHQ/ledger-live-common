@@ -17,6 +17,15 @@ import type { Transaction as ethereumTransaction } from "../families/ethereum/ty
 import type { TransactionRaw as ethereumTransactionRaw } from "../families/ethereum/types";
 import type { NetworkInfo as ethereumNetworkInfo } from "../families/ethereum/types";
 import type { NetworkInfoRaw as ethereumNetworkInfoRaw } from "../families/ethereum/types";
+import { reflect as neoReflect } from "../families/neo/types";
+import type { CoreStatics as CoreStatics_neo } from "../families/neo/types";
+import type { CoreAccountSpecifics as CoreAccountSpecifics_neo } from "../families/neo/types";
+import type { CoreOperationSpecifics as CoreOperationSpecifics_neo } from "../families/neo/types";
+import type { CoreCurrencySpecifics as CoreCurrencySpecifics_neo } from "../families/neo/types";
+import type { Transaction as neoTransaction } from "../families/neo/types";
+import type { TransactionRaw as neoTransactionRaw } from "../families/neo/types";
+import type { NetworkInfo as neoNetworkInfo } from "../families/neo/types";
+import type { NetworkInfoRaw as neoNetworkInfoRaw } from "../families/neo/types";
 import { reflect as rippleReflect } from "../families/ripple/types";
 import type { CoreStatics as CoreStatics_ripple } from "../families/ripple/types";
 import type { CoreAccountSpecifics as CoreAccountSpecifics_ripple } from "../families/ripple/types";
@@ -48,54 +57,63 @@ import type { NetworkInfoRaw as tronNetworkInfoRaw } from "../families/tron/type
 export type SpecificStatics = {}
 & CoreStatics_bitcoin
 & CoreStatics_ethereum
+& CoreStatics_neo
 & CoreStatics_ripple
 & CoreStatics_tezos
 & CoreStatics_tron
 export type CoreAccountSpecifics = {}
 & CoreAccountSpecifics_bitcoin
 & CoreAccountSpecifics_ethereum
+& CoreAccountSpecifics_neo
 & CoreAccountSpecifics_ripple
 & CoreAccountSpecifics_tezos
 & CoreAccountSpecifics_tron
 export type CoreOperationSpecifics = {}
 & CoreOperationSpecifics_bitcoin
 & CoreOperationSpecifics_ethereum
+& CoreOperationSpecifics_neo
 & CoreOperationSpecifics_ripple
 & CoreOperationSpecifics_tezos
 & CoreOperationSpecifics_tron
 export type CoreCurrencySpecifics = {}
 & CoreCurrencySpecifics_bitcoin
 & CoreCurrencySpecifics_ethereum
+& CoreCurrencySpecifics_neo
 & CoreCurrencySpecifics_ripple
 & CoreCurrencySpecifics_tezos
 & CoreCurrencySpecifics_tron
 export type Transaction =
   | bitcoinTransaction
   | ethereumTransaction
+  | neoTransaction
   | rippleTransaction
   | tezosTransaction
   | tronTransaction
 export type TransactionRaw =
   | bitcoinTransactionRaw
   | ethereumTransactionRaw
+  | neoTransactionRaw
   | rippleTransactionRaw
   | tezosTransactionRaw
   | tronTransactionRaw
 export type NetworkInfo =
   | bitcoinNetworkInfo
   | ethereumNetworkInfo
+  | neoNetworkInfo
   | rippleNetworkInfo
   | tezosNetworkInfo
   | tronNetworkInfo
 export type NetworkInfoRaw =
   | bitcoinNetworkInfoRaw
   | ethereumNetworkInfoRaw
+  | neoNetworkInfoRaw
   | rippleNetworkInfoRaw
   | tezosNetworkInfoRaw
   | tronNetworkInfoRaw
 export const reflectSpecifics = (declare: *) => [
   bitcoinReflect(declare),
   ethereumReflect(declare),
+  neoReflect(declare),
   rippleReflect(declare),
   tezosReflect(declare),
   tronReflect(declare),
