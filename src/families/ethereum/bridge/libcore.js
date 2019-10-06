@@ -193,9 +193,7 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
     estimatedGasLimit = t.estimatedGasLimit;
   }
 
-  const gasPrice =
-    t.gasPrice ||
-    (networkInfo.gasPrice ? BigNumber(networkInfo.gasPrice) : null);
+  const gasPrice = t.gasPrice || networkInfo.gasPrice;
 
   if (
     t.gasPrice !== gasPrice ||
@@ -209,9 +207,7 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
 };
 
 const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
-  gasPrice:
-    t.gasPrice ||
-    (networkInfo.gas_price ? BigNumber(networkInfo.gas_price) : null)
+  gasPrice: t.gasPrice || networkInfo.gasPrice
 });
 
 const getCapabilities = () => ({

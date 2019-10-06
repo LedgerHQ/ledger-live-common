@@ -581,9 +581,7 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
 };
 
 const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
-  gasPrice:
-    t.gasPrice ||
-    (networkInfo.gas_price ? BigNumber(networkInfo.gas_price) : null)
+  gasPrice: t.gasPrice || networkInfo.gasPrice
 });
 
 const getCapabilities = () => ({
