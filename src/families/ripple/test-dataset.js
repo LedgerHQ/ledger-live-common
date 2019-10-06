@@ -1,5 +1,6 @@
 // @flow
 import { BigNumber } from "bignumber.js";
+import { NotEnoughBalance } from "@ledgerhq/errors";
 import type { DatasetTest } from "../dataset";
 import { fromTransactionRaw } from "../../transaction";
 
@@ -25,7 +26,7 @@ const dataset: DatasetTest = {
                 amount: BigNumber("1000"),
                 estimatedFees: BigNumber("1"),
                 errors: {
-                  // amount: new NotEnoughBalance() // <- how to match? FIXME not implemented for libcore
+                  amount: new NotEnoughBalance()
                 },
                 warnings: {},
                 totalSpent: BigNumber("1001")

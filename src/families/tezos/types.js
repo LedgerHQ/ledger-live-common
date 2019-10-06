@@ -120,6 +120,7 @@ export type NetworkInfoRaw = {|
   fees: string
 |};
 
+// TODO add a field for indicating if staking
 export type Transaction = {|
   ...TransactionCommon,
   family: "tezos",

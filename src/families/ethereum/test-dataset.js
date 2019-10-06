@@ -25,12 +25,12 @@ const dataset: DatasetTest = {
               }),
               expectedStatus: {
                 amount: BigNumber("10000000000000"),
-                // estimatedFees: "2100000000000", // FIXME
+                estimatedFees: BigNumber("2100000000000"),
+                totalSpent: BigNumber("12100000000000"),
                 errors: {},
                 warnings: {
                   feeTooHigh: new FeeTooHigh()
                 }
-                // totalSpent: "12100000000000", // FIXME
               }
             }
           ],

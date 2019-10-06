@@ -35,12 +35,13 @@ const dataset: DatasetTest = {
               }),
               expectedStatus: {
                 amount: BigNumber("999"),
-                //estimatedFees: "250", // FIXME something is off
+                // FIXME fee are reloaded?
+                // estimatedFees: BigNumber("250"),
+                // totalSpent: BigNumber("1249"),
                 errors: {},
                 warnings: {
                   feeTooHigh: new FeeTooHigh()
                 }
-                //totalSpent: "1249", // FIXME something is off
               }
             },
             {
@@ -54,12 +55,13 @@ const dataset: DatasetTest = {
               }),
               expectedStatus: {
                 amount: BigNumber("998"),
-                //estimatedFees: "250", // FIXME something is off
+                // FIXME fee are reloaded?
+                // estimatedFees: BigNumber("250"),
+                // totalSpent: BigNumber("1248"),
                 errors: {},
                 warnings: {
                   feeTooHigh: new FeeTooHigh()
                 }
-                //totalSpent: "1248", // FIXME something is off
               }
             },
             {
@@ -73,12 +75,13 @@ const dataset: DatasetTest = {
               }),
               expectedStatus: {
                 amount: BigNumber("997"),
-                //estimatedFees: "250", // FIXME something is off
+                // FIXME fee are reloaded?
+                // estimatedFees: BigNumber("250"),
+                // totalSpent: BigNumber("1247"),
                 errors: {},
                 warnings: {
                   feeTooHigh: new FeeTooHigh()
                 }
-                //totalSpent: "1247", // FIXME something is off
               }
             }
           ],

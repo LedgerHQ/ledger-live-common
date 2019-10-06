@@ -42,7 +42,6 @@ const getTransactionStatus = async (a, t) => {
   const errors = {};
   const warnings = {};
   const baseReserve = t.networkInfo ? t.networkInfo.baseReserve : BigNumber(0);
-
   const estimatedFees = t.fee || BigNumber(0);
 
   const totalSpent = !t.useAllAmount
@@ -100,16 +99,16 @@ const prepareTransaction = async (a, t) => {
   }
 
   const fee = t.fee || networkInfo.serverFee;
-  if (networkInfo && (fee === t.fee || fee.eq(t.fee || 0))) {
-    // nothing changes
-    return t;
+
+  if (t.networkInfo !== networkInfo || t.fee !== fee) {
+    return {
+      ...t,
+      networkInfo,
+      fee
+    };
   }
 
-  return {
-    ...t,
-    networkInfo,
-    fee
-  };
+  return t;
 };
 
 // FIXME totally assuming this :shrug:

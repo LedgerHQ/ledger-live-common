@@ -206,9 +206,6 @@ all
           expect(s).toHaveProperty("amount");
           expect(s.amount).toBeInstanceOf(BigNumber);
           expect(s.amount).toEqual(BigNumber(0));
-          expect(s).toHaveProperty("useAllAmount");
-          expect(typeof s.useAllAmount).toBe("boolean");
-          expect(s.useAllAmount).toBe(false);
         });
 
         test("can be called on an empty prepared transaction", async () => {
