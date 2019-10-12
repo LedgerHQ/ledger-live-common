@@ -25,6 +25,10 @@ const modes = Object.freeze({
   // this is "default" by convention
   "": {},
 
+  stellar: {
+    overridesDerivation: "44'/148'/<account>'",
+    tag: "stellar"
+  },
   // MEW legacy derivation
   ethM: {
     mandatoryEmptyAccountSkip: 10,
@@ -139,7 +143,8 @@ const legacyDerivations: $Shape<CryptoCurrencyConfig<DerivationMode[]>> = {
   vertcoin: ["vertcoin_128", "vertcoin_128_segwit"],
   ethereum: ["ethM", "ethMM"],
   ethereum_classic: ["ethM", "etcM", "ethMM"],
-  tezos: ["tezbox", "tezosbip44h"]
+  tezos: ["tezbox", "tezosbip44h"],
+  stellar: ["stellar"]
 };
 
 export const asDerivationMode = (derivationMode: string): DerivationMode => {
