@@ -4,6 +4,7 @@ import type {
   TransactionCommon,
   TransactionCommonRaw
 } from "../../types/transaction";
+import { BigNumber } from "bignumber.js";
 
 export type CoreStatics = {};
 
@@ -14,21 +15,31 @@ export type CoreOperationSpecifics = {};
 export type CoreCurrencySpecifics = {};
 
 export type NetworkInfo = {|
-  family: "stellar"
+  family: "stellar",
+  serverFee: BigNumber,
+  baseReserve: BigNumber
 |};
 
 export type NetworkInfoRaw = {|
-  family: "stellar"
+  family: "stellar",
+  serverFee: string,
+  baseReserve: string
 |};
 
 export type Transaction = {|
   ...TransactionCommon,
-  family: "stellar"
+  family: "stellar",
+  fee: ?BigNumber,
+  networkInfo: ?NetworkInfo,
+  memo: ?string
 |};
 
 export type TransactionRaw = {|
   ...TransactionCommonRaw,
-  family: "stellar"
+  family: "stellar",
+  fee: ?string,
+  networkInfo: ?NetworkInfoRaw,
+  memo: ?string
 |};
 
 export const reflect = (_declare: *) => {};

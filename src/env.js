@@ -45,8 +45,7 @@ const envParsers = {
   SHOW_LEGACY_NEW_ACCOUNT: boolParser,
   SYNC_MAX_CONCURRENT: intParser,
   USER_ID: stringParser,
-  WITH_DEVICE_POLLING_DELAY: floatParser,
-  STELLAR_USE_TESTNET: boolParser
+  WITH_DEVICE_POLLING_DELAY: floatParser
 };
 
 // This define the default values

@@ -170,9 +170,9 @@ export function inferTransactions(
       if (!subAccount) {
         throw new Error(
           "token account '" +
-            token +
-            "' not found. Available: " +
-            subAccounts.map(t => t.token.ticker).join(", ")
+          token +
+          "' not found. Available: " +
+          subAccounts.map(t => t.token.ticker).join(", ")
         );
       }
       acc = subAccount;
@@ -225,12 +225,24 @@ export function inferTransactions(
         };
       }
 
+      case "stellar": {
+        return {
+          family: "stellar",
+          recipient,
+          memo: "", //Fixme implement memo
+          amount,
+          fee: inferAmount(account, opts.fee || "0.00001xlm"),
+          networkInfo: null,
+          useAllAmount
+        };
+      }
+
       case "ripple": {
         return {
           family: "ripple",
           recipient,
           amount,
-          fee: inferAmount(account, opts.fee || "0.001xrp"),
+          fee: inferAmount(account, opts.fee || "0.00001xrp"),
           tag: opts.tag,
           feeCustomUnit: null,
           networkInfo: null,

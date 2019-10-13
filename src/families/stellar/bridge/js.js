@@ -16,10 +16,18 @@ import { open } from "../../../hw";
 import { getAccountPlaceholderName } from "../../../account";
 import api, { parseAPIValue } from "./api";
 import { getDerivationScheme, runDerivationScheme } from "../../../types";
+import {
+  FeeNotLoaded,
+  FeeRequired,
+  FeeTooHigh,
+  InvalidAddress,
+  NotEnoughBalance
+} from "@ledgerhq/errors";
+import type { NetworkInfo } from "../../stellar/types";
 
 const getCapabilities = () => ({
   canSync: true,
-  canSend: false
+  canSend: true
 });
 
 const currencyBridge: CurrencyBridge = {
@@ -113,7 +121,6 @@ const currencyBridge: CurrencyBridge = {
             }
 
             if (emptyCount > 0) {
-              console.log("cant find anything else");
               finished = true;
             }
           }
@@ -136,6 +143,79 @@ const mergeOps = (existing: Operation[], newFetched: Operation[]) => {
   const all = existing.concat(newFetched.filter(o => !ids.includes(o.id)));
   return all.sort((a, b) => b.date - a.date);
 };
+
+const createTransaction = () => ({
+  family: "stellar",
+  amount: BigNumber(0),
+  recipient: "",
+  fee: null,
+  networkInfo: null,
+  memo: undefined
+});
+
+const updateTransaction = (t, patch) => ({ ...t, ...patch });
+
+const prepareTransaction = async (a: Account, t: Transaction) => {
+  let networkInfo: ?NetworkInfo = t.networkInfo;
+  if (!networkInfo) {
+    networkInfo = {
+      family: "stellar",
+      serverFee: BigNumber(await api.getBaseFee()),
+      baseReserve: BigNumber(100) // FIXME NOT USED. will refactor later.
+    };
+  }
+  const fee = t.fee || networkInfo.serverFee;
+
+  if (t.networkInfo !== networkInfo || t.fee !== fee) {
+    return {
+      ...t,
+      networkInfo,
+      fee
+    };
+  }
+
+  return t;
+};
+
+const signAndBroadcast = (a, t, deviceId) =>
+  Observable.create(async o => {
+    let cancelled = false;
+    const isCancelled = () => cancelled;
+    const onSigned = () => {
+      o.next({ type: "signed" });
+    };
+    const onOperationBroadcasted = operation => {
+      o.next({ type: "broadcasted", operation });
+    };
+    api
+      .doSignAndBroadcast({
+        a,
+        t,
+        deviceId,
+        isCancelled,
+        onSigned,
+        onOperationBroadcasted
+      })
+      .then(
+        () => {
+          o.complete();
+        },
+        e => {
+          o.error(e);
+        }
+      );
+    return () => {
+      cancelled = true;
+    };
+  });
+
+const fillUpExtraFieldToApplyTransactionNetworkInfo = async (
+  a,
+  t,
+  networkInfo
+) => ({
+  fee: t.fee || networkInfo.serverFee
+});
 
 const paymentsToOperation = async (id, payments, currency, account) => {
   const parsedPayments = [];
@@ -160,7 +240,7 @@ const paymentsToOperation = async (id, payments, currency, account) => {
       type: account === from ? "OUT" : "IN",
       accountId: id,
       value,
-      fee: new BigNumber(100),
+      fee: new BigNumber(await api.getBaseFee()),
       blockHash: payment.transaction_hash,
       blockHeight: +payment.paging_token,
       senders: [from],
@@ -180,14 +260,50 @@ const paymentsToOperation = async (id, payments, currency, account) => {
   return parsedPayments;
 };
 
+const getTransactionStatus = async (a, t) => {
+  const errors = {};
+  const warnings = {};
+  const estimatedFees = BigNumber(await api.getBaseFee());
+  const totalSpent = BigNumber(t.amount || 0).plus(estimatedFees);
+  const amount = BigNumber(t.amount || 0);
+
+  if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
+    warnings.feeTooHigh = new FeeTooHigh();
+  }
+
+  if (totalSpent.gt(a.balance)) {
+    errors.amount = new NotEnoughBalance();
+  }
+
+  if (!t.fee) {
+    errors.fee = new FeeNotLoaded();
+  } else if (t.fee.eq(0)) {
+    errors.fee = new FeeRequired();
+  }
+
+  if (!api.isValidRecipient(t.recipient)) {
+    errors.recipient = new InvalidAddress("", {
+      currencyName: a.currency.name
+    });
+  }
+
+  return Promise.resolve({
+    errors,
+    warnings,
+    estimatedFees,
+    amount,
+    totalSpent
+  });
+};
+
 const startSync = ({ id, freshAddress, blockHeight, currency }) =>
   Observable.create(o => {
     let unsubscribed = false;
     let balance;
-    const server = api.getServer()
+    let done = false;
+    const server = api.getServer();
 
     async function main(_blockHeight) {
-      console.log({ id, freshAddress, blockHeight, currency })
       if (unsubscribed) return;
       const payments = await server
         .payments()
@@ -215,7 +331,7 @@ const startSync = ({ id, freshAddress, blockHeight, currency }) =>
         o.next(a => ({
           ...a,
           operations: mergeOps(a.operations, newOperations),
-          _blockHeight
+          blockHeight: _blockHeight || 0
         }));
       } else {
         const lastLedger = await api.getLastLedger();
@@ -223,9 +339,16 @@ const startSync = ({ id, freshAddress, blockHeight, currency }) =>
         o.next(a => ({
           ...a,
           balance,
-          blockHeight: +lastLedger.records[0].paging_token,
+          blockHeight: +lastLedger.records[0].paging_token||0,
           pendingOperations: []
         }));
+        done = true;
+        o.complete();
+      }
+
+      if (!done) {
+        main(_blockHeight);
+      } else {
         o.complete();
       }
     }
@@ -237,19 +360,19 @@ const startSync = ({ id, freshAddress, blockHeight, currency }) =>
   });
 
 const accountBridge: AccountBridge<Transaction> = {
-  createTransaction: () => null,
-  updateTransaction: () => null,
-  prepareTransaction: () => null,
-  getTransactionStatus: () => null,
-  signAndBroadcast: () => null,
+  createTransaction,
+  updateTransaction,
+  prepareTransaction,
+  getTransactionStatus,
+  signAndBroadcast,
   startSync,
   getCapabilities,
   ...inferDeprecatedMethods({
     name: "StellarJSBridge",
-    createTransaction: () => null,
-    getTransactionStatus: () => null,
-    prepareTransaction: () => null,
-    fillUpExtraFieldToApplyTransactionNetworkInfo: () => null
+    createTransaction,
+    getTransactionStatus,
+    prepareTransaction,
+    fillUpExtraFieldToApplyTransactionNetworkInfo
   })
 };
 

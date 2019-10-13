@@ -4,20 +4,37 @@ import {
   fromTransactionCommonRaw,
   toTransactionCommonRaw
 } from "../../transaction/common";
+import { BigNumber } from "bignumber.js";
 
 const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
+  const { networkInfo } = tr;
   return {
     ...common,
-    family: tr.family
+    family: tr.family,
+    fee: tr.fee ? BigNumber(tr.fee) : null,
+    memo: tr.memo? tr.memo : undefined,
+    networkInfo: networkInfo && {
+      family: networkInfo.family,
+      serverFee: BigNumber(networkInfo.serverFee),
+      baseReserve: BigNumber(networkInfo.baseReserve)
+    }
   };
 };
 
 const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
+  const { networkInfo } = t;
   return {
     ...common,
-    family: t.family
+    family: t.family,
+    fee: t.fee ? t.fee.toString() : null,
+    memo: t.memo? t.memo : undefined,
+    networkInfo: networkInfo && {
+      family: networkInfo.family,
+      serverFee: networkInfo.serverFee.toString(),
+      baseReserve: networkInfo.baseReserve.toString()
+    }
   };
 };
 
