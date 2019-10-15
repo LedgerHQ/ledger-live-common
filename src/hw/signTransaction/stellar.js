@@ -1,7 +1,7 @@
 // @flow
 import Str from "@ledgerhq/hw-app-str";
 import type Transport from "@ledgerhq/hw-transport";
-import api from "../../families/stellar/bridge/api";
+import { Server } from "stellar-sdk";
 
 import {
   Memo,
@@ -29,7 +29,7 @@ export default async (
     amount: string
   }
 ) => {
-  const server = api.getServer();
+  const server = new Server("https://horizon.stellar.org");
   const account = await server.loadAccount(transaction.freshAddress);
   let creatingAccount = false;
 

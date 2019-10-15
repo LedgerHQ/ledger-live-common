@@ -1,0 +1,9 @@
+{
+  "version": "v1",
+  "packages": {
+    "@ledgerhq/live-common": {
+      "signature": "b99df7465fe0b68d541ba84f7481cec4",
+      "file": true
+    }
+  }
+}

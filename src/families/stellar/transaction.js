@@ -13,7 +13,7 @@ const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     ...common,
     family: tr.family,
     fee: tr.fee ? BigNumber(tr.fee) : null,
-    memo: tr.memo? tr.memo : undefined,
+    memo: tr.memo ? tr.memo : undefined,
     networkInfo: networkInfo && {
       family: networkInfo.family,
       serverFee: BigNumber(networkInfo.serverFee),
@@ -29,7 +29,7 @@ const toTransactionRaw = (t: Transaction): TransactionRaw => {
     ...common,
     family: t.family,
     fee: t.fee ? t.fee.toString() : null,
-    memo: t.memo? t.memo : undefined,
+    memo: t.memo ? t.memo : undefined,
     networkInfo: networkInfo && {
       family: networkInfo.family,
       serverFee: networkInfo.serverFee.toString(),
