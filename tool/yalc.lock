@@ -2,7 +2,7 @@
   "version": "v1",
   "packages": {
     "@ledgerhq/live-common": {
-      "signature": "0417f1320a185ea93fc8d85ccf3b0c5f",
+      "signature": "d23039c6fe8ce1e5031430485c2ec849",
       "file": true
     }
   }

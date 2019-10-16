@@ -3,6 +3,7 @@ import { Observable } from "rxjs";
 import { BigNumber } from "bignumber.js";
 import type { Transaction } from "../types";
 import type { Account, Operation } from "../../../types";
+import { getCryptoCurrencyById } from "../../../types";
 import type { AccountBridge, CurrencyBridge } from "../../../types/bridge";
 import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
 import {
@@ -23,7 +24,6 @@ import {
 import { open } from "../../../hw";
 import signTransaction from "../../../hw/signTransaction";
 import { Asset, StrKey } from "stellar-base";
-import { getCryptoCurrencyById } from "../../../types";
 import { formatCurrencyUnit, parseCurrencyUnit } from "../../../currencies";
 
 const getCapabilities = () => ({
@@ -47,7 +47,7 @@ const post = async (maybeUrl, data) => {
   const url = maybeUrl.startsWith("http") ? maybeUrl : root + maybeUrl;
 
   try {
-    const response = await network({
+    return await network({
       method: "POST",
       url,
       data,
@@ -57,8 +57,6 @@ const post = async (maybeUrl, data) => {
         }
       }
     });
-
-    return response;
   } catch (e) {
     log("http", e.response.data);
   }
@@ -115,7 +113,7 @@ async function fetchOperations(
     payload._embedded.records.length &&
     payload._links.next &&
     shouldFetchMoreOps(txs)
-    ) {
+  ) {
     txs = txs.concat(payload._embedded.records);
     payload = await fetch(payload._links.next.href);
   }
@@ -161,7 +159,7 @@ const createTransaction = () => ({
   fee: null,
   networkInfo: null,
   memo: undefined,
-  memoType: undefined
+  memoType: "MEMO_NONE" //TODO support other memo types and validate them
 });
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
@@ -217,7 +215,7 @@ const signAndBroadcast = (a, t, deviceId) =>
         destination: t.recipient,
         asset: Asset.native(),
         memo: t.memo,
-        memoType: t.memoType, //TODO support memos
+        memoType: t.memoType,
         fee: formatAPICurrency(t.fee || BigNumber(100)),
         amount: formatAPICurrency(t.amount)
       }

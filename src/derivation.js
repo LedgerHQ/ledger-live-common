@@ -26,7 +26,7 @@ const modes = Object.freeze({
   "": {},
 
   stellar: {
-    overridesDerivation: "44'/148'/<account>'",
+    overridesDerivation: "44'/148'/<account>'"
   },
   // MEW legacy derivation
   ethM: {

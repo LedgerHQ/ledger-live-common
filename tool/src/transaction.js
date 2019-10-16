@@ -42,7 +42,9 @@ export type InferTransactionsOpts = $Shape<{
   token: string[],
   shuffle: boolean,
   tag: number,
-  fee: BigNumber
+  fee: BigNumber,
+  memo: string,
+  memoType: "MEMO_NONE" | "MEMO_TEXT" // TODO implement these | "MEMO_ID" | "MEMO_HASH" | "MEMO_RETURN"
 }>;
 
 // TODO split code per family so it works generically
@@ -88,6 +90,16 @@ export const inferTransactionsOpts = [
     name: "tag",
     type: Number,
     desc: "ripple tag"
+  },
+  {
+    name: "memo",
+    type: String,
+    desc: "stellar memo"
+  },
+  {
+    name: "memoType",
+    type: String,
+    desc: "stellar memo type (MEMO_NONE or MEMO_TEXT for now)"
   },
   {
     name: "gasPrice",
@@ -229,8 +241,8 @@ export function inferTransactions(
         return {
           family: "stellar",
           recipient,
-          memo: "", //Fixme implement memo
-          memoType: "MEMO_NONE",
+          memo: opts.memo,
+          memoType: opts.memoType || "MEMO_NONE",
           amount,
           fee: inferAmount(account, opts.fee || "0.00001xlm"),
           networkInfo: null,
