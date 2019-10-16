@@ -14,6 +14,7 @@ const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     family: tr.family,
     fee: tr.fee ? BigNumber(tr.fee) : null,
     memo: tr.memo ? tr.memo : undefined,
+    memoType: tr.memoType ? tr.memoType : "MEMO_NONE",
     networkInfo: networkInfo && {
       family: networkInfo.family,
       serverFee: BigNumber(networkInfo.serverFee),
@@ -30,6 +31,7 @@ const toTransactionRaw = (t: Transaction): TransactionRaw => {
     family: t.family,
     fee: t.fee ? t.fee.toString() : null,
     memo: t.memo ? t.memo : undefined,
+    memoType: t.memoType ? t.memoType : "MEMO_TYPE",
     networkInfo: networkInfo && {
       family: networkInfo.family,
       serverFee: networkInfo.serverFee.toString(),

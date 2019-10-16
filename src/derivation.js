@@ -261,6 +261,7 @@ export const runDerivationScheme = (
     .replace("<address>", String(opts.address || 0));
 
 const disableBIP44 = {
+  stellar: true,
   aeternity: true,
   tezos: true // current workaround, device app does not seem to support bip44
 };

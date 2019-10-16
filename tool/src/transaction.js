@@ -230,6 +230,7 @@ export function inferTransactions(
           family: "stellar",
           recipient,
           memo: "", //Fixme implement memo
+          memoType: "MEMO_NONE",
           amount,
           fee: inferAmount(account, opts.fee || "0.00001xlm"),
           networkInfo: null,

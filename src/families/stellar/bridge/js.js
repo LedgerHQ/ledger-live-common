@@ -58,11 +58,9 @@ const post = async (maybeUrl, data) => {
       }
     });
 
-    // Horizon seems to want application/x-www-form-urlencoded so i'm passing the data in the url for now
-    console.log({ response });
     return response;
   } catch (e) {
-    console.log("failed", e.response.data);
+    log("http", e.response.data);
   }
 };
 
@@ -78,6 +76,8 @@ const rawOpToOp = ({ id, address }) => (operation: Object): any => {
     from = operation.funder;
     to = operation.account;
     value = parseAPIValue(operation.starting_balance);
+  } else if (operation.type === "set_options") {
+    return [];
   } else {
     from = operation.from;
     to = operation.to;
@@ -115,7 +115,7 @@ async function fetchOperations(
     payload._embedded.records.length &&
     payload._links.next &&
     shouldFetchMoreOps(txs)
-  ) {
+    ) {
     txs = txs.concat(payload._embedded.records);
     payload = await fetch(payload._links.next.href);
   }
@@ -132,11 +132,13 @@ const getAccountShape = async info => {
   try {
     const payload = await fetch(`/accounts/${info.address}`);
     accountShape.blockHeight = payload.last_modified_ledger;
-    accountShape.balance ===
-      payload.balances.filter(b => b.asset_type === "native");
-    // FIXME @gre uncommenting this breaks the sync completely, except calling the sync directly
-    //const ops = await fetchOperations(info.address, ops => ops.length < 100);
-    accountShape.operations = []; //flatMap(ops, rawOpToOp(info));
+    const nativeBalance = payload.balances.find(b => b.asset_type === "native");
+    if (nativeBalance) {
+      accountShape.balance = parseAPIValue(nativeBalance.balance);
+    }
+
+    const ops = await fetchOperations(info.address, ops => ops.length < 100);
+    accountShape.operations = flatMap(ops, rawOpToOp(info));
   } catch (e) {
     // Server throws if the account doesn't exist
   }
@@ -215,24 +217,26 @@ const signAndBroadcast = (a, t, deviceId) =>
         destination: t.recipient,
         asset: Asset.native(),
         memo: t.memo,
-        memoType: (t.memoType && t.memoType.value) || "MEMO_NONE",
+        memoType: t.memoType, //TODO support memos
         fee: formatAPICurrency(t.fee || BigNumber(100)),
         amount: formatAPICurrency(t.amount)
       }
     );
 
     if (!cancelled) {
-      o.next({ type: "signed", signedTransactionXDR });
+      o.next({ type: "signed" });
       const transactionResult = await post(
         "/transactions",
         `tx=${encodeURIComponent(signedTransactionXDR)}`
       );
 
+      const hash = transactionResult ? transactionResult.hash : "hash"; //Should never happen
+
       o.next({
         type: "broadcasted",
         operation: {
-          id: `${a.id}-${transactionResult.hash}-OUT`,
-          hash: transactionResult.hash,
+          id: `${a.id}-${hash}-OUT`,
+          hash,
           accountId: a.id,
           type: "OUT",
           value: new BigNumber(t.amount),

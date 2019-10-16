@@ -32,7 +32,7 @@ export type Transaction = {|
   fee: ?BigNumber,
   networkInfo: ?NetworkInfo,
   memo: ?string,
-  memoType: ?any
+  memoType: ?string
 |};
 
 export type TransactionRaw = {|
@@ -41,7 +41,7 @@ export type TransactionRaw = {|
   fee: ?string,
   networkInfo: ?NetworkInfoRaw,
   memo: ?string,
-  memoType: ?any
+  memoType: ?string
 |};
 
 export const reflect = (_declare: *) => {};
