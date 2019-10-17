@@ -265,6 +265,15 @@ export function inferTransactions(
         };
       }
 
+      case "neo": {
+        return {
+          family: "neo",
+          recipient,
+          amount,
+          useAllAmount
+        };
+      }
+
       default:
         throw new Error("family " + account.currency.family + " not supported");
     }

@@ -43,6 +43,7 @@
     "react": "*"
   },
   "dependencies": {
+    "@cityofzion/neon-js": "^4.7.1",
     "@ledgerhq/compressjs": "1.3.2",
     "@ledgerhq/errors": "4.72.1",
     "@ledgerhq/hw-app-btc": "4.72.1",

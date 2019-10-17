@@ -6,6 +6,7 @@ import type { CryptoCurrency } from "../../types";
 import ethereum from "./ethereum";
 import ripple from "./ripple";
 import tron from "./tron";
+import neo from "./neo";
 
 type Resolver = (
   currency: CryptoCurrency,
@@ -20,7 +21,8 @@ const all = {
   ethereum_classic: ethereum,
   ethereum_classic_testnet: ethereum,
   ripple,
-  tron
+  tron,
+  neo
 };
 
 const m: Resolver = (currency, transport, path, transaction) => {

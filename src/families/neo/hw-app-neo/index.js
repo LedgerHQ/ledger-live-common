@@ -3,7 +3,12 @@
 import type Transport from "@ledgerhq/hw-transport";
 import BIPPath from "bip32-path";
 import { getAddressFromScriptHash, getScriptHashFromPublicKey } from "./crypto";
-
+import { foreach } from "./utils";
+const CLA = 0x80;
+const PATH_SIZE = 4;
+const PATHS_LENGTH_SIZE = 1;
+const CHUNK_SIZE = 240;
+const SIGN = 0x02;
 /**
  * Neo API
  *
@@ -34,5 +39,49 @@ export default class Neo {
     const scriptHash = getScriptHashFromPublicKey(publicKey);
     const address = getAddressFromScriptHash(scriptHash);
     return { address, publicKey };
+  }
+
+  /**
+   * You can sign a transaction and retrieve DER signature given the raw
+   * transaction and the BIP 32 path of the account to sign
+   * @example
+   eth.signTransaction("44'/888'/0'/0/0", "0800e1f505000000001405db7c48065877c220bb84b4f88ca9b9ef7e966e1405db7c48065877c220bb84b4f88ca9b9ef7e966e53c1087472616e736665726769090d990e0af2d6647682fb0ecca4b1871f04fe").then(result => ...)
+   */
+  async signTransaction(path, rawTxHex) {
+    const bipPath = BIPPath.fromString(path).toPathArray();
+    const pathBuffer = new Buffer(PATHS_LENGTH_SIZE + PATH_SIZE * bipPath.length);
+    bipPath.forEach((element, index) => {
+      pathBuffer.writeUInt32BE(element, 4 * index);
+    });
+    const rawTx = Buffer.concat([new Buffer(rawTxHex, "hex"), pathBuffer]);
+    let buffers = [];
+    let offset = 0;
+    while (offset !== rawTx.length) {
+      let chunkSize =
+        offset + CHUNK_SIZE > rawTx.length ? rawTx.length - offset : CHUNK_SIZE;
+      let buffer = new Buffer(chunkSize);
+      rawTx.copy(buffer, 0, offset, offset + chunkSize);
+      buffers.push(buffer);
+      offset += chunkSize;
+    }
+
+    buffers = buffers.map((p, i) => {
+      let startByte;
+      if (i === buffers.length - 1) {
+        startByte = 0x80;
+      } else {
+        startByte = 0x00;
+      }
+      return [startByte, p];
+    });
+
+    let response;
+    return foreach(buffers, ([startByte, data]) => {
+      return this.transport
+        .send(CLA, SIGN, startByte, 0x00, data)
+        .then(apduResponse => {
+          response = apduResponse;
+        });
+    }).then(() => response);
   }
 }

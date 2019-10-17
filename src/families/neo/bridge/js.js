@@ -1,5 +1,5 @@
 // @flow
-import { never } from "rxjs";
+import { Observable } from "rxjs";
 import { BigNumber } from "bignumber.js";
 import flatMap from "lodash/flatMap";
 import { log } from "@ledgerhq/logs";
@@ -10,14 +10,17 @@ import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
 import { parseCurrencyUnit, getCryptoCurrencyById } from "../../../currencies";
 import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
 import network from "../../../network";
+import { open } from "../../../hw";
+import signTransaction from "../../../hw/signTransaction";
 import {
   makeStartSync,
   makeScanAccountsOnDevice
 } from "../../../bridge/jsHelpers";
+import Neon, { api, wallet, sc, u } from "@cityofzion/neon-js";
 
+//https://github.com/CityOfZion/neo-tokens/blob/master/tokenList.json
 const neoAsset =
   "c56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
-
 const neoUnit = getCryptoCurrencyById("neo").units[0];
 
 const txToOps = ({ id, address }) => (tx: Object): Operation[] => {
@@ -154,7 +157,96 @@ const getTransactionStatus = a =>
     })
   );
 
-const signAndBroadcast = () => never();
+async function doSignAndBroadcast({
+  a,
+  t,
+  deviceId,
+  isCancelled,
+  onSigned,
+  onOperationBroadcasted
+}) {
+  // Prepare transaction
+  const mainNetNeoscan = new api.neoscan.instance("MainNet");
+  const balance = await mainNetNeoscan.getBalance(a.freshAddress);
+  const neonTx = Neon.create.contractTx();
+  neonTx
+  .addIntent("NEO", t.amount.toNumber(), t.recipient)
+  .calculate(balance); //Possible to set config about fees
+  const unsignedRawTx = neonTx.serialize(false);
+
+  const transport = await open(deviceId);
+  let transaction;
+  try {
+    // Sign by device
+    const signature = await signTransaction(
+      a.currency,
+      transport,
+      a.freshAddressPath,
+      unsignedRawTx
+    );
+    console.log(">> Got signature");
+    console.log(signature);
+  } finally {
+    transport.close();
+  }
+  //
+  // if (!isCancelled()) {
+  //   onSigned();
+  //
+  //   // Broadcast
+  //   const submittedPayment = await broadcastTronTx(transaction);
+  //   if (submittedPayment.result !== true) {
+  //     throw new Error(submittedPayment.resultMessage);
+  //   }
+  //
+  //   const hash = transaction.txID;
+  //   const operation = {
+  //     id: `${a.id}-${hash}-OUT`,
+  //     hash,
+  //     accountId: a.id,
+  //     type: "OUT",
+  //     value: t.amount,
+  //     fee: BigNumber(0), // TBD
+  //     blockHash: null,
+  //     blockHeight: null,
+  //     senders: [a.freshAddress],
+  //     recipients: [t.recipient],
+  //     date: new Date(),
+  //     extra: {}
+  //   };
+  //   onOperationBroadcasted(operation);
+  //}
+}
+
+const signAndBroadcast = (a, t, deviceId) =>
+  Observable.create(o => {
+    let cancelled = false;
+    const isCancelled = () => cancelled;
+    const onSigned = () => {
+      o.next({ type: "signed" });
+    };
+    const onOperationBroadcasted = operation => {
+      o.next({ type: "broadcasted", operation });
+    };
+    doSignAndBroadcast({
+      a,
+      t,
+      deviceId,
+      isCancelled,
+      onSigned,
+      onOperationBroadcasted
+    }).then(
+      () => {
+        o.complete();
+      },
+      e => {
+        o.error(e);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  });
 
 const prepareTransaction = async (a, t: Transaction): Promise<Transaction> =>
   Promise.resolve(t);
