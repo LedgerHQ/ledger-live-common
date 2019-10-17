@@ -18,7 +18,7 @@ import {
   makeScanAccountsOnDevice
 } from "../../../bridge/jsHelpers";
 import { getPublicKeyEncoded } from "../hw-app-neo/crypto";
-import Neon, { api, wallet } from "@cityofzion/neon-js";
+import Neon, { api, tx } from "@cityofzion/neon-js";
 
 //https://github.com/CityOfZion/neo-tokens/blob/master/tokenList.json
 const neoAsset =
@@ -187,9 +187,6 @@ async function doSignAndBroadcast({
       derivationMode: a.derivationMode
     });
     const compPubKey = getPublicKeyEncoded(addressResult.publicKey);
-    const verificationScript = wallet.getVerificationScriptFromPublicKey(
-      compPubKey
-    );
     // Get signature to construct invocation script
     const signature = await signTransaction(
       a.currency,
@@ -197,8 +194,9 @@ async function doSignAndBroadcast({
       a.freshAddressPath,
       unsignedRawTx
     );
-    const invocationScript = `40${signature}`;
-    neonTx.scripts.push({ invocationScript, verificationScript });
+    neonTx.addWitness(
+      tx.Witness.fromSignature(signature, compPubKey)
+    );
     // Get raw signed transaction
     rawSignedTransaction = neonTx.serialize(true);
   } finally {
@@ -209,7 +207,7 @@ async function doSignAndBroadcast({
     onSigned();
     // Broadcast
     const submittedPayment = await broadcastNeonTx(rawSignedTransaction);
-    if (submittedPayment.result !== true) {
+    if (submittedPayment !== true) {
       throw new Error(submittedPayment.error);
     }
     const hash = neonTx.hash();

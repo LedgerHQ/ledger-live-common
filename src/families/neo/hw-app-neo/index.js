@@ -6,7 +6,6 @@ import { getAddressFromScriptHash, getScriptHashFromPublicKey } from "./crypto";
 import { foreach } from "./utils";
 const CLA = 0x80;
 const PATH_SIZE = 4;
-const PATHS_LENGTH_SIZE = 1;
 const CHUNK_SIZE = 240;
 const SIGN = 0x02;
 /**
@@ -49,7 +48,7 @@ export default class Neo {
    */
   async signTransaction(path: string, rawTxHex: string) {
     const bipPath = BIPPath.fromString(path).toPathArray();
-    const pathBuffer = new Buffer(PATHS_LENGTH_SIZE + PATH_SIZE * bipPath.length);
+    const pathBuffer = new Buffer(PATH_SIZE * bipPath.length);
     bipPath.forEach((element, index) => {
       pathBuffer.writeUInt32BE(element, 4 * index);
     });
