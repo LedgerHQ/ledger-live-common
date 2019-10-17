@@ -12,11 +12,13 @@ import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
 import network from "../../../network";
 import { open } from "../../../hw";
 import signTransaction from "../../../hw/signTransaction";
+import getAddress from "../../../hw/getAddress";
 import {
   makeStartSync,
   makeScanAccountsOnDevice
 } from "../../../bridge/jsHelpers";
-import Neon, { api, wallet, sc, u } from "@cityofzion/neon-js";
+import { getPublicKeyEncoded } from "../hw-app-neo/crypto";
+import Neon, { api, wallet } from "@cityofzion/neon-js";
 
 //https://github.com/CityOfZion/neo-tokens/blob/master/tokenList.json
 const neoAsset =
@@ -169,54 +171,74 @@ async function doSignAndBroadcast({
   const mainNetNeoscan = new api.neoscan.instance("MainNet");
   const balance = await mainNetNeoscan.getBalance(a.freshAddress);
   const neonTx = Neon.create.contractTx();
-  neonTx
-  .addIntent("NEO", t.amount.toNumber(), t.recipient)
-  .calculate(balance); //Possible to set config about fees
+  // TODO: we can use calculationStrategyFunction and fees (default) fields
+  // on calculate method to tweak fees
+  // Reference: https://github.com/CityOfZion/neon-js/blob/master/packages/neon-core/src/tx/transaction/BaseTransaction.ts#L141
+  neonTx.addIntent("NEO", t.amount.toNumber(), t.recipient).calculate(balance); //Possible to set config about fees
   const unsignedRawTx = neonTx.serialize(false);
 
   const transport = await open(deviceId);
-  let transaction;
+  let rawSignedTransaction;
   try {
-    // Sign by device
+    // Get verification script
+    const addressResult = await getAddress(transport, {
+      currency: a.currency,
+      path: a.freshAddressPath,
+      derivationMode: a.derivationMode
+    });
+    const compPubKey = getPublicKeyEncoded(addressResult.publicKey);
+    const verificationScript = wallet.getVerificationScriptFromPublicKey(
+      compPubKey
+    );
+    // Get signature to construct invocation script
     const signature = await signTransaction(
       a.currency,
       transport,
       a.freshAddressPath,
       unsignedRawTx
     );
-    console.log(">> Got signature");
-    console.log(signature);
+    const invocationScript = `40${signature}`;
+    neonTx.scripts.push({ invocationScript, verificationScript });
+    // Get raw signed transaction
+    rawSignedTransaction = neonTx.serialize(true);
   } finally {
     transport.close();
   }
-  //
-  // if (!isCancelled()) {
-  //   onSigned();
-  //
-  //   // Broadcast
-  //   const submittedPayment = await broadcastTronTx(transaction);
-  //   if (submittedPayment.result !== true) {
-  //     throw new Error(submittedPayment.resultMessage);
-  //   }
-  //
-  //   const hash = transaction.txID;
-  //   const operation = {
-  //     id: `${a.id}-${hash}-OUT`,
-  //     hash,
-  //     accountId: a.id,
-  //     type: "OUT",
-  //     value: t.amount,
-  //     fee: BigNumber(0), // TBD
-  //     blockHash: null,
-  //     blockHeight: null,
-  //     senders: [a.freshAddress],
-  //     recipients: [t.recipient],
-  //     date: new Date(),
-  //     extra: {}
-  //   };
-  //   onOperationBroadcasted(operation);
-  //}
+
+  if (!isCancelled()) {
+    onSigned();
+    // Broadcast
+    const submittedPayment = await broadcastNeonTx(rawSignedTransaction);
+    if (submittedPayment.result !== true) {
+      throw new Error(submittedPayment.error);
+    }
+    const hash = neonTx.hash();
+    const fees = neonTx.fees();
+    const operation = {
+      id: `${a.id}-${hash}-OUT`,
+      hash,
+      accountId: a.id,
+      type: "OUT",
+      value: t.amount,
+      fee: BigNumber(fees),
+      blockHash: null,
+      blockHeight: null,
+      senders: [a.freshAddress],
+      recipients: [t.recipient],
+      date: new Date(),
+      extra: {}
+    };
+    onOperationBroadcasted(operation);
+  }
 }
+
+const broadcastNeonTx = async (rawSignedTransaction: string) => {
+  const rpcClient = Neon.create.rpcClient(
+    "https://seed1.switcheo.network:10331"
+  );
+  const result = await rpcClient.sendRawTransaction(rawSignedTransaction);
+  return result;
+};
 
 const signAndBroadcast = (a, t, deviceId) =>
   Observable.create(o => {

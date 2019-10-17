@@ -47,7 +47,7 @@ export default class Neo {
    * @example
    eth.signTransaction("44'/888'/0'/0/0", "0800e1f505000000001405db7c48065877c220bb84b4f88ca9b9ef7e966e1405db7c48065877c220bb84b4f88ca9b9ef7e966e53c1087472616e736665726769090d990e0af2d6647682fb0ecca4b1871f04fe").then(result => ...)
    */
-  async signTransaction(path, rawTxHex) {
+  async signTransaction(path: string, rawTxHex: string) {
     const bipPath = BIPPath.fromString(path).toPathArray();
     const pathBuffer = new Buffer(PATHS_LENGTH_SIZE + PATH_SIZE * bipPath.length);
     bipPath.forEach((element, index) => {

@@ -40,14 +40,14 @@ function sha256(hex: string): string {
  * @param unencodedKey unencoded public key
  * @return encoded public key
  */
-function getPublicKeyEncoded(unencodedKey: string): string {
+export const getPublicKeyEncoded = (unencodedKey: string): string => {
   const publicKeyArray = new Uint8Array(hexstring2ab(unencodedKey));
   if (publicKeyArray[64] % 2 === 1) {
     return "03" + ab2hexstring(publicKeyArray.slice(1, 33));
   } else {
     return "02" + ab2hexstring(publicKeyArray.slice(1, 33));
   }
-}
+};
 
 /**
  * Converts a public key to verification script form.
