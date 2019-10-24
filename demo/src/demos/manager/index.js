@@ -72,6 +72,7 @@ const Card = styled.div`
   padding: 24px 20px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05);
   border-radius: 4px;
+  overflow: auto;
 `;
 
 const AppRow = styled.div`
@@ -108,6 +109,8 @@ const CryptoVersion = styled.div`
 `;
 
 const AppActions = styled.div`
+  display: flex;
+  flex-direction: row;
   > *:not(:last-child) {
     margin-right: 10px;
   }
@@ -187,6 +190,92 @@ const Button = styled.button`
   &:hover {
     opacity: 0.8;
   }
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  > svg {
+    padding-right: 5px;
+  }
+`;
+
+const successInstallIcon = (
+  <svg
+    width="12"
+    height="10"
+    viewBox="0 0 12 10"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M1.09094 5.00002L4.36367 8.27275L10.9091 1.72729"
+      stroke="#75B642"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+);
+
+const updateIcon = (
+  <svg
+    width="14"
+    height="16"
+    viewBox="0 0 14 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M12.7276 5.22282C11.6962 3.0998 9.51914 1.63635 7.00029 1.63635C4.15088 1.63635 1.73887 3.5091 0.927979 6.0909M1.27301 10.7772C2.30438 12.9002 4.48143 14.3636 7.00029 14.3636C9.84969 14.3636 12.2617 12.4909 13.0726 9.90908"
+      stroke="white"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M13.0455 2.27271V5.45452H9.86365"
+      stroke="white"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M0.954535 13.7272L0.954535 10.5454L4.13635 10.5454"
+      stroke="white"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+);
+
+const installIcon = (
+  <svg
+    width="14"
+    height="16"
+    viewBox="0 0 14 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M7 1.63637V14.3636M7 14.3636L10.5 10.8636M7 14.3636L3.5 10.8636"
+      stroke="#6490F1"
+      stroke-width="1.4"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+);
+
+const SuccessInstall = styled.div`
+  color: #75b642;
+  font-size: 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  > svg {
+    padding-right: 5px;
+  }
 `;
 
 const AppPreview = ({ app }: *) => (
@@ -200,7 +289,8 @@ const AppItem = ({
   scheduled,
   dispatch,
   progress,
-  error
+  error,
+  appStoreView
 }) => {
   const { name } = app;
   const onInstall = useCallback(() => dispatch({ type: "install", name }), [
@@ -263,17 +353,24 @@ const AppItem = ({
         </div>
       ) : (
         <AppActions>
-          {installed || !installedAvailable ? (
+          {(installed || !installedAvailable) && !appStoreView ? (
             <Button danger onClick={onUninstall}>
               {trashIcon}
             </Button>
           ) : null}
+          {appStoreView && installed && installed.updated ? (
+            <SuccessInstall>
+              {successInstallIcon}
+              Installed
+            </SuccessInstall>
+          ) : null}
+
           {installed && !installed.updated ? (
             <Button primary onClick={onInstall}>
-              Update
+              {updateIcon} Update
             </Button>
           ) : !installed ? (
-            <Button onClick={onInstall}>Install</Button>
+            <Button onClick={onInstall}>{installIcon} Install</Button>
           ) : null}
         </AppActions>
       )}
@@ -342,7 +439,7 @@ const Main = ({ transport, deviceInfo, listAppsRes }) => {
     ReactTooltip.rebuild();
   }, [state.installed]);
 
-  const mapApp = app => (
+  const mapApp = (app, appStoreView) => (
     <AppItem
       key={app.name}
       scheduled={plan.find(a => a.name === app.name)}
@@ -360,13 +457,13 @@ const Main = ({ transport, deviceInfo, listAppsRes }) => {
       installed={state.installed.find(ins => ins.name === app.name)}
       dispatch={dispatch}
       installedAvailable={state.installedAvailable}
+      appStoreView={appStoreView}
     />
   );
 
   const installedApps = state.installed
     .map(i => state.apps.find(a => a.name === i.name))
     .filter(Boolean);
-  const nonInstalledApps = state.apps.filter(a => !installedApps.includes(a));
 
   const distribution = distribute({
     deviceModel,
@@ -404,7 +501,7 @@ const Main = ({ transport, deviceInfo, listAppsRes }) => {
         />
         <Section>
           <h2>App Store</h2>
-          <Card>{nonInstalledApps.map(mapApp)}</Card>
+          <Card>{state.apps.map(app => mapApp(app, true))}</Card>
         </Section>
         <Section>
           <h2>Device Manager</h2>
@@ -469,11 +566,11 @@ const Main = ({ transport, deviceInfo, listAppsRes }) => {
 
           <Card>
             {installedApps.length
-              ? installedApps.map(mapApp)
+              ? installedApps.map(app => mapApp(app))
               : "No apps installed."}
           </Card>
 
-          <div style={{ fontSize: "10px", opacity: 0.3 }}>
+          <div style={{ fontSize: "10px", opacity: 0.3, marginTop: 10 }}>
             {prettyActionPlan(plan)}
           </div>
         </Section>
