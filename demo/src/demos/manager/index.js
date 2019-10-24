@@ -28,33 +28,50 @@ import {
   formatSize
 } from "./sizes";
 
-const Card = styled.div`
-  background: #FFFFFF;
-  padding:24px 20px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05);
-  border-radius: 4px;
-`
-
 const Container = styled.div`
-  display:flex;
-  flex-direction:row;
-  justify-content:space-around;
-  background-color:#F8F8F8;
-  width:100vw;
-  min-height:100vh;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  text-align: ${p => (p.center ? "center" : "left")};
+  align-items: ${p => (p.center ? "center" : "initial")};
+  background-color: #f8f8f8;
+  width: 100vw;
+  min-height: 100vh;
   font-family: Inter, sans-serif;
-  
-  &>div{
-    flex:1;
-    margin:40px;
+
+  & > div {
   }
-  & h2{
+  & h2 {
     font-family: Inter;
     font-style: normal;
     font-weight: 500;
     font-size: 18px;
     line-height: 22px;
   }
+`;
+
+const SectionContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  max-width: 1200px;
+  margin: 0 auto;
+`;
+
+const Section = styled.div`
+  flex: 1;
+  margin: 40px;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+`;
+
+const Card = styled.div`
+  background: #ffffff;
+  padding: 24px 20px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
 `;
 
 const AppRow = styled.div`
@@ -361,105 +378,106 @@ const Main = ({ transport, deviceInfo, listAppsRes }) => {
 
   return (
     <Container>
-      <ReactTooltip
-        id="tooltip"
-        effect="solid"
-        getContent={dataTip => {
-          if (!dataTip) return null;
-          const { name, bytes } = JSON.parse(dataTip);
-          return (
-            <>
+      <SectionContainer>
+        <ReactTooltip
+          id="tooltip"
+          effect="solid"
+          getContent={dataTip => {
+            if (!dataTip) return null;
+            const { name, bytes } = JSON.parse(dataTip);
+            return (
+              <>
+                <div
+                  style={{
+                    textAlign: "center",
+                    color: "rgba(255, 255, 255, 0.7)"
+                  }}
+                >
+                  {name}
+                </div>
+                <div style={{ textAlign: "center", color: "white" }}>
+                  {formatSize(bytes)}
+                </div>
+              </>
+            );
+          }}
+        />
+        <Section>
+          <h2>App Store</h2>
+          <Card>{nonInstalledApps.map(mapApp)}</Card>
+        </Section>
+        <Section>
+          <h2>Device Manager</h2>
+          <Card style={{ display: "flex", flexDirection: "row" }}>
+            <DeviceIllustration deviceModel={deviceModel} />
+            <div style={{ flex: 1 }}>
               <div
                 style={{
-                  textAlign: "center",
-                  color: "rgba(255, 255, 255, 0.7)"
+                  marginBottom: 4,
+                  fontSize: "16px",
+                  lineHeight: "19px",
+                  fontFamily: "Inter"
                 }}
               >
-                {name}
+                <strong>{deviceModel.productName}</strong>
               </div>
-              <div style={{ textAlign: "center", color: "white" }}>
-                {formatSize(bytes)}
+              <div
+                style={{
+                  fontFamily: "Inter",
+                  fontSize: "13px",
+                  lineHeight: "16px",
+                  color: "#999999"
+                }}
+              >
+                Firmware {deviceInfo.version}
               </div>
-            </>
-          );
-        }}
-      />
-      <div>
-        <h2>App Store</h2>
-        <Card>{nonInstalledApps.map(mapApp)}</Card>
-      </div>
-      <div>
-        <h2>Device Manager</h2>
-      <Card style={{ display: "flex", flexDirection: "row" }}>
-        <DeviceIllustration deviceModel={deviceModel} />
-        <div style={{ flex: 1 }}>
-          <div
-            style={{
-              marginBottom: 4,
-              fontSize: "16px",
-              lineHeight: "19px",
-              fontFamily: "Inter"
-            }}
+              <Separator />
+              <Info>
+                <div>
+                  <span>Used</span>
+                  <span>{formatSize(distribution.totalAppsBytes)}</span>
+                </div>
+                <div>
+                  <span>Capacity</span>
+                  <span>{formatSize(distribution.appsSpaceBytes)}</span>
+                </div>
+                <div>
+                  <span>Apps installed</span>
+                  <span>{distribution.apps.length}</span>
+                </div>
+              </Info>
+              <StorageBar distribution={distribution} />
+              <FreeInfo danger={dangerSpace}>
+                {dangerSpace ? dangerIcon : ""}{" "}
+                {formatSize(distribution.freeSpaceBytes)} Free
+              </FreeInfo>
+            </div>
+          </Card>
+          <h2
+            style={{ marginTop: "30px", display: "flex", flexDirection: "row" }}
           >
-            <strong>{deviceModel.productName}</strong>
+            {"On Device "}
+            <span style={{ flex: 1 }} />
+            {state.installed.some(i => !i.updated) ? (
+              <Button onClick={onUpdateAll}>Update all</Button>
+            ) : null}
+          </h2>
+
+          {!state.installedAvailable ? (
+            <div style={{ color: "red" }}>HSM list apps not available!!</div>
+          ) : null}
+
+          <Card>
+            {installedApps.length
+              ? installedApps.map(mapApp)
+              : "No apps installed."}
+          </Card>
+
+          <div style={{ fontSize: "10px", opacity: 0.3 }}>
+            {prettyActionPlan(plan)}
           </div>
-          <div
-            style={{
-              fontFamily: "Inter",
-              fontSize: "13px",
-              lineHeight: "16px",
-              color: "#999999"
-            }}
-          >
-            Firmware {deviceInfo.version}
-          </div>
-          <Separator />
-          <Info>
-            <div>
-              <span>Used</span>
-              <span>{formatSize(distribution.totalAppsBytes)}</span>
-            </div>
-            <div>
-              <span>Capacity</span>
-              <span>{formatSize(distribution.appsSpaceBytes)}</span>
-            </div>
-            <div>
-              <span>Apps installed</span>
-              <span>{distribution.apps.length}</span>
-            </div>
-          </Info>
-          <StorageBar distribution={distribution} />
-          <FreeInfo danger={dangerSpace}>
-            {dangerSpace ? dangerIcon : ""}{" "}
-            {formatSize(distribution.freeSpaceBytes)} Free
-          </FreeInfo>
-        </div>
-      </Card>
-      <h2 style={{ marginTop: "30px", display: "flex", flexDirection: "row" }}>
-        {"On Device "}
-        <span style={{ flex: 1 }} />
-        {state.installed.some(i => !i.updated) ? (
-          <Button onClick={onUpdateAll}>Update all</Button>
-        ) : null}
-      </h2>
-
-      {!state.installedAvailable ? (
-        <div style={{ color: "red" }}>HSM list apps not available!!</div>
-      ) : null}
-
-      <Card>
-        {installedApps.length
-          ? installedApps.map(mapApp)
-          : "No apps installed."}
-      </Card>
-
-      <div style={{ fontSize: "10px", opacity: 0.3 }}>
-        {prettyActionPlan(plan)}
-      </div>
-
-
-      </div>
-
+        </Section>
+      </SectionContainer>
     </Container>
   );
 };
@@ -481,36 +499,36 @@ const ConnectDevice = ({
     [onConnect]
   );
   return (
-    <Container>
+    <Container center>
       <div>
-      {loading ? <h1>Loading...</h1> : <h1>Please connect your device</h1>}
+        {loading ? <h1>Loading...</h1> : <h1>Please connect your device</h1>}
 
-      {error ? (
-        <div style={{ marginBottom: 10 }}>
-          <p>{String(error)}</p>
-          <p>
-            <a href="/manager?FORCE_PROVIDER=4">
-              You may try on /manager?FORCE_PROVIDER=4
-            </a>
-          </p>
-        </div>
-      ) : null}
+        {error ? (
+          <div style={{ marginBottom: 10 }}>
+            <p>{String(error)}</p>
+            <p>
+              <a href="/manager?FORCE_PROVIDER=4">
+                You may try on /manager?FORCE_PROVIDER=4
+              </a>
+            </p>
+          </div>
+        ) : null}
 
-      {!error && loading ? (
-        "Please allow permission on your device..."
-      ) : (
-        <AppActions>
-          <Button primary name="webusb" onClick={onClick}>
-            USB
-          </Button>
-          <Button name="webhid" onClick={onClick}>
-            WebHID
-          </Button>
-          <Button name="webble" onClick={onClick}>
-            Bluetooth
-          </Button>
-        </AppActions>
-      )}
+        {!error && loading ? (
+          "Please allow permission on your device..."
+        ) : (
+          <AppActions>
+            <Button primary name="webusb" onClick={onClick}>
+              USB
+            </Button>
+            <Button name="webhid" onClick={onClick}>
+              WebHID
+            </Button>
+            <Button name="webble" onClick={onClick}>
+              Bluetooth
+            </Button>
+          </AppActions>
+        )}
       </div>
     </Container>
   );
