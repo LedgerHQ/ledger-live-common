@@ -28,10 +28,33 @@ import {
   formatSize
 } from "./sizes";
 
+const Card = styled.div`
+  background: #FFFFFF;
+  padding:24px 20px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+`
+
 const Container = styled.div`
-  width: 600px;
-  margin: 20px auto;
+  display:flex;
+  flex-direction:row;
+  justify-content:space-around;
+  background-color:#F8F8F8;
+  width:100vw;
+  min-height:100vh;
   font-family: Inter, sans-serif;
+  
+  &>div{
+    flex:1;
+    margin:40px;
+  }
+  & h2{
+    font-family: Inter;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 22px;
+  }
 `;
 
 const AppRow = styled.div`
@@ -344,7 +367,13 @@ const Main = ({ transport, deviceInfo, listAppsRes }) => {
           );
         }}
       />
-      <div style={{ display: "flex", flexDirection: "row" }}>
+      <div>
+        <h2>App Store</h2>
+        <Card>{nonInstalledApps.map(mapApp)}</Card>
+      </div>
+      <div>
+        <h2>Device Manager</h2>
+      <Card style={{ display: "flex", flexDirection: "row" }}>
         <DeviceIllustration deviceModel={deviceModel} />
         <div style={{ flex: 1 }}>
           <div
@@ -388,7 +417,7 @@ const Main = ({ transport, deviceInfo, listAppsRes }) => {
             {formatSize(distribution.freeSpaceBytes)} Free
           </FreeInfo>
         </div>
-      </div>
+      </Card>
       <h2 style={{ marginTop: "30px", display: "flex", flexDirection: "row" }}>
         {"On Device "}
         <span style={{ flex: 1 }} />
@@ -401,19 +430,19 @@ const Main = ({ transport, deviceInfo, listAppsRes }) => {
         <div style={{ color: "red" }}>HSM list apps not available!!</div>
       ) : null}
 
-      <div>
+      <Card>
         {installedApps.length
           ? installedApps.map(mapApp)
           : "No apps installed."}
-      </div>
+      </Card>
 
       <div style={{ fontSize: "10px", opacity: 0.3 }}>
         {prettyActionPlan(plan)}
       </div>
 
-      <h2>App Store</h2>
 
-      <div>{nonInstalledApps.map(mapApp)}</div>
+      </div>
+
     </Container>
   );
 };
@@ -436,6 +465,7 @@ const ConnectDevice = ({
   );
   return (
     <Container>
+      <div>
       {loading ? <h1>Loading...</h1> : <h1>Please connect your device</h1>}
 
       {error ? (
@@ -464,6 +494,7 @@ const ConnectDevice = ({
           </Button>
         </AppActions>
       )}
+      </div>
     </Container>
   );
 };
