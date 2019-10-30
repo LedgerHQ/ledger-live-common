@@ -93,3 +93,8 @@ async function load(): Promise<Core> {
 export function setLoadCoreImplementation(loadCore: () => Promise<Core>) {
   loadCoreImpl = loadCore;
 }
+
+export function deleteLibcore() {
+  corePromise = null;
+  core = null;
+}
