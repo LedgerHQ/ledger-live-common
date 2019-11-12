@@ -13,8 +13,13 @@ import {
   FeeRequired,
   FeeTooHigh,
   InvalidAddressBecauseDestinationIsAlsoSource,
-  NotEnoughBalance
+  NotEnoughBalance,
+  NotEnoughBalanceBecauseDestinationNotCreated
 } from "@ledgerhq/errors";
+import { makeLRUCache } from "../../../cache";
+import type { Account } from "../../../types";
+import { withLibcore } from "../../../libcore/access";
+import { getCoreAccount } from "../../../libcore/getCoreAccount";
 
 const startSync = (initialAccount, _observation) => syncAccount(initialAccount);
 
@@ -36,6 +41,16 @@ const signAndBroadcast = (account, transaction, deviceId) =>
     transaction,
     deviceId
   });
+
+const isAddressActivated = makeLRUCache(
+  (account: Account, addr: string) =>
+    withLibcore(async core => {
+      const { coreAccount } = await getCoreAccount(core, account);
+      const rippleLikeAccount = await coreAccount.asRippleLikeAccount();
+      return await rippleLikeAccount.isAddressActivated(addr);
+    }),
+  (a, addr) => a.id + "|" + addr
+);
 
 const getTransactionStatus = async (a, t) => {
   const errors = {};
@@ -60,8 +75,12 @@ const getTransactionStatus = async (a, t) => {
     totalSpent.gt(a.balance.minus(baseReserve));
   } else if (totalSpent.gt(a.balance.minus(baseReserve))) {
     errors.amount = new NotEnoughBalance();
+  } else if (
+    amount.lt(baseReserve) &&
+    !(await isAddressActivated(a, t.recipient))
+  ) {
+    errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated();
   }
-  // TODO take care of account not created ; NotEnoughBalanceBecauseDestinationNotCreated
 
   if (a.freshAddress === t.recipient) {
     errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
