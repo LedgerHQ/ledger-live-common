@@ -16,7 +16,6 @@ import {
   GasLessThanEstimate,
   RecipientRequired
 } from "@ledgerhq/errors";
-import { inferDeprecatedMethods } from "../../../bridge/deprecationUtils";
 import {
   getDerivationModesForCurrency,
   getDerivationScheme,
@@ -128,7 +127,10 @@ function getRecipientWarning(currency, recipient) {
 function mergeOps(existing: Operation[], newFetched: Operation[]) {
   const ids = existing.map(o => o.id);
   const all = newFetched.filter(o => !ids.includes(o.id)).concat(existing);
-  return uniqBy(all.sort((a, b) => b.date - a.date), "id");
+  return uniqBy(
+    all.sort((a, b) => b.date - a.date),
+    "id"
+  );
 }
 
 const doSignAndBroadcast = async ({
@@ -200,6 +202,8 @@ const fetchCurrentBlock = (perCurrencyId => currency => {
 })({});
 
 const currencyBridge: CurrencyBridge = {
+  preload: () => Promise.resolve(),
+  hydrate: () => {},
   scanAccountsOnDevice: (currency, deviceId) =>
     Observable.create(o => {
       let finished = false;
@@ -254,6 +258,7 @@ const currencyBridge: CurrencyBridge = {
                   derivationMode
                 }),
                 balance,
+                spendableBalance: balance,
                 blockHeight: currentBlock.height,
                 index,
                 currency,
@@ -289,6 +294,7 @@ const currencyBridge: CurrencyBridge = {
           derivationMode,
           name: getAccountPlaceholderName({ currency, index, derivationMode }),
           balance,
+          spendableBalance: balance,
           blockHeight: currentBlock.height,
           index,
           currency,
@@ -435,6 +441,7 @@ const startSync = ({ freshAddress, blockHeight, currency, operations }) =>
               pendingOperations,
               operations: ops,
               balance,
+              spendableBalance: balance,
               blockHeight: block.height,
               lastSyncDate: new Date()
             };
@@ -584,11 +591,8 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
   };
 };
 
-const fillUpExtraFieldToApplyTransactionNetworkInfo = (a, t, networkInfo) => ({
-  gasPrice: t.gasPrice || networkInfo.gasPrice
-});
-
 const getCapabilities = () => ({
+  canDelegate: false,
   canSync: true,
   canSend: true
 });
@@ -600,14 +604,7 @@ const accountBridge: AccountBridge<Transaction> = {
   getTransactionStatus,
   startSync,
   signAndBroadcast,
-  getCapabilities,
-  ...inferDeprecatedMethods({
-    name: "EthereumJSBridge",
-    createTransaction,
-    getTransactionStatus,
-    prepareTransaction,
-    fillUpExtraFieldToApplyTransactionNetworkInfo
-  })
+  getCapabilities
 };
 
 export default { currencyBridge, accountBridge };
