@@ -13,7 +13,7 @@ import {
   FeeRequired,
   FeeTooHigh,
   InvalidAddressBecauseDestinationIsAlsoSource,
-  NotEnoughBalance,
+  NotEnoughSpendableBalance,
   NotEnoughBalanceBecauseDestinationNotCreated
 } from "@ledgerhq/errors";
 import { makeLRUCache } from "../../../cache";
@@ -74,7 +74,7 @@ const getTransactionStatus = async (a, t) => {
     errors.fee = new FeeRequired();
     totalSpent.gt(a.balance.minus(baseReserve));
   } else if (totalSpent.gt(a.balance.minus(baseReserve))) {
-    errors.amount = new NotEnoughBalance();
+    errors.amount = new NotEnoughSpendableBalance();
   } else if (
     amount.lt(baseReserve) &&
     !(await isAddressActivated(a, t.recipient))
