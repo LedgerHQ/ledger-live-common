@@ -51,7 +51,6 @@
     "@ledgerhq/hw-app-xrp": "4",
     "@ledgerhq/hw-transport": "4",
     "@ledgerhq/hw-transport-mocker": "4",
-    "@ledgerhq/live-common": "file:.yalc/@ledgerhq/live-common",
     "@ledgerhq/logs": "4",
     "bignumber.js": "^9.0.0",
     "bip32-path": "^0.4.2",
