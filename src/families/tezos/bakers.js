@@ -87,16 +87,32 @@ export const fetchAllBakers = async () => {
   return r;
 };
 
-export const listBakers = async (
-  whitelistAddresses: string[]
-): Promise<Baker[]> => {
+function whitelist(all: Baker[], addresses: string[]) {
   const map = {};
-  const all = await cache();
   all.forEach(b => {
     map[b.address] = b;
   });
-  return whitelistAddresses.map(addr => map[addr]).filter(Boolean);
+  return addresses.map(addr => map[addr]).filter(Boolean);
+}
+
+export const listBakers = async (
+  whitelistAddresses: string[]
+): Promise<Baker[]> => {
+  const all = await cache();
+  return whitelist(all, whitelistAddresses);
 };
+
+export function useBakers(whitelistAddresses: string[]) {
+  const [bakers, setBakers] = useState(() =>
+    whitelist(_lastBakers || [], whitelistAddresses)
+  );
+
+  useEffect(() => {
+    listBakers(whitelistAddresses).then(setBakers);
+  }, [whitelistAddresses]);
+
+  return bakers;
+}
 
 export function getBakerSync(addr: string): ?Baker {
   if (_lastBakers) {
