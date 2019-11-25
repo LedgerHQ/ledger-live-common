@@ -2,6 +2,7 @@
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
 import {
+  AmountRequired,
   FeeNotLoaded,
   FeeRequired,
   FeeTooHigh,
@@ -76,8 +77,8 @@ const getTransactionStatus = async (a, t) => {
     errors.feePerByte = new FeeRequired();
   } else if (!errors.recipient) {
     await calculateFees(a, t).then(
-      _estimatedFees => {
-        estimatedFees = _estimatedFees;
+      res => {
+        estimatedFees = res.estimatedFees;
       },
       error => {
         if (error.name === "NotEnoughBalance") {
@@ -99,6 +100,10 @@ const getTransactionStatus = async (a, t) => {
 
   if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
     warnings.feeTooHigh = new FeeTooHigh();
+  }
+
+  if (!errors.amount && amount.eq(0)) {
+    errors.amount = new AmountRequired();
   }
 
   return Promise.resolve({
@@ -134,12 +139,6 @@ const prepareTransaction = async (
   };
 };
 
-const getCapabilities = () => ({
-  canDelegate: false,
-  canSync: true,
-  canSend: true
-});
-
 const currencyBridge: CurrencyBridge = {
   scanAccountsOnDevice,
   preload: () => Promise.resolve(),
@@ -152,8 +151,7 @@ const accountBridge: AccountBridge<Transaction> = {
   prepareTransaction,
   getTransactionStatus,
   startSync,
-  signAndBroadcast,
-  getCapabilities
+  signAndBroadcast
 };
 
 export default { currencyBridge, accountBridge };

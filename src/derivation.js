@@ -82,17 +82,16 @@ const modes = Object.freeze({
   },
   // default derivation of tezbox offerred to users
   tezbox: {
-    tag: "tezbox",
-    overridesDerivation: "44'/1729'/0'/0'",
-    isNonIterable: true,
+    overridesDerivation: "44'/1729'/<account>'/0'",
     libcoreConfig: {
-      TEZOS_XPUB_CURVE: "SECP256K1" // FIXME bug in libcore? it should be ED25519
+      TEZOS_XPUB_CURVE: "ED25519"
     }
   },
   tezosbip44h: {
+    tag: "galleon",
     overridesDerivation: "44'/1729'/<account>'/0'/0'",
     libcoreConfig: {
-      TEZOS_XPUB_CURVE: "SECP256K1" // FIXME bug in libcore? it should be ED25519
+      TEZOS_XPUB_CURVE: "ED25519"
     }
   },
   native_segwit: {
@@ -153,7 +152,7 @@ const legacyDerivations: $Shape<CryptoCurrencyConfig<DerivationMode[]>> = {
   vertcoin: ["vertcoin_128", "vertcoin_128_segwit"],
   ethereum: ["ethM", "ethMM"],
   ethereum_classic: ["ethM", "etcM", "ethMM"],
-  tezos: ["tezbox", "tezosbip44h"]
+  tezos: ["tezosbip44h", "tezbox"]
 };
 
 export const asDerivationMode = (derivationMode: string): DerivationMode => {

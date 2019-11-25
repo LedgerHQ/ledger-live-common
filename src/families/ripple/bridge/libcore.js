@@ -9,12 +9,18 @@ import { syncAccount } from "../../../libcore/syncAccount";
 import libcoreSignAndBroadcast from "../../../libcore/signAndBroadcast";
 import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
 import {
+  AmountRequired,
   FeeNotLoaded,
   FeeRequired,
   FeeTooHigh,
   InvalidAddressBecauseDestinationIsAlsoSource,
-  NotEnoughBalance
+  NotEnoughSpendableBalance,
+  NotEnoughBalanceBecauseDestinationNotCreated
 } from "@ledgerhq/errors";
+import { makeLRUCache } from "../../../cache";
+import type { Account } from "../../../types";
+import { withLibcore } from "../../../libcore/access";
+import { getCoreAccount } from "../../../libcore/getCoreAccount";
 
 const startSync = (initialAccount, _observation) => syncAccount(initialAccount);
 
@@ -36,6 +42,16 @@ const signAndBroadcast = (account, transaction, deviceId) =>
     transaction,
     deviceId
   });
+
+const isAddressActivated = makeLRUCache(
+  (account: Account, addr: string) =>
+    withLibcore(async core => {
+      const { coreAccount } = await getCoreAccount(core, account);
+      const rippleLikeAccount = await coreAccount.asRippleLikeAccount();
+      return await rippleLikeAccount.isAddressActivated(addr);
+    }),
+  (a, addr) => a.id + "|" + addr
+);
 
 const getTransactionStatus = async (a, t) => {
   const errors = {};
@@ -59,9 +75,13 @@ const getTransactionStatus = async (a, t) => {
     errors.fee = new FeeRequired();
     totalSpent.gt(a.balance.minus(baseReserve));
   } else if (totalSpent.gt(a.balance.minus(baseReserve))) {
-    errors.amount = new NotEnoughBalance();
+    errors.amount = new NotEnoughSpendableBalance();
+  } else if (
+    amount.lt(baseReserve) &&
+    !(await isAddressActivated(a, t.recipient))
+  ) {
+    errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated();
   }
-  // TODO take care of account not created ; NotEnoughBalanceBecauseDestinationNotCreated
 
   if (a.freshAddress === t.recipient) {
     errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
@@ -78,6 +98,10 @@ const getTransactionStatus = async (a, t) => {
     if (recipientWarning) {
       warnings.recipient = recipientWarning;
     }
+  }
+
+  if (!errors.amount && amount.eq(0)) {
+    errors.amount = new AmountRequired();
   }
 
   return Promise.resolve({
@@ -110,12 +134,6 @@ const prepareTransaction = async (a, t) => {
   return t;
 };
 
-const getCapabilities = () => ({
-  canDelegate: false,
-  canSync: true,
-  canSend: true
-});
-
 const currencyBridge: CurrencyBridge = {
   preload: () => Promise.resolve(),
   hydrate: () => {},
@@ -128,8 +146,7 @@ const accountBridge: AccountBridge<Transaction> = {
   prepareTransaction,
   getTransactionStatus,
   startSync,
-  signAndBroadcast,
-  getCapabilities
+  signAndBroadcast
 };
 
 export default { currencyBridge, accountBridge };

@@ -2,7 +2,10 @@
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import {
+  AmountRequired,
   NotEnoughBalance,
+  NotEnoughBalanceToDelegate,
+  NotEnoughBalanceInParentAccount,
   FeeNotLoaded,
   FeeTooHigh,
   InvalidAddressBecauseDestinationIsAlsoSource
@@ -57,7 +60,7 @@ const calculateFees = makeLRUCache(
       t.gasLimit ? t.gasLimit.toString() : ""
     }_${t.fees ? t.fees.toString() : ""}_${
       t.storageLimit ? t.storageLimit.toString() : ""
-    }`
+    }_${String(t.useAllAmount)}`
 );
 
 const startSync = (initialAccount, _observation) => syncAccount(initialAccount);
@@ -90,6 +93,11 @@ const getTransactionStatus = async (a, t) => {
     ? null
     : a.subAccounts && a.subAccounts.find(ta => ta.id === t.subAccountId);
 
+  invariant(
+    t.mode === "send" || !subAcc,
+    "delegation features not supported for sub accounts"
+  );
+
   const account = subAcc || a;
 
   if (t.mode !== "undelegate") {
@@ -112,12 +120,15 @@ const getTransactionStatus = async (a, t) => {
   }
 
   let estimatedFees = BigNumber(0);
+  let amount = t.amount;
+
   if (!t.fees) {
     errors.fees = new FeeNotLoaded();
   } else if (!errors.recipient) {
     await calculateFees(a, t).then(
-      f => {
-        estimatedFees = f;
+      res => {
+        estimatedFees = res.estimatedFees;
+        amount = res.value;
       },
       error => {
         if (error.name === "NotEnoughBalance") {
@@ -129,11 +140,13 @@ const getTransactionStatus = async (a, t) => {
     );
   }
 
+  if (!errors.amount && subAcc && estimatedFees.gt(a.balance)) {
+    errors.amount = new NotEnoughBalanceInParentAccount();
+  }
+
   let totalSpent = !t.useAllAmount
     ? t.amount.plus(estimatedFees)
     : account.balance;
-
-  let amount = t.useAllAmount ? account.balance.minus(estimatedFees) : t.amount;
 
   if (
     !errors.recipient &&
@@ -145,8 +158,17 @@ const getTransactionStatus = async (a, t) => {
     amount = BigNumber(0);
   }
 
-  if (t.mode === "send" && amount.gt(0) && estimatedFees.times(10).gt(amount)) {
-    warnings.feeTooHigh = new FeeTooHigh();
+  if (t.mode === "send") {
+    if (!errors.amount && amount.eq(0)) {
+      errors.amount = new AmountRequired();
+    } else if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
+      warnings.feeTooHigh = new FeeTooHigh();
+    }
+  } else {
+    // delegation case, we remap NotEnoughBalance to a more precise error
+    if (errors.amount instanceof NotEnoughBalance) {
+      errors.amount = new NotEnoughBalanceToDelegate();
+    }
   }
 
   return Promise.resolve({
@@ -212,20 +234,13 @@ const currencyBridge: CurrencyBridge = {
   scanAccountsOnDevice
 };
 
-const getCapabilities = () => ({
-  canDelegate: true,
-  canSync: true,
-  canSend: true
-});
-
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   updateTransaction,
   prepareTransaction,
   getTransactionStatus,
   startSync,
-  signAndBroadcast,
-  getCapabilities
+  signAndBroadcast
 };
 
 export default { currencyBridge, accountBridge };

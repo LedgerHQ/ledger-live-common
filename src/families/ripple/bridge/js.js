@@ -9,8 +9,9 @@ import bs58check from "ripple-bs58check";
 import { computeBinaryTransactionHash } from "ripple-hashes";
 import throttle from "lodash/throttle";
 import {
+  AmountRequired,
   NotEnoughBalanceBecauseDestinationNotCreated,
-  NotEnoughBalance,
+  NotEnoughSpendableBalance,
   InvalidAddress,
   FeeNotLoaded,
   FeeTooHigh,
@@ -35,7 +36,6 @@ import getAddress from "../../../hw/getAddress";
 import { open } from "../../../hw";
 import {
   apiForEndpointConfig,
-  defaultEndpoint,
   parseAPIValue,
   parseAPICurrencyObject,
   formatAPICurrencyXRP
@@ -669,7 +669,7 @@ const getTransactionStatus = async (a, t) => {
   } else if (t.fee.eq(0)) {
     errors.fee = new FeeRequired();
   } else if (totalSpent.gt(a.balance.minus(reserveBaseXRP))) {
-    errors.amount = new NotEnoughBalance();
+    errors.amount = new NotEnoughSpendableBalance();
   } else if (
     t.recipient &&
     (await cachedRecipientIsNew(a.endpointConfig, t.recipient)) &&
@@ -695,6 +695,10 @@ const getTransactionStatus = async (a, t) => {
     }
   }
 
+  if (!errors.amount && amount.eq(0)) {
+    errors.amount = new AmountRequired();
+  }
+
   return Promise.resolve({
     errors,
     warnings,
@@ -704,27 +708,13 @@ const getTransactionStatus = async (a, t) => {
   });
 };
 
-const getCapabilities = () => ({
-  canDelegate: false,
-  canSync: true,
-  canSend: true
-});
-
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   updateTransaction,
   prepareTransaction,
   getTransactionStatus,
   startSync,
-  signAndBroadcast,
-  getCapabilities,
-
-  getDefaultEndpointConfig: () => defaultEndpoint,
-
-  validateEndpointConfig: async endpointConfig => {
-    const api = apiForEndpointConfig(RippleAPI, endpointConfig);
-    await api.connect();
-  }
+  signAndBroadcast
 };
 
 export default { currencyBridge, accountBridge };

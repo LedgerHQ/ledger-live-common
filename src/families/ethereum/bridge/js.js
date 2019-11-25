@@ -7,6 +7,7 @@ import flatMap from "lodash/flatMap";
 import uniqBy from "lodash/uniqBy";
 import eip55 from "eip55";
 import {
+  AmountRequired,
   NotEnoughBalance,
   FeeNotLoaded,
   FeeTooHigh,
@@ -513,6 +514,9 @@ const getTransactionStatus = (a, t) => {
       currencyName: a.currency.name
     });
   }
+  if (!errors.amount && amount.eq(0)) {
+    errors.amount = new AmountRequired();
+  }
 
   return Promise.resolve({
     errors,
@@ -591,20 +595,13 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
   };
 };
 
-const getCapabilities = () => ({
-  canDelegate: false,
-  canSync: true,
-  canSend: true
-});
-
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   updateTransaction,
   prepareTransaction,
   getTransactionStatus,
   startSync,
-  signAndBroadcast,
-  getCapabilities
+  signAndBroadcast
 };
 
 export default { currencyBridge, accountBridge };

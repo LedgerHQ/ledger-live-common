@@ -1,7 +1,7 @@
 // @flow
 import { BigNumber } from "bignumber.js";
 import {
-  NotEnoughBalance,
+  NotEnoughSpendableBalance,
   NotEnoughBalanceBecauseDestinationNotCreated,
   InvalidAddressBecauseDestinationIsAlsoSource,
   InvalidAddress,
@@ -55,12 +55,12 @@ const getTransactionStatus = (a, t) => {
   }
 
   if (totalSpent.gt(a.balance)) {
-    errors.amount = new NotEnoughBalance();
+    errors.amount = new NotEnoughSpendableBalance();
   } else if (
     minimalBaseAmount &&
     a.balance.minus(totalSpent).lt(minimalBaseAmount)
   ) {
-    errors.amount = new NotEnoughBalance();
+    errors.amount = new NotEnoughSpendableBalance();
   } else if (
     minimalBaseAmount &&
     t.recipient.includes("new") &&
@@ -104,20 +104,13 @@ const prepareTransaction = async (a, t) => {
   return t;
 };
 
-const getCapabilities = () => ({
-  canDelegate: false,
-  canSync: true,
-  canSend: true
-});
-
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   updateTransaction,
   getTransactionStatus,
   prepareTransaction,
   startSync,
-  signAndBroadcast,
-  getCapabilities
+  signAndBroadcast
 };
 
 const currencyBridge: CurrencyBridge = {
