@@ -27,9 +27,14 @@ import { flattenAccounts, getAccountCurrency } from "./account";
 import { getEnv } from "./env";
 
 const dayIncrement = 24 * 60 * 60 * 1000;
+const hourIncrement = 60 * 60 * 1000;
 
 function startOfDay(t) {
   return new Date(t.getFullYear(), t.getMonth(), t.getDate());
+}
+
+function startOfHour(t) {
+  return new Date(t.getFullYear(), t.getMonth(), t.getDate(), t.getHours());
 }
 
 const perPortfolioRange: { [k: PortfolioRange]: * } = {
@@ -45,13 +50,28 @@ const perPortfolioRange: { [k: PortfolioRange]: * } = {
   },
   week: {
     count: 7,
-    increment: dayIncrement, // TODO hourly
+    increment: dayIncrement,
     startOf: startOfDay
   }
 };
 
+const experimental: { [k: PortfolioRange]: * } = {
+  week: {
+    count: 7 * 24,
+    increment: hourIncrement,
+    startOf: startOfHour
+  }
+};
+
+function getPortfolioRangeConf(r: PortfolioRange) {
+  if (getEnv("EXPERIMENTAL_COUNTERVALUES") && r in experimental) {
+    return experimental[r];
+  }
+  return perPortfolioRange[r];
+}
+
 export function getDates(r: PortfolioRange): Date[] {
-  const conf = perPortfolioRange[r];
+  const conf = getPortfolioRangeConf(r);
   let t = new Date();
   const array = [t];
   t = new Date(conf.startOf(t) - 1); // end of yesterday
@@ -74,7 +94,7 @@ type GetBalanceHistory = (
  * @memberof account
  */
 const getBalanceHistoryImpl: GetBalanceHistory = (account, r) => {
-  const conf = perPortfolioRange[r];
+  const conf = getPortfolioRangeConf(r);
   const history = [];
   let { balance } = account;
   const operationsLength = account.operations.length;
