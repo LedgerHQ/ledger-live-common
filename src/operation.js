@@ -42,7 +42,6 @@ export function flattenOperationWithInternals(op: Operation): Operation[] {
 }
 
 export function getOperationAmountNumber(op: Operation): BigNumber {
-  if (op.hasFailed) return BigNumber(0);
   switch (op.type) {
     case "IN":
       return op.value;
@@ -50,6 +49,7 @@ export function getOperationAmountNumber(op: Operation): BigNumber {
     case "REVEAL":
     case "CREATE":
     case "DELEGATE":
+    case "UNDELEGATE":
       return op.value.negated();
     default:
       return BigNumber(0);
