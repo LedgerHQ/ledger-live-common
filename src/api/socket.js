@@ -102,12 +102,14 @@ export const createDeviceSocket = (
     };
 
     ws.onerror = e => {
-      if (ignoreError) return;
       log({ type: "socket-error", message: e.message, stack: e.stack });
-      if (!inBulk || !ignoreWebsocketErrorDuringBulk) {
-        terminated = true;
-        o.error(new WebsocketConnectionError(e.message, { url }));
-      }
+      setTimeout(() => {
+        if (ignoreError || terminated) return;
+        if (!inBulk || !ignoreWebsocketErrorDuringBulk) {
+          terminated = true;
+          o.error(new WebsocketConnectionError(e.message, { url }));
+        }
+      }, 1000);
     };
 
     ws.onclose = () => {
