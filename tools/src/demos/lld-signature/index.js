@@ -238,7 +238,7 @@ const LLDSignature = () => {
 
           <Block>
             For extra security, you should also check that the sha512 hashes published in the file {" "}
-            <code>{checksumsFilename}</code>  are indeed signed by Ledger. The multi-signature setup is used internally
+            <code>{checksumsFilename}</code>  are indeed signed by Ledger. A multi-signature setup is used internally
             using Ledger Nano S devices to mitigate a malicious insider attack.
           </Block>
 
