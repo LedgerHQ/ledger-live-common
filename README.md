@@ -1,58 +1,78 @@
-# ledger-wallet-common
+## “Ledger Live Common” `@ledgerhq/live-common`
 
-Common ground for the Ledger Live apps
+`````
+                ````
+           `.--:::::
+        `.-:::::::::       ````
+       .://///:-..``     `-/+++/-`
+     `://///-`           -++++++o/.
+    `/+++/:`            -+++++osss+`
+   `:++++:`            ./++++-/osss/`
+   .+++++`             `-://- .ooooo.
+   -+ooo/`                ``  `/oooo-
+   .oooo+` .::-.`             `+++++.
+   `+oooo:./+++/.             -++++/`
+    -ossso+++++:`            -/+++/.
+     -ooo+++++:`           .://///.
+      ./+++++/`       ``.-://///:`
+        `---.`      -:::::///:-.
+                    :::::::-.`
+                    ....``
 
-## Install
+`````
 
-```
-yarn add @ledgerhq/live-common
-```
+Ledger Live Common (`@ledgerhq/live-common`) is a JavaScript library available via a [NPM package](https://npmjs.com/@ledgerhq/live-common).
 
-## Development
+This library depends on a bunch of [ledgerjs packages](https://github.com/LedgerHQ/ledgerjs) and put together the core business logic behind [Ledger Live Desktop](https://github.com/LedgerHQ/ledger-live-desktop) and [Ledger Live Mobile](https://github.com/LedgerHQ/ledger-live-mobile).
 
-```
-yarn          # install deps
-yarn build    # build live-common...
-yarn watch    # ...or watch to faster re-build
-yarn test     # test exclusively live-common
-```
+The stack is pretty standard for a ES6 and FlowType library. The notable dependencies are libraries like **RxJS** and **BigNumber.js**. There is also a bit of React and Redux but exposed in agnostic ways (meaning it's not mandatory to use – there will be dedicated entry point for them to offer utilities like React Hooks).
 
-### `tool` folder is a `ledger-live` command-line
+## Documentation
 
-To run it for development and have the latest sourcecode running we need to either copy the lib folder of live-common in tool/node*modules or use something like yalc. \_We used to use yarn link but symlink are not properly working and creating dup issues.*
-You likely want to run `yarn watch` in a terminal and do this in another terminal (from top level):
+- [Introduction, Goals and Tradeoffs](./docs/intro.md)
+- Getting started
+  - [Setup to use `@ledgerhq/live-common`](./docs/live-common-setup.md)
+  - [`ledger-live` CLI](./docs/cli.md)
+  - **tools** web playground
+  - `mobile-test-app` test project
+- Learn by example
+  - [gist: transaction with a Ledger device](./docs/gist-tx.md)
+  - gist: Update firmware of a Ledger device
+  - ...
+- [The Currency models](./docs/currency.md) and utilities
+- [The Account models and portfolio logic](./docs/account.md)
+- The [CurrencyBridge](./docs/CurrencyBridge.md): scan accounts with a device
+  - `preload` and `hydrate`
+  - `scanAccountsWithDevice`
+- The [AccountBridge](./docs/CurrencyBridge.md): synchronize an account and perform transaction
+  - `startSync`
+  - Build a transaction with `createTransaction` and `updateTransaction`
+  - `prepareTransaction`
+  - `getTransactionStatus`
+  - `signAndBroadcast`
+  - React: `useTransactionBridge` hook
+- [Apps store logic](./docs/apps.md)
+- [Firmware Update logic](./docs/firmware-update.md)
+- [Countervalues logic](./docs/countervalues.md)
+- Coin integration specifics
+  - [Introduction](./docs/ci-intro.md)
+  - Bridge implementations, where to start? (JS, Libcore, Mock)
+  - Implementing the hardware wallet logic of a new coin
+  - The account derivation (BIP44 and exceptions)
+- Advanced
+  - env.js: live-common configuration system
+  - Serialization and reconciliation
+  - libcore typing and wrapping
+  - cross.js and "LiveQR" protocol
+  - cache.js helpers
+  - Tokens management and ERC20
+  - [Developing with lib-ledger-core bindings](./docs/adding-libcore-bindings.md)
 
-```
-yalc publish # link live-common
-cd tool/
-yarn
-yalc add @ledgerhq/live-common
-yarn link    # will make ledger-live CLI available
-yarn watch   # incremental build as well
-```
+### Developing with Ledger Live Common
 
-Assuming that `yarn global bin` is in your `$PATH`,
-
-You can run:
-
-```
-ledger-live
-```
-
-and it will always use your latest sourcecode.
-
-## Release flow
-
-to run **exclusively on master**
-
-```
-yarn publish
-git push
-git push --tags
-```
-
-you also likely want to update `tool` and release a new version as well (second commit).
-
-## Adding cryptocurrencies
-
-Please find instruction in [`src/data/cryptocurrencies.js`](src/data/cryptocurrencies.js).
+- [Developing setup](./docs/developing.md)
+- The different test approaches
+  - Unit test of live-common logic
+  - End-to-end tests of the `ledger-live` command
+  - Bridge dataset tests
+  - Providing mocks to implement UI tests

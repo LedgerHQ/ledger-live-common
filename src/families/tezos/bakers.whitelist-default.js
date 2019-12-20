@@ -10,7 +10,6 @@ const whitelist = [
   "tz1PWCDnz783NNGGQjEFFsHtrcK5yBW4E2rm",
   "tz1d6Fx42mYgVFnHUW8T8A7WBfJ6nD9pVok8",
   "tz1RV1MBbZMR68tacosb7Mwj6LkbPSUS1er1",
-  "tz1isXamBXpTUgbByQ6gXgZQg4GWNW7r6rKE",
   "tz1KfEsrtDaA1sX7vdM4qmEPWuSytuqCDp5j",
   "tz1gk3TDbU7cJuiBRMhwQXVvgDnjsxuWhcEA",
   "tz1QLXqnfN51dkjeghXvKHkJfhvGiM5gK4tc",
@@ -22,7 +21,6 @@ const whitelist = [
   "tz1Kf25fX1VdmYGSEzwFy1wNmkbSEZ2V83sY",
   "tz1RCFbB9GpALpsZtu6J58sb74dm8qe6XBzv",
   "tz1eEnQhbwf6trb8Q8mPb2RaPkNk2rN7BKi8",
-  "tz1RSWMYKGAykpizFteowByYMueCYv9TMn1L",
   "tz1PeZx7FXy7QRuMREGXGxeipb24RsMMzUNe"
 ];
 

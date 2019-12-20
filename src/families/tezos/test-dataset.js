@@ -24,7 +24,7 @@ const accountTZwithKT = makeAccount(
 );
 const accountTZnew = makeAccount(
   "TZnew",
-  "02e4c49994c90ffe2e5480826d2f49fb9d0f45280e20bd0a61c488f652d7af0f9c",
+  "02a9ae8b0ff5f9a43565793ad78e10db6f12177d904d208ada591b8a5b9999e3fd",
   "tezbox"
 );
 const accountTZnotRevealed = makeAccount(
@@ -46,7 +46,7 @@ const accountTZemptyWithKT = makeAccount(
 const addressAccountTZrevealedDelegating =
   "tz1boBHAVpwcvKkNFAQHYr7mjxAz1PpVgKq7";
 const addressTZregular = "tz1T72nyqnJWwxad6RQnh7imKQz7mzToamWd";
-const addressTZnew = "tz1MyR5fokb1o4bvSBtFErK6fxrkWgpvtpw9";
+const addressTZnew = "tz1VSichevvJSNkSSntgwKDKikWNB6iqNJii";
 const addressKT = "KT1V99vDN5DHNpU9swVXg1cAT2ji981cccXC";
 const addressDelegator = "tz1WCd2jm4uSt4vntk4vSuUWoZQGhLcDuR9q";
 
@@ -261,7 +261,7 @@ const dataset: DatasetTest<Transaction> = {
                 {
                   errors: {},
                   estimatedFees: fees.times(2),
-                  amount: account.balance.div(10).minus(fees.times(2)),
+                  amount: account.balance.div(10),
                   totalSpent: account.balance.div(10).plus(fees.times(2))
                 }
               )
@@ -322,7 +322,10 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "from KT 2, send max to existing account",
               transaction: (t, account) => (
-                invariant(account.subAccounts, "subAccounts"),
+                invariant(
+                  account.subAccounts && account.subAccounts[1],
+                  "subAccounts"
+                ),
                 {
                   ...t,
                   subAccountId: account.subAccounts[1].id,
@@ -330,14 +333,17 @@ const dataset: DatasetTest<Transaction> = {
                   useAllAmount: true
                 }
               ),
-              expectedStatus: ({ subAccounts }, { fees }) => (
-                invariant(subAccounts && fees, "fees are required"),
+              expectedStatus: ({ subAccounts }, { fees, storageLimit }) => (
+                invariant(
+                  subAccounts && fees && storageLimit,
+                  "fees are required"
+                ),
                 {
                   errors: {},
                   warnings: {},
                   estimatedFees: fees,
-                  amount: subAccounts[1].balance,
-                  totalSpent: subAccounts[1].balance
+                  amount: subAccounts[1].balance.minus(storageLimit),
+                  totalSpent: subAccounts[1].balance.minus(storageLimit)
                 }
               )
             }
