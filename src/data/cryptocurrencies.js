@@ -2497,7 +2497,7 @@ export function getCryptoCurrencyById(id: string): CryptoCurrency {
     throw new Error(`currency with id "${id}" not found`);
   }
   return currency;
-}
+} 
 
 export function setSupportedCurrencies(ids: CryptoCurrencyIds[]) {
   userSupportedCurrencies = ids.map(id => getCryptoCurrencyById(id));
