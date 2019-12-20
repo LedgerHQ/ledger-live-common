@@ -185,10 +185,10 @@ const LLDSignature = () => {
 
       <h2>Verify my Ledger Live install binary</h2>
 
-      <block>
+      <Block>
         You can verify the authenticity of the Ledger Live binary installation file by comparing its <strong>sha512</strong> hash to the one available
         in this file:
-      </block>
+      </Block>
 
       {checksums ? (
         <>
@@ -236,11 +236,11 @@ const LLDSignature = () => {
         <>
           <h2>Verify the sha512sum hashes</h2>
 
-          <block>
+          <Block>
             For extra security, you should also check that the sha512 hashes published in the file {" "}
             <code>{checksumsFilename}</code>  are indeed signed by Ledger. The multi-signature setup is used internally
             using Ledger Nano S devices to mitigate a malicious insider attack.
-          </block>
+          </Block>
 
           <Field>
             <FieldHeader>
@@ -277,11 +277,11 @@ Verified OK`}
 
           <h2>What about automatic updates</h2>
 
-          <block>
+          <Block>
             The update mechanism is secured once you've verified and installed Ledger Live. 
             Ledger Live checks each upcoming update against Ledger's public key
             to verify that the update is legitimately from Ledger.
-          </block>
+          </Block>
         </>
       ) : null}
     </Main>
