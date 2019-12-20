@@ -229,7 +229,10 @@ accountsRelated
         });
 
         test("empty transaction correctly serialize", () => {
-          const t = bridge.createTransaction(initialAccount);
+          const t = {
+            ...bridge.createTransaction(initialAccount),
+            resource: null
+          };
           expect(fromTransactionRaw(toTransactionRaw(t))).toEqual(t);
         });
 
@@ -238,7 +241,8 @@ accountsRelated
           const t = {
             ...bridge.createTransaction(account),
             amount: BigNumber(1000),
-            recipient: account.freshAddress
+            recipient: account.freshAddress,
+            resource: null
           };
           expect(fromTransactionRaw(toTransactionRaw(t))).toEqual(t);
         });
@@ -262,7 +266,8 @@ accountsRelated
           await expectStability(account, {
             ...bridge.createTransaction(account),
             amount: BigNumber(1000),
-            recipient: account.freshAddress
+            recipient: account.freshAddress,
+            resource: null
           });
         });
 
@@ -271,7 +276,8 @@ accountsRelated
           const t = {
             ...bridge.createTransaction(account),
             amount: BigNumber(1000),
-            recipient: account.freshAddress
+            recipient: account.freshAddress,
+            resource: null
           };
           const stable = await bridge.prepareTransaction(account, t);
           const first = await bridge.prepareTransaction(account, stable);

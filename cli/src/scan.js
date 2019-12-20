@@ -148,7 +148,10 @@ export const inferCurrency = <
   return withDevice(device || "")(t =>
     from(
       getAppAndVersion(t)
-        .then(r => getCurrencyByKeyword(r.name), () => undefined)
+        .then(
+          r => getCurrencyByKeyword(r.name),
+          () => undefined
+        )
         .then(r => delay(500).then(() => r))
     )
   );
