@@ -185,11 +185,10 @@ const LLDSignature = () => {
 
       <h2>Verify my Ledger Live install binary</h2>
 
-      <Block>
-        You can verify with <strong>sha512</strong> that Ledger Live binary
-        installation file is correct by comparing its hash to the one available
+      <p>
+        You can verify the authenticity of the Ledger Live binary installation file by comparing its <strong>sha512</strong> hash to the one available
         in this file:
-      </Block>
+      </p>
 
       {checksums ? (
         <>
@@ -235,15 +234,13 @@ const LLDSignature = () => {
       checksumsSig &&
       !checksumsFetchError ? (
         <>
-          <h2>Verify that sha512sum hashes are from Ledger</h2>
+          <h2>Verify the sha512sum hashes</h2>
 
-          <Block>
-            For an extra security, you should also check that{" "}
-            <code>{checksumsFilename}</code> content available here is correctly
-            signed by Ledger. Internally, we have a multi-signature setup
-            implemented on Nano S devices. This mitigates the malicious insider
-            threat.
-          </Block>
+          <p>
+            For extra security, you should also check that the sha512 hashes published in the file {" "}
+            <code>{checksumsFilename}</code>  are indeed signed by Ledger. The multi-signature setup is used internally
+            using Ledger Nano S devices to mitigate a malicious insider attack.
+          </p>
 
           <Field>
             <FieldHeader>
@@ -278,15 +275,13 @@ const LLDSignature = () => {
 Verified OK`}
           </BlockCode>
 
-          <h2>What about my Ledger Live auto update?</h2>
+          <h2>What about automatic updates</h2>
 
-          <Block>
-            Once you have verified and installed Ledger Live, you can assume the
-            auto updates mechanism is secured: Ledger Live has hardcoded the
-            public key of Ledger Live and will use it against the upcoming
-            update to verify the update is legit and from Ledger (the same way
-            described here).
-          </Block>
+          <p>
+            The update mechanism is secured once you've verified and installed Ledger Live. 
+            Ledger Live checks each upcoming update against Ledger's public key
+            to verify that the update is legitimately from Ledger.
+          </p>
         </>
       ) : null}
     </Main>
