@@ -4,6 +4,7 @@ import type { BigNumber } from "bignumber.js";
 import type { CryptoCurrency, TokenCurrency, Unit } from "./currencies";
 import type { OperationRaw, Operation } from "./operation";
 import type { DerivationMode } from "../derivation";
+import type { BalanceHistory } from "./portfolio";
 
 // A token belongs to an Account and share the parent account address
 export type TokenAccount = {
@@ -127,7 +128,12 @@ export type Account = {
   // I'm just inside the Ethereum 1: { account: Ethereum 1, parentAccount: undefined }
   // "account" is the primary account that you use/select/view. It is a `AccountLike`.
   // "parentAccount", if available, is the contextual account. It is a `?Account`.
-  subAccounts?: SubAccount[]
+  subAccounts?: SubAccount[],
+
+  // An array of { Date: BigNumber } pairs that represented the balance evolution throughout
+  // time. This can be used to represent the balance in things like the chart without recomputing
+  // the operations for an account.
+  balanceHistory?: BalanceHistory
 };
 
 export type SubAccount = TokenAccount | ChildAccount;

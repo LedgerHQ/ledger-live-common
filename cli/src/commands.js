@@ -9,7 +9,7 @@ import {
   empty,
   Observable,
   interval,
-  throwError
+  throwError,
 } from "rxjs";
 import {
   filter,
@@ -71,6 +71,10 @@ import { apdusFromFile } from "./stream";
 import { toAccountRaw } from "@ledgerhq/live-common/lib/account/serialization";
 import { Buffer } from "buffer";
 import appsUpdateTestAll from "./cmds/appsUpdateTestAll";
+import { getCoreAccount } from "@ledgerhq/live-common/lib/libcore/getCoreAccount";
+import getAccountBalanceHistory from "@ledgerhq/live-common/lib/libcore/getAccountBalanceHistory";
+import { getBalanceHistory } from "@ledgerhq/live-common/lib/portfolio"
+import { formatCurrencyUnit} from "@ledgerhq/live-common/lib/currencies"
 
 const getAccountNetworkInfoFormatters = {
   json: e => JSON.stringify(e)
@@ -698,6 +702,52 @@ const all = {
         map(account =>
           (accountFormatters[opts.format] || accountFormatters.default)(account)
         )
+      )
+  },
+
+  // FIXME @gre don't know if with the new granularity we need to change to have hours as 0
+  // or we need a libcore bump first
+  getAccountBalances: {
+    description: "Get the balance history for accounts",
+    args: [
+      ...scanCommonOpts,
+      {
+        name: "period",
+        alias: "p",
+        type: String,
+        desc: "week | month | year"
+      },
+      {
+        name: "granularity",
+        alias: "g",
+        type: String,
+        desc: "day = 0 | week = 1 | month = 2"
+      },
+      {
+        name: "format",
+        alias: "f",
+        type: String,
+        typeDesc: Object.keys(getAccountNetworkInfoFormatters).join(" | "),
+        desc: "how to display the data"
+      },
+      {
+        name: "impl",
+        type: String,
+        desc: "javascript or libcore impl"
+      }
+    ],
+    job: (opts: ScanCommonOpts & { format: string, period: string, granularity: number, impl: string }) =>
+      scan(opts).pipe(
+        mergeMap(async account =>
+          withLibcore(async core => {
+            const { coreAccount } = await getCoreAccount(core, account);
+            const { period, granularity, impl } = opts
+            return (impl === "libcore"?
+              (await getAccountBalanceHistory(coreAccount, period, granularity)):
+              getBalanceHistory(account, period).history
+            ).map(({date, value})=>date.toISOString() + " " + formatCurrencyUnit(account.unit, value, { showCode: true, disableRounding: true })).join("\n");
+          })
+        ),
       )
   },
 

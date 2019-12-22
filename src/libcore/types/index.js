@@ -56,8 +56,19 @@ declare class CoreWallet {
   ): Promise<CoreAccount>;
 }
 
+export const TimePeriod = {
+  DAY: 0,
+  WEEK: 1,
+  MONTH: 2
+};
+
 declare type CoreAccount = {
   getBalance(): Promise<CoreAmount>,
+  getBalanceHistory(
+    from: string,
+    to: string,
+    timePeriod: $Values<typeof TimePeriod>
+  ): Promise<CoreAmount>,
   getLastBlock(): Promise<CoreBlock>,
   getFreshPublicAddresses(): Promise<CoreAddress[]>,
   getRestoreKey(): Promise<string>,
@@ -370,6 +381,9 @@ export const reflect = (declare: (string, Spec) => void) => {
       ...AccountMethods,
       getBalance: {
         returns: "Amount"
+      },
+      getBalanceHistory: {
+        returns: ["Amount"]
       },
       getLastBlock: {
         returns: "Block"

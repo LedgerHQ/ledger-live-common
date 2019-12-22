@@ -23,6 +23,10 @@ import {
 import dataset from "@ledgerhq/live-common/lib/generated/test-dataset";
 import specifics from "@ledgerhq/live-common/lib/generated/test-specifics";
 import { setup } from "../live-common-setup-test";
+import {withLibcore} from "@ledgerhq/live-common/lib/libcore/access";
+import {getCoreAccount} from "@ledgerhq/live-common/lib/libcore/getCoreAccount";
+import getAccountBalanceHistory from "@ledgerhq/live-common/lib/libcore/getAccountBalanceHistory";
+import {getBalanceHistory} from "@ledgerhq/live-common/lib/portfolio";
 
 const blacklistOpsSumEq = {
   currencies: ["ripple", "ethereum"],
@@ -213,6 +217,21 @@ accountsRelated
           });
         });
       });
+
+      
+      // FIXME, tests don't match for some of the cases
+      // see https://ledgerhq.atlassian.net/browse/LLC-475
+      if(impl==="libcore"){
+        test("balanceHistory", async () => {
+          await withLibcore(async core => {
+            const account = await getSynced();
+            const { coreAccount } = await getCoreAccount(core, account);
+            const libcoreBalanceHistory = await getAccountBalanceHistory(coreAccount, "week", 0);
+            const { history } = getBalanceHistory(account, "week");
+            expect(libcoreBalanceHistory.map(b=>b.value)).toEqual(history.map(b=>b.value));
+          });
+        });
+      }
 
       describe("createTransaction", () => {
         test("empty transaction is an object with empty recipient and zero amount", () => {

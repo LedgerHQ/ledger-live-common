@@ -32,6 +32,8 @@ function startOfDay(t) {
   return new Date(t.getFullYear(), t.getMonth(), t.getDate());
 }
 
+export const getPortfolioRange = (k: PortfolioRange) => perPortfolioRange[k];
+
 const perPortfolioRange: { [k: PortfolioRange]: * } = {
   year: {
     count: 365,
