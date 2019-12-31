@@ -1,6 +1,7 @@
 // @flow
 
 import invariant from "invariant";
+import flatMap from "lodash/flatMap";
 import { getAccountCurrency } from "../../account";
 import type {
   Transaction,
@@ -64,18 +65,14 @@ function inferTransactions(
   opts: Object,
   { inferAmount }: *
 ): Transaction[] {
-  return transactions.flatMap(({ transaction, account }) => {
+  return flatMap(transactions, ({ transaction, account }) => {
     invariant(transaction.family === "tron", "tron family");
-    
-    let subAccountId;
-    if (account.type === "TokenAccount") {
-      subAccountId = account.id;
-    }
+
     return {
       ...transaction,
       mode: opts.mode || "send",
       family: "tron",
-      subAccountId,
+      subAccountId: account.type === "TokenAccount" ? account.id : null,
       resource: opts.resource
     };
   });
