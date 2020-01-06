@@ -237,7 +237,7 @@ export const reflect = (declare: (string, Spec) => void) => {
         returns: "BigInt"
       },
       getERC20Balances: {
-        returns: ["CoreBigInt"]
+        returns: ["BigInt"]
       }
     }
   });
