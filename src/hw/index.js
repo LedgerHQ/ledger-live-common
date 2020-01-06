@@ -57,9 +57,13 @@ export const discoverDevices = (
   );
 };
 
-export const open = (deviceId: string): Promise<Transport<*>> => {
+export const open = (
+  deviceId: string,
+  transportId?: string
+): Promise<Transport<*>> => {
   for (let i = 0; i < modules.length; i++) {
     const m = modules[i];
+    if (transportId && m.id !== transportId) continue;
     const p = m.open(deviceId);
     if (p) return p;
   }

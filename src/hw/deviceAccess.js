@@ -81,7 +81,7 @@ export const cancelDeviceAction = (transport: Transport<*>) => {
 
 const deviceQueues = {};
 
-export const withDevice = (deviceId: string) => <T>(
+export const withDevice = (deviceId: string, transportId?: string) => <T>(
   job: (t: Transport<*>) => Observable<T>
 ): Observable<T> =>
   Observable.create(o => {
@@ -107,7 +107,7 @@ export const withDevice = (deviceId: string) => <T>(
 
     // for any new job, we'll now wait the exec queue to be available
     deviceQueue
-      .then(() => open(deviceId)) // open the transport
+      .then(() => open(deviceId, transportId)) // open the transport
       .then(async transport => {
         if (unsubscribed) {
           // it was unsubscribed prematurely
@@ -179,11 +179,16 @@ export const retryWhileErrors = (acceptError: Error => boolean) => (
     })
   );
 
-export const withDevicePolling = (deviceId: string) => <T>(
+export const withDevicePolling = (deviceId: string, transportId?: string) => <
+  T
+>(
   job: (Transport<*>) => Observable<T>,
   acceptError: Error => boolean = genericCanRetryOnError
 ): Observable<T> =>
-  withDevice(deviceId)(job).pipe(
+  withDevice(
+    deviceId,
+    transportId
+  )(job).pipe(
     // $FlowFixMe
     retryWhen(retryWhileErrors(acceptError))
   );
