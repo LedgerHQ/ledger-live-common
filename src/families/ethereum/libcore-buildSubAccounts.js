@@ -1,7 +1,8 @@
 // @flow
 
+import type { BigNumber } from "bignumber.js";
 import type { CryptoCurrency, TokenAccount, Account } from "../../types";
-import type { CoreAccount } from "../../libcore/types";
+import type { CoreAccount, CoreBigInt } from "../../libcore/types";
 import type { CoreEthereumLikeAccount, CoreERC20LikeAccount } from "./types";
 import { libcoreBigIntToBigNumber } from "../../libcore/buildBigNumber";
 import { minimalOperationsBuilder } from "../../reconciliation";
@@ -15,11 +16,9 @@ async function buildERC20TokenAccount({
   parentAccountId,
   token,
   coreTokenAccount,
-  existingTokenAccount
+  existingTokenAccount,
+  balance,
 }) {
-  const balance = await libcoreBigIntToBigNumber(
-    await coreTokenAccount.getBalance()
-  );
 
   const coreOperations = await coreTokenAccount.getOperations();
   const id = parentAccountId + "+" + token.contractAddress;
@@ -46,6 +45,11 @@ async function buildERC20TokenAccount({
   };
 
   return tokenAccount;
+}
+
+async function getERC20Address(erc20LA: CoreERC20LikeAccount): Promise<string> {
+  const token = await erc20LA.getToken();
+  return await token.getContractAddress();
 }
 
 async function ethereumBuildTokenAccounts({
@@ -76,9 +80,15 @@ async function ethereumBuildTokenAccounts({
     }
   }
 
-  for (const coreTA of coreTAS) {
-    const coreToken = await coreTA.getToken();
-    const contractAddress = await coreToken.getContractAddress();
+  const  coreTAContractAddresses = await Promise.all(
+    coreTAS.map(getERC20Address)
+  );
+
+  const coreTAB: CoreBigInt[] = await ethAccount.getERC20Balances(coreTAContractAddresses);
+
+  for (const [index, coreTA] of coreTAS.entries()) {
+    const contractAddress: string = coreTAContractAddresses[index];
+    const contractBalance: BigNumber = await libcoreBigIntToBigNumber(coreTAB[index]);
     const token = findTokenByAddress(contractAddress);
     if (token) {
       const existingTokenAccount = existingAccountByTicker[token.ticker];
@@ -86,7 +96,8 @@ async function ethereumBuildTokenAccounts({
         parentAccountId: accountId,
         existingTokenAccount,
         token,
-        coreTokenAccount: coreTA
+        coreTokenAccount: coreTA,
+        balance: contractBalance
       });
       if (tokenAccount) tokenAccounts.push(tokenAccount);
     }
