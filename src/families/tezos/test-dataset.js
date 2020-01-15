@@ -64,12 +64,7 @@ const dataset: DatasetTest<Transaction> = {
     tezos: {
       accounts: [
         {
-          FIXME_tests: [
-            // LM-495
-            "balance is sum of ops",
-            // LM-495
-            "existing operations"
-          ],
+          FIXME_tests: [],
           raw: accountTZrevealedDelegating,
           transactions: [
             {
