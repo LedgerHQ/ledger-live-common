@@ -9,8 +9,7 @@ import {
   getSeedIdentifierDerivation,
   derivationModeSupportsIndex,
   isIterableDerivationMode,
-  getMandatoryEmptyAccountSkip,
-  getDerivationModeStartsAt
+  getMandatoryEmptyAccountSkip
 } from "../derivation";
 import {
   getWalletName,
@@ -203,7 +202,7 @@ export const scanAccountsOnDevice = (
               wallet,
               transport,
               currency,
-              accountIndex: getDerivationModeStartsAt(derivationMode),
+              accountIndex: 0,
               onAccountScanned,
               seedIdentifier,
               derivationMode,

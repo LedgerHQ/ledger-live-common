@@ -9,8 +9,7 @@ import {
   runDerivationScheme,
   isIterableDerivationMode,
   derivationModeSupportsIndex,
-  getMandatoryEmptyAccountSkip,
-  getDerivationModeStartsAt
+  getMandatoryEmptyAccountSkip
 } from "../derivation";
 import {
   getAccountPlaceholderName,
@@ -209,8 +208,7 @@ export const makeScanAccountsOnDevice = (getAccountShape: GetAccountShape) => (
             currency
           });
           const stopAt = isIterableDerivationMode(derivationMode) ? 255 : 1;
-          const startsAt = getDerivationModeStartsAt(derivationMode);
-          for (let index = startsAt; index < stopAt; index++) {
+          for (let index = 0; index < stopAt; index++) {
             if (!derivationModeSupportsIndex(derivationMode, index)) continue;
             const freshAddressPath = runDerivationScheme(
               derivationScheme,
