@@ -16,10 +16,9 @@ import type {
 } from "../../../types";
 import type {
   NetworkInfo,
-  Transaction,
-  SendTransactionData,
-  SendTransactionDataSuccess
+  Transaction
 } from "../types";
+import { encode58Check } from "../utils";
 import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
 import { findTokenById } from "../../../data/tokens";
 import { open } from "../../../hw";
@@ -34,103 +33,131 @@ import {
 } from "@ledgerhq/errors";
 import { tokenList } from "../tokens-name-hex";
 import {
-  createTronTransaction,
   broadcastTron,
+  claimRewardTronTransaction,
+  createTronTransaction,
+  extractBandwidthInfo,
   fetchTronAccount,
   fetchTronAccountTxs,
   getTronAccountNetwork,
+  getTronResources,
   validateAddress,
   freezeTronTransaction,
-  unfreezeTronTransaction
+  unfreezeTronTransaction,
+  voteTronSuperRepresentatives
 } from "../../../api/Tron";
 
 const AVERAGE_BANDWIDTH_COST = 200;
 
-const b58 = hex => bs58check.encode(Buffer.from(hex, "hex"));
+const signOperation = ({ account, transaction, deviceId }) =>
+  Observable.create(o => {
+    async function main() {
+      const subAccount =
+        transaction.subAccountId && account.subAccounts
+          ? account.subAccounts.find(sa => sa.id === transaction.subAccountId)
+          : null;
 
-async function doSignAndBroadcast({
-  a,
-  t,
-  deviceId,
-  isCancelled,
-  onSigned,
-  onOperationBroadcasted
-}) {
-  const subAccount =
-    t.subAccountId && a.subAccounts
-      ? a.subAccounts.find(sa => sa.id === t.subAccountId)
-      : null;
-
-  const getPreparedTransaction = () => {
-    switch(t.mode) {
-      case "unfreeze":
-        return unfreezeTronTransaction(a, t);
-      case "freeze":
-        return freezeTronTransaction(a, t);
-      default:
-        return createTronTransaction(a, t, subAccount);
-    }
-  }
-
-  const preparedTransaction = await getPreparedTransaction();
-  const transport = await open(deviceId);
-
-  try {
-    // Sign by device
-    const signature = await signTransaction(
-      a.currency,
-      transport,
-      a.freshAddressPath,
-      {
-        rawDataHex: preparedTransaction.raw_data_hex,
-        assetName: subAccount && subAccount.type === 'TokenAccount'
-          ? [
-              tokenList.find(
-                t => t.id.toString() === subAccount.token.id.split("/")[2]
-              ).message
-            ] // TODO: Find a better way to store this data ? where ? Not really typesafe too
-          : undefined
+      const getPreparedTransaction = () => {
+        switch(transaction.mode) {
+          case "unfreeze":
+            return unfreezeTronTransaction(account, transaction);
+          case "freeze":
+            return freezeTronTransaction(account, transaction);
+          case "vote":
+            return voteTronSuperRepresentatives(account, transaction);
+          case "claimReward":
+            return claimRewardTronTransaction(account);
+          default:
+            return createTronTransaction(account, transaction, subAccount);
+        }
       }
+
+      const preparedTransaction = await getPreparedTransaction();
+      const transport = await open(deviceId);
+
+      try {
+        o.next({ type: "device-signature-requested" });
+
+        // Sign by device
+        const signature = await signTransaction(
+          account.currency,
+          transport,
+          account.freshAddressPath,
+          {
+            rawDataHex: preparedTransaction.raw_data_hex,
+            assetName: subAccount && subAccount.type === 'TokenAccount'
+              ? [
+                  tokenList.find(
+                    t => t.id.toString() === subAccount.token.id.split("/")[2]
+                  ).message
+                ] // TODO: Find a better way to store this data ? where ? Not really typesafe too
+              : undefined
+          }
+        );
+
+        o.next({ type: "device-signature-granted" });
+
+        const hash = preparedTransaction.txID;
+
+        // only if it's a send transaction
+        // estimated fee
+        const fee = transaction.mode === "send" 
+          ? await getEstimatedFees(transaction) 
+          : BigNumber(0);
+        // value
+        const value = transaction.mode === "send" 
+          ? transaction.amount 
+          : BigNumber(0);
+
+        const operation = {
+          id: `${account.id}-${hash}-OUT`,
+          hash,
+          accountId: account.id,
+          type: "OUT",
+          value,
+          fee,
+          blockHash: null,
+          blockHeight: null,
+          senders: [account.freshAddress],
+          recipients: [transaction.recipient],
+          date: new Date(),
+          extra: {}
+        };
+
+        o.next({
+          type: "signed",
+          signedOperation: {
+            operation,
+            signature,
+            signatureRaw: preparedTransaction.raw_data,
+            expirationDate: null
+          }
+        });
+      } finally {
+        transport.close();
+      }
+    }
+
+    main().then(
+      () => o.complete(),
+      e => o.error(e)
     );
+  });
 
-    if (!isCancelled()) {
-      onSigned();
+const broadcast = async ({ signedOperation: { signature, operation, signatureRaw } }) => {
+  const transaction = {
+    raw_data: signatureRaw,
+    txID: operation.hash,
+    signature: [signature],
+  };
 
-      const transaction = {
-        ...preparedTransaction,
-        signature: [signature]
-      };
+  const submittedTransaction = await broadcastTron(transaction);
 
-      // Broadcast
-      const submittedPayment = await broadcastTron(transaction);
-
-      if (submittedPayment.result !== true) {
-        throw new Error(submittedPayment.resultMessage);
-      }
-
-      const hash = transaction.txID;
-
-      const operation = {
-        id: `${a.id}-${hash}-OUT`,
-        hash,
-        accountId: a.id,
-        type: "OUT",
-        value: t.amount,
-        fee: BigNumber(0),
-        blockHash: null,
-        blockHeight: null,
-        senders: [a.freshAddress],
-        recipients: [t.recipient],
-        date: new Date(),
-        extra: {}
-      };
-  
-      onOperationBroadcasted(operation);
-    }
-  
-  } finally {
-    transport.close();
+  if (submittedTransaction.result !== true) {
+    throw new Error(submittedTransaction.resultMessage);
   }
+
+  return operation;
 }
 
 const txToOps = ({ id, address }, token: ?TokenCurrency) => (
@@ -157,8 +184,8 @@ const txToOps = ({ id, address }, token: ?TokenCurrency) => (
 
     if (amount && owner_address && to_address) {
       const value = BigNumber(amount);
-      const from = b58(owner_address);
-      const to = b58(to_address);
+      const from = encode58Check(owner_address);
+      const to = encode58Check(to_address);
       const sending = address === from;
       const receiving = address === to;
       const fee = tx.txInfo && tx.txInfo.fee ? BigNumber(tx.txInfo.fee) : BigNumber(0);
@@ -210,13 +237,11 @@ const getAccountShape = async info => {
 
   const acc = tronAcc[0];
   const spendableBalance = acc.balance ? BigNumber(acc.balance) : BigNumber(0);
+  const resources = await getTronResources(acc);
 
-  const balance = spendableBalance.plus(
-    get(acc, "frozen", []).reduce(
-      (sum, o) => sum.plus(o.frozen_balance),
-      BigNumber(0)
-    )
-  );
+  const balance = spendableBalance
+    .plus(resources.frozen.bandwidth ? BigNumber(resources.frozen.bandwidth.amount) : BigNumber(0))
+    .plus(resources.frozen.energy ? BigNumber(resources.frozen.energy.amount) : BigNumber(0));
 
   const txs = await fetchTronAccountTxs(info.address, txs => txs.length < 1000);
 
@@ -259,7 +284,8 @@ const getAccountShape = async info => {
     balance,
     spendableBalance,
     operations: parentOpsAndSubOutOpsWithFee,
-    subAccounts
+    subAccounts,
+    resources
   };
 };
 
@@ -280,7 +306,8 @@ const createTransaction = () => ({
   duration: 3,
   recipient: "",
   networkInfo: null,
-  resource: null
+  resource: null,
+  votes: []
 });
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
@@ -290,30 +317,21 @@ const updateTransaction = (t, patch) => ({ ...t, ...patch });
 // 2. If not enough, will cost some TRX
 // 3. normal transfert cost around 0.002 TRX
 const getFeesFromBandwidth = (networkInfo: ?NetworkInfo): BigNumber => {
-  // Calculate Bandwidth :
-  if (networkInfo) {
-    const {
-      freeNetUsed = 0,
-      freeNetLimit = 0,
-      NetUsed = 0,
-      NetLimit = 0
-    } = networkInfo;
-    
-    const bandwidth = freeNetLimit - freeNetUsed + NetLimit - NetUsed;
+  const { available } = extractBandwidthInfo(networkInfo);
 
-    if (bandwidth < AVERAGE_BANDWIDTH_COST) {
-      return BigNumber(2000); // cost is around 0.002 TRX
-    }
+  if (available < AVERAGE_BANDWIDTH_COST) {
+    return BigNumber(2000); // cost is around 0.002 TRX
   }
 
   return BigNumber(0); // no fee
 };
 
 // Special case: If activated an account, cost around 0.1 TRX
-const getFeesFromAccountActivation = async (recipient: string): Promise<BigNumber> => {
+const getFeesFromAccountActivation = async (recipient: string, networkInfo: ?NetworkInfo): Promise<BigNumber> => {
   const recipientAccount = await fetchTronAccount(recipient);
+  const { available } = extractBandwidthInfo(networkInfo);
 
-  if (recipientAccount.length === 0) {
+  if (recipientAccount.length === 0 && available < 10000) {
     return BigNumber(100000); // cost is around 0.1 TRX
   }
 
@@ -323,8 +341,10 @@ const getFeesFromAccountActivation = async (recipient: string): Promise<BigNumbe
 const getEstimatedFees = async t => {
   const feesFromBandwidth = getFeesFromBandwidth(t.networkInfo);
   const feesFromAccountActivation = await getFeesFromAccountActivation(t.recipient);
-
-  return feesFromBandwidth.plus(feesFromAccountActivation);
+  if (feesFromAccountActivation.gt(0)) {
+    return feesFromAccountActivation;
+  } 
+  return feesFromBandwidth;
 };
 
 const getTransactionStatus = async (a, t): Promise<TransactionStatus> => {
@@ -366,36 +386,6 @@ const getTransactionStatus = async (a, t): Promise<TransactionStatus> => {
   });
 };
 
-const signAndBroadcast = (a, t, deviceId) =>
-  Observable.create(o => {
-    let cancelled = false;
-    const isCancelled = () => cancelled;
-    const onSigned = () => {
-      o.next({ type: "signed" });
-    };
-    const onOperationBroadcasted = operation => {
-      o.next({ type: "broadcasted", operation });
-    };
-    doSignAndBroadcast({
-      a,
-      t,
-      deviceId,
-      isCancelled,
-      onSigned,
-      onOperationBroadcasted
-    }).then(
-      () => {
-        o.complete();
-      },
-      e => {
-        o.error(e);
-      }
-    );
-    return () => {
-      cancelled = true;
-    };
-  });
-
 const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
   const networkInfo: NetworkInfo =
     t.networkInfo || (await getTronAccountNetwork(a.freshAddress));
@@ -409,13 +399,8 @@ const accountBridge: AccountBridge<Transaction> = {
   prepareTransaction,
   getTransactionStatus,
   sync,
-  signAndBroadcast,
-  signOperation: () => {
-    throw new Error("TODO: port to signOperation paradigm");
-  },
-  broadcast: () => {
-    throw new Error("TODO: port to broascast paradigm");
-  }
+  signOperation,
+  broadcast
 };
 
 export default { currencyBridge, accountBridge };

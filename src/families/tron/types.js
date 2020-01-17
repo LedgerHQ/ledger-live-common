@@ -13,15 +13,16 @@ export type CoreOperationSpecifics = {};
 
 export type CoreCurrencySpecifics = {};
 
-export type TronOperationMode = "send" | "freeze" | "unfreeze";
-export type TronResource = "bandwidth" | "energy";
+export type TronOperationMode = "send" | "freeze" | "unfreeze" | "vote" | "claimReward";
+export type TronResource = "BANDWIDTH" | "ENERGY";
 
 export type NetworkInfo = {|
   family: "tron",
   freeNetUsed: number,
   freeNetLimit: number,
   NetUsed: number,
-  NetLimit: number
+  NetLimit: number,
+  EnergyLimit: ?number
 |};
 
 export type NetworkInfoRaw = {|
@@ -29,7 +30,8 @@ export type NetworkInfoRaw = {|
   freeNetUsed: number,
   freeNetLimit: number,
   NetUsed: number,
-  NetLimit: number
+  NetLimit: number,
+  EnergyLimit: ?number
 |};
 
 export type Transaction = {|
@@ -38,7 +40,8 @@ export type Transaction = {|
   mode: TronOperationMode,
   resource: ?TronResource,
   networkInfo: ?NetworkInfo,
-  duration: ?number
+  duration: ?number,
+  votes: Vote[]
 |};
 
 export type TransactionRaw = {|
@@ -47,7 +50,8 @@ export type TransactionRaw = {|
   family: "tron",
   resource: ?TronResource,
   networkInfo: ?NetworkInfoRaw,
-  duration: ?number
+  duration: ?number,
+  votes: Vote[]
 |};
 
 export type SendTransactionData = {|
@@ -72,11 +76,55 @@ export type FreezeTransactionData = {|
 |};
 
 export type SendTransactionDataSuccess = {|
-  raw_data_hex: string,
+  raw_data: Object,
   txID: string,
   signature: ?(string[])
 |};
-// TODO: What needed it's store and not the entire object.
-// Check if we need to type everything from the API call
 
 export const reflect = (_declare: *) => {};
+
+export type SuperRepresentativeData = {|
+  list: SuperRepresentative[],
+  totalVotes: number,
+  nextVotingDate: Date
+|};
+
+export type SuperRepresentative = {|
+  address: string,
+  name: ?string,
+  url: ?string,
+  isJobs: boolean,
+  brokerage: number,
+  voteCount: number,
+  totalProduced: ?number,
+  totalMissed: ?number,
+  latestBlockNum: ?number,
+  latestSlotNum: ?number
+|};
+
+export type Vote = {|
+  address: string,
+  voteCount: number
+|};
+
+export type TronResources = {|
+  frozen: {
+    bandwidth: ?FrozenInfo,
+    energy: ?FrozenInfo,
+  },
+  votes: Vote[],
+  tronPower: number,
+  energy: number,
+  bandwidth: BandWidthInfo,
+  unwithdrawnReward: number
+|};
+
+export type FrozenInfo = {|
+  amount: number,
+  expiredAt: Date
+|};
+
+export type BandWidthInfo = {|
+  available: number,
+  used: number
+|};

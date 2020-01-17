@@ -295,7 +295,8 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     balance,
     balanceHistory,
     spendableBalance,
-    subAccounts: subAccountsRaw
+    subAccounts: subAccountsRaw,
+    resources
   } = rawAccount;
 
   const subAccounts =
@@ -358,6 +359,10 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     res.subAccounts = subAccounts;
   }
 
+  if (resources) {
+    res.resources = resources;
+  }
+
   return res;
 }
 
@@ -383,7 +388,8 @@ export function toAccountRaw({
   balanceHistory,
   spendableBalance,
   subAccounts,
-  endpointConfig
+  endpointConfig,
+  resources
 }: Account): AccountRaw {
   const res: $Exact<AccountRaw> = {
     id,
@@ -414,6 +420,9 @@ export function toAccountRaw({
   }
   if (subAccounts) {
     res.subAccounts = subAccounts.map(toSubAccountRaw);
+  }
+  if (resources) {
+    res.resources = resources;
   }
   return res;
 }

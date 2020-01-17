@@ -13,7 +13,8 @@ const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     family: tr.family,
     mode: tr.mode,
     resource: tr.resource || null,
-    duration: tr.duration || 3
+    duration: tr.duration || 3,
+    votes: tr.votes
   };
 };
 
@@ -25,7 +26,8 @@ const toTransactionRaw = (t: Transaction): TransactionRaw => {
     family: t.family,
     mode: t.mode,
     resource: t.resource || null,
-    duration: t.duration || 3
+    duration: t.duration || 3,
+    votes: t.votes
   };
 };
 
