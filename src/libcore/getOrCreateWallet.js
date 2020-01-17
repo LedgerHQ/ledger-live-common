@@ -13,11 +13,12 @@ type F = ({
   core: Core,
   walletName: string,
   currency: CryptoCurrency,
-  derivationMode: DerivationMode
+  derivationMode: DerivationMode,
+  index: number
 }) => Promise<CoreWallet>;
 
 export const getOrCreateWallet: F = atomicQueue(
-  async ({ core, walletName, currency, derivationMode }) => {
+  async ({ core, walletName, currency, derivationMode, index }) => {
     const poolInstance = core.getPoolInstance();
     let wallet;
 
@@ -33,7 +34,10 @@ export const getOrCreateWallet: F = atomicQueue(
       }
     }
 
-    const derivationScheme = getDerivationScheme({ currency, derivationMode });
+    const derivationScheme = getDerivationScheme({
+      currency,
+      derivationMode
+    }).replace("<account>", String(index));
     await config.putString("KEYCHAIN_DERIVATION_SCHEME", derivationScheme);
 
     const KEYCHAIN_OBSERVABLE_RANGE = getEnv("KEYCHAIN_OBSERVABLE_RANGE");

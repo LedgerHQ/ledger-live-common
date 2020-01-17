@@ -18,11 +18,11 @@ const restoreWithAccountCreationInfo = {
 };
 
 export const getOrCreateAccount: F = atomicQueue(
-  async ({ core, coreWallet, account: { xpub, index, currency } }) => {
-    log("libcore", "getOrCreateAccount", { xpub, index });
+  async ({ core, coreWallet, account: { xpub, currency } }) => {
+    log("libcore", "getOrCreateAccount", { xpub });
     let coreAccount;
     try {
-      coreAccount = await coreWallet.getAccount(index);
+      coreAccount = await coreWallet.getAccount(0);
     } catch (err) {
       if (!isNonExistingAccountError(err)) {
         throw err;
@@ -31,23 +31,20 @@ export const getOrCreateAccount: F = atomicQueue(
       invariant(xpub, "xpub is missing. Please reimport the account.");
 
       if (restoreWithAccountCreationInfo[currency.id]) {
-        const accountCreationInfos = await coreWallet.getAccountCreationInfo(
-          index
-        );
+        const accountCreationInfos = await coreWallet.getAccountCreationInfo(0);
         const chainCodes = await accountCreationInfos.getChainCodes();
         const publicKeys = await accountCreationInfos.getPublicKeys();
         const derivations = await accountCreationInfos.getDerivations();
         const owners = await accountCreationInfos.getOwners();
         publicKeys.push(xpub);
         log("libcore", "AccountCreationInfo.init", {
-          index,
           owners,
           derivations,
           publicKeys,
           chainCodes
         });
         const newAccountCreationInfos = await core.AccountCreationInfo.init(
-          index,
+          0,
           owners,
           derivations,
           publicKeys,
@@ -59,7 +56,7 @@ export const getOrCreateAccount: F = atomicQueue(
         return account;
       } else {
         const extendedInfos = await coreWallet.getExtendedKeyAccountCreationInfo(
-          index
+          0
         );
         const infosIndex = await extendedInfos.getIndex();
         const extendedKeys = await extendedInfos.getExtendedKeys();

@@ -29,13 +29,15 @@ import getAddress from "../hw/getAddress";
 import { withLibcoreF } from "./access";
 import { syncCoreAccount, newSyncLogId } from "./syncAccount";
 import { getOrCreateWallet } from "./getOrCreateWallet";
-import { createAccountFromDevice } from "./createAccountFromDevice";
+import {
+  DerivationsCache,
+  createAccountFromDevice
+} from "./createAccountFromDevice";
 import { remapLibcoreErrors, isNonExistingAccountError } from "./errors";
-import type { Core, CoreWallet } from "./types";
+import type { Core } from "./types";
 
 async function scanNextAccount(props: {
   core: Core,
-  wallet: CoreWallet,
   transport: Transport<*>,
   currency: CryptoCurrency,
   accountIndex: number,
@@ -45,13 +47,13 @@ async function scanNextAccount(props: {
   showNewAccount: boolean,
   isUnsubscribed: () => boolean,
   emptyCount?: number,
-  syncConfig: SyncConfig
+  syncConfig: SyncConfig,
+  derivationsCache: DerivationsCache
 }) {
   const logId = newSyncLogId();
 
   const {
     core,
-    wallet,
     transport,
     currency,
     accountIndex,
@@ -60,8 +62,25 @@ async function scanNextAccount(props: {
     derivationMode,
     showNewAccount,
     isUnsubscribed,
-    syncConfig
+    syncConfig,
+    derivationsCache
   } = props;
+
+  const walletName = getWalletName({
+    seedIdentifier,
+    currency,
+    derivationMode,
+    index: accountIndex
+  });
+
+  const wallet = await getOrCreateWallet({
+    core,
+    walletName,
+    currency,
+    derivationMode,
+    index: accountIndex
+  });
+  if (isUnsubscribed()) return;
 
   log(
     "libcore",
@@ -83,7 +102,8 @@ async function scanNextAccount(props: {
       currency,
       index: accountIndex,
       derivationMode,
-      isUnsubscribed
+      isUnsubscribed,
+      derivationsCache
     });
   }
 
@@ -197,20 +217,6 @@ export const scanAccounts = ({
 
             if (isUnsubscribed()) return;
 
-            const walletName = getWalletName({
-              seedIdentifier,
-              currency,
-              derivationMode
-            });
-
-            const wallet = await getOrCreateWallet({
-              core,
-              walletName,
-              currency,
-              derivationMode
-            });
-            if (isUnsubscribed()) return;
-
             const onAccountScanned = account =>
               o.next({ type: "discovered", account });
 
@@ -218,7 +224,6 @@ export const scanAccounts = ({
             // new accounts will be created in sqlite, existing ones will be updated
             await scanNextAccount({
               core,
-              wallet,
               transport,
               currency,
               accountIndex: getDerivationModeStartsAt(derivationMode),
@@ -227,7 +232,8 @@ export const scanAccounts = ({
               derivationMode,
               showNewAccount: shouldShowNewAccount(currency, derivationMode),
               isUnsubscribed,
-              syncConfig
+              syncConfig,
+              derivationsCache: new DerivationsCache()
             });
           }
           o.complete();

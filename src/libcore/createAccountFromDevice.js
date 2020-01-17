@@ -4,7 +4,13 @@ import Transport from "@ledgerhq/hw-transport";
 import type { Core, CoreWallet, CoreAccount } from "./types";
 import type { CryptoCurrency } from "../types";
 import type { DerivationMode } from "../derivation";
+import { getDerivationScheme } from "../derivation";
 import getAddress from "../hw/getAddress";
+
+// In order to not re-query the same path, we use a temporary cache
+export class DerivationsCache {
+  store: { [_: string]: { publicKey: string, chainCode?: string } } = {};
+}
 
 type F = ({
   core: Core,
@@ -13,7 +19,8 @@ type F = ({
   currency: CryptoCurrency,
   index: number,
   derivationMode: DerivationMode,
-  isUnsubscribed: () => boolean
+  isUnsubscribed: () => boolean,
+  derivationsCache: DerivationsCache
 }) => Promise<?CoreAccount>;
 
 export const createAccountFromDevice: F = async ({
@@ -22,7 +29,9 @@ export const createAccountFromDevice: F = async ({
   transport,
   currency,
   derivationMode,
-  isUnsubscribed
+  isUnsubscribed,
+  derivationsCache,
+  index
 }) => {
   log(
     "libcore",
@@ -34,24 +43,42 @@ export const createAccountFromDevice: F = async ({
   if (isUnsubscribed()) return;
   const publicKeys = await accountCreationInfos.getPublicKeys();
   if (isUnsubscribed()) return;
-  const index = await accountCreationInfos.getIndex();
-  if (isUnsubscribed()) return;
   const derivations = await accountCreationInfos.getDerivations();
   if (isUnsubscribed()) return;
   const owners = await accountCreationInfos.getOwners();
   if (isUnsubscribed()) return;
 
+  const derivationScheme = getDerivationScheme({
+    currency,
+    derivationMode
+  });
+
   await derivations.reduce(
-    (promise, derivation) =>
+    (promise, derivationReq) =>
       promise.then(async () => {
         if (isUnsubscribed()) return;
-        const { publicKey, chainCode } = await getAddress(transport, {
-          currency,
-          path: derivation,
-          derivationMode,
-          askChainCode: true,
-          skipAppFailSafeCheck: true
-        });
+
+        // workaround libcore index because we use one wallet per account
+        // so we force the derivation to be the scheme we need
+        const parts = derivationReq.split("/");
+        const derivation = derivationScheme
+          .split("/")
+          .slice(0, parts.length)
+          .join("/")
+          .replace("<account>", String(index));
+
+        let cache = derivationsCache.store[derivation];
+        if (!cache) {
+          cache = await getAddress(transport, {
+            currency,
+            path: derivation,
+            derivationMode,
+            askChainCode: true,
+            skipAppFailSafeCheck: true
+          });
+          derivationsCache.store[derivation] = cache;
+        }
+        const { publicKey, chainCode } = cache;
         publicKeys.push(publicKey);
         if (chainCode) chainCodes.push(chainCode);
       }),
@@ -60,14 +87,13 @@ export const createAccountFromDevice: F = async ({
   if (isUnsubscribed()) return;
 
   log("libcore", "AccountCreationInfo.init", {
-    index,
     owners,
     derivations,
     publicKeys,
     chainCodes
   });
   const newAccountCreationInfos = await core.AccountCreationInfo.init(
-    index,
+    0,
     owners,
     derivations,
     publicKeys,

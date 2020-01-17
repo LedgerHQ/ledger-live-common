@@ -26,7 +26,8 @@ export const getAccountNetworkInfo: F = withLibcoreF(core => async account => {
       core,
       walletName,
       currency,
-      derivationMode
+      derivationMode,
+      index: account.index
     });
 
     const coreAccount = await getOrCreateAccount({

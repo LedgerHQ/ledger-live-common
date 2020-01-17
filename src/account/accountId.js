@@ -55,11 +55,13 @@ export function decodeAccountId(accountId: string): AccountIdParams {
 export function getWalletName({
   seedIdentifier,
   derivationMode,
-  currency
+  currency,
+  index
 }: {
   seedIdentifier: string,
   derivationMode: DerivationMode,
-  currency: CryptoCurrency
+  currency: CryptoCurrency,
+  index: number
 }) {
-  return `${seedIdentifier}_${currency.id}_${derivationMode}`;
+  return `${seedIdentifier}_${currency.id}_${derivationMode}_${index}`;
 }

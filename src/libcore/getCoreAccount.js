@@ -13,19 +13,21 @@ export const getCoreAccount = async (
   coreAccount: CoreAccount,
   walletName: string
 }> => {
-  const { currency, derivationMode, seedIdentifier } = account;
+  const { currency, derivationMode, seedIdentifier, index } = account;
 
   const walletName = getWalletName({
     currency,
     seedIdentifier,
-    derivationMode
+    derivationMode,
+    index
   });
 
   const coreWallet = await getOrCreateWallet({
     core,
     walletName,
     currency,
-    derivationMode
+    derivationMode,
+    index
   });
 
   const coreAccount = await getOrCreateAccount({
