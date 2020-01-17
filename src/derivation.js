@@ -11,7 +11,6 @@ type LibcoreConfig = {
 export type ModeSpec = {
   mandatoryEmptyAccountSkip?: number,
   isNonIterable?: boolean,
-  startsAt?: number,
   overridesDerivation?: string,
   libcoreConfig?: LibcoreConfig,
   isSegwit?: boolean, // TODO drop
@@ -95,22 +94,6 @@ const modes = Object.freeze({
       TEZOS_XPUB_CURVE: "ED25519"
     }
   },
-  galleonL: {
-    tag: "legacy",
-    startsAt: 1,
-    overridesDerivation: "44'/1729'/0'/0'/<account>'",
-    libcoreConfig: {
-      TEZOS_XPUB_CURVE: "ED25519"
-    }
-  },
-  tezboxL: {
-    tag: "legacy",
-    startsAt: 1,
-    overridesDerivation: "44'/1729'/0'/<account>'",
-    libcoreConfig: {
-      TEZOS_XPUB_CURVE: "ED25519"
-    }
-  },
   native_segwit: {
     purpose: 84,
     libcoreConfig: {
@@ -169,7 +152,7 @@ const legacyDerivations: $Shape<CryptoCurrencyConfig<DerivationMode[]>> = {
   vertcoin: ["vertcoin_128", "vertcoin_128_segwit"],
   ethereum: ["ethM", "ethMM"],
   ethereum_classic: ["ethM", "etcM", "ethMM"],
-  tezos: ["galleonL", "tezboxL", "tezosbip44h", "tezbox"]
+  tezos: ["tezosbip44h", "tezbox"]
 };
 
 export const asDerivationMode = (derivationMode: string): DerivationMode => {
@@ -225,10 +208,6 @@ export const isUnsplitDerivationMode = (
 export const isIterableDerivationMode = (
   derivationMode: DerivationMode
 ): boolean => !modes[derivationMode].isNonIterable;
-
-export const getDerivationModeStartsAt = (
-  derivationMode: DerivationMode
-): number => modes[derivationMode].startsAt || 0;
 
 export const getPurposeDerivationMode = (
   derivationMode: DerivationMode
