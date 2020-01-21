@@ -86,7 +86,8 @@ const signOperation = ({ account, transaction, deviceId }) =>
           account.freshAddressPath,
           {
             rawDataHex: preparedTransaction.raw_data_hex,
-            assetName: subAccount && subAccount.type === 'TokenAccount'
+            // only for trc10, we need to put the assetName hex message
+            assetName: subAccount && subAccount.type === 'TokenAccount' && subAccount.token.id.includes("trc10")
               ? [
                   tokenList.find(
                     t => t.id.toString() === subAccount.token.id.split("/")[2]

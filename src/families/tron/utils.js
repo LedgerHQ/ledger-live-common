@@ -10,6 +10,14 @@ export const decode58Check = (base58: string) =>
 
 export const encode58Check = (hex: string) => bs58check.encode(Buffer.from(hex, "hex"));
 
+// see: https://solidity.readthedocs.io/en/v0.6.1/abi-spec.html#function-selector-and-argument-encoding
+export const abiEncodeTrc20Transfer = (address: string, amount: BigNumber): string => {
+  const encodedAddress = address.padStart(64, "0");
+  const hexAmount = amount.toNumber().toString(16); // convert to hexadecimal
+  const encodedAmount = hexAmount.padStart(64, "0");
+  return encodedAddress.concat(encodedAmount);
+}
+
 export const hexToAscii = (hex: string) => {
 	let str = '';
 	for (var n = 0; n < hex.length; n += 2) {

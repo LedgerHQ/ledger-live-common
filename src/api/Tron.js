@@ -5,6 +5,7 @@ import type {
   TrongridTxInfo,
   SendTransactionData,
   SendTransactionDataSuccess,
+  SmartContractTransactionData,
   FreezeTransactionData,
   UnfreezeTransactionData,
   NetworkInfo,
@@ -15,7 +16,7 @@ import type {
   Vote
 } from "../families/tron/types";
 import type { Account, SubAccount, Operation } from "../types";
-import { decode58Check, encode58Check, formatTrongridTxResponse, hexToAscii } from "../families/tron/utils";
+import { decode58Check, encode58Check, abiEncodeTrc20Transfer, formatTrongridTxResponse, hexToAscii } from "../families/tron/utils";
 import { log } from "@ledgerhq/logs";
 import network from "../network";
 import { retry } from "../promise";
@@ -93,24 +94,43 @@ export const createTronTransaction = async (
   t: Transaction,
   subAccount: ?SubAccount
 ): Promise<SendTransactionDataSuccess> => {
-  const tokenId = subAccount && subAccount.type === 'TokenAccount' 
-    ? subAccount.token.id.split("/")[2] // Need to get this token id properly
-    : null;
+  const [_, tokenType, tokenId] = subAccount && subAccount.type === 'TokenAccount' 
+    ? subAccount.token.id.split("/")
+    : [undefined, undefined, undefined];
 
-  const txData: SendTransactionData = {
-    to_address: decode58Check(t.recipient),
-    owner_address: decode58Check(a.freshAddress),
-    amount: t.amount.toNumber(),
-    asset_name: tokenId && Buffer.from(tokenId).toString("hex")
-  };
+  // trc20
+  if (tokenType === "trc20" && tokenId) {
+    const txData: SmartContractTransactionData = {
+      function_selector: "transfer(address,uint256)",
+      fee_limit: 10000000,
+      call_value: 0,
+      contract_address: decode58Check(tokenId),
+      parameter: abiEncodeTrc20Transfer(decode58Check(t.recipient), t.amount), // TODO
+      owner_address: decode58Check(a.freshAddress),
+    };
 
-  const url = subAccount
-    ? `${baseApiUrl}/wallet/transferasset`
-    : `${baseApiUrl}/wallet/createtransaction`;
+    const url = `${baseApiUrl}/wallet/triggersmartcontract`
 
-  const preparedTransaction = await post(url, txData);
+    const result = await post(url, txData);
 
-  return preparedTransaction;
+    return result.transaction;
+  } else { // trx/trc10
+  
+    const txData: SendTransactionData = {
+      to_address: decode58Check(t.recipient),
+      owner_address: decode58Check(a.freshAddress),
+      amount: t.amount.toNumber(),
+      asset_name: tokenId && Buffer.from(tokenId).toString("hex")
+    };
+
+    const url = subAccount
+      ? `${baseApiUrl}/wallet/transferasset`
+      : `${baseApiUrl}/wallet/createtransaction`;
+
+    const preparedTransaction = await post(url, txData);
+
+    return preparedTransaction;
+  }
 };
 
 export const broadcastTron = async (
@@ -251,6 +271,7 @@ export const getBrokerage = async (addr: string): Promise<number> => {
 
 export const getTronSuperRepresentatives = async (max: ?number): Promise<SuperRepresentative[]> => {
   try {
+    abiEncodeTrc20Transfer("418186E3A217B8BE7BEEBA28EE590AA81C54CA8EEE", BigNumber(1));
     const result = await post(`${baseApiUrl}/wallet/listwitnesses`, {});
     const sorted = result.witnesses.sort((a, b) => b.voteCount - a.voteCount)
     const witnesses = max ? take(sorted, max) : sorted;

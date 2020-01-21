@@ -83,6 +83,17 @@ export type SendTransactionData = {|
   asset_name: ?string
 |};
 
+export type SmartContractFunction = "transfer(address,uint256)";
+
+export type SmartContractTransactionData = {|
+  function_selector: SmartContractFunction,
+  fee_limit: number,
+  call_value: number,
+  contract_address: string,
+  parameter: string,
+  owner_address: string
+|};
+
 export type UnfreezeTransactionData = {|
   receiver_address?: string,
   owner_address: string,
@@ -98,6 +109,7 @@ export type FreezeTransactionData = {|
 |};
 
 export type SendTransactionDataSuccess = {|
+  raw_data_hex: string,
   raw_data: Object,
   txID: string,
   signature: ?(string[])
