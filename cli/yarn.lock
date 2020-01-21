@@ -855,10 +855,10 @@
   resolved "https://registry.yarnpkg.com/@ledgerhq/errors/-/errors-5.6.0.tgz#878851b961a34c1bda3618b3568b4e8faed532bd"
   integrity sha512-zdEYEsmfhFHv7f89srh7qI5XP0DIkV9xkONsE8dVHhqpoFx732yKozpVDFUp4zhaCCT/xNL5wbCDxM9edk6Uig==
 
-"@ledgerhq/hw-app-btc@5.6.0":
-  version "5.6.0"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-btc/-/hw-app-btc-5.6.0.tgz#cd72375303695936eaee2d3b1f5a60508c0aebcc"
-  integrity sha512-qFh1LQGtH9zAwtVW1LujUTCqov6wyX+m+Tt/2zdwiLxXUUXhOTqhGxReVe8QKnzoiH9wA+6XvzsB+TBGYahJwg==
+"@ledgerhq/hw-app-btc@5.6.1":
+  version "5.6.1"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-btc/-/hw-app-btc-5.6.1.tgz#86ccb3d44ae7c476f43b291514555cd71cfb4163"
+  integrity sha512-T6nQGYTFyMABlnwuP0QuLFh4Prw07Mn+ExMi9tjWXNImMQ093G1jt8GUKxdrXGuJ2rjHYCxi7UsgT5jYd7hiKA==
   dependencies:
     "@ledgerhq/hw-transport" "^5.6.0"
     bip32-path "^0.4.2"
@@ -955,15 +955,13 @@
     bindings "1.3.0"
     nan "^2.6.2"
 
-"@ledgerhq/live-common@^11.1.1":
-  version "11.1.1"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/live-common/-/live-common-11.1.1.tgz#049e68082ca87658e909860aed56fd28c28e90d0"
-  integrity sha512-peUBQzQzem/mRbtKliRQP2MxwSHNkJQEKjCfMSjbwN6SuK8bjYcm47SrQ1BiKBA8NsdIYNOx6s9z7vKM4vnWVw==
+"@ledgerhq/live-common@file:.yalc/@ledgerhq/live-common":
+  version "11.1.2-1967305f"
   dependencies:
     "@ledgerhq/compressjs" "1.3.2"
     "@ledgerhq/devices" "5.6.0"
     "@ledgerhq/errors" "5.6.0"
-    "@ledgerhq/hw-app-btc" "5.6.0"
+    "@ledgerhq/hw-app-btc" "5.6.1"
     "@ledgerhq/hw-app-eth" "5.6.0"
     "@ledgerhq/hw-app-xrp" "5.6.0"
     "@ledgerhq/hw-transport" "5.6.0"
