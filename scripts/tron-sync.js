@@ -22,7 +22,7 @@ async function fetch(url) {
   return data;
 }
 
-async function fetchTokens() {
+async function fetchTrc10Tokens() {
   let payload = await fetch("https://api.trongrid.io/v1/assets?limit=200");
   let els = payload.data;
   let tokens = [];
@@ -38,7 +38,7 @@ async function fetchTokens() {
 
 const outputFolder = path.join(__dirname, "../src/load");
 
-fetchTokens().then(array =>
+fetchTrc10Tokens().then(array =>
   fs.writeFileSync(
     path.join(outputFolder, "tokens/tron/trc10.js"),
     'require("../../../families/tron/tokens").add("trc10", ' +

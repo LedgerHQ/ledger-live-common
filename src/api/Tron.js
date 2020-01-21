@@ -2,6 +2,7 @@
 import { BigNumber } from "bignumber.js";
 import type {
   Transaction,
+  TrongridTxInfo,
   SendTransactionData,
   SendTransactionDataSuccess,
   FreezeTransactionData,
@@ -14,9 +15,10 @@ import type {
   Vote
 } from "../families/tron/types";
 import type { Account, SubAccount, Operation } from "../types";
-import { decode58Check, encode58Check, hexToAscii } from "../families/tron/utils";
+import { decode58Check, encode58Check, formatTrongridTxResponse, hexToAscii } from "../families/tron/utils";
 import { log } from "@ledgerhq/logs";
 import network from "../network";
+import { retry } from "../promise";
 import { makeLRUCache } from "../cache";
 import get from "lodash/get";
 import sumBy from "lodash/sumBy";
@@ -41,7 +43,9 @@ async function fetch(url: string) {
     method: "GET",
     url
   });
+
   log("http", url);
+
   return data;
 }
 
@@ -125,31 +129,29 @@ export async function fetchTronAccount(addr: string) {
 }
 
 // For the moment, fetching transaction info is the only way to get fees from a transaction
-async function fetchTronTxInfo(txId: string) {
+async function fetchTronTxDetail(txId: string) {
   return await post(`${baseApiUrl}/wallet/gettransactioninfobyid`, { value: txId });
 }
 
-function hasTransferContract(tx: Object): boolean {
+function isTransfer(tx: Object): boolean {
   return get(tx, "raw_data.contract", [])
-    .some(c => 
-      c.type === "TransferContract" || c.type === "TransferAssetContract"
-    )
+    .some(c => ["TransferContract", "WithdrawBalanceContract", "TransferAssetContract"].includes(c.type));
 }
 
 export async function fetchTronAccountTxs(
   addr: string,
   shouldFetchMoreTxs: (Operation[]) => boolean
-) {
+): Promise<TrongridTxInfo[]> {
   const getTxs = async (url: string) => fetch(url).then(resp => {
     const nextUrl = get(resp, "meta.links.next");
 
     const resultsWithTxInfo = 
       Promise.all((resp.data || [])
         .map(tx => {
-          const fetchedTxInfo = hasTransferContract(tx) // only if it's a transfer, we need to fetch tx info to get fees
-            ? fetchTronTxInfo(tx.txID) 
+          const fetchedTxDetail = isTransfer(tx) // only if it's a transfer, we need to fetch tx info to get fee or withdraw_amount
+            ? fetchTronTxDetail(tx.txID) 
             : Promise.resolve(null)
-          return fetchedTxInfo.then(txInfo => ({ ...tx, txInfo }))
+          return fetchedTxDetail.then(detail => ({ ...tx, detail }))
         }))
         .then(results => ({ results, nextUrl }))
 
@@ -170,9 +172,15 @@ export async function fetchTronAccountTxs(
     }
   };
 
-  const entireTxs = await getEntireTxs(`${baseApiUrl}/v1/accounts/${addr}/transactions?limit=200`)
+  const entireTxs = await getEntireTxs(`${baseApiUrl}/v1/accounts/${addr}/transactions`)
+  const entireTrc20Txs = await getEntireTxs(`${baseApiUrl}/v1/accounts/${addr}/transactions/trc20`) 
 
-  return entireTxs.results
+  const txInfos = 
+    entireTxs.results.map(tx => formatTrongridTxResponse(tx))
+      .concat(entireTrc20Txs.results.map(tx => formatTrongridTxResponse(tx, true)))
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+
+  return txInfos;
 }
 
 export const getTronAccountNetwork = async (address: string): Promise<NetworkInfo> => {
@@ -241,17 +249,24 @@ export const getBrokerage = async (addr: string): Promise<number> => {
   return brokerage;
 };
 
-export const getTronSuperRepresentatives = async (): Promise<SuperRepresentative[]> => {
+export const getTronSuperRepresentatives = async (max: ?number): Promise<SuperRepresentative[]> => {
   try {
     const result = await post(`${baseApiUrl}/wallet/listwitnesses`, {});
+    const sorted = result.witnesses.sort((a, b) => b.voteCount - a.voteCount)
+    const witnesses = max ? take(sorted, max) : sorted;
     
     const superRepresentatives = 
       await Promise.all(
-        result.witnesses.map(w => {
+        witnesses.map(w => {
           const encodedAddress = encode58Check(w.address);
 
-          return accountNamesCache(encodedAddress).then(accountName =>
-            srBrokeragesCache(encodedAddress).then(brokerage => (
+          // we neeed to retry because trongrid returns '408 Request Timeout' sometimes
+          // in case of mutiple fetch in parallell
+          const doGetAccountName = retry(() => accountNamesCache(encodedAddress));
+          const doGetBrokerage = retry(() => srBrokeragesCache(encodedAddress));
+
+          return doGetAccountName.then(accountName =>
+            doGetBrokerage.then(brokerage => (
               {
                 ...w,
                 address: encodedAddress,
@@ -265,9 +280,7 @@ export const getTronSuperRepresentatives = async (): Promise<SuperRepresentative
         })
       );
 
-    const sortedSrs = superRepresentatives.sort((a, b) => b.voteCount - a.voteCount);
-
-    return sortedSrs;
+    return superRepresentatives;
   } catch (e) {
     throw new Error("Unexpected error occured when calling getTronSuperRepresentatives");
   }
@@ -279,11 +292,11 @@ export const getNextVotingDate = async (): Promise<Date> => {
 };
 
 export const getTronSuperRepresentativeData = async (max: ?number): Promise<SuperRepresentativeData> => {
-  const list = await getTronSuperRepresentatives();
+  const list = await getTronSuperRepresentatives(max);
   const nextVotingDate = await getNextVotingDate();
 
   return {
-    list: max ? take(list, max) : list,
+    list,
     totalVotes: sumBy(list, "voteCount"),
     nextVotingDate
   };

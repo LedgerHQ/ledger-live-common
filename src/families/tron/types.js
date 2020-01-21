@@ -1,5 +1,6 @@
 // @flow
 
+import { BigNumber } from "bignumber.js";
 import type {
   TransactionCommon,
   TransactionCommonRaw
@@ -54,6 +55,27 @@ export type TransactionRaw = {|
   votes: Vote[]
 |};
 
+export type TrongridTxType = 
+  | "TransferContract"
+  | "TransferAssetContract"
+  | "TransferTRC20Contract"
+  | "FreezeBalanceContract"
+  | "UnfreezeBalanceContract"
+  | "VoteWitnessContract"
+  | "TriggerSmartContract"
+  | "WithdrawBalanceContract";
+
+export type TrongridTxInfo = {|
+  txID: string,
+  date: Date,
+  type: TrongridTxType,
+  tokenId?: string,
+  from: string,
+  to?: string,
+  value?: BigNumber,
+  fee?: BigNumber,
+|};
+
 export type SendTransactionData = {|
   to_address: string,
   owner_address: string,
@@ -102,11 +124,6 @@ export type SuperRepresentative = {|
   latestSlotNum: ?number
 |};
 
-export type Vote = {|
-  address: string,
-  voteCount: number
-|};
-
 export type TronResources = {|
   frozen: {
     bandwidth: ?FrozenInfo,
@@ -115,8 +132,13 @@ export type TronResources = {|
   votes: Vote[],
   tronPower: number,
   energy: number,
-  bandwidth: BandWidthInfo,
+  bandwidth: BandwidthInfo,
   unwithdrawnReward: number
+|};
+
+export type Vote = {|
+  address: string,
+  voteCount: number
 |};
 
 export type FrozenInfo = {|
@@ -124,7 +146,7 @@ export type FrozenInfo = {|
   expiredAt: Date
 |};
 
-export type BandWidthInfo = {|
+export type BandwidthInfo = {|
   available: number,
   used: number
 |};

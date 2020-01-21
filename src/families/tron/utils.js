@@ -1,5 +1,9 @@
 // @flow
 import bs58check from "bs58check";
+import { BigNumber } from "bignumber.js";
+import get from "lodash/get";
+import type { TrongridTxInfo, TrongridTxType } from "./types";
+import type { Operation, OperationType } from "../../types/operation";
 
 export const decode58Check = (base58: string) =>
   Buffer.from(bs58check.decode(base58)).toString("hex");
@@ -12,4 +16,123 @@ export const hexToAscii = (hex: string) => {
 		str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
 	}
 	return str;
-}
+};
+
+export const isParentTx = (tx: TrongridTxInfo): boolean => {
+  return [
+    "TransferContract", 
+    "FreezeBalanceContract", 
+    "UnfreezeBalanceContract", 
+    "VoteWitnessContract", 
+    "WithdrawBalanceContract"
+  ].includes(tx.type)
+};
+
+const getOperationType = (tx: TrongridTxInfo, accountAddr: string): ?OperationType => {
+	switch (tx.type) {
+		case "TransferContract":
+    case "TransferAssetContract":
+    case "TransferTRC20Contract":
+			return tx.from === accountAddr 
+				? "OUT"
+				: "IN";
+    case "FreezeBalanceContract":
+      return "FREEZE";
+    case "UnfreezeBalanceContract":
+      return "UNFREEZE";
+    case "VoteWitnessContract":
+      return "VOTE";
+    case "WithdrawBalanceContract":
+      return "REWARD";
+		default:
+			return undefined;
+	}
+};
+
+export const formatTrongridTxResponse = (tx: Object, isTrc20: boolean = false): TrongridTxInfo => {
+  try {
+    if (isTrc20) {
+      const { from, to, block_timestamp, detail, value, transaction_id, token_info } = tx;
+      const type = "TransferTRC20Contract";
+      const txID = transaction_id;
+      const date = new Date(block_timestamp);
+      const tokenId = get(token_info, "address", undefined);
+      const formattedValue = value ? BigNumber(value) : BigNumber(0);
+      const fee = detail && detail.fee ? BigNumber(detail.fee) : undefined;
+
+      return {
+        txID,
+        date,
+        type,
+        tokenId,
+        from,
+        to,
+        value: formattedValue,
+        fee
+      };
+    } else {
+      const { txID, block_timestamp, detail } = tx;
+
+      const date = new Date(block_timestamp);
+  
+      const type = get(tx, "raw_data.contract[0].type", "");
+
+      const { amount, asset_name, owner_address, to_address } = 
+        get(tx, "raw_data.contract[0].parameter.value", {});
+
+      const tokenId = asset_name;
+
+      const from = encode58Check(owner_address);
+
+      const to = to_address ? encode58Check(to_address) : undefined;
+  
+      const value = type === "WithdrawBalanceContract"
+        ? BigNumber(detail.withdraw_amount)
+        : amount ? BigNumber(amount) : undefined;
+
+      const fee = detail && detail.fee ? BigNumber(detail.fee) : undefined;
+
+      return {
+        txID,
+        date,
+        type,
+        tokenId,
+        from,
+        to,
+        value,
+        fee
+      };
+    }
+  } catch (e) {
+    // Should not happen unless Trongrid change response models.
+    throw new Error("unexpected error occured when formatting tron transaction");
+  }
+};
+
+export const txInfoToOperation = (id: string, address: string, tx: TrongridTxInfo): ?Operation => {
+  const { txID, date, from, to, type, value = BigNumber(0), fee = BigNumber(0) } = tx;
+  const hash = tx.txID;
+
+  const operationType = getOperationType(tx, address);
+
+  if (operationType) {
+    return {
+      id: `${id}-${hash}-${operationType}`,
+      hash,
+      type: operationType,
+      value: operationType === "OUT" && type === "TransferContract" 
+        ? value.plus(fee)
+        : value, // fee is not charged in TRC tokens
+      fee: fee,
+      blockHeight: 0,
+      blockHash: null,
+      accountId: id,
+      senders: [from],
+      recipients: to ? [to] : [],
+      date,
+      extra: {}
+    };
+  }
+
+  return undefined;
+};

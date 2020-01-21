@@ -11,7 +11,7 @@ import sumBy from "lodash/sumBy";
 export default () => {
   describe("tron super representatives", () => {
     test("getting the list ordered by voteCount", async () => {
-      const superRepresentatives = await getTronSuperRepresentatives();
+      const superRepresentatives = await getTronSuperRepresentatives(27);
       expect(superRepresentatives.length).toBeGreaterThan(20);
       expect(superRepresentatives[0].voteCount).toBeGreaterThan(superRepresentatives[1].voteCount);
     });

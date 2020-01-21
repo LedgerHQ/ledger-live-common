@@ -61,6 +61,7 @@ export function flattenOperationWithInternals(op: Operation): Operation[] {
 export function getOperationAmountNumber(op: Operation): BigNumber {
   switch (op.type) {
     case "IN":
+    case "REWARD":
       return op.value;
     case "OUT":
     case "REVEAL":

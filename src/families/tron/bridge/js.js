@@ -16,9 +16,10 @@ import type {
 } from "../../../types";
 import type {
   NetworkInfo,
-  Transaction
+  Transaction,
+  TrongridTxInfo
 } from "../types";
-import { encode58Check } from "../utils";
+import { encode58Check, isParentTx, txInfoToOperation } from "../utils";
 import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
 import { findTokenById } from "../../../data/tokens";
 import { open } from "../../../hw";
@@ -59,10 +60,10 @@ const signOperation = ({ account, transaction, deviceId }) =>
 
       const getPreparedTransaction = () => {
         switch(transaction.mode) {
-          case "unfreeze":
-            return unfreezeTronTransaction(account, transaction);
           case "freeze":
             return freezeTronTransaction(account, transaction);
+          case "unfreeze":
+            return unfreezeTronTransaction(account, transaction);
           case "vote":
             return voteTronSuperRepresentatives(account, transaction);
           case "claimReward":
@@ -160,74 +161,6 @@ const broadcast = async ({ signedOperation: { signature, operation, signatureRaw
   return operation;
 }
 
-const txToOps = ({ id, address }, token: ?TokenCurrency) => (
-  tx: Object
-): Operation[] => {
-  const hash = tx.txID;
-  const date = new Date(tx.block_timestamp);
-
-  const transferContracts = 
-    get(tx, "raw_data.contract", [])
-      .filter(c => {
-        return token
-          ? c.type === "TransferAssetContract" &&
-              "tron/trc10/" + get(c, "parameter.value.asset_name") === token.id
-          : c.type === "TransferContract"
-      });
-
-  const operations = transferContracts.map(contract => {
-    const { amount, owner_address, to_address } = get(
-      contract,
-      "parameter.value",
-      {}
-    );
-
-    if (amount && owner_address && to_address) {
-      const value = BigNumber(amount);
-      const from = encode58Check(owner_address);
-      const to = encode58Check(to_address);
-      const sending = address === from;
-      const receiving = address === to;
-      const fee = tx.txInfo && tx.txInfo.fee ? BigNumber(tx.txInfo.fee) : BigNumber(0);
-
-      if (sending) {
-        return {
-          id: `${id}-${hash}-OUT`,
-          hash,
-          type: "OUT",
-          value: contract.type === "TransferContract" ? value.plus(fee) : value, // fee is not charged in TRC tokens
-          fee,
-          blockHeight: 0,
-          blockHash: null,
-          accountId: id,
-          senders: [from],
-          recipients: [to],
-          date,
-          extra: {}
-        };
-      }
-      if (receiving) {
-        return {
-          id: `${id}-${hash}-IN`,
-          hash,
-          type: "IN",
-          value: value,
-          fee,
-          blockHeight: 0,
-          blockHash: null,
-          accountId: id,
-          senders: [from],
-          recipients: [to],
-          date,
-          extra: {}
-        };
-      }
-    }
-  });
-
-  return operations;
-};
-
 const getAccountShape = async info => {
   const tronAcc = await fetchTronAccount(info.address);
 
@@ -245,16 +178,26 @@ const getAccountShape = async info => {
 
   const txs = await fetchTronAccountTxs(info.address, txs => txs.length < 1000);
 
-  const parentOperations: Operation[] = flatMap(txs, txToOps(info));
+  const parentTxs = txs.filter(isParentTx);
+  const parentOperations: Operation[] = compact(parentTxs.map(tx => txInfoToOperation(info.id, info.address, tx)))
 
+  const trc10Tokens = get(acc, "assetV2", []).map(({ key, value }) => ({ type: "trc10", key, value }));
+  const trc20Tokens = get(acc, "trc20", []).map(obj => {
+    const [[key, value]] = Object.entries(obj);
+    return { type: "trc20", key, value };
+  });
+
+  // TRC10 and TRC20 accounts
   const subAccounts: SubAccount[] = 
     compact(
-      get(acc, "assetV2", [])
-        .map(({ key, value }) => {
-          const token = findTokenById(`tron/trc10/${key}`);
+      trc10Tokens
+        .concat(trc20Tokens)
+        .map(({ type, key, value }) => {
+          const token = findTokenById(`tron/${type}/${key}`);
           if (!token) return;
           const id = info.id + "+" + key;
-          const operations = flatMap(txs, txToOps({ ...info, id }, token));
+          const tokenTxs = txs.filter(tx => tx.tokenId === key);
+          const operations = compact(tokenTxs.map(tx => txInfoToOperation(id, info.address, tx)));
           const sub: TokenAccount = {
             type: "TokenAccount",
             id,
@@ -274,7 +217,7 @@ const getAccountShape = async info => {
   const subOutOperationsWithFee: Operation[] = 
     flatMap(subAccounts.map(s => s.operations))
       .filter(o => o.type === 'OUT' && o.fee.isGreaterThan(0))
-      .map(o => ({ ...o, value: o.fee }));
+      .map(o => ({ ...o, accountId: info.id, value: o.fee }));
 
   // add them to the parent operations and sort by date desc
   const parentOpsAndSubOutOpsWithFee =
@@ -283,6 +226,7 @@ const getAccountShape = async info => {
   return {
     balance,
     spendableBalance,
+    operationsCount: parentOpsAndSubOutOpsWithFee.length,
     operations: parentOpsAndSubOutOpsWithFee,
     subAccounts,
     resources
