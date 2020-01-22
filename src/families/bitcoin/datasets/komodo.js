@@ -1,4 +1,3 @@
-
 // @flow
 import type { CurrenciesData } from "../../../__tests__/test-helpers/bridge";
 import type { Transaction } from "../types";
@@ -28,4 +27,3 @@ const dataset: CurrenciesData<Transaction> = {
 };
 
 export default dataset;
-
