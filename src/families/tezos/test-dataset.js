@@ -61,7 +61,7 @@ const dataset: DatasetTest<Transaction> = {
   implementations: ["libcore"],
   currencies: {
     tezos: {
-      scanAccounts :[tezosScanAccounts1],
+      scanAccounts: [tezosScanAccounts1],
       accounts: [
         {
           raw: accountTZrevealedDelegating,
