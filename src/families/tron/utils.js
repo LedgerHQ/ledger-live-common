@@ -2,7 +2,7 @@
 import bs58check from "bs58check";
 import { BigNumber } from "bignumber.js";
 import get from "lodash/get";
-import type { TrongridTxInfo, TrongridTxType } from "./types";
+import type { TronOperationMode, TrongridTxInfo, TrongridTxType } from "./types";
 import type { Operation, OperationType } from "../../types/operation";
 
 export const decode58Check = (base58: string) =>
@@ -35,6 +35,23 @@ export const isParentTx = (tx: TrongridTxInfo): boolean => {
     "WithdrawBalanceContract"
   ].includes(tx.type)
 };
+
+export const getOperationTypefromMode = (mode: TronOperationMode): OperationType => {
+  switch (mode) {
+    case "send":
+      return "OUT";
+    case "freeze":
+      return "FREEZE";
+    case "unfreeze":
+      return "UNFREEZE"
+    case "vote":
+      return "VOTE";
+    case "claimReward":
+      return "REWARD";
+    default:
+      return "OUT";
+  }
+}
 
 const getOperationType = (tx: TrongridTxInfo, accountAddr: string): ?OperationType => {
 	switch (tx.type) {

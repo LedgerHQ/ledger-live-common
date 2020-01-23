@@ -19,7 +19,7 @@ import type {
   Transaction,
   TrongridTxInfo
 } from "../types";
-import { encode58Check, isParentTx, txInfoToOperation } from "../utils";
+import { encode58Check, isParentTx, txInfoToOperation, getOperationTypefromMode } from "../utils";
 import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
 import { findTokenById } from "../../../data/tokens";
 import { open } from "../../../hw";
@@ -71,7 +71,7 @@ const signOperation = ({ account, transaction, deviceId }) =>
           default:
             return createTronTransaction(account, transaction, subAccount);
         }
-      }
+      };
 
       const preparedTransaction = await getPreparedTransaction();
       const transport = await open(deviceId);
@@ -107,15 +107,15 @@ const signOperation = ({ account, transaction, deviceId }) =>
           ? await getEstimatedFees(transaction) 
           : BigNumber(0);
         // value
-        const value = transaction.mode === "send" 
-          ? transaction.amount 
-          : BigNumber(0);
+        const value = transaction.amount;
+
+        const operationType = getOperationTypefromMode(transaction.mode);
 
         const operation = {
-          id: `${account.id}-${hash}-OUT`,
+          id: `${account.id}-${hash}-${operationType}`,
           hash,
           accountId: account.id,
-          type: "OUT",
+          type: operationType,
           value,
           fee,
           blockHash: null,
