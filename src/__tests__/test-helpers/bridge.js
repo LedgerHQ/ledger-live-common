@@ -35,6 +35,7 @@ import { mockDeviceWithAPDUs, releaseMockDevice } from "./mockDevice";
 type ExpectFn = Function;
 
 export type CurrenciesData<T: Transaction> = {|
+  FIXME_ignoreOperationFields?: string[],
   scanAccounts?: Array<{|
     name: string,
     apdus: string,
@@ -177,8 +178,15 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
       (scanAccountsCaches[apdus] = scanAccounts(apdus));
 
     describe(currency.id + " currency bridge", () => {
-      const { scanAccounts } = currencyData;
+      const { scanAccounts, FIXME_ignoreOperationFields } = currencyData;
       if (scanAccounts) {
+        if (FIXME_ignoreOperationFields) {
+          console.warn(
+            currency.id +
+              " is ignoring operation fields: " +
+              FIXME_ignoreOperationFields.join(", ")
+          );
+        }
         describe("scanAccounts", () => {
           scanAccounts.forEach(sa => {
             // we start running the scan accounts in parallel!
@@ -216,6 +224,9 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
                   .map(op => {
                     const copy: Object = { ...op };
                     delete copy.date;
+                    (FIXME_ignoreOperationFields || []).forEach(k => {
+                      delete copy[k];
+                    });
                     return copy;
                   })
               );
