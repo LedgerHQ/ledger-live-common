@@ -44,53 +44,57 @@ if (process.env.DEVICE_PROXY_URL) {
 const cacheBle = {};
 
 if (!process.env.CI) {
-  const {
-    default: TransportNodeBle
-  } = require("@ledgerhq/hw-transport-node-ble");
-  const openBleByQuery = async query => {
-    const m = query.match(/^ble:?(.*)/);
-    if (!m) throw new Error("ble regexp should match");
-    const [, q] = m;
-    if (cacheBle[query]) return cacheBle[query];
-    const t = await (!q
-      ? TransportNodeBle.create()
-      : Observable.create(TransportNodeBle.listen)
-          .pipe(
-            first(
-              e =>
-                (e.device.name || "").toLowerCase().includes(q.toLowerCase()) ||
-                e.device.id.toLowerCase() === q.toLowerCase()
-            ),
-            switchMap(e => TransportNodeBle.open(e.descriptor))
-          )
-          .toPromise());
-    cacheBle[query] = t;
-    t.on("disconnect", () => {
-      delete cacheBle[query];
+  if (process.platform === "darwin") {
+    const {
+      default: TransportNodeBle
+    } = require("@ledgerhq/hw-transport-node-ble");
+    const openBleByQuery = async query => {
+      const m = query.match(/^ble:?(.*)/);
+      if (!m) throw new Error("ble regexp should match");
+      const [, q] = m;
+      if (cacheBle[query]) return cacheBle[query];
+      const t = await (!q
+        ? TransportNodeBle.create()
+        : Observable.create(TransportNodeBle.listen)
+            .pipe(
+              first(
+                e =>
+                  (e.device.name || "")
+                    .toLowerCase()
+                    .includes(q.toLowerCase()) ||
+                  e.device.id.toLowerCase() === q.toLowerCase()
+              ),
+              switchMap(e => TransportNodeBle.open(e.descriptor))
+            )
+            .toPromise());
+      cacheBle[query] = t;
+      t.on("disconnect", () => {
+        delete cacheBle[query];
+      });
+      return t;
+    };
+    registerTransportModule({
+      id: "ble",
+      open: query => {
+        if (query.startsWith("ble")) {
+          return openBleByQuery(query);
+        }
+      },
+      discovery: Observable.create(TransportNodeBle.listen).pipe(
+        map(e => ({
+          type: e.type,
+          id: "ble:" + e.device.id,
+          name: e.device.name || ""
+        }))
+      ),
+      disconnect: query =>
+        query.startsWith("ble")
+          ? cacheBle[query]
+            ? TransportNodeBle.disconnect(cacheBle[query].id)
+            : Promise.resolve()
+          : null
     });
-    return t;
-  };
-  registerTransportModule({
-    id: "ble",
-    open: query => {
-      if (query.startsWith("ble")) {
-        return openBleByQuery(query);
-      }
-    },
-    discovery: Observable.create(TransportNodeBle.listen).pipe(
-      map(e => ({
-        type: e.type,
-        id: "ble:" + e.device.id,
-        name: e.device.name || ""
-      }))
-    ),
-    disconnect: query =>
-      query.startsWith("ble")
-        ? cacheBle[query]
-          ? TransportNodeBle.disconnect(cacheBle[query].id)
-          : Promise.resolve()
-        : null
-  });
+  }
 
   const {
     default: TransportNodeHid
