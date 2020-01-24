@@ -33,7 +33,6 @@ export const ethereum2 = {
 };
 
 const dataset: CurrenciesData<Transaction> = {
-
       scanAccounts: [ethereumScanAccounts1],
       accounts: [
         {
