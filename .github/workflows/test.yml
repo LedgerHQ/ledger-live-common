@@ -33,7 +33,7 @@ jobs:
       - name: Deps versions
         run: |
           yarn flow --version
-          yar jest --version
+          yarn jest --version
       - name: Lint
         run: yarn ci-lint
       - name: Run tests
