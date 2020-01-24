@@ -33,13 +33,10 @@ export const ethereum2 = {
 };
 
 const dataset: CurrenciesData<Transaction> = {
-  implementations: ["libcore", "mock", "ethereumjs"],
-  currencies: {
-    ethereum: {
+
       scanAccounts: [ethereumScanAccounts1],
       accounts: [
         {
-          implementations: ["libcore"],
           transactions: [
             {
               name: "success1",
@@ -163,8 +160,6 @@ const dataset: CurrenciesData<Transaction> = {
           raw: ethereum2
         }
       ]
-    }
-  }
 };
 
 export default dataset;
