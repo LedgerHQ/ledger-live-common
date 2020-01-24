@@ -9,7 +9,6 @@ git clone $GIT_REMOTE
 cd ledger-live-common
 yarn
 cd cli
-yarn add @ledgerhq/live-common
 yarn
 yarn link
 yarn build
