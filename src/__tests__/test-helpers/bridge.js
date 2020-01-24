@@ -3,6 +3,7 @@
 import { BigNumber } from "bignumber.js";
 import { Observable, defer, from } from "rxjs";
 import { reduce, filter, map } from "rxjs/operators";
+import flatMap from "lodash/flatMap";
 import { InvalidAddress, RecipientRequired } from "@ledgerhq/errors";
 import type {
   CryptoCurrencyIds,
@@ -208,7 +209,12 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
                 accountsFoundInScanAccountsMap[a.id] = a;
               });
 
-              const raws = accounts.map(a => toAccountRaw(a));
+              const raws = flatMap(accounts, a => {
+                const main = toAccountRaw(a);
+                if (!main.subAccounts) return [main];
+                return [{ ...main, subAccounts: [] }, ...main.subAccounts];
+              });
+
               const heads = raws.map(a => {
                 const copy: Object = { ...a };
                 delete copy.operations;
@@ -217,6 +223,7 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
                 delete copy.balanceHistory;
                 return copy;
               });
+
               const ops = raws.map(({ operations }) =>
                 operations
                   .slice(0)
