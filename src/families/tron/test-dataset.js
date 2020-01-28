@@ -1,9 +1,10 @@
 // @flow
 import { BigNumber } from "bignumber.js";
-import type { DatasetTest } from "../dataset";
-import { fromTransactionRaw } from "../../transaction";
+import type { DatasetTest } from "../../__tests__/test-helpers/bridge";
+import { fromTransactionRaw } from "./transaction";
+import type { Transaction } from "./types";
 
-const dataset: DatasetTest = {
+const dataset: DatasetTest<Transaction> = {
   implementations: ["tronjs"],
   currencies: {
     tron: {
@@ -17,7 +18,10 @@ const dataset: DatasetTest = {
                 recipient: "TLKCi5WwJx79abs5ctQYCyL2pHCyQGZaXM",
                 amount: "10",
                 networkInfo: null,
-                mode: "send"
+                mode: "send",
+                duration: undefined,
+                resource: undefined,
+                votes: []
               }),
               expectedStatus: {
                 amount: BigNumber("10"),
