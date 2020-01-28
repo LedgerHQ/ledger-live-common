@@ -2,8 +2,8 @@
 import bs58check from "bs58check";
 import { BigNumber } from "bignumber.js";
 import get from "lodash/get";
-import type { Transaction, TronOperationMode, TrongridTxInfo, TrongridTxType } from "./types";
-import type { Account, Operation, OperationType  } from "../../types"
+import type { Transaction, TronOperationMode, TrongridTxInfo } from "./types";
+import type { Account, Operation, OperationType  } from "../../types";
 
 export const decode58Check = (base58: string) =>
   Buffer.from(bs58check.decode(base58)).toString("hex");
@@ -16,7 +16,7 @@ export const abiEncodeTrc20Transfer = (address: string, amount: BigNumber): stri
   const hexAmount = amount.toNumber().toString(16); // convert to hexadecimal
   const encodedAmount = hexAmount.padStart(64, "0");
   return encodedAddress.concat(encodedAmount);
-}
+};
 
 export const hexToAscii = (hex: string) => {
 	let str = '';
@@ -33,7 +33,7 @@ export const isParentTx = (tx: TrongridTxInfo): boolean => {
     "UnfreezeBalanceContract", 
     "VoteWitnessContract", 
     "WithdrawBalanceContract"
-  ].includes(tx.type)
+  ].includes(tx.type);
 };
 
 // This is an estimation, there is no endpoint to calculate the real size of a block before broadcasting it.
@@ -58,7 +58,7 @@ export const getEstimatedBlockSize = (a: Account, t: Transaction): number => {
     default:
       return 0;
   }
-}
+};
 
 export const getOperationTypefromMode = (mode: TronOperationMode): OperationType => {
   switch (mode) {
@@ -67,7 +67,7 @@ export const getOperationTypefromMode = (mode: TronOperationMode): OperationType
     case "freeze":
       return "FREEZE";
     case "unfreeze":
-      return "UNFREEZE"
+      return "UNFREEZE";
     case "vote":
       return "VOTE";
     case "claimReward":
@@ -75,7 +75,7 @@ export const getOperationTypefromMode = (mode: TronOperationMode): OperationType
     default:
       return "OUT";
   }
-}
+};
 
 const getOperationType = (tx: TrongridTxInfo, accountAddr: string): ?OperationType => {
 	switch (tx.type) {
@@ -160,7 +160,7 @@ export const formatTrongridTxResponse = (tx: Object, isTrc20: boolean = false): 
 
 export const txInfoToOperation = (id: string, address: string, tx: TrongridTxInfo): ?Operation => {
   const { txID, date, from, to, type, value = BigNumber(0), fee = BigNumber(0) } = tx;
-  const hash = tx.txID;
+  const hash = txID;
 
   const operationType = getOperationType(tx, address);
 

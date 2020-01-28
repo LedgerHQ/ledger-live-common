@@ -12,8 +12,7 @@ import type {
   BandwidthInfo,
   SuperRepresentative,
   SuperRepresentativeData,
-  TronResources,
-  Vote
+  TronResources
 } from "../families/tron/types";
 import type { Account, SubAccount, Operation } from "../types";
 import { decode58Check, encode58Check, abiEncodeTrc20Transfer, formatTrongridTxResponse, hexToAscii } from "../families/tron/utils";
@@ -22,6 +21,7 @@ import network from "../network";
 import { retry } from "../promise";
 import { makeLRUCache } from "../cache";
 import get from "lodash/get";
+import drop from "lodash/drop";
 import sumBy from "lodash/sumBy";
 import take from "lodash/take";
 
@@ -106,9 +106,9 @@ export const createTronTransaction = async (
   t: Transaction,
   subAccount: ?SubAccount
 ): Promise<SendTransactionDataSuccess> => {
-  const [_, tokenType, tokenId] = subAccount && subAccount.type === 'TokenAccount' 
-    ? subAccount.token.id.split("/")
-    : [undefined, undefined, undefined];
+  const [tokenType, tokenId] = subAccount && subAccount.type === 'TokenAccount' 
+    ? drop(subAccount.token.id.split("/"), 1)
+    : [undefined, undefined];
 
   // trc20
   if (tokenType === "trc20" && tokenId) {
@@ -121,7 +121,7 @@ export const createTronTransaction = async (
       owner_address: decode58Check(a.freshAddress),
     };
 
-    const url = `${baseApiUrl}/wallet/triggersmartcontract`
+    const url = `${baseApiUrl}/wallet/triggersmartcontract`;
 
     const result = await post(url, txData);
 
@@ -182,10 +182,10 @@ export async function fetchTronAccountTxs(
         .map(tx => {
           const fetchedTxDetail = isTransfer(tx) // only if it's a transfer, we need to fetch tx info to get fee or withdraw_amount
             ? fetchTronTxDetail(tx.txID) 
-            : Promise.resolve(null)
-          return fetchedTxDetail.then(detail => ({ ...tx, detail }))
+            : Promise.resolve(null);
+          return fetchedTxDetail.then(detail => ({ ...tx, detail }));
         }))
-        .then(results => ({ results, nextUrl }))
+        .then(results => ({ results, nextUrl }));
 
     return resultsWithTxInfo;
   });
@@ -198,14 +198,14 @@ export async function fetchTronAccountTxs(
       return {
         results: response.results.concat(nextResponse.results),
         nextUrl: nextResponse.nextUrl
-      }
+      };
     } else {
       return response;
     }
   };
 
-  const entireTxs = await getEntireTxs(`${baseApiUrl}/v1/accounts/${addr}/transactions`)
-  const entireTrc20Txs = await getEntireTxs(`${baseApiUrl}/v1/accounts/${addr}/transactions/trc20`) 
+  const entireTxs = await getEntireTxs(`${baseApiUrl}/v1/accounts/${addr}/transactions`);
+  const entireTrc20Txs = await getEntireTxs(`${baseApiUrl}/v1/accounts/${addr}/transactions/trc20`);
 
   const txInfos = 
     entireTxs.results.map(tx => formatTrongridTxResponse(tx))
@@ -285,7 +285,7 @@ export const getTronSuperRepresentatives = async (max: ?number): Promise<SuperRe
   try {
     abiEncodeTrc20Transfer("418186E3A217B8BE7BEEBA28EE590AA81C54CA8EEE", BigNumber(1));
     const result = await post(`${baseApiUrl}/wallet/listwitnesses`, {});
-    const sorted = result.witnesses.sort((a, b) => b.voteCount - a.voteCount)
+    const sorted = result.witnesses.sort((a, b) => b.voteCount - a.voteCount);
     const witnesses = max ? take(sorted, max) : sorted;
     
     const superRepresentatives = 
@@ -401,7 +401,7 @@ export const getTronResources = async (acc: Object): Promise<TronResources> => {
 
     const votes = 
       get(acc, "votes", [])
-        .map(v => ({ address: encode58Check(v.vote_address), voteCount: v.vote_count }))
+        .map(v => ({ address: encode58Check(v.vote_address), voteCount: v.vote_count }));
 
     return {
       energy,
@@ -427,7 +427,7 @@ export const getTronResourcesFromAddress = async (addr: string): Promise<TronRes
 
 export const getUnwithdrawnReward = async (addr: string): Promise<number> => {
   try {
-    const { reward = 0 } = await post(`${baseApiUrl}/wallet/getReward`, { address: decode58Check(addr) })
+    const { reward = 0 } = await post(`${baseApiUrl}/wallet/getReward`, { address: decode58Check(addr) });
     return reward;
   } catch (e) {
     // TODO: error handling
@@ -441,4 +441,4 @@ export const claimRewardTronTransaction = async (account: Account): Promise<Send
   const result = await post(url, data);
   // TODO error?
   return result;
-}
+};

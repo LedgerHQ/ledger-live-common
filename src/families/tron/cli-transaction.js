@@ -6,7 +6,7 @@ import invariant from "invariant";
 import flatMap from "lodash/flatMap";
 import zipWith from "lodash/zipWith";
 import { getAccountCurrency } from "../../account";
-import { getTronSuperRepresentativeData } from "../../api/Tron"
+import { getTronSuperRepresentativeData } from "../../api/Tron";
 import type {
   Transaction,
   Account,
@@ -79,10 +79,9 @@ function inferAccounts(account: Account, opts: Object): AccountLikeArray {
 
 function inferTransactions(
   transactions: Array<{ account: AccountLike, transaction: Transaction }>,
-  opts: Object,
-  { inferAmount }: *
+  opts: Object
 ): Transaction[] {
-  const voteAddresses: string[] = opts["tronVoteAddress"] || []
+  const voteAddresses: string[] = opts["tronVoteAddress"] || [];
   const voteCounts: number[] = (opts["tronVoteCount"] || []).map(value => parseInt(value));
   const votes: Vote[] =
     zipWith(voteAddresses, voteCounts, (a, c) => ({ address: a, voteCount: c }));

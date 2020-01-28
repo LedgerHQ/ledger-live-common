@@ -4,31 +4,22 @@ import { Observable } from "rxjs";
 import flatMap from "lodash/flatMap";
 import compact from "lodash/compact";
 import get from "lodash/get";
-import bs58check from "bs58check";
-import SHA256 from "crypto-js/sha256";
 import type {
   Account,
   Operation,
-  TokenCurrency,
   TokenAccount,
   SubAccount,
-  ChildAccount,
   TransactionStatus
 } from "../../../types";
-import type {
-  NetworkInfo,
-  Transaction,
-  TrongridTxInfo
-} from "../types";
-import { encode58Check, isParentTx, txInfoToOperation, getOperationTypefromMode, getEstimatedBlockSize } from "../utils";
+import type { NetworkInfo, Transaction } from "../types";
+import { isParentTx, txInfoToOperation, getOperationTypefromMode, getEstimatedBlockSize } from "../utils";
 import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
 import { findTokenById } from "../../../data/tokens";
 import { open } from "../../../hw";
 import signTransaction from "../../../hw/signTransaction";
 import { makeSync, makeScanAccounts } from "../../../bridge/jsHelpers";
-import { validateRecipient } from "../../../bridge/shared";
 import { formatCurrencyUnit } from "../../../currencies";
-import { getAccountUnit } from "../../../account"
+import { getAccountUnit } from "../../../account";
 import {
   InvalidAddress,
   RecipientRequired,
@@ -104,7 +95,7 @@ const signOperation = ({ account, transaction, deviceId }) =>
 
         const hash = preparedTransaction.txID;
 
-        const fee = await getEstimatedFees(account, transaction) 
+        const fee = await getEstimatedFees(account, transaction);
 
         const value = transaction.mode === "send" ? transaction.amount : BigNumber(0);
 
@@ -159,7 +150,7 @@ const broadcast = async ({ signedOperation: { signature, operation, signatureRaw
   }
 
   return operation;
-}
+};
 
 const getAccountShape = async info => {
   const tronAcc = await fetchTronAccount(info.address);
@@ -179,7 +170,7 @@ const getAccountShape = async info => {
   const txs = await fetchTronAccountTxs(info.address, txs => txs.length < 1000);
 
   const parentTxs = txs.filter(isParentTx);
-  const parentOperations: Operation[] = compact(parentTxs.map(tx => txInfoToOperation(info.id, info.address, tx)))
+  const parentOperations: Operation[] = compact(parentTxs.map(tx => txInfoToOperation(info.id, info.address, tx)));
 
   const trc10Tokens = get(acc, "assetV2", []).map(({ key, value }) => ({ type: "trc10", key, value }));
   const trc20Tokens = get(acc, "trc20", []).map(obj => {
@@ -221,7 +212,7 @@ const getAccountShape = async info => {
 
   // add them to the parent operations and sort by date desc
   const parentOpsAndSubOutOpsWithFee =
-    parentOperations.concat(subOutOperationsWithFee).sort((a, b) => b.date - a.date)
+    parentOperations.concat(subOutOperationsWithFee).sort((a, b) => b.date - a.date);
 
   return {
     balance,
