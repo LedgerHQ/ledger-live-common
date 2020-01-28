@@ -82,9 +82,13 @@ function inferTransactions(
   opts: Object
 ): Transaction[] {
   const voteAddresses: string[] = opts["tronVoteAddress"] || [];
-  const voteCounts: number[] = (opts["tronVoteCount"] || []).map(value => parseInt(value));
-  const votes: Vote[] =
-    zipWith(voteAddresses, voteCounts, (a, c) => ({ address: a, voteCount: c }));
+  const voteCounts: number[] = (opts["tronVoteCount"] || []).map(value =>
+    parseInt(value)
+  );
+  const votes: Vote[] = zipWith(voteAddresses, voteCounts, (a, c) => ({
+    address: a,
+    voteCount: c
+  }));
 
   return flatMap(transactions, ({ transaction, account }) => {
     invariant(transaction.family === "tron", "tron family");
@@ -107,18 +111,22 @@ const superRepresentativesFormatters = {
   default: srData => {
     const headerList = 'address "name" url voteCount brokerage isJobs';
 
-    const strList = 
-      srData.list.map(sr => 
-        `${sr.address} "${formatOptStr(sr.name)}" ${formatOptStr(sr.url)} ${sr.voteCount} ${sr.brokerage} ${sr.isJobs}`
-      );
+    const strList = srData.list.map(
+      sr =>
+        `${sr.address} "${formatOptStr(sr.name)}" ${formatOptStr(sr.url)} ${
+          sr.voteCount
+        } ${sr.brokerage} ${sr.isJobs}`
+    );
 
-    const metaData =  
-      [
-        `nextVotingDate: ${srData.nextVotingDate}`,
-        `totalVotes: ${srData.totalVotes}`
-      ];
-    
-    return [headerList].concat(strList).concat(metaData).join("\n");
+    const metaData = [
+      `nextVotingDate: ${srData.nextVotingDate}`,
+      `totalVotes: ${srData.totalVotes}`
+    ];
+
+    return [headerList]
+      .concat(strList)
+      .concat(metaData)
+      .join("\n");
   }
 };
 
@@ -144,7 +152,9 @@ const tronSuperRepresentative = {
   }>): Observable<string> =>
     from(getTronSuperRepresentativeData(max)).pipe(
       map((srData: SuperRepresentativeData) => {
-        const f = superRepresentativesFormatters[format] || superRepresentativesFormatters.default;
+        const f =
+          superRepresentativesFormatters[format] ||
+          superRepresentativesFormatters.default;
         return f(srData);
       })
     )

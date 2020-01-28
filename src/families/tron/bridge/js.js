@@ -12,7 +12,12 @@ import type {
   TransactionStatus
 } from "../../../types";
 import type { NetworkInfo, Transaction } from "../types";
-import { isParentTx, txInfoToOperation, getOperationTypefromMode, getEstimatedBlockSize } from "../utils";
+import {
+  isParentTx,
+  txInfoToOperation,
+  getOperationTypefromMode,
+  getEstimatedBlockSize
+} from "../utils";
 import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
 import { findTokenById } from "../../../data/tokens";
 import { open } from "../../../hw";
@@ -53,7 +58,7 @@ const signOperation = ({ account, transaction, deviceId }) =>
           : null;
 
       const getPreparedTransaction = () => {
-        switch(transaction.mode) {
+        switch (transaction.mode) {
           case "freeze":
             return freezeTronTransaction(account, transaction);
           case "unfreeze":
@@ -81,13 +86,16 @@ const signOperation = ({ account, transaction, deviceId }) =>
           {
             rawDataHex: preparedTransaction.raw_data_hex,
             // only for trc10, we need to put the assetName hex message
-            assetName: subAccount && subAccount.type === 'TokenAccount' && subAccount.token.id.includes("trc10")
-              ? [
-                  tokenList.find(
-                    t => t.id.toString() === subAccount.token.id.split("/")[2]
-                  ).message
-                ] // TODO: Find a better way to store this data ? where ? Not really typesafe too
-              : undefined
+            assetName:
+              subAccount &&
+              subAccount.type === "TokenAccount" &&
+              subAccount.token.id.includes("trc10")
+                ? [
+                    tokenList.find(
+                      t => t.id.toString() === subAccount.token.id.split("/")[2]
+                    ).message
+                  ] // TODO: Find a better way to store this data ? where ? Not really typesafe too
+                : undefined
           }
         );
 
@@ -97,7 +105,8 @@ const signOperation = ({ account, transaction, deviceId }) =>
 
         const fee = await getEstimatedFees(account, transaction);
 
-        const value = transaction.mode === "send" ? transaction.amount : BigNumber(0);
+        const value =
+          transaction.mode === "send" ? transaction.amount : BigNumber(0);
 
         const operationType = getOperationTypefromMode(transaction.mode);
 
@@ -136,11 +145,13 @@ const signOperation = ({ account, transaction, deviceId }) =>
     );
   });
 
-const broadcast = async ({ signedOperation: { signature, operation, signatureRaw } }) => {
+const broadcast = async ({
+  signedOperation: { signature, operation, signatureRaw }
+}) => {
   const transaction = {
     raw_data: signatureRaw,
     txID: operation.hash,
-    signature: [signature],
+    signature: [signature]
   };
 
   const submittedTransaction = await broadcastTron(transaction);
@@ -164,55 +175,70 @@ const getAccountShape = async info => {
   const resources = await getTronResources(acc);
 
   const balance = spendableBalance
-    .plus(resources.frozen.bandwidth ? BigNumber(resources.frozen.bandwidth.amount) : BigNumber(0))
-    .plus(resources.frozen.energy ? BigNumber(resources.frozen.energy.amount) : BigNumber(0));
+    .plus(
+      resources.frozen.bandwidth
+        ? BigNumber(resources.frozen.bandwidth.amount)
+        : BigNumber(0)
+    )
+    .plus(
+      resources.frozen.energy
+        ? BigNumber(resources.frozen.energy.amount)
+        : BigNumber(0)
+    );
 
   const txs = await fetchTronAccountTxs(info.address, txs => txs.length < 1000);
 
   const parentTxs = txs.filter(isParentTx);
-  const parentOperations: Operation[] = compact(parentTxs.map(tx => txInfoToOperation(info.id, info.address, tx)));
+  const parentOperations: Operation[] = compact(
+    parentTxs.map(tx => txInfoToOperation(info.id, info.address, tx))
+  );
 
-  const trc10Tokens = get(acc, "assetV2", []).map(({ key, value }) => ({ type: "trc10", key, value }));
+  const trc10Tokens = get(acc, "assetV2", []).map(({ key, value }) => ({
+    type: "trc10",
+    key,
+    value
+  }));
   const trc20Tokens = get(acc, "trc20", []).map(obj => {
     const [[key, value]] = Object.entries(obj);
     return { type: "trc20", key, value };
   });
 
   // TRC10 and TRC20 accounts
-  const subAccounts: SubAccount[] = 
-    compact(
-      trc10Tokens
-        .concat(trc20Tokens)
-        .map(({ type, key, value }) => {
-          const token = findTokenById(`tron/${type}/${key}`);
-          if (!token) return;
-          const id = info.id + "+" + key;
-          const tokenTxs = txs.filter(tx => tx.tokenId === key);
-          const operations = compact(tokenTxs.map(tx => txInfoToOperation(id, info.address, tx)));
-          const sub: TokenAccount = {
-            type: "TokenAccount",
-            id,
-            starred: false,
-            parentId: info.id,
-            token,
-            balance: BigNumber(value),
-            operationsCount: operations.length,
-            operations,
-            pendingOperations: []
-          };
-          return sub;
-        })
-    );
+  const subAccounts: SubAccount[] = compact(
+    trc10Tokens.concat(trc20Tokens).map(({ type, key, value }) => {
+      const token = findTokenById(`tron/${type}/${key}`);
+      if (!token) return;
+      const id = info.id + "+" + key;
+      const tokenTxs = txs.filter(tx => tx.tokenId === key);
+      const operations = compact(
+        tokenTxs.map(tx => txInfoToOperation(id, info.address, tx))
+      );
+      const sub: TokenAccount = {
+        type: "TokenAccount",
+        id,
+        starred: false,
+        parentId: info.id,
+        token,
+        balance: BigNumber(value),
+        operationsCount: operations.length,
+        operations,
+        pendingOperations: []
+      };
+      return sub;
+    })
+  );
 
   // get 'OUT' token operations with fee
-  const subOutOperationsWithFee: Operation[] = 
-    flatMap(subAccounts.map(s => s.operations))
-      .filter(o => o.type === 'OUT' && o.fee.isGreaterThan(0))
-      .map(o => ({ ...o, accountId: info.id, value: o.fee }));
+  const subOutOperationsWithFee: Operation[] = flatMap(
+    subAccounts.map(s => s.operations)
+  )
+    .filter(o => o.type === "OUT" && o.fee.isGreaterThan(0))
+    .map(o => ({ ...o, accountId: info.id, value: o.fee }));
 
   // add them to the parent operations and sort by date desc
-  const parentOpsAndSubOutOpsWithFee =
-    parentOperations.concat(subOutOperationsWithFee).sort((a, b) => b.date - a.date);
+  const parentOpsAndSubOutOpsWithFee = parentOperations
+    .concat(subOutOperationsWithFee)
+    .sort((a, b) => b.date - a.date);
 
   return {
     balance,
@@ -252,7 +278,9 @@ const updateTransaction = (t, patch) => ({ ...t, ...patch });
 // 2. If not enough, will cost some TRX
 // 3. normal transfert cost around 0.002 TRX
 const getFeesFromBandwidth = (a: Account, t: Transaction): BigNumber => {
-  const { freeUsed, freeLimit, gainedUsed, gainedLimit } = extractBandwidthInfo(t.networkInfo);
+  const { freeUsed, freeLimit, gainedUsed, gainedLimit } = extractBandwidthInfo(
+    t.networkInfo
+  );
   const available = freeLimit - freeUsed + gainedLimit - gainedUsed;
 
   const estimatedBandwidthCost = getEstimatedBlockSize(a, t);
@@ -265,7 +293,10 @@ const getFeesFromBandwidth = (a: Account, t: Transaction): BigNumber => {
 };
 
 // Special case: If activated an account, cost around 0.1 TRX
-const getFeesFromAccountActivation = async (a: Account, t: Transaction): Promise<BigNumber> => {
+const getFeesFromAccountActivation = async (
+  a: Account,
+  t: Transaction
+): Promise<BigNumber> => {
   const recipientAccount = await fetchTronAccount(t.recipient);
   const { gainedUsed, gainedLimit } = extractBandwidthInfo(t.networkInfo);
   const available = gainedLimit - gainedUsed;
@@ -280,10 +311,8 @@ const getFeesFromAccountActivation = async (a: Account, t: Transaction): Promise
 };
 
 const getEstimatedFees = async (a: Account, t: Transaction) => {
-  const feesFromAccountActivation = 
-    t.mode === "send"
-      ? await getFeesFromAccountActivation(a, t)
-      : BigNumber(0);
+  const feesFromAccountActivation =
+    t.mode === "send" ? await getFeesFromAccountActivation(a, t) : BigNumber(0);
 
   if (feesFromAccountActivation.gt(0)) {
     return feesFromAccountActivation;
@@ -305,7 +334,8 @@ const getTransactionStatus = async (a, t): Promise<TransactionStatus> => {
 
   const account = tokenAccount || a;
 
-  const balance = account.type === "Account" ? account.spendableBalance : account.balance;
+  const balance =
+    account.type === "Account" ? account.spendableBalance : account.balance;
 
   if (!["send", "freeze", "unfreeze", "vote", "claimReward"].includes(mode)) {
     errors.mode = new ModeNotSupported();
@@ -315,23 +345,30 @@ const getTransactionStatus = async (a, t): Promise<TransactionStatus> => {
     errors.recipient = new RecipientRequired();
   }
 
-  if (["send", "freeze"].includes(mode) && recipient && !(await validateAddress(recipient))) {
-    errors.recipient = new InvalidAddress(null, { currencyName: a.currency.name });
+  if (
+    ["send", "freeze"].includes(mode) &&
+    recipient &&
+    !(await validateAddress(recipient))
+  ) {
+    errors.recipient = new InvalidAddress(null, {
+      currencyName: a.currency.name
+    });
   }
 
   if (["send", "freeze"].includes(mode) && amount.eq(0)) {
     errors.amount = new AmountRequired();
   }
 
-  const estimatedFees = Object.entries(errors).length > 0
-    ? BigNumber(0)
-    : await getEstimatedFees(a, t);
+  const estimatedFees =
+    Object.entries(errors).length > 0
+      ? BigNumber(0)
+      : await getEstimatedFees(a, t);
 
   const totalSpent = amount.plus(estimatedFees);
 
   if (estimatedFees.gt(0)) {
     const formattedFees = formatCurrencyUnit(
-      getAccountUnit(account), 
+      getAccountUnit(account),
       estimatedFees,
       {
         showCode: true,
@@ -341,7 +378,6 @@ const getTransactionStatus = async (a, t): Promise<TransactionStatus> => {
 
     warnings.fee = new FeeRequired(`Estimated fees: ${formattedFees}`);
   }
-
 
   if (totalSpent.gt(balance)) {
     errors.amount = new NotEnoughBalance();

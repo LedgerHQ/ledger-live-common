@@ -14,7 +14,12 @@ export type CoreOperationSpecifics = {};
 
 export type CoreCurrencySpecifics = {};
 
-export type TronOperationMode = "send" | "freeze" | "unfreeze" | "vote" | "claimReward";
+export type TronOperationMode =
+  | "send"
+  | "freeze"
+  | "unfreeze"
+  | "vote"
+  | "claimReward";
 export type TronResource = "BANDWIDTH" | "ENERGY";
 
 export type NetworkInfo = {|
@@ -55,7 +60,7 @@ export type TransactionRaw = {|
   votes: Vote[]
 |};
 
-export type TrongridTxType = 
+export type TrongridTxType =
   | "TransferContract"
   | "TransferAssetContract"
   | "TransferTRC20Contract"
@@ -73,7 +78,7 @@ export type TrongridTxInfo = {|
   from: string,
   to?: string,
   value?: BigNumber,
-  fee?: BigNumber,
+  fee?: BigNumber
 |};
 
 export type SendTransactionData = {|
@@ -139,7 +144,7 @@ export type SuperRepresentative = {|
 export type TronResources = {|
   frozen: {
     bandwidth: ?FrozenInfo,
-    energy: ?FrozenInfo,
+    energy: ?FrozenInfo
   },
   votes: Vote[],
   tronPower: number,

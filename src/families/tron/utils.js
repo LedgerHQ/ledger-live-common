@@ -3,15 +3,19 @@ import bs58check from "bs58check";
 import { BigNumber } from "bignumber.js";
 import get from "lodash/get";
 import type { Transaction, TronOperationMode, TrongridTxInfo } from "./types";
-import type { Account, Operation, OperationType  } from "../../types";
+import type { Account, Operation, OperationType } from "../../types";
 
 export const decode58Check = (base58: string) =>
   Buffer.from(bs58check.decode(base58)).toString("hex");
 
-export const encode58Check = (hex: string) => bs58check.encode(Buffer.from(hex, "hex"));
+export const encode58Check = (hex: string) =>
+  bs58check.encode(Buffer.from(hex, "hex"));
 
 // see: https://solidity.readthedocs.io/en/v0.6.1/abi-spec.html#function-selector-and-argument-encoding
-export const abiEncodeTrc20Transfer = (address: string, amount: BigNumber): string => {
+export const abiEncodeTrc20Transfer = (
+  address: string,
+  amount: BigNumber
+): string => {
   const encodedAddress = address.padStart(64, "0");
   const hexAmount = amount.toNumber().toString(16); // convert to hexadecimal
   const encodedAmount = hexAmount.padStart(64, "0");
@@ -19,19 +23,19 @@ export const abiEncodeTrc20Transfer = (address: string, amount: BigNumber): stri
 };
 
 export const hexToAscii = (hex: string) => {
-	let str = '';
-	for (var n = 0; n < hex.length; n += 2) {
-		str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
-	}
-	return str;
+  let str = "";
+  for (var n = 0; n < hex.length; n += 2) {
+    str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
+  }
+  return str;
 };
 
 export const isParentTx = (tx: TrongridTxInfo): boolean => {
   return [
-    "TransferContract", 
-    "FreezeBalanceContract", 
-    "UnfreezeBalanceContract", 
-    "VoteWitnessContract", 
+    "TransferContract",
+    "FreezeBalanceContract",
+    "UnfreezeBalanceContract",
+    "VoteWitnessContract",
     "WithdrawBalanceContract"
   ].includes(tx.type);
 };
@@ -54,13 +58,15 @@ export const getEstimatedBlockSize = (a: Account, t: Transaction): number => {
     case "claimReward":
       return 260;
     case "vote":
-      return 290 + (t.votes.length * 19);
+      return 290 + t.votes.length * 19;
     default:
       return 0;
   }
 };
 
-export const getOperationTypefromMode = (mode: TronOperationMode): OperationType => {
+export const getOperationTypefromMode = (
+  mode: TronOperationMode
+): OperationType => {
   switch (mode) {
     case "send":
       return "OUT";
@@ -77,14 +83,15 @@ export const getOperationTypefromMode = (mode: TronOperationMode): OperationType
   }
 };
 
-const getOperationType = (tx: TrongridTxInfo, accountAddr: string): ?OperationType => {
-	switch (tx.type) {
-		case "TransferContract":
+const getOperationType = (
+  tx: TrongridTxInfo,
+  accountAddr: string
+): ?OperationType => {
+  switch (tx.type) {
+    case "TransferContract":
     case "TransferAssetContract":
     case "TransferTRC20Contract":
-			return tx.from === accountAddr 
-				? "OUT"
-				: "IN";
+      return tx.from === accountAddr ? "OUT" : "IN";
     case "FreezeBalanceContract":
       return "FREEZE";
     case "UnfreezeBalanceContract":
@@ -93,15 +100,26 @@ const getOperationType = (tx: TrongridTxInfo, accountAddr: string): ?OperationTy
       return "VOTE";
     case "WithdrawBalanceContract":
       return "REWARD";
-		default:
-			return undefined;
-	}
+    default:
+      return undefined;
+  }
 };
 
-export const formatTrongridTxResponse = (tx: Object, isTrc20: boolean = false): TrongridTxInfo => {
+export const formatTrongridTxResponse = (
+  tx: Object,
+  isTrc20: boolean = false
+): TrongridTxInfo => {
   try {
     if (isTrc20) {
-      const { from, to, block_timestamp, detail, value, transaction_id, token_info } = tx;
+      const {
+        from,
+        to,
+        block_timestamp,
+        detail,
+        value,
+        transaction_id,
+        token_info
+      } = tx;
       const type = "TransferTRC20Contract";
       const txID = transaction_id;
       const date = new Date(block_timestamp);
@@ -123,21 +141,27 @@ export const formatTrongridTxResponse = (tx: Object, isTrc20: boolean = false): 
       const { txID, block_timestamp, detail } = tx;
 
       const date = new Date(block_timestamp);
-  
+
       const type = get(tx, "raw_data.contract[0].type", "");
 
-      const { amount, asset_name, owner_address, to_address } = 
-        get(tx, "raw_data.contract[0].parameter.value", {});
+      const { amount, asset_name, owner_address, to_address } = get(
+        tx,
+        "raw_data.contract[0].parameter.value",
+        {}
+      );
 
       const tokenId = asset_name;
 
       const from = encode58Check(owner_address);
 
       const to = to_address ? encode58Check(to_address) : undefined;
-  
-      const value = type === "WithdrawBalanceContract"
-        ? BigNumber(detail.withdraw_amount)
-        : amount ? BigNumber(amount) : undefined;
+
+      const value =
+        type === "WithdrawBalanceContract"
+          ? BigNumber(detail.withdraw_amount)
+          : amount
+          ? BigNumber(amount)
+          : undefined;
 
       const fee = detail && detail.fee ? BigNumber(detail.fee) : undefined;
 
@@ -154,12 +178,26 @@ export const formatTrongridTxResponse = (tx: Object, isTrc20: boolean = false): 
     }
   } catch (e) {
     // Should not happen unless Trongrid change response models.
-    throw new Error("unexpected error occured when formatting tron transaction");
+    throw new Error(
+      "unexpected error occured when formatting tron transaction"
+    );
   }
 };
 
-export const txInfoToOperation = (id: string, address: string, tx: TrongridTxInfo): ?Operation => {
-  const { txID, date, from, to, type, value = BigNumber(0), fee = BigNumber(0) } = tx;
+export const txInfoToOperation = (
+  id: string,
+  address: string,
+  tx: TrongridTxInfo
+): ?Operation => {
+  const {
+    txID,
+    date,
+    from,
+    to,
+    type,
+    value = BigNumber(0),
+    fee = BigNumber(0)
+  } = tx;
   const hash = txID;
 
   const operationType = getOperationType(tx, address);
@@ -169,9 +207,10 @@ export const txInfoToOperation = (id: string, address: string, tx: TrongridTxInf
       id: `${id}-${hash}-${operationType}`,
       hash,
       type: operationType,
-      value: operationType === "OUT" && type === "TransferContract" 
-        ? value.plus(fee)
-        : value, // fee is not charged in TRC tokens
+      value:
+        operationType === "OUT" && type === "TransferContract"
+          ? value.plus(fee)
+          : value, // fee is not charged in TRC tokens
       fee: fee,
       blockHeight: 0,
       blockHash: null,

@@ -1,10 +1,10 @@
 // @flow
 
-import { 
+import {
   getAccountName,
   getBrokerage,
   getTronSuperRepresentatives,
-  getTronSuperRepresentativeData 
+  getTronSuperRepresentativeData
 } from "../../api/Tron";
 import sumBy from "lodash/sumBy";
 
@@ -13,7 +13,9 @@ export default () => {
     test("getting the list ordered by voteCount", async () => {
       const superRepresentatives = await getTronSuperRepresentatives(27);
       expect(superRepresentatives.length).toBeGreaterThan(20);
-      expect(superRepresentatives[0].voteCount).toBeGreaterThan(superRepresentatives[1].voteCount);
+      expect(superRepresentatives[0].voteCount).toBeGreaterThan(
+        superRepresentatives[1].voteCount
+      );
     });
   });
 
@@ -22,13 +24,17 @@ export default () => {
       const srData = await getTronSuperRepresentativeData();
       expect(srData.list.length).toBeGreaterThan(27);
       expect(srData.totalVotes).toEqual(sumBy(srData.list, "voteCount"));
-      expect(srData.nextVotingDate.getTime()).toBeGreaterThanOrEqual(new Date().getTime());
+      expect(srData.nextVotingDate.getTime()).toBeGreaterThanOrEqual(
+        new Date().getTime()
+      );
     });
 
     test("max is set to 27", async () => {
       const srData = await getTronSuperRepresentativeData(27);
       expect(srData.list.length).toEqual(27);
-      expect(srData.nextVotingDate.getTime()).toBeGreaterThanOrEqual(new Date().getTime());
+      expect(srData.nextVotingDate.getTime()).toBeGreaterThanOrEqual(
+        new Date().getTime()
+      );
     });
   });
 
@@ -46,7 +52,9 @@ export default () => {
 
   describe("get brokerage", () => {
     test("from a top SR (binance)", async () => {
-      const brokerage = await getBrokerage("TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH");
+      const brokerage = await getBrokerage(
+        "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH"
+      );
       expect(brokerage).toEqual(20);
     });
   });

@@ -14,7 +14,7 @@ const convertTokens = (type: TokenType) => ([
   precision
 ]): TokenCurrency => ({
   type: "TokenCurrency",
-  id: `tron/${type}/${id}` ,
+  id: `tron/${type}/${id}`,
   contractAddress,
   parentCurrency: getCryptoCurrencyById("tron"),
   tokenType: type,
