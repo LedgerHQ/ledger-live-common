@@ -2,8 +2,8 @@
 import bs58check from "bs58check";
 import { BigNumber } from "bignumber.js";
 import get from "lodash/get";
-import type { TronOperationMode, TrongridTxInfo, TrongridTxType } from "./types";
-import type { Operation, OperationType } from "../../types/operation";
+import type { Transaction, TronOperationMode, TrongridTxInfo, TrongridTxType } from "./types";
+import type { Account, Operation, OperationType  } from "../../types"
 
 export const decode58Check = (base58: string) =>
   Buffer.from(bs58check.decode(base58)).toString("hex");
@@ -35,6 +35,30 @@ export const isParentTx = (tx: TrongridTxInfo): boolean => {
     "WithdrawBalanceContract"
   ].includes(tx.type)
 };
+
+// This is an estimation, there is no endpoint to calculate the real size of a block before broadcasting it.
+export const getEstimatedBlockSize = (a: Account, t: Transaction): number => {
+  switch (t.mode) {
+    case "send": {
+      const subAccount =
+        t.subAccountId && a.subAccounts
+          ? a.subAccounts.find(sa => sa.id === t.subAccountId)
+          : null;
+
+      if (get(subAccount, "id", "").includes("trc10")) return 285;
+      if (get(subAccount, "id", "").includes("trc20")) return 350;
+      return 270;
+    }
+    case "freeze":
+    case "unfreeze":
+    case "claimReward":
+      return 260;
+    case "vote":
+      return 290 + (t.votes.length * 19);
+    default:
+      return 0;
+  }
+}
 
 export const getOperationTypefromMode = (mode: TronOperationMode): OperationType => {
   switch (mode) {

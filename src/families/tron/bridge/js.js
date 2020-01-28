@@ -7,6 +7,7 @@ import get from "lodash/get";
 import bs58check from "bs58check";
 import SHA256 from "crypto-js/sha256";
 import type {
+  Account,
   Operation,
   TokenCurrency,
   TokenAccount,
@@ -19,19 +20,23 @@ import type {
   Transaction,
   TrongridTxInfo
 } from "../types";
-import { encode58Check, isParentTx, txInfoToOperation, getOperationTypefromMode } from "../utils";
+import { encode58Check, isParentTx, txInfoToOperation, getOperationTypefromMode, getEstimatedBlockSize } from "../utils";
 import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
 import { findTokenById } from "../../../data/tokens";
 import { open } from "../../../hw";
 import signTransaction from "../../../hw/signTransaction";
 import { makeSync, makeScanAccounts } from "../../../bridge/jsHelpers";
 import { validateRecipient } from "../../../bridge/shared";
+import { formatCurrencyUnit } from "../../../currencies";
+import { getAccountUnit } from "../../../account"
 import {
   InvalidAddress,
   RecipientRequired,
   NotEnoughBalance,
-  AmountRequired
+  AmountRequired,
+  FeeRequired
 } from "@ledgerhq/errors";
+import { ModeNotSupported } from "../../../errors";
 import { tokenList } from "../tokens-name-hex";
 import {
   broadcastTron,
@@ -47,8 +52,6 @@ import {
   unfreezeTronTransaction,
   voteTronSuperRepresentatives
 } from "../../../api/Tron";
-
-const AVERAGE_BANDWIDTH_COST = 200;
 
 const signOperation = ({ account, transaction, deviceId }) =>
   Observable.create(o => {
@@ -101,13 +104,9 @@ const signOperation = ({ account, transaction, deviceId }) =>
 
         const hash = preparedTransaction.txID;
 
-        // only if it's a send transaction
-        // estimated fee
-        const fee = transaction.mode === "send" 
-          ? await getEstimatedFees(transaction) 
-          : BigNumber(0);
-        // value
-        const value = transaction.amount;
+        const fee = await getEstimatedFees(account, transaction) 
+
+        const value = transaction.mode === "send" ? transaction.amount : BigNumber(0);
 
         const operationType = getOperationTypefromMode(transaction.mode);
 
@@ -261,10 +260,13 @@ const updateTransaction = (t, patch) => ({ ...t, ...patch });
 // 1. cost around 200 Bandwidth, if not enough check Free Bandwidth
 // 2. If not enough, will cost some TRX
 // 3. normal transfert cost around 0.002 TRX
-const getFeesFromBandwidth = (networkInfo: ?NetworkInfo): BigNumber => {
-  const { available } = extractBandwidthInfo(networkInfo);
+const getFeesFromBandwidth = (a: Account, t: Transaction): BigNumber => {
+  const { freeUsed, freeLimit, gainedUsed, gainedLimit } = extractBandwidthInfo(t.networkInfo);
+  const available = freeLimit - freeUsed + gainedLimit - gainedUsed;
 
-  if (available < AVERAGE_BANDWIDTH_COST) {
+  const estimatedBandwidthCost = getEstimatedBlockSize(a, t);
+
+  if (available < estimatedBandwidthCost) {
     return BigNumber(2000); // cost is around 0.002 TRX
   }
 
@@ -272,23 +274,31 @@ const getFeesFromBandwidth = (networkInfo: ?NetworkInfo): BigNumber => {
 };
 
 // Special case: If activated an account, cost around 0.1 TRX
-const getFeesFromAccountActivation = async (recipient: string, networkInfo: ?NetworkInfo): Promise<BigNumber> => {
-  const recipientAccount = await fetchTronAccount(recipient);
-  const { available } = extractBandwidthInfo(networkInfo);
+const getFeesFromAccountActivation = async (a: Account, t: Transaction): Promise<BigNumber> => {
+  const recipientAccount = await fetchTronAccount(t.recipient);
+  const { gainedUsed, gainedLimit } = extractBandwidthInfo(t.networkInfo);
+  const available = gainedLimit - gainedUsed;
 
-  if (recipientAccount.length === 0 && available < 10000) {
+  const estimatedBandwidthCost = getEstimatedBlockSize(a, t);
+
+  if (recipientAccount.length === 0 && available < estimatedBandwidthCost) {
     return BigNumber(100000); // cost is around 0.1 TRX
   }
 
   return BigNumber(0); // no fee
 };
 
-const getEstimatedFees = async t => {
-  const feesFromBandwidth = getFeesFromBandwidth(t.networkInfo);
-  const feesFromAccountActivation = await getFeesFromAccountActivation(t.recipient);
+const getEstimatedFees = async (a: Account, t: Transaction) => {
+  const feesFromAccountActivation = 
+    t.mode === "send"
+      ? await getFeesFromAccountActivation(a, t)
+      : BigNumber(0);
+
   if (feesFromAccountActivation.gt(0)) {
     return feesFromAccountActivation;
-  } 
+  }
+
+  const feesFromBandwidth = getFeesFromBandwidth(a, t);
   return feesFromBandwidth;
 };
 
@@ -296,30 +306,54 @@ const getTransactionStatus = async (a, t): Promise<TransactionStatus> => {
   const errors: { [string]: Error } = {};
   const warnings: { [string]: Error } = {};
 
+  const { mode, amount, recipient } = t;
+
   const tokenAccount = !t.subAccountId
     ? null
     : a.subAccounts && a.subAccounts.find(ta => ta.id === t.subAccountId);
 
   const account = tokenAccount || a;
 
-  if (!t.recipient) {
+  const balance = account.type === "Account" ? account.spendableBalance : account.balance;
+
+  if (!["send", "freeze", "unfreeze", "vote", "claimReward"].includes(mode)) {
+    errors.mode = new ModeNotSupported();
+  }
+
+  if (mode === "send" && !recipient) {
     errors.recipient = new RecipientRequired();
-  } else if (!(await validateAddress(t.recipient))) {
+  }
+
+  if (["send", "freeze"].includes(mode) && recipient && !(await validateAddress(recipient))) {
     errors.recipient = new InvalidAddress(null, { currencyName: a.currency.name });
   }
 
-  const estimatedFees = errors.recipient
-    ? BigNumber(0)
-    : await getEstimatedFees(t); //TBD
+  if (["send", "freeze"].includes(mode) && amount.eq(0)) {
+    errors.amount = new AmountRequired();
+  }
 
-  const amount = t.amount;
+  const estimatedFees = Object.entries(errors).length > 0
+    ? BigNumber(0)
+    : await getEstimatedFees(a, t);
 
   const totalSpent = amount.plus(estimatedFees);
 
-  if (totalSpent.gt(BigNumber(account.balance))) {
+  if (estimatedFees.gt(0)) {
+    const formattedFees = formatCurrencyUnit(
+      getAccountUnit(account), 
+      estimatedFees,
+      {
+        showCode: true,
+        disableRounding: true
+      }
+    );
+
+    warnings.fee = new FeeRequired(`Estimated fees: ${formattedFees}`);
+  }
+
+
+  if (totalSpent.gt(balance)) {
     errors.amount = new NotEnoughBalance();
-  } else if (amount.eq(0)) {
-    errors.amount = new AmountRequired();
   }
 
   return Promise.resolve({

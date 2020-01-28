@@ -7,3 +7,5 @@ import { createCustomErrorClass } from "@ledgerhq/errors";
 export const TransactionRefusedOnDevice = createCustomErrorClass(
   "TransactionRefusedOnDevice"
 );
+
+export const ModeNotSupported = createCustomErrorClass("ModeNotSupported");

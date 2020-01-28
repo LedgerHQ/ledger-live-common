@@ -159,6 +159,8 @@ export type FrozenInfo = {|
 |};
 
 export type BandwidthInfo = {|
-  available: number,
-  used: number
+  freeUsed: number,
+  freeLimit: number,
+  gainedUsed: number,
+  gainedLimit: number
 |};

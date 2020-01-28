@@ -25,32 +25,44 @@ import get from "lodash/get";
 import sumBy from "lodash/sumBy";
 import take from "lodash/take";
 
+const baseApiUrl: string = "https://api.trongrid.io";
+
 async function post(url: string, body: Object) {
-  const { data } = await network({
-    method: "POST",
-    url,
-    data: body
-  });
+  try {
+    const { data } = await network({
+      method: "POST",
+      url,
+      data: body
+    });
 
-  log("http", url);
+    log("http", url);
 
-  if (data.Error) throw new Error(data.Error);
-  
-  return data;
+    if (data.Error) throw new Error(data.Error);
+    
+    return data;
+  } catch (e) {
+    log("http", `Error when calling ${url}`, e);
+    throw e;
+  }
 }
 
 async function fetch(url: string) {
-  const { data } = await network({
-    method: "GET",
-    url
-  });
+  try {
+    const { data } = await network({
+      method: "GET",
+      url
+    });
 
-  log("http", url);
+    log("http", url);
 
-  return data;
+    if (data.Error) throw new Error(data.Error);
+
+    return data;
+  } catch (e) {
+    log("http", `Error when calling ${url}`, e);
+    throw e;
+  }
 }
-
-const baseApiUrl = "https://api.trongrid.io";
 
 export const freezeTronTransaction = async (
   a: Account, 
@@ -347,14 +359,16 @@ export const extractBandwidthInfo = (networkInfo: ?NetworkInfo): BandwidthInfo =
       NetUsed = 0,
       NetLimit = 0
     } = networkInfo;
-    
-    
-    const available = freeNetLimit - freeNetUsed + NetLimit - NetUsed;
-    const used = freeNetUsed + NetUsed;
-    return { available, used };
+
+    return { 
+      freeUsed: freeNetUsed,
+      freeLimit: freeNetLimit,
+      gainedUsed: NetUsed,
+      gainedLimit: NetLimit 
+    };
   }
 
-  return { available: 0, used: 0 };
+  return { freeUsed: 0, freeLimit: 0, gainedUsed: 0, gainedLimit: 0 };
 };
 
 export const getTronResources = async (acc: Object): Promise<TronResources> => {
