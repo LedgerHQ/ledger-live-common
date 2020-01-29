@@ -9,3 +9,15 @@ export const TransactionRefusedOnDevice = createCustomErrorClass(
 );
 
 export const ModeNotSupported = createCustomErrorClass("ModeNotSupported");
+
+export const ResourceNotSupported = createCustomErrorClass(
+  "ResourceNotSupported"
+);
+
+export const UnfreezeNotExpired = createCustomErrorClass("UnfreezeNotExpired");
+
+export const VoteRequired = createCustomErrorClass("VoteRequired");
+
+export const InvalidVoteCount = createCustomErrorClass("InvalidVoteCount");
+
+export const RewardNotAvailable = createCustomErrorClass("RewardNotAvailable");

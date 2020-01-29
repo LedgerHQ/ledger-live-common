@@ -32,7 +32,14 @@ import {
   AmountRequired,
   FeeRequired
 } from "@ledgerhq/errors";
-import { ModeNotSupported } from "../../../errors";
+import {
+  ModeNotSupported,
+  ResourceNotSupported,
+  UnfreezeNotExpired,
+  VoteRequired,
+  InvalidVoteCount,
+  RewardNotAvailable
+} from "../../../errors";
 import { tokenList } from "../tokens-name-hex";
 import {
   broadcastTron,
@@ -43,6 +50,7 @@ import {
   fetchTronAccountTxs,
   getTronAccountNetwork,
   getTronResources,
+  getTronSuperRepresentatives,
   validateAddress,
   freezeTronTransaction,
   unfreezeTronTransaction,
@@ -322,11 +330,14 @@ const getEstimatedFees = async (a: Account, t: Transaction) => {
   return feesFromBandwidth;
 };
 
-const getTransactionStatus = async (a, t): Promise<TransactionStatus> => {
+const getTransactionStatus = async (
+  a: Account,
+  t: Transaction
+): Promise<TransactionStatus> => {
   const errors: { [string]: Error } = {};
   const warnings: { [string]: Error } = {};
 
-  const { mode, amount, recipient } = t;
+  const { mode, amount, recipient, resource, votes } = t;
 
   const tokenAccount = !t.subAccountId
     ? null
@@ -346,6 +357,13 @@ const getTransactionStatus = async (a, t): Promise<TransactionStatus> => {
   }
 
   if (
+    ["freeze", "unfreeze"].includes(mode) &&
+    !["BANDWIDTH", "ENERGY"].includes(resource)
+  ) {
+    errors.resource = new ResourceNotSupported();
+  }
+
+  if (
     ["send", "freeze"].includes(mode) &&
     recipient &&
     !(await validateAddress(recipient))
@@ -355,7 +373,9 @@ const getTransactionStatus = async (a, t): Promise<TransactionStatus> => {
     });
   }
 
-  if (["send", "freeze"].includes(mode) && amount.eq(0)) {
+  const amountSpent = ["send", "freeze"].includes(mode) ? amount : BigNumber(0);
+
+  if (["send", "freeze"].includes(mode) && amountSpent.eq(0)) {
     errors.amount = new AmountRequired();
   }
 
@@ -364,29 +384,74 @@ const getTransactionStatus = async (a, t): Promise<TransactionStatus> => {
       ? BigNumber(0)
       : await getEstimatedFees(a, t);
 
-  const totalSpent = amount.plus(estimatedFees);
+  const totalSpent = amountSpent.plus(estimatedFees);
 
   if (estimatedFees.gt(0)) {
-    const formattedFees = formatCurrencyUnit(
-      getAccountUnit(account),
-      estimatedFees,
-      {
-        showCode: true,
-        disableRounding: true
-      }
-    );
+    const fees = formatCurrencyUnit(getAccountUnit(account), estimatedFees, {
+      showCode: true,
+      disableRounding: true
+    });
 
-    warnings.fee = new FeeRequired(`Estimated fees: ${formattedFees}`);
+    warnings.fee = new FeeRequired("Estimated fees", { fees });
   }
 
-  if (totalSpent.gt(balance)) {
+  if (["send", "freeze"].includes(mode) && totalSpent.gt(balance)) {
     errors.amount = new NotEnoughBalance();
+  }
+
+  if (mode === "unfreeze") {
+    const lowerCaseResource = resource ? resource.toLowerCase() : "bandwidth";
+    const now = new Date();
+    const expirationDate: Date = get(
+      a,
+      `resources.frozen.${lowerCaseResource}.expiredAt`,
+      now
+    );
+
+    if (now.getTime() < expirationDate.getTime()) {
+      errors.resource = new UnfreezeNotExpired(null, {
+        until: expirationDate.toISOString()
+      });
+    }
+  }
+
+  if (mode === "vote") {
+    if (votes.length === 0) {
+      errors.vote = new VoteRequired();
+    } else {
+      const superRepresentatives = await getTronSuperRepresentatives();
+      const isValidVoteCounts = votes.every(v => v.voteCount > 0);
+      const isValidAddresses = votes.every(v =>
+        superRepresentatives.some(s => s.address === v.address)
+      );
+
+      if (!isValidVoteCounts) {
+        errors.voteCount = new InvalidVoteCount();
+      }
+
+      if (!isValidAddresses) {
+        errors.voteAddress = new InvalidAddress();
+      }
+    }
+  }
+
+  if (mode === "claimReward") {
+    const lastRewardOp = account.operations.find(o => o.type === "REWARD");
+    const claimableRewardDate = lastRewardOp
+      ? new Date(lastRewardOp.date.getTime() + 86400000)
+      : new Date();
+
+    if (lastRewardOp && claimableRewardDate > new Date().getTime()) {
+      errors.claimReward = new RewardNotAvailable("Reward is not claimable", {
+        until: claimableRewardDate.toISOString()
+      });
+    }
   }
 
   return Promise.resolve({
     errors,
     warnings,
-    amount,
+    amount: amountSpent,
     estimatedFees,
     totalSpent
   });
