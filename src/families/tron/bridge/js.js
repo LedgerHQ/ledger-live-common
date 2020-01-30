@@ -204,11 +204,15 @@ const getAccountShape = async info => {
     parentTxs.map(tx => txInfoToOperation(info.id, info.address, tx))
   );
 
-  const trc10Tokens = get(acc, "assetV2", []).map(({ key, value }) => ({
-    type: "trc10",
-    key,
-    value
-  }));
+  // we need to filter only supported tokens by the nano app
+  const trc10Tokens = get(acc, "assetV2", [])
+    .map(({ key, value }) => ({
+      type: "trc10",
+      key,
+      value
+    }))
+    .filter(({ key }) => tokenList.some(t => t.id.toString() === key));
+
   const trc20Tokens = get(acc, "trc20", []).map(obj => {
     const [[key, value]] = Object.entries(obj);
     return { type: "trc20", key, value };
