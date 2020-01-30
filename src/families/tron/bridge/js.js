@@ -39,6 +39,7 @@ import {
   UnfreezeNotExpired,
   VoteRequired,
   InvalidVoteCount,
+  InvalidFreezeAmount,
   RewardNotAvailable
 } from "../../../errors";
 import { tokenList } from "../tokens-name-hex";
@@ -396,6 +397,10 @@ const getTransactionStatus = async (
     } else if (totalSpent.gt(balance)) {
       errors.amount = new NotEnoughBalance();
     }
+  }
+
+  if (mode === "freeze" && amount.lt(BigNumber(1000000))) {
+    errors.amount = new InvalidFreezeAmount();
   }
 
   if (mode === "unfreeze") {

@@ -21,3 +21,5 @@ export const VoteRequired = createCustomErrorClass("VoteRequired");
 export const InvalidVoteCount = createCustomErrorClass("InvalidVoteCount");
 
 export const RewardNotAvailable = createCustomErrorClass("RewardNotAvailable");
+
+export const InvalidFreezeAmount = createCustomErrorClass("InvalidFreezeAmount");
