@@ -78,7 +78,8 @@ export type TrongridTxInfo = {|
   from: string,
   to?: string,
   value?: BigNumber,
-  fee?: BigNumber
+  fee?: BigNumber,
+  resource?: TronResource
 |};
 
 export type SendTransactionData = {|
@@ -144,8 +145,10 @@ export type SuperRepresentative = {|
 export type TronResources = {|
   frozen: {
     bandwidth: ?FrozenInfo,
-    delegatedBandwidth: ?BigNumber,
-    delegatedEnergy: ?BigNumber,
+    energy: ?FrozenInfo
+  },
+  delegatedFrozen: {
+    bandwidth: ?FrozenInfo,
     energy: ?FrozenInfo
   },
   votes: Vote[],

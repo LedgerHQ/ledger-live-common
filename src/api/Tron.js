@@ -404,7 +404,10 @@ export const extractBandwidthInfo = (
   return { freeUsed: 0, freeLimit: 0, gainedUsed: 0, gainedLimit: 0 };
 };
 
-export const getTronResources = async (acc: Object): Promise<TronResources> => {
+export const getTronResources = async (
+  acc: Object,
+  txs: TrongridTxInfo[]
+): Promise<TronResources> => {
   try {
     const frozenBandwidth = get(acc, "frozen[0]", undefined);
     const frozenEnergy = get(
@@ -413,8 +416,25 @@ export const getTronResources = async (acc: Object): Promise<TronResources> => {
       undefined
     );
 
-    const delegatedFrozenBandwidth = get(acc, "delegated_frozen_balance_for_bandwidth", undefined);
-    const delegatedFrozenEnergy = get(acc, "account_resource.delegated_frozen_balance_for_energy", undefined);
+    const delegatedFrozenBandwidth = get(
+      acc,
+      "delegated_frozen_balance_for_bandwidth",
+      undefined
+    );
+    const delegatedFrozenEnergy = get(
+      acc,
+      "account_resource.delegated_frozen_balance_for_energy",
+      undefined
+    );
+
+    const lastDelegatedFrozenBandwidthOp = txs.find(
+      t =>
+        t.type === "FreezeBalanceContract" && t.to && t.resource === "BANDWIDTH"
+    );
+
+    const lastDelegatedFrozenEnergyOp = txs.find(
+      t => t.type === "FreezeBalanceContract" && t.to && t.resource === "ENERGY"
+    );
 
     const encodedAddress = encode58Check(acc.address);
 
@@ -423,6 +443,7 @@ export const getTronResources = async (acc: Object): Promise<TronResources> => {
 
     const energy = tronNetworkInfo.EnergyLimit || 0;
     const bandwidth = extractBandwidthInfo(tronNetworkInfo);
+    const threeDaysInMs = 3 * 24 * 60 * 60 * 1000;
 
     const frozen = {
       bandwidth: frozenBandwidth
@@ -431,14 +452,33 @@ export const getTronResources = async (acc: Object): Promise<TronResources> => {
             expiredAt: new Date(frozenBandwidth.expire_time)
           }
         : undefined,
-      delegatedBandwidth: delegatedFrozenBandwidth ? BigNumber(delegatedFrozenBandwidth) : undefined,
-      delegatedEnergy: delegatedFrozenEnergy ? BigNumber(delegatedFrozenEnergy) : undefined,
       energy: frozenEnergy
         ? {
             amount: BigNumber(frozenEnergy.frozen_balance),
             expiredAt: new Date(frozenEnergy.expire_time)
           }
         : undefined
+    };
+
+    const delegatedFrozen = {
+      bandwidth:
+        delegatedFrozenBandwidth && lastDelegatedFrozenBandwidthOp
+          ? {
+              amount: BigNumber(delegatedFrozenBandwidth),
+              expiredAt: new Date(
+                lastDelegatedFrozenBandwidthOp.date.getTime() + threeDaysInMs
+              ) // + 3 days
+            }
+          : undefined,
+      energy:
+        delegatedFrozenEnergy && lastDelegatedFrozenEnergyOp
+          ? {
+              amount: BigNumber(delegatedFrozenEnergy),
+              expiredAt: new Date(
+                lastDelegatedFrozenEnergyOp.date.getTime() + threeDaysInMs
+              ) // + 3 days
+            }
+          : undefined
     };
 
     const tronPower = BigNumber(
@@ -457,25 +497,13 @@ export const getTronResources = async (acc: Object): Promise<TronResources> => {
       energy,
       bandwidth,
       frozen,
+      delegatedFrozen,
       votes,
       tronPower,
       unwithdrawnReward
     };
   } catch (e) {
     throw new Error("Unexpected error occured when calling getTronResources");
-  }
-};
-
-export const getTronResourcesFromAddress = async (
-  addr: string
-): Promise<TronResources> => {
-  try {
-    const acc = await fetchTronAccount(addr);
-    return getTronResources(acc);
-  } catch (e) {
-    throw new Error(
-      "Unexpected error occured when calling getTronResourcesFromAddress"
-    );
   }
 };
 

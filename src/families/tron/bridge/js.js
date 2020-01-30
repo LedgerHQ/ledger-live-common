@@ -183,7 +183,10 @@ const getAccountShape = async info => {
 
   const acc = tronAcc[0];
   const spendableBalance = acc.balance ? BigNumber(acc.balance) : BigNumber(0);
-  const resources = await getTronResources(acc);
+
+  const txs = await fetchTronAccountTxs(info.address, txs => txs.length < 1000);
+
+  const resources = await getTronResources(acc, txs);
 
   const balance = spendableBalance
     .plus(
@@ -192,18 +195,18 @@ const getAccountShape = async info => {
         : BigNumber(0)
     )
     .plus(
-      resources.frozen.energy
-        ? resources.frozen.energy.amount
+      resources.frozen.energy ? resources.frozen.energy.amount : BigNumber(0)
+    )
+    .plus(
+      resources.delegatedFrozen.bandwidth
+        ? resources.delegatedFrozen.bandwidth.amount
         : BigNumber(0)
     )
     .plus(
-      resources.frozen.delegatedBandwidth || BigNumber(0)
-    )
-    .plus(
-      resources.frozen.delegatedEnergy || BigNumber(0)
+      resources.delegatedFrozen.energy
+        ? resources.delegatedFrozen.energy.amount
+        : BigNumber(0)
     );
-
-  const txs = await fetchTronAccountTxs(info.address, txs => txs.length < 1000);
 
   const parentTxs = txs.filter(isParentTx);
   const parentOperations: Operation[] = compact(
@@ -384,7 +387,8 @@ const getTransactionStatus = async (
       : await getEstimatedFees(a, t);
 
   // fees are applied in the parent only (TRX)
-  const totalSpent = account.type === "Account" ? amountSpent.plus(estimatedFees) : amountSpent;
+  const totalSpent =
+    account.type === "Account" ? amountSpent.plus(estimatedFees) : amountSpent;
 
   if (["send", "freeze", "unfreeze"].includes(mode)) {
     if (recipient === a.freshAddress) {
@@ -427,14 +431,14 @@ const getTransactionStatus = async (
     errors.amount = new InvalidFreezeAmount();
   }
 
-  if (mode === "unfreeze" && !recipient) {
+  if (mode === "unfreeze") {
     const lowerCaseResource = resource ? resource.toLowerCase() : "bandwidth";
     const now = new Date();
-    const expirationDate: Date = get(
-      a,
-      `resources.frozen.${lowerCaseResource}.expiredAt`,
-      now
-    );
+    const expiredDatePath = recipient
+      ? `resources.delegatedFrozen.${lowerCaseResource}.expiredAt`
+      : `resources.frozen.${lowerCaseResource}.expiredAt`;
+
+    const expirationDate: Date = get(a, expiredDatePath, now);
 
     if (now.getTime() < expirationDate.getTime()) {
       errors.resource = new UnfreezeNotExpired(null, {
@@ -466,7 +470,7 @@ const getTransactionStatus = async (
   if (mode === "claimReward") {
     const lastRewardOp = account.operations.find(o => o.type === "REWARD");
     const claimableRewardDate = lastRewardOp
-      ? new Date(lastRewardOp.date.getTime() + 86400000)
+      ? new Date(lastRewardOp.date.getTime() + 24 * 60 * 60 * 1000) // date + 24 hours
       : new Date();
 
     if (lastRewardOp && claimableRewardDate > new Date().getTime()) {

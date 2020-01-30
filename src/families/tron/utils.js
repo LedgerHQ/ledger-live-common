@@ -144,17 +144,21 @@ export const formatTrongridTxResponse = (
 
       const type = get(tx, "raw_data.contract[0].type", "");
 
-      const { amount, asset_name, owner_address, to_address } = get(
-        tx,
-        "raw_data.contract[0].parameter.value",
-        {}
-      );
+      const {
+        amount,
+        asset_name,
+        owner_address,
+        to_address,
+        resource_type
+      } = get(tx, "raw_data.contract[0].parameter.value", {});
 
       const tokenId = asset_name;
 
       const from = encode58Check(owner_address);
 
       const to = to_address ? encode58Check(to_address) : undefined;
+
+      const resource = resource_type;
 
       const value =
         type === "WithdrawBalanceContract"
@@ -173,7 +177,8 @@ export const formatTrongridTxResponse = (
         from,
         to,
         value,
-        fee
+        fee,
+        resource
       };
     }
   } catch (e) {
