@@ -383,7 +383,8 @@ const getTransactionStatus = async (
       ? BigNumber(0)
       : await getEstimatedFees(a, t);
 
-  const totalSpent = amountSpent.plus(estimatedFees);
+  // fees are applied in the parent only (TRX)
+  const totalSpent = account.type === "Account" ? amountSpent.plus(estimatedFees) : amountSpent;
 
   if (["send", "freeze", "unfreeze"].includes(mode)) {
     if (recipient === a.freshAddress) {
@@ -407,6 +408,8 @@ const getTransactionStatus = async (
     if (amountSpent.eq(0)) {
       errors.amount = new AmountRequired();
     } else if (totalSpent.gt(balance)) {
+      errors.amount = new NotEnoughBalance();
+    } else if (account.type === "TokenAccount" && estimatedFees.gt(a.balance)) {
       errors.amount = new NotEnoughBalance();
     }
   }
