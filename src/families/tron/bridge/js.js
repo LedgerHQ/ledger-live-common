@@ -30,8 +30,7 @@ import {
   InvalidAddressBecauseDestinationIsAlsoSource,
   RecipientRequired,
   NotEnoughBalance,
-  AmountRequired,
-  UnexpectedFees
+  AmountRequired
 } from "@ledgerhq/errors";
 import {
   ModeNotSupported,
@@ -41,7 +40,8 @@ import {
   InvalidVoteCount,
   InvalidFreezeAmount,
   RewardNotAvailable,
-  SendTrc20ToNewAccountForbidden
+  SendTrc20ToNewAccountForbidden,
+  UnexpectedFees
 } from "../../../errors";
 import { tokenList } from "../tokens-name-hex";
 import {
