@@ -27,6 +27,7 @@ import { formatCurrencyUnit } from "../../../currencies";
 import { getAccountUnit } from "../../../account";
 import {
   InvalidAddress,
+  InvalidAddressBecauseDestinationIsAlsoSource,
   RecipientRequired,
   NotEnoughBalance,
   AmountRequired,
@@ -363,21 +364,7 @@ const getTransactionStatus = async (
     errors.resource = new ResourceNotSupported();
   }
 
-  if (
-    ["send", "freeze"].includes(mode) &&
-    recipient &&
-    !(await validateAddress(recipient))
-  ) {
-    errors.recipient = new InvalidAddress(null, {
-      currencyName: a.currency.name
-    });
-  }
-
   const amountSpent = ["send", "freeze"].includes(mode) ? amount : BigNumber(0);
-
-  if (["send", "freeze"].includes(mode) && amountSpent.eq(0)) {
-    errors.amount = new AmountRequired();
-  }
 
   const estimatedFees =
     Object.entries(errors).length > 0
@@ -395,8 +382,20 @@ const getTransactionStatus = async (
     warnings.fee = new FeeRequired("Estimated fees", { fees });
   }
 
-  if (["send", "freeze"].includes(mode) && totalSpent.gt(balance)) {
-    errors.amount = new NotEnoughBalance();
+  if (["send", "freeze"].includes(mode)) {
+    if (recipient === a.freshAddress) {
+      errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
+    } else if (recipient && !(await validateAddress(recipient))) {
+      errors.recipient = new InvalidAddress(null, {
+        currencyName: a.currency.name
+      });
+    }
+
+    if (amountSpent.eq(0)) {
+      errors.amount = new AmountRequired();
+    } else if (totalSpent.gt(balance)) {
+      errors.amount = new NotEnoughBalance();
+    }
   }
 
   if (mode === "unfreeze") {
