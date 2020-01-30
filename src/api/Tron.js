@@ -101,7 +101,6 @@ export const unfreezeTronTransaction = async (
 
   const url = `${baseApiUrl}/wallet/unfreezebalance`;
   const result = await post(url, txData);
-  //TODO: Error on unfreeze if the day is not available
 
   return result;
 };
@@ -414,6 +413,9 @@ export const getTronResources = async (acc: Object): Promise<TronResources> => {
       undefined
     );
 
+    const delegatedFrozenBandwidth = get(acc, "delegated_frozen_balance_for_bandwidth", undefined);
+    const delegatedFrozenEnergy = get(acc, "account_resource.delegated_frozen_balance_for_energy", undefined);
+
     const encodedAddress = encode58Check(acc.address);
 
     const tronNetworkInfo = await getTronAccountNetwork(encodedAddress);
@@ -425,13 +427,15 @@ export const getTronResources = async (acc: Object): Promise<TronResources> => {
     const frozen = {
       bandwidth: frozenBandwidth
         ? {
-            amount: frozenBandwidth.frozen_balance,
+            amount: BigNumber(frozenBandwidth.frozen_balance),
             expiredAt: new Date(frozenBandwidth.expire_time)
           }
         : undefined,
+      delegatedBandwidth: delegatedFrozenBandwidth ? BigNumber(delegatedFrozenBandwidth) : undefined,
+      delegatedEnergy: delegatedFrozenEnergy ? BigNumber(delegatedFrozenEnergy) : undefined,
       energy: frozenEnergy
         ? {
-            amount: frozenEnergy.frozen_balance,
+            amount: BigNumber(frozenEnergy.frozen_balance),
             expiredAt: new Date(frozenEnergy.expire_time)
           }
         : undefined

@@ -144,6 +144,8 @@ export type SuperRepresentative = {|
 export type TronResources = {|
   frozen: {
     bandwidth: ?FrozenInfo,
+    delegatedBandwidth: ?BigNumber,
+    delegatedEnergy: ?BigNumber,
     energy: ?FrozenInfo
   },
   votes: Vote[],
@@ -159,7 +161,7 @@ export type Vote = {|
 |};
 
 export type FrozenInfo = {|
-  amount: number,
+  amount: BigNumber,
   expiredAt: Date
 |};
 

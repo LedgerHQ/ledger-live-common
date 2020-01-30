@@ -188,13 +188,19 @@ const getAccountShape = async info => {
   const balance = spendableBalance
     .plus(
       resources.frozen.bandwidth
-        ? BigNumber(resources.frozen.bandwidth.amount)
+        ? resources.frozen.bandwidth.amount
         : BigNumber(0)
     )
     .plus(
       resources.frozen.energy
-        ? BigNumber(resources.frozen.energy.amount)
+        ? resources.frozen.energy.amount
         : BigNumber(0)
+    )
+    .plus(
+      resources.frozen.delegatedBandwidth || BigNumber(0)
+    )
+    .plus(
+      resources.frozen.delegatedEnergy || BigNumber(0)
     );
 
   const txs = await fetchTronAccountTxs(info.address, txs => txs.length < 1000);
@@ -379,7 +385,7 @@ const getTransactionStatus = async (
 
   const totalSpent = amountSpent.plus(estimatedFees);
 
-  if (["send", "freeze"].includes(mode)) {
+  if (["send", "freeze", "unfreeze"].includes(mode)) {
     if (recipient === a.freshAddress) {
       errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
     } else if (recipient && !(await validateAddress(recipient))) {
@@ -394,7 +400,11 @@ const getTransactionStatus = async (
       (await fetchTronAccount(recipient)).length === 0
     ) {
       errors.recipient = new SendTrc20ToNewAccountForbidden();
-    } else if (amountSpent.eq(0)) {
+    }
+  }
+
+  if (!errors.recipient && ["send", "freeze"].includes(mode)) {
+    if (amountSpent.eq(0)) {
       errors.amount = new AmountRequired();
     } else if (totalSpent.gt(balance)) {
       errors.amount = new NotEnoughBalance();
@@ -414,7 +424,7 @@ const getTransactionStatus = async (
     errors.amount = new InvalidFreezeAmount();
   }
 
-  if (mode === "unfreeze") {
+  if (mode === "unfreeze" && !recipient) {
     const lowerCaseResource = resource ? resource.toLowerCase() : "bandwidth";
     const now = new Date();
     const expirationDate: Date = get(
