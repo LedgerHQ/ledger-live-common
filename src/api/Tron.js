@@ -26,12 +26,13 @@ import { log } from "@ledgerhq/logs";
 import network from "../network";
 import { retry } from "../promise";
 import { makeLRUCache } from "../cache";
+import { getEnv } from "../env";
 import get from "lodash/get";
 import drop from "lodash/drop";
 import sumBy from "lodash/sumBy";
 import take from "lodash/take";
 
-const baseApiUrl: string = "https://api.trongrid.io";
+const baseApiUrl: string = getEnv("API_TRONGRID_PROXY");
 
 async function post(url: string, body: Object) {
   try {
@@ -123,7 +124,7 @@ export const createTronTransaction = async (
       fee_limit: 10000000,
       call_value: 0,
       contract_address: decode58Check(tokenId),
-      parameter: abiEncodeTrc20Transfer(decode58Check(t.recipient), t.amount), // TODO
+      parameter: abiEncodeTrc20Transfer(decode58Check(t.recipient), t.amount),
       owner_address: decode58Check(a.freshAddress)
     };
 
@@ -227,19 +228,12 @@ export async function fetchTronAccountTxs(
 export const getTronAccountNetwork = async (
   address: string
 ): Promise<NetworkInfo> => {
-  try {
-    const result = await post(`${baseApiUrl}/wallet/getaccountresource`, {
-      address: decode58Check(address)
-    });
-    return result;
-  } catch (e) {
-    throw new Error(
-      "unexpected error occured when calling getTronAccountNetwork"
-    );
-  }
+  const result = await post(`${baseApiUrl}/wallet/getaccountresource`, {
+    address: decode58Check(address)
+  });
+  return result;
 };
 
-// TODO: Find an another way to validate formula, I don't like to depend on api for this
 export const validateAddress = async (address: string): Promise<boolean> => {
   try {
     const result = await post(`${baseApiUrl}/wallet/validateaddress`, {
@@ -249,8 +243,8 @@ export const validateAddress = async (address: string): Promise<boolean> => {
     return result.result || false;
   } catch (e) {
     // dont throw anything
+    return false;
   }
-  return false;
 };
 
 // cache for account names (name is unchanged over time)
@@ -299,10 +293,6 @@ export const getTronSuperRepresentatives = async (
   max: ?number
 ): Promise<SuperRepresentative[]> => {
   try {
-    abiEncodeTrc20Transfer(
-      "418186E3A217B8BE7BEEBA28EE590AA81C54CA8EEE",
-      BigNumber(1)
-    );
     const result = await post(`${baseApiUrl}/wallet/listwitnesses`, {});
     const sorted = result.witnesses.sort((a, b) => b.voteCount - a.voteCount);
     const witnesses = max ? take(sorted, max) : sorted;
@@ -504,7 +494,6 @@ export const getUnwithdrawnReward = async (addr: string): Promise<number> => {
     });
     return reward;
   } catch (e) {
-    // TODO: error handling
     return Promise.resolve(0);
   }
 };
@@ -515,6 +504,5 @@ export const claimRewardTronTransaction = async (
   const url = `${baseApiUrl}/wallet/withdrawbalance`;
   const data = { owner_address: decode58Check(account.freshAddress) };
   const result = await post(url, data);
-  // TODO error?
   return result;
 };
