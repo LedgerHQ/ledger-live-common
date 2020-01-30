@@ -470,9 +470,10 @@ export const getTronResources = async (
           : undefined
     };
 
-    const tronPower = BigNumber(
-      get(frozen, "bandwidth.amount", 0) + get(frozen, "energy.amount", 0)
-    )
+    const tronPower = BigNumber(get(frozen, "bandwidth.amount", 0))
+      .plus(get(frozen, "energy.amount", 0))
+      .plus(get(delegatedFrozen, "bandwidth.amount", 0))
+      .plus(get(delegatedFrozen, "energy.amount", 0))
       .dividedBy(1000000)
       .decimalPlaces(3, BigNumber.ROUND_HALF_DOWN)
       .toNumber();
