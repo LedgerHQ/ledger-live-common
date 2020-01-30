@@ -10,7 +10,10 @@ platform :ios do
   lane :test do
     scan(
       scheme: "LLTool",
-      workspace: "ios/LLTool.xcworkspace"
+      workspace: "ios/LLTool.xcworkspace",
+      devices: ["iPhone 11"],
+      include_simulator_logs: true,
+      buildlog_path: "fastlane/test_output"
     )
   end
 end
