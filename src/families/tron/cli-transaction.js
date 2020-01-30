@@ -82,9 +82,14 @@ function inferTransactions(
   opts: Object
 ): Transaction[] {
   const voteAddresses: string[] = opts["tronVoteAddress"] || [];
-  const voteCounts: number[] = (opts["tronVoteCount"] || []).map(value =>
-    parseInt(value)
-  );
+  const voteCounts: number[] = (opts["tronVoteCount"] || []).map(value => {
+    const intValue = parseInt(value);
+    if (Number.isInteger(intValue)) {
+      return intValue;
+    } else {
+      throw new Error(`Invalid integer: ${value}`);
+    }
+  });
   const votes: Vote[] = zipWith(voteAddresses, voteCounts, (a, c) => ({
     address: a,
     voteCount: c

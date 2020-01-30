@@ -31,7 +31,7 @@ import {
   RecipientRequired,
   NotEnoughBalance,
   AmountRequired,
-  FeeRequired
+  UnexpectedFees
 } from "@ledgerhq/errors";
 import {
   ModeNotSupported,
@@ -40,7 +40,8 @@ import {
   VoteRequired,
   InvalidVoteCount,
   InvalidFreezeAmount,
-  RewardNotAvailable
+  RewardNotAvailable,
+  SendTrc20ToNewAccountForbidden
 } from "../../../errors";
 import { tokenList } from "../tokens-name-hex";
 import {
@@ -374,15 +375,6 @@ const getTransactionStatus = async (
 
   const totalSpent = amountSpent.plus(estimatedFees);
 
-  if (estimatedFees.gt(0)) {
-    const fees = formatCurrencyUnit(getAccountUnit(account), estimatedFees, {
-      showCode: true,
-      disableRounding: true
-    });
-
-    warnings.fee = new FeeRequired("Estimated fees", { fees });
-  }
-
   if (["send", "freeze"].includes(mode)) {
     if (recipient === a.freshAddress) {
       errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
@@ -390,13 +382,28 @@ const getTransactionStatus = async (
       errors.recipient = new InvalidAddress(null, {
         currencyName: a.currency.name
       });
-    }
-
-    if (amountSpent.eq(0)) {
+    } else if (
+      recipient &&
+      mode === "send" &&
+      account.type === "TokenAccount" &&
+      account.token.tokenType === "trc20" &&
+      (await fetchTronAccount(recipient)).length === 0
+    ) {
+      errors.recipient = new SendTrc20ToNewAccountForbidden();
+    } else if (amountSpent.eq(0)) {
       errors.amount = new AmountRequired();
     } else if (totalSpent.gt(balance)) {
       errors.amount = new NotEnoughBalance();
     }
+  }
+
+  if (!errors.recipient && estimatedFees.gt(0)) {
+    const fees = formatCurrencyUnit(getAccountUnit(a), estimatedFees, {
+      showCode: true,
+      disableRounding: true
+    });
+
+    warnings.fee = new UnexpectedFees("Estimated fees", { fees });
   }
 
   if (mode === "freeze" && amount.lt(BigNumber(1000000))) {

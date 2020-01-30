@@ -22,4 +22,12 @@ export const InvalidVoteCount = createCustomErrorClass("InvalidVoteCount");
 
 export const RewardNotAvailable = createCustomErrorClass("RewardNotAvailable");
 
-export const InvalidFreezeAmount = createCustomErrorClass("InvalidFreezeAmount");
+export const InvalidFreezeAmount = createCustomErrorClass(
+  "InvalidFreezeAmount"
+);
+
+export const SendTrc20ToNewAccountForbidden = createCustomErrorClass(
+  "SendTrc20ToNewAccountForbidden"
+);
+
+export const UnexpectedFees = createCustomErrorClass("UnexpectedFees");
