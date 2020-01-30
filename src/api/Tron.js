@@ -174,16 +174,6 @@ async function fetchTronTxDetail(txId: string) {
   });
 }
 
-function isTransfer(tx: Object): boolean {
-  return get(tx, "raw_data.contract", []).some(c =>
-    [
-      "TransferContract",
-      "WithdrawBalanceContract",
-      "TransferAssetContract"
-    ].includes(c.type)
-  );
-}
-
 export async function fetchTronAccountTxs(
   addr: string,
   shouldFetchMoreTxs: (Operation[]) => boolean
@@ -194,9 +184,7 @@ export async function fetchTronAccountTxs(
 
       const resultsWithTxInfo = Promise.all(
         (resp.data || []).map(tx => {
-          const fetchedTxDetail = isTransfer(tx) // only if it's a transfer, we need to fetch tx info to get fee or withdraw_amount
-            ? fetchTronTxDetail(tx.txID)
-            : Promise.resolve(null);
+          const fetchedTxDetail = fetchTronTxDetail(tx.txID);
           return fetchedTxDetail.then(detail => ({ ...tx, detail }));
         })
       ).then(results => ({ results, nextUrl }));
@@ -218,18 +206,19 @@ export async function fetchTronAccountTxs(
     }
   };
 
-  const entireTxs = await getEntireTxs(
-    `${baseApiUrl}/v1/accounts/${addr}/transactions`
-  );
-  const entireTrc20Txs = await getEntireTxs(
-    `${baseApiUrl}/v1/accounts/${addr}/transactions/trc20`
-  );
+  const entireTxs = (
+    await getEntireTxs(`${baseApiUrl}/v1/accounts/${addr}/transactions`)
+  ).results.map(tx => formatTrongridTxResponse(tx));
 
-  const txInfos = entireTxs.results
-    .map(tx => formatTrongridTxResponse(tx))
-    .concat(
-      entireTrc20Txs.results.map(tx => formatTrongridTxResponse(tx, true))
-    )
+  // we need to fetch and filter trc20 'IN' transactions from another endpoint
+  const entireTrc20InTxs = (
+    await getEntireTxs(`${baseApiUrl}/v1/accounts/${addr}/transactions/trc20`)
+  ).results
+    .filter(tx => tx.to === addr)
+    .map(tx => formatTrongridTxResponse(tx, true));
+
+  const txInfos = entireTxs
+    .concat(entireTrc20InTxs)
     .sort((a, b) => b.date.getTime() - a.date.getTime());
 
   return txInfos;

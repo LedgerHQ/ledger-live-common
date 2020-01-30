@@ -90,7 +90,7 @@ const getOperationType = (
   switch (tx.type) {
     case "TransferContract":
     case "TransferAssetContract":
-    case "TransferTRC20Contract":
+    case "TriggerSmartContract":
       return tx.from === accountAddr ? "OUT" : "IN";
     case "FreezeBalanceContract":
       return "FREEZE";
@@ -107,10 +107,10 @@ const getOperationType = (
 
 export const formatTrongridTxResponse = (
   tx: Object,
-  isTrc20: boolean = false
+  isInTrc20: boolean = false
 ): TrongridTxInfo => {
   try {
-    if (isTrc20) {
+    if (isInTrc20) {
       const {
         from,
         to,
@@ -120,7 +120,7 @@ export const formatTrongridTxResponse = (
         transaction_id,
         token_info
       } = tx;
-      const type = "TransferTRC20Contract";
+      const type = "TriggerSmartContract";
       const txID = transaction_id;
       const date = new Date(block_timestamp);
       const tokenId = get(token_info, "address", undefined);
@@ -149,10 +149,16 @@ export const formatTrongridTxResponse = (
         asset_name,
         owner_address,
         to_address,
-        resource_type
+        resource_type,
+        contract_address
       } = get(tx, "raw_data.contract[0].parameter.value", {});
 
-      const tokenId = asset_name;
+      const tokenId =
+        type === "TransferAssetContract"
+          ? asset_name
+          : type === "TriggerSmartContract" && contract_address
+          ? encode58Check(contract_address)
+          : undefined;
 
       const from = encode58Check(owner_address);
 

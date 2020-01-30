@@ -251,7 +251,6 @@ Usage: ledger-live send       # Send crypto-assets
      --storageLimit <String>  : how much storageLimit. default is estimated with the recipient
      --subAccount <String>    : use a sub account instead of the parent by index
      --fees <String>          : how much fees
-<<<<<<< HEAD
      --ignore-errors          : when using multiple transactions, an error won't stop the flow
      --disable-broadcast      : do not broadcast the transaction
 

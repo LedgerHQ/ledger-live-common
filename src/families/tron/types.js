@@ -63,7 +63,6 @@ export type TransactionRaw = {|
 export type TrongridTxType =
   | "TransferContract"
   | "TransferAssetContract"
-  | "TransferTRC20Contract"
   | "FreezeBalanceContract"
   | "UnfreezeBalanceContract"
   | "VoteWitnessContract"
