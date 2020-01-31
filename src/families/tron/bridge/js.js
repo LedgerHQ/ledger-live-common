@@ -68,6 +68,18 @@ const signOperation = ({ account, transaction, deviceId }) =>
           ? account.subAccounts.find(sa => sa.id === transaction.subAccountId)
           : null;
 
+      // send trc20 to a new account is forbidden by us (because it will not activate the account)
+      if (
+        transaction.recipient &&
+        transaction.mode === "send" &&
+        subAccount &&
+        subAccount.type === "TokenAccount" &&
+        subAccount.token.tokenType === "trc20" &&
+        (await fetchTronAccount(transaction.recipient)).length === 0
+      ) {
+        throw new SendTrc20ToNewAccountForbidden();
+      }
+
       const getPreparedTransaction = () => {
         switch (transaction.mode) {
           case "freeze":
@@ -404,6 +416,7 @@ const getTransactionStatus = async (
       account.token.tokenType === "trc20" &&
       (await fetchTronAccount(recipient)).length === 0
     ) {
+      // send trc20 to a new account is forbidden by us (because it will not activate the account)
       errors.recipient = new SendTrc20ToNewAccountForbidden();
     }
   }

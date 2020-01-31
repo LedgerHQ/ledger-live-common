@@ -83,9 +83,8 @@ function inferTransactions(
 ): Transaction[] {
   const voteAddresses: string[] = opts["tronVoteAddress"] || [];
   const voteCounts: number[] = (opts["tronVoteCount"] || []).map(value => {
-    const intValue = parseInt(value);
-    if (Number.isInteger(intValue)) {
-      return intValue;
+    if (Number.isInteger(Number(value))) {
+      return parseInt(value);
     } else {
       throw new Error(`Invalid integer: ${value}`);
     }
