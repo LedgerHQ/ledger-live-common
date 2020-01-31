@@ -8,10 +8,6 @@ import { flatMap } from "lodash";
 import { setup } from "./test-helpers/libcore-setup";
 import { withLibcore, afterLibcoreGC } from "../libcore/access";
 import { delay } from "../promise";
-import { testBridge } from "./test-helpers/bridge";
-import dataset from "../generated/test-dataset";
-import specifics from "../generated/test-specifics";
-import type { DatasetTest } from "./test-helpers/bridge";
 
 setup("libcore");
 
@@ -20,29 +16,6 @@ test("libcore version", async () => {
   expect(typeof v).toBe("string");
   // eslint-disable-next-line no-console
   console.log("libcore version " + v);
-});
-
-// covers all bridges through many different accounts
-// to test the common shared properties of bridges.
-// const all =
-Object.keys(dataset)
-  .map(family => {
-    if (process.env.FAMILY && process.env.FAMILY !== family) return;
-    const data: DatasetTest<any> = dataset[family];
-    return testBridge(family, data);
-  })
-  .filter(Boolean);
-
-// FIXME overkill atm but could help perf
-/*
-const MAX_CONCURRENT = 2;
-from(flatMap(all, r => r.preloadObservables))
-  .pipe(mergeAll(MAX_CONCURRENT))
-  .subscribe();
-*/
-
-Object.values(specifics).forEach((specific: Function) => {
-  specific();
 });
 
 describe("libcore access", () => {
