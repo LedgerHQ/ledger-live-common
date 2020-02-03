@@ -43,7 +43,7 @@ import {
   SendTrc20ToNewAccountForbidden,
   UnexpectedFees
 } from "../../../errors";
-import { tokenList } from "../tokens-name-hex";
+import { trc10HexList } from "../../../load/tokens/tron/trc10-name-hex";
 import {
   broadcastTron,
   claimRewardTronTransaction,
@@ -54,6 +54,7 @@ import {
   getTronAccountNetwork,
   getTronResources,
   getTronSuperRepresentatives,
+  hydrateSuperRepresentatives,
   validateAddress,
   freezeTronTransaction,
   unfreezeTronTransaction,
@@ -113,11 +114,7 @@ const signOperation = ({ account, transaction, deviceId }) =>
               subAccount &&
               subAccount.type === "TokenAccount" &&
               subAccount.token.id.includes("trc10")
-                ? [
-                    tokenList.find(
-                      t => t.id.toString() === subAccount.token.id.split("/")[2]
-                    ).message
-                  ] // TODO: Find a better way to store this data ? where ? Not really typesafe too
+                ? subAccount.token.ledgerSignature
                 : undefined
           }
         );
@@ -198,25 +195,25 @@ const getAccountShape = async info => {
 
   const txs = await fetchTronAccountTxs(info.address, txs => txs.length < 1000);
 
-  const resources = await getTronResources(acc, txs);
+  const tronResources = await getTronResources(acc, txs);
 
   const balance = spendableBalance
     .plus(
-      resources.frozen.bandwidth
-        ? resources.frozen.bandwidth.amount
+      tronResources.frozen.bandwidth
+        ? tronResources.frozen.bandwidth.amount
         : BigNumber(0)
     )
     .plus(
-      resources.frozen.energy ? resources.frozen.energy.amount : BigNumber(0)
+      tronResources.frozen.energy ? tronResources.frozen.energy.amount : BigNumber(0)
     )
     .plus(
-      resources.delegatedFrozen.bandwidth
-        ? resources.delegatedFrozen.bandwidth.amount
+      tronResources.delegatedFrozen.bandwidth
+        ? tronResources.delegatedFrozen.bandwidth.amount
         : BigNumber(0)
     )
     .plus(
-      resources.delegatedFrozen.energy
-        ? resources.delegatedFrozen.energy.amount
+      tronResources.delegatedFrozen.energy
+        ? tronResources.delegatedFrozen.energy.amount
         : BigNumber(0)
     );
 
@@ -232,7 +229,7 @@ const getAccountShape = async info => {
       key,
       value
     }))
-    .filter(({ key }) => tokenList.some(t => t.id.toString() === key));
+    .filter(({ key }) => trc10HexList.some(t => t.id.toString() === key));
 
   const trc20Tokens = get(acc, "trc20", []).map(obj => {
     const [[key, value]] = Object.entries(obj);
@@ -282,7 +279,7 @@ const getAccountShape = async info => {
     operationsCount: parentOpsAndSubOutOpsWithFee.length,
     operations: parentOpsAndSubOutOpsWithFee,
     subAccounts,
-    resources
+    tronResources
   };
 };
 
@@ -291,8 +288,16 @@ const scanAccounts = makeScanAccounts(getAccountShape);
 const sync = makeSync(getAccountShape);
 
 const currencyBridge: CurrencyBridge = {
-  preload: () => Promise.resolve(),
-  hydrate: () => {},
+  preload: async () => {
+    const superRepresentatives = await getTronSuperRepresentatives();
+    return { superRepresentatives };
+  },
+  hydrate: (data: mixed) => {
+    if (!data || typeof data !== "object") return;
+    const { superRepresentatives } = data;
+    if (!superRepresentatives || typeof superRepresentatives !== "object" || !Array.isArray(superRepresentatives)) return;
+    hydrateSuperRepresentatives(superRepresentatives);
+  },
   scanAccounts
 };
 
@@ -448,8 +453,8 @@ const getTransactionStatus = async (
     const lowerCaseResource = resource ? resource.toLowerCase() : "bandwidth";
     const now = new Date();
     const expiredDatePath = recipient
-      ? `resources.delegatedFrozen.${lowerCaseResource}.expiredAt`
-      : `resources.frozen.${lowerCaseResource}.expiredAt`;
+      ? `tronResources.delegatedFrozen.${lowerCaseResource}.expiredAt`
+      : `tronResources.frozen.${lowerCaseResource}.expiredAt`;
 
     const expirationDate: Date = get(a, expiredDatePath, now);
 
@@ -470,12 +475,10 @@ const getTransactionStatus = async (
         superRepresentatives.some(s => s.address === v.address)
       );
 
-      if (!isValidVoteCounts) {
-        errors.voteCount = new InvalidVoteCount();
-      }
-
       if (!isValidAddresses) {
-        errors.voteAddress = new InvalidAddress();
+        errors.vote = new InvalidAddress();
+      } else if (!isValidVoteCounts) {
+        errors.vote = new InvalidVoteCount();
       }
     }
   }

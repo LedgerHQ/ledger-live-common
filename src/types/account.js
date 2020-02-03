@@ -157,12 +157,11 @@ export type Account = {
   balanceHistory?: BalanceHistoryMap,
 
   // On some blockchain, an account can have resources (gained, delegated, ...)
-  resources?: ResourcesLike
+  tronResources?: TronResources
 };
 
 export type SubAccount = TokenAccount | ChildAccount;
 export type AccountLike = Account | SubAccount;
-export type ResourcesLike = TronResources;
 
 // Damn it flow. can't you support covariance.
 export type AccountLikeArray =
@@ -221,7 +220,7 @@ export type AccountRaw = {
   endpointConfig?: ?string,
   subAccounts?: SubAccountRaw[],
   balanceHistory?: BalanceHistoryRawMap,
-  resources?: ResourcesLike
+  tronResources?: TronResources
 };
 
 export type SubAccountRaw = TokenAccountRaw | ChildAccountRaw;

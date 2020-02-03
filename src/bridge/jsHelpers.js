@@ -17,7 +17,6 @@ import {
   getNewAccountPlaceholderName,
   shouldRetainPendingOperation
 } from "../account";
-import get from "lodash/get";
 import uniqBy from "lodash/uniqBy";
 import type {
   Operation,
@@ -128,8 +127,8 @@ export const makeScanAccounts = (
       if (balance.isNaN()) throw new Error("invalid balance NaN");
 
       const isAccountEmpty =
-        currency.id === "tron"
-          ? get(accountShape, "resources.bandwidth.freeLimit", 0) === 0
+        currency.id === "tron" && accountShape.tronResources
+          ? accountShape.tronResources.bandwidth.freeLimit === 0
           : operations.length === 0 && balance.isZero();
 
       if (isAccountEmpty) {

@@ -243,6 +243,11 @@ export function patchAccount(
     changed = true;
   }
 
+  if (account.tronResources !== updatedRaw.tronResources) {
+    next.tronResources = updatedRaw.tronResources;
+    changed = true;
+  }
+
   if (!changed) return account; // nothing changed at all
 
   return next;

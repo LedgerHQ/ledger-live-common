@@ -266,7 +266,8 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
           expect(serialized).toBeDefined();
           const data2 = await bridge.preload();
           expect(data1).toMatchObject(data2);
-          expect(JSON.parse(serialized)).toMatchObject(data2);
+          const serialized2 = JSON.stringify(data2); 
+          expect(JSON.parse(serialized)).toMatchObject(JSON.parse(serialized2));
           bridge.hydrate(data1);
         }
       });

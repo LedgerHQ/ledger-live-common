@@ -164,8 +164,12 @@ export const broadcastTron = async (
 };
 
 export async function fetchTronAccount(addr: string) {
-  const data = await fetch(`${baseApiUrl}/v1/accounts/${addr}`);
-  return data.data;
+  try {
+    const data = await fetch(`${baseApiUrl}/v1/accounts/${addr}`);
+    return data.data;
+  } catch (e) {
+    return [];
+  }
 }
 
 // For the moment, fetching transaction info is the only way to get fees from a transaction
@@ -289,16 +293,36 @@ export const getBrokerage = async (addr: string): Promise<number> => {
   return brokerage;
 };
 
-export const getTronSuperRepresentatives = async (
-  max: ?number
-): Promise<SuperRepresentative[]> => {
+const superRepresentativesCache = makeLRUCache(
+  async (): Promise<SuperRepresentative[]> => {
+    const superRepresentatives = await fetchSuperRepresentatives();
+    log("tron/superRepresentatives", "loaded " + superRepresentatives.length + " super representatives");
+    return superRepresentatives;
+  },
+  () => "",
+  {
+    max: 300,
+    maxAge: 60 * 60 * 1000 // 1hour
+  }
+);
+
+export const getTronSuperRepresentatives = async (): Promise<SuperRepresentative[]>  => {
+ return await superRepresentativesCache();
+};
+
+
+export const hydrateSuperRepresentatives = (list: SuperRepresentative[]) => {
+  log("tron/superRepresentatives", "hydrate " + list.length + " super representatives");
+  superRepresentativesCache.hydrate("", list);
+};
+
+const fetchSuperRepresentatives = async (): Promise<SuperRepresentative[]> => {
   try {
     const result = await post(`${baseApiUrl}/wallet/listwitnesses`, {});
     const sorted = result.witnesses.sort((a, b) => b.voteCount - a.voteCount);
-    const witnesses = max ? take(sorted, max) : sorted;
 
     const superRepresentatives = await Promise.all(
-      witnesses.map(w => {
+      sorted.map(w => {
         const encodedAddress = encode58Check(w.address);
 
         // we neeed to retry because trongrid returns '408 Request Timeout' sometimes
@@ -319,10 +343,12 @@ export const getTronSuperRepresentatives = async (
       })
     );
 
+    hydrateSuperRepresentatives(superRepresentatives); // put it in cache
+
     return superRepresentatives;
   } catch (e) {
     throw new Error(
-      "Unexpected error occured when calling getTronSuperRepresentatives"
+      "Unexpected error occured when calling fetchSuperRepresentatives"
     );
   }
 };
@@ -335,11 +361,11 @@ export const getNextVotingDate = async (): Promise<Date> => {
 export const getTronSuperRepresentativeData = async (
   max: ?number
 ): Promise<SuperRepresentativeData> => {
-  const list = await getTronSuperRepresentatives(max);
+  const list = await getTronSuperRepresentatives();
   const nextVotingDate = await getNextVotingDate();
 
   return {
-    list,
+    list: max ? take(list, max) : list,
     totalVotes: sumBy(list, "voteCount"),
     nextVotingDate
   };

@@ -3,22 +3,11 @@
 import {
   getAccountName,
   getBrokerage,
-  getTronSuperRepresentatives,
   getTronSuperRepresentativeData
 } from "../../api/Tron";
 import sumBy from "lodash/sumBy";
 
 export default () => {
-  describe("tron super representatives", () => {
-    test("getting the list ordered by voteCount", async () => {
-      const superRepresentatives = await getTronSuperRepresentatives(27);
-      expect(superRepresentatives.length).toBeGreaterThan(20);
-      expect(superRepresentatives[0].voteCount).toBeGreaterThan(
-        superRepresentatives[1].voteCount
-      );
-    });
-  });
-
   describe("tron super representative data", () => {
     test("max is undefined", async () => {
       const srData = await getTronSuperRepresentativeData();
@@ -32,6 +21,7 @@ export default () => {
     test("max is set to 27", async () => {
       const srData = await getTronSuperRepresentativeData(27);
       expect(srData.list.length).toEqual(27);
+      expect(srData.totalVotes).toBeGreaterThan(sumBy(srData.list, "voteCount"));
       expect(srData.nextVotingDate.getTime()).toBeGreaterThanOrEqual(
         new Date().getTime()
       );

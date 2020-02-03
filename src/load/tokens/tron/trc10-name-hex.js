@@ -1,6 +1,6 @@
 // TODO: Check how we can store this array better.
 // It's seems to be a message that would be send to the Nano contains info about the tokens (like the name of token and his `magnitude`)
-var tokenList = [
+var trc10HexList = [
   {
     id: 0,
     message:
@@ -14213,4 +14213,4 @@ var tokenList = [
   }
 ];
 // export it
-exports.tokenList = tokenList;
+exports.trc10HexList = trc10HexList;
