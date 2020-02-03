@@ -32,13 +32,13 @@ jobs:
         run: |
           cd mobile-test-app
           echo 'process.env.BRANCH = "${{ github.head_ref }}";' > process.js
-          cat process.js
       - name: run tests
         run: |
           cd mobile-test-app
           yarn ios:test
         timeout-minutes: 20
       - name: upload logs
+        if: failure() || success()
         uses: actions/upload-artifact@v1
         with:
           name: LLTool-LLTool.log
