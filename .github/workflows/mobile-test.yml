@@ -36,7 +36,7 @@ jobs:
         run: |
           cd mobile-test-app
           yarn ios:test
-        timeout-minutes: 20
+        timeout-minutes: 60
       - name: upload logs
         if: failure() || success()
         uses: actions/upload-artifact@v1
