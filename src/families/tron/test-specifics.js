@@ -21,7 +21,9 @@ export default () => {
     test("max is set to 27", async () => {
       const srData = await getTronSuperRepresentativeData(27);
       expect(srData.list.length).toEqual(27);
-      expect(srData.totalVotes).toBeGreaterThan(sumBy(srData.list, "voteCount"));
+      expect(srData.totalVotes).toBeGreaterThan(
+        sumBy(srData.list, "voteCount")
+      );
       expect(srData.nextVotingDate.getTime()).toBeGreaterThanOrEqual(
         new Date().getTime()
       );

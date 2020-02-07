@@ -4,6 +4,7 @@ import { Observable } from "rxjs";
 import flatMap from "lodash/flatMap";
 import compact from "lodash/compact";
 import get from "lodash/get";
+import sumBy from "lodash/sumBy";
 import type {
   Account,
   Operation,
@@ -33,15 +34,17 @@ import {
   AmountRequired
 } from "@ledgerhq/errors";
 import {
-  ModeNotSupported,
-  ResourceNotSupported,
+  NoFrozenForBandwidth,
+  NoFrozenForEnergy,
   UnfreezeNotExpired,
   VoteRequired,
   InvalidVoteCount,
   InvalidFreezeAmount,
   RewardNotAvailable,
+  NoReward,
   SendTrc20ToNewAccountForbidden,
-  UnexpectedFees
+  UnexpectedFees,
+  NotEnoughTronPower
 } from "../../../errors";
 import { trc10HexList } from "../../../load/tokens/tron/trc10-name-hex";
 import {
@@ -204,7 +207,9 @@ const getAccountShape = async info => {
         : BigNumber(0)
     )
     .plus(
-      tronResources.frozen.energy ? tronResources.frozen.energy.amount : BigNumber(0)
+      tronResources.frozen.energy
+        ? tronResources.frozen.energy.amount
+        : BigNumber(0)
     )
     .plus(
       tronResources.delegatedFrozen.bandwidth
@@ -295,7 +300,12 @@ const currencyBridge: CurrencyBridge = {
   hydrate: (data: mixed) => {
     if (!data || typeof data !== "object") return;
     const { superRepresentatives } = data;
-    if (!superRepresentatives || typeof superRepresentatives !== "object" || !Array.isArray(superRepresentatives)) return;
+    if (
+      !superRepresentatives ||
+      typeof superRepresentatives !== "object" ||
+      !Array.isArray(superRepresentatives)
+    )
+      return;
     hydrateSuperRepresentatives(superRepresentatives);
   },
   scanAccounts
@@ -381,31 +391,9 @@ const getTransactionStatus = async (
   const balance =
     account.type === "Account" ? account.spendableBalance : account.balance;
 
-  if (!["send", "freeze", "unfreeze", "vote", "claimReward"].includes(mode)) {
-    errors.mode = new ModeNotSupported();
-  }
-
   if (mode === "send" && !recipient) {
     errors.recipient = new RecipientRequired();
   }
-
-  if (
-    ["freeze", "unfreeze"].includes(mode) &&
-    !["BANDWIDTH", "ENERGY"].includes(resource)
-  ) {
-    errors.resource = new ResourceNotSupported();
-  }
-
-  const amountSpent = ["send", "freeze"].includes(mode) ? amount : BigNumber(0);
-
-  const estimatedFees =
-    Object.entries(errors).length > 0
-      ? BigNumber(0)
-      : await getEstimatedFees(a, t);
-
-  // fees are applied in the parent only (TRX)
-  const totalSpent =
-    account.type === "Account" ? amountSpent.plus(estimatedFees) : amountSpent;
 
   if (["send", "freeze", "unfreeze"].includes(mode)) {
     if (recipient === a.freshAddress) {
@@ -426,25 +414,6 @@ const getTransactionStatus = async (
     }
   }
 
-  if (!errors.recipient && ["send", "freeze"].includes(mode)) {
-    if (amountSpent.eq(0)) {
-      errors.amount = new AmountRequired();
-    } else if (totalSpent.gt(balance)) {
-      errors.amount = new NotEnoughBalance();
-    } else if (account.type === "TokenAccount" && estimatedFees.gt(a.balance)) {
-      errors.amount = new NotEnoughBalance();
-    }
-  }
-
-  if (!errors.recipient && estimatedFees.gt(0)) {
-    const fees = formatCurrencyUnit(getAccountUnit(a), estimatedFees, {
-      showCode: true,
-      disableRounding: true
-    });
-
-    warnings.fee = new UnexpectedFees("Estimated fees", { fees });
-  }
-
   if (mode === "freeze" && amount.lt(BigNumber(1000000))) {
     errors.amount = new InvalidFreezeAmount();
   }
@@ -456,9 +425,15 @@ const getTransactionStatus = async (
       ? `tronResources.delegatedFrozen.${lowerCaseResource}.expiredAt`
       : `tronResources.frozen.${lowerCaseResource}.expiredAt`;
 
-    const expirationDate: Date = get(a, expiredDatePath, now);
+    const expirationDate: ?Date = get(a, expiredDatePath, undefined);
 
-    if (now.getTime() < expirationDate.getTime()) {
+    if (!expirationDate) {
+      if (resource === "BANDWIDTH") {
+        errors.resource = new NoFrozenForBandwidth();
+      } else {
+        errors.resource = new NoFrozenForEnergy();
+      }
+    } else if (now.getTime() < expirationDate.getTime()) {
       errors.resource = new UnfreezeNotExpired(null, {
         until: expirationDate.toISOString()
       });
@@ -479,6 +454,12 @@ const getTransactionStatus = async (
         errors.vote = new InvalidAddress();
       } else if (!isValidVoteCounts) {
         errors.vote = new InvalidVoteCount();
+      } else {
+        const totalVoteCount = sumBy(votes, "voteCount");
+        const tronPower = (a.tronResources && a.tronResources.tronPower) || 0;
+        if (totalVoteCount > tronPower) {
+          errors.vote = new NotEnoughTronPower();
+        }
       }
     }
   }
@@ -489,11 +470,43 @@ const getTransactionStatus = async (
       ? new Date(lastRewardOp.date.getTime() + 24 * 60 * 60 * 1000) // date + 24 hours
       : new Date();
 
-    if (lastRewardOp && claimableRewardDate > new Date().getTime()) {
-      errors.claimReward = new RewardNotAvailable("Reward is not claimable", {
+    if (a.tronResources && a.tronResources.unwithdrawnReward === 0) {
+      errors.reward = new NoReward();
+    } else if (lastRewardOp && claimableRewardDate > new Date().getTime()) {
+      errors.reward = new RewardNotAvailable("Reward is not claimable", {
         until: claimableRewardDate.toISOString()
       });
     }
+  }
+
+  const amountSpent = ["send", "freeze"].includes(mode) ? amount : BigNumber(0);
+
+  const estimatedFees =
+    Object.entries(errors).length > 0
+      ? BigNumber(0)
+      : await getEstimatedFees(a, t);
+
+  // fees are applied in the parent only (TRX)
+  const totalSpent =
+    account.type === "Account" ? amountSpent.plus(estimatedFees) : amountSpent;
+
+  if (!errors.recipient && ["send", "freeze"].includes(mode)) {
+    if (amountSpent.eq(0)) {
+      errors.amount = new AmountRequired();
+    } else if (totalSpent.gt(balance)) {
+      errors.amount = new NotEnoughBalance();
+    } else if (account.type === "TokenAccount" && estimatedFees.gt(a.balance)) {
+      errors.amount = new NotEnoughBalance();
+    }
+  }
+
+  if (!errors.recipient && estimatedFees.gt(0)) {
+    const fees = formatCurrencyUnit(getAccountUnit(a), estimatedFees, {
+      showCode: true,
+      disableRounding: true
+    });
+
+    warnings.fee = new UnexpectedFees("Estimated fees", { fees });
   }
 
   return Promise.resolve({

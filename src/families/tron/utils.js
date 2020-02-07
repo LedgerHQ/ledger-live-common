@@ -36,7 +36,8 @@ export const isParentTx = (tx: TrongridTxInfo): boolean => {
     "FreezeBalanceContract",
     "UnfreezeBalanceContract",
     "VoteWitnessContract",
-    "WithdrawBalanceContract"
+    "WithdrawBalanceContract",
+    "ExchangeTransactionContract"
   ].includes(tx.type);
 };
 
@@ -92,6 +93,8 @@ const getOperationType = (
     case "TransferAssetContract":
     case "TriggerSmartContract":
       return tx.from === accountAddr ? "OUT" : "IN";
+    case "ExchangeTransactionContract":
+      return "OUT";
     case "FreezeBalanceContract":
       return "FREEZE";
     case "UnfreezeBalanceContract":
@@ -150,7 +153,8 @@ export const formatTrongridTxResponse = (
         owner_address,
         to_address,
         resource_type,
-        contract_address
+        contract_address,
+        quant
       } = get(tx, "raw_data.contract[0].parameter.value", {});
 
       const tokenId =
@@ -166,12 +170,18 @@ export const formatTrongridTxResponse = (
 
       const resource = resource_type;
 
-      const value =
-        type === "WithdrawBalanceContract"
-          ? BigNumber(detail.withdraw_amount)
-          : amount
-          ? BigNumber(amount)
-          : undefined;
+      const getValue = (): BigNumber => {
+        switch (type) {
+          case "WithdrawBalanceContract":
+            return BigNumber(detail.withdraw_amount);
+          case "ExchangeTransactionContract":
+            return BigNumber(quant);
+          default:
+            return amount ? BigNumber(amount) : BigNumber(0);
+        }
+      };
+
+      const value = getValue();
 
       const fee = detail && detail.fee ? BigNumber(detail.fee) : undefined;
 

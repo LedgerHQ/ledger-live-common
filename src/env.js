@@ -49,7 +49,8 @@ const envDefinitions = {
   },
   API_TRONGRID_PROXY: {
     parser: stringParser,
-    def: "https://xlr.dev.aws.ledger.fr",
+    //def: "https://api.trongrid.io",
+    def: "https://trx.dev.aws.ledger.fr",
     desc: "proxy url for trongrid API"
   },
   BASE_SOCKET_URL: {

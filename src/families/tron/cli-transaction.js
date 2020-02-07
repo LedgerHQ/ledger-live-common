@@ -81,13 +81,26 @@ function inferTransactions(
   transactions: Array<{ account: AccountLike, transaction: Transaction }>,
   opts: Object
 ): Transaction[] {
+  const mode = opts.mode || "send";
+
+  invariant(
+    ["send", "freeze", "unfreeze", "vote", "claimReward"].includes(mode),
+    `Unexpected mode: ${mode}`
+  );
+
+  const resource = opts.resource ? opts.resource.toUpperCase() : undefined;
+
+  if (resource) {
+    invariant(
+      ["BANDWIDTH", "ENERGY"].includes(resource),
+      `Unexpected resource: ${resource}`
+    );
+  }
+
   const voteAddresses: string[] = opts["tronVoteAddress"] || [];
   const voteCounts: number[] = (opts["tronVoteCount"] || []).map(value => {
-    if (Number.isInteger(Number(value))) {
-      return parseInt(value);
-    } else {
-      throw new Error(`Invalid integer: ${value}`);
-    }
+    invariant(Number.isInteger(Number(value)), `Invalid integer: ${value}`);
+    return parseInt(value);
   });
   const votes: Vote[] = zipWith(voteAddresses, voteCounts, (a, c) => ({
     address: a,
@@ -97,12 +110,14 @@ function inferTransactions(
   return flatMap(transactions, ({ transaction, account }) => {
     invariant(transaction.family === "tron", "tron family");
 
+    invariant(account.tronResources, "Unactivated account");
+
     return {
       ...transaction,
-      mode: opts.mode || "send",
       family: "tron",
       subAccountId: account.type === "TokenAccount" ? account.id : null,
-      resource: opts.resource ? opts.resource.toUpperCase() : undefined,
+      mode,
+      resource,
       votes
     };
   });

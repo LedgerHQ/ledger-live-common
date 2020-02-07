@@ -222,7 +222,7 @@ export async function fetchTronAccountTxs(
     .filter(tx => tx.to === addr)
     .map(tx => formatTrongridTxResponse(tx, true));
 
-  const txInfos = entireTxs
+  const txInfos: TrongridTxInfo[] = entireTxs
     .concat(entireTrc20InTxs)
     .sort((a, b) => b.date.getTime() - a.date.getTime());
 
@@ -296,7 +296,10 @@ export const getBrokerage = async (addr: string): Promise<number> => {
 const superRepresentativesCache = makeLRUCache(
   async (): Promise<SuperRepresentative[]> => {
     const superRepresentatives = await fetchSuperRepresentatives();
-    log("tron/superRepresentatives", "loaded " + superRepresentatives.length + " super representatives");
+    log(
+      "tron/superRepresentatives",
+      "loaded " + superRepresentatives.length + " super representatives"
+    );
     return superRepresentatives;
   },
   () => "",
@@ -306,13 +309,17 @@ const superRepresentativesCache = makeLRUCache(
   }
 );
 
-export const getTronSuperRepresentatives = async (): Promise<SuperRepresentative[]>  => {
- return await superRepresentativesCache();
+export const getTronSuperRepresentatives = async (): Promise<
+  SuperRepresentative[]
+> => {
+  return await superRepresentativesCache();
 };
 
-
 export const hydrateSuperRepresentatives = (list: SuperRepresentative[]) => {
-  log("tron/superRepresentatives", "hydrate " + list.length + " super representatives");
+  log(
+    "tron/superRepresentatives",
+    "hydrate " + list.length + " super representatives"
+  );
   superRepresentativesCache.hydrate("", list);
 };
 

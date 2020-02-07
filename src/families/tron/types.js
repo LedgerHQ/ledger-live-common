@@ -67,7 +67,8 @@ export type TrongridTxType =
   | "UnfreezeBalanceContract"
   | "VoteWitnessContract"
   | "TriggerSmartContract"
-  | "WithdrawBalanceContract";
+  | "WithdrawBalanceContract"
+  | "ExchangeTransactionContract";
 
 export type TrongridTxInfo = {|
   txID: string,

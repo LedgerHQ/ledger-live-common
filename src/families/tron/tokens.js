@@ -15,9 +15,14 @@ const convertTokens = (type: TokenType) => ([
   contractAddress,
   precision
 ]): TokenCurrency => {
-  const ledgerSignature = type === "trc10"
-    ? get(trc10HexList.find(t => t.id.toString() === id), "message", undefined)
-    : undefined;
+  const ledgerSignature =
+    type === "trc10"
+      ? get(
+          trc10HexList.find(t => t.id.toString() === id),
+          "message",
+          undefined
+        )
+      : undefined;
 
   return {
     type: "TokenCurrency",

@@ -69,6 +69,10 @@ export function getOperationAmountNumber(op: Operation): BigNumber {
     case "DELEGATE":
     case "UNDELEGATE":
       return op.value.negated();
+    case "FREEZE":
+    case "UNFREEZE":
+    case "VOTE":
+      return op.fee.negated();
     default:
       return BigNumber(0);
   }
