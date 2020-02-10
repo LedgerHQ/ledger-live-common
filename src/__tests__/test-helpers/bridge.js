@@ -631,15 +631,9 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
                   const { errors, warnings } = es;
                   // we match errors and warnings
                   if (s.errors) {
-                    expect(Object.keys(s.errors).length).toEqual(
-                      Object.keys(errors).length
-                    );
                     expect(s.errors).toMatchObject(errors);
                   }
                   if (s.warnings) {
-                    expect(Object.keys(s.warnings).length).toEqual(
-                      Object.keys(warnings).length
-                    );
                     expect(s.warnings).toMatchObject(warnings);
                   }
                   // now we match rest of fields but using the raw version for better readability
