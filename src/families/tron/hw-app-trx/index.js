@@ -167,7 +167,7 @@ export default class Trx {
           ? rawTx.length - offset
           : maxChunkSize;
 
-      let buffer = new Buffer.alloc(
+      let buffer = Buffer.alloc(
         offset === 0 ? 1 + paths.length * PATH_SIZE + chunkSize : chunkSize
       );
 
