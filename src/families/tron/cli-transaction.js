@@ -110,7 +110,14 @@ function inferTransactions(
   return flatMap(transactions, ({ transaction, account }) => {
     invariant(transaction.family === "tron", "tron family");
 
-    invariant(account.tronResources, "Unactivated account");
+    if (account.type === "Account") {
+      invariant(account.tronResources, "unactivated account");
+    }
+
+    if (account.type === "TokenAccount") {
+      const isDelisted = account.token.delisted === true;
+      invariant(!isDelisted, "token is delisted");
+    }
 
     return {
       ...transaction,

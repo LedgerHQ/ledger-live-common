@@ -46,7 +46,6 @@ import {
   UnexpectedFees,
   NotEnoughTronPower
 } from "../../../errors";
-import { trc10HexList } from "../../../load/tokens/tron/trc10-name-hex";
 import {
   broadcastTron,
   claimRewardTronTransaction,
@@ -233,8 +232,7 @@ const getAccountShape = async info => {
       type: "trc10",
       key,
       value
-    }))
-    .filter(({ key }) => trc10HexList.some(t => t.id.toString() === key));
+    }));
 
   const trc20Tokens = get(acc, "trc20", []).map(obj => {
     const [[key, value]] = Object.entries(obj);

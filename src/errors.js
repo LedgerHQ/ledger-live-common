@@ -8,8 +8,6 @@ export const TransactionRefusedOnDevice = createCustomErrorClass(
   "TransactionRefusedOnDevice"
 );
 
-export const ModeNotSupported = createCustomErrorClass("ModeNotSupported");
-
 export const ResourceNotSupported = createCustomErrorClass(
   "ResourceNotSupported"
 );

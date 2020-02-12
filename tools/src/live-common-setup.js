@@ -57,7 +57,8 @@ setSupportedCurrencies([
   "clubcoin",
   "decred",
   "bitcoin_testnet",
-  "ethereum_ropsten"
+  "ethereum_ropsten",
+  "tron"
 ]);
 
 const webusbDevices = {};

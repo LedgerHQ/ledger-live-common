@@ -22,24 +22,18 @@ export const abiEncodeTrc20Transfer = (
   return encodedAddress.concat(encodedAmount);
 };
 
-export const hexToAscii = (hex: string) => {
-  let str = "";
-  for (var n = 0; n < hex.length; n += 2) {
-    str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
-  }
-  return str;
-};
+export const hexToAscii = (hex: string) => Buffer.from(hex, "hex").toString("ascii");
 
-export const isParentTx = (tx: TrongridTxInfo): boolean => {
-  return [
-    "TransferContract",
-    "FreezeBalanceContract",
-    "UnfreezeBalanceContract",
-    "VoteWitnessContract",
-    "WithdrawBalanceContract",
-    "ExchangeTransactionContract"
-  ].includes(tx.type);
-};
+const parentTx = [
+  "TransferContract",
+  "FreezeBalanceContract",
+  "UnfreezeBalanceContract",
+  "VoteWitnessContract",
+  "WithdrawBalanceContract",
+  "ExchangeTransactionContract"
+];
+
+export const isParentTx = (tx: TrongridTxInfo): boolean => parentTx.includes(tx.type);
 
 // This is an estimation, there is no endpoint to calculate the real size of a block before broadcasting it.
 export const getEstimatedBlockSize = (a: Account, t: Transaction): number => {
@@ -49,9 +43,10 @@ export const getEstimatedBlockSize = (a: Account, t: Transaction): number => {
         t.subAccountId && a.subAccounts
           ? a.subAccounts.find(sa => sa.id === t.subAccountId)
           : null;
-
-      if (get(subAccount, "id", "").includes("trc10")) return 285;
-      if (get(subAccount, "id", "").includes("trc20")) return 350;
+      if (subAccount && subAccount.type === "TokenAccount") {
+        if (subAccount.token.tokenType === "trc10") return 285;
+        if (subAccount.token.tokenType === "trc20") return 350;
+      }
       return 270;
     }
     case "freeze":
