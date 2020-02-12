@@ -227,12 +227,11 @@ const getAccountShape = async info => {
   );
 
   // we need to filter only supported tokens by the nano app
-  const trc10Tokens = get(acc, "assetV2", [])
-    .map(({ key, value }) => ({
-      type: "trc10",
-      key,
-      value
-    }));
+  const trc10Tokens = get(acc, "assetV2", []).map(({ key, value }) => ({
+    type: "trc10",
+    key,
+    value
+  }));
 
   const trc20Tokens = get(acc, "trc20", []).map(obj => {
     const [[key, value]] = Object.entries(obj);

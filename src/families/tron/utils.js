@@ -22,7 +22,8 @@ export const abiEncodeTrc20Transfer = (
   return encodedAddress.concat(encodedAmount);
 };
 
-export const hexToAscii = (hex: string) => Buffer.from(hex, "hex").toString("ascii");
+export const hexToAscii = (hex: string) =>
+  Buffer.from(hex, "hex").toString("ascii");
 
 const parentTx = [
   "TransferContract",
@@ -33,7 +34,8 @@ const parentTx = [
   "ExchangeTransactionContract"
 ];
 
-export const isParentTx = (tx: TrongridTxInfo): boolean => parentTx.includes(tx.type);
+export const isParentTx = (tx: TrongridTxInfo): boolean =>
+  parentTx.includes(tx.type);
 
 // This is an estimation, there is no endpoint to calculate the real size of a block before broadcasting it.
 export const getEstimatedBlockSize = (a: Account, t: Transaction): number => {

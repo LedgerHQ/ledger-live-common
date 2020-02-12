@@ -3,7 +3,6 @@
 import type { TokenCurrency } from "../../types";
 import { getCryptoCurrencyById } from "../../data/cryptocurrencies";
 import { addTokens } from "../../data/tokens";
-import get from "lodash/get";
 
 type TokenType = "trc10" | "trc20";
 
@@ -32,7 +31,7 @@ const convertTokens = (type: TokenType) => ([
       code: abbr,
       magnitude: precision
     }
-    ]
+  ]
 });
 
 const converters = {
