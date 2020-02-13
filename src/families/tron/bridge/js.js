@@ -226,7 +226,6 @@ const getAccountShape = async info => {
     parentTxs.map(tx => txInfoToOperation(info.id, info.address, tx))
   );
 
-  // we need to filter only supported tokens by the nano app
   const trc10Tokens = get(acc, "assetV2", []).map(({ key, value }) => ({
     type: "trc10",
     key,

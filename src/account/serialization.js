@@ -16,6 +16,7 @@ import type {
   SubAccount,
   SubAccountRaw
 } from "../types";
+import type { TronResources, TronResourcesRaw } from "../families/tron/types";
 import {
   getCryptoCurrencyById,
   getTokenById,
@@ -132,6 +133,106 @@ export const fromOperationRaw = (
   }
 
   return res;
+};
+
+export const toTronResourcesRaw = ({
+  frozen,
+  delegatedFrozen,
+  votes,
+  tronPower,
+  energy,
+  bandwidth,
+  unwithdrawnReward
+}: TronResources): TronResourcesRaw => {
+  const frozenBandwidth = frozen.bandwidth;
+  const frozenEnergy = frozen.energy;
+  const delegatedFrozenBandwidth = delegatedFrozen.bandwidth;
+  const delegatedFrozenEnergy = delegatedFrozen.energy;
+  return {
+    frozen: {
+      bandwidth: frozenBandwidth
+        ? {
+            amount: frozenBandwidth.amount.toString(),
+            expiredAt: frozenBandwidth.expiredAt.toISOString()
+          }
+        : undefined,
+      energy: frozenEnergy
+        ? {
+            amount: frozenEnergy.amount.toString(),
+            expiredAt: frozenEnergy.expiredAt.toISOString()
+          }
+        : undefined
+    },
+    delegatedFrozen: {
+      bandwidth: delegatedFrozenBandwidth
+        ? {
+            amount: delegatedFrozenBandwidth.amount.toString(),
+            expiredAt: delegatedFrozenBandwidth.expiredAt.toISOString()
+          }
+        : undefined,
+      energy: delegatedFrozenEnergy
+        ? {
+            amount: delegatedFrozenEnergy.amount.toString(),
+            expiredAt: delegatedFrozenEnergy.expiredAt.toISOString()
+          }
+        : undefined
+    },
+    votes,
+    tronPower,
+    energy,
+    bandwidth,
+    unwithdrawnReward
+  };
+};
+
+export const fromTronResourcesRaw = ({
+  frozen,
+  delegatedFrozen,
+  votes,
+  tronPower,
+  energy,
+  bandwidth,
+  unwithdrawnReward
+}: TronResourcesRaw): TronResources => {
+  const frozenBandwidth = frozen.bandwidth;
+  const frozenEnergy = frozen.energy;
+  const delegatedFrozenBandwidth = delegatedFrozen.bandwidth;
+  const delegatedFrozenEnergy = delegatedFrozen.energy;
+  return {
+    frozen: {
+      bandwidth: frozenBandwidth
+        ? {
+            amount: BigNumber(frozenBandwidth.amount),
+            expiredAt: new Date(frozenBandwidth.expiredAt)
+          }
+        : undefined,
+      energy: frozenEnergy
+        ? {
+            amount: BigNumber(frozenEnergy.amount),
+            expiredAt: new Date(frozenEnergy.expiredAt)
+          }
+        : undefined
+    },
+    delegatedFrozen: {
+      bandwidth: delegatedFrozenBandwidth
+        ? {
+            amount: BigNumber(delegatedFrozenBandwidth.amount),
+            expiredAt: new Date(delegatedFrozenBandwidth.expiredAt)
+          }
+        : undefined,
+      energy: delegatedFrozenEnergy
+        ? {
+            amount: BigNumber(delegatedFrozenEnergy.amount),
+            expiredAt: new Date(delegatedFrozenEnergy.expiredAt)
+          }
+        : undefined
+    },
+    votes,
+    tronPower,
+    energy,
+    bandwidth,
+    unwithdrawnReward
+  };
 };
 
 export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
@@ -360,7 +461,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
   }
 
   if (tronResources) {
-    res.tronResources = tronResources;
+    res.tronResources = fromTronResourcesRaw(tronResources);
   }
 
   return res;
@@ -422,7 +523,7 @@ export function toAccountRaw({
     res.subAccounts = subAccounts.map(toSubAccountRaw);
   }
   if (tronResources) {
-    res.tronResources = tronResources;
+    res.tronResources = toTronResourcesRaw(tronResources);
   }
   return res;
 }

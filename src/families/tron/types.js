@@ -158,6 +158,22 @@ export type TronResources = {|
   unwithdrawnReward: number
 |};
 
+export type TronResourcesRaw = {|
+  frozen: {
+    bandwidth: ?FrozenInfoRaw,
+    energy: ?FrozenInfoRaw
+  },
+  delegatedFrozen: {
+    bandwidth: ?FrozenInfoRaw,
+    energy: ?FrozenInfoRaw
+  },
+  votes: Vote[],
+  tronPower: number,
+  energy: number,
+  bandwidth: BandwidthInfo,
+  unwithdrawnReward: number
+|};
+
 export type Vote = {|
   address: string,
   voteCount: number
@@ -166,6 +182,11 @@ export type Vote = {|
 export type FrozenInfo = {|
   amount: BigNumber,
   expiredAt: Date
+|};
+
+export type FrozenInfoRaw = {|
+  amount: string,
+  expiredAt: string
 |};
 
 export type BandwidthInfo = {|

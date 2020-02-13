@@ -4,7 +4,7 @@ import type { BigNumber } from "bignumber.js";
 import type { CryptoCurrency, TokenCurrency, Unit } from "./currencies";
 import type { OperationRaw, Operation } from "./operation";
 import type { DerivationMode } from "../derivation";
-import type { TronResources } from "../families/tron/types";
+import type { TronResources, TronResourcesRaw } from "../families/tron/types";
 import type {
   BalanceHistory,
   BalanceHistoryRaw,
@@ -220,7 +220,7 @@ export type AccountRaw = {
   endpointConfig?: ?string,
   subAccounts?: SubAccountRaw[],
   balanceHistory?: BalanceHistoryRawMap,
-  tronResources?: TronResources
+  tronResources?: TronResourcesRaw
 };
 
 export type SubAccountRaw = TokenAccountRaw | ChildAccountRaw;

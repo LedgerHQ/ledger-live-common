@@ -12,7 +12,12 @@ import type {
   SubAccount,
   SubAccountRaw
 } from "./types";
-import { fromAccountRaw, fromOperationRaw, fromSubAccountRaw } from "./account";
+import {
+  fromAccountRaw,
+  fromOperationRaw,
+  fromSubAccountRaw,
+  fromTronResourcesRaw
+} from "./account";
 
 const sameOp = (a: Operation, b: Operation) =>
   a === b ||
@@ -243,8 +248,11 @@ export function patchAccount(
     changed = true;
   }
 
-  if (account.tronResources !== updatedRaw.tronResources) {
-    next.tronResources = updatedRaw.tronResources;
+  if (
+    updatedRaw.tronResources &&
+    account.tronResources !== updatedRaw.tronResources
+  ) {
+    next.tronResources = fromTronResourcesRaw(updatedRaw.tronResources);
     changed = true;
   }
 
