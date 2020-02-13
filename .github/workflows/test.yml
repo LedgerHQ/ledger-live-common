@@ -9,11 +9,7 @@ on:
 
 jobs:
   main-test:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@master
@@ -36,51 +32,10 @@ jobs:
         run: |
           yarn global add yalc codecov
           yarn --frozen-lockfile
+      - name: Install cli deps
+        run: |
           cd cli
           yarn --frozen-lockfile
-          cd -
-          yarn ci-setup-cli
-      - name: Deps versions
+      - name: Setup tests
         run: |
-          yarn flow --version
-          yarn jest --version
-      - name: Lint
-        run: yarn ci-lint
-      - name: Run tests
-        run: CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }} yarn ci-test-common && npx codecov
-        timeout-minutes: 60
-
-  cli-tests:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@master
-        with:
-          node-version: 12.x
-      - name: Install linux deps
-        if: runner.os == 'Linux'
-        run: sudo apt-get install -y libusb-1.0-0-dev jq
-      - name: Get yarn cache
-        id: yarn-cache
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-      - uses: actions/cache@v1
-        with:
-          path: ${{ steps.yarn-cache.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      - name: Install dependencies
-        run: |
-          yarn global add yalc codecov
-          yarn install --frozen-lockfile
-          cd cli
-          yarn --frozen-lockfile
-          cd -
           yarn ci-setup-cli
-      - name: Run CLI tests
-        run: yarn ci-test-cli
-        timeout-minutes: 60
