@@ -20,7 +20,12 @@ const extractErrorMessage = (raw: string): ?string => {
   try {
     let data = JSON.parse(raw);
     if (data && Array.isArray(data)) data = data[0];
-    let msg = data.error || data.message || data.error_message || data.msg || data.Error;
+    let msg =
+      data.error ||
+      data.message ||
+      data.error_message ||
+      data.msg ||
+      data.Error;
     if (typeof msg === "string") {
       const m = msg.match(/^JsDefined\((.*)\)$/);
       const innerPart = m ? m[1] : msg;
