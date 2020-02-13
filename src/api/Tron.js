@@ -35,40 +35,22 @@ import take from "lodash/take";
 const baseApiUrl: string = getEnv("API_TRONGRID_PROXY");
 
 async function post(url: string, body: Object) {
-  try {
-    const { data } = await network({
-      method: "POST",
-      url,
-      data: body
-    });
+  const { data } = await network({
+    method: "POST",
+    url,
+    data: body
+  });
 
-    log("http", url);
-
-    if (data.Error) throw new Error(data.Error);
-
-    return data;
-  } catch (e) {
-    log("http", `Error when calling ${url}`, e);
-    throw e;
-  }
+  return data;
 }
 
 async function fetch(url: string) {
-  try {
-    const { data } = await network({
-      method: "GET",
-      url
-    });
+  const { data } = await network({
+    method: "GET",
+    url
+  });
 
-    log("http", url);
-
-    if (data.Error) throw new Error(data.Error);
-
-    return data;
-  } catch (e) {
-    log("http", `Error when calling ${url}`, e);
-    throw e;
-  }
+  return data;
 }
 
 export const freezeTronTransaction = async (
