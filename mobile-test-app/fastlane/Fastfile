@@ -13,7 +13,8 @@ platform :ios do
       workspace: "ios/LLTool.xcworkspace",
       devices: ["iPhone 11"],
       include_simulator_logs: true,
-      buildlog_path: "fastlane/test_output"
+      buildlog_path: "fastlane/test_output",
+      reinstall_app: true
     )
   end
 end
