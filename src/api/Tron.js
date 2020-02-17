@@ -41,6 +41,9 @@ async function post(url: string, body: Object) {
     data: body
   });
 
+  // Ugly but trongrid send a 200 status event if there are errors
+  if (data.Error) throw new Error(data.Error);
+
   return data;
 }
 
@@ -49,6 +52,9 @@ async function fetch(url: string) {
     method: "GET",
     url
   });
+
+  // Ugly but trongrid send a 200 status event if there are errors
+  if (data.Error) throw new Error(data.Error);
 
   return data;
 }

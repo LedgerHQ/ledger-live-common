@@ -24,8 +24,7 @@ const extractErrorMessage = (raw: string): ?string => {
       data.error ||
       data.message ||
       data.error_message ||
-      data.msg ||
-      data.Error;
+      data.msg;
     if (typeof msg === "string") {
       const m = msg.match(/^JsDefined\((.*)\)$/);
       const innerPart = m ? m[1] : msg;
