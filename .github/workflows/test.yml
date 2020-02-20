@@ -53,7 +53,7 @@ jobs:
         run: yarn ci-lint
         if: runner.os != 'Windows'
       - name: Setup TimeZone for Windows
-        run: tzutil /s "Pacific Standard Time"
+        run: tzutil /s "Eastern Standard Time"
         if: runner.os == 'Windows'
       - name: Run tests
         run: yarn ci-test-common
