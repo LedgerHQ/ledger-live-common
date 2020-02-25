@@ -60,7 +60,7 @@ jobs:
         timeout-minutes: 60
       - name: Run coverage
         if: runner.os == 'macOS'
-        run: CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }} npx codecov
+        run: npx codecov --token="${{ secrets.CODECOV_TOKEN }}"
 
   cli:
     strategy:
@@ -90,7 +90,7 @@ jobs:
             ${{ runner.os }}-yarn-
       - name: Install dependencies
         run: |
-          yarn global add yalc codecov
+          yarn global add yalc
           yarn --frozen-lockfile
       - name: Install CLI dependencies
         run: |
@@ -123,7 +123,7 @@ jobs:
             ${{ runner.os }}-yarn-
       - name: Install dependencies
         run: |
-          yarn global add yalc codecov
+          yarn global add yalc
           yarn --frozen-lockfile
       - name: Install CLI dependencies
         run: |
