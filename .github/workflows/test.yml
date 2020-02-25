@@ -60,7 +60,7 @@ jobs:
         timeout-minutes: 60
       - name: Run coverage
         if: runner.os == 'macOS'
-        run: npx codecov --token="${{ secrets.CODECOV_TOKEN }}"
+        run: CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }} npx codecov
 
   cli:
     strategy:
