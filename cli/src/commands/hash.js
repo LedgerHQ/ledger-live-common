@@ -33,8 +33,9 @@ const command = async (transport, currencyId, hash) => {
   );
 
   const outHash = await btc.getTrustedInput(transport, 0, tx);
+  const ouHash = outHash.substring(2, 64);
 
-  return { inHash: hash, outHash };
+  return { inHash: hash, ouHash };
 };
 
 export default {
