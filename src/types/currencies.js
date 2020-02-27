@@ -62,6 +62,7 @@ export type CryptoCurrency = CurrencyCommon & {
   // used for UI
   color: string,
   family: string,
+  hasTimestamp?: boolean,
   blockAvgTime?: number, // in seconds
   supportsSegwit?: boolean,
   supportsNativeSegwit?: boolean,
