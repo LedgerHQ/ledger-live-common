@@ -135,44 +135,44 @@ jobs:
   #         cd cli
   #         yarn test
   #       timeout-minutes: 60
-  # ios:
-  #   runs-on: macos-latest
-  #   steps:
-  #     - uses: actions/checkout@v1
-  #     - uses: actions/setup-node@master
-  #       with:
-  #         node-version: 12.x
-  #     - name: set xCode version
-  #       run: sudo xcode-select -s /Applications/Xcode_11.3.app/Contents/Developer
-  #     - name: get yarn cache
-  #       id: yarn-cache
-  #       run: echo "::set-output name=dir::$(yarn cache dir)"
-  #     - uses: actions/cache@v1
-  #       with:
-  #         path: ${{ steps.yarn-cache.outputs.dir }}
-  #         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-yarn-
-  #     - name: install all dependencies
-  #       run: |
-  #         yarn install
-  #         cd mobile-test-app
-  #         bundle install
-  #         yarn
-  #         cd ios
-  #         bundle exec pod install
-  #     - name: setup process
-  #       run: |
-  #         cd mobile-test-app
-  #         echo 'process.env.BRANCH = "${{ github.head_ref }}";' > process.js
-  #     - name: run tests
-  #       run: |
-  #         cd mobile-test-app
-  #         yarn ios:test
-  #       timeout-minutes: 60
-  #     - name: upload logs
-  #       if: failure() || success()
-  #       uses: actions/upload-artifact@v1
-  #       with:
-  #         name: LLTool-LLTool.log
-  #         path: mobile-test-app/fastlane/test_output/LLTool-LLTool.log
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@master
+        with:
+          node-version: 12.x
+      - name: set xCode version
+        run: sudo xcode-select -s /Applications/Xcode_11.3.app/Contents/Developer
+      - name: get yarn cache
+        id: yarn-cache
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - name: install all dependencies
+        run: |
+          yarn install
+          cd mobile-test-app
+          bundle install
+          yarn
+          cd ios
+          bundle exec pod install
+      - name: setup process
+        run: |
+          cd mobile-test-app
+          echo 'process.env.BRANCH = "${{ github.head_ref }}";' > process.js
+      - name: run tests
+        run: |
+          cd mobile-test-app
+          yarn ios:test
+        timeout-minutes: 60
+      - name: upload logs
+        if: failure() || success()
+        uses: actions/upload-artifact@v1
+        with:
+          name: LLTool-LLTool.log
+          path: mobile-test-app/fastlane/test_output/LLTool-LLTool.log
