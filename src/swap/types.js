@@ -30,17 +30,19 @@ export type ExchangeRate = {
 // it could fail if the exchange is not possible (out of range)
 export type GetExchangeRates = Exchange => Promise<ExchangeRate[]>;
 
+export type InitSwapResult = {
+  transaction: Transaction,
+  swapId: string
+};
+
 // init a swap with the Exchange app
 // throw if TransactionStatus have errors
 // you get at the end a final Transaction to be done (it's not yet signed, nor broadcasted!) and a swapId
 export type InitSwap = (
   exchange: Exchange,
   exchangeRate: ExchangeRate,
-  transport: Transport<*>
-) => Promise<{
-  transaction: Transaction,
-  swapId: string
-}>;
+  deviceId: string
+) => Promise<InitSwapResult>;
 
 export type SwapCurrencyNameAndSignature = {
   config: Buffer,

@@ -2,37 +2,47 @@
 /* eslint-disable no-console */
 
 import secp256k1 from "secp256k1";
-import type Transport from "@ledgerhq/hw-transport";
 import Swap from "@ledgerhq/hw-app-swap";
 import perFamily from "../generated/swap";
-
-import type { Exchange, ExchangeRate, InitSwap } from "./types";
+import { from } from "rxjs";
+import type {
+  Exchange,
+  ExchangeRate,
+  InitSwap,
+  SwapProviderNameAndSignature
+} from "./types";
+import type { Account } from "../types";
+import type { CryptoCurrency } from "../types/currencies";
 import type { Transaction } from "../generated/types";
 import { getAccountCurrency, getMainAccount } from "../account";
 import network from "../network";
 import { getAccountBridge } from "../bridge";
 import { getCurrencySwapConfig, getSwapProviders, swapAPIBaseURL } from "./";
+import { withDevice } from "../hw/deviceAccess";
 
 const initSwap: InitSwap = async (
   exchange: Exchange,
   exchangeRate: ExchangeRate,
-  transport: Transport<*>
+  deviceId: string
 ): Promise<{
   transaction: Transaction,
   swapId: string
 }> => {
-  const swap = new Swap(transport);
+  const deviceTransactionId = await withDevice(deviceId)(t => {
+    const swap = new Swap(t);
+    return from(swap.startNewTransaction());
+  }).toPromise();
+
   const { provider, rateId } = exchangeRate;
   const { fromAmount: amountFrom } = exchange;
   const refundCurrency = getAccountCurrency(exchange.fromAccount);
-  const payoutCurrency = getAccountCurrency(exchange.toAccount);
 
-  const deviceTransactionId = await swap.startNewTransaction();
-  const refundAddress = getMainAccount(
+  const payoutCurrency = getAccountCurrency(exchange.toAccount);
+  const refundAccount = getMainAccount(
     exchange.fromAccount,
     exchange.fromParentAccount
   );
-  const payoutAddress = getMainAccount(
+  const payoutAccount = getMainAccount(
     exchange.toAccount,
     exchange.toParentAccount
   );
@@ -47,8 +57,8 @@ const initSwap: InitSwap = async (
         from: refundCurrency.ticker,
         to: payoutCurrency.ticker,
         rateId,
-        address: payoutAddress.freshAddress,
-        refundAddress: refundAddress.freshAddress,
+        address: payoutAccount.freshAddress,
+        refundAddress: refundAccount.freshAddress,
         deviceTransactionId
       }
     ]
@@ -59,22 +69,6 @@ const initSwap: InitSwap = async (
     const { swapId, provider: providerName } = swapResult;
     const provider = getSwapProviders(providerName);
 
-    console.log("⁍ Setting partner on swap");
-    await swap.setPartnerKey(provider.nameAndPubkey);
-    console.log("⁍ Checking partner on swap");
-    await swap.checkPartner(provider.signature);
-    console.log("⁍ Process the transaction payload");
-    await swap.processTransaction(Buffer.from(swapResult.binaryPayload, "hex"));
-    const goodSign = secp256k1.signatureExport(
-      Buffer.from(swapResult.signature, "hex")
-    );
-    console.log("⁍ Checking transaction signature");
-    await swap.checkTransactionSignature(goodSign);
-
-    console.log(
-      `⁍ Fetching address parameters from ${payoutAddress.freshAddressPath}`
-    );
-
     // FIXME because this would only work for currencies right now
     if (payoutCurrency.type !== "CryptoCurrency") {
       throw new Error("How do I handle non CryptoCurrencies");
@@ -83,42 +77,23 @@ const initSwap: InitSwap = async (
       throw new Error("How do I handle non CryptoCurrencies");
     }
 
-    const payoutAddressParameters = await perFamily[
-      payoutCurrency.family
-    ].getSerializedAddressParameters(payoutAddress.freshAddressPath, "p2sh");
+    await withDevice(deviceId)(transport =>
+      from(
+        performSwapChecks({
+          transport,
+          provider,
+          payoutAccount,
+          payoutCurrency,
+          refundAccount,
+          refundCurrency,
+          swapResult
+        })
+      )
+    ).toPromise();
 
-    console.log("⁍ Checking payout address config/signature");
-    const {
-      config: payoutAddressConfig,
-      signature: payoutAddressConfigSignature
-    } = getCurrencySwapConfig(payoutCurrency);
-
-    await swap.checkPayoutAddress(
-      payoutAddressConfig,
-      payoutAddressConfigSignature,
-      payoutAddressParameters.addressParameters
-    );
-
-    const refundAddressParameters = await perFamily[
-      refundCurrency.family
-    ].getSerializedAddressParameters(refundAddress.freshAddressPath, "bech32");
-
-    console.log("⁍ Checking refund address config/signature");
-    const {
-      config: refundAddressConfig,
-      signature: refundAddressConfigSignature
-    } = getCurrencySwapConfig(refundCurrency);
-
-    await swap.checkRefundAddress(
-      refundAddressConfig,
-      refundAddressConfigSignature,
-      refundAddressParameters.addressParameters
-    );
-
-    const accountBridge = getAccountBridge(refundAddress);
-
+    const accountBridge = getAccountBridge(refundAccount);
     console.log("⁍ Creating transaction");
-    let transaction = accountBridge.createTransaction(refundAddress);
+    let transaction = accountBridge.createTransaction(refundAccount);
 
     console.log("⁍ Updating transaction");
     transaction = accountBridge.updateTransaction(transaction, {
@@ -127,7 +102,7 @@ const initSwap: InitSwap = async (
     });
     console.log("⁍ Preparing transaction");
     transaction = await accountBridge.prepareTransaction(
-      refundAddress,
+      refundAccount,
       transaction
     );
 
@@ -138,6 +113,73 @@ const initSwap: InitSwap = async (
   }
 
   throw new Error("initSwap: Something broke");
+};
+
+const performSwapChecks = async ({
+  transport,
+  provider,
+  payoutAccount,
+  refundAccount,
+  payoutCurrency,
+  refundCurrency,
+  swapResult
+}: {
+  transport: *,
+  provider: SwapProviderNameAndSignature,
+  payoutAccount: Account,
+  refundAccount: Account,
+  payoutCurrency: CryptoCurrency,
+  refundCurrency: CryptoCurrency,
+  swapResult: *
+}) => {
+  const swap = new Swap(transport);
+  console.log("⁍ Setting partner on swap");
+  await swap.setPartnerKey(provider.nameAndPubkey);
+  console.log("⁍ Checking partner on swap");
+  await swap.checkPartner(provider.signature);
+  console.log("⁍ Process the transaction payload");
+  await swap.processTransaction(Buffer.from(swapResult.binaryPayload, "hex"));
+  const goodSign = secp256k1.signatureExport(
+    Buffer.from(swapResult.signature, "hex")
+  );
+  console.log("⁍ Checking transaction signature");
+  await swap.checkTransactionSignature(goodSign);
+
+  console.log(
+    `⁍ Fetching address parameters from ${payoutAccount.freshAddressPath}`
+  );
+
+  const payoutAddressParameters = await perFamily[
+    payoutCurrency.family
+  ].getSerializedAddressParameters(payoutAccount.freshAddressPath, "p2sh");
+
+  console.log("⁍ Checking payout address config/signature");
+  const {
+    config: payoutAddressConfig,
+    signature: payoutAddressConfigSignature
+  } = getCurrencySwapConfig(payoutCurrency);
+
+  await swap.checkPayoutAddress(
+    payoutAddressConfig,
+    payoutAddressConfigSignature,
+    payoutAddressParameters.addressParameters
+  );
+
+  const refundAddressParameters = await perFamily[
+    refundCurrency.family
+  ].getSerializedAddressParameters(refundAccount.freshAddressPath, "bech32");
+
+  console.log("⁍ Checking refund address config/signature");
+  const {
+    config: refundAddressConfig,
+    signature: refundAddressConfigSignature
+  } = getCurrencySwapConfig(refundCurrency);
+
+  await swap.checkRefundAddress(
+    refundAddressConfig,
+    refundAddressConfigSignature,
+    refundAddressParameters.addressParameters
+  );
 };
 
 export default initSwap;
