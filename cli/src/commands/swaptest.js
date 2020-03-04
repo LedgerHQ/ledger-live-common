@@ -1,14 +1,15 @@
 // @flow
 /* eslint-disable no-console */
 import { from } from "rxjs";
-import { withDevice } from "@ledgerhq/live-common/lib/hw/deviceAccess";
+import { first, map } from "rxjs/operators";
 import type { Exchange } from "@ledgerhq/live-common/lib/swap/types";
-import {getStatus, initSwap} from "@ledgerhq/live-common/lib/swap";
+import { initSwap } from "@ledgerhq/live-common/lib/swap";
 import { getExchangeRates } from "@ledgerhq/live-common/lib/swap";
+import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import { deviceOpt } from "../scan";
 import { accountToReceiveSwap, accountToSendSwap } from "../poc/accounts";
 
-const test = async transport => {
+const test = async deviceId => {
   const exchange: Exchange = {
     fromAccount: accountToSendSwap,
     fromParentAccount: undefined,
@@ -23,15 +24,21 @@ const test = async transport => {
   const { transaction, swapId } = await initSwap(
     exchange,
     exchangeRates[0],
-    transport
+    deviceId
   );
+  const bridge = getAccountBridge(exchange.fromAccount);
+  const signOperation = await bridge
+    .signOperation({ account: exchange.fromAccount, deviceId, transaction })
+    .pipe(
+      first(e => e.type === "signed"),
+      map(e => e.signedOperation)
+    )
+    .toPromise();
 
-  // await getStatus("changelly", "wdsruz9bc628lpw8") // to check status
-  console.log({ transaction, swapId });
+  console.log({ transaction, swapId, signOperation });
 };
 
 export default {
   args: [deviceOpt],
-  job: ({ device }: $Shape<{ device: string }>) =>
-    withDevice(device || "")(transport => from(test(transport)))
+  job: ({ device }: $Shape<{ device: string }>) => from(test(device))
 };
