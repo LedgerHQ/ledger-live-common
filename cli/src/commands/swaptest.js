@@ -1,9 +1,9 @@
 // @flow
 /* eslint-disable no-console */
 import { from } from "rxjs";
-import initSwap from "@ledgerhq/live-common/lib/hw/swap/initSwap";
 import { withDevice } from "@ledgerhq/live-common/lib/hw/deviceAccess";
 import type { Exchange } from "@ledgerhq/live-common/lib/swap/types";
+import { initSwap } from "@ledgerhq/live-common/lib/swap";
 import { getExchangeRates } from "@ledgerhq/live-common/lib/swap";
 import { deviceOpt } from "../scan";
 import { accountToReceiveSwap, accountToSendSwap } from "../poc/accounts";
