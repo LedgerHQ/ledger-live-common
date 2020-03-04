@@ -21,6 +21,7 @@ deviceTransactionConfig.js \
 test-dataset.js \
 test-specifics.js \
 mock.js \
+swap.js \
 "
 
 cd ../src

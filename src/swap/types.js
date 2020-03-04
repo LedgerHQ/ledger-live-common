@@ -1,8 +1,9 @@
 // @flow
 
+import type Transport from "@ledgerhq/hw-transport";
 import { BigNumber } from "bignumber.js";
 import type { Account, AccountLike } from "../types/account";
-import type { DeviceId, Transaction } from "../types";
+import type { Transaction } from "../types";
 
 // in bridge? heuristic. error could happen later.
 export type EstimateMaxSpendable = (account: Account) => BigNumber;
@@ -21,25 +22,35 @@ export type ExchangeRate = {
   rate: BigNumber,
   rateId: string,
   provider: string,
-  providerURL: ?string,
-  expirationDate: ?Date // FIXME not available? Asked channel where we get this from
+  providerURL?: ?string,
+  expirationDate?: ?Date // FIXME not available? Asked channel where we get this from
 };
 
 // to be called every time Exchange changes
 // it could fail if the exchange is not possible (out of range)
-export type GetExchangeRate = Exchange => Promise<ExchangeRate>;
+export type GetExchangeRates = Exchange => Promise<ExchangeRate[]>;
 
 // init a swap with the Exchange app
 // throw if TransactionStatus have errors
 // you get at the end a final Transaction to be done (it's not yet signed, nor broadcasted!) and a swapId
-export type InitSwap = ({
+export type InitSwap = (
   exchange: Exchange,
   exchangeRate: ExchangeRate,
-  deviceId: DeviceId
-}) => Promise<{
+  transport: Transport<*>
+) => Promise<{
   transaction: Transaction,
   swapId: string
 }>;
+
+export type SwapCurrencyNameAndSignature = {
+  config: Buffer,
+  signature: Buffer
+};
+
+export type SwapProviderNameAndSignature = {
+  nameAndPubkey: Buffer,
+  signature: Buffer
+};
 
 /*
 // TO BE FIGURED OUT
