@@ -52,6 +52,30 @@ export type SwapProviderNameAndSignature = {
   signature: Buffer
 };
 
+type ValidSwapStatus =
+  | "confirming"
+  | "finished"
+  | "exchanging"
+  | "hold"
+  | "sending"
+  | "waiting"
+  | "overdue"
+  | "refunded"
+  | "new"
+  | "expired"
+  | "failed";
+
+type SwapStatus = {
+  provider: string,
+  swapId: string,
+  status: ValidSwapStatus
+};
+
+export type GetSwapStatus = (
+  provider: string,
+  swapId: string
+) => Promise<SwapStatus[]>;
+
 /*
 // TO BE FIGURED OUT
 type FamilySwapSpecifics = {
@@ -70,18 +94,3 @@ type FamilySwapSpecifics = {
 //   operation: Operation,
 //   swapId: string
 // };
-
-type SwapStatus =
-  | "Confirming"
-  | "Finished"
-  | "Exchanging"
-  | "Hold"
-  | "Sending"
-  | "Waiting"
-  | "Overdue"
-  | "Refunded"
-  | "New"
-  | "Expired"
-  | "Failed";
-
-export type GetSwapStatus = ({ swapId: string }) => Promise<SwapStatus>;
