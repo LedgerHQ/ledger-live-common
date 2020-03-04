@@ -1,48 +1,13 @@
 // @flow
 
-import { getAccountCurrency } from "../account";
-import network from "../network";
 import type {
-  Exchange,
-  GetExchangeRates,
   SwapCurrencyNameAndSignature,
   SwapProviderNameAndSignature
 } from "./types";
 import type { CryptoCurrency, TokenCurrency } from "../types/currencies";
-
-export const swapAPIBaseURL = "https://swap.dev.aws.ledger.fr";
-
-export const getExchangeRates: GetExchangeRates = async (
-  exchange: Exchange
-) => {
-  const from = getAccountCurrency(exchange.fromAccount).ticker;
-  const to = getAccountCurrency(exchange.toAccount).ticker;
-
-  const res = await network({
-    method: "POST",
-    url: `${swapAPIBaseURL}/rate/fixed`,
-    data: [
-      {
-        from,
-        to,
-        amountFrom: exchange.fromAmount
-      }
-    ]
-  });
-
-  if (res.data) {
-    return res.data.map(({ rate, rateId, provider }) => {
-      return {
-        rate,
-        rateId,
-        provider,
-        expirationDate: new Date()
-      };
-    });
-  }
-
-  throw new Error("getExchangeRate: Something broke");
-};
+import getExchangeRates from "./getExchangeRates";
+import initSwap from "./initSwap";
+const swapAPIBaseURL = "https://swap.dev.aws.ledger.fr";
 
 const swapProviders: {
   [string]: { nameAndPubkey: Buffer, signature: Buffer }
@@ -66,7 +31,7 @@ const swapCurrencyConfigs: { [string]: SwapCurrencyNameAndSignature } = {
   }
 };
 
-export const getCurrencySwapConfig = (
+const getCurrencySwapConfig = (
   currency: CryptoCurrency | TokenCurrency
 ): SwapCurrencyNameAndSignature => {
   const res = swapCurrencyConfigs[currency.id];
@@ -76,7 +41,7 @@ export const getCurrencySwapConfig = (
   return res;
 };
 
-export const getSwapProviders = (
+const getSwapProviders = (
   providerName: string
 ): SwapProviderNameAndSignature => {
   const res = swapProviders[providerName];
@@ -84,4 +49,12 @@ export const getSwapProviders = (
     throw new Error(`Unknown partner ${providerName}`);
   }
   return res;
+};
+
+export {
+  swapAPIBaseURL,
+  getSwapProviders,
+  getCurrencySwapConfig,
+  getExchangeRates,
+  initSwap
 };

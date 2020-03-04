@@ -4,18 +4,14 @@
 import secp256k1 from "secp256k1";
 import type Transport from "@ledgerhq/hw-transport";
 import Swap from "@ledgerhq/hw-app-swap";
-import perFamily from "../../generated/swap";
+import perFamily from "../generated/swap";
 
-import type { Exchange, ExchangeRate, InitSwap } from "../../swap/types";
-import type { Transaction } from "../../generated/types";
-import { getAccountCurrency, getMainAccount } from "../../account";
-import network from "../../network";
-import { getAccountBridge } from "../../bridge";
-import {
-  getCurrencySwapConfig,
-  getSwapProviders,
-  swapAPIBaseURL
-} from "../../swap";
+import type { Exchange, ExchangeRate, InitSwap } from "./types";
+import type { Transaction } from "../generated/types";
+import { getAccountCurrency, getMainAccount } from "../account";
+import network from "../network";
+import { getAccountBridge } from "../bridge";
+import { getCurrencySwapConfig, getSwapProviders, swapAPIBaseURL } from "./";
 
 const initSwap: InitSwap = async (
   exchange: Exchange,
