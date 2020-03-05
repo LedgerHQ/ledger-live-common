@@ -1,5 +1,6 @@
 // @flow
 
+import { BigNumber } from "bignumber.js";
 import secp256k1 from "secp256k1";
 import Swap from "@ledgerhq/hw-app-swap";
 import { from } from "rxjs";
@@ -18,7 +19,6 @@ import type {
 import { withDevice } from "../hw/deviceAccess";
 import type { Account } from "../types";
 import { getCurrencySwapConfig, getSwapProviders, swapAPIBaseURL } from "./";
-import { BigNumber } from "bignumber.js";
 
 const initSwap: InitSwap = async (
   exchange: Exchange,
@@ -118,10 +118,12 @@ const initSwap: InitSwap = async (
 
     return { transaction, swapId };
   }
-
+  // FIXME better error handling
   throw new Error("initSwap: Something broke");
 };
 
+// NB If any of the swap interactions fail it throws an error, maybe we can remap
+// those errors to handle them differently.
 const performSwapChecks = async ({
   transport,
   provider,
@@ -149,8 +151,10 @@ const performSwapChecks = async ({
   await swap.checkTransactionSignature(goodSign);
   const payoutAddressParameters = await perFamily[
     payoutCurrency.family
-  ].getSerializedAddressParameters(payoutAccount.freshAddressPath, "p2sh");
-  // FIXME need to fetch this `format` from the account somehow     ↑
+  ].getSerializedAddressParameters(
+    payoutAccount.freshAddressPath,
+    payoutAccount.derivationMode
+  );
 
   const {
     config: payoutAddressConfig,
@@ -165,8 +169,10 @@ const performSwapChecks = async ({
 
   const refundAddressParameters = await perFamily[
     refundCurrency.family
-  ].getSerializedAddressParameters(refundAccount.freshAddressPath, "bech32");
-  // FIXME need to fetch this `format` from the account somehow     ↑
+  ].getSerializedAddressParameters(
+    refundAccount.freshAddressPath,
+    refundAccount.derivationMode
+  );
 
   const {
     config: refundAddressConfig,
