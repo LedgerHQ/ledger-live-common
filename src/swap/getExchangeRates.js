@@ -22,14 +22,21 @@ const getExchangeRates: GetExchangeRates = async (exchange: Exchange) => {
   });
 
   if (res.data) {
-    return res.data.map(({ rate, rateId, provider }) => {
-      return {
-        rate,
-        rateId,
-        provider,
-        expirationDate: new Date()
-      };
-    });
+    return res.data.map(
+      ({ rate, rateId, provider, minAmountFrom, maxAmountFrom }) => {
+        if (!rateId) {
+          throw new Error(
+            `getExchangeRate: Rate available for amounts between ${minAmountFrom} and ${maxAmountFrom}`
+          );
+        }
+        return {
+          rate,
+          rateId,
+          provider,
+          expirationDate: new Date()
+        };
+      }
+    );
   }
 
   throw new Error("getExchangeRate: Something broke");
