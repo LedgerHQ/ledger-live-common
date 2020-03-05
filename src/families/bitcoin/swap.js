@@ -1,7 +1,9 @@
 // @flow
 
 import { bip32asBuffer } from "@ledgerhq/hw-app-btc/lib/bip32";
-import type { AddressFormat } from "@ledgerhq/hw-app-btc/lib/getWalletPublicKey";
+import type { DerivationMode } from "../../derivation";
+import { getAddressFormatDerivationMode } from "../../derivation";
+import invariant from "invariant";
 
 const addressFormatMap = {
   legacy: 0,
@@ -17,11 +19,15 @@ const addressFormatMap = {
  */
 const getSerializedAddressParameters = (
   path: string,
-  format: AddressFormat = "legacy"
+  derivationMode: DerivationMode
 ): { addressParameters: Buffer } => {
-  if (!(format in addressFormatMap)) {
-    throw new Error("btc.getWalletPublicKey invalid format=" + format);
-  }
+  const format = getAddressFormatDerivationMode(derivationMode);
+  invariant(
+    format === "legacy" || format === "p2sh" || format === "bech32",
+    "unsupported format %s",
+    format
+  );
+
   console.log("bip32asBuffer on", { path, format });
   const buffer = bip32asBuffer(path);
   const addressParameters = Buffer.concat([
