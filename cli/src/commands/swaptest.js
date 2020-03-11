@@ -9,16 +9,17 @@ import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import { deviceOpt } from "../scan";
 import { accountToReceiveSwap, accountToSendSwap } from "../poc/accounts";
 
-const test = async deviceId => {
-  const fromAccount = await getAccountBridge(accountToSendSwap, null)
-    .sync(accountToSendSwap, { paginationConfig: {} })
-    .pipe(reduce((a, f) => f(a), accountToSendSwap))
+const test = async (deviceId, mock = false) => {
+  const fromAccount = await getAccountBridge(accountToSendSwap(mock), null)
+    .sync(accountToSendSwap(mock), { paginationConfig: {} })
+    .pipe(reduce((a, f) => f(a), accountToSendSwap(mock)))
     .toPromise();
 
+  console.log(`/!\\ Performing a ${mock ? "MOCK" : "REAL"} swap test`);
   const exchange: Exchange = {
     fromAccount,
     fromParentAccount: undefined,
-    toAccount: accountToReceiveSwap,
+    toAccount: accountToReceiveSwap(mock),
     toParentAccount: undefined,
     fromAmount: "0.005",
     sendMax: false
@@ -46,6 +47,14 @@ const test = async deviceId => {
 };
 
 export default {
-  args: [deviceOpt],
-  job: ({ device }: $Shape<{ device: string }>) => from(test(device))
+  args: [
+    deviceOpt,
+    {
+      name: "mock",
+      alias: "m",
+      type: Boolean
+    }
+  ],
+  job: ({ device, mock }: $Shape<{ device: string, mock: boolean }>) =>
+    from(test(device, mock))
 };

@@ -4,6 +4,7 @@ import { BigNumber } from "bignumber.js";
 import secp256k1 from "secp256k1";
 import Swap from "@ledgerhq/hw-app-swap";
 import { from } from "rxjs";
+import { mockedInitSwap } from "./mock";
 import perFamily from "../generated/swap";
 import type { CryptoCurrency } from "../types/currencies";
 import type { Transaction } from "../generated/types";
@@ -19,6 +20,7 @@ import type {
 import { withDevice } from "../hw/deviceAccess";
 import type { Account } from "../types";
 import { getCurrencySwapConfig, getSwapProviders, swapAPIBaseURL } from "./";
+import { getEnv } from "../env";
 
 const initSwap: InitSwap = async (
   exchange: Exchange,
@@ -28,98 +30,103 @@ const initSwap: InitSwap = async (
   transaction: Transaction,
   swapId: string
 }> => {
-  const deviceTransactionId = await withDevice(deviceId)(t => {
-    const swap = new Swap(t);
-    return from(swap.startNewTransaction());
-  }).toPromise();
+  if (!getEnv("MOCK")) {
+    const deviceTransactionId = await withDevice(deviceId)(t => {
+      const swap = new Swap(t);
+      return from(swap.startNewTransaction());
+    }).toPromise();
 
-  const { provider, rateId } = exchangeRate;
-  const { fromAmount: amountFrom } = exchange;
-  const refundCurrency = getAccountCurrency(exchange.fromAccount);
+    const { provider, rateId } = exchangeRate;
+    const { fromAmount: amountFrom } = exchange;
+    const refundCurrency = getAccountCurrency(exchange.fromAccount);
 
-  const payoutCurrency = getAccountCurrency(exchange.toAccount);
-  const refundAccount = getMainAccount(
-    exchange.fromAccount,
-    exchange.fromParentAccount
-  );
-  const payoutAccount = getMainAccount(
-    exchange.toAccount,
-    exchange.toParentAccount
-  );
+    const payoutCurrency = getAccountCurrency(exchange.toAccount);
+    const refundAccount = getMainAccount(
+      exchange.fromAccount,
+      exchange.fromParentAccount
+    );
+    const payoutAccount = getMainAccount(
+      exchange.toAccount,
+      exchange.toParentAccount
+    );
 
-  const res = await network({
-    method: "POST",
-    url: `${swapAPIBaseURL}/swap`,
-    data: [
-      {
-        provider,
-        amountFrom,
-        from: refundCurrency.ticker,
-        to: payoutCurrency.ticker,
-        rateId,
-        address: payoutAccount.freshAddress,
-        refundAddress: refundAccount.freshAddress,
-        deviceTransactionId
-      }
-    ]
-  });
-
-  if (res.data) {
-    const swapResult = res.data[0];
-    const { swapId, provider: providerName } = swapResult;
-    const provider = getSwapProviders(providerName);
-
-    // FIXME because this would break for tokens
-    if (payoutCurrency.type !== "CryptoCurrency") {
-      throw new Error("How do I handle non CryptoCurrencies");
-    }
-    if (refundCurrency.type !== "CryptoCurrency") {
-      throw new Error("How do I handle non CryptoCurrencies");
-    }
-
-    await withDevice(deviceId)(transport =>
-      from(
-        performSwapChecks({
-          transport,
+    const res = await network({
+      method: "POST",
+      url: `${swapAPIBaseURL}/swap`,
+      data: [
+        {
           provider,
-          payoutAccount,
-          payoutCurrency,
-          refundAccount,
-          refundCurrency,
-          swapResult
-        })
-      )
-    ).toPromise();
-
-    const accountBridge = getAccountBridge(refundAccount);
-    let transaction = accountBridge.createTransaction(refundAccount);
-
-    // FIXME we send decimals but swap wants satoshis
-    transaction = accountBridge.updateTransaction(transaction, {
-      amount: BigNumber(
-        swapResult.amountExpectedFrom * 10 ** refundCurrency.units[0].magnitude
-      ),
-      recipient: swapResult.payinAddress
+          amountFrom,
+          from: refundCurrency.ticker,
+          to: payoutCurrency.ticker,
+          rateId,
+          address: payoutAccount.freshAddress,
+          refundAddress: refundAccount.freshAddress,
+          deviceTransactionId
+        }
+      ]
     });
 
-    transaction = await accountBridge.prepareTransaction(
-      refundAccount,
-      transaction
-    );
+    if (res.data) {
+      const swapResult = res.data[0];
+      const { swapId, provider: providerName } = swapResult;
+      const provider = getSwapProviders(providerName);
 
-    const { errors } = await accountBridge.getTransactionStatus(
-      refundAccount,
-      transaction
-    );
+      // FIXME because this would break for tokens
+      if (payoutCurrency.type !== "CryptoCurrency") {
+        throw new Error("How do I handle non CryptoCurrencies");
+      }
+      if (refundCurrency.type !== "CryptoCurrency") {
+        throw new Error("How do I handle non CryptoCurrencies");
+      }
 
-    if (errors.recipient || errors.amount) {
-      throw errors.recipient || errors.amount;
+      await withDevice(deviceId)(transport =>
+        from(
+          performSwapChecks({
+            transport,
+            provider,
+            payoutAccount,
+            payoutCurrency,
+            refundAccount,
+            refundCurrency,
+            swapResult
+          })
+        )
+      ).toPromise();
+
+      const accountBridge = getAccountBridge(refundAccount);
+      let transaction = accountBridge.createTransaction(refundAccount);
+
+      // FIXME we send decimals but swap wants satoshis
+      transaction = accountBridge.updateTransaction(transaction, {
+        amount: BigNumber(
+          swapResult.amountExpectedFrom *
+            10 ** refundCurrency.units[0].magnitude
+        ),
+        recipient: swapResult.payinAddress
+      });
+
+      transaction = await accountBridge.prepareTransaction(
+        refundAccount,
+        transaction
+      );
+
+      const { errors } = await accountBridge.getTransactionStatus(
+        refundAccount,
+        transaction
+      );
+
+      if (errors.recipient || errors.amount) {
+        throw errors.recipient || errors.amount;
+      }
+
+      return { transaction, swapId };
     }
-
-    return { transaction, swapId };
+    // FIXME better error handling
+    throw new Error("initSwap: Something broke");
+  } else {
+    return mockedInitSwap(exchange, exchangeRate, deviceId);
   }
-  // FIXME better error handling
-  throw new Error("initSwap: Something broke");
 };
 
 // NB If any of the swap interactions fail it throws an error, maybe we can remap
