@@ -8,6 +8,7 @@ import { getExchangeRates } from "@ledgerhq/live-common/lib/swap";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import { deviceOpt } from "../scan";
 import { accountToReceiveSwap, accountToSendSwap } from "../poc/accounts";
+import { BigNumber } from "bignumber.js";
 
 const test = async (deviceId, mock = false) => {
   const fromAccount = await getAccountBridge(accountToSendSwap(mock), null)
@@ -21,7 +22,7 @@ const test = async (deviceId, mock = false) => {
     fromParentAccount: undefined,
     toAccount: accountToReceiveSwap(mock),
     toParentAccount: undefined,
-    fromAmount: "0.005",
+    fromAmount: BigNumber("2"),
     sendMax: false
   };
 

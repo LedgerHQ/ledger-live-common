@@ -19,7 +19,7 @@ const getExchangeRates: GetExchangeRates = async (exchange: Exchange) => {
         {
           from,
           to,
-          amountFrom: exchange.fromAmount
+          amountFrom: exchange.fromAmount.toNumber()
         }
       ]
     });
@@ -44,7 +44,7 @@ const getExchangeRates: GetExchangeRates = async (exchange: Exchange) => {
 
     throw new Error("getExchangeRate: Something broke");
   } else {
-    return mockedGetExchangeRates();
+    return mockedGetExchangeRates(exchange);
   }
 };
 
