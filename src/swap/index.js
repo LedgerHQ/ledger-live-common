@@ -7,6 +7,7 @@ import type {
 import type { CryptoCurrency, TokenCurrency } from "../types/currencies";
 import getExchangeRates from "./getExchangeRates";
 import getStatus from "./getStatus";
+import getProviders from "./getProviders";
 import initSwap from "./initSwap";
 
 const swapAPIBaseURL = "https://swap.dev.aws.ledger.fr";
@@ -43,7 +44,7 @@ const getCurrencySwapConfig = (
   return res;
 };
 
-const getSwapProviders = (
+const getProviderNameAndSignature = (
   providerName: string
 ): SwapProviderNameAndSignature => {
   const res = swapProviders[providerName];
@@ -55,7 +56,8 @@ const getSwapProviders = (
 
 export {
   swapAPIBaseURL,
-  getSwapProviders,
+  getProviderNameAndSignature,
+  getProviders,
   getStatus,
   getCurrencySwapConfig,
   getExchangeRates,

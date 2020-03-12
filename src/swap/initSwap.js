@@ -19,7 +19,11 @@ import type {
 } from "./types";
 import { withDevice } from "../hw/deviceAccess";
 import type { Account } from "../types";
-import { getCurrencySwapConfig, getSwapProviders, swapAPIBaseURL } from "./";
+import {
+  getCurrencySwapConfig,
+  getProviderNameAndSignature,
+  swapAPIBaseURL
+} from "./";
 import { getEnv } from "../env";
 
 const initSwap: InitSwap = async (
@@ -70,7 +74,7 @@ const initSwap: InitSwap = async (
     if (res.data) {
       const swapResult = res.data[0];
       const { swapId, provider: providerName } = swapResult;
-      const provider = getSwapProviders(providerName);
+      const provider = getProviderNameAndSignature(providerName);
 
       // FIXME because this would break for tokens
       if (payoutCurrency.type !== "CryptoCurrency") {
