@@ -37,3 +37,12 @@ export const mockedInitSwap = async (
     swapId: "mockedSwapId"
   };
 };
+
+export const mockedGetProviders = async () => {
+  return [
+    {
+      provider: "changelly",
+      supportedCurrencies: ["BTC", "LTC", "ETH"]
+    }
+  ];
+};
