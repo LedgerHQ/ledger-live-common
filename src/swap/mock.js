@@ -1,18 +1,29 @@
 // @flow
 
 import { BigNumber } from "bignumber.js";
-import type { Exchange, ExchangeRate } from "./types";
+import type { Exchange, ExchangeRate, GetProviders} from "./types";
 import type { Transaction } from "../generated/types";
 
-export const mockedGetExchangeRates = () => {
-  return [
-    {
-      rate: BigNumber("0.5"),
-      rateId: "mockedRateId",
-      provider: "changelly",
-      expirationDate: new Date()
-    }
-  ];
+export const mockedGetExchangeRates = async (exchange: Exchange) => {
+  const { fromAmount } = exchange;
+  if (fromAmount.isLessThanOrEqualTo(10)) {
+    //Fake delay to show loading UI
+    await new Promise(r => setTimeout(r, 800));
+    //Mock OK
+    return [
+      {
+        rate: BigNumber("0.5"),
+        rateId: "mockedRateId",
+        provider: "changelly",
+        expirationDate: new Date()
+      }
+    ];
+  } else {
+    //Mock KO
+    throw new Error(
+      `getExchangeRate: Rate available for amounts between 1 and 10`
+    );
+  }
 };
 
 export const mockedInitSwap = async (
@@ -38,7 +49,10 @@ export const mockedInitSwap = async (
   };
 };
 
-export const mockedGetProviders = async () => {
+export const mockedGetProviders: GetProviders = async () => {
+  //Fake delay to show loading UI
+  await new Promise(r => setTimeout(r, 800));
+
   return [
     {
       provider: "changelly",

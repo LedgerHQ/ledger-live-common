@@ -1,6 +1,5 @@
 // @flow
 
-import type Transport from "@ledgerhq/hw-transport";
 import { BigNumber } from "bignumber.js";
 import type { Account, AccountLike } from "../types/account";
 import type { Transaction } from "../types";
@@ -26,9 +25,13 @@ export type ExchangeRate = {
   expirationDate?: ?Date // FIXME not available? Asked channel where we get this from
 };
 
-// to be called every time Exchange changes
-// it could fail if the exchange is not possible (out of range)
+export type AvailableProvider = {
+  provider: string,
+  supportedCurrencies: string[]
+};
+
 export type GetExchangeRates = Exchange => Promise<ExchangeRate[]>;
+export type GetProviders = () => Promise<AvailableProvider[]>;
 
 export type InitSwapResult = {
   transaction: Transaction,
