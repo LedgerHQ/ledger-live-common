@@ -112,7 +112,8 @@ const dataset: DatasetTest<Transaction> = {
               transaction: transactionTransformer.fromTransactionRaw({
                 amount: "1000",
                 recipient:
-                  "GAGUUHH6HNQUH255LBENKIM5HTJGVSX5HLN7K66H2CHGMRLCUAMICGYC",
+                  "GDYPMQMYW2JTLPWAUAHIDY3E4VHP5SGTFC5SMA45L7ZPOTHWQ2PHEW3E",
+                // Have to use an address from the test seed, here is from one coin int testing device
                 useAllAmount: false,
                 family: "stellar",
                 baseReserve: "1500000",

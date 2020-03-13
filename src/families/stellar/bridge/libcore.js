@@ -67,7 +67,7 @@ const updateTransaction = (t, patch) => {
   return { ...t, ...patch };
 };
 
-const isMemoValide = (memoType: string, memoValue: string): boolean => {
+const isMemoValid = (memoType: string, memoValue: string): boolean => {
   switch (memoType) {
     case "MEMO_TEXT":
       if (memoValue.length > 28) {
@@ -178,7 +178,7 @@ const getTransactionStatus = async (a, t) => {
     errors.amount = new StellarNewAccountMinimumTransaction();
   }
 
-  if (t.memoType && t.memoValue && isMemoValide(t.memoType, t.memoValue)) {
+  if (t.memoType && t.memoValue && !isMemoValid(t.memoType, t.memoValue)) {
     errors.transaction = new StellarWrongMemoFormat();
   }
 
