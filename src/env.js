@@ -200,7 +200,7 @@ const envDefinitions = {
     desc: "enable sending to KT accounts. Not tested."
   },
   LIBCORE_BALANCE_HISTORY_NOGO: {
-    def: "ripple,ethereum,tezos", // LLC-475
+    def: "ripple,ethereum,tezos,stellar", // LLC-475
     parser: stringParser,
     desc:
       "comma-separated list of currencies which does not properly support balance history libcore implementation"

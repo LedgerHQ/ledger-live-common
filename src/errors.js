@@ -44,3 +44,19 @@ export const TronUnexpectedFees = createCustomErrorClass("TronUnexpectedFees");
 export const TronNotEnoughTronPower = createCustomErrorClass(
   "TronNotEnoughTronPower"
 );
+
+export const StellarWrongMemoFormat = createCustomErrorClass(
+  "StellarWrongMemoFormat"
+);
+
+export const StellarMinimumBalanceWarning = createCustomErrorClass(
+  "StellarMinimumBalanceWarning"
+);
+
+export const StellarNewAccountMinimumTransaction = createCustomErrorClass(
+  "StellarNewAccountMinimumTransaction"
+);
+
+export const StellarSourceHasMultiSign = createCustomErrorClass(
+  "StellarSourceHasMultiSign"
+);

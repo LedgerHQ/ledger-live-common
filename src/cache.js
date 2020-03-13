@@ -2,7 +2,7 @@
 
 import LRU from "lru-cache";
 
-type Res<A, T> = {
+export type CacheRes<A, T> = {
   (...args: A): Promise<T>,
   force: (...args: A) => Promise<T>,
   hydrate: (string, T) => void
@@ -15,7 +15,7 @@ export const makeLRUCache = <A: Array<*>, T>(
     max: 100,
     maxAge: 5 * 60 * 1000
   }
-): Res<A, T> => {
+): CacheRes<A, T> => {
   const cache = new LRU(lruOpts);
   const result = (...args) => {
     const key = keyExtractor(...args);
