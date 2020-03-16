@@ -5,16 +5,13 @@ import {
   AmountRequired,
   NotEnoughBalance,
   FeeNotLoaded,
-  InvalidAddressBecauseDestinationIsAlsoSource
+  InvalidAddressBecauseDestinationIsAlsoSource,
+  NotEnoughSpendableBalance,
+  NotEnoughBalanceBecauseDestinationNotCreated
 } from "@ledgerhq/errors";
-import {
-  StellarWrongMemoFormat,
-  StellarMinimumBalanceWarning,
-  StellarNewAccountMinimumTransaction,
-  StellarSourceHasMultiSign
-} from "../../../errors";
+import { StellarWrongMemoFormat, SourceHasMultiSign } from "../../../errors";
 import { validateRecipient } from "../../../bridge/shared";
-import type { AccountBridge, CurrencyBridge } from "../../../types";
+import type { AccountBridge, CurrencyBridge, Account } from "../../../types";
 import type { Transaction } from "../types";
 import { scanAccounts } from "../../../libcore/scanAccounts";
 import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
@@ -23,29 +20,38 @@ import broadcast from "../libcore-broadcast";
 import signOperation from "../libcore-signOperation";
 import { withLibcore } from "../../../libcore/access";
 import memoTypeCheck from "../memo-type-check";
-
+import type { CacheRes } from "../../../cache";
+import { makeLRUCache } from "../../../cache";
 import { getWalletName } from "../../../account";
 import { getOrCreateWallet } from "../../../libcore/getOrCreateWallet";
 import { getCoreAccount } from "../../../libcore/getCoreAccount";
 
-const checkRecipientExist = (account, recipient) =>
-  withLibcore(async core => {
-    const { derivationMode, currency } = account;
+export const checkRecipientExist: CacheRes<
+  Array<{ account: Account, recipient: string }>,
+  boolean
+> = makeLRUCache(
+  ({ account, recipient }) =>
+    withLibcore(async core => {
+      const { derivationMode, currency } = account;
 
-    const walletName = getWalletName(account);
+      const walletName = getWalletName(account);
 
-    const coreWallet = await getOrCreateWallet({
-      core,
-      walletName,
-      currency,
-      derivationMode
-    });
+      const coreWallet = await getOrCreateWallet({
+        core,
+        walletName,
+        currency,
+        derivationMode
+      });
 
-    const stellarLikeWallet = await coreWallet.asStellarLikeWallet();
-    const recipientExist = await stellarLikeWallet.exists(recipient);
+      const stellarLikeWallet = await coreWallet.asStellarLikeWallet();
+      const recipientExist = await stellarLikeWallet.exists(recipient);
 
-    return recipientExist;
-  });
+      checkRecipientExist.hydrate(recipient, recipientExist);
+      return recipientExist;
+    }),
+  extract => extract.recipient,
+  { max: 300, maxAge: 5 * 60 } // 5 minutes
+);
 
 const createTransaction = () => ({
   family: "stellar",
@@ -124,7 +130,9 @@ const getTransactionStatus = async (a, t) => {
   }
 
   if (await isAccountIsMultiSign(a)) {
-    errors.recipient = new StellarSourceHasMultiSign();
+    errors.recipient = new SourceHasMultiSign("", {
+      currencyName: a.currency.name
+    });
   }
 
   if (!t.fees || !t.baseReserve) {
@@ -142,7 +150,9 @@ const getTransactionStatus = async (a, t) => {
     : a.balance.minus(baseReserve);
 
   if (useAllAmount) {
-    warnings.amount = new StellarMinimumBalanceWarning();
+    warnings.amount = new NotEnoughSpendableBalance("", {
+      minimumAmount: `${baseReserve.toString()} XLM`
+    });
   }
 
   if (
@@ -172,10 +182,12 @@ const getTransactionStatus = async (a, t) => {
   // if amount < 1.0 you can't
   if (
     !errors.amount &&
-    !(await checkRecipientExist(a, t.recipient)) &&
+    !(await checkRecipientExist({ account: a, recipient: t.recipient })) &&
     amount.lt(10000000)
   ) {
-    errors.amount = new StellarNewAccountMinimumTransaction();
+    errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {
+      minimalAmount: "1 XLM"
+    });
   }
 
   if (t.memoType && t.memoValue && !isMemoValid(t.memoType, t.memoValue)) {
@@ -216,7 +228,7 @@ const prepareTransaction = async (a, t) => {
       }
       return {
         memoType: undefined,
-        memoTypeRecommended: t.memoTypeRecommended
+        memoTypeRecommended: false
       };
     }
   };

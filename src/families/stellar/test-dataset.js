@@ -4,18 +4,32 @@ import { BigNumber } from "bignumber.js";
 import type { DatasetTest } from "../../__tests__/test-helpers/bridge";
 import {
   InvalidAddressBecauseDestinationIsAlsoSource,
-  NotEnoughBalance
+  NotEnoughBalance,
+  NotEnoughSpendableBalance,
+  NotEnoughBalanceBecauseDestinationNotCreated
 } from "@ledgerhq/errors";
 import type { Transaction } from "./types";
 import transactionTransformer from "./transaction";
+import { StellarWrongMemoFormat } from "../../errors";
 import {
-  StellarWrongMemoFormat,
-  StellarMinimumBalanceWarning,
-  StellarNewAccountMinimumTransaction
-} from "../../errors";
+  addNotCreatedStellarMockAddresses,
+  addMultisignStellarMockAddresses,
+  addMemotypeTextStellarMockAddresses
+} from "./bridge/mock";
+
+const notCreatedStellarMockAddress =
+  "GDYPMQMYW2JTLPWAUAHIDY3E4VHP5SGTFC5SMA45L7ZPOTHWQ2PHEW3E";
+const multisignStellarMockAddress =
+  "GAJTWW4OGH5BWFTH24C7SGIDALKI2HUVC2LXHFD533A5FIMSXE5AB3TJ";
+const memoTypeSelectStellarMockAddress =
+  "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3B2WSQHG4W37";
+
+addNotCreatedStellarMockAddresses(notCreatedStellarMockAddress);
+addMultisignStellarMockAddresses(multisignStellarMockAddress);
+addMemotypeTextStellarMockAddresses(memoTypeSelectStellarMockAddress);
 
 const dataset: DatasetTest<Transaction> = {
-  implementations: ["libcore"],
+  implementations: ["libcore", "mock"],
   currencies: {
     stellar: {
       scanAccounts: [
@@ -104,15 +118,14 @@ const dataset: DatasetTest<Transaction> = {
               }),
               expectedStatus: {
                 errors: {},
-                warnings: { amount: new StellarMinimumBalanceWarning() }
+                warnings: { amount: new NotEnoughSpendableBalance() }
               }
             },
             {
               name: "Send To New Account - amount is too low",
               transaction: transactionTransformer.fromTransactionRaw({
                 amount: "1000",
-                recipient:
-                  "GDYPMQMYW2JTLPWAUAHIDY3E4VHP5SGTFC5SMA45L7ZPOTHWQ2PHEW3E",
+                recipient: notCreatedStellarMockAddress,
                 // Have to use an address from the test seed, here is from one coin int testing device
                 useAllAmount: false,
                 family: "stellar",
@@ -128,7 +141,9 @@ const dataset: DatasetTest<Transaction> = {
                 memoTypeRecommended: false
               }),
               expectedStatus: {
-                errors: { amount: new StellarNewAccountMinimumTransaction() },
+                errors: {
+                  amount: new NotEnoughBalanceBecauseDestinationNotCreated()
+                },
                 warnings: {}
               }
             },
@@ -259,41 +274,31 @@ const dataset: DatasetTest<Transaction> = {
                 errors: { transaction: new StellarWrongMemoFormat() },
                 warnings: {}
               }
-            },
-            {
-              name: "Multisign - error",
-              transaction: t => ({
-                ...t,
-                amount: BigNumber(100),
-                recipient:
-                  "GAIXIJBMYPTSF2CDVQ35WOTULCLZIE4W2SDEK3RQGAA3A22BPWY7R53Z",
-                memoType: "MEMO_HASH",
-                memoValue: "dsadsdasdsasseeee"
-              }),
-              expectedStatus: {
-                errors: { transaction: new StellarWrongMemoFormat() },
-                warnings: {}
-              }
             }
           ]
         },
         {
+          FIXME_tests: [
+            "balance is sum of ops",
+            // We prevent user to do anything if we detect that he is a multisign user
+            // SourceHasMultiSign will be launch first
+            "Default empty recipient have a recipientError",
+            "invalid recipient have a recipientError"
+          ],
           raw: {
             id:
-              "libcore:1:stellar:GAJTWW4OGH5BWFTH24C7SGIDALKI2HUVC2LXHFD533A5FIMSXE5AB3TJ:sep5",
+              "libcore:2:stellar:GAJTWW4OGH5BWFTH24C7SGIDALKI2HUVC2LXHFD533A5FIMSXE5AB3TJ:sep5",
             seedIdentifier:
               "cb3d982e538ffe77a40f9179096db07a14ecec5669933cc3e47309be848c66a9",
-            name: "Stellar 1",
+            name: "Stellar 2",
             derivationMode: "sep5",
             index: 0,
-            freshAddress:
-              "GAJTWW4OGH5BWFTH24C7SGIDALKI2HUVC2LXHFD533A5FIMSXE5AB3TJ",
-            freshAddressPath: "44'/148'/0'",
+            freshAddress: multisignStellarMockAddress,
+            freshAddressPath: "44'/148'/1'",
             freshAddresses: [
               {
-                address:
-                  "GAJTWW4OGH5BWFTH24C7SGIDALKI2HUVC2LXHFD533A5FIMSXE5AB3TJ",
-                derivationPath: "44'/148'/0'"
+                address: multisignStellarMockAddress,
+                derivationPath: "44'/148'/1'"
               }
             ],
             unit: { name: "Lumen", code: "XLM", magnitude: 7 },

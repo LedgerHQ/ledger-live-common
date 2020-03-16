@@ -5,7 +5,8 @@ import LRU from "lru-cache";
 export type CacheRes<A, T> = {
   (...args: A): Promise<T>,
   force: (...args: A) => Promise<T>,
-  hydrate: (string, T) => void
+  hydrate: (string, T) => void,
+  clear: string => void
 };
 
 export const makeLRUCache = <A: Array<*>, T>(
@@ -39,6 +40,9 @@ export const makeLRUCache = <A: Array<*>, T>(
   };
   result.hydrate = (key: string, value: T) => {
     cache.set(key, Promise.resolve(value));
+  };
+  result.clear = (key: string) => {
+    cache.del(key);
   };
   return result;
 };

@@ -2,9 +2,8 @@
 
 import type { CacheRes } from "../../cache";
 import { makeLRUCache } from "../../cache";
-import axios from "axios";
-
-const baseUrl: string = "https://api.stellar.expert/";
+import { getEnv } from "../../env";
+import network from "../../network";
 
 const memoTypeCheckCache: CacheRes<Array<string>, ?string> = makeLRUCache(
   async (addr: string): Promise<?string> => getMemoTypeSuggested(addr),
@@ -20,12 +19,12 @@ const memoTypeCheckCache: CacheRes<Array<string>, ?string> = makeLRUCache(
 const getMemoTypeSuggested = async (addr: string): Promise<?string> => {
   const getMemoType = async () => {
     try {
-      const { data } = await axios.get(
-        `${baseUrl}/api/explorer/public/directory/${addr}`
+      const { data } = await network(
+        `${getEnv("API_STELLAR_MEMO")}/api/explorer/public/directory/${addr}`
       );
       return data && data.accepts ? data.accepts.memo : null;
     } catch (e) {
-      if (e.response.status === 404) {
+      if (e.status === 404) {
         return null;
       } else {
         throw e;

@@ -49,14 +49,4 @@ export const StellarWrongMemoFormat = createCustomErrorClass(
   "StellarWrongMemoFormat"
 );
 
-export const StellarMinimumBalanceWarning = createCustomErrorClass(
-  "StellarMinimumBalanceWarning"
-);
-
-export const StellarNewAccountMinimumTransaction = createCustomErrorClass(
-  "StellarNewAccountMinimumTransaction"
-);
-
-export const StellarSourceHasMultiSign = createCustomErrorClass(
-  "StellarSourceHasMultiSign"
-);
+export const SourceHasMultiSign = createCustomErrorClass("SourceHasMultiSign");

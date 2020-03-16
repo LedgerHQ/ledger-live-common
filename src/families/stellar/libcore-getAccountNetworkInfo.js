@@ -15,6 +15,7 @@ type Output = Promise<NetworkInfo>;
 async function stellar({ coreAccount }: Input): Output {
   const stellarLikeAccount: CoreStellarLikeAccount = await coreAccount.asStellarLikeAccount();
   // We disable this because node doesn't return us any fee stats ATM
+  // can be followed here : https://ledgerhq.atlassian.net/browse/COIN-250
   // const baseFees = await stellarLikeAccount.getFeeStats();
   // const lastBaseFee = await baseFees.getLastBaseFee();
 

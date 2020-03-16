@@ -8,6 +8,7 @@ import {
   libcoreBigIntToBigNumber
 } from "../../libcore/buildBigNumber";
 import buildTransaction from "./libcore-buildTransaction";
+import { checkRecipientExist } from "./bridge/libcore";
 
 async function signTransaction({
   account: { freshAddress, freshAddressPath, balance, id },
@@ -71,6 +72,8 @@ async function signTransaction({
     transactionSequenceNumber,
     extra: {}
   };
+
+  checkRecipientExist.clear(transaction.recipient);
 
   return {
     operation: op,

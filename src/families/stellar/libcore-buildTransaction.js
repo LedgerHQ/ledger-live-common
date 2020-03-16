@@ -1,5 +1,5 @@
 // @flow
-
+import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import { FeeNotLoaded } from "@ledgerhq/errors";
 import type { Account } from "../../types";
@@ -25,6 +25,9 @@ const setSequenceToTransactionBuilder = async (
   stellarLikeAccount,
   core
 ) => {
+  // A transaction’s sequence number needs to match the account’s sequence number,
+  // so we need to get the account’s current sequence number from the network and then
+  // sequence number is required to be increased with every transaction
   const sequence = await stellarLikeAccount.getSequence();
   const sequenceBigNumber = await libcoreBigIntToBigNumber(sequence);
   const sequenceBigInt = await bigNumberToLibcoreBigInt(
@@ -78,10 +81,6 @@ const setMemo = async (
   memoType: string,
   memoValue: string
 ) => {
-  if (memoValue === undefined || memoType === undefined) {
-    return;
-  }
-
   switch (memoType) {
     case "MEMO_TEXT":
       await transactionBuilder.setTextMemo(memoValue.toString());
@@ -125,6 +124,9 @@ export async function stellarBuildTransaction({
   isCancelled: () => boolean
 }): Promise<?CoreStellarLikeTransaction> {
   const { recipient, fees, memoType, memoValue } = transaction;
+  if (!fees) {
+    throw new FeeNotLoaded();
+  }
 
   const stellarAccount = await coreAccount.asStellarLikeAccount();
   if (isCancelled()) return;
@@ -132,9 +134,6 @@ export async function stellarBuildTransaction({
   const transactionBuilder = await stellarAccount.buildTransaction();
   if (isCancelled()) return;
 
-  if (!fees) {
-    throw new FeeNotLoaded();
-  }
   const stellarLikeWallet = await coreWallet.asStellarLikeWallet();
   const recipientExist = await stellarLikeWallet.exists(recipient);
 
@@ -151,10 +150,11 @@ export async function stellarBuildTransaction({
   let amount = BigNumber(0);
   const { useAllAmount, networkInfo } = transaction;
 
-  amount =
-    useAllAmount && networkInfo
-      ? account.balance.minus(networkInfo.baseReserve).minus(fees)
-      : transaction.amount;
+  invariant(networkInfo && networkInfo.family === "stellar", "stellar family");
+
+  amount = useAllAmount
+    ? account.balance.minus(networkInfo.baseReserve).minus(fees)
+    : transaction.amount;
 
   if (!amount) throw new Error("amount is missing");
 
