@@ -2,7 +2,12 @@
 
 import { BigNumber } from "bignumber.js";
 import type { Account, AccountLike } from "../types/account";
-import type { Transaction } from "../types";
+import type {
+  AccountRawLike,
+  AccountRaw,
+  Operation,
+  Transaction, SubAccountRaw
+} from "../types";
 
 // in bridge? heuristic. error could happen later.
 export type EstimateMaxSpendable = (account: Account) => BigNumber;
@@ -14,6 +19,15 @@ export type Exchange = {
   toParentAccount: ?Account,
   toAccount: AccountLike,
   fromAmount: BigNumber,
+  sendMax: boolean
+};
+
+export type ExchangeRaw = {
+  fromParentAccount: ?AccountRaw,
+  fromAccount: AccountRaw | SubAccountRaw,
+  toParentAccount: ?AccountRaw,
+  toAccount: AccountRawLike,
+  fromAmount: string,
   sendMax: boolean
 };
 
@@ -92,10 +106,9 @@ type FamilySwapSpecifics = {
 // bridge.signOperation
 // bridge.broadcast => Operation
 
-// META: this is what the UI "operation" will need
-// type SwapOperation = {
-//   exchange: Exchange,
-//   exchangeStatus: ExchangeStatus, // TODO what is ExchangeStatus
-//   operation: Operation,
-//   swapId: string
-// };
+export type SwapOperation = {
+  exchange: Exchange,
+  exchangeRate: ExchangeRate,
+  swapStatus: SwapStatus,
+  operation: Operation
+};

@@ -8,7 +8,7 @@ import { mockedInitSwap } from "./mock";
 import perFamily from "../generated/swap";
 import type { CryptoCurrency } from "../types/currencies";
 import type { Transaction } from "../generated/types";
-import { getAccountCurrency, getMainAccount } from "../account";
+import { getAccountCurrency, getAccountUnit, getMainAccount } from "../account";
 import network from "../network";
 import { getAccountBridge } from "../bridge";
 import type {
@@ -41,7 +41,10 @@ const initSwap: InitSwap = async (
     }).toPromise();
 
     const { provider, rateId } = exchangeRate;
-    const { fromAmount: amountFrom } = exchange;
+    const unitFrom = getAccountUnit(exchange.fromAccount);
+    const amountFrom = exchange.fromAmount.div(
+      BigNumber(10).pow(unitFrom.magnitude)
+    );
     const refundCurrency = getAccountCurrency(exchange.fromAccount);
 
     const payoutCurrency = getAccountCurrency(exchange.toAccount);

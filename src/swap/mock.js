@@ -1,12 +1,16 @@
 // @flow
 
 import { BigNumber } from "bignumber.js";
-import type { Exchange, ExchangeRate, GetProviders} from "./types";
+import type { Exchange, ExchangeRate, GetProviders } from "./types";
 import type { Transaction } from "../generated/types";
+import { getAccountUnit } from "../account";
 
 export const mockedGetExchangeRates = async (exchange: Exchange) => {
-  const { fromAmount } = exchange;
-  if (fromAmount.isLessThanOrEqualTo(10)) {
+  const { fromAccount, fromAmount } = exchange;
+  const unitFrom = getAccountUnit(fromAccount);
+  const amountFrom = fromAmount.div(BigNumber(10).pow(unitFrom.magnitude));
+
+  if (amountFrom.isLessThanOrEqualTo(10)) {
     //Fake delay to show loading UI
     await new Promise(r => setTimeout(r, 800));
     //Mock OK
@@ -34,6 +38,7 @@ export const mockedInitSwap = async (
   transaction: Transaction,
   swapId: string
 }> => {
+  // TODO Better mock with input data please
   const transaction = {
     family: "bitcoin",
     amount: BigNumber(0),
