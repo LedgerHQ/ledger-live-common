@@ -4,26 +4,25 @@ import type { GetProviders } from "./types";
 import network from "../network";
 import { swapAPIBaseURL } from "./";
 import { getEnv } from "../env";
-import { mockedGetProviders } from "./mock";
+import { mockGetProviders } from "./mock";
+import { SwapNoAvailableProviders } from "../errors";
 
 const getProviders: GetProviders = async () => {
-  if (!getEnv("MOCK")) {
-    const res = await network({
-      method: "GET",
-      url: `${swapAPIBaseURL}/providers`
-    });
+  if (getEnv("MOCK")) return mockGetProviders();
 
-    if (res.data) {
-      return res.data.map(({ provider, supportedCurrencies }) => ({
-        provider,
-        supportedCurrencies: supportedCurrencies.map(c => c.toUpperCase()) // TODO backend to give us this uc
-      }));
-    }
+  const res = await network({
+    method: "GET",
+    url: `${swapAPIBaseURL}/providers`
+  });
 
-    throw new Error("getProviders: Something broke");
-  } else {
-    return mockedGetProviders();
+  if (!res.data.length) {
+    return new SwapNoAvailableProviders();
   }
+
+  return res.data.map(({ provider, supportedCurrencies }) => ({
+    provider,
+    supportedCurrencies: supportedCurrencies.map(c => c.toUpperCase()) // TODO backend to give us this uc
+  }));
 };
 
 export default getProviders;

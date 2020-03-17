@@ -1,16 +1,24 @@
 // @flow
 
 import { BigNumber } from "bignumber.js";
-import type { Exchange, ExchangeRate, GetProviders } from "./types";
+import type {
+  Exchange,
+  ExchangeRate,
+  GetProviders,
+  GetStatus
+} from "./types";
 import type { Transaction } from "../generated/types";
-import { getAccountUnit } from "../account";
+import { getAccountCurrency, getAccountUnit } from "../account";
+import { SwapExchangeRateOutOfBounds } from "../errors";
 
-export const mockedGetExchangeRates = async (exchange: Exchange) => {
-  const { fromAccount, fromAmount } = exchange;
+export const mockGetExchangeRates = async (exchange: Exchange) => {
+  const { fromAccount, toAccount, fromAmount } = exchange;
+  const from = getAccountCurrency(fromAccount).ticker;
+  const to = getAccountCurrency(toAccount).ticker;
   const unitFrom = getAccountUnit(fromAccount);
   const amountFrom = fromAmount.div(BigNumber(10).pow(unitFrom.magnitude));
 
-  if (amountFrom.isLessThanOrEqualTo(10)) {
+  if (amountFrom.gte(1) && amountFrom.lte(10)) {
     //Fake delay to show loading UI
     await new Promise(r => setTimeout(r, 800));
     //Mock OK
@@ -24,13 +32,16 @@ export const mockedGetExchangeRates = async (exchange: Exchange) => {
     ];
   } else {
     //Mock KO
-    throw new Error(
-      `getExchangeRate: Rate available for amounts between 1 and 10`
-    );
+    throw new SwapExchangeRateOutOfBounds(null, {
+      from,
+      to,
+      minAmountFrom: 1,
+      maxAmountFrom: 10
+    });
   }
 };
 
-export const mockedInitSwap = async (
+export const mockInitSwap = async (
   exchange: Exchange, // eslint-disable-line no-unused-vars
   exchangeRate: ExchangeRate, // eslint-disable-line no-unused-vars
   deviceId: string // eslint-disable-line no-unused-vars
@@ -54,7 +65,7 @@ export const mockedInitSwap = async (
   };
 };
 
-export const mockedGetProviders: GetProviders = async () => {
+export const mockGetProviders: GetProviders = async () => {
   //Fake delay to show loading UI
   await new Promise(r => setTimeout(r, 800));
 
@@ -62,6 +73,19 @@ export const mockedGetProviders: GetProviders = async () => {
     {
       provider: "changelly",
       supportedCurrencies: ["BTC", "LTC", "ETH"]
+    }
+  ];
+};
+
+export const mockGetStatus: GetStatus = async (provider, swapId) => {
+  //Fake delay to show loading UI
+  await new Promise(r => setTimeout(r, 800));
+
+  return [
+    {
+      provider,
+      swapId,
+      status: "finished"
     }
   ];
 };

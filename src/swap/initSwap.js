@@ -4,7 +4,7 @@ import { BigNumber } from "bignumber.js";
 import secp256k1 from "secp256k1";
 import Swap from "@ledgerhq/hw-app-swap";
 import { from } from "rxjs";
-import { mockedInitSwap } from "./mock";
+import { mockInitSwap } from "./mock";
 import perFamily from "../generated/swap";
 import type { CryptoCurrency } from "../types/currencies";
 import type { Transaction } from "../generated/types";
@@ -74,73 +74,69 @@ const initSwap: InitSwap = async (
       ]
     });
 
-    if (res.data) {
-      const swapResult = res.data[0];
-      const { swapId, provider: providerName } = swapResult;
-      const provider = getProviderNameAndSignature(providerName);
+    const swapResult = res.data[0];
+    const { swapId, provider: providerName } = swapResult;
+    const providerNameAndSignature = getProviderNameAndSignature(providerName);
 
-      // FIXME because this would break for tokens
-      if (payoutCurrency.type !== "CryptoCurrency") {
-        throw new Error("How do I handle non CryptoCurrencies");
-      }
-      if (refundCurrency.type !== "CryptoCurrency") {
-        throw new Error("How do I handle non CryptoCurrencies");
-      }
-
-      await withDevice(deviceId)(transport =>
-        from(
-          performSwapChecks({
-            transport,
-            provider,
-            payoutAccount,
-            payoutCurrency,
-            refundAccount,
-            refundCurrency,
-            swapResult
-          })
-        )
-      ).toPromise();
-
-      const accountBridge = getAccountBridge(refundAccount);
-      let transaction = accountBridge.createTransaction(refundAccount);
-
-      // FIXME we send decimals but swap wants satoshis
-      transaction = accountBridge.updateTransaction(transaction, {
-        amount: BigNumber(
-          swapResult.amountExpectedFrom *
-            10 ** refundCurrency.units[0].magnitude
-        ),
-        recipient: swapResult.payinAddress
-      });
-
-      transaction = await accountBridge.prepareTransaction(
-        refundAccount,
-        transaction
-      );
-
-      const { errors } = await accountBridge.getTransactionStatus(
-        refundAccount,
-        transaction
-      );
-
-      if (errors.recipient || errors.amount) {
-        throw errors.recipient || errors.amount;
-      }
-
-      return { transaction, swapId };
+    // FIXME because this would break for tokens
+    if (payoutCurrency.type !== "CryptoCurrency") {
+      throw new Error("How do I handle non CryptoCurrencies");
     }
-    // FIXME better error handling
-    throw new Error("initSwap: Something broke");
+    if (refundCurrency.type !== "CryptoCurrency") {
+      throw new Error("How do I handle non CryptoCurrencies");
+    }
+
+    await withDevice(deviceId)(transport =>
+      from(
+        performSwapChecks({
+          transport,
+          providerNameAndSignature,
+          payoutAccount,
+          payoutCurrency,
+          refundAccount,
+          refundCurrency,
+          swapResult
+        })
+      )
+    ).toPromise();
+
+    const accountBridge = getAccountBridge(refundAccount);
+    let transaction = accountBridge.createTransaction(refundAccount);
+
+    // FIXME we send decimals but swap wants satoshis
+    transaction = accountBridge.updateTransaction(transaction, {
+      amount: BigNumber(
+        swapResult.amountExpectedFrom * 10 ** refundCurrency.units[0].magnitude
+      ),
+      recipient: swapResult.payinAddress
+    });
+
+    transaction = await accountBridge.prepareTransaction(
+      refundAccount,
+      transaction
+    );
+
+    const { errors } = await accountBridge.getTransactionStatus(
+      refundAccount,
+      transaction
+    );
+
+    if (errors.recipient || errors.amount) {
+      throw errors.recipient || errors.amount;
+    }
+
+    return { transaction, swapId };
   } else {
-    return mockedInitSwap(exchange, exchangeRate, deviceId);
+    return mockInitSwap(exchange, exchangeRate, deviceId);
   }
 };
 
 // NB If any of the swap interactions fail it throws an error, maybe we can remap
 // those errors to handle them differently.
+// TODO test timedout rates
 const performSwapChecks = async ({
   transport,
-  provider,
+  providerNameAndSignature,
   payoutAccount,
   refundAccount,
   payoutCurrency,
@@ -148,7 +144,7 @@ const performSwapChecks = async ({
   swapResult
 }: {
   transport: *,
-  provider: SwapProviderNameAndSignature,
+  providerNameAndSignature: SwapProviderNameAndSignature,
   payoutAccount: Account,
   refundAccount: Account,
   payoutCurrency: CryptoCurrency,
@@ -156,8 +152,8 @@ const performSwapChecks = async ({
   swapResult: *
 }) => {
   const swap = new Swap(transport);
-  await swap.setPartnerKey(provider.nameAndPubkey);
-  await swap.checkPartner(provider.signature);
+  await swap.setPartnerKey(providerNameAndSignature.nameAndPubkey);
+  await swap.checkPartner(providerNameAndSignature.signature);
   await swap.processTransaction(Buffer.from(swapResult.binaryPayload, "hex"));
   const goodSign = secp256k1.signatureExport(
     Buffer.from(swapResult.signature, "hex")

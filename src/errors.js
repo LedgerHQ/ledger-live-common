@@ -66,3 +66,11 @@ export const AccountAwaitingSendPendingOperations = createCustomErrorClass(
 );
 
 export const SourceHasMultiSign = createCustomErrorClass("SourceHasMultiSign");
+
+export const SwapNoAvailableProviders = createCustomErrorClass(
+  "SwapNoAvailableProviders"
+);
+
+export const SwapExchangeRateOutOfBounds = createCustomErrorClass(
+  "SwapExchangeRateOutOfBounds"
+);
