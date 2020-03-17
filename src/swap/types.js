@@ -90,7 +90,7 @@ type SwapStatus = {
   status: ValidSwapStatus
 };
 
-export type GetSwapStatus = (
+export type GetStatus = (
   provider: string,
   swapId: string
 ) => Promise<SwapStatus[]>;
