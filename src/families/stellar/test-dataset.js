@@ -17,11 +17,11 @@ import {
   addMemotypeTextStellarMockAddresses
 } from "./bridge/mock";
 
-const notCreatedStellarMockAddress =
+export const notCreatedStellarMockAddress =
   "GDYPMQMYW2JTLPWAUAHIDY3E4VHP5SGTFC5SMA45L7ZPOTHWQ2PHEW3E";
-const multisignStellarMockAddress =
+export const multisignStellarMockAddress =
   "GAJTWW4OGH5BWFTH24C7SGIDALKI2HUVC2LXHFD533A5FIMSXE5AB3TJ";
-const memoTypeSelectStellarMockAddress =
+export const memoTypeSelectStellarMockAddress =
   "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3B2WSQHG4W37";
 
 addNotCreatedStellarMockAddresses(notCreatedStellarMockAddress);
