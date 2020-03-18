@@ -12,11 +12,14 @@ import { findCryptoCurrencyById } from "@ledgerhq/live-common/lib/data/cryptocur
 const command = async (transport, currencyId, hash) => {
   const btc = new Btc(transport);
   const currency = findCryptoCurrencyById(currencyId);
-  invariant(currency.family==="bitcoin", "currency of bitcoin family only");
-
-  if (!currency) return `No currency found with id ${currencyId}`;
-
+  invariant(currency, "currency not found");
+  const { bitcoinLikeInfo } = currency;
+  invariant(
+    currency.family === "bitcoin" && bitcoinLikeInfo,
+    "currency of bitcoin family only"
+  );
   const ledgerExplorer = findCurrencyExplorer(currency);
+  invariant(ledgerExplorer, "ledgerExplorer not found");
   const { endpoint, version, id } = ledgerExplorer;
 
   const res = await axios.get(
@@ -25,18 +28,20 @@ const command = async (transport, currencyId, hash) => {
 
   const hex = res.data[0] && res.data[0].hex;
 
-  if (!hex) return `Backend returned no hex for this hash`
+  if (!hex) return `Backend returned no hex for this hash`;
 
   const tx = btc.splitTransaction(
     hex,
     currency.supportsSegwit,
-    currency.bitcoinLikeInfo.hasTimestamp,
+    bitcoinLikeInfo.hasTimestamp,
     true
   );
 
-  const outHash = await btc.getTrustedInput(transport, 0, tx, [currency.id]);
+  const outHash = await btc.getTrustedInput(0, tx, [currency.id]);
   const ouHash = outHash.substring(8, 72);
-  const finalOut = Buffer.from(ouHash, 'hex').reverse().toString('hex');
+  const finalOut = Buffer.from(ouHash, "hex")
+    .reverse()
+    .toString("hex");
 
   return { inHash: hash, finalOut };
 };
