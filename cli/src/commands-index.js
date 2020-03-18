@@ -19,7 +19,7 @@ import genuineCheck from "./commands/genuineCheck";
 import getAccountNetworkInfo from "./commands/getAccountNetworkInfo";
 import getAddress from "./commands/getAddress";
 import getTransactionStatus from "./commands/getTransactionStatus";
-import hash from "./commands/hash";
+import testGetTrustedInputFromTxHash from "./commands/testGetTrustedInputFromTxHash";
 import libcoreReset from "./commands/libcoreReset";
 import libcoreSetPassword from "./commands/libcoreSetPassword";
 import liveData from "./commands/liveData";
@@ -56,7 +56,7 @@ export default {
   getAccountNetworkInfo,
   getAddress,
   getTransactionStatus,
-  hash,
+  testGetTrustedInputFromTxHash,
   libcoreReset,
   libcoreSetPassword,
   liveData,
