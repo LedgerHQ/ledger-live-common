@@ -69,7 +69,10 @@ async function signTransaction({
   const rawInputs: CoreBitcoinLikeInput[] = await coreTransaction.getInputs();
   if (isCancelled()) return;
 
-  const hasExtraData = currency.id === "zcash" || currency.id === "komodo" ||  currency.id === "zencash";
+  const hasExtraData =
+    currency.id === "zcash" ||
+    currency.id === "komodo" ||
+    currency.id === "zencash";
 
   const inputs = await promiseAllBatched(5, rawInputs, async (input, i) => {
     const hexPreviousTransaction = await input.getPreviousTransaction();

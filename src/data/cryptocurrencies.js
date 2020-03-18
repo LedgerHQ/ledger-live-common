@@ -582,7 +582,6 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     id: "clubcoin",
     coinType: 79,
     name: "Clubcoin",
-    hasTimestamp: true,
     managerAppName: "Clubcoin",
     ticker: "CLUB",
     scheme: "club",
@@ -591,7 +590,8 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     blockAvgTime: 140,
     bitcoinLikeInfo: {
       P2PKH: 28,
-      P2SH: 85
+      P2SH: 85,
+      hasTimestamp: true
     },
     units: [
       {
@@ -1068,7 +1068,6 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     id: "hcash",
     coinType: 171,
     name: "Hcash",
-    hasTimestamp: true,
     managerAppName: "HCash",
     ticker: "HSR",
     scheme: "hcash",
@@ -1077,7 +1076,8 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     blockAvgTime: 150,
     bitcoinLikeInfo: {
       P2PKH: 40,
-      P2SH: 100
+      P2SH: 100,
+      hasTimestamp: true,
     },
     units: [
       {
@@ -1579,7 +1579,6 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     type: "CryptoCurrency",
     id: "peercoin",
     coinType: 6,
-    hasTimestamp: true,
     name: "Peercoin",
     managerAppName: "Peercoin",
     ticker: "PPC",
@@ -1589,7 +1588,8 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     blockAvgTime: 450,
     bitcoinLikeInfo: {
       P2PKH: 55,
-      P2SH: 117
+      P2SH: 117,
+      hasTimestamp: true
     },
     units: [
       {
@@ -1695,7 +1695,6 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     id: "poswallet",
     coinType: 47,
     name: "PosW",
-    hasTimestamp: true,
     managerAppName: "PoSW",
     ticker: "POSW",
     scheme: "posw",
@@ -1704,7 +1703,8 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     blockAvgTime: 60,
     bitcoinLikeInfo: {
       P2PKH: 55,
-      P2SH: 85
+      P2SH: 85,
+      hasTimestamp: true
     },
     units: [
       {
@@ -1904,7 +1904,6 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     id: "stratis",
     coinType: 105,
     name: "Stratis",
-    hasTimestamp: true,
     managerAppName: "Stratis",
     ticker: "STRAT",
     scheme: "stratis",
@@ -1913,7 +1912,8 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     blockAvgTime: 150,
     bitcoinLikeInfo: {
       P2PKH: 63,
-      P2SH: 125
+      P2SH: 125,
+      hasTimestamp: true
     },
     units: [
       {
@@ -1939,7 +1939,6 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     id: "stealthcoin",
     coinType: 125,
     name: "Stealth",
-    hasTimestamp: true,
     managerAppName: "Stealth",
     ticker: "XST",
     scheme: "stealth",
@@ -1948,7 +1947,8 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     blockAvgTime: 150,
     bitcoinLikeInfo: {
       P2PKH: 62,
-      P2SH: 85
+      P2SH: 85,
+      hasTimestamp: true
     },
     units: [
       {

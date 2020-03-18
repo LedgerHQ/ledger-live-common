@@ -28,11 +28,11 @@ const command = async (transport, currencyId, hash) => {
   const tx = btc.splitTransaction(
     hex,
     currency.supportsSegwit,
-    currency.hasTimestamp,
+    currency.bitcoinLikeInfo.hasTimestamp,
     true
   );
 
-  const outHash = await btc.getTrustedInput(transport, 0, tx, ['zencash']);
+  const outHash = await btc.getTrustedInput(transport, 0, tx, [currency.id]);
   const ouHash = outHash.substring(8, 72);
   const finalOut = Buffer.from(ouHash, 'hex').reverse().toString('hex');
 

@@ -19,6 +19,7 @@ import genuineCheck from "./commands/genuineCheck";
 import getAccountNetworkInfo from "./commands/getAccountNetworkInfo";
 import getAddress from "./commands/getAddress";
 import getTransactionStatus from "./commands/getTransactionStatus";
+import hash from "./commands/hash";
 import libcoreReset from "./commands/libcoreReset";
 import libcoreSetPassword from "./commands/libcoreSetPassword";
 import liveData from "./commands/liveData";
@@ -29,7 +30,6 @@ import receive from "./commands/receive";
 import repl from "./commands/repl";
 import send from "./commands/send";
 import signMessage from "./commands/signMessage";
-import hash from "./commands/hash";
 import sync from "./commands/sync";
 import validRecipient from "./commands/validRecipient";
 import version from "./commands/version";
@@ -56,6 +56,7 @@ export default {
   getAccountNetworkInfo,
   getAddress,
   getTransactionStatus,
+  hash,
   libcoreReset,
   libcoreSetPassword,
   liveData,
@@ -66,7 +67,6 @@ export default {
   repl,
   send,
   signMessage,
-  hash,
   sync,
   validRecipient,
   version,
