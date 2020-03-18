@@ -866,6 +866,16 @@
     ripemd160 "2"
     sha.js "2"
 
+"@ledgerhq/hw-app-btc@^5.11.2":
+  version "5.11.2"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-btc/-/hw-app-btc-5.11.2.tgz#90772ee6d5507a7c7801bdf0e963404495bc89ec"
+  integrity sha512-mjR5cJ9ORJQ6GAKXhBbbjK3zmSIdIVeYQ3rAQW+M3upC60kIvsfZip3QoxLsxLeJNs3pUeM0G/0MTEmwdG14CQ==
+  dependencies:
+    "@ledgerhq/hw-transport" "^5.11.0"
+    bip32-path "^0.4.2"
+    ripemd160 "2"
+    sha.js "2"
+
 "@ledgerhq/hw-app-eth@5.11.0":
   version "5.11.0"
   resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-eth/-/hw-app-eth-5.11.0.tgz#5db6abe0ddf5b5266ed09868de12021f59c1a33e"

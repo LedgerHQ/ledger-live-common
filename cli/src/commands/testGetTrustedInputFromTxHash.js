@@ -3,6 +3,7 @@
 import { withDevice } from "@ledgerhq/live-common/lib/hw/deviceAccess";
 import { deviceOpt } from "../scan";
 import { from } from "rxjs";
+import invariant from "invariant";
 import axios from "axios";
 import Btc from "@ledgerhq/hw-app-btc";
 import { findCurrencyExplorer } from "@ledgerhq/live-common/lib/api/Ledger";
@@ -11,6 +12,7 @@ import { findCryptoCurrencyById } from "@ledgerhq/live-common/lib/data/cryptocur
 const command = async (transport, currencyId, hash) => {
   const btc = new Btc(transport);
   const currency = findCryptoCurrencyById(currencyId);
+  invariant(currency.family==="bitcoin", "currency of bitcoin family only");
 
   if (!currency) return `No currency found with id ${currencyId}`;
 

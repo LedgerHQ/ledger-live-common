@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@ledgerhq/errors": "5.11.0",
+    "@ledgerhq/hw-app-btc": "^5.11.2",
     "@ledgerhq/hw-transport-http": "5.11.0",
     "@ledgerhq/hw-transport-mocker": "5.11.0",
     "@ledgerhq/hw-transport-node-hid": "5.11.0",
