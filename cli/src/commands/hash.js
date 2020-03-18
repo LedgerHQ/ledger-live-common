@@ -29,13 +29,14 @@ const command = async (transport, currencyId, hash) => {
     hex,
     currency.supportsSegwit,
     currency.hasTimestamp,
-    false
+    true
   );
 
-  const outHash = await btc.getTrustedInput(transport, 0, tx);
-  const ouHash = outHash.substring(2, 64);
+  const outHash = await btc.getTrustedInput(transport, 0, tx, ['zencash']);
+  const ouHash = outHash.substring(8, 72);
+  const finalOut = Buffer.from(ouHash, 'hex').reverse().toString('hex');
 
-  return { inHash: hash, ouHash };
+  return { inHash: hash, finalOut };
 };
 
 export default {
