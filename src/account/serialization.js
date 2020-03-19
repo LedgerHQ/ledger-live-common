@@ -16,7 +16,9 @@ import type {
   Operation,
   OperationRaw,
   SubAccount,
-  SubAccountRaw
+  SubAccountRaw,
+  AccountLike,
+  AccountRawLike
 } from "../types";
 import type { TronResources, TronResourcesRaw } from "../families/tron/types";
 import {

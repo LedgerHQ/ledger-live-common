@@ -1,18 +1,22 @@
 // @flow
 
 import type { Exchange, ExchangeRaw } from "./types";
-import { fromAccountRaw, toAccountRaw } from "../account";
+import {
+  fromAccountLikeRaw,
+  fromAccountRaw,
+  toAccountLikeRaw,
+  toAccountRaw
+} from "../account";
 import { BigNumber } from "bignumber.js";
 
 export const fromExchangeRaw = (exchangeRaw: ExchangeRaw): Exchange => {
-  // FIXME how do we handle subaccounts?
-  const fromAccount = fromAccountRaw(exchangeRaw.fromAccount);
-  const toAccount = fromAccountRaw(exchangeRaw.toAccount);
-  const fromParentAccount = exchangeRaw.fromAccount
-    ? fromAccountRaw(exchangeRaw.fromAccount)
+  const fromAccount = fromAccountLikeRaw(exchangeRaw.fromAccount);
+  const toAccount = fromAccountLikeRaw(exchangeRaw.toAccount);
+  const fromParentAccount = exchangeRaw.fromParentAccount
+    ? fromAccountRaw(exchangeRaw.fromParentAccount)
     : null;
-  const toParentAccount = exchangeRaw.toAccount
-    ? fromAccountRaw(exchangeRaw.toAccount)
+  const toParentAccount = exchangeRaw.toParentAccount
+    ? fromAccountRaw(exchangeRaw.toParentAccount)
     : null;
 
   return {
@@ -36,11 +40,11 @@ export const toExchangeRaw = (exchange: Exchange): ExchangeRaw => {
   } = exchange;
 
   return {
-    fromAccount: toAccountRaw(fromAccount),
+    fromAccount: toAccountLikeRaw(fromAccount),
     fromParentAccount: fromParentAccount
       ? toAccountRaw(fromParentAccount)
       : null,
-    toAccount: toAccountRaw(toAccount),
+    toAccount: toAccountLikeRaw(toAccount),
     toParentAccount: toParentAccount ? toAccountRaw(toParentAccount) : null,
     fromAmount: fromAmount.toString(),
     sendMax

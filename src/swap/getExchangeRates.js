@@ -40,8 +40,14 @@ const getExchangeRates: GetExchangeRates = async (exchange: Exchange) => {
           maxAmountFrom
         });
       }
+
+      // NB Allows us to simply multiply satoshi values from/to
+      const magnitudeAwareRate = BigNumber(rate).div(
+        BigNumber(10).pow(unitFrom.magnitude)
+      );
+
       return {
-        rate,
+        rate: magnitudeAwareRate,
         rateId,
         provider,
         expirationDate: new Date()

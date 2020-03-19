@@ -24,7 +24,7 @@ export type Exchange = {
 
 export type ExchangeRaw = {
   fromParentAccount: ?AccountRaw,
-  fromAccount: AccountRaw | SubAccountRaw,
+  fromAccount: AccountRawLike,
   toParentAccount: ?AccountRaw,
   toAccount: AccountRawLike,
   fromAmount: string,
@@ -32,7 +32,7 @@ export type ExchangeRaw = {
 };
 
 export type ExchangeRate = {
-  rate: BigNumber,
+  rate: BigNumber, // NB it's a rate of conversion between satoshi units of the currencies.
   rateId: string,
   provider: string,
   providerURL?: ?string,
