@@ -1,13 +1,19 @@
 // @flow
 
-import type { CoreOperation } from "../../libcore/types";
+import type { Core, CoreOperation } from "../../libcore/types";
+import invariant from "invariant";
 
 async function bitcoinBuildOperation({
-  coreOperation,
+  core,
+  coreOperation
 }: {
-  coreOperation: CoreOperation,
+  core: Core,
+  coreOperation: CoreOperation
 }) {
-  const bitcoinLikeOperation = await coreOperation.asBitcoinLikeOperation();
+  const bitcoinLikeOperation = core.CoreBitcoinLikeOperation.fromCoreOperation(
+    coreOperation
+  );
+  invariant(bitcoinLikeOperation, "bitcoin operation expected");
   const bitcoinLikeTransaction = await bitcoinLikeOperation.getTransaction();
   const hash = await bitcoinLikeTransaction.getHash();
   return { hash };

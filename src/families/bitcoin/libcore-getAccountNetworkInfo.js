@@ -2,11 +2,13 @@
 import { BigNumber } from "bignumber.js";
 import type { NetworkInfo } from "./types";
 import type { Account } from "../../types";
-import type { CoreAccount } from "../../libcore/types";
+import type { Core, CoreAccount } from "../../libcore/types";
 import { promiseAllBatched } from "../../promise";
 import { libcoreBigIntToBigNumber } from "../../libcore/buildBigNumber";
+import invariant from "invariant";
 
 type Input = {
+  core: Core,
   coreAccount: CoreAccount,
   account: Account,
 };
@@ -15,8 +17,11 @@ type Output = Promise<NetworkInfo>;
 
 const speeds = ["high", "standard", "low"];
 
-async function bitcoin({ coreAccount }: Input): Output {
-  const bitcoinLikeAccount = await coreAccount.asBitcoinLikeAccount();
+async function bitcoin({ core, coreAccount }: Input): Output {
+  const bitcoinLikeAccount = core.RippleLikeAccount.fromCoreAccount(
+    coreAccount
+  );
+  invariant(bitcoinLikeAccount, "bitcoin account expected");
   const bigInts = await bitcoinLikeAccount.getFees();
   const bigNumbers = await promiseAllBatched(
     10,

@@ -5,11 +5,14 @@ import type {
   TransactionCommon,
   TransactionCommonRaw,
 } from "../../types/transaction";
+
 import type {
-  CoreBigInt,
   CoreAmount,
+  CoreAccount,
+  CoreBigInt,
   CoreDerivationPath,
-  Spec,
+  CoreOperation,
+  Spec
 } from "../../libcore/types";
 
 export type BitcoinInput = {
@@ -79,6 +82,9 @@ declare class CoreBitcoinLikeTransaction {
 }
 
 declare class CoreBitcoinLikeOperation {
+  static fromCoreOperation(
+    coreOperation: CoreOperation
+  ): ?CoreBitcoinLikeOperation;
   getTransaction(): Promise<CoreBitcoinLikeTransaction>;
 }
 
@@ -92,6 +98,7 @@ declare class CoreBitcoinLikeTransactionBuilder {
 }
 
 declare class CoreBitcoinLikeAccount {
+  static fromCoreAccount(coreAccount: CoreAccount): ?CoreBitcoinLikeAccount;
   getUTXO(from: number, to: number): Promise<CoreBitcoinLikeOutput[]>;
   getUTXOCount(): Promise<number>;
   buildTransaction(
@@ -126,13 +133,9 @@ export type {
   CoreBitcoinLikeTransactionBuilder,
 };
 
-export type CoreAccountSpecifics = {
-  asBitcoinLikeAccount(): Promise<CoreBitcoinLikeAccount>,
-};
+export type CoreAccountSpecifics = {};
 
-export type CoreOperationSpecifics = {
-  asBitcoinLikeOperation(): Promise<CoreBitcoinLikeOperation>,
-};
+export type CoreOperationSpecifics = {};
 
 export type CoreCurrencySpecifics = {
   getBitcoinLikeNetworkParameters(): Promise<CoreBitcoinLikeNetworkParameters>,
@@ -307,15 +310,7 @@ export const reflect = (declare: (string, Spec) => void) => {
   });
 
   return {
-    OperationMethods: {
-      asBitcoinLikeOperation: {
-        returns: "BitcoinLikeOperation",
-      },
-    },
-    AccountMethods: {
-      asBitcoinLikeAccount: {
-        returns: "BitcoinLikeAccount",
-      },
-    },
+    OperationMethods: {},
+    AccountMethods: {}
   };
 };
