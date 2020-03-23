@@ -6,13 +6,14 @@ import type {
   Account,
   SignedOperation,
 } from "../types";
-import type { CoreAccount } from "./types";
+import type { Core, CoreAccount } from "./types";
 import { withLibcore } from "./access";
 import { remapLibcoreErrors } from "./errors";
 import { getCoreAccount } from "./getCoreAccount";
 
 export type Arg = {
   broadcast: ({
+    core: Core,
     account: Account,
     coreAccount: CoreAccount,
     signedOperation: SignedOperation,
@@ -27,6 +28,11 @@ export const makeBroadcast = ({ broadcast }: Arg): Broadcast<any> => ({
 }) =>
   withLibcore(async (core) => {
     const { coreAccount } = await getCoreAccount(core, account);
-    const res = await broadcast({ account, coreAccount, signedOperation });
+    const res = await broadcast({
+      core,
+      account,
+      coreAccount,
+      signedOperation
+    });
     return res;
   }).catch((e) => Promise.reject(remapLibcoreErrors(e)));

@@ -8,7 +8,19 @@ import { log } from "@ledgerhq/logs";
 import { NotEnoughBalance } from "@ledgerhq/errors/lib";
 import { deserializeError, serializeError } from "@ledgerhq/errors/lib/helpers";
 import { reflect } from "../types";
-import type { Core, CoreStatics, CoreHttpClient, CoreWalletPool, CoreWebSocketClient, CorePathResolver, CoreLogPrinter, CoreThreadDispatcher, CoreRandomNumberGenerator, CoreDatabaseBackend, CoreDynamicObject } from "../types";
+import type {
+  Core,
+  CoreStatics,
+  CoreHttpClient,
+  CoreWalletPool,
+  CoreWebSocketClient,
+  CorePathResolver,
+  CoreLogPrinter,
+  CoreThreadDispatcher,
+  CoreRandomNumberGenerator,
+  CoreDatabaseBackend,
+  CoreDynamicObject
+} from "../types";
 import { setLoadCoreImplementation } from "../access";
 import { setRemapLibcoreErrorsImplementation } from "../errors";
 import { getEnv } from "../../env";
@@ -287,7 +299,7 @@ export default (arg: {
             config
           );
 
-          this.walletStore = new lib.NJSWalletStore(this.services)
+          this.walletStore = new lib.NJSWalletStore(this.services);
         }
 
         static newInstance(
@@ -315,25 +327,39 @@ export default (arg: {
             walletDynObject
           );
 
-          let walletStore = new lib.NJSWalletStore(services)
+          let walletStore = new lib.NJSWalletStore(services);
 
-          Promise.resolve({ services, walletStore })
+          Promise.resolve({ services, walletStore });
         }
 
         services = null;
         walletStore = null;
 
-        getWallet = function(...args) { this.walletStore.getWallet(...args) }
-        getCurrency = function(...args) { this.walletStore.getCurrency(...args) }
-        updateWalletConfig = function(...args) { this.walletStore.updateWalletConfig(...args) }
-        createWallet = function(...args) { this.walletStore.createWallet(...args) }
-        freshResetAll = function(...args) { this.services.freshResetAll(...args) }
-        changePassword = function(...args) { this.services.changePassword(...args) }
-        getName = function(...args) { this.services.getName(...args) }
+        getWallet = function(...args) {
+          this.walletStore.getWallet(...args);
+        };
+        getCurrency = function(...args) {
+          this.walletStore.getCurrency(...args);
+        };
+        updateWalletConfig = function(...args) {
+          this.walletStore.updateWalletConfig(...args);
+        };
+        createWallet = function(...args) {
+          this.walletStore.createWallet(...args);
+        };
+        freshResetAll = function(...args) {
+          this.services.freshResetAll(...args);
+        };
+        changePassword = function(...args) {
+          this.services.changePassword(...args);
+        };
+        getName = function(...args) {
+          this.services.getName(...args);
+        };
       }
 
-      return new WalletPoolModularized;
-    }
+      return new WalletPoolModularized();
+    };
 
     const getPoolInstance = () => {
       if (!walletPoolInstance) {

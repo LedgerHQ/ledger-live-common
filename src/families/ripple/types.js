@@ -6,7 +6,13 @@ import type {
   TransactionCommon,
   TransactionCommonRaw,
 } from "../../types/transaction";
-import type { CoreAmount, CoreBigInt, Spec } from "../../libcore/types";
+import type {
+  CoreAccount,
+  CoreAmount,
+  CoreBigInt,
+  CoreOperation,
+  Spec
+} from "../../libcore/types";
 
 declare class CoreRippleLikeAddress {
   toBase58(): Promise<string>;
@@ -25,6 +31,9 @@ declare class CoreRippleLikeTransaction {
 }
 
 declare class CoreRippleLikeOperation {
+  static fromCoreOperation(
+    coreOperation: CoreOperation
+  ): ?CoreRippleLikeOperation;
   getTransaction(): Promise<CoreRippleLikeTransaction>;
 }
 
@@ -37,6 +46,7 @@ declare class CoreRippleLikeTransactionBuilder {
 }
 
 declare class CoreRippleLikeAccount {
+  static fromCoreAccount(coreAccount: CoreAccount): ?CoreRippleLikeAccount;
   buildTransaction(): Promise<CoreRippleLikeTransactionBuilder>;
   broadcastRawTransaction(signed: string): Promise<string>;
   getFees(): Promise<CoreAmount>;
@@ -61,13 +71,9 @@ export type {
   CoreRippleLikeTransactionBuilder,
 };
 
-export type CoreAccountSpecifics = {
-  asRippleLikeAccount(): Promise<CoreRippleLikeAccount>,
-};
+export type CoreAccountSpecifics = {};
 
-export type CoreOperationSpecifics = {
-  asRippleLikeOperation(): Promise<CoreRippleLikeOperation>,
-};
+export type CoreOperationSpecifics = {};
 
 export type CoreCurrencySpecifics = {};
 
@@ -169,15 +175,7 @@ export const reflect = (declare: (string, Spec) => void) => {
   });
 
   return {
-    OperationMethods: {
-      asRippleLikeOperation: {
-        returns: "RippleLikeOperation",
-      },
-    },
-    AccountMethods: {
-      asRippleLikeAccount: {
-        returns: "RippleLikeAccount",
-      },
-    },
+    OperationMethods: {},
+    AccountMethods: {}
   };
 };
