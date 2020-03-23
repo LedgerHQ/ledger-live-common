@@ -145,6 +145,21 @@ const getTransactionStatus = async (a, t) => {
   });
 };
 
+const estimateGasLimitForERC20 = makeLRUCache(
+  (account: Account, addr: string) =>
+    withLibcore(async core => {
+      const { coreAccount } = await getCoreAccount(core, account);
+      const ethereumLikeAccount = core.CoreEthereumLikeAccount.fromCoreAccount(
+        coreAccount
+      );
+      invariant(ethereumLikeAccount, "ethereum account expected");
+      const r = await ethereumLikeAccount.getEstimatedGasLimit(addr);
+      const bn = await libcoreBigIntToBigNumber(r);
+      return bn;
+    }),
+  (a, addr) => a.id + "|" + addr
+);
+
 const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
   const tAccount = getTransactionAccount(a, t);
   let networkInfo = t.networkInfo;

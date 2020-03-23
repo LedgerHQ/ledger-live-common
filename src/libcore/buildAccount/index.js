@@ -131,6 +131,7 @@ export async function buildAccount({
   const subAccounts = await buildSubAccounts({
     core,
     currency,
+    core,
     coreAccount,
     accountId,
     existingAccount,

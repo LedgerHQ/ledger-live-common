@@ -1,5 +1,6 @@
 // @flow
 
+<<<<<<< HEAD
 import type {
   CryptoCurrency,
   TokenAccount,
@@ -8,6 +9,12 @@ import type {
 } from "../../types";
 import type { CoreAccount } from "../../libcore/types";
 import type { CoreERC20LikeAccount } from "./types";
+=======
+import type { BigNumber } from "bignumber.js";
+import type { CryptoCurrency, TokenAccount, Account } from "../../types";
+import type { Core, CoreAccount, CoreBigInt } from "../../libcore/types";
+import type { CoreEthereumLikeAccount, CoreERC20LikeAccount } from "./types";
+>>>>>>> Add support for CoreEthereumLikeAccount.{fromCoreAccount,fromCoreOperation}.
 import { libcoreBigIntToBigNumber } from "../../libcore/buildBigNumber";
 import { minimalOperationsBuilder } from "../../reconciliation";
 import { buildERC20Operation } from "./buildERC20Operation";
@@ -16,6 +23,7 @@ import {
   listTokensForCryptoCurrency,
 } from "../../currencies";
 import { promiseAllBatched } from "../../promise";
+import invariant from "invariant";
 
 async function buildERC20TokenAccount({
   parentAccountId,
@@ -64,12 +72,14 @@ async function getERC20Address(erc20LA: CoreERC20LikeAccount): Promise<string> {
 
 async function ethereumBuildTokenAccounts({
   currency,
+  core,
   coreAccount,
   accountId,
   existingAccount,
   syncConfig,
 }: {
   currency: CryptoCurrency,
+  core: Core,
   coreAccount: CoreAccount,
   accountId: string,
   existingAccount: ?Account,
@@ -78,7 +88,10 @@ async function ethereumBuildTokenAccounts({
   const { blacklistedTokenIds = [] } = syncConfig;
   if (listTokensForCryptoCurrency(currency).length === 0) return undefined;
   const tokenAccounts = [];
-  const ethAccount = await coreAccount.asEthereumLikeAccount();
+  const ethAccount: CoreEthereumLikeAccount = core.CoreEthereumLikeAccount.fromCoreAccount(
+    coreAccount
+  );
+  invariant(ethAccount, "ethereum account expected");
   const allCoreTAS = await ethAccount.getERC20Accounts();
   const allCoreTAContractAddresses = await promiseAllBatched(
     4,

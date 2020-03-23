@@ -2,11 +2,12 @@
 
 import { BigNumber } from "bignumber.js";
 import type { Operation } from "../../types";
-import type { CoreOperation } from "../../libcore/types";
+import type { Core, CoreOperation } from "../../libcore/types";
 import { CoreInternalTransaction } from "./types";
 import { OperationTypeMap } from "../../libcore/buildAccount/buildOperation";
 import { libcoreBigIntToBigNumber } from "../../libcore/buildBigNumber";
 import { promiseAllBatched } from "../../promise";
+import invariant from "invariant";
 
 async function buildInternalOperation(
   tx: CoreInternalTransaction,
@@ -53,13 +54,18 @@ async function buildInternalOperation(
 
 async function ethereumBuildOperation(
   {
-    coreOperation,
+    core,
+    coreOperation
   }: {
-    coreOperation: CoreOperation,
+    core: Core,
+    coreOperation: CoreOperation
   },
   partialOp: $Shape<Operation>
 ) {
-  const ethereumLikeOperation = await coreOperation.asEthereumLikeOperation();
+  const ethereumLikeOperation = core.CoreEthereumLikeOperation.fromCoreOperation(
+    coreOperation
+  );
+  invariant(ethereumLikeOperation, "ethereum operation expected");
   const ethereumLikeTransaction = await ethereumLikeOperation.getTransaction();
   const status = await ethereumLikeTransaction.getStatus();
   const hash = await ethereumLikeTransaction.getHash();

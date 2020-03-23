@@ -12,6 +12,7 @@ import byFamily from "../../generated/libcore-buildSubAccounts";
 export async function buildSubAccounts(arg: {
   core: Core,
   currency: CryptoCurrency,
+  core: Core,
   coreAccount: CoreAccount,
   accountId: string,
   existingAccount: ?Account,
