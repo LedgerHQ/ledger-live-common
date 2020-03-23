@@ -2,6 +2,7 @@
 
 import type { BigNumber } from "bignumber.js";
 import type {
+  CoreAccount,
   CoreAmount,
   CoreBigInt,
   OperationType,
@@ -49,6 +50,9 @@ declare class CoreTezosLikeTransaction {
 }
 
 declare class CoreTezosLikeOperation {
+  static fromCoreOperation(
+    coreOperation: CoreOperation
+  ): ?CoreTezosLikeOperation;
   getTransaction(): Promise<CoreTezosLikeTransaction>;
 }
 
@@ -68,6 +72,7 @@ declare class CoreTezosLikeTransactionBuilder {
 }
 
 declare class CoreTezosLikeAccount {
+  static fromCoreAccount(coreAccount: CoreAccount): ?CoreTezosLikeAccount;
   broadcastRawTransaction(signed: string): Promise<string>;
   buildTransaction(): Promise<CoreTezosLikeTransactionBuilder>;
   getStorage(address: string): Promise<CoreBigInt>;
@@ -103,13 +108,9 @@ export type {
   CoreTezosLikeTransactionBuilder,
 };
 
-export type CoreAccountSpecifics = {
-  asTezosLikeAccount(): Promise<CoreTezosLikeAccount>,
-};
+export type CoreAccountSpecifics = {};
 
-export type CoreOperationSpecifics = {
-  asTezosLikeOperation(): Promise<CoreTezosLikeOperation>,
-};
+export type CoreOperationSpecifics = {};
 
 export type CoreCurrencySpecifics = {};
 
@@ -248,15 +249,7 @@ export const reflect = (declare: (string, Spec) => void) => {
   });
 
   return {
-    OperationMethods: {
-      asTezosLikeOperation: {
-        returns: "TezosLikeOperation",
-      },
-    },
-    AccountMethods: {
-      asTezosLikeAccount: {
-        returns: "TezosLikeAccount",
-      },
-    },
+    OperationMethods: {},
+    AccountMethods: {}
   };
 };

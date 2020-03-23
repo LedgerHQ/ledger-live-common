@@ -44,7 +44,11 @@ export async function tezosBuildTransaction({
     : null;
 
   let tezosAccount: ?CoreTezosLikeAccount | ?CoreTezosLikeOriginatedAccount;
-  const tezosLikeAccount = await coreAccount.asTezosLikeAccount();
+  const tezosLikeAccount = core.CoreTezosLikeAccount.fromCoreAccount(
+    coreAccount
+  );
+  invariant(tezosLikeAccount, "tezos account expected");
+
   if (isCancelled()) return;
 
   if (subAccount && subAccount.type === "ChildAccount") {

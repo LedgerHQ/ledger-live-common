@@ -2,18 +2,23 @@
 import { BigNumber } from "bignumber.js";
 import type { Account } from "../../types";
 import type { NetworkInfo, CoreTezosLikeAccount } from "./types";
-import type { CoreAccount } from "../../libcore/types";
+import type { Core, CoreAccount } from "../../libcore/types";
 import { libcoreBigIntToBigNumber } from "../../libcore/buildBigNumber";
+import invariant from "invariant";
 
 type Input = {
+  core: Core,
   coreAccount: CoreAccount,
   account: Account,
 };
 
 type Output = Promise<NetworkInfo>;
 
-async function tezos({ coreAccount }: Input): Output {
-  const tezosLikeAccount: CoreTezosLikeAccount = await coreAccount.asTezosLikeAccount();
+async function tezos({ core, coreAccount }: Input): Output {
+  const tezosLikeAccount: CoreTezosLikeAccount = core.CoreTezosLikeAccount.fromCoreAccount(
+    coreAccount
+  );
+  invariant(tezosLikeAccount, "tezos account expected");
   const bigInt = await tezosLikeAccount.getFees();
   const networkFees = await libcoreBigIntToBigNumber(bigInt);
   // workaround of a bug on server side. set some boundaries.

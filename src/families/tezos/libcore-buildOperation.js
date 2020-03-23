@@ -1,8 +1,9 @@
 // @flow
 
 import type { Operation } from "../../types";
-import type { CoreOperation } from "../../libcore/types";
+import type { Core, CoreOperation } from "../../libcore/types";
 import { tezosOperationTag } from "./types";
+import invariant from "invariant";
 
 const opTagToType = {
   [tezosOperationTag.OPERATION_TAG_REVEAL]: "REVEAL",
@@ -12,13 +13,18 @@ const opTagToType = {
 
 async function tezosBuildOperation(
   {
-    coreOperation,
+    core,
+    coreOperation
   }: {
-    coreOperation: CoreOperation,
+    core: Core,
+    coreOperation: CoreOperation
   },
   partialOp: $Shape<Operation>
 ) {
-  const tezosLikeOperation = await coreOperation.asTezosLikeOperation();
+  const tezosLikeOperation = core.CoreTezosLikeOperation.fromCoreOperation(
+    coreOperation
+  );
+  invariant(tezosLikeOperation, "tezos operation expected");
   const tezosLikeTransaction = await tezosLikeOperation.getTransaction();
   const status = await tezosLikeTransaction.getStatus();
   const tezosType = await tezosLikeTransaction.getType();
