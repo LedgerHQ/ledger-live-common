@@ -363,7 +363,7 @@ export default (arg: {
 
     const getPoolInstance = () => {
       if (!walletPoolInstance) {
-        instanciateWalletPool();
+        walletPoolInstance = instanciateWalletPool();
       }
       invariant(walletPoolInstance, "can't initialize walletPoolInstance");
       return walletPoolInstance;
