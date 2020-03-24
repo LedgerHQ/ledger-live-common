@@ -20,6 +20,7 @@ import memoTypeCheck from "../memo-type-check";
 import { getWalletName } from "../../../account";
 import { getOrCreateWallet } from "../../../libcore/getOrCreateWallet";
 import { getCoreAccount } from "../../../libcore/getCoreAccount";
+import { getMainAccount } from "../../../account";
 
 import {
   scanAccounts,
@@ -229,6 +230,22 @@ const prepareTransaction = async (a, t) => {
   return t;
 };
 
+const estimateMaxSpendable = async ({
+  account,
+  parentAccount,
+  transaction
+}) => {
+  const mainAccount = getMainAccount(account, parentAccount);
+  const t = await prepareTransaction(mainAccount, {
+    ...createTransaction(),
+    ...transaction,
+    useAllAmount: true,
+    recipient: notCreatedAddresses[0] // not used address
+  });
+  const s = await getTransactionStatus(mainAccount, t);
+  return s.amount;
+};
+
 const preload = async () => {};
 
 const hydrate = () => {};
@@ -246,7 +263,8 @@ const accountBridge: AccountBridge<Transaction> = {
   getTransactionStatus,
   sync,
   signOperation,
-  broadcast
+  broadcast,
+  estimateMaxSpendable
 };
 
 export default { currencyBridge, accountBridge };
