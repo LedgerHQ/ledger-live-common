@@ -14,12 +14,6 @@ import {
 import { StellarWrongMemoFormat, SourceHasMultiSign } from "../../../errors";
 import type { AccountBridge, CurrencyBridge } from "../../../types";
 import type { Transaction } from "../types";
-import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
-import memoTypeCheck from "../memo-type-check";
-
-import { getWalletName } from "../../../account";
-import { getOrCreateWallet } from "../../../libcore/getOrCreateWallet";
-import { getCoreAccount } from "../../../libcore/getCoreAccount";
 import { getMainAccount } from "../../../account";
 
 import {

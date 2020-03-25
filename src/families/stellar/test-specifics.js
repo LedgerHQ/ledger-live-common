@@ -1,6 +1,5 @@
 // @flow
 
-import { fromAccountRaw } from "../../account";
 import getMemoType from "./memo-type-check.js";
 import {
   memoTypeSelectStellarMockAddress,

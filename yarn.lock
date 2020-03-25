@@ -1182,6 +1182,16 @@
     "@ledgerhq/hw-transport" "^5.12.0"
     bignumber.js "^9.0.0"
 
+"@ledgerhq/hw-app-str@^5.12.0":
+  version "5.12.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-str/-/hw-app-str-5.12.0.tgz#aa9cbaeceda2fdc2075d283ba87c0a68253097bf"
+  integrity sha512-tITdJ2MdDXF9AV1dh0+VX1R2fGpAfVdCNqsFPRI+h68R5mtGUMEi8VlTlI3ARyr22nXTnKTO1dZJ416PPkNolw==
+  dependencies:
+    "@ledgerhq/hw-transport" "^5.12.0"
+    base32.js "^0.1.0"
+    sha.js "^2.3.6"
+    tweetnacl "^1.0.3"
+
 "@ledgerhq/hw-app-trx@5.12.0":
   version "5.12.0"
   resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-trx/-/hw-app-trx-5.12.0.tgz#5278ff9a52da47dfd49af9e3236daa6676c05873"
@@ -6912,7 +6922,7 @@ tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-0.14.5.tgz#5ae68177f192d4456269d108afa93ff8743f4f64"
   integrity sha1-WuaBd/GS1EViadEIr6k/+HQ/T2Q=
 
-tweetnacl@^1.0.0:
+tweetnacl@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-1.0.3.tgz#ac0af71680458d8a6378d0d0d050ab1407d35596"
   integrity sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==
