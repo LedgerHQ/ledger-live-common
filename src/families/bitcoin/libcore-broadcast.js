@@ -2,6 +2,7 @@
 
 import { patchOperationWithHash } from "../../operation";
 import { makeBroadcast } from "../../libcore/broadcast";
+import invariant from "invariant";
 
 async function broadcast({
   core,
@@ -11,6 +12,7 @@ async function broadcast({
   const bitcoinLikeAccount = core.CoreBitcoinLikeAccount.fromCoreAccount(
     coreAccount
   );
+  invariant(bitcoinLikeAccount, "bitcoin account expected");
   const txHash = await bitcoinLikeAccount.broadcastRawTransaction(signature);
   return patchOperationWithHash(operation, txHash);
 }

@@ -11,8 +11,17 @@ import type {
   CoreAmount,
   CoreBigInt,
   CoreOperation,
+  CoreServices,
+  CoreWalletStore,
   Spec
 } from "../../libcore/types";
+
+declare class CoreRipple {
+  static registerInto(
+    services: CoreServices,
+    walletStore: CoreWalletStore
+  ): Promise<boolean>;
+}
 
 declare class CoreRippleLikeAddress {
   toBase58(): Promise<string>;

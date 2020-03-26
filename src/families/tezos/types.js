@@ -5,10 +5,20 @@ import type {
   CoreAccount,
   CoreAmount,
   CoreBigInt,
+  CoreServices,
+  CoreWalletStore,
   OperationType,
   Spec,
   CoreOperationQuery,
 } from "../../libcore/types";
+
+declare class CoreTezos {
+  static registerInto(
+    services: CoreServices,
+    walletStore: CoreWalletStore
+  ): Promise<boolean>;
+}
+
 import type {
   TransactionCommon,
   TransactionCommonRaw,

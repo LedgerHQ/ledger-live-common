@@ -10,6 +10,7 @@ import type { CoreBitcoinLikeTransaction, Transaction } from "./types";
 import { getUTXOStatus } from "./transaction";
 import { promiseAllBatched } from "../../promise";
 import { parseBitcoinUTXO } from "./transaction";
+import invariant from "invariant";
 
 async function bitcoinBuildTransaction({
   account,
@@ -31,6 +32,7 @@ async function bitcoinBuildTransaction({
   const bitcoinLikeAccount = core.CoreBitcoinLikeAccount.fromCoreAccount(
     coreAccount
   );
+  invariant(bitcoinLikeAccount, "bitcoin account expected");
 
   const isValid = await isValidRecipient({
     currency: account.currency,

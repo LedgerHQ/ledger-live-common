@@ -94,7 +94,7 @@ export async function reset() {
   log("libcore/access", "reset");
   if (!core) return;
   invariant(libcoreJobsCounter === 0, "some libcore jobs are still running");
-  await core.getPoolInstance().freshResetAll();
+  await core.getServices().freshResetAll();
   core = null;
   corePromise = null;
 }

@@ -12,6 +12,8 @@ import type {
   CoreBigInt,
   CoreDerivationPath,
   CoreOperation,
+  CoreServices,
+  CoreWalletStore,
   Spec
 } from "../../libcore/types";
 
@@ -51,6 +53,13 @@ export type BitcoinResources = {
 export type BitcoinResourcesRaw = {
   utxos: BitcoinOutputRaw[],
 };
+
+declare class CoreBitcoin {
+  static registerInto(
+    services: CoreServices,
+    walletStore: CoreWalletStore
+  ): Promise<boolean>;
+}
 
 declare class CoreBitcoinLikeInput {
   getPreviousTransaction(): Promise<string>;

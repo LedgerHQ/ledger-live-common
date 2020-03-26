@@ -18,7 +18,7 @@ type F = ({
 
 export const getOrCreateWallet: F = atomicQueue(
   async ({ core, walletName, currency, derivationMode }) => {
-    const poolInstance = core.getPoolInstance();
+    const walletStore = core.getWalletStore();
     let wallet;
 
     const config = await core.DynamicObject.newInstance();
@@ -63,25 +63,21 @@ export const getOrCreateWallet: F = atomicQueue(
     log("libcore", "getOrCreateWallet " + walletName);
     try {
       // check if wallet exists yet
-      wallet = await poolInstance.getWallet(walletName);
+      wallet = await walletStore.getWallet(walletName);
     } catch (err) {
       if (!isNonExistingWalletError(err)) {
         throw err;
       }
       // create it with the config
-      const currencyCore = await poolInstance.getCurrency(currency.id);
-      wallet = await poolInstance.createWallet(
-        walletName,
-        currencyCore,
-        config
-      );
+      const currencyCore = await walletStore.getCurrency(currency.id);
+      wallet = await walletStore.createWallet(walletName, currencyCore, config);
       return wallet;
     }
 
     // if it existed, we still need to sync again the config in case it changed
-    await poolInstance.updateWalletConfig(walletName, config);
+    await walletStore.updateWalletConfig(walletName, config);
     // and we need to get wallet again to have this config taken into account
-    wallet = await poolInstance.getWallet(walletName);
+    wallet = await walletStore.getWallet(walletName);
     return wallet;
   },
   ({ walletName }: { walletName: string }) => walletName

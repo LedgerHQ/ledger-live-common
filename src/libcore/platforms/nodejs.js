@@ -8,7 +8,20 @@ import { log } from "@ledgerhq/logs";
 import { NotEnoughBalance } from "@ledgerhq/errors";
 import { deserializeError, serializeError } from "@ledgerhq/errors";
 import { reflect } from "../types";
-import type { Core, CoreStatics } from "../types";
+import type {
+  Core,
+  CoreStatics,
+  CoreHttpClient,
+  CoreServices,
+  CoreWalletStore,
+  CoreWebSocketClient,
+  CorePathResolver,
+  CoreLogPrinter,
+  CoreThreadDispatcher,
+  CoreRandomNumberGenerator,
+  CoreDatabaseBackend,
+  CoreDynamicObject
+} from "../types";
 import { setLoadCoreImplementation } from "../access";
 import { setRemapLibcoreErrorsImplementation } from "../errors";
 import { getEnv } from "../../env";
@@ -243,9 +256,9 @@ export default (arg: {
       !!process.env.LIBCORE_ENABLE_INTERNAL_LOGGING
     );
 
-    let walletPoolInstance = null;
+    let servicesWalletStoreInstance = null;
 
-    const instanciateWalletPool = () => {
+    const instanciateServicesNWalletStore = () => {
       try {
         fs.mkdirSync(dbPath);
       } catch (err) {
@@ -269,7 +282,8 @@ export default (arg: {
         },
       });
 
-      walletPoolInstance = new lib.NJSWalletPool(
+      // Create the Services and WalletStore objects
+      const services = new lib.NJSServices(
         "ledgerlive",
         dbPassword,
         NJSHttpClient,
@@ -282,15 +296,28 @@ export default (arg: {
         config
       );
 
-      return walletPoolInstance;
+      const walletStore = new lib.NJSWalletStore(this.services);
+
+      return { services, walletStore };
     };
 
-    const getPoolInstance = () => {
-      if (!walletPoolInstance) {
-        instanciateWalletPool();
+    const getServicesNWalletStore = () => {
+      if (!servicesWalletStoreInstance) {
+        servicesWalletStoreInstance = instanciateServicesNWalletStore();
       }
-      invariant(walletPoolInstance, "can't initialize walletPoolInstance");
-      return walletPoolInstance;
+      invariant(
+        servicesWalletStoreInstance,
+        "can't initialize servicesWalletStoreInstance"
+      );
+      return servicesWalletStoreInstance;
+    };
+
+    const getServices = () => {
+      return getServicesNWalletStore().services;
+    };
+
+    const getWalletStore = () => {
+      return getServicesNWalletStore().walletStore;
     };
 
     const mappings = {};
@@ -500,8 +527,9 @@ export default (arg: {
     const core: Core = {
       ...cs,
       flush: () => Promise.resolve(),
-      getPoolInstance,
-      getThreadDispatcher: () => NJSThreadDispatcher,
+      getServices,
+      getWalletStore,
+      getThreadDispatcher: () => NJSThreadDispatcher
     };
 
     return Promise.resolve(core);
