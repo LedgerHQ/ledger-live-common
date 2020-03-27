@@ -62,8 +62,6 @@ const dataset: DatasetTest<Transaction> = {
             seedIdentifier:
               "3544cee0d67187d277cd9c7e26a2bf70425b1bee8e92003f45d150c5513d531a",
             name: "Stellar 1",
-            seedIdentifier:
-              "3544cee0d67187d277cd9c7e26a2bf70425b1bee8e92003f45d150c5513d531a",
             xpub: "GAT4LBXYJGJJJRSNK74NPFLO55CDDXSYVMQODSEAAH3M6EY4S7LPH5GV",
             derivationMode: "sep5",
             index: 0,
