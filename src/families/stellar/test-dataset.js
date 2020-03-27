@@ -20,7 +20,7 @@ import {
 export const notCreatedStellarMockAddress =
   "GDYPMQMYW2JTLPWAUAHIDY3E4VHP5SGTFC5SMA45L7ZPOTHWQ2PHEW3E";
 export const multisignStellarMockAddress =
-  "GAJTWW4OGH5BWFTH24C7SGIDALKI2HUVC2LXHFD533A5FIMSXE5AB3TJ";
+  "GCDDN6T2LJN3T7SPWJQV6BCCL5KNY5GBN7X4CMSZLDEXDHXAH32TOAHS";
 export const memoTypeSelectStellarMockAddress =
   "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3B2WSQHG4W37";
 
@@ -29,7 +29,7 @@ addMultisignStellarMockAddresses(multisignStellarMockAddress);
 addMemotypeTextStellarMockAddresses(memoTypeSelectStellarMockAddress);
 
 const dataset: DatasetTest<Transaction> = {
-  implementations: ["libcore", "mock"],
+  implementations: ["libcore"],
   currencies: {
     stellar: {
       scanAccounts: [
@@ -37,15 +37,19 @@ const dataset: DatasetTest<Transaction> = {
           name: "stellar seed 1",
           apdus: `
             => e002000013028000002c80000094766961206c756d696e61
-            <= cb3d982e538ffe77a40f9179096db07a14ecec5669933cc3e47309be848c66a99000
+            <= 3544cee0d67187d277cd9c7e26a2bf70425b1bee8e92003f45d150c5513d531a9000
             => e002000017038000002c8000009480000000766961206c756d696e61
-            <= c74e1ced14b3a0a3c45ca4553e4e0af5320780de53670a7a1a17055533c85b279000
+            <= 27c586f8499294c64d57f8d7956eef4431de58ab20e1c88001f6cf131c97d6f39000
             => e002000017038000002c8000009480000001766961206c756d696e61
-            <= 133b5b8e31fa1b1667d705f9190302d48d1e95169773947ddec1d2a192b93a009000
+            <= 1174242cc3e722e843ac37db3a745897941396d486456e303001b06b417db1f89000
             => e002000017038000002c8000009480000002766961206c756d696e61
-            <= 1f1eb360758c16bc548e99b68fba1ebdae00a9132f720085a897bd638c128f5f9000
+            <= 8636fa7a5a5bb9fe4fb2615f04425f54dc74c16fefc1325958c9719ee03ef5379000
             => e002000017038000002c8000009480000003766961206c756d696e61
-            <= 0d4a1cfe3b6143ebbd5848d5219d3cd26acafd3adbf57bc7d08e664562a018819000
+            <= 0f052ff4b74726a6f668380927c3d23e9c16d538cb6c272add871e069336bead9000
+            => e002000017038000002c8000009480000004766961206c756d696e61
+            <= 60c75356c268ff0158eeca556526830761327693a93cf4754020fadbe04d0f2b9000
+            => e002000017038000002c8000009480000005766961206c756d696e61
+            <= 124516f8ffb161c9492486e54b4432a2c11e4817414dea54fb8bde13b5ac49439000
           `
         }
       ],
@@ -56,30 +60,32 @@ const dataset: DatasetTest<Transaction> = {
             id:
               "libcore:1:stellar:GAT4LBXYJGJJJRSNK74NPFLO55CDDXSYVMQODSEAAH3M6EY4S7LPH5GV:sep5",
             seedIdentifier:
-              "cb3d982e538ffe77a40f9179096db07a14ecec5669933cc3e47309be848c66a9",
+              "3544cee0d67187d277cd9c7e26a2bf70425b1bee8e92003f45d150c5513d531a",
             name: "Stellar 1",
+            seedIdentifier:
+              "3544cee0d67187d277cd9c7e26a2bf70425b1bee8e92003f45d150c5513d531a",
+            xpub: "GAT4LBXYJGJJJRSNK74NPFLO55CDDXSYVMQODSEAAH3M6EY4S7LPH5GV",
             derivationMode: "sep5",
             index: 0,
             freshAddress:
-              "GDDU4HHNCSZ2BI6ELSSFKPSOBL2TEB4A3ZJWOCT2DILQKVJTZBNSOZA2",
+              "GAT4LBXYJGJJJRSNK74NPFLO55CDDXSYVMQODSEAAH3M6EY4S7LPH5GV",
             freshAddressPath: "44'/148'/0'",
             freshAddresses: [
               {
                 address:
-                  "GDDU4HHNCSZ2BI6ELSSFKPSOBL2TEB4A3ZJWOCT2DILQKVJTZBNSOZA2",
+                  "GAT4LBXYJGJJJRSNK74NPFLO55CDDXSYVMQODSEAAH3M6EY4S7LPH5GV",
                 derivationPath: "44'/148'/0'"
               }
             ],
             unit: { name: "Lumen", code: "XLM", magnitude: 7 },
-            blockHeight: 28282963,
+            blockHeight: 28884793,
             operations: [],
             pendingOperations: [],
             currencyId: "stellar",
             unitMagnitude: 7,
             lastSyncDate: "",
-            balance: "127738083",
-            spendableBalance: "127738083",
-            xpub: "GDDU4HHNCSZ2BI6ELSSFKPSOBL2TEB4A3ZJWOCT2DILQKVJTZBNSOZA2"
+            balance: "371210662",
+            spendableBalance: "371210662"
           },
           transactions: [
             {
@@ -88,7 +94,7 @@ const dataset: DatasetTest<Transaction> = {
                 ...t,
                 amount: BigNumber(100),
                 recipient:
-                  "GDDU4HHNCSZ2BI6ELSSFKPSOBL2TEB4A3ZJWOCT2DILQKVJTZBNSOZA2"
+                  "GAT4LBXYJGJJJRSNK74NPFLO55CDDXSYVMQODSEAAH3M6EY4S7LPH5GV"
               }),
               expectedStatus: {
                 errors: {
@@ -287,30 +293,32 @@ const dataset: DatasetTest<Transaction> = {
           ],
           raw: {
             id:
-              "libcore:2:stellar:GAJTWW4OGH5BWFTH24C7SGIDALKI2HUVC2LXHFD533A5FIMSXE5AB3TJ:sep5",
+              "libcore:2:stellar:GCDDN6T2LJN3T7SPWJQV6BCCL5KNY5GBN7X4CMSZLDEXDHXAH32TOAHS:sep5",
             seedIdentifier:
-              "cb3d982e538ffe77a40f9179096db07a14ecec5669933cc3e47309be848c66a9",
-            name: "Stellar 2",
+              "3544cee0d67187d277cd9c7e26a2bf70425b1bee8e92003f45d150c5513d531a",
+            xpub: "GCDDN6T2LJN3T7SPWJQV6BCCL5KNY5GBN7X4CMSZLDEXDHXAH32TOAHS",
             derivationMode: "sep5",
-            index: 0,
-            freshAddress: multisignStellarMockAddress,
-            freshAddressPath: "44'/148'/1'",
+            index: 2,
+            freshAddress:
+              "GCDDN6T2LJN3T7SPWJQV6BCCL5KNY5GBN7X4CMSZLDEXDHXAH32TOAHS",
+            freshAddressPath: "44'/148'/2'",
             freshAddresses: [
               {
-                address: multisignStellarMockAddress,
-                derivationPath: "44'/148'/1'"
+                address:
+                  "GCDDN6T2LJN3T7SPWJQV6BCCL5KNY5GBN7X4CMSZLDEXDHXAH32TOAHS",
+                derivationPath: "44'/148'/2'"
               }
             ],
+            name: "Stellar 3",
             unit: { name: "Lumen", code: "XLM", magnitude: 7 },
-            blockHeight: 28282963,
+            blockHeight: 28884848,
             operations: [],
             pendingOperations: [],
             currencyId: "stellar",
             unitMagnitude: 7,
             lastSyncDate: "",
-            balance: "127738083",
-            spendableBalance: "127738083",
-            xpub: "GAJTWW4OGH5BWFTH24C7SGIDALKI2HUVC2LXHFD533A5FIMSXE5AB3TJ"
+            balance: "59999500",
+            spendableBalance: "59999500"
           },
           transactions: [
             {
