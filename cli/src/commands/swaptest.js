@@ -22,20 +22,24 @@ const test = async (deviceId, mock = false) => {
     fromParentAccount: undefined,
     toAccount: accountToReceiveSwap(mock),
     toParentAccount: undefined,
-    fromAmount: BigNumber("2"),
+    fromAmount: BigNumber("500000"),
     sendMax: false
   };
 
+  console.log("Getting exchange rates");
   const exchangeRates = await getExchangeRates(exchange);
+
+  console.log("Initialising swap");
   // NB using the first rate
   const { transaction, swapId } = await initSwap(
     exchange,
     exchangeRates[0],
     deviceId
   );
+
   console.log("got the tx, attempt to sign", { transaction, swapId });
   const bridge = getAccountBridge(exchange.fromAccount);
-  const signOperation = await bridge
+  const signedOperation = await bridge
     .signOperation({ account: exchange.fromAccount, deviceId, transaction })
     .pipe(
       tap(e => console.log(e)),
@@ -44,7 +48,15 @@ const test = async (deviceId, mock = false) => {
     )
     .toPromise();
 
-  console.log({ transaction, swapId, signOperation });
+  console.log("tx signed successfully", { signedOperation });
+  console.log("broadcasting");
+
+  const operation = await bridge.broadcast({
+    account: exchange.fromAccount,
+    signedOperation
+  });
+
+  console.log("resulting operation", { operation });
 };
 
 export default {
