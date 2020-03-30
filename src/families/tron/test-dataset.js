@@ -26,11 +26,6 @@ const dataset: DatasetTest<Transaction> = {
   implementations: ["tronjs"],
   currencies: {
     tron: {
-      FIXME_ignoreAccountFields: [
-        "tronResources.bandwidth",
-        "tronResources.energy",
-        "tronResources.unwithdrawnReward"
-      ],
       scanAccounts: [
         {
           name: "tron seed 1",
