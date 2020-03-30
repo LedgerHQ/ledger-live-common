@@ -72,6 +72,11 @@ const signOperation = ({ account, transaction, deviceId }) =>
           ? account.subAccounts.find(sa => sa.id === transaction.subAccountId)
           : null;
 
+      const balance =
+        subAccount ? subAccount.balance : account.spendableBalance;
+
+      transaction.amount = transaction.useAllAmount ? balance : transaction.amount;
+
       // send trc20 to a new account is forbidden by us (because it will not activate the account)
       if (
         transaction.recipient &&
@@ -354,6 +359,7 @@ const currencyBridge: CurrencyBridge = {
 const createTransaction = () => ({
   family: "tron",
   amount: BigNumber(0),
+  useAllAmount: false,
   mode: "send",
   duration: 3,
   recipient: "",
@@ -423,7 +429,7 @@ const getTransactionStatus = async (
   const errors: { [string]: Error } = {};
   const warnings: { [string]: Error } = {};
 
-  const { mode, amount, recipient, resource, votes } = t;
+  const { mode, recipient, resource, votes, useAllAmount = false } = t;
 
   const tokenAccount = !t.subAccountId
     ? null
@@ -433,6 +439,8 @@ const getTransactionStatus = async (
 
   const balance =
     account.type === "Account" ? account.spendableBalance : account.balance;
+
+  const amount = useAllAmount ? balance : t.amount;
 
   if (mode === "send" && !recipient) {
     errors.recipient = new RecipientRequired();
@@ -535,7 +543,7 @@ const getTransactionStatus = async (
 
   if (!errors.recipient && ["send", "freeze"].includes(mode)) {
     if (amountSpent.eq(0)) {
-      errors.amount = new AmountRequired();
+      errors.amount = useAllAmount ? new NotEnoughBalance() : new AmountRequired();
     } else if (totalSpent.gt(balance)) {
       errors.amount = new NotEnoughBalance();
     } else if (account.type === "TokenAccount" && estimatedFees.gt(a.balance)) {

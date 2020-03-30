@@ -27,6 +27,7 @@ const dataset: DatasetTest<Transaction> = {
   currencies: {
     tron: {
       FIXME_ignoreAccountFields: [
+        "tronResources.bandwidth",
         "tronResources.energy",
         "tronResources.unwithdrawnReward"
       ],
@@ -75,6 +76,27 @@ const dataset: DatasetTest<Transaction> = {
                 errors: {},
                 warnings: {},
                 totalSpent: BigNumber("1000000"),
+                estimatedFees: BigNumber("0")
+              }
+            },
+            {
+              name: "useAllAmountSuccess",
+              transaction: fromTransactionRaw({
+                family: "tron",
+                recipient: "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
+                amount: "0",
+                useAllAmount: true,
+                networkInfo: null,
+                mode: "send",
+                duration: undefined,
+                resource: undefined,
+                votes: []
+              }),
+              expectedStatus: {
+                amount: BigNumber("1606000"),
+                errors: {},
+                warnings: {},
+                totalSpent: BigNumber("1606000"),
                 estimatedFees: BigNumber("0")
               }
             },
@@ -512,7 +534,28 @@ const dataset: DatasetTest<Transaction> = {
                 totalSpent: BigNumber("0"),
                 estimatedFees: BigNumber("0")
               }
-            }
+            },
+            {
+              name: "useAllAmountNotEnoughBalance",
+              transaction: fromTransactionRaw({
+                family: "tron",
+                recipient: "THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi",
+                amount: "0",
+                useAllAmount: true,
+                networkInfo: null,
+                mode: "send",
+                duration: undefined,
+                resource: undefined,
+                votes: []
+              }),
+              expectedStatus: {
+                amount: BigNumber("0"),
+                errors: { amount: new NotEnoughBalance() },
+                warnings: {},
+                totalSpent: BigNumber("0"),
+                estimatedFees: BigNumber("0")
+              }
+            },
           ],
           FIXME_tests: [
             /** 

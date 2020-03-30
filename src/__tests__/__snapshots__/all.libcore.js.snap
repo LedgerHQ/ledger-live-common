@@ -77398,12 +77398,6 @@ Array [
     "starred": false,
     "subAccounts": Array [],
     "tronResources": Object {
-      "bandwidth": Object {
-        "freeLimit": "5000",
-        "freeUsed": "0",
-        "gainedLimit": "0",
-        "gainedUsed": "0",
-      },
       "delegatedFrozen": Object {
         "bandwidth": undefined,
         "energy": undefined,
@@ -77469,12 +77463,6 @@ Array [
     "starred": false,
     "subAccounts": Array [],
     "tronResources": Object {
-      "bandwidth": Object {
-        "freeLimit": "5000",
-        "freeUsed": "0",
-        "gainedLimit": "0",
-        "gainedUsed": "0",
-      },
       "delegatedFrozen": Object {
         "bandwidth": undefined,
         "energy": undefined,
@@ -77520,12 +77508,6 @@ Array [
     "starred": false,
     "subAccounts": Array [],
     "tronResources": Object {
-      "bandwidth": Object {
-        "freeLimit": "5000",
-        "freeUsed": "0",
-        "gainedLimit": "0",
-        "gainedUsed": "0",
-      },
       "delegatedFrozen": Object {
         "bandwidth": undefined,
         "energy": undefined,
@@ -77581,12 +77563,6 @@ Array [
     "starred": false,
     "subAccounts": Array [],
     "tronResources": Object {
-      "bandwidth": Object {
-        "freeLimit": "5000",
-        "freeUsed": "0",
-        "gainedLimit": "0",
-        "gainedUsed": "0",
-      },
       "delegatedFrozen": Object {
         "bandwidth": undefined,
         "energy": undefined,
@@ -77642,12 +77618,6 @@ Array [
     "starred": false,
     "subAccounts": Array [],
     "tronResources": Object {
-      "bandwidth": Object {
-        "freeLimit": "5000",
-        "freeUsed": "0",
-        "gainedLimit": "0",
-        "gainedUsed": "0",
-      },
       "delegatedFrozen": Object {
         "bandwidth": undefined,
         "energy": undefined,
