@@ -5,6 +5,7 @@ import type {
   CoreAccount,
   CoreAmount,
   CoreBigInt,
+  CoreOperation,
   CoreServices,
   CoreWalletStore,
   OperationType,
@@ -13,10 +14,14 @@ import type {
 } from "../../libcore/types";
 
 declare class CoreTezos {
-  static registerInto(
+  registerInto(
     services: CoreServices,
     walletStore: CoreWalletStore
-  ): Promise<boolean>;
+  ): Promise<void>;
+  fromCoreAccount(coreAccount: CoreAccount): Promise<?CoreTezosLikeAccount>;
+  fromCoreOperation(
+    coreOperation: CoreOperation
+  ): Promise<?CoreTezosLikeOperation>;
 }
 
 import type {
@@ -60,9 +65,6 @@ declare class CoreTezosLikeTransaction {
 }
 
 declare class CoreTezosLikeOperation {
-  static fromCoreOperation(
-    coreOperation: CoreOperation
-  ): ?CoreTezosLikeOperation;
   getTransaction(): Promise<CoreTezosLikeTransaction>;
 }
 
@@ -82,7 +84,6 @@ declare class CoreTezosLikeTransactionBuilder {
 }
 
 declare class CoreTezosLikeAccount {
-  static fromCoreAccount(coreAccount: CoreAccount): ?CoreTezosLikeAccount;
   broadcastRawTransaction(signed: string): Promise<string>;
   buildTransaction(): Promise<CoreTezosLikeTransactionBuilder>;
   getStorage(address: string): Promise<CoreBigInt>;
@@ -102,6 +103,7 @@ declare class CoreTezosLikeOriginatedAccount {
 }
 
 export type CoreStatics = {
+  Tezos: Class<CoreTezos>,
   TezosLikeOperation: Class<CoreTezosLikeOperation>,
   TezosLikeAddress: Class<CoreTezosLikeAddress>,
   TezosLikeAccount: Class<CoreTezosLikeAccount>,
@@ -156,6 +158,14 @@ export type TransactionRaw = {|
 |};
 
 export const reflect = (declare: (string, Spec) => void) => {
+  declare("Tezos", {
+    methods: {
+      registerInto: {},
+      fromCoreAccount: {},
+      fromCoreOperation: {}
+    }
+  });
+
   declare("TezosLikeAddress", {
     methods: {
       toBase58: {},

@@ -1,20 +1,13 @@
 // @flow
 
-<<<<<<< HEAD
 import type {
   CryptoCurrency,
   TokenAccount,
   Account,
   SyncConfig,
 } from "../../types";
-import type { CoreAccount } from "../../libcore/types";
+import type { Core, CoreAccount } from "../../libcore/types";
 import type { CoreERC20LikeAccount } from "./types";
-=======
-import type { BigNumber } from "bignumber.js";
-import type { CryptoCurrency, TokenAccount, Account } from "../../types";
-import type { Core, CoreAccount, CoreBigInt } from "../../libcore/types";
-import type { CoreEthereumLikeAccount, CoreERC20LikeAccount } from "./types";
->>>>>>> Add support for CoreEthereumLikeAccount.{fromCoreAccount,fromCoreOperation}.
 import { libcoreBigIntToBigNumber } from "../../libcore/buildBigNumber";
 import { minimalOperationsBuilder } from "../../reconciliation";
 import { buildERC20Operation } from "./buildERC20Operation";
@@ -88,7 +81,7 @@ async function ethereumBuildTokenAccounts({
   const { blacklistedTokenIds = [] } = syncConfig;
   if (listTokensForCryptoCurrency(currency).length === 0) return undefined;
   const tokenAccounts = [];
-  const ethAccount: CoreEthereumLikeAccount = core.CoreEthereumLikeAccount.fromCoreAccount(
+  const ethAccount: CoreEthereumLikeAccount = core.EthereumLikeAccount.fromCoreAccount(
     coreAccount
   );
   invariant(ethAccount, "ethereum account expected");

@@ -27,7 +27,7 @@ checkLibs({
   connect,
 });
 
-import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs-modularized";
+import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
 implementLibcore({
   lib: () => require("@ledgerhq/ledger-core-modularized"), // eslint-disable-line global-require
   dbPath: process.env.LIBCORE_DB_PATH || "./dbdata",

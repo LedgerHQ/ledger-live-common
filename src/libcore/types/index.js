@@ -31,7 +31,7 @@ declare class CoreServices {
   ): Promise<CoreServices>;
   freshResetAll(): Promise<void>;
   changePassword(oldPassword: string, newPassword: string): Promise<void>;
-  getName(): Promise<string>;
+  getTenant(): Promise<string>;
 }
 
 declare class CoreWalletStore {
@@ -355,7 +355,7 @@ export const reflect = (declare: (string, Spec) => void) => {
     methods: {
       freshResetAll: {},
       changePassword: {},
-      getName: {}
+      getTenant: {}
     }
   });
 

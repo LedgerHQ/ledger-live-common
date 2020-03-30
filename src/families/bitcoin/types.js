@@ -55,10 +55,14 @@ export type BitcoinResourcesRaw = {
 };
 
 declare class CoreBitcoin {
-  static registerInto(
+  registerInto(
     services: CoreServices,
     walletStore: CoreWalletStore
-  ): Promise<boolean>;
+  ): Promise<void>;
+  fromCoreAccount(coreAccount: CoreAccount): Promise<?CoreBitcoinLikeAccount>;
+  fromCoreOperation(
+    coreOperation: CoreOperation
+  ): Promise<?CoreBitcoinLikeOperation>;
 }
 
 declare class CoreBitcoinLikeInput {
@@ -91,9 +95,6 @@ declare class CoreBitcoinLikeTransaction {
 }
 
 declare class CoreBitcoinLikeOperation {
-  static fromCoreOperation(
-    coreOperation: CoreOperation
-  ): ?CoreBitcoinLikeOperation;
   getTransaction(): Promise<CoreBitcoinLikeTransaction>;
 }
 
@@ -107,7 +108,6 @@ declare class CoreBitcoinLikeTransactionBuilder {
 }
 
 declare class CoreBitcoinLikeAccount {
-  static fromCoreAccount(coreAccount: CoreAccount): ?CoreBitcoinLikeAccount;
   getUTXO(from: number, to: number): Promise<CoreBitcoinLikeOutput[]>;
   getUTXOCount(): Promise<number>;
   buildTransaction(
@@ -123,6 +123,7 @@ declare class CoreBitcoinLikeNetworkParameters {
 }
 
 export type CoreStatics = {
+  Bitcoin: Class<CoreBitcoin>,
   BitcoinLikeAccount: Class<CoreBitcoinLikeAccount>,
   BitcoinLikeInput: Class<CoreBitcoinLikeInput>,
   BitcoinLikeNetworkParameters: Class<CoreBitcoinLikeNetworkParameters>,
@@ -219,6 +220,14 @@ export type TransactionRaw = {|
 |};
 
 export const reflect = (declare: (string, Spec) => void) => {
+  declare("Bitcoin", {
+    methods: {
+      registerInto: {},
+      fromCoreAccount: {},
+      fromCoreOperation: {}
+    }
+  });
+
   declare("BitcoinLikeInput", {
     methods: {
       getPreviousTransaction: {

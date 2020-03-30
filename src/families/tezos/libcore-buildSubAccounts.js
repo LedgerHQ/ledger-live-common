@@ -89,7 +89,7 @@ async function tezosBuildOriginatedAccount({
   existingAccount: ?Account,
 }): Promise<?(ChildAccount[])> {
   const originatedAccounts = [];
-  const xtzAccount: CoreTezosLikeAccount = core.CoreTezosLikeAccount.fromCoreAccount(
+  const xtzAccount: CoreTezosLikeAccount = await new core.Tezos().fromCoreAccount(
     coreAccount
   );
   invariant(xtzAccount, "tezos account expected");

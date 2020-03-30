@@ -21,7 +21,7 @@ async function tezosBuildOperation(
   },
   partialOp: $Shape<Operation>
 ) {
-  const tezosLikeOperation = core.CoreTezosLikeOperation.fromCoreOperation(
+  const tezosLikeOperation = await new core.Tezos().fromCoreOperation(
     coreOperation
   );
   invariant(tezosLikeOperation, "tezos operation expected");

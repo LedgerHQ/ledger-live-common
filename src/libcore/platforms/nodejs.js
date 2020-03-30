@@ -296,7 +296,7 @@ export default (arg: {
         config
       );
 
-      const walletStore = new lib.NJSWalletStore(this.services);
+      const walletStore = new lib.NJSWalletStore(services);
 
       return { services, walletStore };
     };
@@ -531,6 +531,14 @@ export default (arg: {
       getWalletStore,
       getThreadDispatcher: () => NJSThreadDispatcher
     };
+
+    // register currencies
+    const services = getServices();
+    const walletStore = getWalletStore();
+    new core.Bitcoin().registerInto(services, walletStore);
+    new core.Ethereum().registerInto(services, walletStore);
+    new core.Ripple().registerInto(services, walletStore);
+    new core.Tezos().registerInto(services, walletStore);
 
     return Promise.resolve(core);
   };

@@ -9,7 +9,7 @@ async function broadcast({
   coreAccount,
   signedOperation: { signature, operation },
 }) {
-  const bitcoinLikeAccount = core.CoreBitcoinLikeAccount.fromCoreAccount(
+  const bitcoinLikeAccount = await new core.Bitcoin().fromCoreAccount(
     coreAccount
   );
   invariant(bitcoinLikeAccount, "bitcoin account expected");

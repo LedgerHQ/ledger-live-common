@@ -27,10 +27,10 @@ export type EthereumGasLimitRequest = {
 };
 
 declare class CoreEthereum {
-  static registerInto(
+  registerInto(
     services: CoreServices,
     walletStore: CoreWalletStore
-  ): Promise<boolean>;
+  ): Promise<void>;
 }
 
 declare class CoreEthereumLikeAddress {
@@ -113,6 +113,7 @@ declare class CoreERC20LikeOperation {
 }
 
 export type CoreStatics = {
+  Ethereum: Class<CoreEthereum>,
   InternalTransaction: Class<CoreInternalTransaction>,
   EthereumLikeOperation: Class<CoreEthereumLikeOperation>,
   EthereumLikeAddress: Class<CoreEthereumLikeAddress>,
@@ -173,6 +174,12 @@ export type TransactionRaw = {|
 |};
 
 export const reflect = (declare: (string, Spec) => void) => {
+  declare("Ethereum", {
+    methods: {
+      registerInto: {}
+    }
+  });
+
   declare("InternalTransaction", {
     methods: {
       getGasLimit: { returns: "BigInt" },
