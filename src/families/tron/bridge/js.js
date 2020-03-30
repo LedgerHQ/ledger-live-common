@@ -529,9 +529,10 @@ const getTransactionStatus = async (
       ? BigNumber(0)
       : await getEstimatedFees(a, t);
 
-  const balance = account.type === "Account" 
-    ? account.spendableBalance.minus(estimatedFees)
-    : account.balance;
+  const balance =
+    account.type === "Account"
+      ? account.spendableBalance.minus(estimatedFees)
+      : account.balance;
 
   const amount = useAllAmount ? balance : t.amount;
 
