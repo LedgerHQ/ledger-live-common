@@ -555,7 +555,7 @@ const dataset: DatasetTest<Transaction> = {
                 totalSpent: BigNumber("0"),
                 estimatedFees: BigNumber("0")
               }
-            },
+            }
           ],
           FIXME_tests: [
             /** 

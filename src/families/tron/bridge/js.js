@@ -72,10 +72,13 @@ const signOperation = ({ account, transaction, deviceId }) =>
           ? account.subAccounts.find(sa => sa.id === transaction.subAccountId)
           : null;
 
-      const balance =
-        subAccount ? subAccount.balance : account.spendableBalance;
+      const balance = subAccount
+        ? subAccount.balance
+        : account.spendableBalance;
 
-      transaction.amount = transaction.useAllAmount ? balance : transaction.amount;
+      transaction.amount = transaction.useAllAmount
+        ? balance
+        : transaction.amount;
 
       // send trc20 to a new account is forbidden by us (because it will not activate the account)
       if (
@@ -543,7 +546,9 @@ const getTransactionStatus = async (
 
   if (!errors.recipient && ["send", "freeze"].includes(mode)) {
     if (amountSpent.eq(0)) {
-      errors.amount = useAllAmount ? new NotEnoughBalance() : new AmountRequired();
+      errors.amount = useAllAmount
+        ? new NotEnoughBalance()
+        : new AmountRequired();
     } else if (totalSpent.gt(balance)) {
       errors.amount = new NotEnoughBalance();
     } else if (account.type === "TokenAccount" && estimatedFees.gt(a.balance)) {
