@@ -2,6 +2,7 @@
 
 import Transport from "@ledgerhq/hw-transport";
 import { getDeviceModel } from "@ledgerhq/devices";
+import type { DeviceModelId } from "@ledgerhq/devices";
 import { UnexpectedBootloader } from "@ledgerhq/errors";
 import { Observable, throwError } from "rxjs";
 import type { Exec, AppOp, ListAppsEvent, ListAppsResult } from "./types";
@@ -32,15 +33,18 @@ const appsThatKeepChangingHashes = ["Fido U2F"];
 
 export const listApps = (
   transport: Transport<*>,
-  deviceInfo: DeviceInfo
+  deviceInfo: DeviceInfo,
+  modelId?: DeviceModelId
 ): Observable<ListAppsEvent> => {
   if (deviceInfo.isOSU || deviceInfo.isBootloader) {
     return throwError(new UnexpectedBootloader(""));
   }
 
   const deviceModelId =
-    // $FlowFixMe
-    (transport.deviceModel && transport.deviceModel.id) || "nanoS";
+    modelId ||
+    // $FlowFixMe (deviceModel member is only found in RN BLE transport class and not part of Transport type)
+    (transport.deviceModel && transport.deviceModel.id) ||
+    "nanoS";
 
   return Observable.create(o => {
     let sub;
