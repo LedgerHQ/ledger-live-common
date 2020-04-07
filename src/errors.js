@@ -45,8 +45,17 @@ export const TronNotEnoughTronPower = createCustomErrorClass(
   "TronNotEnoughTronPower"
 );
 
+export const TronTransactionExpired = createCustomErrorClass(
+  "TronTransactionExpired"
+);
+
+export const TronNotEnoughEnergy = createCustomErrorClass(
+  "TronNotEnoughEnergy"
+);
+
 export const StellarWrongMemoFormat = createCustomErrorClass(
   "StellarWrongMemoFormat"
 );
 
 export const SourceHasMultiSign = createCustomErrorClass("SourceHasMultiSign");
+

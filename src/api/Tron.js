@@ -12,7 +12,8 @@ import type {
   BandwidthInfo,
   SuperRepresentative,
   SuperRepresentativeData,
-  TronResources
+  TronResources,
+  TronTransactionInfo
 } from "../families/tron/types";
 import type { Account, SubAccount } from "../types";
 import {
@@ -23,6 +24,7 @@ import {
   hexToAscii
 } from "../families/tron/utils";
 import { log } from "@ledgerhq/logs";
+import { TronTransactionExpired } from "../errors";
 import network from "../network";
 import { promiseAllBatched } from "../promise";
 import { makeLRUCache } from "../cache";
@@ -154,6 +156,11 @@ export const broadcastTron = async (
     `${baseApiUrl}/wallet/broadcasttransaction`,
     trxTransaction
   );
+
+  if (result.code === "TRANSACTION_EXPIRATION_ERROR") {
+    throw new TronTransactionExpired();
+  }
+
   return result;
 };
 
@@ -172,17 +179,19 @@ export async function fetchCurrentBlockHeight() {
 }
 
 // For the moment, fetching transaction info is the only way to get fees from a transaction
-function fetchTronTxDetail(txId: string) {
-  return fetch(
+async function fetchTronTxDetail(txId: string): Promise<TronTransactionInfo> {
+  const { fee, blockNumber, withdraw_amount, unfreeze_amount } = await fetch(
     `${baseApiUrl}/wallet/gettransactioninfobyid?value=${encodeURIComponent(
       txId
     )}`
   );
+  return { fee, blockNumber, withdraw_amount, unfreeze_amount };
 }
 
 export async function fetchTronAccountTxs(
   addr: string,
-  shouldFetchMoreTxs: (Object[]) => boolean
+  shouldFetchMoreTxs: (Object[]) => boolean,
+  cacheTransactionInfoById: { [_: string]: TronTransactionInfo }
 ): Promise<TrongridTxInfo[]> {
   const getTxs = async (url: string) =>
     fetch(url).then(resp => {
@@ -192,10 +201,13 @@ export async function fetchTronAccountTxs(
         3,
         resp.data || [],
         async tx => {
-          if (!tx.txID) {
+          const txID = tx.txID || tx.transaction_id;
+          if (!txID) {
             return tx;
           }
-          const detail = await fetchTronTxDetail(tx.txID);
+          const detail =
+            cacheTransactionInfoById[txID] || (await fetchTronTxDetail(txID));
+          cacheTransactionInfoById[txID] = detail;
           return { ...tx, detail };
         }
       ).then(results => ({ results, nextUrl }));
@@ -203,28 +215,27 @@ export async function fetchTronAccountTxs(
       return resultsWithTxInfo;
     });
 
-  const getEntireTxs = async (url: string) => {
-    const response = await getTxs(url);
-
-    if (shouldFetchMoreTxs(response.results) && response.nextUrl) {
-      const nextResponse = await getEntireTxs(response.nextUrl);
-      return {
-        results: response.results.concat(nextResponse.results),
-        nextUrl: nextResponse.nextUrl
-      };
-    } else {
-      return response;
+  const getEntireTxs = async (initialUrl: string) => {
+    let all = [];
+    let url = initialUrl;
+    while (url && shouldFetchMoreTxs(all)) {
+      const { nextUrl, results } = await getTxs(url);
+      url = nextUrl;
+      all = all.concat(results);
     }
+    return all;
   };
 
   const entireTxs = (
-    await getEntireTxs(`${baseApiUrl}/v1/accounts/${addr}/transactions`)
-  ).results.map(tx => formatTrongridTxResponse(tx));
+    await getEntireTxs(
+      `${baseApiUrl}/v1/accounts/${addr}/transactions?limit=100`
+    )
+  ).map(tx => formatTrongridTxResponse(tx));
 
   // we need to fetch and filter trc20 'IN' transactions from another endpoint
   const entireTrc20InTxs = (
     await getEntireTxs(`${baseApiUrl}/v1/accounts/${addr}/transactions/trc20`)
-  ).results
+  )
     .filter(tx => tx.to === addr)
     .map(tx => formatTrongridTxResponse(tx, true));
 
@@ -234,6 +245,19 @@ export async function fetchTronAccountTxs(
 
   return txInfos;
 }
+
+export const getContractUserEnergyRatioConsumption = async (
+  address: string
+): Promise<number> => {
+  const { consume_user_resource_percent = 0 } = await post(
+    `${baseApiUrl}/wallet/getcontract`,
+    {
+      value: decode58Check(address)
+    }
+  );
+
+  return consume_user_resource_percent;
+};
 
 export const getTronAccountNetwork = async (
   address: string
@@ -249,6 +273,7 @@ export const getTronAccountNetwork = async (
     freeNetLimit = 0,
     NetUsed = 0,
     NetLimit = 0,
+    EnergyUsed = 0,
     EnergyLimit = 0
   } = result;
 
@@ -258,7 +283,8 @@ export const getTronAccountNetwork = async (
     freeNetLimit: BigNumber(freeNetLimit),
     netUsed: BigNumber(NetUsed),
     netLimit: BigNumber(NetLimit),
-    energyLimit: EnergyLimit ? BigNumber(EnergyLimit) : undefined
+    energyUsed: BigNumber(EnergyUsed),
+    energyLimit: BigNumber(EnergyLimit)
   };
 };
 
@@ -428,7 +454,8 @@ export const extractBandwidthInfo = (
 
 export const getTronResources = async (
   acc: Object,
-  txs: TrongridTxInfo[]
+  txs: TrongridTxInfo[],
+  cacheTransactionInfoById: { [_: string]: TronTransactionInfo }
 ): Promise<TronResources> => {
   const frozenBandwidth = get(acc, "frozen[0]", undefined);
   const frozenEnergy = get(
@@ -448,23 +475,13 @@ export const getTronResources = async (
     undefined
   );
 
-  const lastDelegatedFrozenBandwidthOp = txs.find(
-    t =>
-      t.type === "FreezeBalanceContract" && t.to && t.resource === "BANDWIDTH"
-  );
-
-  const lastDelegatedFrozenEnergyOp = txs.find(
-    t => t.type === "FreezeBalanceContract" && t.to && t.resource === "ENERGY"
-  );
-
   const encodedAddress = encode58Check(acc.address);
 
   const tronNetworkInfo = await getTronAccountNetwork(encodedAddress);
   const unwithdrawnReward = await getUnwithdrawnReward(encodedAddress);
 
-  const energy = BigNumber(tronNetworkInfo.energyLimit || 0);
+  const energy = tronNetworkInfo.energyLimit.minus(tronNetworkInfo.energyUsed);
   const bandwidth = extractBandwidthInfo(tronNetworkInfo);
-  const threeDaysInMs = 3 * 24 * 60 * 60 * 1000;
 
   const frozen = {
     bandwidth: frozenBandwidth
@@ -482,24 +499,12 @@ export const getTronResources = async (
   };
 
   const delegatedFrozen = {
-    bandwidth:
-      delegatedFrozenBandwidth && lastDelegatedFrozenBandwidthOp
-        ? {
-            amount: BigNumber(delegatedFrozenBandwidth),
-            expiredAt: new Date(
-              lastDelegatedFrozenBandwidthOp.date.getTime() + threeDaysInMs
-            ) // + 3 days
-          }
-        : undefined,
-    energy:
-      delegatedFrozenEnergy && lastDelegatedFrozenEnergyOp
-        ? {
-            amount: BigNumber(delegatedFrozenEnergy),
-            expiredAt: new Date(
-              lastDelegatedFrozenEnergyOp.date.getTime() + threeDaysInMs
-            ) // + 3 days
-          }
-        : undefined
+    bandwidth: delegatedFrozenBandwidth
+      ? { amount: BigNumber(delegatedFrozenBandwidth) }
+      : undefined,
+    energy: delegatedFrozenEnergy
+      ? { amount: BigNumber(delegatedFrozenEnergy) }
+      : undefined
   };
 
   const tronPower = BigNumber(get(frozen, "bandwidth.amount", 0))
@@ -507,13 +512,24 @@ export const getTronResources = async (
     .plus(get(delegatedFrozen, "bandwidth.amount", 0))
     .plus(get(delegatedFrozen, "energy.amount", 0))
     .dividedBy(1000000)
-    .decimalPlaces(3, BigNumber.ROUND_HALF_DOWN)
+    .integerValue(BigNumber.ROUND_FLOOR)
     .toNumber();
 
   const votes = get(acc, "votes", []).map(v => ({
     address: encode58Check(v.vote_address),
     voteCount: v.vote_count
   }));
+
+  const lastWithdrawnRewardDate = acc.latest_withdraw_time
+    ? new Date(acc.latest_withdraw_time)
+    : undefined;
+
+  // TODO: rely on the account object when trongrid will provide this info.
+  const getLastVotedDate = (txs: TrongridTxInfo[]): ?Date => {
+    const lastOp = txs.find(({ type }) => type === "VoteWitnessContract");
+    return lastOp ? lastOp.date : null;
+  };
+  const lastVotedDate = getLastVotedDate(txs);
 
   return {
     energy,
@@ -522,7 +538,10 @@ export const getTronResources = async (
     delegatedFrozen,
     votes,
     tronPower,
-    unwithdrawnReward
+    unwithdrawnReward,
+    lastWithdrawnRewardDate,
+    lastVotedDate,
+    cacheTransactionInfoById
   };
 };
 

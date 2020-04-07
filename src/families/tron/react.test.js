@@ -3,13 +3,20 @@ import { renderHook, act } from "@testing-library/react-hooks";
 import {
   useTronSuperRepresentatives,
   useNextVotingDate,
+  getLastVotedDate,
   getNextRewardDate,
   formatVotes,
   useSortedSr,
   useVotesReducer
 } from "./react";
 
-import { __NEXT_REWARD_DATE__, mockAccount, mockAccountNoReward } from "./mock";
+import {
+  __NEXT_REWARD_DATE__,
+  __LAST_VOTING_DATE__,
+  mockAccount,
+  mockAccountNoReward,
+  mockAccountNoVote
+} from "./mock";
 
 jest.mock("../../api/Tron");
 
@@ -34,6 +41,11 @@ test("Tron next voting date hook - useNextVotingDate - Expect to get next voting
   );
 });
 
+test("Tron get last voting date - getLastVotedDate - Expect to get last voted date", () => {
+  expect(getLastVotedDate(mockAccount)).toStrictEqual(__LAST_VOTING_DATE__);
+  expect(getLastVotedDate(mockAccountNoVote)).toStrictEqual(null);
+});
+
 test("Tron get next reward date - getNextRewardDate - Expect to get next reward date", () => {
   expect(getNextRewardDate(mockAccount)).toStrictEqual(
     __NEXT_REWARD_DATE__.valueOf() + 24 * 60 * 60 * 1000
@@ -45,11 +57,15 @@ const __VOTES__ = superRepresentatives
   .slice(0, 2)
   .map(({ address }) => ({ address, voteCount: 100 }));
 
-const __FORMATTED_VOTES__ = superRepresentatives.slice(0, 2).map(validator => ({
-  address: validator.address,
-  voteCount: 100,
-  validator
-}));
+const __FORMATTED_VOTES__ = superRepresentatives
+  .slice(0, 2)
+  .map((validator, i) => ({
+    address: validator.address,
+    voteCount: 100,
+    validator,
+    rank: i + 1,
+    isSR: true
+  }));
 
 test("Tron format votes - formatVotes - Expect to get formatted votes", () => {
   expect(formatVotes(undefined, superRepresentatives)).toStrictEqual([]);

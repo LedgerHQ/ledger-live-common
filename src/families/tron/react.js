@@ -3,10 +3,9 @@ import { useState, useEffect, useMemo, useReducer, useRef } from "react";
 import { getTronSuperRepresentatives, getNextVotingDate } from "../../api/Tron";
 
 import { BigNumber } from "bignumber.js";
-
 import type { SuperRepresentative, Vote, TronResources } from "./types";
 import type { Account } from "../../types";
-
+import { useBridgeSync } from "../../bridge/react";
 import { getCryptoCurrencyById } from "../../currencies";
 
 export type Action = {
@@ -32,20 +31,28 @@ export const MIN_TRANSACTION_AMOUNT = oneTrx;
 export const SR_THRESHOLD = 27;
 export const SR_MAX_VOTES = 5;
 
+let __lastSeenSR: SuperRepresentative[] = [];
+
 /** Fetch the list of super representatives */
 export const useTronSuperRepresentatives = (): Array<SuperRepresentative> => {
-  const [sp, setSp] = useState([]);
-
+  const [sr, setSr] = useState(__lastSeenSR);
   useEffect(() => {
-    getTronSuperRepresentatives().then(setSp);
-    return () => {};
+    let unsub = false;
+    getTronSuperRepresentatives().then((sr: SuperRepresentative[]) => {
+      __lastSeenSR = sr;
+      if (unsub) return;
+      setSr(sr);
+    });
+    return () => {
+      unsub = true;
+    };
   }, []);
-
-  return sp;
+  return sr;
 };
 
 /** Get next voting date window */
 export const useNextVotingDate = (): ?number => {
+  console.warn("DEPRECATED: useNextVotingDate");
   const [nextVotingDate, setNextVotingDate] = useState();
   useEffect(() => {
     getNextVotingDate().then(d => d && setNextVotingDate(d.valueOf()));
@@ -54,18 +61,24 @@ export const useNextVotingDate = (): ?number => {
   return nextVotingDate;
 };
 
+/** Get last time voted */
+export const getLastVotedDate = (account: Account): ?Date => {
+  return account.tronResources && account.tronResources.lastVotedDate
+    ? account.tronResources.lastVotedDate
+    : null;
+};
+
 /** Get next available date to claim rewards */
 export const getNextRewardDate = (account: Account): ?number => {
-  const { operations } = account;
-  const lastRewardOp = operations.find(({ type }) => type === "REWARD");
+  const lastWithdrawnRewardDate =
+    account.tronResources && account.tronResources.lastWithdrawnRewardDate
+      ? account.tronResources.lastWithdrawnRewardDate
+      : null;
 
-  if (lastRewardOp) {
-    const { date } = lastRewardOp;
-    if (date) {
-      // add 24hours
-      const nextDate = date.getTime() + 24 * 60 * 60 * 1000;
-      if (nextDate > Date.now()) return nextDate;
-    }
+  if (lastWithdrawnRewardDate) {
+    // add 24hours
+    const nextDate = lastWithdrawnRewardDate.getTime() + 24 * 60 * 60 * 1000;
+    if (nextDate > Date.now()) return nextDate;
   }
 
   return null;
@@ -75,17 +88,60 @@ export const getNextRewardDate = (account: Account): ?number => {
 export const formatVotes = (
   votes: ?Array<Vote>,
   superRepresentatives: ?Array<SuperRepresentative>
-): Array<{| ...Vote, validator: ?SuperRepresentative |}> => {
-  return votes
-    ? votes.map(({ address, voteCount }) => ({
-        validator:
-          superRepresentatives &&
-          superRepresentatives.find(sp => sp.address === address),
-        address,
-        voteCount
-      }))
+): Array<{|
+  ...Vote,
+  validator: ?SuperRepresentative,
+  isSR: boolean,
+  rank: number
+|}> => {
+  return votes && superRepresentatives
+    ? votes.map(({ address, voteCount }) => {
+        const srIndex = superRepresentatives.findIndex(
+          sp => sp.address === address
+        );
+
+        return {
+          validator: superRepresentatives[srIndex],
+          rank: srIndex + 1,
+          isSR: srIndex < SR_THRESHOLD,
+          address,
+          voteCount
+        };
+      })
     : [];
 };
+
+// wait an effect of a tron freeze until it effectively change
+export function useTronPowerLoading(account: Account) {
+  const tronPower =
+    (account.tronResources && account.tronResources.tronPower) || 0;
+  const initialTronPower = useRef(tronPower);
+  const initialAccount = useRef(account);
+
+  const [isLoading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (initialTronPower.current !== tronPower) {
+      setLoading(false);
+    }
+  }, [tronPower]);
+
+  const sync = useBridgeSync();
+
+  useEffect(() => {
+    if (!isLoading) return;
+    const interval = setInterval(() => {
+      sync({
+        type: "SYNC_ONE_ACCOUNT",
+        priority: 10,
+        accountId: initialAccount.current.id
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [initialAccount, sync, isLoading]);
+
+  return isLoading;
+}
 
 /** Search filters for SR list */
 const searchFilter = (query?: string) => ({
@@ -121,7 +177,7 @@ export function useSortedSr(
         name: sr.name,
         address: sr.address,
         rank: rank + 1,
-        isSR: rank <= SR_THRESHOLD
+        isSR: rank < SR_THRESHOLD
       })),
     [superRepresentatives]
   );
@@ -144,6 +200,8 @@ export function useSortedSr(
 
 /** Tron vote flow state reducer */
 function votesReducer(state: State, { type, address, value }: Action) {
+  console.warn("DEPRECATED: votesReducer");
+
   switch (type) {
     case "updateVote": {
       const voteCount = value
@@ -203,6 +261,8 @@ function votesReducer(state: State, { type, address, value }: Action) {
 
 /** Vote flow init state */
 function initState(initialVotes, tronResources): State {
+  console.warn("DEPRECATED: initState");
+
   const votes = initialVotes.reduce(
     (sum, { voteCount, address }) => ({ ...sum, [address]: voteCount }),
     {}
@@ -226,6 +286,7 @@ function initState(initialVotes, tronResources): State {
 export function toTransactionVotes(votes: {
   [address: string]: number
 }): Vote[] {
+  console.warn("DEPRECATED: toTransactionVotes");
   return Object.keys(votes)
     .map(address => ({ address, voteCount: votes[address] }))
     .filter(({ voteCount }) => voteCount > 0);
@@ -236,6 +297,8 @@ export function useVotesReducer(
   initialVotes: Vote[],
   tronResources: ?TronResources
 ): [State, (action: Action) => void] {
+  console.warn("DEPRECATED: useVotesReducer");
+
   const [state, dispatch]: [State, (action: Action) => void] = useReducer(
     votesReducer,
     initState(initialVotes, tronResources)

@@ -29,7 +29,7 @@ import getAddress from "../hw/getAddress";
 import { open } from "../hw";
 
 type GetAccountShape = (
-  { address: string, id: string },
+  { address: string, id: string, initialAccount?: Account },
   SyncConfig
 ) => Promise<$Shape<Account>>;
 
@@ -48,7 +48,8 @@ export function mergeOps(
 }
 
 export const makeSync = (
-  getAccountShape: GetAccountShape
+  getAccountShape: GetAccountShape,
+  postSync: Account => Account = a => a
 ): $PropertyType<AccountBridge<any>, "sync"> => (
   initial,
   syncConfig
@@ -59,13 +60,14 @@ export const makeSync = (
         const shape = await getAccountShape(
           {
             id: initial.id,
-            address: initial.freshAddress
+            address: initial.freshAddress,
+            initialAccount: initial
           },
           syncConfig
         );
         o.next(a => {
           const operations = mergeOps(a.operations, shape.operations || []);
-          return {
+          return postSync({
             ...a,
             spendableBalance: shape.balance || a.balance,
             operationsCount: shape.operationsCount || operations.length,
@@ -75,7 +77,7 @@ export const makeSync = (
             pendingOperations: a.pendingOperations.filter(op =>
               shouldRetainPendingOperation(a, op)
             )
-          };
+          });
         });
         o.complete();
       } catch (e) {
@@ -122,6 +124,7 @@ export const makeScanAccounts = (
 
       const freshAddress = address;
       const operations = accountShape.operations || [];
+      const operationsCount = accountShape.operationsCount || operations.length;
       const balance = accountShape.balance || BigNumber(0);
       const spendableBalance = accountShape.spendableBalance || BigNumber(0);
 
@@ -130,7 +133,7 @@ export const makeScanAccounts = (
       const isAccountEmpty =
         currency.id === "tron" && accountShape.tronResources
           ? accountShape.tronResources.bandwidth.freeLimit === 0
-          : operations.length === 0 && balance.isZero();
+          : operationsCount === 0 && balance.isZero();
 
       if (isAccountEmpty) {
         // this is an empty account

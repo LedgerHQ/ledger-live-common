@@ -28,7 +28,8 @@ export type NetworkInfo = {|
   freeNetLimit: BigNumber,
   netUsed: BigNumber,
   netLimit: BigNumber,
-  energyLimit: ?BigNumber
+  energyUsed: BigNumber,
+  energyLimit: BigNumber
 |};
 
 export type NetworkInfoRaw = {|
@@ -37,7 +38,8 @@ export type NetworkInfoRaw = {|
   freeNetLimit: string,
   netUsed: string,
   netLimit: string,
-  energyLimit: ?string
+  energyUsed: string,
+  energyLimit: string
 |};
 
 export type Transaction = {|
@@ -81,7 +83,8 @@ export type TrongridTxInfo = {|
   fee?: BigNumber,
   resource?: TronResource,
   blockHeight?: number,
-  extra?: TrongridExtraTxInfo
+  extra?: TrongridExtraTxInfo,
+  hasFailed: boolean
 |};
 
 export type TrongridExtraTxInfo =
@@ -171,14 +174,17 @@ export type TronResources = {|
     energy: ?FrozenInfo
   },
   delegatedFrozen: {
-    bandwidth: ?FrozenInfo,
-    energy: ?FrozenInfo
+    bandwidth: ?DelegatedFrozenInfo,
+    energy: ?DelegatedFrozenInfo
   },
   votes: Vote[],
   tronPower: number,
   energy: BigNumber,
   bandwidth: BandwidthInfo,
-  unwithdrawnReward: BigNumber
+  unwithdrawnReward: BigNumber,
+  lastWithdrawnRewardDate: ?Date,
+  lastVotedDate: ?Date,
+  cacheTransactionInfoById: { [_: string]: TronTransactionInfo }
 |};
 
 export type TronResourcesRaw = {|
@@ -187,14 +193,17 @@ export type TronResourcesRaw = {|
     energy: ?FrozenInfoRaw
   },
   delegatedFrozen: {
-    bandwidth: ?FrozenInfoRaw,
-    energy: ?FrozenInfoRaw
+    bandwidth: ?DelegatedFrozenInfoRaw,
+    energy: ?DelegatedFrozenInfoRaw
   },
   votes: Vote[],
   tronPower: number,
   energy: string,
   bandwidth: BandwidthInfoRaw,
-  unwithdrawnReward: string
+  unwithdrawnReward: string,
+  lastWithdrawnRewardDate: ?string,
+  lastVotedDate: ?string,
+  cacheTransactionInfoById?: { [_: string]: TronTransactionInfoRaw }
 |};
 
 export type Vote = {|
@@ -212,6 +221,14 @@ export type FrozenInfoRaw = {|
   expiredAt: string
 |};
 
+export type DelegatedFrozenInfo = {|
+  amount: BigNumber
+|};
+
+export type DelegatedFrozenInfoRaw = {|
+  amount: string
+|};
+
 export type BandwidthInfo = {|
   freeUsed: BigNumber,
   freeLimit: BigNumber,
@@ -225,3 +242,12 @@ export type BandwidthInfoRaw = {|
   gainedUsed: string,
   gainedLimit: string
 |};
+
+export type TronTransactionInfo = {|
+  fee: number,
+  blockNumber: number,
+  withdraw_amount: number,
+  unfreeze_amount: number
+|};
+
+export type TronTransactionInfoRaw = [number, number, number, number];

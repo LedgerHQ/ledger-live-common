@@ -19,7 +19,8 @@ import {
   TronNotEnoughTronPower,
   TronSendTrc20ToNewAccountForbidden,
   TronVoteRequired,
-  TronUnexpectedFees
+  TronUnexpectedFees,
+  TronNotEnoughEnergy
 } from "../../errors";
 
 const dataset: DatasetTest<Transaction> = {
@@ -27,7 +28,10 @@ const dataset: DatasetTest<Transaction> = {
   currencies: {
     tron: {
       FIXME_ignoreAccountFields: [
-        "tronResources.unwithdrawnReward" // it changes every vote cycles
+        "tronResources.cacheTransactionInfoById", // this is a cache, don't save it
+        "tronResources.unwithdrawnReward", // it changes every vote cycles
+        "tronResources.bandwidth", // it changes if a tx is made
+        "tronResources.energy" // it keep changing?
       ],
       scanAccounts: [
         {
@@ -91,10 +95,10 @@ const dataset: DatasetTest<Transaction> = {
                 votes: []
               }),
               expectedStatus: {
-                amount: BigNumber("1606000"),
+                amount: BigNumber("606000"),
                 errors: {},
                 warnings: {},
-                totalSpent: BigNumber("1606000"),
+                totalSpent: BigNumber("606000"),
                 estimatedFees: BigNumber("0")
               }
             },
@@ -112,10 +116,10 @@ const dataset: DatasetTest<Transaction> = {
                 votes: []
               }),
               expectedStatus: {
-                amount: BigNumber("1506000"),
+                amount: BigNumber("506000"),
                 errors: {},
                 warnings: {},
-                totalSpent: BigNumber("1606000"),
+                totalSpent: BigNumber("606000"),
                 estimatedFees: BigNumber("100000")
               }
             },
@@ -333,6 +337,50 @@ const dataset: DatasetTest<Transaction> = {
               }
             },
             {
+              name: "tronSendTrc20NotEnoughEnergyWarning",
+              transaction: fromTransactionRaw({
+                family: "tron",
+                recipient: "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
+                subAccountId:
+                  "tronjs:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:+TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+                amount: "1000000",
+                networkInfo: null,
+                mode: "send",
+                duration: undefined,
+                resource: undefined,
+                votes: []
+              }),
+              expectedStatus: {
+                amount: BigNumber("1000000"),
+                errors: {},
+                warnings: { amount: new TronNotEnoughEnergy() },
+                totalSpent: BigNumber("1000000"),
+                estimatedFees: BigNumber("0")
+              }
+            },
+            {
+              name: "tronSendTrc20Success",
+              transaction: fromTransactionRaw({
+                family: "tron",
+                recipient: "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
+                subAccountId:
+                  "tronjs:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:+TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7",
+                amount: "1000000",
+                networkInfo: null,
+                mode: "send",
+                duration: undefined,
+                resource: undefined,
+                votes: []
+              }),
+              expectedStatus: {
+                amount: BigNumber("1000000"),
+                errors: {},
+                warnings: {},
+                totalSpent: BigNumber("1000000"),
+                estimatedFees: BigNumber("0")
+              }
+            },
+            {
               name: "tronInvalidFreezeAmount",
               transaction: fromTransactionRaw({
                 family: "tron",
@@ -441,7 +489,7 @@ const dataset: DatasetTest<Transaction> = {
               name: "tronNotEnoughTronPower",
               transaction: fromTransactionRaw({
                 family: "tron",
-                recipient: "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
+                recipient: "",
                 amount: "0",
                 networkInfo: null,
                 mode: "vote",
@@ -454,7 +502,7 @@ const dataset: DatasetTest<Transaction> = {
                   },
                   {
                     address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U",
-                    voteCount: 4
+                    voteCount: 5
                   }
                 ]
               }),

@@ -26,6 +26,7 @@ import signTransaction from "../../../hw/signTransaction";
 import { makeSync, makeScanAccounts } from "../../../bridge/jsHelpers";
 import { formatCurrencyUnit } from "../../../currencies";
 import { getAccountUnit, getMainAccount } from "../../../account";
+import { getOperationsPageSize } from "../../../pagination";
 import {
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
@@ -44,7 +45,8 @@ import {
   TronNoReward,
   TronSendTrc20ToNewAccountForbidden,
   TronUnexpectedFees,
-  TronNotEnoughTronPower
+  TronNotEnoughTronPower,
+  TronNotEnoughEnergy
 } from "../../../errors";
 import {
   broadcastTron,
@@ -61,7 +63,8 @@ import {
   freezeTronTransaction,
   unfreezeTronTransaction,
   voteTronSuperRepresentatives,
-  fetchCurrentBlockHeight
+  fetchCurrentBlockHeight,
+  getContractUserEnergyRatioConsumption
 } from "../../../api/Tron";
 
 const signOperation = ({ account, transaction, deviceId }) =>
@@ -139,7 +142,9 @@ const signOperation = ({ account, transaction, deviceId }) =>
         const getValue = (): BigNumber => {
           switch (transaction.mode) {
             case "send":
-              return transaction.amount;
+              return subAccount
+                ? fee
+                : BigNumber(transaction.amount || 0).plus(fee);
             case "claimReward":
               return account.tronResources
                 ? account.tronResources.unwithdrawnReward
@@ -182,20 +187,43 @@ const signOperation = ({ account, transaction, deviceId }) =>
 
         const extra = getExtra() || {};
 
-        const operation = {
+        const operation: $Exact<Operation> = {
           id: `${account.id}-${hash}-${operationType}`,
           hash,
-          accountId: account.id,
-          type: operationType,
+          // if it's a token op and there is no fee, this operation does not exist and is a "NONE"
+          type: subAccount && value.eq(0) ? "NONE" : operationType,
           value,
           fee,
           blockHash: null,
           blockHeight: null,
           senders: [account.freshAddress],
           recipients: [transaction.recipient],
+          accountId: account.id,
           date: new Date(),
           extra
         };
+
+        if (subAccount) {
+          operation.subOperations = [
+            {
+              id: `${subAccount.id}-${hash}-OUT`,
+              hash,
+              type: "OUT",
+              value:
+                transaction.useAllAmount && subAccount
+                  ? subAccount.balance
+                  : BigNumber(transaction.amount || 0),
+              fee: BigNumber(0),
+              blockHash: null,
+              blockHeight: null,
+              senders: [account.freshAddress],
+              recipients: [transaction.recipient],
+              accountId: subAccount.id,
+              date: new Date(),
+              extra: {}
+            }
+          ];
+        }
 
         o.next({
           type: "signed",
@@ -235,7 +263,7 @@ const broadcast = async ({
   return operation;
 };
 
-const getAccountShape = async info => {
+const getAccountShape = async (info, syncConfig) => {
   const blockHeight = await fetchCurrentBlockHeight();
   const tronAcc = await fetchTronAccount(info.address);
 
@@ -246,9 +274,33 @@ const getAccountShape = async info => {
   const acc = tronAcc[0];
   const spendableBalance = acc.balance ? BigNumber(acc.balance) : BigNumber(0);
 
-  const txs = await fetchTronAccountTxs(info.address, txs => txs.length < 1000);
+  const cacheTransactionInfoById = {
+    ...(info.initialAccount &&
+      info.initialAccount.tronResources &&
+      info.initialAccount.tronResources.cacheTransactionInfoById)
+  };
 
-  const tronResources = await getTronResources(acc, txs);
+  const operationsPageSize = Math.min(
+    1000,
+    getOperationsPageSize(
+      info.initialAccount && info.initialAccount.id,
+      syncConfig
+    )
+  );
+
+  // FIXME: this is not optional especially that we might already have info.initialAccount
+  // use minimalOperationsBuilderSync to reconciliate and KEEP REF
+  const txs = await fetchTronAccountTxs(
+    info.address,
+    txs => txs.length < operationsPageSize,
+    cacheTransactionInfoById
+  );
+
+  const tronResources = await getTronResources(
+    acc,
+    txs,
+    cacheTransactionInfoById
+  );
 
   const balance = spendableBalance
     .plus(
@@ -289,15 +341,23 @@ const getAccountShape = async info => {
   });
 
   // TRC10 and TRC20 accounts
+  // FIXME: this is bad for perf: we should reconciliate with potential existing data
+  // we need to KEEP REF as much as possible & use minimalOperationsBuilderSync
   const subAccounts: SubAccount[] = compact(
     trc10Tokens.concat(trc20Tokens).map(({ type, key, value }) => {
-      const token = findTokenById(`tron/${type}/${key}`);
-      if (!token) return;
+      const { blacklistedTokenIds = [] } = syncConfig;
+      const tokenId = `tron/${type}/${key}`;
+      const token = findTokenById(tokenId);
+      if (!token || blacklistedTokenIds.includes(tokenId)) return;
       const id = info.id + "+" + key;
       const tokenTxs = txs.filter(tx => tx.tokenId === key);
       const operations = compact(
         tokenTxs.map(tx => txInfoToOperation(id, info.address, tx))
       );
+      const maybeExistingSubAccount =
+        info.initialAccount &&
+        info.initialAccount.subAccounts &&
+        info.initialAccount.subAccounts.find(a => a.id === id);
       const sub: TokenAccount = {
         type: "TokenAccount",
         id,
@@ -307,7 +367,9 @@ const getAccountShape = async info => {
         balance: BigNumber(value),
         operationsCount: operations.length,
         operations,
-        pendingOperations: []
+        pendingOperations: maybeExistingSubAccount
+          ? maybeExistingSubAccount.pendingOperations
+          : []
       };
       return sub;
     })
@@ -318,7 +380,12 @@ const getAccountShape = async info => {
     subAccounts.map(s => s.operations)
   )
     .filter(o => o.type === "OUT" && o.fee.isGreaterThan(0))
-    .map(o => ({ ...o, accountId: info.id, value: o.fee }));
+    .map(o => ({
+      ...o,
+      accountId: info.id,
+      value: o.fee,
+      id: `${info.id}-${o.hash}-OUT`
+    }));
 
   // add them to the parent operations and sort by date desc
   const parentOpsAndSubOutOpsWithFee = parentOperations
@@ -338,7 +405,29 @@ const getAccountShape = async info => {
 
 const scanAccounts = makeScanAccounts(getAccountShape);
 
-const sync = makeSync(getAccountShape);
+// the balance does not update straightaway so we should ignore recent operations if they are in pending for a bit
+const preferPendingOperationsUntilBlockValidation = 35;
+
+const postSync = parent => {
+  function evictRecentOpsIfPending(a) {
+    a.pendingOperations.forEach(pending => {
+      const i = a.operations.findIndex(o => o.id === pending.id);
+      if (i !== -1) {
+        const diff = parent.blockHeight - (a.operations[i].blockHeight || 0);
+        if (diff < preferPendingOperationsUntilBlockValidation) {
+          a.operations.splice(i, 1);
+        }
+      }
+    });
+  }
+
+  evictRecentOpsIfPending(parent);
+  parent.subAccounts && parent.subAccounts.forEach(evictRecentOpsIfPending);
+
+  return parent;
+};
+
+const sync = makeSync(getAccountShape, postSync);
 
 const currencyBridge: CurrencyBridge = {
   preload: async () => {
@@ -531,7 +620,7 @@ const getTransactionStatus = async (
 
   const balance =
     account.type === "Account"
-      ? account.spendableBalance.minus(estimatedFees)
+      ? BigNumber.max(0, account.spendableBalance.minus(estimatedFees))
       : account.balance;
 
   const amount = useAllAmount ? balance : t.amount;
@@ -551,10 +640,31 @@ const getTransactionStatus = async (
       errors.amount = useAllAmount
         ? new NotEnoughBalance()
         : new AmountRequired();
-    } else if (totalSpent.gt(balance)) {
+    } else if (amount.gt(balance)) {
       errors.amount = new NotEnoughBalance();
     } else if (account.type === "TokenAccount" && estimatedFees.gt(a.balance)) {
       errors.amount = new NotEnoughBalance();
+    }
+
+    const energy = (a.tronResources && a.tronResources.energy) || BigNumber(0);
+
+    // For the moment, we rely on this rule:
+    // Add a 'TronNotEnoughEnergy' warning only if the account sastifies theses 3 conditions:
+    // - no energy
+    // - balance is lower than 1 TRX
+    // - contract consumes user energy (ie: user's ratio > 0%)
+    if (
+      account.type === "TokenAccount" &&
+      account.token.tokenType === "trc20" &&
+      energy.eq(0) &&
+      a.spendableBalance.lt(1000000)
+    ) {
+      const contractUserEnergyConsumption = await getContractUserEnergyRatioConsumption(
+        account.token.contractAddress
+      );
+      if (contractUserEnergyConsumption > 0) {
+        warnings.amount = new TronNotEnoughEnergy();
+      }
     }
   }
 
