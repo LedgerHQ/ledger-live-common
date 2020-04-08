@@ -58,4 +58,3 @@ export const StellarWrongMemoFormat = createCustomErrorClass(
 );
 
 export const SourceHasMultiSign = createCustomErrorClass("SourceHasMultiSign");
-
