@@ -4,7 +4,6 @@ import { BigNumber } from "bignumber.js";
 import type { DatasetTest } from "../../__tests__/test-helpers/bridge";
 import {
   InvalidAddressBecauseDestinationIsAlsoSource,
-  NotEnoughBalance,
   NotEnoughSpendableBalance,
   NotEnoughBalanceBecauseDestinationNotCreated
 } from "@ledgerhq/errors";

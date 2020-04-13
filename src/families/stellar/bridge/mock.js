@@ -15,6 +15,7 @@ import { StellarWrongMemoFormat, SourceHasMultiSign } from "../../../errors";
 import type { AccountBridge, CurrencyBridge } from "../../../types";
 import type { Transaction } from "../types";
 import { getMainAccount } from "../../../account";
+import { formatCurrencyUnit } from "../../../currencies";
 
 import {
   scanAccounts,
