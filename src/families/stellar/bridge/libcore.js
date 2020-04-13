@@ -7,7 +7,7 @@ import {
   FeeNotLoaded,
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughSpendableBalance,
-  NotEnoughBalanceBecauseDestinationNotCreated,
+  NotEnoughBalanceBecauseDestinationNotCreated
 } from "@ledgerhq/errors";
 import { StellarWrongMemoFormat, SourceHasMultiSign } from "../../../errors";
 import { validateRecipient } from "../../../bridge/shared";
@@ -34,7 +34,7 @@ export const checkRecipientExist: CacheRes<
   boolean
 > = makeLRUCache(
   ({ account, recipient }) =>
-    withLibcore(async (core) => {
+    withLibcore(async core => {
       const { derivationMode, currency } = account;
 
       const walletName = getWalletName(account);
@@ -43,7 +43,7 @@ export const checkRecipientExist: CacheRes<
         core,
         walletName,
         currency,
-        derivationMode,
+        derivationMode
       });
 
       const stellarLikeWallet = await coreWallet.asStellarLikeWallet();
@@ -52,7 +52,7 @@ export const checkRecipientExist: CacheRes<
       checkRecipientExist.hydrate(recipient, recipientExist);
       return recipientExist;
     }),
-  (extract) => extract.recipient,
+  extract => extract.recipient,
   { max: 300, maxAge: 5 * 60 } // 5 minutes
 );
 
@@ -66,7 +66,7 @@ const createTransaction = () => ({
   memoValue: null,
   memoType: null,
   useAllAmount: false,
-  memoTypeRecommended: null,
+  memoTypeRecommended: null
 });
 
 const updateTransaction = (t, patch) => {
@@ -100,8 +100,8 @@ const isMemoValid = (memoType: string, memoValue: string): boolean => {
   return true;
 };
 
-const isAccountIsMultiSign = async (account) =>
-  withLibcore(async (core) => {
+const isAccountIsMultiSign = async account =>
+  withLibcore(async core => {
     const { coreAccount } = await getCoreAccount(core, account);
 
     const stellarLikeAccount = await coreAccount.asStellarLikeAccount();
@@ -134,7 +134,7 @@ const getTransactionStatus = async (a, t) => {
 
   if (await isAccountIsMultiSign(a)) {
     errors.recipient = new SourceHasMultiSign("", {
-      currencyName: a.currency.name,
+      currencyName: a.currency.name
     });
   }
 
@@ -157,8 +157,8 @@ const getTransactionStatus = async (a, t) => {
       minimumAmount: formatCurrencyUnit(a.currency.units[0], baseReserve, {
         disableRounding: true,
         useGrouping: false,
-        showCode: true,
-      }),
+        showCode: true
+      })
     });
   }
 
@@ -193,7 +193,7 @@ const getTransactionStatus = async (a, t) => {
     amount.lt(10000000)
   ) {
     errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {
-      minimalAmount: "1 XLM",
+      minimalAmount: "1 XLM"
     });
   }
 
@@ -206,7 +206,7 @@ const getTransactionStatus = async (a, t) => {
     warnings,
     estimatedFees,
     amount,
-    totalSpent,
+    totalSpent
   });
 };
 
@@ -221,7 +221,7 @@ const prepareTransaction = async (a, t) => {
     if (t.memoType) {
       return {
         memoType: t.memoType,
-        memoTypeRecommended: t.memoTypeRecommended,
+        memoTypeRecommended: t.memoTypeRecommended
       };
     } else {
       const { recipientError } = await validateRecipient(
@@ -235,7 +235,7 @@ const prepareTransaction = async (a, t) => {
       }
       return {
         memoType: undefined,
-        memoTypeRecommended: false,
+        memoTypeRecommended: false
       };
     }
   };
@@ -254,7 +254,7 @@ const prepareTransaction = async (a, t) => {
       fees,
       baseReserve,
       memoType,
-      memoTypeRecommended,
+      memoTypeRecommended
     };
   }
 
@@ -264,14 +264,14 @@ const prepareTransaction = async (a, t) => {
 const estimateMaxSpendable = async ({
   account,
   parentAccount,
-  transaction,
+  transaction
 }) => {
   const mainAccount = getMainAccount(account, parentAccount);
   const t = await prepareTransaction(mainAccount, {
     ...createTransaction(),
     recipient: notCreatedStellarMockAddress, // not used address,
     ...transaction,
-    useAllAmount: true,
+    useAllAmount: true
   });
   const s = await getTransactionStatus(mainAccount, t);
   return s.amount;
@@ -284,7 +284,7 @@ const hydrate = () => {};
 const currencyBridge: CurrencyBridge = {
   preload,
   hydrate,
-  scanAccounts,
+  scanAccounts
 };
 
 const accountBridge: AccountBridge<Transaction> = {
@@ -295,7 +295,7 @@ const accountBridge: AccountBridge<Transaction> = {
   sync,
   signOperation,
   broadcast,
-  estimateMaxSpendable,
+  estimateMaxSpendable
 };
 
 export default { currencyBridge, accountBridge };

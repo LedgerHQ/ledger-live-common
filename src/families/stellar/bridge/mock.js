@@ -9,7 +9,7 @@ import {
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughBalanceBecauseDestinationNotCreated,
-  NotEnoughSpendableBalance,
+  NotEnoughSpendableBalance
 } from "@ledgerhq/errors";
 import { StellarWrongMemoFormat, SourceHasMultiSign } from "../../../errors";
 import type { AccountBridge, CurrencyBridge } from "../../../types";
@@ -21,7 +21,7 @@ import {
   signOperation,
   broadcast,
   sync,
-  isInvalidRecipient,
+  isInvalidRecipient
 } from "../../../bridge/mockHelpers";
 
 const notCreatedAddresses = [];
@@ -48,7 +48,7 @@ const createTransaction = () => ({
   memoValue: null,
   memoType: null,
   useAllAmount: false,
-  memoTypeRecommended: null,
+  memoTypeRecommended: null
 });
 
 const updateTransaction = (t, patch) => {
@@ -99,7 +99,7 @@ const getTransactionStatus = async (a, t) => {
 
   if (multiSignAddresses.includes(a.freshAddress)) {
     errors.recipient = new SourceHasMultiSign("", {
-      currencyName: a.currency.name,
+      currencyName: a.currency.name
     });
   }
 
@@ -122,8 +122,8 @@ const getTransactionStatus = async (a, t) => {
       minimumAmount: formatCurrencyUnit(a.currency.units[0], baseReserve, {
         disableRounding: true,
         useGrouping: false,
-        showCode: true,
-      }),
+        showCode: true
+      })
     });
   }
 
@@ -158,7 +158,7 @@ const getTransactionStatus = async (a, t) => {
     amount.lt(10000000)
   ) {
     errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {
-      minimalAmount: "1 XLM",
+      minimalAmount: "1 XLM"
     });
   }
 
@@ -171,7 +171,7 @@ const getTransactionStatus = async (a, t) => {
     warnings,
     estimatedFees,
     amount,
-    totalSpent,
+    totalSpent
   });
 };
 
@@ -179,7 +179,7 @@ const prepareTransaction = async (a, t) => {
   const networkInfo = t.networkInfo || {
     family: "stellar",
     fees: BigNumber("100"),
-    baseReserve: BigNumber("100000"),
+    baseReserve: BigNumber("100000")
   };
   invariant(networkInfo.family === "stellar", "stellar networkInfo expected");
 
@@ -190,7 +190,7 @@ const prepareTransaction = async (a, t) => {
     if (t.memoType) {
       return {
         memoType: t.memoType,
-        memoTypeRecommended: t.memoTypeRecommended,
+        memoTypeRecommended: t.memoTypeRecommended
       };
     } else {
       if (!isInvalidRecipient(t.recipient)) {
@@ -202,7 +202,7 @@ const prepareTransaction = async (a, t) => {
       }
       return {
         memoType: undefined,
-        memoTypeRecommended: t.memoTypeRecommended,
+        memoTypeRecommended: t.memoTypeRecommended
       };
     }
   };
@@ -221,7 +221,7 @@ const prepareTransaction = async (a, t) => {
       fees,
       baseReserve,
       memoType,
-      memoTypeRecommended,
+      memoTypeRecommended
     };
   }
 
@@ -231,14 +231,14 @@ const prepareTransaction = async (a, t) => {
 const estimateMaxSpendable = async ({
   account,
   parentAccount,
-  transaction,
+  transaction
 }) => {
   const mainAccount = getMainAccount(account, parentAccount);
   const t = await prepareTransaction(mainAccount, {
     ...createTransaction(),
     recipient: notCreatedAddresses[0], // not used address
     ...transaction,
-    useAllAmount: true,
+    useAllAmount: true
   });
   const s = await getTransactionStatus(mainAccount, t);
   return s.amount;
@@ -251,7 +251,7 @@ const hydrate = () => {};
 const currencyBridge: CurrencyBridge = {
   preload,
   hydrate,
-  scanAccounts,
+  scanAccounts
 };
 
 const accountBridge: AccountBridge<Transaction> = {
@@ -262,7 +262,7 @@ const accountBridge: AccountBridge<Transaction> = {
   sync,
   signOperation,
   broadcast,
-  estimateMaxSpendable,
+  estimateMaxSpendable
 };
 
 export default { currencyBridge, accountBridge };
