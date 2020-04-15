@@ -53,6 +53,10 @@ export const TronNotEnoughEnergy = createCustomErrorClass(
   "TronNotEnoughEnergy"
 );
 
+export const StellarMemoRecommended = createCustomErrorClass(
+  "StellarMemoRecommended"
+);
+
 export const StellarWrongMemoFormat = createCustomErrorClass(
   "StellarWrongMemoFormat"
 );

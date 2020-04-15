@@ -9,7 +9,11 @@ import {
   NotEnoughSpendableBalance,
   NotEnoughBalanceBecauseDestinationNotCreated
 } from "@ledgerhq/errors";
-import { StellarWrongMemoFormat, SourceHasMultiSign } from "../../../errors";
+import {
+  StellarWrongMemoFormat,
+  SourceHasMultiSign,
+  StellarMemoRecommended
+} from "../../../errors";
 import { validateRecipient } from "../../../bridge/shared";
 import type { AccountBridge, CurrencyBridge, Account } from "../../../types";
 import type { Transaction } from "../types";
@@ -130,6 +134,10 @@ const getTransactionStatus = async (a, t) => {
     if (recipientWarning) {
       warnings.recipient = recipientWarning;
     }
+  }
+
+  if (!warnings.recipient && t.memoTypeRecommended && !t.memoValue) {
+    warnings.recipient = new StellarMemoRecommended();
   }
 
   if (await isAccountIsMultiSign(a)) {
