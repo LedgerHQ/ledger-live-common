@@ -535,12 +535,14 @@ export default (arg: {
     // register currencies
     const services = getServices();
     const walletStore = getWalletStore();
-    new core.Bitcoin().registerInto(services, walletStore);
-    new core.Ethereum().registerInto(services, walletStore);
-    new core.Ripple().registerInto(services, walletStore);
-    new core.Tezos().registerInto(services, walletStore);
 
-    return Promise.resolve(core);
+    return (async () => {
+      //await new core.Bitcoin().registerInto(services, walletStore);
+      //await new core.Ethereum().registerInto(services, walletStore);
+      //await new core.Ripple().registerInto(services, walletStore);
+      await new core.Tezos().registerInto(services, walletStore);
+      return core;
+    })();
   };
 
   function parseError(error: string): Error {
