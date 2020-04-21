@@ -301,7 +301,7 @@ export const getAccountDelegatedResourcesDetails = async (
         expiredAt: new Date(expire_time_for_bandwidth)
       });
     }
-    if (frozen_balance_for_bandwidth) {
+    if (frozen_balance_for_energy) {
       resources.push({
         toAddress: encode58Check(toAddress),
         resource: "ENERGY",
