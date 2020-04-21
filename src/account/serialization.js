@@ -140,6 +140,7 @@ export const fromOperationRaw = (
 export const toTronResourcesRaw = ({
   frozen,
   delegatedFrozen,
+  delegatedResources,
   votes,
   tronPower,
   energy,
@@ -187,6 +188,7 @@ export const toTronResourcesRaw = ({
         ? { amount: delegatedFrozenEnergy.amount.toString() }
         : undefined
     },
+    delegatedResources,
     votes,
     tronPower,
     energy: energy.toString(),
@@ -208,6 +210,7 @@ export const toTronResourcesRaw = ({
 export const fromTronResourcesRaw = ({
   frozen,
   delegatedFrozen,
+  delegatedResources,
   votes,
   tronPower,
   energy,
@@ -261,6 +264,7 @@ export const fromTronResourcesRaw = ({
         ? { amount: BigNumber(delegatedFrozenEnergy.amount) }
         : undefined
     },
+    delegatedResources,
     votes,
     tronPower,
     energy: BigNumber(energy),

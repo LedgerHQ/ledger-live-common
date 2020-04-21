@@ -13,7 +13,8 @@ import type {
   SuperRepresentative,
   SuperRepresentativeData,
   TronResources,
-  TronTransactionInfo
+  TronTransactionInfo,
+  DelegatedResources
 } from "../families/tron/types";
 import type { Account, SubAccount } from "../types";
 import {
@@ -275,6 +276,73 @@ export const getContractUserEnergyRatioConsumption = async (
   return consume_user_resource_percent;
 };
 
+export const getAccountDelegatedResourcesDetails = async (
+  fromAddress: string,
+  toAddress: string
+): Promise<DelegatedResources[]> => {
+  const result = await fetch(
+    `${baseApiUrl}/wallet/getdelegatedresource?fromAddress=${fromAddress}&toAddress=${toAddress}`
+  );
+
+  const resources: DelegatedResources[] = [];
+  if (result && result.delegatedResource &&  result.delegatedResource.length === 1) {
+    const {
+      frozen_balance_for_bandwidth,
+      frozen_balance_for_energy,
+      expire_time_for_bandwidth,
+      expire_time_for_energy
+    } = result.delegatedResource[0];
+
+    if (frozen_balance_for_bandwidth) {
+      resources.push({
+        toAddress: encode58Check(toAddress),
+        resource: "BANDWIDTH",
+        amount: BigNumber(frozen_balance_for_bandwidth),
+        expiredAt: new Date(expire_time_for_bandwidth)
+      });
+    }
+    if (frozen_balance_for_bandwidth) {
+      resources.push({
+        toAddress: encode58Check(toAddress),
+        resource: "ENERGY",
+        amount: BigNumber(frozen_balance_for_energy),
+        expiredAt: new Date(expire_time_for_energy)
+      });
+    }
+  }
+  return resources;
+};
+
+export const getAccountDelegatedResources = async (
+  fromAddress: string
+): Promise<DelegatedResources[]> => {
+  const { toAccounts } = await fetch(
+    `${baseApiUrl}/wallet/getdelegatedresourceaccountindex?value=${fromAddress}`
+  );
+
+  const resources: DelegatedResources[] = [];
+  if (toAccounts) {
+    var promises = [];
+    toAccounts.forEach(toAddress => {
+      promises.push(
+        getAccountDelegatedResourcesDetails(fromAddress, toAddress)
+          .then(resourceToAddress => {
+            resources.push(...resourceToAddress);
+          })
+          .catch(e => {
+            log(
+              "tron-error",
+              "fetch account delegated resources fails with " + e.message,
+              { fromAddress }
+            );
+          })
+      );
+    });
+    await Promise.all(promises);
+  }
+  return resources;
+};
+
 export const getTronAccountNetwork = async (
   address: string
 ): Promise<NetworkInfo> => {
@@ -496,6 +564,8 @@ export const getTronResources = async (
   const tronNetworkInfo = await getTronAccountNetwork(encodedAddress);
   const unwithdrawnReward = await getUnwithdrawnReward(encodedAddress);
 
+  const delegatedResources = await getAccountDelegatedResources(acc.address);
+
   const energy = tronNetworkInfo.energyLimit.minus(tronNetworkInfo.energyUsed);
   const bandwidth = extractBandwidthInfo(tronNetworkInfo);
 
@@ -552,6 +622,7 @@ export const getTronResources = async (
     bandwidth,
     frozen,
     delegatedFrozen,
+    delegatedResources,
     votes,
     tronPower,
     unwithdrawnReward,

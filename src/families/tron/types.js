@@ -22,6 +22,14 @@ export type TronOperationMode =
   | "claimReward";
 export type TronResource = "BANDWIDTH" | "ENERGY";
 
+
+export type DelegatedResources = {|
+  toAddress: string,
+  resource: TronResource,
+  amount: BigNumber,
+  expiredAt: Date
+|};
+
 export type NetworkInfo = {|
   family: "tron",
   freeNetUsed: BigNumber,
@@ -177,6 +185,7 @@ export type TronResources = {|
     bandwidth: ?DelegatedFrozenInfo,
     energy: ?DelegatedFrozenInfo
   },
+  delegatedResources: DelegatedResources[],
   votes: Vote[],
   tronPower: number,
   energy: BigNumber,
@@ -196,6 +205,7 @@ export type TronResourcesRaw = {|
     bandwidth: ?DelegatedFrozenInfoRaw,
     energy: ?DelegatedFrozenInfoRaw
   },
+  delegatedResources: DelegatedResources[],
   votes: Vote[],
   tronPower: number,
   energy: string,

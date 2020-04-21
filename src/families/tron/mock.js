@@ -245,6 +245,7 @@ export const mockAccount = fromAccountRaw({
       energy: null
     },
     delegatedFrozen: { bandwidth: null, energy: null },
+    delegatedResources: [],
     votes: [
       { address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH", voteCount: 281 },
       { address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U", voteCount: 55 }
@@ -455,6 +456,7 @@ export const mockAccountNoReward = fromAccountRaw({
       energy: null
     },
     delegatedFrozen: { bandwidth: null, energy: null },
+    delegatedResources: [],
     votes: [
       { address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH", voteCount: 281 },
       { address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U", voteCount: 55 }
@@ -623,6 +625,7 @@ export const mockAccountNoVote = fromAccountRaw({
       energy: null
     },
     delegatedFrozen: { bandwidth: null, energy: null },
+    delegatedResources: [],
     votes: [
       { address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH", voteCount: 281 },
       { address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U", voteCount: 55 }
