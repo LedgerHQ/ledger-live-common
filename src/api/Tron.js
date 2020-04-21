@@ -285,7 +285,11 @@ export const getAccountDelegatedResourcesDetails = async (
   );
 
   const resources: DelegatedResources[] = [];
-  if (result && result.delegatedResource &&  result.delegatedResource.length === 1) {
+  if (
+    result &&
+    result.delegatedResource &&
+    result.delegatedResource.length === 1
+  ) {
     const {
       frozen_balance_for_bandwidth,
       frozen_balance_for_energy,
