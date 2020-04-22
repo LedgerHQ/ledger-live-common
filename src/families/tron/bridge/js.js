@@ -556,11 +556,30 @@ const getTransactionStatus = async (
   if (mode === "unfreeze") {
     const lowerCaseResource = resource ? resource.toLowerCase() : "bandwidth";
     const now = new Date();
-    const expiredDatePath = recipient
-      ? `tronResources.delegatedFrozen.${lowerCaseResource}.expiredAt`
-      : `tronResources.frozen.${lowerCaseResource}.expiredAt`;
+    let expirationDate;
+    if (recipient) {
+      const delegatedResources = get(
+        a,
+        `tronResources.delegatedResources`,
+        undefined
+      );
 
-    const expirationDate: ?Date = get(a, expiredDatePath, undefined);
+      if (delegatedResources) {
+        const found = delegatedResources.findIndex(r =>{
+          return (
+            r.resource.toLowerCase() === lowerCaseResource &&
+            r.toAddress === recipient
+          );
+        });
+        if (found >= 0) expirationDate = delegatedResources[found].expiredAt;
+      }
+    } else {
+      expirationDate = get(
+        a,
+        `tronResources.frozen.${lowerCaseResource}.expiredAt`,
+        undefined
+      );
+    }
 
     if (!expirationDate) {
       if (resource === "BANDWIDTH") {
