@@ -342,7 +342,7 @@ export const getAccountDelegatedResources = async (
           })
       );
     });
-    await Promise.all(promises);
+    await promiseAllBatched(promises);
   }
   return resources;
 };

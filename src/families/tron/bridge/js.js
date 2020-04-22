@@ -565,7 +565,7 @@ const getTransactionStatus = async (
       );
 
       if (delegatedResources) {
-        const found = delegatedResources.findIndex(r =>{
+        const found = delegatedResources.findIndex(r => {
           return (
             r.resource.toLowerCase() === lowerCaseResource &&
             r.toAddress === recipient
