@@ -165,6 +165,15 @@ export const toTronResourcesRaw = ({
     ];
   }
 
+  const delegatedResourcesRaw = delegatedResources.map(r => {
+    return {
+      toAddress: r.toAddress,
+      resource: r.resource,
+      amount: r.amount.toString(),
+      expiredAt: r.expiredAt.toISOString()
+    };
+  });
+
   return {
     frozen: {
       bandwidth: frozenBandwidth
@@ -188,7 +197,7 @@ export const toTronResourcesRaw = ({
         ? { amount: delegatedFrozenEnergy.amount.toString() }
         : undefined
     },
-    delegatedResources,
+    delegatedResources: delegatedResourcesRaw,
     votes,
     tronPower,
     energy: energy.toString(),
@@ -210,7 +219,7 @@ export const toTronResourcesRaw = ({
 export const fromTronResourcesRaw = ({
   frozen,
   delegatedFrozen,
-  delegatedResources,
+  delegatedResources: delegatedResourcesRaw,
   votes,
   tronPower,
   energy,
@@ -241,6 +250,16 @@ export const fromTronResourcesRaw = ({
       };
     }
   }
+
+  const delegatedResources = delegatedResourcesRaw.map(r => {
+    return {
+      toAddress: r.toAddress,
+      resource: r.resource,
+      amount: BigNumber(r.amount),
+      expiredAt: new Date(r.expiredAt)
+    };
+  });
+
   return {
     frozen: {
       bandwidth: frozenBandwidth

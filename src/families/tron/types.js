@@ -30,6 +30,13 @@ export type DelegatedResources = {|
   expiredAt: Date
 |};
 
+export type DelegatedResourcesRaw = {|
+  toAddress: string,
+  resource: TronResource,
+  amount: string,
+  expiredAt: string
+|};
+
 export type NetworkInfo = {|
   family: "tron",
   freeNetUsed: BigNumber,
@@ -205,7 +212,7 @@ export type TronResourcesRaw = {|
     bandwidth: ?DelegatedFrozenInfoRaw,
     energy: ?DelegatedFrozenInfoRaw
   },
-  delegatedResources: DelegatedResources[],
+  delegatedResources: DelegatedResourcesRaw[],
   votes: Vote[],
   tronPower: number,
   energy: string,
