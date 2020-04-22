@@ -283,7 +283,7 @@ export const getAccountDelegatedResourcesDetails = async (
   toAddress: string
 ): Promise<DelegatedResources[]> => {
   const result = await fetch(
-    `${baseApiUrl}/wallet/getdelegatedresource?fromAddress=${fromAddress}&toAddress=${toAddress}`
+    `${getBaseApiUrl()}/wallet/getdelegatedresource?fromAddress=${fromAddress}&toAddress=${toAddress}`
   );
 
   const resources: DelegatedResources[] = [];
@@ -323,7 +323,7 @@ export const getAccountDelegatedResources = async (
   fromAddress: string
 ): Promise<DelegatedResources[]> => {
   const { toAccounts } = await fetch(
-    `${baseApiUrl}/wallet/getdelegatedresourceaccountindex?value=${fromAddress}`
+    `${getBaseApiUrl()}/wallet/getdelegatedresourceaccountindex?value=${fromAddress}`
   );
 
   const resources: DelegatedResources[] = [];
