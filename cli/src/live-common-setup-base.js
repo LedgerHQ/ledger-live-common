@@ -132,6 +132,6 @@ listen((log) => {
 });
 
 implementLibcore({
-  lib: () => require("@ledgerhq/ledger-core"), // eslint-disable-line global-require
+  lib: () => require("@ledgerhq/ledger-core-modularized"), // eslint-disable-line global-require
   dbPath: process.env.LIBCORE_DB_PATH || "./dbdata",
 });

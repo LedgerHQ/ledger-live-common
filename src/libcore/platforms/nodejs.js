@@ -537,9 +537,10 @@ export default (arg: {
     const walletStore = getWalletStore();
 
     return (async () => {
-      //await new core.Bitcoin().registerInto(services, walletStore);
-      //await new core.Ethereum().registerInto(services, walletStore);
-      //await new core.Ripple().registerInto(services, walletStore);
+      console.log(core);
+      await new core.Bitcoin().registerInto(services, walletStore);
+      await new core.Ethereum().registerInto(services, walletStore);
+      await new core.Ripple().registerInto(services, walletStore);
       await new core.Tezos().registerInto(services, walletStore);
       return core;
     })();

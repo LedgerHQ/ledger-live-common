@@ -15,8 +15,8 @@ export default {
           require("@ledgerhq/live-common/package.json").version
       ),
       of(
-        "@ledgerhq/ledger-core: " +
-          require("@ledgerhq/ledger-core/package.json").version
+        "@ledgerhq/ledger-core-modularized: " +
+          require("@ledgerhq/ledger-core-modularized/package.json").version
       ),
       from(withLibcore((core) => core.LedgerCore.getStringVersion())).pipe(
         map((v) => "libcore: " + v)
