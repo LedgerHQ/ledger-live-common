@@ -52,7 +52,7 @@ export type Portfolio = {
 
 export type PortfolioRangeConfig = {
   count: number,
-  granularityId: "DAY" | "WEEK", // only supported here atm
+  granularityId: "HOUR" | "DAY" | "WEEK", // only supported here atm
   startOf: (Date) => Date,
   increment: number, // FIXME it should be a Date=>Date
 };

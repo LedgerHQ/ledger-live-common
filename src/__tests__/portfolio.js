@@ -17,7 +17,9 @@ import {
 } from "../portfolio";
 import type { Account } from "../types";
 import { genAccount } from "../mock/account";
-import { baseMockBTCRates } from "../countervalues/mock";
+import { getBTCValues } from "../countervalues/mock";
+
+const baseMockBTCRates = getBTCValues();
 
 const accounts = Array(100)
   .fill(null)
@@ -248,7 +250,7 @@ test("getAssetsDistribution 1", () => {
     }
   );
   expect(assetsDistribution.isAvailable).toBe(true);
-  expect(assetsDistribution.showFirst).toBe(6);
+  expect(assetsDistribution.showFirst).toBe(2);
   expect(
     assetsDistribution.list.reduce((sum, o) => sum + o.distribution, 0)
   ).toBeCloseTo(1);

@@ -1,6 +1,5 @@
 // @flow
 import { Observable } from "rxjs";
-import { implementCountervalues } from "@ledgerhq/live-common/lib/countervalues";
 import { setSupportedCurrencies } from "@ledgerhq/live-common/lib/data/cryptocurrencies";
 import { map } from "rxjs/operators";
 import { listen } from "@ledgerhq/logs";
@@ -14,9 +13,6 @@ import "@ledgerhq/live-common/lib/load/tokens/ethereum/erc20";
 import "@ledgerhq/live-common/lib/load/tokens/tron/trc10";
 import "@ledgerhq/live-common/lib/load/tokens/tron/trc20";
 import "@ledgerhq/live-common/lib/load/tokens/algorand/asa";
-
-import { pairsSelector } from "./reducers/markets";
-import { setExchangePairsAction } from "./actions/markets";
 
 listen(({ id: _id, date: _date, type, message, ...rest }) => {
   Object.keys(rest).length === 0

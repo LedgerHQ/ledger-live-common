@@ -27,5 +27,5 @@ export default {
   assets,
   manager,
   lldSignature,
-  mcurepair
+  mcurepair,
 };

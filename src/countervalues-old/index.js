@@ -520,19 +520,6 @@ function createCounterValues<State>({
         dispatch(setExchangePairsAction(pairsToUpdate));
       }
     }
-
-    const hourly = getEnv("EXPERIMENTAL_PORTFOLIO_RANGE")
-      ? await run({
-          rate: "hourly",
-          fetch: getHourlyRates,
-          mandatory: false,
-        })
-      : null;
-
-    if (hourly) {
-      const ev: PollAction = { type: POLL, hourly };
-      dispatch(ev);
-    }
   };
 
   const wipe = () => ({ type: WIPE });

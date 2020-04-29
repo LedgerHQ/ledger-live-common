@@ -175,12 +175,6 @@ const envDefinitions = {
     parser: boolParser,
     desc: "enable an experimental version of Manager",
   },
-  EXPERIMENTAL_PORTFOLIO_RANGE: {
-    def: false,
-    parser: boolParser,
-    desc:
-      "enable an experimental version of available graph ranges and granularity",
-  },
   EXPERIMENTAL_ROI_CALCULATION: {
     def: false,
     parser: boolParser,
@@ -234,7 +228,7 @@ const envDefinitions = {
     desc: "overrides the gap limit specified by BIP44 (default to 20)",
   },
   LEDGER_COUNTERVALUES_API: {
-    def: "https://countervalues.api.live.ledger.com",
+    def: "https://countervalue-service.staging.aws.ledger.fr",
     parser: stringParser,
     desc: "Ledger countervalues API",
   },

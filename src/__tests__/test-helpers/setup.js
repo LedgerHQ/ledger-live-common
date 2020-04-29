@@ -1,18 +1,10 @@
 /* eslint-disable no-console */
-import { implementCountervalues } from "../../countervalues";
 import { setSupportedCurrencies } from "../../data/cryptocurrencies";
 
 import "../../load/tokens/ethereum/erc20";
 import "../../load/tokens/tron/trc10";
 import "../../load/tokens/tron/trc20";
 import "../../load/tokens/algorand/asa";
-
-implementCountervalues({
-  getAPIBaseURL: () => window.LEDGER_CV_API,
-  storeSelector: (state) => state.countervalues,
-  pairsSelector: () => [],
-  setExchangePairsAction: () => {},
-});
 
 setSupportedCurrencies([
   "bitcoin",
