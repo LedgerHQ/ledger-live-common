@@ -13,7 +13,8 @@ const convertTokens = (type: TokenType) => ([
   contractAddress,
   precision,
   delisted,
-  ledgerSignature
+  ledgerSignature,
+  hasCountervalues
 ]): TokenCurrency => ({
   type: "TokenCurrency",
   id: `tron/${type}/${id}`,
@@ -23,7 +24,7 @@ const convertTokens = (type: TokenType) => ([
   name,
   ticker: abbr,
   delisted,
-  disableCountervalue: true,
+  disableCountervalue: !hasCountervalues,
   ledgerSignature,
   units: [
     {

@@ -195,6 +195,11 @@ const envDefinitions = {
     parser: stringParser,
     desc: "Ledger countervalues API"
   },
+  LEDGER_COUNTERVALUES_API_EXPERIMENTAL: {
+    def: false,
+    parser: boolParser,
+    desc: "new experimental implementation"
+  },
   LEDGER_REST_API_BASE: {
     def: "https://explorers.api.live.ledger.com",
     parser: stringParser,
