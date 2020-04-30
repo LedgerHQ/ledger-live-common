@@ -70,6 +70,16 @@ const envDefinitions = {
     desc:
       "force implementation for ALL currency bridges (affects scanning accounts)",
   },
+  COSMOS_GAS_AMPLIFIER: {
+    def: 2,
+    parser: intParser,
+    desc: "estimate gas multiplier"
+  },
+  COSMOS_GAS_PRICE: {
+    def: 0.025,
+    parser: floatParser,
+    desc: "gasLimit * gasPrice to determine the fees price"
+  },
   DEBUG_HTTP_RESPONSE: {
     def: false,
     parser: boolParser,

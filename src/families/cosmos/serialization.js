@@ -20,6 +20,26 @@ export function toCosmosResourcesRaw(r: CosmosResources): CosmosResourcesRaw {
         validatorAddress,
       })
     ),
+    redelegations: redelegations.map(
+      ({
+        amount,
+        completionDate,
+        validatorSrcAddress,
+        validatorDstAddress
+      }) => ({
+        amount: amount.toString(),
+        completionDate: completionDate.toString(),
+        validatorSrcAddress,
+        validatorDstAddress
+      })
+    ),
+    unbondings: unbondings.map(
+      ({ amount, completionDate, validatorAddress }) => ({
+        amount: amount.toString(),
+        completionDate: completionDate.toString(),
+        validatorAddress
+      })
+    ),
     delegatedBalance: delegatedBalance.toString(),
     pendingRewardsBalance: pendingRewardsBalance.toString(),
     unboundingBalance: unboundingBalance.toString(),
@@ -42,6 +62,26 @@ export function fromCosmosResourcesRaw(r: CosmosResourcesRaw): CosmosResources {
         status,
         pendingRewards: BigNumber(pendingRewards),
         validatorAddress,
+      })
+    ),
+    redelegations: redelegations.map(
+      ({
+        amount,
+        completionDate,
+        validatorSrcAddress,
+        validatorDstAddress
+      }) => ({
+        amount: BigNumber(amount),
+        completionDate: Date(completionDate),
+        validatorSrcAddress,
+        validatorDstAddress
+      })
+    ),
+    unbondings: unbondings.map(
+      ({ amount, completionDate, validatorAddress }) => ({
+        amount: BigNumber(amount),
+        completionDate: Date(completionDate),
+        validatorAddress
       })
     ),
     delegatedBalance: BigNumber(delegatedBalance),
