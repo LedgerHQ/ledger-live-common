@@ -6,8 +6,6 @@ import {
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughBalance,
-  NotEnoughSpendableBalance,
-  NotEnoughBalanceBecauseDestinationNotCreated
 } from "@ledgerhq/errors";
 import type { Transaction } from "./types";
 import transactionTransformer from "./transaction";
@@ -44,7 +42,7 @@ const dataset: DatasetTest<Transaction> = {
         {
           FIXME_tests: [
             "cosmos seed 1", // Rewards keep increased the balances
-            "balance is sum of ops",
+            "balance is sum of ops"
           ],
           raw: {
             id:
@@ -159,8 +157,7 @@ const dataset: DatasetTest<Transaction> = {
               name: "send with memo",
               transaction: transactionTransformer.fromTransactionRaw({
                 amount: "0",
-                recipient:
-                  "cosmos108uy5q9jt59gwugq5yrdhkzcd9jryslmpcstk5",
+                recipient: "cosmos108uy5q9jt59gwugq5yrdhkzcd9jryslmpcstk5",
                 useAllAmount: true,
                 family: "cosmos",
                 networkInfo: null,

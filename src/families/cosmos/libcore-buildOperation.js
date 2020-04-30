@@ -12,7 +12,9 @@ async function cosmosBuildOperation({
   const cosmosLikeTransaction = await cosmosLikeOperation.getTransaction();
   const hash = await cosmosLikeTransaction.getHash();
   const message = await cosmosLikeOperation.getMessage();
-  const out: $Shape<Operation> = { hash: `${hash}-${await message.getIndex()}` };
+  const out: $Shape<Operation> = {
+    hash: `${hash}-${await message.getIndex()}`
+  };
 
   if (message && (await message.getRawMessageType()) === "internal/MsgFees") {
     out.type = "FEES";

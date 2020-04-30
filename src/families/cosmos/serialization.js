@@ -10,6 +10,8 @@ export function toCosmosResourcesRaw(r: CosmosResources): CosmosResourcesRaw {
     pendingRewardsBalance,
     unboundingBalance,
     withdrawAddress,
+    redelegations,
+    unbondings
   } = r;
   return {
     delegations: delegations.map(
@@ -52,8 +54,10 @@ export function fromCosmosResourcesRaw(r: CosmosResourcesRaw): CosmosResources {
     delegatedBalance,
     delegations,
     pendingRewardsBalance,
+    redelegations,
     unboundingBalance,
     withdrawAddress,
+    unbondings
   } = r;
   return {
     delegations: delegations.map(
@@ -72,7 +76,7 @@ export function fromCosmosResourcesRaw(r: CosmosResourcesRaw): CosmosResources {
         validatorDstAddress
       }) => ({
         amount: BigNumber(amount),
-        completionDate: Date(completionDate),
+        completionDate: new Date(completionDate),
         validatorSrcAddress,
         validatorDstAddress
       })
@@ -80,7 +84,7 @@ export function fromCosmosResourcesRaw(r: CosmosResourcesRaw): CosmosResources {
     unbondings: unbondings.map(
       ({ amount, completionDate, validatorAddress }) => ({
         amount: BigNumber(amount),
-        completionDate: Date(completionDate),
+        completionDate: new Date(completionDate),
         validatorAddress
       })
     ),
