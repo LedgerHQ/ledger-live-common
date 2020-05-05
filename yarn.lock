@@ -1168,15 +1168,16 @@
   resolved "https://registry.yarnpkg.com/@ledgerhq/errors/-/errors-5.13.1.tgz#1df73a8084609888fabcefbdb9edfd4c11ab3a22"
   integrity sha512-IuEw9a70K3C3AZV4yVGk75HlwmKmJaR6EjMIxBAupiCw0G6rBP0d62MA1Vx4dg082LKKNXKafWcDstLG4ySpBA==
 
-"@ledgerhq/hw-app-btc@^5.13.1":
-  version "5.13.1"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-btc/-/hw-app-btc-5.13.1.tgz#a5ec50623369c8d1c7b040cb2236745077918c69"
-  integrity sha512-PrxrF1MiKLYZY1/WED8zhp5Q+kupLG38sPI6oFHZqruj+vcRqPkYkBZDUhNdpkrk31y4AJMcc1iuoxUF0wVqEA==
+"@ledgerhq/hw-app-btc@5.15.0-alpha.5":
+  version "5.15.0-alpha.5"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-btc/-/hw-app-btc-5.15.0-alpha.5.tgz#937aeacfcf4d77defd9b835eab775c4b861ed41e"
+  integrity sha512-tkLhL+urTHOTL7Fa1ZN+BOfKDr1y3rxf9avt3SN2lWVRTNntbbgw6wNtIValWp/LSUOW3WdqSe4DB/YxJy6qZQ==
   dependencies:
     "@ledgerhq/hw-transport" "^5.13.1"
     bip32-path "^0.4.2"
     invariant "^2.2.4"
     ripemd160 "2"
+    semver "^7.3.2"
     sha.js "2"
 
 "@ledgerhq/hw-app-eth@5.14.0":
