@@ -13,8 +13,8 @@ import { SwapExchangeRateOutOfBounds } from "../errors";
 
 export const mockGetExchangeRates = async (exchange: Exchange) => {
   const { fromAccount, toAccount, fromAmount } = exchange;
-  const from = getAccountCurrency(fromAccount).ticker;
-  const to = getAccountCurrency(toAccount).ticker;
+  const from = getAccountCurrency(fromAccount).id;
+  const to = getAccountCurrency(toAccount).id;
   const unitFrom = getAccountUnit(fromAccount);
   const amountFrom = fromAmount.div(BigNumber(10).pow(unitFrom.magnitude));
 

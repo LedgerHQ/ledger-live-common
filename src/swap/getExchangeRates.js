@@ -12,9 +12,9 @@ import { SwapExchangeRateOutOfBounds } from "../errors";
 const getExchangeRates: GetExchangeRates = async (exchange: Exchange) => {
   if (getEnv("MOCK")) return mockGetExchangeRates(exchange);
 
-  const from = getAccountCurrency(exchange.fromAccount).ticker.toLowerCase();
+  const from = getAccountCurrency(exchange.fromAccount).id;
   const unitFrom = getAccountUnit(exchange.fromAccount);
-  const to = getAccountCurrency(exchange.toAccount).ticker.toLowerCase();
+  const to = getAccountCurrency(exchange.toAccount).id;
   const amountFrom = exchange.fromAmount.div(
     BigNumber(10).pow(unitFrom.magnitude)
   );
