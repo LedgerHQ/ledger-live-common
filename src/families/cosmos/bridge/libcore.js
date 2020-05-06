@@ -43,33 +43,6 @@ const calculateFees = makeLRUCache(
     }`
 );
 
-type CosmosRedelegations = Account => Promise<CosmosLikeRedelegation[]>;
-export const getRedelegations: CosmosRedelegations = makeLRUCache(
-  account =>
-    withLibcore(async core => {
-      const { coreAccount } = await getCoreAccount(core, account);
-      const cosmosLikeAccount = await coreAccount.asCosmosLikeAccount();
-
-      const redelegations = await cosmosLikeAccount.getRedelegations();
-      return redelegations;
-    }),
-  a => a.id
-);
-
-type CosmosUnboundings = Account => Promise<CosmosLikeUnbonding[]>;
-export const getUnbondings: CosmosUnboundings = makeLRUCache(
-  account =>
-    withLibcore(async core => {
-      const { coreAccount } = await getCoreAccount(core, account);
-      const cosmosLikeAccount = await coreAccount.asCosmosLikeAccount();
-
-      const unboundings = await cosmosLikeAccount.getUnbondings();
-
-      return unboundings;
-    }),
-  a => a.id
-);
-
 const createTransaction = () => ({
   family: "cosmos",
   mode: "send",
@@ -86,31 +59,21 @@ const createTransaction = () => ({
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
-const redelegationStatusError = async (a, t) => {
-  const redelegations: CosmosLikeRedelegation[] = await getRedelegations(a);
+const redelegationStatusError = (a, t) => {
+  if (a.cosmosResources) {
+    const redelegations = a.cosmosResources.redelegations;
+    
+    if (redelegations.length >= 7) {
+      return new CosmosTooMuchRedelegations();
+    }
 
-  const entriesSize = await redelegations.reduce(async (res, current) => {
-    const entries = await current.getEntries();
-    return entries.length + (await res);
-  }, 0);
-
-  if (entriesSize >= 7) {
-    return new CosmosTooMuchRedelegations();
-  }
-
-  for (let i = 0; redelegations.length < i; i++) {
-    let dstValidator = await redelegations[i].getDstValidatorAddress();
-    if (dstValidator === t.cosmosSourceValidator) {
-      const entries = await redelegations[i].getEntries();
-      const lastCompletionDate = await entries[
-        entries.length - 1
-      ].getCompletionTime();
-      if (lastCompletionDate > new Date()) {
-        return new CosmosRedelegationInProgress();
+    for (let i = 0; redelegations.length < i; i++) {
+      let dstValidator = redelegations[i].validatorDstAddress;
+      if (dstValidator === t.cosmosSourceValidator && redelegations[i].completionDate > new Date()) {
+          return new CosmosRedelegationInProgress();
       }
     }
   }
-
   return null;
 };
 
@@ -119,15 +82,13 @@ const getTransactionStatus = async (a, t) => {
   const warnings = {};
 
   if (t.mode === "redelegate") {
-    const redelegationError = await redelegationStatusError(a, t);
+    const redelegationError = redelegationStatusError(a, t);
     if (redelegationError) {
       errors.redelegation = redelegationError;
     }
   } else if (t.mode === "undelegate") {
-    const unboundings: CosmosLikeUnbonding[] = await getUnbondings(a);
-
-    if (unboundings.length >= 7) {
-      errors.undelegations = new CosmosTooMuchUnboundings();
+    if (a.cosmosResources && a.cosmosResources.unbondings.length >= 7) {
+      errors.unbondings = new CosmosTooMuchUnboundings();
     }
   } else if (t.mode === "claimReward") {
     if (!t.recipient || !t.recipient.includes("cosmosvaloper"))

@@ -75,14 +75,14 @@ const getFlattenRedelegations = async cosmosAccount => {
 };
 
 const getFlattenUnbonding = async cosmosAccount => {
-  const unboundings = await cosmosAccount.getUnbondings();
+  const unbonding = await cosmosAccount.getUnbondings();
 
-  return unboundings.reduce(async (old, unbounding) => {
+  return unbonding.reduce(async (old, unbonding) => {
     const collection = await old;
     const entries = await Promise.all(
-      (await unbounding.getEntries()).map(async entry => {
+      (await unbonding.getEntries()).map(async entry => {
         return {
-          validatorAddress: await unbounding.getValidatorAddress(),
+          validatorAddress: await unbonding.getValidatorAddress(),
           amount: await libcoreBigIntToBigNumber(
             await entry.getInitialBalance()
           ),
