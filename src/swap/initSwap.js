@@ -2,7 +2,7 @@
 
 import { BigNumber } from "bignumber.js";
 import secp256k1 from "secp256k1";
-import Swap from "@ledgerhq/hw-app-swap";
+import Swap from "./hw-app-swap/Swap";
 import { from } from "rxjs";
 import { mockInitSwap } from "./mock";
 import perFamily from "../generated/swap";
@@ -65,8 +65,8 @@ const initSwap: InitSwap = async (
       {
         provider,
         amountFrom,
-        from: refundCurrency.ticker,
-        to: payoutCurrency.ticker,
+        from: refundCurrency.id,
+        to: payoutCurrency.id,
         rateId,
         address: payoutAccount.freshAddress,
         refundAddress: refundAccount.freshAddress,
