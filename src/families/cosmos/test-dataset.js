@@ -5,7 +5,7 @@ import type { DatasetTest } from "../../__tests__/test-helpers/bridge";
 import {
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
-  NotEnoughBalance,
+  NotEnoughBalance
 } from "@ledgerhq/errors";
 import type { Transaction } from "./types";
 import transactionTransformer from "./transaction";
