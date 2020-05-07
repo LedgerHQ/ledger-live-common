@@ -7,6 +7,7 @@ import {
   libcoreAmountToBigNumber,
   libcoreBigIntToBigNumber
 } from "../../libcore/buildBigNumber";
+import { promiseAllBatched } from "../../promise";
 
 const getValidatorStatus = async (
   cosmosAccount: CoreCosmosLikeAccount,
@@ -21,8 +22,7 @@ const getValidatorStatus = async (
 const getFlattenDelegation = async cosmosAccount => {
   const delegations = await cosmosAccount.getDelegations();
 
-  return await Promise.all(
-    delegations.map(async delegation => {
+  return await promiseAllBatched(2, delegations, (async delegation => {
       const validatorAddress = await delegation.getValidatorAddress();
       const pendingRewards = await cosmosAccount.getPendingRewards();
 
@@ -58,8 +58,8 @@ const getFlattenRedelegations = async cosmosAccount => {
 
   return redelegations.reduce(async (old, redelegation) => {
     const collection = await old;
-    const entries = await Promise.all(
-      (await redelegation.getEntries()).map(async entry => {
+    const entries = await promiseAllBatched(3, await redelegation.getEntries(),
+      (async entry => {
         return {
           validatorSrcAddress: await redelegation.getSrcValidatorAddress(),
           validatorDstAddress: await redelegation.getDstValidatorAddress(),
@@ -79,8 +79,7 @@ const getFlattenUnbonding = async cosmosAccount => {
 
   return unbonding.reduce(async (old, unbonding) => {
     const collection = await old;
-    const entries = await Promise.all(
-      (await unbonding.getEntries()).map(async entry => {
+    const entries = await promiseAllBatched(3, await unbonding.getEntries(), (async entry => {
         return {
           validatorAddress: await unbonding.getValidatorAddress(),
           amount: await libcoreBigIntToBigNumber(

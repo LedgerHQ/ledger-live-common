@@ -14,6 +14,7 @@ import {
 import { BigNumber } from "bignumber.js";
 import { cosmosCreateMessage } from "./message";
 import { getEnv } from "../../env";
+import { promiseAllBatched } from "../../promise";
 
 export async function cosmosBuildTransaction({
   account,
@@ -45,11 +46,8 @@ export async function cosmosBuildTransaction({
     core
   );
 
-  console.log(messages);
-
-  Promise.all(
-    messages.map(async message => await transactionBuilder.addMessage(message))
-  );
+  promiseAllBatched(3, messages, 
+    async message => await transactionBuilder.addMessage(message));
 
   console.log("set memo");
   const memoTransaction = memo ? memo : "";

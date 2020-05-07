@@ -2,6 +2,7 @@
 
 import type { Transaction, CosmosMessage } from "./types";
 import type { Core } from "../../libcore/types";
+import { promiseAllBatched } from "../../promise"
 
 export const cosmosCreateMessage = async (
   freshAddress: string,
@@ -24,15 +25,13 @@ export const cosmosCreateMessage = async (
       if (!validators || validators.length === 0) {
         throw new Error("no validators");
       }
-      return await Promise.all(
-        validators.map<Promise<CosmosMessage>>(
+      return await promiseAllBatched(2, validators,
           async validator =>
             await core.CosmosLikeMessage.wrapMsgDelegate({
               delegatorAddress: freshAddress,
               validatorAddress: validator.address,
               amount: { amount: validator.amount.toString(), denom: "uatom" }
             })
-        )
       );
     }
 
