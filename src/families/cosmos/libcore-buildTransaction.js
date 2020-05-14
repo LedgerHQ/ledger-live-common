@@ -46,8 +46,11 @@ export async function cosmosBuildTransaction({
     core
   );
 
-  promiseAllBatched(3, messages, 
-    async message => await transactionBuilder.addMessage(message));
+  promiseAllBatched(
+    3,
+    messages,
+    async message => await transactionBuilder.addMessage(message)
+  );
 
   console.log("set memo");
   const memoTransaction = memo ? memo : "";

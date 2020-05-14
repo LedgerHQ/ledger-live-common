@@ -193,10 +193,15 @@ const dataset: DatasetTest<Transaction> = {
               transaction: t => ({
                 ...t,
                 amount: BigNumber(100),
+                validators: [
+                  {
+                    address:
+                      "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
+                    amount: BigNumber(100)
+                  }
+                ],
                 cosmosSourceValidator:
                   "cosmosvaloper1sd4tl9aljmmezzudugs7zlaya7pg2895ws8tfs",
-                recipient:
-                  "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
                 mode: "redelegate"
               }),
               expectedStatus: {
@@ -208,10 +213,14 @@ const dataset: DatasetTest<Transaction> = {
               name: "Unbounding - success",
               transaction: t => ({
                 ...t,
-                amount: BigNumber(100),
-                recipient:
-                  "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
-                mode: "undelegate"
+                mode: "undelegate",
+                validators: [
+                  {
+                    address:
+                      "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
+                    amount: BigNumber(100)
+                  }
+                ]
               }),
               expectedStatus: {
                 errors: {},
@@ -223,7 +232,6 @@ const dataset: DatasetTest<Transaction> = {
               transaction: t => ({
                 ...t,
                 mode: "delegate",
-                amount: BigNumber(100),
                 validators: [
                   {
                     address:
@@ -242,7 +250,6 @@ const dataset: DatasetTest<Transaction> = {
               transaction: t => ({
                 ...t,
                 mode: "delegate",
-                amount: BigNumber(100),
                 validators: [
                   {
                     address: "cosmos108uy5q9jt59gwugq5yrdhkzcd9jryslmpcstk5",
@@ -259,8 +266,13 @@ const dataset: DatasetTest<Transaction> = {
               name: "ClaimReward - success",
               transaction: t => ({
                 ...t,
-                recipient:
-                  "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
+                validators: [
+                  {
+                    address:
+                      "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
+                    amount: BigNumber(0)
+                  }
+                ],
                 mode: "claimReward"
               }),
               expectedStatus: {
@@ -272,11 +284,34 @@ const dataset: DatasetTest<Transaction> = {
               name: "ClaimReward - not a cosmosvaloper",
               transaction: t => ({
                 ...t,
-                recipient: "cosmos108uy5q9jt59gwugq5yrdhkzcd9jryslmpcstk5",
+                validators: [
+                  {
+                    address: "cosmos108uy5q9jt59gwugq5yrdhkzcd9jryslmpcstk5",
+                    amount: BigNumber(0)
+                  }
+                ],
                 mode: "claimReward"
               }),
               expectedStatus: {
                 errors: { recipient: new InvalidAddress() },
+                warnings: {}
+              }
+            },
+            {
+              name: "claimRewardCompound - success",
+              transaction: t => ({
+                ...t,
+                validators: [
+                  {
+                    address:
+                      "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
+                    amount: BigNumber(100)
+                  }
+                ],
+                mode: "claimRewardCompound"
+              }),
+              expectedStatus: {
+                errors: {},
                 warnings: {}
               }
             }

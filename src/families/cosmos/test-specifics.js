@@ -105,7 +105,7 @@ export default () => {
             ...commonTransaction,
             amount: BigNumber(3000),
             mode: "undelegate",
-            recipient: "dest"
+            validators: [{ amount: BigNumber(3000), address: "" }]
           },
           core
         );
@@ -122,10 +122,10 @@ export default () => {
             sourceAddresss,
             {
               ...commonTransaction,
-              amount: BigNumber(3000),
+              amount: BigNumber(0),
               mode: "redelegate",
               cosmosSourceValidator: null,
-              recipient: "dest"
+              validators: [{ amount: BigNumber(3000), address: "" }]
             },
             core
           );
@@ -144,7 +144,7 @@ export default () => {
             amount: BigNumber(3000),
             mode: "redelegate",
             cosmosSourceValidator: "source",
-            recipient: "dest"
+            validators: [{ amount: BigNumber(3000), address: "" }]
           },
           core
         );
@@ -160,9 +160,9 @@ export default () => {
           sourceAddresss,
           {
             ...commonTransaction,
-            amount: BigNumber(3000),
+            amount: BigNumber(0),
             mode: "claimReward",
-            recipient: "dest"
+            validators: [{ amount: BigNumber(0), address: "" }]
           },
           core
         );
@@ -170,6 +170,25 @@ export default () => {
 
       expect(messages[0].constructor.name).toBe("NJSCosmosLikeMessage");
       expect(messages.length).toBe(1);
+    });
+
+    test("create a message claimRewardCompound", async () => {
+      const messages = await withLibcore(async core => {
+        return await cosmosCreateMessage(
+          sourceAddresss,
+          {
+            ...commonTransaction,
+            amount: BigNumber(0),
+            mode: "claimRewardCompound",
+            validators: [{ amount: BigNumber(0), address: "" }]
+          },
+          core
+        );
+      });
+
+      expect(messages[0].constructor.name).toBe("NJSCosmosLikeMessage");
+      expect(messages[1].constructor.name).toBe("NJSCosmosLikeMessage");
+      expect(messages.length).toBe(2);
     });
   });
 };

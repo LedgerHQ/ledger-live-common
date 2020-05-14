@@ -1,17 +1,11 @@
 // @flow
 import { scanAccounts } from "../../../libcore/scanAccounts";
 import { sync } from "../../../libcore/syncAccount";
-import type { Account, AccountBridge, CurrencyBridge } from "../../../types";
-import type {
-  Transaction,
-  CosmosLikeRedelegation,
-  CosmosLikeUnbonding
-} from "../types";
+import type { AccountBridge, CurrencyBridge } from "../../../types";
+import type { Transaction } from "../types";
 import { BigNumber } from "bignumber.js";
 import broadcast from "../libcore-broadcast";
 import signOperation from "../libcore-signOperation";
-import { withLibcore } from "../../../libcore/access";
-import { getCoreAccount } from "../../../libcore/getCoreAccount";
 import { getMainAccount } from "../../../account";
 import { makeLRUCache } from "../../../cache";
 import { validateRecipient } from "../../../bridge/shared";
@@ -62,15 +56,18 @@ const updateTransaction = (t, patch) => ({ ...t, ...patch });
 const redelegationStatusError = (a, t) => {
   if (a.cosmosResources) {
     const redelegations = a.cosmosResources.redelegations;
-    
+
     if (redelegations.length >= 7) {
       return new CosmosTooMuchRedelegations();
     }
 
     for (let i = 0; redelegations.length < i; i++) {
       let dstValidator = redelegations[i].validatorDstAddress;
-      if (dstValidator === t.cosmosSourceValidator && redelegations[i].completionDate > new Date()) {
-          return new CosmosRedelegationInProgress();
+      if (
+        dstValidator === t.cosmosSourceValidator &&
+        redelegations[i].completionDate > new Date()
+      ) {
+        return new CosmosRedelegationInProgress();
       }
     }
   }
@@ -90,12 +87,9 @@ const getTransactionStatus = async (a, t) => {
     if (a.cosmosResources && a.cosmosResources.unbondings.length >= 7) {
       errors.unbondings = new CosmosTooMuchUnboundings();
     }
-  } else if (t.mode === "claimReward") {
-    if (!t.recipient || !t.recipient.includes("cosmosvaloper"))
-      errors.recipient = new InvalidAddress(null, {
-        currencyName: a.currency.name
-      });
-  } else if (t.mode === "delegate") {
+  } else if (
+    ["delegate", "claimReward", "claimRewardCompound"].includes(t.mode)
+  ) {
     if (
       t.validators.some(v => !v.address || !v.address.includes("cosmosvaloper"))
     )
