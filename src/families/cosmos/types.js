@@ -97,6 +97,7 @@ export type CosmosValidatorItem = {|
   name: string,
   votingPower: number, // value from 0.0 to 1.0 (normalized percentage)
   commission: number, // value from 0.0 to 1.0 (normalized percentage)
+  estimatedYearlyRewardsRate: number // value from 0.0 to 1.0 (normalized percentage)
 |};
 
 export type CosmosRewardsState = {|
@@ -115,8 +116,7 @@ export type CosmosRewardsState = {|
 
 // by convention preload would return a Promise of CosmosPreloadData
 export type CosmosPreloadData = {
-  validators: CosmosValidatorItem[],
-  rewardsState: CosmosRewardsState,
+  validators: CosmosValidatorItem[]
 };
 
 export type CosmosOperationMode =
@@ -363,7 +363,7 @@ export type Transaction = {|
   fees: ?BigNumber,
   gasLimit: ?BigNumber,
   memo: ?string,
-  validators: ?(CosmosDelegationInfo[]),
+  validators: CosmosDelegationInfo[],
   cosmosSourceValidator: ?string,
 |};
 
@@ -375,7 +375,7 @@ export type TransactionRaw = {|
   fees: ?string,
   gasLimit: ?string,
   memo: ?string,
-  validators: ?(CosmosDelegationInfoRaw[]),
+  validators: CosmosDelegationInfoRaw[],
   cosmosSourceValidator: ?string,
 |};
 

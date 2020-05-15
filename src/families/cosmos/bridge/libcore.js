@@ -13,19 +13,20 @@ import { getFeesForTransaction } from "../../../libcore/getFeesForTransaction";
 import {
   NotEnoughBalance,
   InvalidAddressBecauseDestinationIsAlsoSource,
-  InvalidAddress
+  InvalidAddress,
 } from "@ledgerhq/errors";
 import {
   CosmosTooMuchRedelegations,
   CosmosTooMuchUnboundings,
-  CosmosRedelegationInProgress
+  CosmosRedelegationInProgress,
 } from "../../../errors";
+import { getValidators, hydrateValidators} from "../validators";
 
 const calculateFees = makeLRUCache(
   async (a, t) => {
     return getFeesForTransaction({
       account: a,
-      transaction: t
+      transaction: t,
     });
   },
   (a, t) =>
@@ -33,7 +34,7 @@ const calculateFees = makeLRUCache(
       t.gasLimit ? t.gasLimit.toString() : ""
     }_${t.fees ? t.fees.toString() : ""}
     _${String(t.useAllAmount)}_${t.mode}_${
-      t.validators ? t.validators.map(v => v.address).join("-") : ""
+      t.validators ? t.validators.map((v) => v.address).join("-") : ""
     }`
 );
 
@@ -48,7 +49,7 @@ const createTransaction = () => ({
   networkInfo: null,
   memo: null,
   cosmosSourceValidator: null,
-  validators: []
+  validators: [],
 });
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
@@ -91,10 +92,12 @@ const getTransactionStatus = async (a, t) => {
     ["delegate", "claimReward", "claimRewardCompound"].includes(t.mode)
   ) {
     if (
-      t.validators.some(v => !v.address || !v.address.includes("cosmosvaloper"))
+      t.validators.some(
+        (v) => !v.address || !v.address.includes("cosmosvaloper")
+      )
     )
       errors.recipient = new InvalidAddress(null, {
-        currencyName: a.currency.name
+        currencyName: a.currency.name,
       });
   } else {
     if (a.freshAddress === t.recipient) {
@@ -120,10 +123,10 @@ const getTransactionStatus = async (a, t) => {
 
   if (!errors.recipient) {
     await calculateFees(a, t).then(
-      res => {
+      (res) => {
         estimatedFees = res.estimatedFees;
       },
-      error => {
+      (error) => {
         if (error.name === "NotEnoughBalance") {
           errors.amount = error;
         } else {
@@ -152,7 +155,7 @@ const getTransactionStatus = async (a, t) => {
     warnings,
     estimatedFees,
     amount,
-    totalSpent
+    totalSpent,
   });
 };
 
@@ -161,22 +164,30 @@ const prepareTransaction = async (a, t) => {
 };
 
 const currencyBridge: CurrencyBridge = {
-  preload: async () => {},
-  hydrate: () => {},
-  scanAccounts
+  preload: async () => {
+    const validators = await getValidators();
+    return { validators };
+  },
+  hydrate: (data: mixed) => {
+    if (!data || typeof data !== "object") return;
+    const { validators } = data;
+    if (!validators || typeof validators !== "object" || !Array.isArray(validators)) return;
+    hydrateValidators(validators);
+  },
+  scanAccounts,
 };
 
 const estimateMaxSpendable = async ({
   account,
   parentAccount,
-  transaction
+  transaction,
 }) => {
   const mainAccount = getMainAccount(account, parentAccount);
   const t = await prepareTransaction(mainAccount, {
     ...createTransaction(),
     recipient: "rHsMGQEkVNJmpGWs8XUBoTBiAAbwxZN5v3", // public testing seed abandonx11,about
     ...transaction,
-    useAllAmount: true
+    useAllAmount: true,
   });
   const s = await getTransactionStatus(mainAccount, t);
   return s.amount;
@@ -190,7 +201,7 @@ const accountBridge: AccountBridge<Transaction> = {
   estimateMaxSpendable,
   sync,
   signOperation,
-  broadcast
+  broadcast,
 };
 
 export default { currencyBridge, accountBridge };

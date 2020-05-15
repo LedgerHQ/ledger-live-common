@@ -2,14 +2,14 @@
 import type {
   Transaction,
   CoreCosmosLikeTransaction,
-  CoreCosmosGasLimitRequest
+  CoreCosmosGasLimitRequest,
 } from "./types";
 import type { Account } from "../../types";
 import type { Core, CoreAccount, CoreCurrency } from "../../libcore/types";
 
 import {
   bigNumberToLibcoreAmount,
-  libcoreBigIntToBigNumber
+  libcoreBigIntToBigNumber,
 } from "../../libcore/buildBigNumber";
 import { BigNumber } from "bignumber.js";
 import { cosmosCreateMessage } from "./message";
@@ -22,7 +22,7 @@ export async function cosmosBuildTransaction({
   coreAccount,
   coreCurrency,
   transaction,
-  isCancelled
+  isCancelled,
 }: {
   account: Account,
   core: Core,
@@ -30,7 +30,7 @@ export async function cosmosBuildTransaction({
   coreCurrency: CoreCurrency,
   transaction: Transaction,
   isPartial: boolean,
-  isCancelled: () => boolean
+  isCancelled: () => boolean,
 }): Promise<?CoreCosmosLikeTransaction> {
   const { fees, gasLimit, memo } = transaction;
 
@@ -49,7 +49,7 @@ export async function cosmosBuildTransaction({
   promiseAllBatched(
     3,
     messages,
-    async message => await transactionBuilder.addMessage(message)
+    async (message) => await transactionBuilder.addMessage(message)
   );
 
   console.log("set memo");
@@ -67,7 +67,7 @@ export async function cosmosBuildTransaction({
     const gasRequest: CoreCosmosGasLimitRequest = {
       memo: memoTransaction,
       amplifier: getEnv("COSMOS_GAS_AMPLIFIER"),
-      messages
+      messages,
     };
     console.log("estimate gas : ", gasRequest);
     gas = await libcoreBigIntToBigNumber(
@@ -85,10 +85,7 @@ export async function cosmosBuildTransaction({
 
   console.log(
     "set fee :",
-    gas
-      .multipliedBy(gasPrice)
-      .integerValue(BigNumber.ROUND_CEIL)
-      .toString()
+    gas.multipliedBy(gasPrice).integerValue(BigNumber.ROUND_CEIL).toString()
   );
 
   const feesAmount = await bigNumberToLibcoreAmount(

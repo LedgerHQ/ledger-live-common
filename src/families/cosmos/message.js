@@ -16,8 +16,8 @@ export const cosmosCreateMessage = async (
         await core.CosmosLikeMessage.wrapMsgSend({
           fromAddress: freshAddress,
           toAddress: recipient,
-          amount: [{ amount: transaction.amount.toString(), denom: "uatom" }]
-        })
+          amount: [{ amount: transaction.amount.toString(), denom: "uatom" }],
+        }),
       ];
 
     case "delegate": {
@@ -28,11 +28,11 @@ export const cosmosCreateMessage = async (
       return await promiseAllBatched(
         2,
         validators,
-        async validator =>
+        async (validator) =>
           await core.CosmosLikeMessage.wrapMsgDelegate({
             delegatorAddress: freshAddress,
             validatorAddress: validator.address,
-            amount: { amount: validator.amount.toString(), denom: "uatom" }
+            amount: { amount: validator.amount.toString(), denom: "uatom" },
           })
       );
     }
@@ -45,11 +45,11 @@ export const cosmosCreateMessage = async (
       return await promiseAllBatched(
         2,
         validators,
-        async validator =>
+        async (validator) =>
           await core.CosmosLikeMessage.wrapMsgUndelegate({
             delegatorAddress: freshAddress,
             validatorAddress: validator.address,
-            amount: { amount: validator.amount.toString(), denom: "uatom" }
+            amount: { amount: validator.amount.toString(), denom: "uatom" },
           })
       );
     }
@@ -66,12 +66,12 @@ export const cosmosCreateMessage = async (
       return await promiseAllBatched(
         2,
         validators,
-        async validator =>
+        async (validator) =>
           await core.CosmosLikeMessage.wrapMsgBeginRedelegate({
             delegatorAddress: freshAddress,
             validatorSourceAddress: cosmosSourceValidator,
             validatorDestinationAddress: validator.address,
-            amount: { amount: validator.amount.toString(), denom: "uatom" }
+            amount: { amount: validator.amount.toString(), denom: "uatom" },
           })
       );
     }
@@ -84,10 +84,10 @@ export const cosmosCreateMessage = async (
       return await promiseAllBatched(
         2,
         validators,
-        async validator =>
+        async (validator) =>
           await core.CosmosLikeMessage.wrapMsgWithdrawDelegationReward({
             delegatorAddress: freshAddress,
-            validatorAddress: validator.address
+            validatorAddress: validator.address,
           })
       );
     }
@@ -98,19 +98,19 @@ export const cosmosCreateMessage = async (
         throw new Error("no validators");
       }
       return [
-        ...(await promiseAllBatched(2, validators, async validator => {
+        ...(await promiseAllBatched(2, validators, async (validator) => {
           return await core.CosmosLikeMessage.wrapMsgWithdrawDelegationReward({
             delegatorAddress: freshAddress,
-            validatorAddress: validator.address
+            validatorAddress: validator.address,
           });
         })),
-        ...(await promiseAllBatched(2, validators, async validator => {
+        ...(await promiseAllBatched(2, validators, async (validator) => {
           return await core.CosmosLikeMessage.wrapMsgDelegate({
             delegatorAddress: freshAddress,
             validatorAddress: validator.address,
-            amount: { amount: validator.amount.toString(), denom: "uatom" }
+            amount: { amount: validator.amount.toString(), denom: "uatom" },
           });
-        }))
+        })),
       ];
     }
   }

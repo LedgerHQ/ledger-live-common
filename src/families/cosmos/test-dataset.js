@@ -5,7 +5,7 @@ import type { DatasetTest } from "../../__tests__/test-helpers/bridge";
 import {
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
-  NotEnoughBalance
+  NotEnoughBalance,
 } from "@ledgerhq/errors";
 import type { Transaction } from "./types";
 import transactionTransformer from "./transaction";
@@ -35,14 +35,14 @@ const dataset: DatasetTest<Transaction> = {
             <= 0002010300330000049000
             => 550400001b06636f736d6f732c00008076000080020000800000000000000000
             <= 038ff98278402aa3e46ccfd020561dc9724ab63d7179ca507c8154b5257c7d5200636f736d6f733163676336393661793270673664346763656a656b3279386c6136366a376535793363376b79779000
-            `
-        }
+            `,
+        },
       ],
       accounts: [
         {
           FIXME_tests: [
             "cosmos seed 1", // Rewards keep increased the balances
-            "balance is sum of ops"
+            "balance is sum of ops",
           ],
           raw: {
             id:
@@ -58,8 +58,8 @@ const dataset: DatasetTest<Transaction> = {
             freshAddresses: [
               {
                 address: "cosmos1g84934jpu3v5de5yqukkkhxmcvsw3u2ajxvpdl",
-                derivationPath: "44'/118'/0'/0/0"
-              }
+                derivationPath: "44'/118'/0'/0/0",
+              },
             ],
             name: "Cosmos 1",
             balance: "2180673",
@@ -71,66 +71,66 @@ const dataset: DatasetTest<Transaction> = {
             operationsCount: 85,
             operations: [],
             pendingOperations: [],
-            lastSyncDate: ""
+            lastSyncDate: "",
           },
           transactions: [
             {
               name: "Same as Recipient",
-              transaction: t => ({
+              transaction: (t) => ({
                 ...t,
                 amount: BigNumber(100),
-                recipient: "cosmos1g84934jpu3v5de5yqukkkhxmcvsw3u2ajxvpdl"
+                recipient: "cosmos1g84934jpu3v5de5yqukkkhxmcvsw3u2ajxvpdl",
               }),
               expectedStatus: {
                 errors: {
-                  recipient: new InvalidAddressBecauseDestinationIsAlsoSource()
+                  recipient: new InvalidAddressBecauseDestinationIsAlsoSource(),
                 },
-                warnings: {}
-              }
+                warnings: {},
+              },
             },
             {
               name: "Invalid Address",
-              transaction: t => ({
+              transaction: (t) => ({
                 ...t,
                 amount: BigNumber(100),
-                recipient: "dsadasdasdasdas"
+                recipient: "dsadasdasdasdas",
               }),
               expectedStatus: {
                 errors: {
-                  recipient: new InvalidAddress()
+                  recipient: new InvalidAddress(),
                 },
-                warnings: {}
-              }
+                warnings: {},
+              },
             },
             {
               name: "GasLimit",
-              transaction: t => ({
+              transaction: (t) => ({
                 ...t,
                 amount: BigNumber(100),
                 recipient: "cosmos108uy5q9jt59gwugq5yrdhkzcd9jryslmpcstk5",
-                gasLimit: BigNumber("10000")
+                gasLimit: BigNumber("10000"),
               }),
               expectedStatus: {
                 errors: {},
                 warnings: {},
                 estimatedFees: BigNumber("10000").multipliedBy(
                   getEnv("COSMOS_GAS_PRICE")
-                )
-              }
+                ),
+              },
             },
             {
               name: "Fees",
-              transaction: t => ({
+              transaction: (t) => ({
                 ...t,
                 amount: BigNumber(100),
                 recipient: "cosmos108uy5q9jt59gwugq5yrdhkzcd9jryslmpcstk5",
-                fees: BigNumber("10000")
+                fees: BigNumber("10000"),
               }),
               expectedStatus: {
                 errors: {},
                 warnings: {},
-                estimatedFees: BigNumber("10000")
-              }
+                estimatedFees: BigNumber("10000"),
+              },
             },
             {
               name: "send max",
@@ -145,13 +145,13 @@ const dataset: DatasetTest<Transaction> = {
                 fees: null,
                 gasLimit: "0",
                 memo: null,
-                mode: "send"
+                mode: "send",
               }),
-              expectedStatus: account => ({
+              expectedStatus: (account) => ({
                 errors: {},
                 warnings: {},
-                totalSpent: account.balance
-              })
+                totalSpent: account.balance,
+              }),
             },
             {
               name: "send with memo",
@@ -166,160 +166,160 @@ const dataset: DatasetTest<Transaction> = {
                 fees: null,
                 gasLimit: "0",
                 memo: "test",
-                mode: "send"
+                mode: "send",
               }),
-              expectedStatus: account => ({
+              expectedStatus: (account) => ({
                 errors: {},
                 warnings: {},
-                totalSpent: account.balance
-              })
+                totalSpent: account.balance,
+              }),
             },
             {
               name: "Not Enough balance",
-              transaction: t => ({
+              transaction: (t) => ({
                 ...t,
                 amount: BigNumber("99999999999999999"),
-                recipient: "cosmos108uy5q9jt59gwugq5yrdhkzcd9jryslmpcstk5"
+                recipient: "cosmos108uy5q9jt59gwugq5yrdhkzcd9jryslmpcstk5",
               }),
               expectedStatus: {
                 errors: {
-                  amount: new NotEnoughBalance()
+                  amount: new NotEnoughBalance(),
                 },
-                warnings: {}
-              }
+                warnings: {},
+              },
             },
             {
               name: "Redelegation - success",
-              transaction: t => ({
+              transaction: (t) => ({
                 ...t,
                 amount: BigNumber(100),
                 validators: [
                   {
                     address:
                       "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
-                    amount: BigNumber(100)
-                  }
+                    amount: BigNumber(100),
+                  },
                 ],
                 cosmosSourceValidator:
                   "cosmosvaloper1sd4tl9aljmmezzudugs7zlaya7pg2895ws8tfs",
-                mode: "redelegate"
+                mode: "redelegate",
               }),
               expectedStatus: {
                 errors: {},
-                warnings: {}
-              }
+                warnings: {},
+              },
             },
             {
               name: "Unbounding - success",
-              transaction: t => ({
+              transaction: (t) => ({
                 ...t,
                 mode: "undelegate",
                 validators: [
                   {
                     address:
                       "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
-                    amount: BigNumber(100)
-                  }
-                ]
+                    amount: BigNumber(100),
+                  },
+                ],
               }),
               expectedStatus: {
                 errors: {},
-                warnings: {}
-              }
+                warnings: {},
+              },
             },
             {
               name: "Delegate - success",
-              transaction: t => ({
+              transaction: (t) => ({
                 ...t,
                 mode: "delegate",
                 validators: [
                   {
                     address:
                       "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
-                    amount: BigNumber(100)
-                  }
-                ]
+                    amount: BigNumber(100),
+                  },
+                ],
               }),
               expectedStatus: {
                 errors: {},
-                warnings: {}
-              }
+                warnings: {},
+              },
             },
             {
               name: "Delegate - not a valid",
-              transaction: t => ({
+              transaction: (t) => ({
                 ...t,
                 mode: "delegate",
                 validators: [
                   {
                     address: "cosmos108uy5q9jt59gwugq5yrdhkzcd9jryslmpcstk5",
-                    amount: BigNumber(100)
-                  }
-                ]
+                    amount: BigNumber(100),
+                  },
+                ],
               }),
               expectedStatus: {
                 errors: { recipient: new InvalidAddress() },
-                warnings: {}
-              }
+                warnings: {},
+              },
             },
             {
               name: "ClaimReward - success",
-              transaction: t => ({
+              transaction: (t) => ({
                 ...t,
                 validators: [
                   {
                     address:
                       "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
-                    amount: BigNumber(0)
-                  }
+                    amount: BigNumber(0),
+                  },
                 ],
-                mode: "claimReward"
+                mode: "claimReward",
               }),
               expectedStatus: {
                 errors: {},
-                warnings: {}
-              }
+                warnings: {},
+              },
             },
             {
               name: "ClaimReward - not a cosmosvaloper",
-              transaction: t => ({
+              transaction: (t) => ({
                 ...t,
                 validators: [
                   {
                     address: "cosmos108uy5q9jt59gwugq5yrdhkzcd9jryslmpcstk5",
-                    amount: BigNumber(0)
-                  }
+                    amount: BigNumber(0),
+                  },
                 ],
-                mode: "claimReward"
+                mode: "claimReward",
               }),
               expectedStatus: {
                 errors: { recipient: new InvalidAddress() },
-                warnings: {}
-              }
+                warnings: {},
+              },
             },
             {
               name: "claimRewardCompound - success",
-              transaction: t => ({
+              transaction: (t) => ({
                 ...t,
                 validators: [
                   {
                     address:
                       "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
-                    amount: BigNumber(100)
-                  }
+                    amount: BigNumber(100),
+                  },
                 ],
-                mode: "claimRewardCompound"
+                mode: "claimRewardCompound",
               }),
               expectedStatus: {
                 errors: {},
-                warnings: {}
-              }
-            }
-          ]
-        }
-      ]
-    }
-  }
+                warnings: {},
+              },
+            },
+          ],
+        },
+      ],
+    },
+  },
 };
 
 export default dataset;

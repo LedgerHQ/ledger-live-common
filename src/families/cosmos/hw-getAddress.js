@@ -16,7 +16,7 @@ const resolver: Resolver = async (transport, { path, verify }) => {
   return {
     address: r.bech32_address,
     publicKey: r.compressed_pk.toString("hex"),
-    path
+    path,
   };
 };
 

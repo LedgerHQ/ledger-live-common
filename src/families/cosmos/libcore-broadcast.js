@@ -7,7 +7,7 @@ import { CosmosBroadcastError } from "../../errors";
 
 async function broadcast({
   coreAccount,
-  signedOperation: { operation, signature }
+  signedOperation: { operation, signature },
 }): Promise<Operation> {
   const cosmosLikeAccount = await coreAccount.asCosmosLikeAccount();
   const res = await cosmosLikeAccount.broadcastRawTransaction(signature);

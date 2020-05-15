@@ -32,6 +32,12 @@ const stringParser = (v: mixed): ?string =>
   typeof v === "string" ? v : undefined;
 
 const envDefinitions = {
+  API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
+    def:
+      "http://lite-client-0e27eefb-4031-4859-a88e-249fd241989d.cosmos.bison.run:1317",
+    parser: stringParser,
+    desc: "node API for cosmos",
+  },
   API_TEZOS_BAKER: {
     parser: stringParser,
     def: "https://tezos-bakers.api.live.ledger.com",
@@ -73,12 +79,12 @@ const envDefinitions = {
   COSMOS_GAS_AMPLIFIER: {
     def: 2,
     parser: intParser,
-    desc: "estimate gas multiplier"
+    desc: "estimate gas multiplier",
   },
   COSMOS_GAS_PRICE: {
     def: 0.025,
     parser: floatParser,
-    desc: "gasLimit * gasPrice to determine the fees price"
+    desc: "gasLimit * gasPrice to determine the fees price",
   },
   DEBUG_HTTP_RESPONSE: {
     def: false,

@@ -6,13 +6,13 @@ export const INS = {
   GET_VERSION: 0x00,
   INS_PUBLIC_KEY_SECP256K1: 0x01, // Obsolete
   SIGN_SECP256K1: 0x02,
-  GET_ADDR_SECP256K1: 0x04
+  GET_ADDR_SECP256K1: 0x04,
 };
 
 export const PAYLOAD_TYPE = {
   INIT: 0x00,
   ADD: 0x01,
-  LAST: 0x02
+  LAST: 0x02,
 };
 
 const ERROR_DESCRIPTION = {
@@ -37,7 +37,7 @@ const ERROR_DESCRIPTION = {
   0x6d00: "Instruction not supported",
   0x6e00: "Cosmos app does not seem to be open",
   0x6f00: "Unknown error",
-  0x6f01: "Sign/verify error"
+  0x6f01: "Sign/verify error",
 };
 
 export function errorCodeToString(statusCode) {
@@ -48,12 +48,12 @@ export function errorCodeToString(statusCode) {
 export function processErrorResponse(response) {
   return {
     return_code: response.statusCode,
-    error_message: errorCodeToString(response.statusCode)
+    error_message: errorCodeToString(response.statusCode),
   };
 }
 
 export async function getVersion(transport) {
-  return transport.send(CLA, INS.GET_VERSION, 0, 0).then(response => {
+  return transport.send(CLA, INS.GET_VERSION, 0, 0).then((response) => {
     const errorCodeData = response.slice(-2);
     const returnCode = errorCodeData[0] * 256 + errorCodeData[1];
 
@@ -77,7 +77,7 @@ export async function getVersion(transport) {
       minor: response[2],
       patch: response[3],
       device_locked: response[4] === 1,
-      target_id: targetId.toString(16)
+      target_id: targetId.toString(16),
     };
   }, processErrorResponse);
 }

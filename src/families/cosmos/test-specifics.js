@@ -15,19 +15,19 @@ export default () => {
       networkInfo: null,
       memo: null,
       cosmosSourceValidator: null,
-      validators: []
+      validators: [],
     };
 
     const sourceAddresss = "cosmos1g84934jpu3v5de5yqukkkhxmcvsw3u2ajxvpdl";
 
     test("create a message send", async () => {
-      const messages = await withLibcore(async core => {
+      const messages = await withLibcore(async (core) => {
         return await cosmosCreateMessage(
           sourceAddresss,
           {
             ...commonTransaction,
             amount: BigNumber(3000),
-            mode: "send"
+            mode: "send",
           },
           core
         );
@@ -38,14 +38,14 @@ export default () => {
     });
 
     test("create a message delegate that throw and error", async () => {
-      await withLibcore(async core => {
+      await withLibcore(async (core) => {
         try {
           return await cosmosCreateMessage(
             sourceAddresss,
             {
               ...commonTransaction,
               amount: BigNumber(3000),
-              mode: "delegate"
+              mode: "delegate",
             },
             core
           );
@@ -56,7 +56,7 @@ export default () => {
     });
 
     test("create a message delegate with multiples validators", async () => {
-      const messages = await withLibcore(async core => {
+      const messages = await withLibcore(async (core) => {
         return await cosmosCreateMessage(
           sourceAddresss,
           {
@@ -66,8 +66,8 @@ export default () => {
             validators: [
               { amount: BigNumber(3000), address: "" },
               { amount: BigNumber(3000), address: "" },
-              { amount: BigNumber(3000), address: "" }
-            ]
+              { amount: BigNumber(3000), address: "" },
+            ],
           },
           core
         );
@@ -80,14 +80,14 @@ export default () => {
     });
 
     test("create a message delegate", async () => {
-      const messages = await withLibcore(async core => {
+      const messages = await withLibcore(async (core) => {
         return await cosmosCreateMessage(
           sourceAddresss,
           {
             ...commonTransaction,
             amount: BigNumber(3000),
             mode: "delegate",
-            validators: [{ amount: BigNumber(3000), address: "" }]
+            validators: [{ amount: BigNumber(3000), address: "" }],
           },
           core
         );
@@ -98,14 +98,14 @@ export default () => {
     });
 
     test("create a message undelegate", async () => {
-      const messages = await withLibcore(async core => {
+      const messages = await withLibcore(async (core) => {
         return await cosmosCreateMessage(
           sourceAddresss,
           {
             ...commonTransaction,
             amount: BigNumber(3000),
             mode: "undelegate",
-            validators: [{ amount: BigNumber(3000), address: "" }]
+            validators: [{ amount: BigNumber(3000), address: "" }],
           },
           core
         );
@@ -116,7 +116,7 @@ export default () => {
     });
 
     test("create a message redelegate - without cosmosSourceValidator", async () => {
-      await withLibcore(async core => {
+      await withLibcore(async (core) => {
         try {
           return await cosmosCreateMessage(
             sourceAddresss,
@@ -125,7 +125,7 @@ export default () => {
               amount: BigNumber(0),
               mode: "redelegate",
               cosmosSourceValidator: null,
-              validators: [{ amount: BigNumber(3000), address: "" }]
+              validators: [{ amount: BigNumber(3000), address: "" }],
             },
             core
           );
@@ -136,7 +136,7 @@ export default () => {
     });
 
     test("create a message redelegate", async () => {
-      const messages = await withLibcore(async core => {
+      const messages = await withLibcore(async (core) => {
         return await cosmosCreateMessage(
           sourceAddresss,
           {
@@ -144,7 +144,7 @@ export default () => {
             amount: BigNumber(3000),
             mode: "redelegate",
             cosmosSourceValidator: "source",
-            validators: [{ amount: BigNumber(3000), address: "" }]
+            validators: [{ amount: BigNumber(3000), address: "" }],
           },
           core
         );
@@ -155,14 +155,14 @@ export default () => {
     });
 
     test("create a message claimReward", async () => {
-      const messages = await withLibcore(async core => {
+      const messages = await withLibcore(async (core) => {
         return await cosmosCreateMessage(
           sourceAddresss,
           {
             ...commonTransaction,
             amount: BigNumber(0),
             mode: "claimReward",
-            validators: [{ amount: BigNumber(0), address: "" }]
+            validators: [{ amount: BigNumber(0), address: "" }],
           },
           core
         );
@@ -173,14 +173,14 @@ export default () => {
     });
 
     test("create a message claimRewardCompound", async () => {
-      const messages = await withLibcore(async core => {
+      const messages = await withLibcore(async (core) => {
         return await cosmosCreateMessage(
           sourceAddresss,
           {
             ...commonTransaction,
             amount: BigNumber(0),
             mode: "claimRewardCompound",
-            validators: [{ amount: BigNumber(0), address: "" }]
+            validators: [{ amount: BigNumber(0), address: "" }],
           },
           core
         );

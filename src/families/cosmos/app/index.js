@@ -27,7 +27,7 @@ import {
   INS,
   errorCodeToString,
   getVersion,
-  processErrorResponse
+  processErrorResponse,
 } from "./common";
 
 export default class CosmosApp {
@@ -45,7 +45,7 @@ export default class CosmosApp {
         "getAddressAndPubKey",
         "appInfo",
         "deviceInfo",
-        "getBech32FromPK"
+        "getBech32FromPK",
       ],
       scrambleKey
     );
@@ -65,10 +65,7 @@ export default class CosmosApp {
     if (pk.length !== 33) {
       throw new Error("expected compressed public key [31 bytes]");
     }
-    const hashSha256 = crypto
-      .createHash("sha256")
-      .update(pk)
-      .digest();
+    const hashSha256 = crypto.createHash("sha256").update(pk).digest();
     const hashRip = new Ripemd160().update(hashSha256).digest();
     return bech32.encode(hrp, bech32.toWords(hashRip));
   }
@@ -83,7 +80,7 @@ export default class CosmosApp {
       default:
         return {
           return_code: 0x6400,
-          error_message: "App Version is not supported"
+          error_message: "App Version is not supported",
         };
     }
   }
@@ -112,7 +109,7 @@ export default class CosmosApp {
   }
 
   async appInfo() {
-    return this.transport.send(0xb0, 0x01, 0, 0).then(response => {
+    return this.transport.send(0xb0, 0x01, 0, 0).then((response) => {
       const errorCodeData = response.slice(-2);
       const returnCode = errorCodeData[0] * 256 + errorCodeData[1];
 
@@ -156,7 +153,7 @@ export default class CosmosApp {
         // eslint-disable-next-line no-bitwise
         flag_onboarded: (flagsValue & 4) !== 0,
         // eslint-disable-next-line no-bitwise
-        flag_pin_validated: (flagsValue & 128) !== 0
+        flag_pin_validated: (flagsValue & 128) !== 0,
       };
     }, processErrorResponse);
   }
@@ -164,14 +161,14 @@ export default class CosmosApp {
   async deviceInfo() {
     return this.transport
       .send(0xe0, 0x01, 0, 0, Buffer.from([]), [0x9000, 0x6e00])
-      .then(response => {
+      .then((response) => {
         const errorCodeData = response.slice(-2);
         const returnCode = errorCodeData[0] * 256 + errorCodeData[1];
 
         if (returnCode === 0x6e00) {
           return {
             return_code: returnCode,
-            error_message: "This command is only available in the Dashboard"
+            error_message: "This command is only available in the Dashboard",
           };
         }
 
@@ -206,7 +203,7 @@ export default class CosmosApp {
           targetId,
           seVersion,
           flag,
-          mcuVersion
+          mcuVersion,
         };
       }, processErrorResponse);
   }
@@ -220,14 +217,14 @@ export default class CosmosApp {
       case 2: {
         const data = Buffer.concat([
           CosmosApp.serializeHRP("cosmos"),
-          serializedPath
+          serializedPath,
         ]);
         return publicKeyv2(this, data);
       }
       default:
         return {
           return_code: 0x6400,
-          error_message: "App Version is not supported"
+          error_message: "App Version is not supported",
         };
     }
   }
@@ -237,9 +234,9 @@ export default class CosmosApp {
     const data = Buffer.concat([CosmosApp.serializeHRP(hrp), serializedPath]);
     return this.transport
       .send(CLA, INS.GET_ADDR_SECP256K1, validateOnDevice ? 1 : 0, 0, data, [
-        0x9000
+        0x9000,
       ])
-      .then(response => {
+      .then((response) => {
         const errorCodeData = response.slice(-2);
         const returnCode = errorCodeData[0] * 256 + errorCodeData[1];
 
@@ -250,7 +247,7 @@ export default class CosmosApp {
           bech32_address: bech32Address,
           compressed_pk: compressedPk,
           return_code: returnCode,
-          error_message: errorCodeToString(returnCode)
+          error_message: errorCodeToString(returnCode),
         };
       }, processErrorResponse);
   }
@@ -264,7 +261,7 @@ export default class CosmosApp {
       default:
         return {
           return_code: 0x6400,
-          error_message: "App Version is not supported"
+          error_message: "App Version is not supported",
         };
     }
   }
@@ -273,11 +270,11 @@ export default class CosmosApp {
     const chunks = await this.signGetChunks(path, message);
 
     return this.signSendChunk(1, chunks.length, chunks[0], [0x9000]).then(
-      async response => {
+      async (response) => {
         let result = {
           return_code: response.return_code,
           error_message: response.error_message,
-          signature: null
+          signature: null,
         };
 
         for (let i = 1; i < chunks.length; i += 1) {
@@ -292,7 +289,7 @@ export default class CosmosApp {
           return_code: result.return_code,
           error_message: result.error_message,
           // ///
-          signature: result.signature
+          signature: result.signature,
         };
       },
       processErrorResponse

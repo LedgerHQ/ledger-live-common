@@ -14,7 +14,7 @@ async function signTransaction({
   coreTransaction,
   isCancelled,
   onDeviceSignatureGranted,
-  onDeviceSignatureRequested
+  onDeviceSignatureRequested,
 }) {
   const hwApp = new CosmosApp(transport);
   const serialized = await coreTransaction.serializeForSignature();
@@ -71,17 +71,17 @@ async function signTransaction({
     recipients,
     accountId: id,
     date: new Date(),
-    extra: {}
+    extra: {},
   };
 
   return {
     operation: op,
     expirationDate: null,
-    signature: hex
+    signature: hex,
   };
 }
 
 export default makeSignOperation<Transaction, CoreCosmosLikeTransaction>({
   buildTransaction,
-  signTransaction
+  signTransaction,
 });

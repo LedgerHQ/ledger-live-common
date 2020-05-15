@@ -23,9 +23,9 @@ export async function signSendChunkv1(app, chunkIdx, chunkNum, chunk) {
     .send(CLA, INS.SIGN_SECP256K1, chunkIdx, chunkNum, chunk, [
       0x9000,
       0x6984,
-      0x6a80
+      0x6a80,
     ])
-    .then(response => {
+    .then((response) => {
       const errorCodeData = response.slice(-2);
       const returnCode = errorCodeData[0] * 256 + errorCodeData[1];
       let errorMessage = errorCodeToString(returnCode);
@@ -44,7 +44,7 @@ export async function signSendChunkv1(app, chunkIdx, chunkNum, chunk) {
       return {
         signature,
         return_code: returnCode,
-        error_message: errorMessage
+        error_message: errorMessage,
       };
     }, processErrorResponse);
 }
@@ -62,7 +62,7 @@ function compressPublicKey(publicKey) {
 export async function publicKeyv1(app, data) {
   return app.transport
     .send(CLA, INS.INS_PUBLIC_KEY_SECP256K1, 0, 0, data, [0x9000])
-    .then(response => {
+    .then((response) => {
       const errorCodeData = response.slice(-2);
       const returnCode = errorCodeData[0] * 256 + errorCodeData[1];
       const pk = Buffer.from(response.slice(0, 65));
@@ -71,7 +71,7 @@ export async function publicKeyv1(app, data) {
         pk,
         compressed_pk: compressPublicKey(pk),
         return_code: returnCode,
-        error_message: errorCodeToString(returnCode)
+        error_message: errorCodeToString(returnCode),
       };
     }, processErrorResponse);
 }

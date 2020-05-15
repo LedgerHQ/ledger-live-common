@@ -96,7 +96,7 @@ export function clearAccount<T: AccountLike>(account: T): T {
       cacheTransactionInfoById: {},
     },
     cosmosResources: account.cosmosResources && {
-      ...account.cosmosResources
+      ...account.cosmosResources,
     },
     lastSyncDate: new Date(0),
     operations: [],

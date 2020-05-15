@@ -5,7 +5,7 @@ import type { CosmosResources, CoreCosmosLikeAccount } from "./types";
 import { BigNumber } from "bignumber.js";
 import {
   libcoreAmountToBigNumber,
-  libcoreBigIntToBigNumber
+  libcoreBigIntToBigNumber,
 } from "../../libcore/buildBigNumber";
 import { promiseAllBatched } from "../../promise";
 
@@ -19,10 +19,10 @@ const getValidatorStatus = async (
   return status[validatorInfo.activeStatus];
 };
 
-const getFlattenDelegation = async cosmosAccount => {
+const getFlattenDelegation = async (cosmosAccount) => {
   const delegations = await cosmosAccount.getDelegations();
 
-  return await promiseAllBatched(2, delegations, async delegation => {
+  return await promiseAllBatched(2, delegations, async (delegation) => {
     const validatorAddress = await delegation.getValidatorAddress();
     const pendingRewards = await cosmosAccount.getPendingRewards();
 
@@ -47,12 +47,12 @@ const getFlattenDelegation = async cosmosAccount => {
       status: await getValidatorStatus(
         cosmosAccount,
         await delegation.getValidatorAddress()
-      )
+      ),
     };
   });
 };
 
-const getFlattenRedelegations = async cosmosAccount => {
+const getFlattenRedelegations = async (cosmosAccount) => {
   const redelegations = await cosmosAccount.getRedelegations();
 
   return redelegations.reduce(async (old, redelegation) => {
@@ -60,14 +60,14 @@ const getFlattenRedelegations = async cosmosAccount => {
     const entries = await promiseAllBatched(
       3,
       await redelegation.getEntries(),
-      async entry => {
+      async (entry) => {
         return {
           validatorSrcAddress: await redelegation.getSrcValidatorAddress(),
           validatorDstAddress: await redelegation.getDstValidatorAddress(),
           amount: await libcoreBigIntToBigNumber(
             await entry.getInitialBalance()
           ),
-          completionDate: await entry.getCompletionTime()
+          completionDate: await entry.getCompletionTime(),
         };
       }
     );
@@ -75,7 +75,7 @@ const getFlattenRedelegations = async cosmosAccount => {
   }, Promise.resolve([]));
 };
 
-const getFlattenUnbonding = async cosmosAccount => {
+const getFlattenUnbonding = async (cosmosAccount) => {
   const unbonding = await cosmosAccount.getUnbondings();
 
   return unbonding.reduce(async (old, unbonding) => {
@@ -83,13 +83,13 @@ const getFlattenUnbonding = async cosmosAccount => {
     const entries = await promiseAllBatched(
       3,
       await unbonding.getEntries(),
-      async entry => {
+      async (entry) => {
         return {
           validatorAddress: await unbonding.getValidatorAddress(),
           amount: await libcoreBigIntToBigNumber(
             await entry.getInitialBalance()
           ),
-          completionDate: await entry.getCompletionTime()
+          completionDate: await entry.getCompletionTime(),
         };
       }
     );
@@ -125,7 +125,7 @@ const getCosmosResources = async (
       (old, current) => old.plus(current.amount),
       BigNumber(0)
     ),
-    withdrawAddress: ""
+    withdrawAddress: "",
   };
 
   return res;
@@ -133,10 +133,10 @@ const getCosmosResources = async (
 
 const postBuildAccount = async ({
   account,
-  coreAccount
+  coreAccount,
 }: {
   account: Account,
-  coreAccount: CoreAccount
+  coreAccount: CoreAccount,
 }): Promise<Account> => {
   account.cosmosResources = await getCosmosResources(account, coreAccount);
   return account;

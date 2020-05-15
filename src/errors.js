@@ -95,5 +95,5 @@ export const CosmosBroadcastError = {
   "14": createCustomErrorClass(" CosmosBroadcastCodeInsufficientFee"),
   "15": createCustomErrorClass(" CosmosBroadcastCodeTooManySignatures"),
   "16": createCustomErrorClass(" CosmosBroadcastCodeGasOverflow"),
-  "17": createCustomErrorClass(" CosmosBroadcastCodeNoSignatures")
+  "17": createCustomErrorClass(" CosmosBroadcastCodeNoSignatures"),
 };

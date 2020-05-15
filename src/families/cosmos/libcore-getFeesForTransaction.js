@@ -13,7 +13,7 @@ async function cosmos(args: {
   coreCurrency: CoreCurrency,
   transaction: Transaction,
   isPartial: boolean,
-  isCancelled: () => boolean
+  isCancelled: () => boolean,
 }) {
   console.log("get Fees for transaction");
   const builded = await buildTransaction(args);
