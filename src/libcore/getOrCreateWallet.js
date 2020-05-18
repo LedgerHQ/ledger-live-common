@@ -16,6 +16,11 @@ type F = ({
   derivationMode: DerivationMode,
 }) => Promise<CoreWallet>;
 
+const preventSyncToken = {
+  // infinite loop issue.
+  tezos: true,
+};
+
 export const getOrCreateWallet: F = atomicQueue(
   async ({ core, walletName, currency, derivationMode }) => {
     const poolInstance = core.getPoolInstance();
@@ -35,10 +40,12 @@ export const getOrCreateWallet: F = atomicQueue(
 
     const derivationScheme = getDerivationScheme({ currency, derivationMode });
     await config.putString("KEYCHAIN_DERIVATION_SCHEME", derivationScheme);
-    await config.putBoolean(
-      "DEACTIVATE_SYNC_TOKEN",
-      getEnv("DISABLE_SYNC_TOKEN")
-    );
+    if (!preventSyncToken[currency.id]) {
+      await config.putBoolean(
+        "DEACTIVATE_SYNC_TOKEN",
+        getEnv("DISABLE_SYNC_TOKEN")
+      );
+    }
 
     const KEYCHAIN_OBSERVABLE_RANGE = getEnv("KEYCHAIN_OBSERVABLE_RANGE");
     if (KEYCHAIN_OBSERVABLE_RANGE) {

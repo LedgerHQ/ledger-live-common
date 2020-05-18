@@ -60,8 +60,7 @@ const reservedAmountForStorageLimit = (storageLimit) =>
 const dataset: DatasetTest<Transaction> = {
   implementations: ["libcore"],
   currencies: {
-    //  FIXME: LIBCORE IS KINDA BROKEN STATE FOR TEZOS !!!
-    tezos: {} || {
+    tezos: {
       FIXME_ignoreOperationFields: ["blockHeight"],
       scanAccounts: [tezosScanAccounts1],
       accounts: [
