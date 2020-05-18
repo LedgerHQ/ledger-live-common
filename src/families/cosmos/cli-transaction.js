@@ -69,7 +69,7 @@ function inferTransactions(
       validatorsAmounts,
       (address, amount) => ({
         address,
-        amount,
+        amount: amount || BigNumber(0),
       })
     );
 

@@ -75,6 +75,18 @@ const redelegationStatusError = (a, t) => {
   return null;
 };
 
+const getMaxEstimatedBalance = (a, t, estimatedFees) => {
+  const { cosmosResources } = a;
+  let blockBalance = BigNumber(0);
+  if (cosmosResources) {
+    blockBalance = cosmosResources.pendingRewardsBalance
+      .plus(cosmosResources.unboundingBalance)
+      .plus(cosmosResources.delegatedBalance)
+  }
+  
+  return a.balance.minus(estimatedFees).minus(blockBalance);
+}
+
 const getTransactionStatus = async (a, t) => {
   const errors = {};
   const warnings = {};
@@ -136,9 +148,13 @@ const getTransactionStatus = async (a, t) => {
     );
   }
 
+  if (!amount && t.mode !== "send") {
+    amount = t.validators.reduce((old, current) => old.plus(current.amount), BigNumber(0))
+  }
+
   let totalSpent = !t.useAllAmount
-    ? t.amount.plus(estimatedFees)
-    : a.balance.minus(estimatedFees);
+    ? amount.plus(estimatedFees)
+    : getMaxEstimatedBalance(a, t, estimatedFees);
 
   if (
     !errors.recipient &&
