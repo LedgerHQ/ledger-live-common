@@ -19,10 +19,7 @@ const getProviders: GetProviders = async () => {
     return new SwapNoAvailableProviders();
   }
 
-  return res.data.map(({ provider, supportedCurrencies }) => ({
-    provider,
-    supportedCurrencies: supportedCurrencies.map(c => c.toUpperCase()) // TODO backend to give us this uc
-  }));
+  return res.data;
 };
 
 export default getProviders;

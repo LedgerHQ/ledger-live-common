@@ -14,6 +14,7 @@ const getExchangeRates: GetExchangeRates = async (exchange: Exchange) => {
 
   const from = getAccountCurrency(exchange.fromAccount).id;
   const unitFrom = getAccountUnit(exchange.fromAccount);
+  const unitTo = getAccountUnit(exchange.toAccount);
   const to = getAccountCurrency(exchange.toAccount).id;
   const amountFrom = exchange.fromAmount.div(
     BigNumber(10).pow(unitFrom.magnitude)
@@ -35,8 +36,7 @@ const getExchangeRates: GetExchangeRates = async (exchange: Exchange) => {
     ({ rate, rateId, provider, minAmountFrom, maxAmountFrom }) => {
       if (!rateId) {
         throw new SwapExchangeRateOutOfBounds(null, {
-          from,
-          to,
+          unit: unitFrom.code,
           minAmountFrom,
           maxAmountFrom
         });
@@ -44,11 +44,12 @@ const getExchangeRates: GetExchangeRates = async (exchange: Exchange) => {
 
       // NB Allows us to simply multiply satoshi values from/to
       const magnitudeAwareRate = BigNumber(rate).div(
-        BigNumber(10).pow(unitFrom.magnitude)
+        BigNumber(10).pow(unitFrom.magnitude - unitTo.magnitude)
       );
 
       return {
-        rate: magnitudeAwareRate,
+        magnitudeAwareRate,
+        rate,
         rateId,
         provider,
         expirationDate: new Date()
