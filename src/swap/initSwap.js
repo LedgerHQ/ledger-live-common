@@ -7,7 +7,6 @@ import { from } from "rxjs";
 import { mockInitSwap } from "./mock";
 import perFamily from "../generated/swap";
 import type { CryptoCurrency } from "../types/currencies";
-import type { Transaction } from "../generated/types";
 import { getAccountCurrency, getAccountUnit, getMainAccount } from "../account";
 import network from "../network";
 import { getAccountBridge } from "../bridge";
@@ -15,6 +14,7 @@ import type {
   Exchange,
   ExchangeRate,
   InitSwap,
+  InitSwapResult,
   SwapProviderNameAndSignature
 } from "./types";
 import { withDevice } from "../hw/deviceAccess";
@@ -30,10 +30,7 @@ const initSwap: InitSwap = async (
   exchange: Exchange,
   exchangeRate: ExchangeRate,
   deviceId: string
-): Promise<{
-  transaction: Transaction,
-  swapId: string
-}> => {
+): Promise<InitSwapResult> => {
   if (getEnv("MOCK")) return mockInitSwap(exchange, exchangeRate, deviceId);
 
   const deviceTransactionId = await withDevice(deviceId)(t => {

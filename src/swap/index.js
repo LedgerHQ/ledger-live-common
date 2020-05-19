@@ -10,7 +10,7 @@ import getStatus from "./getStatus";
 import getProviders from "./getProviders";
 import initSwap from "./initSwap";
 
-const swapAPIBaseURL = "https://swap.dev.aws.ledger.fr";
+const swapAPIBaseURL = "https://swap.staging.aws.ledger.fr";
 
 const swapProviders: {
   [string]: { nameAndPubkey: Buffer, signature: Buffer }

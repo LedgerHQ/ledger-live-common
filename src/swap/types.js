@@ -6,7 +6,7 @@ import type {
   AccountRawLike,
   AccountRaw,
   Operation,
-  Transaction, SubAccountRaw
+  Transaction
 } from "../types";
 
 // in bridge? heuristic. error could happen later.
@@ -32,7 +32,8 @@ export type ExchangeRaw = {
 };
 
 export type ExchangeRate = {
-  rate: BigNumber, // NB it's a rate of conversion between satoshi units of the currencies.
+  rate: BigNumber, // NB Raw rate, for display
+  magnitudeAwareRate: BigNumber, // NB rate between satoshi units
   rateId: string,
   provider: string,
   providerURL?: ?string,

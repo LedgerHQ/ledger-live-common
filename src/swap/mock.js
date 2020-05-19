@@ -1,12 +1,7 @@
 // @flow
 
 import { BigNumber } from "bignumber.js";
-import type {
-  Exchange,
-  ExchangeRate,
-  GetProviders,
-  GetStatus
-} from "./types";
+import type { Exchange, ExchangeRate, GetProviders, GetStatus } from "./types";
 import type { Transaction } from "../generated/types";
 import { getAccountCurrency, getAccountUnit } from "../account";
 import { SwapExchangeRateOutOfBounds } from "../errors";
@@ -18,13 +13,14 @@ export const mockGetExchangeRates = async (exchange: Exchange) => {
   const unitFrom = getAccountUnit(fromAccount);
   const amountFrom = fromAmount.div(BigNumber(10).pow(unitFrom.magnitude));
 
-  if (amountFrom.gte(1) && amountFrom.lte(10)) {
+  if (amountFrom.gte(0.00001) && amountFrom.lte(10)) {
     //Fake delay to show loading UI
     await new Promise(r => setTimeout(r, 800));
-    //Mock OK
+    //Mock OK, not really magnitude aware
     return [
       {
-        rate: BigNumber("0.5"),
+        rate: BigNumber("0.0045684305261604"),
+        magnitudeAwareRate: BigNumber("0.0045684305261604"),
         rateId: "mockedRateId",
         provider: "changelly",
         expirationDate: new Date()
@@ -35,7 +31,7 @@ export const mockGetExchangeRates = async (exchange: Exchange) => {
     throw new SwapExchangeRateOutOfBounds(null, {
       from,
       to,
-      minAmountFrom: 1,
+      minAmountFrom: 0.00001,
       maxAmountFrom: 10
     });
   }
@@ -72,7 +68,7 @@ export const mockGetProviders: GetProviders = async () => {
   return [
     {
       provider: "changelly",
-      supportedCurrencies: ["BTC", "LTC", "ETH"]
+      supportedCurrencies: ["bitcoin", "litecoin", "ethereum", "tron"]
     }
   ];
 };
