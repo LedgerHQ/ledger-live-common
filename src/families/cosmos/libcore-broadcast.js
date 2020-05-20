@@ -15,7 +15,12 @@ async function broadcast({
   if (parsed.code) {
     throw new CosmosBroadcastError[parsed.code]();
   }
-  return patchOperationWithHash(operation, parsed.txhash);
+
+  return {
+    ...operation,
+    hash: parsed.txhash,
+    id: `${operation.accountId}-${parsed.txhash}-0-${operation.type}`
+  };
 }
 
 export default makeBroadcast({ broadcast });
