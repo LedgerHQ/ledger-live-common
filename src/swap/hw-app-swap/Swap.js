@@ -111,16 +111,24 @@ export default class Swap {
     if (!this.isSuccess(result)) this.mapProtocolError(result);
   }
 
-  async processTransaction(transaction: Buffer): Promise<void> {
+  async processTransaction(transaction: Buffer, fee: BigNumber): Promise<void> {
+    var hex: string = fee.toString(16);
+    hex = hex.padStart(hex.length + hex.length % 2, '0');
+    var feeHex: Buffer = Buffer.from(hex, 'hex');
+    const bufferToSend: Buffer = Buffer.concat([
+      Buffer.from([transaction.length]),
+      transaction,
+      Buffer.from([feeHex.length]),
+      feeHex]);
     let result: Buffer = await this.transport.send(
-      0xe0,
+      0xE0,
       PROCESS_TRANSACTION_RESPONSE,
       0x00,
       0x00,
-      transaction,
-      this.allowedStatuses
-    );
-    if (!this.isSuccess(result)) this.mapProtocolError(result);
+      bufferToSend,
+      this.allowedStatuses);
+    if (!this.isSuccess(result))
+      this.mapProtocolError(result);
   }
 
   async checkTransactionSignature(transactionSignature: Buffer): Promise<void> {
