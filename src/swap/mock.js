@@ -1,7 +1,12 @@
 // @flow
 
 import { BigNumber } from "bignumber.js";
-import type { Exchange, ExchangeRate, GetProviders, GetStatus } from "./types";
+import type {
+  Exchange,
+  ExchangeRate,
+  GetMultipleStatus,
+  GetProviders
+} from "./types";
 import type { Transaction } from "../generated/types";
 import { getAccountCurrency, getAccountUnit } from "../account";
 import { SwapExchangeRateOutOfBounds } from "../errors";
@@ -73,15 +78,8 @@ export const mockGetProviders: GetProviders = async () => {
   ];
 };
 
-export const mockGetStatus: GetStatus = async (provider, swapId) => {
+export const mockGetStatus: GetMultipleStatus = async statusList => {
   //Fake delay to show loading UI
   await new Promise(r => setTimeout(r, 800));
-
-  return [
-    {
-      provider,
-      swapId,
-      status: "finished"
-    }
-  ];
+  return statusList.map(s => ({ ...s, status: "failed" }));
 };

@@ -32,6 +32,7 @@ import {
   getTokenById,
   findTokenById,
 } from "../currencies";
+import type { SwapOperation, SwapOperationRaw } from "../swap/types";
 
 export { toCosmosResourcesRaw, fromCosmosResourcesRaw };
 export { toBitcoinResourcesRaw, fromBitcoinResourcesRaw };
@@ -290,6 +291,26 @@ export const fromTronResourcesRaw = ({
   };
 };
 
+export function fromSwapOperationRaw(raw: SwapOperationRaw): SwapOperation {
+  const { fromAmount, toAmount } = raw;
+
+  return {
+    ...raw,
+    fromAmount: BigNumber(fromAmount),
+    toAmount: BigNumber(toAmount)
+  };
+}
+
+export function toSwapOperationRaw(so: SwapOperation): SwapOperationRaw {
+  const { fromAmount, toAmount } = so;
+
+  return {
+    ...so,
+    fromAmount: fromAmount.toString(),
+    toAmount: toAmount.toString()
+  };
+}
+
 export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
   const {
     id,
@@ -301,6 +322,7 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
     creationDate,
     balance,
     balanceHistory,
+    swapHistory
   } = raw;
   const token = getTokenById(tokenId);
   const convertOperation = (op) => fromOperationRaw(op, id);
@@ -317,6 +339,7 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
       raw.operationsCount || (operations && operations.length) || 0,
     operations: (operations || []).map(convertOperation),
     pendingOperations: (pendingOperations || []).map(convertOperation),
+    swapHistory: (swapHistory || []).map(fromSwapOperationRaw)
   };
 }
 
@@ -331,6 +354,7 @@ export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
     pendingOperations,
     balance,
     balanceHistory,
+    swapHistory
   } = ta;
   return {
     type: "TokenAccountRaw",
@@ -342,8 +366,9 @@ export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
     balanceHistory: toBalanceHistoryRawMap(balanceHistory || {}),
     creationDate: ta.creationDate.toISOString(),
     operationsCount,
-    operations: operations.map((o) => toOperationRaw(o)),
-    pendingOperations: pendingOperations.map((o) => toOperationRaw(o)),
+    operations: operations.map(o => toOperationRaw(o)),
+    pendingOperations: pendingOperations.map(o => toOperationRaw(o)),
+    swapHistory: (swapHistory || []).map(toSwapOperationRaw)
   };
 }
 
@@ -483,6 +508,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     tronResources,
     cosmosResources,
     bitcoinResources,
+    swapHistory
   } = rawAccount;
 
   const subAccounts =
@@ -556,6 +582,8 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
 
   if (bitcoinResources) {
     res.bitcoinResources = fromBitcoinResourcesRaw(bitcoinResources);
+  if (swapHistory) {
+    res.swapHistory = swapHistory.map(fromSwapOperationRaw);
   }
 
   return res;
@@ -588,6 +616,7 @@ export function toAccountRaw({
   tronResources,
   cosmosResources,
   bitcoinResources,
+  swapHistory
 }: Account): AccountRaw {
   const res: $Exact<AccountRaw> = {
     id,
@@ -630,6 +659,8 @@ export function toAccountRaw({
   }
   if (bitcoinResources) {
     res.bitcoinResources = toBitcoinResourcesRaw(bitcoinResources);
+  if (swapHistory) {
+    res.swapHistory = swapHistory.map(toSwapOperationRaw);
   }
   return res;
 }
