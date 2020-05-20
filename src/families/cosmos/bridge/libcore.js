@@ -20,6 +20,10 @@ import {
   CosmosTooMuchUnboundings,
   CosmosRedelegationInProgress,
 } from "../../../errors";
+import {
+  setCosmosPreloadData,
+  asSafeCosmosPreloadData,
+} from "../preloadedData";
 import { getValidators, hydrateValidators } from "../validators";
 
 const calculateFees = makeLRUCache(
@@ -185,6 +189,7 @@ const prepareTransaction = async (a, t) => {
 const currencyBridge: CurrencyBridge = {
   preload: async () => {
     const validators = await getValidators();
+    setCosmosPreloadData({ validators });
     return { validators };
   },
   hydrate: (data: mixed) => {
@@ -197,6 +202,7 @@ const currencyBridge: CurrencyBridge = {
     )
       return;
     hydrateValidators(validators);
+    setCosmosPreloadData(asSafeCosmosPreloadData(data));
   },
   scanAccounts,
 };
