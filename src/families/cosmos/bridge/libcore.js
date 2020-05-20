@@ -20,7 +20,7 @@ import {
   CosmosTooMuchUnboundings,
   CosmosRedelegationInProgress,
 } from "../../../errors";
-import { getValidators, hydrateValidators} from "../validators";
+import { getValidators, hydrateValidators } from "../validators";
 
 const calculateFees = makeLRUCache(
   async (a, t) => {
@@ -81,11 +81,11 @@ const getMaxEstimatedBalance = (a, t, estimatedFees) => {
   if (cosmosResources) {
     blockBalance = cosmosResources.pendingRewardsBalance
       .plus(cosmosResources.unboundingBalance)
-      .plus(cosmosResources.delegatedBalance)
+      .plus(cosmosResources.delegatedBalance);
   }
-  
+
   return a.balance.minus(estimatedFees).minus(blockBalance);
-}
+};
 
 const getTransactionStatus = async (a, t) => {
   const errors = {};
@@ -149,7 +149,10 @@ const getTransactionStatus = async (a, t) => {
   }
 
   if (!amount && t.mode !== "send") {
-    amount = t.validators.reduce((old, current) => old.plus(current.amount), BigNumber(0))
+    amount = t.validators.reduce(
+      (old, current) => old.plus(current.amount),
+      BigNumber(0)
+    );
   }
 
   let totalSpent = !t.useAllAmount
@@ -187,7 +190,12 @@ const currencyBridge: CurrencyBridge = {
   hydrate: (data: mixed) => {
     if (!data || typeof data !== "object") return;
     const { validators } = data;
-    if (!validators || typeof validators !== "object" || !Array.isArray(validators)) return;
+    if (
+      !validators ||
+      typeof validators !== "object" ||
+      !Array.isArray(validators)
+    )
+      return;
     hydrateValidators(validators);
   },
   scanAccounts,

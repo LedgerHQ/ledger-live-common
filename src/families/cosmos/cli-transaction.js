@@ -88,7 +88,13 @@ function inferTransactions(
 
 const cosmosValidatorsFormatters = {
   json: (list) => JSON.stringify(list),
-  default: (list) => list.map((v) => `${v.validatorAddress} "${v.name}" ${v.votingPower} ${v.commission} ${v.estimatedYearlyRewardsRate}`).join("\n"),
+  default: (list) =>
+    list
+      .map(
+        (v) =>
+          `${v.validatorAddress} "${v.name}" ${v.votingPower} ${v.commission} ${v.estimatedYearlyRewardsRate}`
+      )
+      .join("\n"),
 };
 
 const cosmosValidators = {

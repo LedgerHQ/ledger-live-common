@@ -12,7 +12,7 @@ const getBaseApiUrl = () =>
 const cacheValidators = makeLRUCache(
   async (rewardState: CosmosRewardsState) => {
     const url = `${getBaseApiUrl()}/staking/validators`;
-    const { data } = await network({ url });
+    const { data } = await network({ url, method: "GET" });
 
     const validators = data.result.map((validator) => {
       const commission = parseFloat(validator.commission.commission_rates.rate);
@@ -36,8 +36,11 @@ const cacheValidators = makeLRUCache(
 );
 
 export const getValidators = async () => {
+  log("cosmos/validators", "getRewards");
   const rewardsState = await getRewardsState();
+  log("cosmos/validators", "getRewards State Done");
   // validators need the rewardsState ONLY to compute voting power as percentage instead of raw uatoms amounts
+  log("cosmos/validators", "Cache Validators");
   return await cacheValidators(rewardsState);
 };
 
@@ -49,12 +52,16 @@ const cacheRewardsState = makeLRUCache(
   async () => {
     // All obtained values are strings ; so sometimes we will need to parse them as numbers
     const inflationUrl = `${getBaseApiUrl()}/minting/inflation`;
-    const { data: inflationData } = await network({ url: inflationUrl });
+    const { data: inflationData } = await network({
+      url: inflationUrl,
+      method: "GET",
+    });
     const currentValueInflation = parseFloat(inflationData.result);
 
     const inflationParametersUrl = `${getBaseApiUrl()}/minting/parameters`;
     const { data: inflationParametersData } = await network({
       url: inflationParametersUrl,
+      method: "GET",
     });
     const inflationRateChange = parseFloat(
       inflationParametersData.result.inflation_rate_change
@@ -74,19 +81,25 @@ const cacheRewardsState = makeLRUCache(
       31556736.0 / parseFloat(inflationParametersData.result.blocks_per_year);
 
     const communityTaxUrl = `${getBaseApiUrl()}/distribution/parameters`;
-    const { data: communityTax } = await network({ url: communityTaxUrl });
+    const { data: communityTax } = await network({
+      url: communityTaxUrl,
+      method: "GET",
+    });
     const communityPoolCommission = parseFloat(
       communityTax.result.community_tax
     );
 
     const supplyUrl = `${getBaseApiUrl()}/supply/total`;
-    const { data: totalSupplyData } = await network({ url: supplyUrl });
+    const { data: totalSupplyData } = await network({
+      url: supplyUrl,
+      method: "GET",
+    });
     const totalSupply = parseUatomStrAsAtomNumber(
       totalSupplyData.result[0].amount
     );
 
     const ratioUrl = `${getBaseApiUrl()}/staking/pool`;
-    const { data: ratioData } = await network({ url: ratioUrl });
+    const { data: ratioData } = await network({ url: ratioUrl, method: "GET" });
     const actualBondedRatio =
       parseUatomStrAsAtomNumber(ratioData.result.bonded_tokens) / totalSupply;
 
@@ -151,7 +164,7 @@ const computeAvgYearlyInflation = (rewardsState: CosmosRewardsState) => {
     return averageInflation;
   }
 
-  throw new Error("Unreachable code")
+  throw new Error("Unreachable code");
 };
 
 export const getRewardsState = async () => {
@@ -184,4 +197,4 @@ export const validatorEstimatedRate = (
 export const hydrateValidators = (validators: CosmosValidatorItem[]) => {
   log("cosmos/validators", "hydrate " + validators.length + " validators");
   cacheValidators.hydrate("", validators);
-}
+};
