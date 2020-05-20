@@ -8,6 +8,7 @@ import type { CryptoCurrency, TokenCurrency } from "../types/currencies";
 import getExchangeRates from "./getExchangeRates";
 import getStatus from "./getStatus";
 import getProviders from "./getProviders";
+import getCompleteSwapHistory from "./getCompleteSwapHistory";
 import initSwap from "./initSwap";
 
 const swapAPIBaseURL = "https://swap.staging.aws.ledger.fr";
@@ -61,5 +62,6 @@ export {
   getStatus,
   getCurrencySwapConfig,
   getExchangeRates,
+  getCompleteSwapHistory,
   initSwap
 };

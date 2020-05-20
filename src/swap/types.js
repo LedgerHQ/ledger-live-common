@@ -6,7 +6,8 @@ import type {
   AccountRawLike,
   AccountRaw,
   Operation,
-  Transaction
+  Transaction,
+  Currency
 } from "../types";
 
 // in bridge? heuristic. error could happen later.
@@ -85,16 +86,19 @@ type ValidSwapStatus =
   | "expired"
   | "failed";
 
-type SwapStatus = {
+export type SwapStatusRequest = {
+  provider: string,
+  swapId: string
+};
+
+export type SwapStatus = {
   provider: string,
   swapId: string,
   status: ValidSwapStatus
 };
 
-export type GetStatus = (
-  provider: string,
-  swapId: string
-) => Promise<SwapStatus[]>;
+export type GetStatus = SwapStatusRequest => Promise<SwapStatus>;
+export type GetMultipleStatus = (SwapStatusRequest[]) => Promise<SwapStatus[]>;
 
 /*
 // TO BE FIGURED OUT
@@ -107,9 +111,54 @@ type FamilySwapSpecifics = {
 // bridge.signOperation
 // bridge.broadcast => Operation
 
+export type MappedSwapOperation = {
+  fromAccount: AccountLike,
+  fromParentAccount?: Account,
+  toAccount: AccountLike,
+  toParentAccount?: Account,
+
+  operation: Operation,
+  provider: string,
+  swapId: string,
+  status: string,
+  fromAmount: BigNumber,
+  toAmount: BigNumber
+};
+
 export type SwapOperation = {
-  exchange: Exchange,
-  exchangeRate: ExchangeRate,
-  swapStatus: SwapStatus,
-  operation: Operation
+  provider: string,
+  swapId: string,
+  status: string,
+
+  receiverAccountId: string,
+  receiverParentAccountId?: string,
+  operationId: string,
+
+  fromAmount: BigNumber,
+  toAmount: BigNumber
+};
+
+export type SwapOperationRaw = {
+  provider: string,
+  swapId: string,
+  status: string,
+
+  receiverAccountId: string,
+  receiverParentAccountId?: string,
+  operationId: string,
+
+  fromAmount: string,
+  toAmount: string
+};
+
+export type SwapState = {
+  swap: {
+    exchange: $Shape<Exchange>,
+    exchangeRate?: ?ExchangeRate
+  },
+  error?: ?Error,
+  isLoading: boolean,
+  okCurrencies: Currency[],
+  fromCurrency: ?Currency,
+  toCurrency: ?Currency
 };
