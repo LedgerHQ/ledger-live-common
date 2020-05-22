@@ -1,13 +1,15 @@
 // @flow
 import type Transport from "@ledgerhq/hw-transport";
 
+const GET_VERSION_COMMAND: number           = 0x00;
 const START_NEW_TRANSACTION_COMMAND: number = 0x01;
-const SET_PARTNER_KEY_COMMAND: number = 0x02;
-const CHECK_PARTNER_COMMAND: number = 0x03;
-const PROCESS_TRANSACTION_RESPONSE: number = 0x04;
-const CHECK_TRANSACTION_SIGNATURE: number = 0x05;
-const CHECK_PAYOUT_ADDRESS: number = 0x06;
-const CHECK_REFUND_ADDRESS: number = 0x07;
+const SET_PARTNER_KEY_COMMAND: number       = 0x02;
+const CHECK_PARTNER_COMMAND: Number         = 0x03;
+const PROCESS_TRANSACTION_RESPONSE: number  = 0x04;
+const CHECK_TRANSACTION_SIGNATURE: number   = 0x05;
+const CHECK_PAYOUT_ADDRESS:number           = 0x06;
+const CHECK_REFUND_ADDRESS:number           = 0x07;
+const SIGN_COIN_TRANSACTION:number          = 0x08;
 
 export default class Swap {
   transport: Transport<*>;
@@ -215,5 +217,17 @@ export default class Swap {
       this.allowedStatuses
     );
     if (!this.isSuccess(result)) this.mapProtocolError(result);
+  }
+
+  async signCoinTransaction(): Promise<void> {
+    let result: Buffer = await this.transport.send(
+      0xE0,
+      SIGN_COIN_TRANSACTION,
+      0x00,
+      0x00,
+      Buffer(0),
+      this.allowedStatuses);
+    if (!this.isSuccess(result))
+      this.mapProtocolError(result);
   }
 }
