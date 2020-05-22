@@ -52,7 +52,7 @@ export async function cosmosBuildTransaction({
     async (message) => await transactionBuilder.addMessage(message)
   );
 
-  const memoTransaction = memo ? memo : "";
+  const memoTransaction = memo || "";
   await transactionBuilder.setMemo(memoTransaction);
 
   // Gas

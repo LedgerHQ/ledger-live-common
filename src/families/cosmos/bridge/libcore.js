@@ -3,6 +3,7 @@ import { scanAccounts } from "../../../libcore/scanAccounts";
 import { sync } from "../../../libcore/syncAccount";
 import type { AccountBridge, CurrencyBridge } from "../../../types";
 import type { Transaction } from "../types";
+import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import broadcast from "../libcore-broadcast";
 import signOperation from "../libcore-signOperation";
@@ -15,16 +16,15 @@ import {
   InvalidAddressBecauseDestinationIsAlsoSource,
   InvalidAddress,
 } from "@ledgerhq/errors";
-import {
-  CosmosTooMuchRedelegations,
-  CosmosTooMuchUnboundings,
-  CosmosRedelegationInProgress,
-} from "../../../errors";
+import { CosmosRedelegationInProgress } from "../../../errors";
 import {
   setCosmosPreloadData,
   asSafeCosmosPreloadData,
 } from "../preloadedData";
 import { getValidators, hydrateValidators } from "../validators";
+
+export const COSMOS_MAX_REDELEGATIONS = 6;
+export const COSMOS_MAX_UNBONDINGS = 6;
 
 const calculateFees = makeLRUCache(
   async (a, t) => {
@@ -39,6 +39,8 @@ const calculateFees = makeLRUCache(
     }_${t.fees ? t.fees.toString() : ""}
     _${String(t.useAllAmount)}_${t.mode}_${
       t.validators ? t.validators.map((v) => v.address).join("-") : ""
+    }_${t.memo ? t.memo.toString() : ""}_${
+      t.cosmosSourceValidator ? t.cosmosSourceValidator : ""
     }`
 );
 
@@ -62,9 +64,10 @@ const redelegationStatusError = (a, t) => {
   if (a.cosmosResources) {
     const redelegations = a.cosmosResources.redelegations;
 
-    if (redelegations.length >= 7) {
-      return new CosmosTooMuchRedelegations();
-    }
+    invariant(
+      redelegations.length < COSMOS_MAX_REDELEGATIONS,
+      "redelegation should not have more than 6 entries"
+    );
 
     for (let i = 0; redelegations.length < i; i++) {
       let dstValidator = redelegations[i].validatorDstAddress;
@@ -84,7 +87,7 @@ const getMaxEstimatedBalance = (a, t, estimatedFees) => {
   let blockBalance = BigNumber(0);
   if (cosmosResources) {
     blockBalance = cosmosResources.pendingRewardsBalance
-      .plus(cosmosResources.unboundingBalance)
+      .plus(cosmosResources.unbondingBalance)
       .plus(cosmosResources.delegatedBalance);
   }
 
@@ -98,12 +101,15 @@ const getTransactionStatus = async (a, t) => {
   if (t.mode === "redelegate") {
     const redelegationError = redelegationStatusError(a, t);
     if (redelegationError) {
+      // Note : note sure if I have to put this error on this field
       errors.redelegation = redelegationError;
     }
   } else if (t.mode === "undelegate") {
-    if (a.cosmosResources && a.cosmosResources.unbondings.length >= 7) {
-      errors.unbondings = new CosmosTooMuchUnboundings();
-    }
+    invariant(
+      a.cosmosResources &&
+        a.cosmosResources.unbondings.length < COSMOS_MAX_UNBONDINGS,
+      "unbondings should not have more than 6 entries"
+    );
   } else if (
     ["delegate", "claimReward", "claimRewardCompound"].includes(t.mode)
   ) {
@@ -190,7 +196,7 @@ const currencyBridge: CurrencyBridge = {
   preload: async () => {
     const validators = await getValidators();
     setCosmosPreloadData({ validators });
-    return { validators };
+    return Promise.resolve({ validators });
   },
   hydrate: (data: mixed) => {
     if (!data || typeof data !== "object") return;

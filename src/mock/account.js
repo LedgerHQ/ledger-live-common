@@ -366,7 +366,7 @@ export function genAccount(
       unbondings: [],
       delegatedBalance: BigNumber(0),
       pendingRewardsBalance: BigNumber(0),
-      unboundingBalance: BigNumber(0),
+      unbondingBalance: BigNumber(0),
       withdrawAddress: address,
     };
   }

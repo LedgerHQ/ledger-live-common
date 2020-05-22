@@ -45,7 +45,7 @@ const parseUatomStrAsAtomNumber = (uatoms: string) => {
   return parseFloat(uatoms) / 1000000.0;
 };
 
-const cacheRewardsState = makeLRUCache(
+const getRewardsState = makeLRUCache(
   async () => {
     // All obtained values are strings ; so sometimes we will need to parse them as numbers
     const inflationUrl = `${getBaseApiUrl()}/minting/inflation`;
@@ -162,10 +162,6 @@ const computeAvgYearlyInflation = (rewardsState: CosmosRewardsState) => {
   }
 
   throw new Error("Unreachable code");
-};
-
-export const getRewardsState = async () => {
-  return await cacheRewardsState();
 };
 
 export const validatorEstimatedRate = (

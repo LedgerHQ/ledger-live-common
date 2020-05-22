@@ -10,6 +10,7 @@ export const cosmosCreateMessage = async (
   core: Core
 ): Promise<CosmosMessage[]> => {
   const { recipient } = transaction;
+
   switch (transaction.mode) {
     case "send":
       return [
@@ -114,5 +115,5 @@ export const cosmosCreateMessage = async (
       ];
     }
   }
-  throw new Error("unknown message");
+  throw new Error(`unknown message : ${transaction.mode}`);
 };

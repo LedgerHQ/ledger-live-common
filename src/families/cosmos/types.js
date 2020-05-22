@@ -57,7 +57,7 @@ export type CosmosResources = {|
   unbondings: CosmosUnbonding[],
   delegatedBalance: BigNumber,
   pendingRewardsBalance: BigNumber,
-  unboundingBalance: BigNumber,
+  unbondingBalance: BigNumber,
   withdrawAddress: string,
 |};
 
@@ -87,7 +87,7 @@ export type CosmosResourcesRaw = {|
   unbondings: CosmosUnbondingRaw[],
   delegatedBalance: string,
   pendingRewardsBalance: string,
-  unboundingBalance: string,
+  unbondingBalance: string,
   withdrawAddress: string,
 |};
 

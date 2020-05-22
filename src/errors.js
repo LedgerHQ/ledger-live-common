@@ -67,12 +67,6 @@ export const AccountAwaitingSendPendingOperations = createCustomErrorClass(
 
 export const SourceHasMultiSign = createCustomErrorClass("SourceHasMultiSign");
 
-export const CosmosTooMuchRedelegations = createCustomErrorClass(
-  "CosmosTooMuchRedelegations"
-);
-export const CosmosTooMuchUnboundings = createCustomErrorClass(
-  "CosmosTooMuchUnboundings"
-);
 export const CosmosRedelegationInProgress = createCustomErrorClass(
   "CosmosRedelegationInProgress"
 );

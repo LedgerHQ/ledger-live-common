@@ -882,19 +882,6 @@ const data: CosmosPreloadData = {
       estimatedYearlyRewardsRate: 0,
     },
   ],
-  rewardsState: {
-    targetBondedRatio: 0.67,
-    communityPoolCommission: 0.02,
-    assumedTimePerBlock: 6.5,
-    inflationRateChange: 0.13,
-    inflationMaxRate: 0.2,
-    inflationMinRate: 0.07,
-    actualBondedRatio: 0.7202,
-    averageTimePerBlock: 7.5,
-    totalSupply: 254624972.017526,
-    averageDailyFees: 20,
-    currentValueInflation: 0.07,
-  },
 };
 
 export default data;

@@ -210,7 +210,7 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "Unbounding - success",
+              name: "Unbonding - success",
               transaction: (t) => ({
                 ...t,
                 mode: "undelegate",
