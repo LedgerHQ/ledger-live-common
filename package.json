@@ -30,8 +30,7 @@
     "flow",
     "react.js",
     "reactNative.js",
-    ".flowconfig",
-    ".yalc"
+    ".flowconfig"
   ],
   "jest": {
     "coverageDirectory": "./coverage/",

@@ -83,7 +83,7 @@ const envDefinitions = {
   COSMOS_GAS_PRICE: {
     def: 0.025,
     parser: floatParser,
-    desc: "gasLimit * gasPrice to determine the fees price",
+    desc: "gasLimit * gasPrice to determine the fees price. A too low GAS_PRICE will get rejected before the transaction is broadcast",
   },
   DEBUG_HTTP_RESPONSE: {
     def: false,
