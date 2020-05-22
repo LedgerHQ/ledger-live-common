@@ -88,7 +88,7 @@ export async function cosmosBuildTransaction({
   // Signature information
   const seq = await cosmosLikeAccount.getSequence();
   const accNum = await cosmosLikeAccount.getAccountNumber();
-  
+
   await transactionBuilder.setAccountNumber(accNum);
   await transactionBuilder.setSequence(seq);
 
