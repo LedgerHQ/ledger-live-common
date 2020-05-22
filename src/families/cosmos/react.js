@@ -14,10 +14,14 @@ import type {
   CosmosSearchFilter,
   Transaction,
 } from "./types";
-import { mapDelegations, searchFilter as defaultSearchFilter } from "./utils";
+import {
+  mapDelegations,
+  mapDelegationInfo,
+  searchFilter as defaultSearchFilter,
+} from "./utils";
 import { getAccountUnit } from "../../account";
 import useMemoOnce from "../../hooks/useMemoOnce";
-import type { Account } from "../../types";
+import type { Account, OperationType } from "../../types";
 
 export function useCosmosPreloadData() {
   const [state, setState] = useState(getCurrentCosmosPreloadData);
@@ -141,4 +145,25 @@ export function useSortedValidators(
   );
 
   return sr;
+}
+
+export function useMappedExtraOperationDetials({
+  account,
+  extra,
+}: {
+  account: Account,
+  extra: CosmosExtraTxInfo,
+}) {
+  const { validators } = useCosmosPreloadData();
+  const unit = getAccountUnit(account);
+
+  return {
+    validators: extra.validators
+      ? mapDelegationInfo(extra.validators, validators, unit)
+      : undefined,
+    validator: extra.validator
+      ? mapDelegationInfo([extra.validator], validators, unit)[0]
+      : undefined,
+    cosmosSourceValidator: extra.cosmosSourceValidator,
+  };
 }
