@@ -16,8 +16,6 @@
  ******************************************************************************* */
 
 // const crypto = require("crypto");
-import Ripemd160 from "ripemd160";
-import bech32 from "bech32";
 import { publicKeyv1, serializePathv1, signSendChunkv1 } from "./helperV1";
 import { publicKeyv2, serializePathv2, signSendChunkv2 } from "./helperV2";
 import {
@@ -39,14 +37,7 @@ export default class CosmosApp {
     this.transport = transport;
     transport.decorateAppAPIMethods(
       this,
-      [
-        "getVersion",
-        "sign",
-        "getAddressAndPubKey",
-        "appInfo",
-        "deviceInfo",
-        "getBech32FromPK",
-      ],
+      ["getVersion", "sign", "getAddressAndPubKey", "appInfo", "deviceInfo"],
       scrambleKey
     );
   }
@@ -59,15 +50,6 @@ export default class CosmosApp {
     buf.writeUInt8(hrp.length, 0);
     buf.write(hrp, 1);
     return buf;
-  }
-
-  static getBech32FromPK(hrp, pk) {
-    if (pk.length !== 33) {
-      throw new Error("expected compressed public key [31 bytes]");
-    }
-    const hashSha256 = crypto.createHash("sha256").update(pk).digest();
-    const hashRip = new Ripemd160().update(hashSha256).digest();
-    return bech32.encode(hrp, bech32.toWords(hashRip));
   }
 
   async serializePath(path) {
