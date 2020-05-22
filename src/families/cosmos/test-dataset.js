@@ -7,6 +7,7 @@ import {
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughBalance,
 } from "@ledgerhq/errors";
+import invariant  from "invariant"
 import type { Transaction } from "./types";
 import transactionTransformer from "./transaction";
 import { getEnv } from "../../env";
@@ -15,6 +16,12 @@ const dataset: DatasetTest<Transaction> = {
   implementations: ["libcore"],
   currencies: {
     cosmos: {
+      FIXME_ignoreAccountFields: [
+        "cosmosResources.pendingRewardsBalance", // They are always movings
+        "cosmosResources.delegations", // They are always movings because of pending Rewards
+        "cosmosResources.redelegations", // will change ince a redelegation it's done
+        "cosmosResources.unbondings", // will change once a unbonding it's done
+      ],
       scanAccounts: [
         {
           name: "cosmos seed 1",
@@ -41,7 +48,6 @@ const dataset: DatasetTest<Transaction> = {
       accounts: [
         {
           FIXME_tests: [
-            "cosmos seed 1", // Rewards keep increased the balances
             "balance is sum of ops",
           ],
           raw: {
@@ -147,11 +153,18 @@ const dataset: DatasetTest<Transaction> = {
                 memo: null,
                 mode: "send",
               }),
-              expectedStatus: (account) => ({
-                errors: {},
-                warnings: {},
-                totalSpent: account.balance,
-              }),
+              expectedStatus: (account, transaction) => {
+                  const{ cosmosResources} = account;
+                  invariant(cosmosResources, "Should exist because it's cosmos")
+                  const totalSpent = account.balance.minus(cosmosResources.pendingRewardsBalance
+                      .plus(cosmosResources.unbondingBalance)
+                      .plus(cosmosResources.delegatedBalance))
+                return {
+                  errors: {},
+                  warnings: {},
+                  totalSpent
+                }
+              },
             },
             {
               name: "send with memo",
@@ -168,11 +181,18 @@ const dataset: DatasetTest<Transaction> = {
                 memo: "test",
                 mode: "send",
               }),
-              expectedStatus: (account) => ({
-                errors: {},
-                warnings: {},
-                totalSpent: account.balance,
-              }),
+              expectedStatus: (account, transaction) => {
+                  const{ cosmosResources} = account;
+                  invariant(cosmosResources, "Should exist because it's cosmos")
+                  const totalSpent = account.balance.minus(cosmosResources.pendingRewardsBalance
+                      .plus(cosmosResources.unbondingBalance)
+                      .plus(cosmosResources.delegatedBalance))
+                return {
+                  errors: {},
+                  warnings: {},
+                  totalSpent
+                }
+              },
             },
             {
               name: "Not Enough balance",
