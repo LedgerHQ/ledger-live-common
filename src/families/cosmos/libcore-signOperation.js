@@ -28,8 +28,6 @@ async function signTransaction({
   await coreTransaction.setDERSignature(signature.toString("hex"));
   if (isCancelled()) return;
 
-  console.log("signed !");
-
   // Serialize the transaction to be broadcast
   // @param mode The supported broadcast modes include
   //        "block"(return after tx commit), (https://docs.cosmos.network/master/basics/tx-lifecycle.html#commit)
@@ -38,7 +36,6 @@ async function signTransaction({
   const hex = await coreTransaction.serializeForBroadcast("block");
 
   if (isCancelled()) return;
-  console.log("transaction signe:", hex);
 
   const feesRaw = await coreTransaction.getFee();
   if (isCancelled()) return;

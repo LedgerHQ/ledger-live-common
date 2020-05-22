@@ -7,6 +7,8 @@ import {
   processErrorResponse,
 } from "./common";
 
+// I think this part is the only thing we really change from the ledger-cosmos-js
+// https://github.com/gagbo/ledger-cosmos-js/pull/1/files
 export function serializePathv2(path) {
   const buf = Buffer.alloc(20);
   // HACK : without the >>>,

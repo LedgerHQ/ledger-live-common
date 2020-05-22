@@ -4,7 +4,6 @@ export function serializePathv1(path) {
   if (path.length > 10) {
     throw new Error("Invalid path. Length should be <= 10");
   }
-  console.log(path);
   const buf = Buffer.alloc(1 + 4 * path.length);
   buf.writeUInt8(path.length, 0);
   for (let i = 0; i < path.length; i += 1) {

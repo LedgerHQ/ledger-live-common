@@ -15,7 +15,6 @@ async function cosmos(args: {
   isPartial: boolean,
   isCancelled: () => boolean,
 }) {
-  console.log("get Fees for transaction");
   const builded = await buildTransaction(args);
   if (!builded) return;
   const estimatedFees = await libcoreAmountToBigNumber(await builded.getFee());

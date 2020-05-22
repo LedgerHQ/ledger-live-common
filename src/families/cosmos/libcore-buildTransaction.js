@@ -52,13 +52,10 @@ export async function cosmosBuildTransaction({
     async (message) => await transactionBuilder.addMessage(message)
   );
 
-  console.log("set memo");
   const memoTransaction = memo ? memo : "";
   await transactionBuilder.setMemo(memoTransaction);
 
   // Gas
-  console.log("set gas");
-
   let gas: BigNumber;
 
   if (gasLimit && gasLimit !== "0") {
@@ -69,24 +66,16 @@ export async function cosmosBuildTransaction({
       amplifier: getEnv("COSMOS_GAS_AMPLIFIER"),
       messages,
     };
-    console.log("estimate gas : ", gasRequest);
     gas = await libcoreBigIntToBigNumber(
       await cosmosLikeAccount.estimateGas(gasRequest)
     );
-    console.log("Estimate from ", gasRequest, " => ", gas.toString());
   }
   const gasAmount = await bigNumberToLibcoreAmount(core, coreCurrency, gas);
   if (isCancelled()) return;
 
-  console.log("Gas amount  => ", gasAmount);
   await transactionBuilder.setGas(gasAmount);
 
   const gasPrice = getEnv("COSMOS_GAS_PRICE");
-
-  console.log(
-    "set fee :",
-    gas.multipliedBy(gasPrice).integerValue(BigNumber.ROUND_CEIL).toString()
-  );
 
   const feesAmount = await bigNumberToLibcoreAmount(
     core,
@@ -97,12 +86,9 @@ export async function cosmosBuildTransaction({
   await transactionBuilder.setFee(feesAmount);
 
   // Signature information
-  console.log("get sequence");
   const seq = await cosmosLikeAccount.getSequence();
-  console.log("value of seq : ", seq);
-
-  console.log("get account number");
   const accNum = await cosmosLikeAccount.getAccountNumber();
+  
   await transactionBuilder.setAccountNumber(accNum);
   await transactionBuilder.setSequence(seq);
 
