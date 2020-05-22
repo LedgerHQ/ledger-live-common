@@ -15,7 +15,6 @@ async function broadcast({
     throw new CosmosBroadcastError[parsed.code]();
   }
 
-
   // Note : 0 is the index of transaction because cosmos can contains 1 or more operations in a transaction
   return {
     ...operation,

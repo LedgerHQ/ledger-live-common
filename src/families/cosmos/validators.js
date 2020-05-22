@@ -36,11 +36,8 @@ const cacheValidators = makeLRUCache(
 );
 
 export const getValidators = async () => {
-  log("cosmos/validators", "getRewards");
   const rewardsState = await getRewardsState();
-  log("cosmos/validators", "getRewards State Done");
   // validators need the rewardsState ONLY to compute voting power as percentage instead of raw uatoms amounts
-  log("cosmos/validators", "Cache Validators");
   return await cacheValidators(rewardsState);
 };
 

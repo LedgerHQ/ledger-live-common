@@ -15,22 +15,16 @@ const getValidatorStatus = async (
   address
 ) => {
   const status = ["unbonded", "unbonding", "bonded"];
-  log("cosmos/post-buildAccount", "validatorInfo");
   const validatorInfo = await cosmosAccount.getValidatorInfo(address);
-  log("cosmos/post-buildAccount", "validatorInfo Done");
   return status[await validatorInfo.getActiveStatus()];
 };
 
 const getFlattenDelegation = async (cosmosAccount) => {
   const delegations = await cosmosAccount.getDelegations();
 
-  log("cosmos/post-buildAccount", "delegations size : " + delegations.length);
-
   return await promiseAllBatched(10, delegations, async (delegation) => {
     const validatorAddress = await delegation.getValidatorAddress();
     const pendingRewards = await cosmosAccount.getPendingRewards();
-
-    log("cosmos/post-buildAccount", "validatorAddress : " + validatorAddress);
 
     let reward;
     for (let i = 0; i < pendingRewards.length; i++) {
@@ -89,10 +83,6 @@ const getFlattenUnbonding = async (cosmosAccount) => {
       3,
       entries,
       async (entry) => {
-        log(
-          "cosmos/post-buildAccount",
-          "entry of " + current.getValidatorAddress()
-        );
         return {
           validatorAddress: await current.getValidatorAddress(),
           amount: await libcoreBigIntToBigNumber(
@@ -111,13 +101,9 @@ const getCosmosResources = async (
   coreAccount
 ): Promise<CosmosResources> => {
   const cosmosAccount = await coreAccount.asCosmosLikeAccount();
-  log("cosmos/post-buildAccount", "getFlattenDelegation");
   const flattenDelegation = await getFlattenDelegation(cosmosAccount);
-  log("cosmos/post-buildAccount", "getFlattenDelegation Done");
   const flattenUnbonding = await getFlattenUnbonding(cosmosAccount);
-  log("cosmos/post-buildAccount", "getFlattenUnbonding Done");
   const flattenRedelegation = await getFlattenRedelegations(cosmosAccount);
-  log("cosmos/post-buildAccount", "getFlattenRedelegations Done");
 
   const res = {
     delegations: flattenDelegation,
