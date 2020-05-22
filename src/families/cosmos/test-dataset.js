@@ -7,7 +7,7 @@ import {
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughBalance,
 } from "@ledgerhq/errors";
-import invariant  from "invariant"
+import invariant from "invariant";
 import type { Transaction } from "./types";
 import transactionTransformer from "./transaction";
 import { getEnv } from "../../env";
@@ -47,9 +47,7 @@ const dataset: DatasetTest<Transaction> = {
       ],
       accounts: [
         {
-          FIXME_tests: [
-            "balance is sum of ops",
-          ],
+          FIXME_tests: ["balance is sum of ops"],
           raw: {
             id:
               "libcore:1:cosmos:cosmospub1addwnpepqwyytxex2dgejj93yjf0rg95v3eqzyxpg75p2hfr6s36tnpuy8vf5p6kez4:",
@@ -153,17 +151,19 @@ const dataset: DatasetTest<Transaction> = {
                 memo: null,
                 mode: "send",
               }),
-              expectedStatus: (account, transaction) => {
-                  const{ cosmosResources} = account;
-                  invariant(cosmosResources, "Should exist because it's cosmos")
-                  const totalSpent = account.balance.minus(cosmosResources.pendingRewardsBalance
-                      .plus(cosmosResources.unbondingBalance)
-                      .plus(cosmosResources.delegatedBalance))
+              expectedStatus: (account) => {
+                const { cosmosResources } = account;
+                invariant(cosmosResources, "Should exist because it's cosmos");
+                const totalSpent = account.balance.minus(
+                  cosmosResources.pendingRewardsBalance
+                    .plus(cosmosResources.unbondingBalance)
+                    .plus(cosmosResources.delegatedBalance)
+                );
                 return {
                   errors: {},
                   warnings: {},
-                  totalSpent
-                }
+                  totalSpent,
+                };
               },
             },
             {
@@ -181,17 +181,19 @@ const dataset: DatasetTest<Transaction> = {
                 memo: "test",
                 mode: "send",
               }),
-              expectedStatus: (account, transaction) => {
-                  const{ cosmosResources} = account;
-                  invariant(cosmosResources, "Should exist because it's cosmos")
-                  const totalSpent = account.balance.minus(cosmosResources.pendingRewardsBalance
-                      .plus(cosmosResources.unbondingBalance)
-                      .plus(cosmosResources.delegatedBalance))
+              expectedStatus: (account) => {
+                const { cosmosResources } = account;
+                invariant(cosmosResources, "Should exist because it's cosmos");
+                const totalSpent = account.balance.minus(
+                  cosmosResources.pendingRewardsBalance
+                    .plus(cosmosResources.unbondingBalance)
+                    .plus(cosmosResources.delegatedBalance)
+                );
                 return {
                   errors: {},
                   warnings: {},
-                  totalSpent
-                }
+                  totalSpent,
+                };
               },
             },
             {
