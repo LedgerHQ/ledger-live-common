@@ -84,20 +84,6 @@ const initSwap: InitSwap = async (
     throw new Error("How do I handle non CryptoCurrencies");
   }
 
-  await withDevice(deviceId)(transport =>
-    from(
-      performSwapChecks({
-        transport,
-        providerNameAndSignature,
-        payoutAccount,
-        payoutCurrency,
-        refundAccount,
-        refundCurrency,
-        swapResult
-      })
-    )
-  ).toPromise();
-
   const accountBridge = getAccountBridge(refundAccount);
   let transaction = accountBridge.createTransaction(refundAccount);
 
@@ -114,7 +100,7 @@ const initSwap: InitSwap = async (
     transaction
   );
 
-  const { errors } = await accountBridge.getTransactionStatus(
+  const { errors, estimatedFees } = await accountBridge.getTransactionStatus(
     refundAccount,
     transaction
   );
@@ -122,6 +108,21 @@ const initSwap: InitSwap = async (
   if (errors.recipient || errors.amount) {
     throw errors.recipient || errors.amount;
   }
+
+  await withDevice(deviceId)(transport =>
+    from(
+      performSwapChecks({
+        transport,
+        providerNameAndSignature,
+        payoutAccount,
+        payoutCurrency,
+        refundAccount,
+        refundCurrency,
+        swapResult,
+        estimatedFees
+      })
+    )
+  ).toPromise();
 
   return { transaction, swapId };
 };
@@ -136,7 +137,8 @@ const performSwapChecks = async ({
   refundAccount,
   payoutCurrency,
   refundCurrency,
-  swapResult
+  swapResult,
+  estimatedFees
 }: {
   transport: *,
   providerNameAndSignature: SwapProviderNameAndSignature,
@@ -144,12 +146,16 @@ const performSwapChecks = async ({
   refundAccount: Account,
   payoutCurrency: CryptoCurrency,
   refundCurrency: CryptoCurrency,
-  swapResult: *
+  swapResult: *,
+  estimatedFees: BigNumber
 }) => {
   const swap = new Swap(transport);
   await swap.setPartnerKey(providerNameAndSignature.nameAndPubkey);
   await swap.checkPartner(providerNameAndSignature.signature);
-  await swap.processTransaction(Buffer.from(swapResult.binaryPayload, "hex"));
+  await swap.processTransaction(
+    Buffer.from(swapResult.binaryPayload, "hex"),
+    estimatedFees
+  );
   const goodSign = secp256k1.signatureExport(
     Buffer.from(swapResult.signature, "hex")
   );
@@ -189,6 +195,7 @@ const performSwapChecks = async ({
     refundAddressConfigSignature,
     refundAddressParameters.addressParameters
   );
+  await swap.signCoinTransaction();
 };
 
 export default initSwap;
