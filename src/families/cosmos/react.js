@@ -21,7 +21,7 @@ import {
 } from "./utils";
 import { getAccountUnit } from "../../account";
 import useMemoOnce from "../../hooks/useMemoOnce";
-import type { Account, OperationType } from "../../types";
+import type { Account } from "../../types";
 
 export function useCosmosPreloadData() {
   const [state, setState] = useState(getCurrentCosmosPreloadData);
