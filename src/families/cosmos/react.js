@@ -13,6 +13,7 @@ import type {
   CosmosOperationMode,
   CosmosSearchFilter,
   Transaction,
+  CosmosExtraTxInfo,
 } from "./types";
 import {
   mapDelegations,
@@ -164,6 +165,8 @@ export function useMappedExtraOperationDetials({
     validator: extra.validator
       ? mapDelegationInfo([extra.validator], validators, unit)[0]
       : undefined,
-    cosmosSourceValidator: extra.cosmosSourceValidator,
+    cosmosSourceValidator: extra.cosmosSourceValidator
+      ? extra.cosmosSourceValidator
+      : undefined,
   };
 }
