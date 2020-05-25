@@ -148,7 +148,7 @@ export function useSortedValidators(
   return sr;
 }
 
-export function useMappedExtraOperationDetials({
+export function useMappedExtraOperationDetails({
   account,
   extra,
 }: {
