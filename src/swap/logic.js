@@ -100,7 +100,8 @@ export const reducer = (
       newState = {
         ...state,
         swap: { ...state.swap, exchangeRate: payload.rate },
-        isLoading: false,
+        ratesTimestamp: new Date(),
+        ratesExpired: false,
         error: null
       };
       break;
@@ -152,6 +153,14 @@ export const reducer = (
     }
     case "setError":
       return { ...state, error: payload.error };
+    case "expireRates":
+      return {
+        ...state,
+        swap: {
+          ...state.swap,
+          exchangeRate: null
+        }
+      };
     default:
       return state;
   }

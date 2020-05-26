@@ -9,6 +9,7 @@ import type {
   Transaction,
   Currency
 } from "../types";
+import { Observable } from "rxjs";
 
 // in bridge? heuristic. error could happen later.
 export type EstimateMaxSpendable = (account: Account) => BigNumber;
@@ -61,7 +62,7 @@ export type InitSwap = (
   exchange: Exchange,
   exchangeRate: ExchangeRate,
   deviceId: string
-) => Promise<InitSwapResult>;
+) => Observable<SwapRequestEvent>;
 
 export type SwapCurrencyNameAndSignature = {
   config: Buffer,
@@ -111,6 +112,10 @@ type FamilySwapSpecifics = {
 // bridge.signOperation
 // bridge.broadcast => Operation
 
+export type SwapRequestEvent =
+  | { type: "init-swap-requested" }
+  | { type: "init-swap-result", initSwapResult: InitSwapResult };
+
 export type MappedSwapOperation = {
   fromAccount: AccountLike,
   fromParentAccount?: Account,
@@ -157,7 +162,8 @@ export type SwapState = {
     exchangeRate?: ?ExchangeRate
   },
   error?: ?Error,
-  isLoading: boolean,
+  ratesTimestamp?: number,
+  ratesExpired?: boolean,
   okCurrencies: Currency[],
   fromCurrency: ?Currency,
   toCurrency: ?Currency

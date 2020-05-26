@@ -5,11 +5,12 @@ import type {
   Exchange,
   ExchangeRate,
   GetMultipleStatus,
-  GetProviders
+  GetProviders,
+  SwapRequestEvent
 } from "./types";
-import type { Transaction } from "../generated/types";
 import { getAccountCurrency, getAccountUnit } from "../account";
 import { SwapExchangeRateOutOfBounds } from "../errors";
+import { Observable, of } from "rxjs";
 
 export const mockGetExchangeRates = async (exchange: Exchange) => {
   const { fromAccount, toAccount, fromAmount } = exchange;
@@ -42,14 +43,11 @@ export const mockGetExchangeRates = async (exchange: Exchange) => {
   }
 };
 
-export const mockInitSwap = async (
+export const mockInitSwap = (
   exchange: Exchange, // eslint-disable-line no-unused-vars
   exchangeRate: ExchangeRate, // eslint-disable-line no-unused-vars
   deviceId: string // eslint-disable-line no-unused-vars
-): Promise<{
-  transaction: Transaction,
-  swapId: string
-}> => {
+): Observable<SwapRequestEvent> => {
   // TODO Better mock with input data please
   const transaction = {
     family: "bitcoin",
@@ -60,10 +58,13 @@ export const mockInitSwap = async (
     useAllAmount: false
   };
 
-  return {
-    transaction,
-    swapId: "mockedSwapId"
-  };
+  return of({
+    type: "init-swap-result",
+    initSwapResult: {
+      transaction,
+      swapId: "mockedSwapId"
+    }
+  });
 };
 
 export const mockGetProviders: GetProviders = async () => {
