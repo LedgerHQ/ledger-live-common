@@ -77,7 +77,7 @@ export default {
             url: `https://api.github.com/repos/LedgerHQ/ledger-live-common/commits/${GITHUB_SHA}/comments`,
             method: "POST",
             headers: {
-              Authorization: `token ${GITHUB_TOKEN}`,
+              Authorization: `Bearer ${GITHUB_TOKEN}`,
             },
             data: {
               body:
