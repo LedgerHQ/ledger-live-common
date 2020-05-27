@@ -49,7 +49,7 @@ export default class Swap {
       this.allowedStatuses
     );
     maybeThrowProtocolError(result);
-    invariant(result.length === 12, "APDU response length should be 12");
+    // invariant(result.length === 12, "APDU response length should be 12");
 
     return result.toString("ascii", 0, 10);
   }

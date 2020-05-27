@@ -37,7 +37,6 @@ const initSwap: InitSwap = (
         // NB this id is crucial to prevent replay attacks, if it changes
         // we need to start the flow again.
         const deviceTransactionId = await swap.startNewTransaction();
-
         const { provider, rateId } = exchangeRate;
         const unitFrom = getAccountUnit(exchange.fromAccount);
         const amountFrom = exchange.fromAmount.div(
@@ -175,7 +174,10 @@ const initSwap: InitSwap = (
       };
       confirmSwap().then(
         () => o.complete(),
-        e => o.error(e)
+        e => {
+          o.error(e);
+          unsubscribed = true;
+        }
       );
       return () => {
         unsubscribed = true;

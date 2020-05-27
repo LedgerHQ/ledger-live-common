@@ -114,6 +114,7 @@ type FamilySwapSpecifics = {
 
 export type SwapRequestEvent =
   | { type: "init-swap-requested" }
+  | { type: "error", error: Error }
   | { type: "init-swap-result", initSwapResult: InitSwapResult };
 
 export type MappedSwapOperation = {
