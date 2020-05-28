@@ -21,7 +21,7 @@ const cosmos: AppSpec<Transaction> = {
       name: "split half to another account",
       maxRun: 6,
       transaction: ({ account, siblings, bridge, maxSpendable }) => {
-        invariant(maxSpendable.gt(10000), "balance is too low");
+        invariant(maxSpendable.gt(2000), "balance is too low");
         let t = bridge.createTransaction(account);
         const sibling = pickSiblings(siblings, 30);
         const recipient = sibling.freshAddress;
@@ -41,7 +41,7 @@ const cosmos: AppSpec<Transaction> = {
       name: "delegate 10% to a NEW validator",
       maxRun: 3,
       transaction: ({ account, bridge, maxSpendable }) => {
-        invariant(maxSpendable.gt(10000), "balance is too low");
+        invariant(maxSpendable.gt(0), "account don't have remaining spendable");
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         invariant(
@@ -79,7 +79,7 @@ const cosmos: AppSpec<Transaction> = {
       name: "undelegate an existing delegation without existing unbondings",
       maxRun: 1,
       transaction: ({ account, bridge, maxSpendable }) => {
-        invariant(maxSpendable.gt(10000), "balance is too low");
+        invariant(maxSpendable.gt(0), "account don't have remaining spendable");
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         invariant(
@@ -120,7 +120,7 @@ const cosmos: AppSpec<Transaction> = {
       name: "redelegate a delegation without existing redelegation/unbonding",
       maxRun: 1,
       transaction: ({ account, bridge, maxSpendable }) => {
-        invariant(maxSpendable.gt(10000), "balance is too low");
+        invariant(maxSpendable.gt(0), "account don't have remaining spendable");
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         invariant(
@@ -159,7 +159,7 @@ const cosmos: AppSpec<Transaction> = {
       name: "claim rewards",
       maxRun: 1,
       transaction: ({ account, bridge, maxSpendable }) => {
-        invariant(maxSpendable.gt(10000), "balance is too low");
+        invariant(maxSpendable.gt(0), "account don't have remaining spendable");
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         const delegation = cosmosResources.delegations.find((d) =>
