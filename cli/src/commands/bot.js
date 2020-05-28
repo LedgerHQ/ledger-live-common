@@ -43,6 +43,7 @@ export default {
 
       const specs = [];
       const specsLogs = [];
+      const specFatals = [];
 
       const maybeCurrency = currency
         ? findCryptoCurrencyByKeyword(currency)
@@ -72,6 +73,10 @@ export default {
         return runWithAppSpec(spec, (log) => {
           console.log(log);
           logs.push(log);
+        }).catch((error) => {
+          specFatals.push({ spec, error });
+          console.error(error);
+          logs.push(`FATAL:\n${"```"}\n${String(error)}\n${"```"}\n`);
         });
       });
       const combinedResults = await Promise.all(results);
@@ -79,8 +84,20 @@ export default {
 
       const errorCases = combinedResultsFlat.filter((r) => r.error);
 
+      const botHaveFailed = specFatals.length > 0 || errorCases.length > 0;
+
+      if (specFatals.length) {
+        console.error(`================== SPEC ERRORS =====================\n`);
+        specFatals.forEach((c) => {
+          console.error(c.error);
+          console.error("");
+        });
+      }
+
       if (errorCases.length) {
-        console.error(`================== ERRORS =====================\n`);
+        console.error(
+          `================== MUTATION ERRORS =====================\n`
+        );
         errorCases.forEach((c) => {
           console.error(formatReportForConsole(c));
           console.error(c.error);
@@ -96,10 +113,16 @@ export default {
         let body = "";
         if (errorCases.length) {
           body += `## 🤖❌ ${errorCases.length} mutations failed`;
+        } else if (specFatals.length) {
+          body += `## 🤖❌ ${specFatals.length} specs failed`;
         } else {
           body += `## 🤖👏 ${combinedResultsFlat.length} mutations succeed!`;
         }
         body += "\n\n";
+
+        specFatals.forEach(({ error }) => {
+          body += "```\n" + String(error) + "\n```\n\n";
+        });
 
         errorCases.forEach((c) => {
           body +=
@@ -132,7 +155,7 @@ export default {
         });
       }
 
-      if (errorCases.length) {
+      if (botHaveFailed) {
         process.exit(1);
       }
     }
