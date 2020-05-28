@@ -42,6 +42,7 @@ export default {
       }
 
       const specs = [];
+      const specsLogs = [];
 
       const maybeCurrency = currency
         ? findCryptoCurrencyByKeyword(currency)
@@ -65,9 +66,14 @@ export default {
         }
       }
 
-      const results = specs.map((spec) =>
-        runWithAppSpec(spec, (log) => console.log(log))
-      );
+      const results = specs.map((spec) => {
+        const logs = [];
+        specsLogs.push(logs);
+        return runWithAppSpec(spec, (log) => {
+          console.log(log);
+          logs.push(log);
+        });
+      });
       const combinedResults = await Promise.all(results);
       const combinedResultsFlat = combinedResults.flat();
 
@@ -105,14 +111,13 @@ export default {
         });
 
         body += "<details>\n";
-        body += "<summary>Full Detail</summary>\n";
+        body += `<summary>Details of the ${combinedResultsFlat.length} mutations</summary>\n\n`;
         combinedResults.forEach((specResults, i) => {
           const spec = specs[i];
+          const logs = specsLogs[i];
           body += `### Spec '${spec.name}'\n`;
           body += "\n```\n";
-          specResults.forEach((r) => {
-            body += formatReportForConsole(r) + "\n";
-          });
+          body += logs.join("\n");
           body += "\n```\n";
         });
         body += "</details>\n";
