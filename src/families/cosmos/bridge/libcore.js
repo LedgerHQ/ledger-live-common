@@ -205,7 +205,7 @@ const estimateMaxSpendable = async ({
   const mainAccount = getMainAccount(account, parentAccount);
   const t = await prepareTransaction(mainAccount, {
     ...createTransaction(),
-    recipient: "cosmos1cgc696ay2pg6d4gcejek2y8la66j7e5y3c7kyw", // public testing seed abandonx11,about
+    recipient: "cosmos19rl4cm2hmr8afy4kldpxz3fka4jguq0auqdal4", // abandon seed generate with ledger-live-bot
     ...transaction,
     useAllAmount: true,
   });
