@@ -77,6 +77,7 @@ export default {
           specFatals.push({ spec, error });
           console.error(error);
           logs.push(`FATAL:\n${"```"}\n${String(error)}\n${"```"}\n`);
+          return [];
         });
       });
       const combinedResults = await Promise.all(results);
@@ -120,7 +121,8 @@ export default {
         }
         body += "\n\n";
 
-        specFatals.forEach(({ error }) => {
+        specFatals.forEach(({ spec, error }) => {
+          body += `**Spec '${spec.name}' failed:**\n`;
           body += "```\n" + String(error) + "\n```\n\n";
         });
 
