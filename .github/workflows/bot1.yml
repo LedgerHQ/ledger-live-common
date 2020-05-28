@@ -43,7 +43,7 @@ jobs:
           SEED: ${{ secrets.SEED1 }}
           VERBOSE_FILE: bot-tests.txt
           GITHUB_SHA: ${GITHUB_SHA}
-          GITHUB_TOKEN: ${GITHUB_TOKEN}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: COINAPPS=$PWD/coin-apps node cli/bin/index.js bot
       - name: upload logs
         if: failure() || success()
