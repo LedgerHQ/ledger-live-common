@@ -43,7 +43,9 @@ export default {
 
       const specs = [];
 
-      const maybeCurrency = findCryptoCurrencyByKeyword(currency);
+      const maybeCurrency = currency
+        ? findCryptoCurrencyByKeyword(currency)
+        : undefined;
 
       for (const family in allSpecs) {
         const familySpecs = allSpecs[family];
