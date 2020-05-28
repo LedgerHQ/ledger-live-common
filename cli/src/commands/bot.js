@@ -83,33 +83,51 @@ export default {
         console.error(
           `/!\\ ${errorCases.length} failures out of ${combinedResultsFlat.length} mutations. Check above!\n`
         );
+      }
 
-        const { GITHUB_SHA, GITHUB_TOKEN } = process.env;
-        if (GITHUB_TOKEN && GITHUB_SHA) {
-          await network({
-            url: `https://api.github.com/repos/LedgerHQ/ledger-live-common/commits/${GITHUB_SHA}/comments`,
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${GITHUB_TOKEN}`,
-            },
-            data: {
-              body:
-                "## 🤖 Oops\n\n" +
-                `ledger-live bot reached ${errorCases.length} failures out of ${combinedResultsFlat.length} mutations:\n\n` +
-                errorCases
-                  .map(
-                    (c) =>
-                      "```\n" +
-                      formatReportForConsole(c) +
-                      "\n" +
-                      String(c.error) +
-                      "\n```\n"
-                  )
-                  .join("\n"),
-            },
-          });
+      const { GITHUB_SHA, GITHUB_TOKEN } = process.env;
+      if (GITHUB_TOKEN && GITHUB_SHA) {
+        let body = "";
+        if (errorCases.length) {
+          body += `## 🤖❌ ${errorCases.length} mutations failed`;
+        } else {
+          body += `## 🤖👏 ${combinedResultsFlat.length} mutations succeed!`;
         }
+        body += "\n\n";
 
+        errorCases.forEach((c) => {
+          body +=
+            "```\n" +
+            formatReportForConsole(c) +
+            "\n" +
+            String(c.error) +
+            "\n```\n\n";
+        });
+
+        body += "<details>\n";
+        body += "<summary>Full Detail</summary>\n";
+        combinedResults.forEach((specResults, i) => {
+          const spec = specs[i];
+          body += `### Spec '${spec.name}'\n`;
+          body += "\n```\n";
+          specResults.forEach((r) => {
+            body += formatReportForConsole(r) + "\n";
+          });
+          body += "\n```\n";
+        });
+        body += "</details>\n";
+
+        await network({
+          url: `https://api.github.com/repos/LedgerHQ/ledger-live-common/commits/${GITHUB_SHA}/comments`,
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${GITHUB_TOKEN}`,
+          },
+          data: { body },
+        });
+      }
+
+      if (errorCases.length) {
         process.exit(1);
       }
     }
