@@ -164,7 +164,7 @@ const initSwap: InitSwap = (
           refundAddressConfigSignature,
           refundAddressParameters.addressParameters
         );
-        await swap.signCoinTransaction();
+        //await swap.signCoinTransaction();
 
         if (unsubscribed) return;
         o.next({

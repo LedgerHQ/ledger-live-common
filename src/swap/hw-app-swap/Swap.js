@@ -80,27 +80,38 @@ export default class Swap {
     maybeThrowProtocolError(result);
   }
 
-  async processTransaction(transaction: Buffer, fee: BigNumber): Promise<void> {
-    var hex: string = fee.toString(16);
-    hex = hex.padStart(hex.length + (hex.length % 2), "0");
-    var feeHex: Buffer = Buffer.from(hex, "hex");
+  // async processTransaction(transaction: Buffer, fee: BigNumber): Promise<void> {
+  //   var hex: string = fee.toString(16);
+  //   hex = hex.padStart(hex.length + (hex.length % 2), "0");
+  //   var feeHex: Buffer = Buffer.from(hex, "hex");
 
-    const bufferToSend: Buffer = Buffer.concat([
-      Buffer.from([transaction.length]),
-      transaction,
-      Buffer.from([feeHex.length]),
-      feeHex
-    ]);
+  //   const bufferToSend: Buffer = Buffer.concat([
+  //     Buffer.from([transaction.length]),
+  //     transaction,
+  //     Buffer.from([feeHex.length]),
+  //     feeHex
+  //   ]);
 
+  //   let result: Buffer = await this.transport.send(
+  //     0xe0,
+  //     PROCESS_TRANSACTION_RESPONSE,
+  //     0x00,
+  //     0x00,
+  //     bufferToSend,
+  //     this.allowedStatuses
+  //   );
+
+  //   maybeThrowProtocolError(result);
+  // }
+  async processTransaction(transaction: Buffer): Promise<void> {
     let result: Buffer = await this.transport.send(
       0xe0,
       PROCESS_TRANSACTION_RESPONSE,
       0x00,
       0x00,
-      bufferToSend,
+      transaction,
       this.allowedStatuses
     );
-
     maybeThrowProtocolError(result);
   }
 

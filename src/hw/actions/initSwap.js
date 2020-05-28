@@ -82,7 +82,7 @@ export const createAction = (
     const [state, setState] = useState(initialState);
 
     useEffect(() => {
-      if (!device || !opened || error || !initSwapRequest) {
+      if (/*!device || */ !opened || error || !initSwapRequest) {
         setState(initialState);
         return;
       }

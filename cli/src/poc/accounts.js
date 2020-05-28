@@ -1,7 +1,7 @@
 // @flow
 import { fromAccountRaw } from "@ledgerhq/live-common/lib/account";
 
-export const accountToSendSwap = (mock: boolean) => {
+export const account1 = (mock: boolean) => {
   const id = `${
     mock ? "mock" : "libcore"
   }:1:bitcoin:xpub6D4xrRjfZp6bgGTfDHHjCFsS8E9LbXB3u4izJAwVxNSUoFugt4qd83zLywBrRooPzfWrcKLC1D7DipjECEEsRMCqhM2ptb5yKVmLgUnVGUs:native_segwit`;
@@ -41,7 +41,7 @@ export const accountToSendSwap = (mock: boolean) => {
   });
 };
 
-export const accountToReceiveSwap = (mock: boolean) => {
+export const account2 = (mock: boolean) => {
   const id = `${
     mock ? "mock" : "libcore"
   }:1:litecoin:Ltub2YQy7ASMeb7PYatDvv1PfvukhDemVRDwXUN55z5rfMTaDztZFrn9iScxB8ZmGzpJSaNxKhva2FXVYaUjpZHQfpxJXqvAfJ4V6VLBtweH5ys:segwit`;
