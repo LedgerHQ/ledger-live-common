@@ -130,9 +130,16 @@ export async function createSpeculosDevice(
 
   let destroyed = false;
 
-  const destroy = () => {
-    if (destroyed) return;
-    destroyed = true;
+  p.stderr.on("data", (data) => {
+    if (!data.includes("apdu: ")) {
+      log("speculos-stderr", `${id}: ${data}`);
+    }
+    if (data.includes("using SDK")) {
+      resolveReady();
+    }
+  });
+
+  const destroy = () =>
     new Promise((resolve, reject) => {
       if (!data[speculosID]) return;
       delete data[speculosID];

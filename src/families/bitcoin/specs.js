@@ -387,6 +387,7 @@ const zcash: AppSpec<Transaction> = {
     model: "nanoS",
     firmware: "< 1.6.1",
     appName: "Zcash",
+    appVersion: ">= 1.4.1",
   },
   test: genericTest,
   mutations: bitcoinLikeMutations({
