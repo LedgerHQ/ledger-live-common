@@ -1,11 +1,11 @@
 // @flow
-import { of, Observable } from "rxjs";
+import { Observable } from "rxjs";
 import { useEffect, useState } from "react";
 import type { ConnectAppEvent, Input as ConnectAppInput } from "../connectApp";
 import type { Action, Device } from "./types";
 import { toExchangeRaw } from "../../swap/serialization";
 import type { AppState } from "./app";
-import { scan, catchError, tap } from "rxjs/operators";
+import { scan, tap } from "rxjs/operators";
 import { log } from "@ledgerhq/logs";
 import { createAction as createAppAction } from "./app";
 import type {
@@ -35,7 +35,6 @@ type InitSwapRequest = {
 type Result =
   | {
       initSwapResult: InitSwapResult,
-      device: Device
     }
   | {
       initSwapError: Error
@@ -43,13 +42,9 @@ type Result =
 
 type InitSwapAction = Action<InitSwapRequest, InitSwapState, Result>;
 
-const mapResult = ({
-  device,
-  initSwapResult,
-  initSwapError
-}: InitSwapState): ?Result =>
-  initSwapResult && device
-    ? { initSwapResult, device }
+const mapResult = ({ initSwapResult, initSwapError }: InitSwapState): ?Result =>
+  initSwapResult
+    ? { initSwapResult }
     : initSwapError
     ? { initSwapError }
     : null;
@@ -59,6 +54,22 @@ const initialState = {
   initSwapError: null,
   initSwapRequested: false,
   isLoading: true
+};
+
+const reducer = (state: any, e: SwapRequestEvent) => {
+  switch (e.type) {
+    case "init-swap-error":
+      return { ...state, initSwapError: e.error, isLoading: false };
+    case "init-swap-requested":
+      return { ...state, initSwapRequested: true, isLoading: false };
+    case "init-swap-result":
+      return {
+        ...state,
+        initSwapResult: e.initSwapResult,
+        isLoading: false
+      };
+  }
+  return state;
 };
 
 export const createAction = (
@@ -74,7 +85,7 @@ export const createAction = (
     initSwapRequest: InitSwapRequest
   ): InitSwapState => {
     const appState = createAppAction(connectAppExec).useHook(reduxDevice, {
-      appName: "Exchange"
+      appName: "Bitcoin" // FIXME TODO until we have the silent mode swap app, we need to make it feel like it's bitcoin ¯\_(ツ)_/¯
     });
 
     const { device, opened, error } = appState;
@@ -82,42 +93,31 @@ export const createAction = (
     const [state, setState] = useState(initialState);
 
     useEffect(() => {
-      if (/*!device || */ !opened || error || !initSwapRequest) {
+      if (!opened || error || !initSwapRequest || !device) {
         setState(initialState);
         return;
       }
-      const { exchange, exchangeRate } = initSwapRequest;
 
+      const { exchange, exchangeRate } = initSwapRequest;
       const sub = initSwapExec({
         exchange: toExchangeRaw(exchange),
         exchangeRate,
         deviceId: ""
       })
         .pipe(
-          catchError(error => of({ type: "error", error })),
-          tap(e => log("actions-initSwap-event", e.type, e)),
-          scan((state: any, e: SwapRequestEvent) => {
-            switch (e.type) {
-              case "error":
-                return { ...state, initSwapError: e.error, isLoading: false };
-              case "init-swap-requested":
-                return { ...state, initSwapRequested: true, isLoading: false };
-              case "init-swap-result":
-                return {
-                  ...state,
-                  initSwapResult: e.initSwapResult,
-                  isLoading: false
-                };
-            }
-            return state;
-          }, initialState)
+          tap(e => {
+            log("actions-initSwap-event", e.type, e);
+            console.log("actions-initSwap-event", e.type, e);
+          }),
+          scan(reducer, initialState)
         )
         .subscribe(setState);
 
       return () => {
+        console.log("exiting the useeffect code, and ruining everything");
         sub.unsubscribe();
       };
-    }, [state, initSwapRequest, device, error, opened, setState]);
+    }, [initSwapRequest, device, error, opened]);
 
     return {
       ...appState,

@@ -58,14 +58,16 @@ export const getCurrenciesWithStatus = ({
   for (const { name, updated } of installedApps)
     installedAppsStatus[name] = updated;
   for (const c of selectableCurrencies) {
+    if (c.type !== "CryptoCurrency" && c.type !== "TokenCurrency") continue;
     const mainCurrency =
       c.type === "TokenCurrency"
         ? c.parentCurrency
         : c.type === "CryptoCurrency"
         ? c
         : null;
+
     if (!mainCurrency) continue;
-    statuses[mainCurrency.id] =
+    statuses[c.id] =
       mainCurrency.managerAppName in installedAppsStatus
         ? notEmptyCurrencies.includes(mainCurrency.id)
           ? "ok"
@@ -124,6 +126,23 @@ export const reducer = (
         },
         fromCurrency: payload.fromCurrency,
         toCurrency,
+        error: null
+      };
+      break;
+    }
+    case "setToCurrency": {
+      newState = {
+        ...state,
+        swap: {
+          ...state.swap,
+          exchangeRate: null,
+          exchange: {
+            ...state.swap.exchange,
+            toAccount: undefined,
+            fromAmount: BigNumber(0),
+          }
+        },
+        toCurrency: payload.toCurrency,
         error: null
       };
       break;

@@ -126,3 +126,7 @@ export const SwapExchangeRateOutOfBounds = createCustomErrorClass(
 );
 
 export const SwapUnknownSwapId = createCustomErrorClass("SwapUnknownSwapId");
+
+export const SwapGenericAPIError = createCustomErrorClass(
+  "SwapGenericAPIError"
+);

@@ -8,11 +8,12 @@ import perFamily from "../generated/swap";
 import { getAccountCurrency, getAccountUnit, getMainAccount } from "../account";
 import network from "../network";
 import { getAccountBridge } from "../bridge";
+import { SwapGenericAPIError } from "../errors";
 import type {
   Exchange,
   ExchangeRate,
   InitSwap,
-  SwapRequestEvent,
+  SwapRequestEvent
 } from "./types";
 import { Observable } from "rxjs";
 import { withDevice } from "../hw/deviceAccess";
@@ -56,22 +57,51 @@ const initSwap: InitSwap = (
 
         // Request a lock on the specified rate for 20 minutes,
         // user is expected to send funds after this.
-        const res = await network({
-          method: "POST",
-          url: `${swapAPIBaseURL}/swap`,
-          data: [
-            {
-              provider,
-              amountFrom,
-              from: refundCurrency.id,
-              to: payoutCurrency.id,
-              rateId,
-              address: payoutAccount.freshAddress,
-              refundAddress: refundAccount.freshAddress,
-              deviceTransactionId
-            }
-          ]
-        });
+        // NB Added the try/catch because of the API stability issues.
+        let res;
+        try {
+          o.next({
+            type: "init-swap-api-confirm",
+            payload: [
+              {
+                provider,
+                amountFrom,
+                from: refundCurrency.id,
+                to: payoutCurrency.id,
+                rateId,
+                address: payoutAccount.freshAddress,
+                refundAddress: refundAccount.freshAddress,
+                deviceTransactionId
+              }
+            ]
+          });
+
+          res = await network({
+            method: "POST",
+            url: `${swapAPIBaseURL}/swap`,
+            data: [
+              {
+                provider,
+                amountFrom,
+                from: refundCurrency.id,
+                to: payoutCurrency.id,
+                rateId,
+                address: payoutAccount.freshAddress,
+                refundAddress: refundAccount.freshAddress,
+                deviceTransactionId
+              }
+            ]
+          });
+        } catch (e) {
+          o.next({
+            type: "init-swap-error",
+            error: new SwapGenericAPIError()
+          });
+          o.complete();
+          unsubscribed = true;
+        }
+
+        if (unsubscribed || !res || !res.data) return;
 
         const swapResult = res.data[0];
         const { swapId, provider: providerName } = swapResult;
@@ -105,8 +135,8 @@ const initSwap: InitSwap = (
         );
 
         const {
-          errors,
-          estimatedFees
+          errors
+          // estimatedFees
         } = await accountBridge.getTransactionStatus(
           refundAccount,
           transaction
@@ -120,8 +150,8 @@ const initSwap: InitSwap = (
         await swap.setPartnerKey(providerNameAndSignature.nameAndPubkey);
         await swap.checkPartner(providerNameAndSignature.signature);
         await swap.processTransaction(
-          Buffer.from(swapResult.binaryPayload, "hex"),
-          estimatedFees
+          Buffer.from(swapResult.binaryPayload, "hex")
+          // estimatedFees
         );
         const goodSign = secp256k1.signatureExport(
           Buffer.from(swapResult.signature, "hex")
@@ -173,9 +203,16 @@ const initSwap: InitSwap = (
         });
       };
       confirmSwap().then(
-        () => o.complete(),
+        () => {
+          o.complete();
+          unsubscribed = true;
+        },
         e => {
-          o.error(e);
+          o.next({
+            type: "init-swap-error",
+            error: e
+          });
+          o.complete();
           unsubscribed = true;
         }
       );
@@ -185,9 +222,5 @@ const initSwap: InitSwap = (
     })
   );
 };
-
-// NB If any of the swap interactions fail it throws an error, maybe we can remap
-// those errors to handle them differently.
-// TODO test timedout rates
 
 export default initSwap;
