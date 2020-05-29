@@ -18,31 +18,30 @@ const tron: AppSpec<Transaction> = {
   appQuery: {
     model: "nanoS",
     appName: "Tron",
-    appVersion: "0.2.x",
   },
   mutations: [
     {
       name: "move 50% to another account",
-      transaction: ({ account, siblings, bridge }) => {
-        invariant(account.balance.gt(minimalAmount), "balance is too low");
+      transaction: ({ account, siblings, bridge, maxSpendable }) => {
+        invariant(maxSpendable.gt(minimalAmount), "balance is too low");
         let t = bridge.createTransaction(account);
         const sibling = pickSiblings(siblings);
         const recipient = sibling.freshAddress;
-        const amount = account.balance.div(2).integerValue();
+        const amount = maxSpendable.div(2).integerValue();
         t = bridge.updateTransaction(t, { amount, recipient });
         return t;
       },
       deviceAction: deviceActions.acceptTransaction,
-      test: ({ account, accountBeforeTransaction, operation }) => {
-        expect(account.balance.toString()).toBe(
+      test: ({ accountBeforeTransaction, operation, maxSpendable }) => {
+        expect(maxSpendable.toString()).toBe(
           accountBeforeTransaction.balance.minus(operation.value).toString()
         );
       },
     },
     {
       name: "send max to another account",
-      transaction: ({ account, siblings, bridge }) => {
-        invariant(account.balance.gt(minimalAmount), "balance is too low");
+      transaction: ({ account, siblings, bridge, maxSpendable }) => {
+        invariant(maxSpendable.gt(minimalAmount), "balance is too low");
         let t = bridge.createTransaction(account);
         const sibling = pickSiblings(siblings);
         const recipient = sibling.freshAddress;
@@ -50,16 +49,16 @@ const tron: AppSpec<Transaction> = {
         return t;
       },
       deviceAction: deviceActions.acceptTransaction,
-      test: ({ account }) => {
-        expect(account.balance.toString()).toBe("0");
+      test: ({ maxSpendable }) => {
+        expect(maxSpendable.toString()).toBe("0");
       },
     },
     {
       name: "freeze 25% to bandwidth | energy",
-      transaction: ({ account, bridge }) => {
-        invariant(account.balance.gt(minimalAmount), "balance is too low");
+      transaction: ({ account, bridge, maxSpendable }) => {
+        invariant(maxSpendable.gt(minimalAmount), "balance is too low");
         let t = bridge.createTransaction(account);
-        const amount = account.balance.div(4).integerValue();
+        const amount = maxSpendable.div(4).integerValue();
 
         const energy = get(account, `tronResources.energy`, BigNumber(0));
 
@@ -121,7 +120,7 @@ const tron: AppSpec<Transaction> = {
           "tronResources.frozen.energy.expiredAt",
           undefined
         );
-
+        // To be rewrited using helper
         invariant(
           (bandwithExpiredAt && bandwithExpiredAt < currentDate) ||
             (energyExpiredAt && energyExpiredAt < currentDate),
