@@ -2,12 +2,12 @@
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
 import expect from "expect";
+import get from "lodash/get";
 import type { Transaction } from "./types";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
 import deviceActions from "./speculos-deviceActions";
-import { NetworkDown } from "@ledgerhq/errors";
 
 const currency = getCryptoCurrencyById("tron");
 const minimalAmount = parseCurrencyUnit(currency.units[0], "10");
@@ -33,14 +33,7 @@ const tron: AppSpec<Transaction> = {
         return t;
       },
       deviceAction: deviceActions.acceptTransaction,
-      test: ({
-        account,
-        accountBeforeTransaction,
-        transaction,
-        optimisticOperation,
-        operation,
-      }) => {
-        // can be generalized!
+      test: ({ account, accountBeforeTransaction, operation }) => {
         expect(account.balance.toString()).toBe(
           accountBeforeTransaction.balance.minus(operation.value).toString()
         );
@@ -57,13 +50,7 @@ const tron: AppSpec<Transaction> = {
         return t;
       },
       deviceAction: deviceActions.acceptTransaction,
-      test: ({
-        account,
-        accountBeforeTransaction,
-        transaction,
-        optimisticOperation,
-        operation,
-      }) => {
+      test: ({ account }) => {
         expect(account.balance.toString()).toBe("0");
       },
     },
@@ -72,78 +59,105 @@ const tron: AppSpec<Transaction> = {
       transaction: ({ account, bridge }) => {
         invariant(account.balance.gt(minimalAmount), "balance is too low");
         let t = bridge.createTransaction(account);
-
         const amount = account.balance.div(4).integerValue();
+
+        const energy = get(account, `tronResources.energy`, BigNumber(0));
+
         t = bridge.updateTransaction(t, {
           mode: "freeze",
           amount,
-          resource: account.energy.eq(0) ? "ENERGY" : "BANDWIDTH",
+          resource: energy.eq(0) ? "ENERGY" : "BANDWIDTH",
         });
         return t;
       },
       deviceAction: deviceActions.acceptTransaction,
-      test: ({
-        account,
-        accountBeforeTransaction,
-        transaction,
-        optimisticOperation,
-        operation,
-      }) => {
-        const resourceType = transaction.resource;
+      test: ({ account, accountBeforeTransaction, transaction }) => {
+        const resourceType = transaction.resource || "";
+
+        // We need Lenses or Getter for this 😱
+        const resourceBeforeTransaction = get(
+          accountBeforeTransaction,
+          `tronResources.frozen.${resourceType}.amount`,
+          BigNumber(0)
+        );
+
         const expectedAmount = BigNumber(transaction.amount)
           .times(10e6)
-          .plus(
-            accountBeforeTransaction.tronResources.frozen[`${resourceType}`]
-              ? accountBeforeTransaction.tronResources.frozen[`${resourceType}`]
-                  .amount
-              : BigNumber(0)
-          );
+          .plus(resourceBeforeTransaction);
+
+        const currentRessourceAmount = get(
+          account,
+          `tronResources.frozen.${resourceType}.amount`,
+          BigNumber(0)
+        );
+
         expect(expectedAmount.toString()).toBe(
-          account.tronResources.frozen[`${resourceType}`].amount.toString()
+          currentRessourceAmount.toString()
         );
-        const expectedTP = transaction.amount.plus(
-          accountBeforeTransaction.tronResources.tronPower
+
+        const TPBefore = get(
+          accountBeforeTransaction,
+          "tronResources.tronPower",
+          BigNumber(0)
         );
-        expect(expectedTP).toBe(account.tronResources.tronPower);
+        const currentTP = get(account, "tronResources.tronPower", "0");
+        const expectedTP = transaction.amount.plus(TPBefore);
+        expect(expectedTP.toString()).toBe(currentTP);
       },
     },
     {
       name: "unfreeze bandwith / energy",
-      transaction: ({ account, bridge, amount }) => {
-        invariant(account.tronResources.tronPower.gt(0), "no frozen assets");
+      transaction: ({ account, bridge }) => {
+        const TP = BigNumber(get(account, "tronResources.tronPower", "0"));
+        invariant(TP.gt(0), "no frozen assets");
         const currentDate = new Date();
+        const bandwithExpiredAt = get(
+          account,
+          "tronResources.frozen.bandwidth.expiredAt",
+          undefined
+        );
+        const energyExpiredAt = get(
+          account,
+          "tronResources.frozen.energy.expiredAt",
+          undefined
+        );
+
         invariant(
-          account.tronResources.frozen.bandwidth.expiredAt < currentDate &&
-            currentDate > account.tronResources.frozen.energy.expiredAt,
+          (bandwithExpiredAt && bandwithExpiredAt < currentDate) ||
+            (energyExpiredAt && energyExpiredAt < currentDate),
           "freeze period not expired yet"
         );
         const resourceToUnfreeze =
-          account.tronResources.frozen.bandwidth.expiredAt < currentDate
+          bandwithExpiredAt && bandwithExpiredAt < currentDate
             ? "BANDWIDTH"
             : "ENERGY";
+
         let t = bridge.createTransaction(account);
         t = bridge.updateTransaction(t, {
           mode: "unfreeze",
-          amount,
           resource: resourceToUnfreeze,
         });
         return t;
       },
       deviceAction: deviceActions.acceptTransaction,
-      test: ({
-        account,
-        accountBeforeTransaction,
-        transaction,
-        optimisticOperation,
-        operation,
-      }) => {
-        expect(account.tronResources.frozen).toEqual(
-          expect.not.stringContaining(transaction.resource)
+      test: ({ account, accountBeforeTransaction, transaction }) => {
+        const TxResource = transaction.resource || "";
+
+        const currentFrozen = get(
+          account,
+          `tronResources.frozen.${TxResource}`,
+          {}
         );
-        const expectedTronPower = accountBeforeTransaction.tronResources.tronPower.minus(
-          transaction.amount
+
+        expect(currentFrozen).toBeUndefined();
+
+        const TPBeforeTx = BigNumber(
+          get(accountBeforeTransaction, "tronResources.tronPower", 0)
         );
-        expect(account.tronResources.tronPower).toEqual(expectedTronPower);
+        const currentTP = BigNumber(get(account, "tronResources.tronPower", 0));
+
+        const expectedTronPower = TPBeforeTx.minus(transaction.amount);
+        expect(currentTP).toEqual(expectedTronPower);
       },
     },
   ],
