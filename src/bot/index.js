@@ -55,7 +55,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
     }).catch((error) => {
       specFatals.push({ spec, error });
       console.error("FATAL spec " + spec.name, error);
-      logs.push(`FATAL:\n${"```"}\n${String(error)}\n${"```"}\n`);
+      logs.push(String(error));
       return [];
     });
   });
@@ -99,19 +99,17 @@ export async function bot({ currency, mutation }: Arg = {}) {
 
     const withoutResults = results
       .map((result, i) => ({
-        result,
+        resultWithMutations: result.filter((r) => !!r.mutation),
         spec: specs[i],
         isFatal: specFatals.find((f) => f.spec === specs[i]),
       }))
-      .filter((s) => !s.isFatal && s.result.length === 0)
+      .filter((s) => !s.isFatal && s.resultWithMutations.length === 0)
       .map((s) => s.spec.name);
 
     if (withoutResults.length) {
       body += `**⚠️ ${
         withoutResults.length
-      } specs ran without any mutation done. Make sure you have enough funds!** (${withoutResults.join(
-        ", "
-      )})\n\n`;
+      } specs don't have enough funds!** (${withoutResults.join(", ")})\n\n`;
     }
 
     specFatals.forEach(({ spec, error }) => {

@@ -56,7 +56,10 @@ export async function createSpeculosDevice({
   const buttonPort = 42000 + idCounter;
   const automationPort = 43000 + idCounter;
 
-  const appPath = `./apps/${model.toLowerCase()}/${firmware}/${appName}/app_${appVersion}.elf`;
+  const appPath = `./apps/${model.toLowerCase()}/${firmware}/${appName.replace(
+    / /g,
+    ""
+  )}/app_${appVersion}.elf`;
 
   log("speculos", `spawning ${id} with coinapps=${coinapps} on app ${appPath}`);
 
