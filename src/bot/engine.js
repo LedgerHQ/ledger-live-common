@@ -2,7 +2,7 @@
 import invariant from "invariant";
 import now from "performance-now";
 import sample from "lodash/sample";
-import { Subject, Observable } from "rxjs";
+import { Subject, Observable, merge } from "rxjs";
 import { first, filter, map, reduce, tap } from "rxjs/operators";
 import { log } from "@ledgerhq/logs";
 import type {
@@ -150,7 +150,7 @@ export async function runWithAppSpec<T: Transaction>(
     for (let i = 0; i < length; i++) {
       log(
         "engine",
-        `spec ${spec.name} on account ${i}/${length} (${accounts[i].name})`
+        `spec ${spec.name} on account ${i + 1}/${length} (${accounts[i].name})`
       );
       // resync all accounts (necessary between mutations)
       t = now();
@@ -454,7 +454,7 @@ function timeoutWithError<T>(
     const subject = new Subject();
     const timeout = setTimeout(() => subject.error(errorFn()), time);
     return Observable.create((o) => {
-      const s = observable.subscribe(o);
+      const s = merge(subject, observable).subscribe(o);
       return () => {
         s.unsubscribe();
         clearTimeout(timeout);
