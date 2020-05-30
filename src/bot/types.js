@@ -108,10 +108,14 @@ export type MutationReport<T: Transaction> = {
   appCandidate: AppCandidate,
   account?: Account,
   maxSpendable?: BigNumber,
+<<<<<<< HEAD
   unavailableMutationReasons?: Array<{
     error: Error,
     mutation: MutationSpec<T>,
   }>,
+=======
+  unavailableMutationReasons?: string[],
+>>>>>>> improve bot
   mutation?: MutationSpec<T>,
   mutationTime?: number,
   destination?: Account,

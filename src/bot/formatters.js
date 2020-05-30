@@ -53,6 +53,12 @@ export function formatReportForConsole<T: Transaction>({
   if (account && maxSpendable) {
     str += `max spendable ~${formatCurrencyUnit(account.unit, maxSpendable)}\n`;
   }
+  if (account && maxSpendable) {
+    str += `max spendable ~ ${formatCurrencyUnit(
+      account.unit,
+      maxSpendable
+    )}\n`;
+  }
   if (unavailableMutationReasons) {
     let detail;
     if (account && isAccountEmpty(account)) {
