@@ -27,7 +27,11 @@ import {
 } from "../load/speculos";
 import deviceActions from "../generated/speculos-deviceActions";
 import type { AppCandidate } from "../load/speculos";
-import { formatReportForConsole, formatTime } from "./formatters";
+import {
+  formatReportForConsole,
+  formatTime,
+  formatAppCandidate,
+} from "./formatters";
 import type { AppSpec, MutationReport, DeviceAction } from "./types";
 
 let appCandidates;
@@ -39,6 +43,7 @@ export async function runWithAppSpec<T: Transaction>(
   if (!isCurrencySupported(spec.currency)) {
     return Promise.resolve([]);
   }
+  log("engine", `spec ${spec.name}`);
 
   const seed = getEnv("SEED");
   invariant(seed, "SEED is not set");
@@ -65,6 +70,10 @@ export async function runWithAppSpec<T: Transaction>(
     coinapps
   );
 
+  log(
+    "engine",
+    `spec ${spec.name} will use ${formatAppCandidate(appCandidate)}`
+  );
   const device = await createSpeculosDevice({
     ...appCandidate,
     appName: spec.currency.managerAppName,
@@ -107,11 +116,13 @@ export async function runWithAppSpec<T: Transaction>(
     );
 
     const preloadStats =
-      preloadTime > 10 ? `(preload: ${formatTime(preloadTime)})` : "";
+      preloadTime > 10 ? ` (preload: ${formatTime(preloadTime)})` : "";
     reportLog(
       `Spec '${spec.name}' found ${accounts.length} ${
         currency.name
-      } accounts. ${preloadStats}\n${accounts
+      } accounts${preloadStats}. Will use ${formatAppCandidate(
+        appCandidate
+      )}\n${accounts
         .map(
           (a) =>
             "(" +
@@ -137,6 +148,10 @@ export async function runWithAppSpec<T: Transaction>(
     // we sequentially iterate on the initial account set to perform mutations
     const length = accounts.length;
     for (let i = 0; i < length; i++) {
+      log(
+        "engine",
+        `spec ${spec.name} on account ${i}/${length} (${accounts[i].name})`
+      );
       // resync all accounts (necessary between mutations)
       t = now();
       accounts = await promiseAllBatched(5, accounts, syncAccount);
@@ -156,6 +171,7 @@ export async function runWithAppSpec<T: Transaction>(
     }
   } finally {
     releaseSpeculosDevice(device.id);
+    log("engine", `spec ${spec.name} finished`);
   }
   return reports;
 }
