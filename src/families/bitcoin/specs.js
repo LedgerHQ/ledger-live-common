@@ -203,7 +203,7 @@ const zencash: AppSpec<Transaction> = {
   mutations: bitcoinLikeMutations({
     minimalAmount: parseCurrencyUnit(
       getCryptoCurrencyById("zencash").units[0],
-      "0.1"
+      "0.01"
     ),
   }),
 };
@@ -219,7 +219,7 @@ const digibyte: AppSpec<Transaction> = {
   mutations: bitcoinLikeMutations({
     minimalAmount: parseCurrencyUnit(
       getCryptoCurrencyById("digibyte").units[0],
-      "5"
+      "0.1"
     ),
   }),
 };
@@ -235,7 +235,7 @@ const komodo: AppSpec<Transaction> = {
   mutations: bitcoinLikeMutations({
     minimalAmount: parseCurrencyUnit(
       getCryptoCurrencyById("komodo").units[0],
-      "5"
+      "0.1"
     ),
   }),
 };
@@ -252,7 +252,7 @@ const litecoin: AppSpec<Transaction> = {
     targetAccountSize: 3,
     minimalAmount: parseCurrencyUnit(
       getCryptoCurrencyById("litecoin").units[0],
-      "0.01"
+      "0.001"
     ),
   }),
 };
@@ -268,7 +268,7 @@ const stealthcoin: AppSpec<Transaction> = {
   mutations: bitcoinLikeMutations({
     minimalAmount: parseCurrencyUnit(
       getCryptoCurrencyById("stealthcoin").units[0],
-      "10"
+      "0.1"
     ),
   }),
 };
