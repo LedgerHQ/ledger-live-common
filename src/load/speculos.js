@@ -131,11 +131,12 @@ export async function createSpeculosDevice(
   let destroyed = false;
 
   p.stderr.on("data", (data) => {
+    if (!data) return;
     if (!data.includes("apdu: ")) {
-      log("speculos-stderr", `${id}: ${data}`);
+      log("speculos-stderr", `${speculosID}: ${String(data).trim()}`);
     }
     if (data.includes("using SDK")) {
-      resolveReady();
+      setTimeout(resolveReady, 500);
     }
   });
 

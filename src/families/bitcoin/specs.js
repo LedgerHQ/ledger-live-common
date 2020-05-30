@@ -363,6 +363,7 @@ const viacoin: AppSpec<Transaction> = {
 const bitcoinGold: AppSpec<Transaction> = {
   name: "Bitcoin Gold",
   currency: getCryptoCurrencyById("bitcoin_gold"),
+  dependency: "Bitcoin",
   appQuery: {
     model: "nanoS",
     appName: "BitcoinGold",
@@ -373,6 +374,7 @@ const bitcoinGold: AppSpec<Transaction> = {
 const bitcoinCash: AppSpec<Transaction> = {
   name: "Bitcoin Cash",
   currency: getCryptoCurrencyById("bitcoin_cash"),
+  dependency: "Bitcoin",
   appQuery: {
     model: "nanoS",
     appName: "BitcoinCash",
@@ -383,6 +385,7 @@ const bitcoinCash: AppSpec<Transaction> = {
 const peercoin: AppSpec<Transaction> = {
   name: "Peercoin",
   currency: getCryptoCurrencyById("peercoin"),
+  dependency: "Bitcoin",
   appQuery: {
     model: "nanoS",
     appName: "Peercoin",
@@ -393,6 +396,7 @@ const peercoin: AppSpec<Transaction> = {
 const pivx: AppSpec<Transaction> = {
   name: "PivX",
   currency: getCryptoCurrencyById("pivx"),
+  dependency: "Bitcoin",
   appQuery: {
     model: "nanoS",
     appName: "PivX",
@@ -403,6 +407,7 @@ const pivx: AppSpec<Transaction> = {
 const qtum: AppSpec<Transaction> = {
   name: "Qtum",
   currency: getCryptoCurrencyById("qtum"),
+  dependency: "Bitcoin",
   appQuery: {
     model: "nanoS",
     appName: "Qtum",
@@ -413,6 +418,7 @@ const qtum: AppSpec<Transaction> = {
 const stakenet: AppSpec<Transaction> = {
   name: "Stakenet",
   currency: getCryptoCurrencyById("stakenet"),
+  dependency: "Bitcoin",
   appQuery: {
     model: "nanoS",
     appName: "XSN",
@@ -423,6 +429,7 @@ const stakenet: AppSpec<Transaction> = {
 const stratis: AppSpec<Transaction> = {
   name: "Stratis",
   currency: getCryptoCurrencyById("stratis"),
+  dependency: "Bitcoin",
   appQuery: {
     model: "nanoS",
     appName: "Stratis",
@@ -433,6 +440,7 @@ const stratis: AppSpec<Transaction> = {
 const vertcoin: AppSpec<Transaction> = {
   name: "Vertcoin",
   currency: getCryptoCurrencyById("vertcoin"),
+  dependency: "Bitcoin",
   appQuery: {
     model: "nanoS",
     appName: "Vertcoin",
@@ -443,6 +451,7 @@ const vertcoin: AppSpec<Transaction> = {
 const viacoin: AppSpec<Transaction> = {
   name: "Viacoin",
   currency: getCryptoCurrencyById("viacoin"),
+  dependency: "Bitcoin",
   appQuery: {
     model: "nanoS",
     appName: "Viacoin",

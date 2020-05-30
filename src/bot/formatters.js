@@ -21,6 +21,10 @@ export function formatAppCandidate(appCandidate: AppCandidate) {
   return `${appCandidate.appName} ${appCandidate.appVersion} on ${appCandidate.model} ${appCandidate.firmware}`;
 }
 
+export function formatAppCandidate(appCandidate: AppCandidate) {
+  return `${appCandidate.appName} ${appCandidate.appVersion} on ${appCandidate.model} ${appCandidate.firmware}`;
+}
+
 export function formatReportForConsole<T: Transaction>({
   syncAllAccountsTime,
   appCandidate,
