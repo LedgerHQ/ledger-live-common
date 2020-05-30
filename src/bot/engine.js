@@ -2,7 +2,7 @@
 import invariant from "invariant";
 import now from "performance-now";
 import sample from "lodash/sample";
-import { Subject, Observable, race } from "rxjs";
+import { Subject, Observable } from "rxjs";
 import { first, filter, map, reduce, tap } from "rxjs/operators";
 import { log } from "@ledgerhq/logs";
 import type {
@@ -455,10 +455,12 @@ function timeoutWithError<T>(
     return Observable.create((o) => {
       const subject = new Subject();
       const timeout = setTimeout(() => subject.error(errorFn()), time);
-      const s = race(subject, observable).subscribe(o);
+      const s1 = observable.subscribe(o);
+      const s2 = subject.subscribe(o);
       return () => {
         clearTimeout(timeout);
-        s.unsubscribe();
+        s1.unsubscribe();
+        s2.unsubscribe();
       };
     });
   };
