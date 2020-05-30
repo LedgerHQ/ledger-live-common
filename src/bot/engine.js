@@ -2,7 +2,7 @@
 import invariant from "invariant";
 import now from "performance-now";
 import sample from "lodash/sample";
-import { Subject, Observable, merge } from "rxjs";
+import { Subject, Observable, race } from "rxjs";
 import { first, filter, map, reduce, tap } from "rxjs/operators";
 import { log } from "@ledgerhq/logs";
 import type {
@@ -452,13 +452,13 @@ function timeoutWithError<T>(
 ): rxjs$MonoTypeOperatorFunction<T> {
   // $FlowFixMe
   return (observable: Observable<T>): Observable<T> => {
-    const subject = new Subject();
-    const timeout = setTimeout(() => subject.error(errorFn()), time);
     return Observable.create((o) => {
-      const s = merge(subject, observable).subscribe(o);
+      const subject = new Subject();
+      const timeout = setTimeout(() => subject.error(errorFn()), time);
+      const s = race(subject, observable).subscribe(o);
       return () => {
-        s.unsubscribe();
         clearTimeout(timeout);
+        s.unsubscribe();
       };
     });
   };

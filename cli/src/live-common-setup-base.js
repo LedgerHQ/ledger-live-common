@@ -61,9 +61,14 @@ const logger = winston.createLogger({
 });
 
 const { format } = winston;
-const { combine, timestamp, json } = format;
-const winstonFormatJSON = combine(timestamp(), json());
-const winstonFormatConsole = combine(format.colorize(), format.simple());
+const { combine, json } = format;
+const winstonFormatJSON = json();
+const winstonFormatConsole = combine(
+  // eslint-disable-next-line no-unused-vars
+  format(({ type, id, date, ...rest }) => rest)(),
+  format.colorize(),
+  format.simple()
+);
 
 const levels = {
   error: 0,
@@ -105,8 +110,8 @@ if (VERBOSE && VERBOSE !== "json") {
   );
 }
 
-// eslint-disable-next-line no-unused-vars
-listen(({ id, date, type, ...rest }) => {
+listen((log) => {
+  const { type } = log;
   let level = "info";
   if (type === "libcore-call" || type === "libcore-result") {
     level = "silly";
@@ -125,7 +130,7 @@ listen(({ id, date, type, ...rest }) => {
   } else if (type.includes("error")) {
     level = "error";
   }
-  logger.log(level, rest);
+  logger.log(level, log);
 });
 
 implementLibcore({
