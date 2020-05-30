@@ -320,6 +320,7 @@ export async function runOnAccount<T: Transaction>({
       });
     }
   } catch (error) {
+    log("mutation-error", spec.name + ": " + String(error));
     report.error = error;
   }
   return report;

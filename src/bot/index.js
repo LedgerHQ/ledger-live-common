@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 // @flow
+import { log } from "@ledgerhq/logs";
 import invariant from "invariant";
 import flatMap from "lodash/flatMap";
 import { getEnv } from "../env";
@@ -49,11 +50,13 @@ export async function bot({ currency, mutation }: Arg = {}) {
   const results = await promiseAllBatched(6, specs, (spec) => {
     const logs = [];
     specsLogs.push(logs);
-    return runWithAppSpec(spec, (log) => {
-      console.log(log);
-      logs.push(log);
+    return runWithAppSpec(spec, (message) => {
+      log("bot", message);
+      console.log(message);
+      logs.push(message);
     }).catch((error) => {
       specFatals.push({ spec, error });
+      log("bot-error", "FATAL spec " + spec.name + String(error));
       console.error("FATAL spec " + spec.name, error);
       logs.push(String(error));
       return [];
