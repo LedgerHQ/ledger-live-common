@@ -370,6 +370,7 @@ export function autoSignTransaction<T: Transaction>({
   transaction: T,
 }) {
   let sub;
+  let observer;
   let state;
   const recentEvents = [];
   return concatMap<SignOperationEvent, SignOperationEvent, SignOperationEvent>(
@@ -378,6 +379,7 @@ export function autoSignTransaction<T: Transaction>({
 
       if (e.type === "device-signature-requested") {
         return Observable.create((o) => {
+          observer = o;
           o.next(e);
           sub = transport.automationEvents
             .pipe(
@@ -414,6 +416,9 @@ export function autoSignTransaction<T: Transaction>({
             sub.unsubscribe();
           };
         });
+      } else if (observer) {
+        observer.complete();
+        observer = null;
       }
 
       if (sub) {
