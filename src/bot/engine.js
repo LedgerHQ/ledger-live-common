@@ -150,7 +150,7 @@ export async function runWithAppSpec<T: Transaction>(
     for (let i = 0; i < length; i++) {
       log(
         "engine",
-        `spec ${spec.name} on account ${i + 1}/${length} (${accounts[i].name})`
+        `spec ${spec.name} on account ${accounts[i].name} (${i + 1}/${length}`
       );
       // resync all accounts (necessary between mutations)
       t = now();
@@ -408,7 +408,7 @@ export function getImplicitDeviceAction(currency: CryptoCurrency) {
 function awaitAccountOperation<T>({
   account,
   optimisticOperation,
-  timeout = 1000 * 60 * 5, // 5mn
+  timeout,
 }: {
   account: Account,
   accountBridge: AccountBridge<T>,
@@ -427,9 +427,6 @@ function awaitAccountOperation<T>({
         "could not find optimisticOperation " + optimisticOperation.id
       );
     }
-    log("engine", "sync #" + syncCounter++ + " on " + account.name);
-    await delay(5000);
-    acc = await syncAccount(acc);
 
     const operation = acc.operations.find(
       (o) => o.id === optimisticOperation.id
@@ -438,6 +435,10 @@ function awaitAccountOperation<T>({
       log("engine", "found " + operation.id);
       return { account: acc, operation };
     }
+
+    await delay(5000);
+    log("engine", "sync #" + syncCounter++ + " on " + account.name);
+    acc = await syncAccount(acc);
 
     const r = await loop();
     return r;
@@ -451,8 +452,8 @@ function timeoutWithError<T>(
   errorFn: () => Error
 ): rxjs$MonoTypeOperatorFunction<T> {
   // $FlowFixMe
-  return (observable: Observable<T>): Observable<T> => {
-    return Observable.create((o) => {
+  return (observable: Observable<T>): Observable<T> =>
+    Observable.create((o) => {
       const subject = new Subject();
       const timeout = setTimeout(() => subject.error(errorFn()), time);
       const s1 = observable.subscribe(o);
@@ -463,5 +464,4 @@ function timeoutWithError<T>(
         s2.unsubscribe();
       };
     });
-  };
 }
