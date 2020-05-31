@@ -9,7 +9,7 @@ import {
   map,
   reduce,
   tap,
-  concatMap,
+  mergeMap,
   timeoutWith,
 } from "rxjs/operators";
 import { log } from "@ledgerhq/logs";
@@ -205,8 +205,6 @@ export async function runOnAccount<T: Transaction>({
 }): Promise<MutationReport<T>> {
   const { mutations } = spec;
 
-  let deviceShouldReboot = false;
-
   let report: MutationReport<T> = { spec, appCandidate, syncAllAccountsTime };
   try {
     const accountBridge = getAccountBridge(account);
@@ -290,11 +288,6 @@ export async function runOnAccount<T: Transaction>({
       .signOperation({ account, transaction, deviceId: device.id })
       .pipe(
         tap((e) => {
-          if (e.type === "device-signature-requested") {
-            deviceShouldReboot = true;
-          } else {
-            deviceShouldReboot = false;
-          }
           log("engine", `spec ${spec.name}/${account.name}: ${e.type}`);
         }),
         autoSignTransaction({
@@ -359,10 +352,6 @@ export async function runOnAccount<T: Transaction>({
   } catch (error) {
     log("mutation-error", spec.name + ": " + String(error));
     report.error = error;
-    // FIXME we throw for now but we will need to "restore" a device instead
-    if (deviceShouldReboot) {
-      throw error;
-    }
   }
   return report;
 }
@@ -397,7 +386,7 @@ export function autoSignTransaction<T: Transaction>({
   let state;
   const recentEvents = [];
 
-  return concatMap<SignOperationEvent, SignOperationEvent, SignOperationEvent>(
+  return mergeMap<SignOperationEvent, SignOperationEvent, SignOperationEvent>(
     (e) => {
       if (e.type === "device-signature-requested") {
         return Observable.create((o) => {
