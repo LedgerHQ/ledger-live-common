@@ -2,7 +2,7 @@
 import invariant from "invariant";
 import now from "performance-now";
 import sample from "lodash/sample";
-import { throwError, of, Observable, defer } from "rxjs";
+import { throwError, of, Observable } from "rxjs";
 import {
   first,
   filter,
@@ -158,10 +158,7 @@ export async function runWithAppSpec<T: Transaction>(
     // we sequentially iterate on the initial account set to perform mutations
     const length = accounts.length;
     for (let i = 0; i < length; i++) {
-      log(
-        "engine",
-        `spec ${spec.name} on account ${accounts[i].name} (${i + 1}/${length}`
-      );
+      log("engine", `spec ${spec.name} sync all accounts`);
       // resync all accounts (necessary between mutations)
       t = now();
       accounts = await promiseAllBatched(5, accounts, syncAccount);
@@ -208,14 +205,24 @@ export async function runOnAccount<T: Transaction>({
 }): Promise<MutationReport<T>> {
   const { mutations } = spec;
 
+  let deviceShouldReboot = false;
+
   let report: MutationReport<T> = { spec, appCandidate, syncAllAccountsTime };
   try {
     const accountBridge = getAccountBridge(account);
     const accountBeforeTransaction = account;
     report.account = account;
 
+    log("engine", `spec ${spec.name}/${account.name}`);
+
     const maxSpendable = await accountBridge.estimateMaxSpendable({ account });
     report.maxSpendable = maxSpendable;
+    log(
+      "engine",
+      `spec ${spec.name}/${
+        account.name
+      } maxSpendable=${maxSpendable.toString()}`
+    );
 
     const candidates = [];
     const unavailableMutationReasons = [];
@@ -278,9 +285,18 @@ export async function runOnAccount<T: Transaction>({
 
     // sign the transaction with speculos
 
+    log("engine", `spec ${spec.name}/${account.name} signing`);
     const signedOperation = await accountBridge
       .signOperation({ account, transaction, deviceId: device.id })
       .pipe(
+        tap((e) => {
+          if (e.type === "device-signature-requested") {
+            deviceShouldReboot = true;
+          } else {
+            deviceShouldReboot = false;
+          }
+          log("engine", `spec ${spec.name}/${account.name}: ${e.type}`);
+        }),
         autoSignTransaction({
           transport: device.transport,
           deviceAction:
@@ -309,6 +325,10 @@ export async function runOnAccount<T: Transaction>({
         });
     report.optimisticOperation = optimisticOperation;
     report.broadcastedTime = now();
+    log(
+      "engine",
+      `spec ${spec.name}/${account.name}/${optimisticOperation.hash} broadcasted`
+    );
 
     // wait the condition are good (operation confirmed)
     const result = await awaitAccountOperation({
@@ -320,6 +340,10 @@ export async function runOnAccount<T: Transaction>({
     report.finalAccount = result.account;
     report.operation = result.operation;
     report.confirmedTime = now();
+    log(
+      "engine",
+      `spec ${spec.name}/${account.name}/${optimisticOperation.hash} confirmed`
+    );
 
     // do potential final tests
     if (mutation.test) {
@@ -335,6 +359,10 @@ export async function runOnAccount<T: Transaction>({
   } catch (error) {
     log("mutation-error", spec.name + ": " + String(error));
     report.error = error;
+    // FIXME we throw for now but we will need to "restore" a device instead
+    if (deviceShouldReboot) {
+      throw error;
+    }
   }
   return report;
 }
@@ -346,12 +374,7 @@ async function syncAccount(initialAccount: Account): Promise<Account> {
       reduce((a, f: (Account) => Account) => f(a), initialAccount),
       timeoutWith(
         5 * 60 * 1000,
-        throwError(
-          new Error(
-            "account sync timeout for " +
-              formatAccount(initialAccount, "summary")
-          )
-        )
+        throwError(new Error("account sync timeout for " + initialAccount.name))
       )
     )
     .toPromise();
@@ -373,51 +396,51 @@ export function autoSignTransaction<T: Transaction>({
   let observer;
   let state;
   const recentEvents = [];
+
   return concatMap<SignOperationEvent, SignOperationEvent, SignOperationEvent>(
     (e) => {
-      log("engine", `device-event: ${e.type}`);
-
       if (e.type === "device-signature-requested") {
         return Observable.create((o) => {
+          invariant(
+            !observer,
+            "device-signature-requested should not be called twice!"
+          );
           observer = o;
           o.next(e);
-          sub = transport.automationEvents
-            .pipe(
-              timeoutWith(
-                10 * 1000,
-                defer(() =>
-                  throwError(
-                    new Error(
-                      "device action timeout. Recent events was:\n" +
-                        recentEvents.map((e) => JSON.stringify(e)).join("\n")
-                    )
-                  )
-                )
+
+          const timeout = setTimeout(() => {
+            o.error(
+              new Error(
+                "device action timeout. Recent events was:\n" +
+                  recentEvents.map((e) => JSON.stringify(e)).join("\n")
               )
-            )
-            .subscribe({
-              next: (event) => {
-                recentEvents.push(event);
-                if (recentEvents.length > 5) {
-                  recentEvents.shift();
-                }
-                state = deviceAction({
-                  appCandidate,
-                  transaction,
-                  event,
-                  transport,
-                  state,
-                });
-              },
-              complete: () => {
-                o.complete();
-              },
-              error: (e) => {
-                o.error(e);
-              },
-            });
+            );
+          }, 10 * 1000);
+
+          sub = transport.automationEvents.subscribe({
+            next: (event) => {
+              recentEvents.push(event);
+              if (recentEvents.length > 5) {
+                recentEvents.shift();
+              }
+              state = deviceAction({
+                appCandidate,
+                transaction,
+                event,
+                transport,
+                state,
+              });
+            },
+            complete: () => {
+              o.complete();
+            },
+            error: (e) => {
+              o.error(e);
+            },
+          });
 
           return () => {
+            clearTimeout(timeout);
             sub.unsubscribe();
           };
         });
