@@ -2,8 +2,16 @@
 import invariant from "invariant";
 import now from "performance-now";
 import sample from "lodash/sample";
-import { Subject, Observable, throwError } from "rxjs";
-import { first, filter, map, reduce, tap, timeoutWith } from "rxjs/operators";
+import { throwError, of, Observable } from "rxjs";
+import {
+  first,
+  filter,
+  map,
+  reduce,
+  tap,
+  concatMap,
+  timeoutWith,
+} from "rxjs/operators";
 import { log } from "@ledgerhq/logs";
 import type {
   Transaction,
@@ -364,41 +372,57 @@ export function autoSignTransaction<T: Transaction>({
   let sub;
   let state;
   const recentEvents = [];
-  return tap<SignOperationEvent>((e: SignOperationEvent) => {
-    log("engine", `device-event: ${e.type}`);
-    if (e.type === "device-signature-requested") {
-      // TODO we need a timeout on this.
-      // TODO event probably can be pushed in the report because it will be useful to debug.
-      sub = transport.automationEvents
-        .pipe(
-          timeoutWith(
-            10 * 1000,
-            throwError(
-              new Error(
-                "device action timeout. Recent events was:\n" +
-                  recentEvents.map((e) => JSON.stringify(e)).join("\n")
+  return concatMap<SignOperationEvent, SignOperationEvent, SignOperationEvent>(
+    (e) => {
+      log("engine", `device-event: ${e.type}`);
+
+      if (e.type === "device-signature-requested") {
+        return Observable.create((o) => {
+          o.next(e);
+          sub = transport.automationEvents
+            .pipe(
+              timeoutWith(
+                10 * 1000,
+                throwError(
+                  new Error(
+                    "device action timeout. Recent events was:\n" +
+                      recentEvents.map((e) => JSON.stringify(e)).join("\n")
+                  )
+                )
               )
             )
-          )
-        )
-        .subscribe((event) => {
-          recentEvents.push(event);
-          if (recentEvents.length > 5) {
-            recentEvents.shift();
-          }
-          state = deviceAction({
-            appCandidate,
-            transaction,
-            event,
-            transport,
-            state,
-          });
+            .subscribe({
+              next: (event) => {
+                recentEvents.push(event);
+                if (recentEvents.length > 5) {
+                  recentEvents.shift();
+                }
+                state = deviceAction({
+                  appCandidate,
+                  transaction,
+                  event,
+                  transport,
+                  state,
+                });
+              },
+              error: (e) => {
+                o.error(e);
+              },
+            });
+
+          return () => {
+            sub.unsubscribe();
+          };
         });
+      }
+
+      if (sub) {
+        sub.unsubscribe();
+      }
+
+      return of(e);
     }
-    if (e.type === "signed" && sub) {
-      sub.unsubscribe();
-    }
-  });
+  );
 }
 
 export function getImplicitDeviceAction(currency: CryptoCurrency) {
