@@ -90,6 +90,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
 
   const { GITHUB_SHA, GITHUB_TOKEN } = process.env;
   if (GITHUB_TOKEN && GITHUB_SHA) {
+    log("github", "will send a report to " + GITHUB_SHA);
     let body = "";
     if (errorCases.length) {
       body += `## 🤖❌ ${errorCases.length} mutations failed`;
@@ -149,6 +150,14 @@ export async function bot({ currency, mutation }: Arg = {}) {
       },
       data: { body },
     });
+  } else {
+    log(
+      "github",
+      "will NOT send a report. Missing " +
+        [GITHUB_SHA ? "" : "commit", GITHUB_TOKEN ? "" : "token"]
+          .filter(Boolean)
+          .join(" ")
+    );
   }
 
   if (botHaveFailed) {
