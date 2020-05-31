@@ -47,7 +47,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
     }
   }
 
-  const results = await promiseAllBatched(10, specs, (spec) => {
+  const results = await promiseAllBatched(4, specs, (spec) => {
     const logs = [];
     specsLogs.push(logs);
     return runWithAppSpec(spec, (message) => {

@@ -2,7 +2,7 @@
 import invariant from "invariant";
 import now from "performance-now";
 import sample from "lodash/sample";
-import { throwError, of, Observable } from "rxjs";
+import { throwError, of, Observable, defer } from "rxjs";
 import {
   first,
   filter,
@@ -385,10 +385,12 @@ export function autoSignTransaction<T: Transaction>({
             .pipe(
               timeoutWith(
                 10 * 1000,
-                throwError(
-                  new Error(
-                    "device action timeout. Recent events was:\n" +
-                      recentEvents.map((e) => JSON.stringify(e)).join("\n")
+                defer(() =>
+                  throwError(
+                    new Error(
+                      "device action timeout. Recent events was:\n" +
+                        recentEvents.map((e) => JSON.stringify(e)).join("\n")
+                    )
                   )
                 )
               )
@@ -406,6 +408,9 @@ export function autoSignTransaction<T: Transaction>({
                   transport,
                   state,
                 });
+              },
+              complete: () => {
+                o.complete();
               },
               error: (e) => {
                 o.error(e);
