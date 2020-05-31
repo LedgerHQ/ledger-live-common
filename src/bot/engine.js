@@ -2,8 +2,8 @@
 import invariant from "invariant";
 import now from "performance-now";
 import sample from "lodash/sample";
-import { Subject, Observable } from "rxjs";
-import { first, filter, map, reduce, tap } from "rxjs/operators";
+import { Subject, Observable, throwError } from "rxjs";
+import { first, filter, map, reduce, tap, timeoutWith } from "rxjs/operators";
 import { log } from "@ledgerhq/logs";
 import type {
   Transaction,
@@ -103,9 +103,11 @@ export async function runWithAppSpec<T: Transaction>(
           t = now();
         }),
         reduce<Account>((all, a) => all.concat(a), []),
-        timeoutWithError(
+        timeoutWith(
           15 * 60 * 1000,
-          () => new Error("scan accounts timeout for currency " + currency.name)
+          throwError(
+            new Error("scan accounts timeout for currency " + currency.name)
+          )
         )
       )
       .toPromise();
@@ -169,9 +171,12 @@ export async function runWithAppSpec<T: Transaction>(
       reportLog(formatReportForConsole(report));
       reports.push(report);
     }
+  } catch (e) {
+    log("engine", `spec ${spec.name} failed with ${String(e)}`);
+    throw e;
   } finally {
-    releaseSpeculosDevice(device.id);
     log("engine", `spec ${spec.name} finished`);
+    await releaseSpeculosDevice(device.id);
   }
   return reports;
 }
@@ -331,13 +336,14 @@ async function syncAccount(initialAccount: Account): Promise<Account> {
     .sync(initialAccount, { paginationConfig: {} })
     .pipe(
       reduce((a, f: (Account) => Account) => f(a), initialAccount),
-      timeoutWithError(
+      timeoutWith(
         5 * 60 * 1000,
-        () =>
+        throwError(
           new Error(
             "account sync timeout for " +
               formatAccount(initialAccount, "summary")
           )
+        )
       )
     )
     .toPromise();
@@ -365,13 +371,14 @@ export function autoSignTransaction<T: Transaction>({
       // TODO event probably can be pushed in the report because it will be useful to debug.
       sub = transport.automationEvents
         .pipe(
-          timeoutWithError(
+          timeoutWith(
             10 * 1000,
-            () =>
+            throwError(
               new Error(
                 "device action timeout. Recent events was:\n" +
                   recentEvents.map((e) => JSON.stringify(e)).join("\n")
               )
+            )
           )
         )
         .subscribe((event) => {
@@ -445,23 +452,4 @@ function awaitAccountOperation<T>({
   }
 
   return loop();
-}
-
-function timeoutWithError<T>(
-  time: number,
-  errorFn: () => Error
-): rxjs$MonoTypeOperatorFunction<T> {
-  // $FlowFixMe
-  return (observable: Observable<T>): Observable<T> =>
-    Observable.create((o) => {
-      const subject = new Subject();
-      const timeout = setTimeout(() => subject.error(errorFn()), time);
-      const s1 = observable.subscribe(o);
-      const s2 = subject.subscribe(o);
-      return () => {
-        clearTimeout(timeout);
-        s1.unsubscribe();
-        s2.unsubscribe();
-      };
-    });
 }
