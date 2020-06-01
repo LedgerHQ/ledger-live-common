@@ -135,8 +135,8 @@ const initSwap: InitSwap = (
         );
 
         const {
-          errors
-          // estimatedFees
+          errors,
+          estimatedFees
         } = await accountBridge.getTransactionStatus(
           refundAccount,
           transaction
@@ -150,8 +150,8 @@ const initSwap: InitSwap = (
         await swap.setPartnerKey(providerNameAndSignature.nameAndPubkey);
         await swap.checkPartner(providerNameAndSignature.signature);
         await swap.processTransaction(
-          Buffer.from(swapResult.binaryPayload, "hex")
-          // estimatedFees
+          Buffer.from(swapResult.binaryPayload, "hex"),
+          estimatedFees
         );
         const goodSign = secp256k1.signatureExport(
           Buffer.from(swapResult.signature, "hex")
@@ -194,7 +194,7 @@ const initSwap: InitSwap = (
           refundAddressConfigSignature,
           refundAddressParameters.addressParameters
         );
-        //await swap.signCoinTransaction();
+        await swap.signCoinTransaction();
 
         if (unsubscribed) return;
         o.next({

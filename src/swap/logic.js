@@ -27,6 +27,7 @@ export const initState: ({ okCurrencies: Currency[] }) => SwapState = ({
     },
     error: null,
     isLoading: false,
+    useAllAmount: false,
     okCurrencies,
     fromCurrency,
     toCurrency
@@ -139,7 +140,7 @@ export const reducer = (
           exchange: {
             ...state.swap.exchange,
             toAccount: undefined,
-            fromAmount: BigNumber(0),
+            fromAmount: BigNumber(0)
           }
         },
         toCurrency: payload.toCurrency,
@@ -147,17 +148,36 @@ export const reducer = (
       };
       break;
     }
+    case "setFromAccount": {
+      newState = {
+        ...state,
+        useAllAmount: false,
+        swap: {
+          ...state.swap,
+          exchangeRate: null,
+          exchange: {
+            ...state.swap.exchange,
+            fromAmount: BigNumber(0),
+            ...payload
+          }
+        },
+        error: null
+      };
+      break;
+    }
     case "setFromAmount": {
       let error;
+      const { fromAmount, useAllAmount = false } = payload;
       if (
         state.swap.exchange.fromAccount &&
-        state.swap.exchange.fromAccount.balance.lt(payload.fromAmount)
+        state.swap.exchange.fromAccount.balance.lt(fromAmount)
       ) {
         error = new NotEnoughBalance();
       }
 
       newState = {
         ...state,
+        useAllAmount,
         swap: {
           ...state.swap,
           exchangeRate: null,

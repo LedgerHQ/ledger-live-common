@@ -88,12 +88,12 @@ export const createAction = (
       appName: "Bitcoin" // FIXME TODO until we have the silent mode swap app, we need to make it feel like it's bitcoin ¯\_(ツ)_/¯
     });
 
-    const { device, opened, error } = appState;
+    const { device, opened } = appState;
 
     const [state, setState] = useState(initialState);
 
     useEffect(() => {
-      if (!opened || error || !initSwapRequest || !device) {
+      if (!opened || !initSwapRequest || !device) {
         setState(initialState);
         return;
       }
@@ -117,7 +117,7 @@ export const createAction = (
         console.log("exiting the useeffect code, and ruining everything");
         sub.unsubscribe();
       };
-    }, [initSwapRequest, device, error, opened]);
+    }, [initSwapRequest, device, opened]);
 
     return {
       ...appState,

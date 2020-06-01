@@ -167,5 +167,6 @@ export type SwapState = {
   ratesExpired?: boolean,
   okCurrencies: Currency[],
   fromCurrency: ?Currency,
-  toCurrency: ?Currency
+  toCurrency: ?Currency,
+  useAllAmount: boolean
 };
