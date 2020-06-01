@@ -1,64 +1,85 @@
 // @flow
 
 import type { Operation } from "../../types";
-import type { CoreOperation } from "../../libcore/types";
+import type { Core, CoreOperation } from "../../libcore/types";
+import type {
+  CosmosMessage,
+  CosmosDelegateTxInfo,
+  CosmosRedelegateTxInfo,
+  CosmosUndelegateTxInfo,
+} from "./types";
+import { BigNumber } from "bignumber.js";
 
-async function translateExtraDelegateInfo(
+const translateExtraDelegateInfo = async (
+  core,
   msg: CosmosMessage
-): CosmosDelegateTxInfo {
-  const delegateMsg = await CosmosLikeMessage.unwrapMsgDelegate(msg);
+): Promise<CosmosDelegateTxInfo> => {
+  const delegateMsg = await core.CosmosLikeMessage.unwrapMsgDelegate(msg);
   return {
     validators: [
       {
-        address: delegateMsg.validatorAddress,
-        amount: delegateMsg.amount.toBigNumber(),
+        address: await delegateMsg.getValidatorAddress(),
+        amount: BigNumber(await delegateMsg.getAmount()),
+      },
+    ],
+  };
+};
+
+async function translateExtraRedelegateInfo(
+  core,
+  msg: CosmosMessage
+): Promise<CosmosRedelegateTxInfo> {
+  const redelegateMsg = await core.CosmosLikeMessage.unwrapMsgBeginRedelegate(
+    msg
+  );
+  return {
+    validators: [
+      {
+        address: await redelegateMsg.getValidatorDestinationAddress(),
+        amount: BigNumber(await redelegateMsg.getAmount()),
+      },
+    ],
+    cosmosSourceValidator: "",
+  };
+}
+
+async function translateExtraUndelegateInfo(
+  core,
+  msg: CosmosMessage
+): Promise<CosmosUndelegateTxInfo> {
+  const undelegateMsg = await core.CosmosLikeMessage.unwrapMsgUndelegate(msg);
+  return {
+    validators: [
+      {
+        address: await undelegateMsg.getValidatorAddress(),
+        amount: BigNumber(await undelegateMsg.getAmount()),
       },
     ],
   };
 }
 
-async function translateExtraRedelegateInfo(
-  msg: CosmosMessage
-): CosmosRedelegateTxInfo {
-  const redelegateMsg = await CosmosLikeMessage.unwrapMsgRedegelate(msg);
-  return {
-    validator: {
-      address: redelegateMsg.validatorDstAddress,
-      amount: redelegateMsg.amount.toBigNumber(),
-    },
-    cosmosSourceValidator: redelegateMsg.validatorSrcAddress,
-  };
-}
-
-async function translateExtraUndelegateInfo(
-  msg: CosmosMessage
-): CosmosUndelegateTxInfo {
-  const undelegateMsg = await CosmosLikeMessage.unwrapMsgUndelegate(msg);
-  return {
-    validator: {
-      address: undelegateMsg.validatorAddress,
-      amount: undelegateMsg.amount.toBigNumber(),
-    },
-  };
-}
-
 async function translateExtraRewardInfo(
+  core,
   msg: CosmosMessage
-): CosmosClaimRewardsTxInfo {
-  const rewardMsg = await CosmosLikeMessage.unwrapMsgWithdrawDelegationReward(
+): Promise<CosmosDelegateTxInfo> {
+  const rewardMsg = await core.CosmosLikeMessage.unwrapMsgWithdrawDelegationReward(
     msg
   );
   return {
-    validator: {
-      address: rewardMsg.validatorAddress,
-      amount: 0, // 0 because it's unknown
-    },
+    validators: [
+      {
+        address: rewardMsg.validatorAddress,
+        amount: BigNumber(0),
+      },
+    ],
   };
 }
 
 async function cosmosBuildOperation({
+  core,
   coreOperation,
 }: {
+  core: Core,
   coreOperation: CoreOperation,
 }) {
   const cosmosLikeOperation = await coreOperation.asCosmosLikeOperation();
@@ -66,7 +87,7 @@ async function cosmosBuildOperation({
   const hash = await cosmosLikeTransaction.getHash();
   const message = await cosmosLikeOperation.getMessage();
   const out: $Shape<Operation> = {
-    hash: `${hash}-${await message.getIndex()}`,
+    hash: `${hash}`,
   };
 
   switch (await message.getRawMessageType()) {
@@ -76,22 +97,22 @@ async function cosmosBuildOperation({
 
     case "cosmos-sdk/MsgDelegate":
       out.type = "DELEGATE";
-      out.extra = translateExtraDelegateInfo(message);
+      out.extra = await translateExtraDelegateInfo(core, message);
       break;
 
     case "cosmos-sdk/MsgUndelegate":
       out.type = "UNDELEGATE";
-      out.extra = translateExtraUndelegateInfo(message);
+      out.extra = await translateExtraUndelegateInfo(core, message);
       break;
 
     case "cosmos-sdk/MsgWithdrawDelegationReward":
       out.type = "REWARD";
-      out.extra = translateExtraRewardInfo(message);
+      out.extra = await translateExtraRewardInfo(core, message);
       break;
 
     case "cosmos-sdk/MsgBeginRedelegate":
       out.type = "REDELEGATE";
-      out.extra = translateExtraRedelegateInfo(message);
+      out.extra = await translateExtraRedelegateInfo(core, message);
       break;
   }
 
