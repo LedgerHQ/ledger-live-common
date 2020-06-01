@@ -224,6 +224,10 @@ export async function bot({ currency, mutation }: Arg = {}) {
       body += "</details>\n\n";
     }
 
+    if (errorCases.length) {
+      body += "----\n\n";
+    }
+
     body += "<details>\n";
     body += `<summary>Details of the ${mutationReports.length} mutations</summary>\n\n`;
     results.forEach((r, i) => {
