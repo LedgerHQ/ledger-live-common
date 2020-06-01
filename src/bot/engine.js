@@ -80,12 +80,6 @@ export async function runWithAppSpec<T: Transaction>(
     spec.name,
     coinapps
   );
-  invariant(
-    appCandidate,
-    "%s: no app found. Are you sure your COINAPPS is up to date?",
-    spec.name,
-    coinapps
-  );
 
   log(
     "engine",
