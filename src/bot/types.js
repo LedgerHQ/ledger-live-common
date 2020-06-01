@@ -108,24 +108,13 @@ export type MutationReport<T: Transaction> = {
   appCandidate: AppCandidate,
   account?: Account,
   maxSpendable?: BigNumber,
-<<<<<<< HEAD
-  unavailableMutationReasons?: Array<{
-    error: Error,
-    mutation: MutationSpec<T>,
-  }>,
-=======
   unavailableMutationReasons?: string[],
->>>>>>> improve bot
   mutation?: MutationSpec<T>,
   mutationTime?: number,
   destination?: Account,
   transaction?: T,
   status?: TransactionStatus,
   statusTime?: number,
-  recoveredFromTransactionStatus?: {
-    transaction: T,
-    status: TransactionStatus,
-  },
   latestSignOperationEvent?: SignOperationEvent,
   signedOperation?: SignedOperation,
   signedTime?: number,
