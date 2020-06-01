@@ -130,13 +130,22 @@ export async function createSpeculosDevice(
 
   let destroyed = false;
 
+  let latestStderr;
+
   p.stderr.on("data", (data) => {
     if (!data) return;
+    latestStderr = data;
     if (!data.includes("apdu: ")) {
       log("speculos-stderr", `${speculosID}: ${String(data).trim()}`);
     }
     if (data.includes("using SDK")) {
       setTimeout(resolveReady, 500);
+    } else if (data.includes("is already in use by container")) {
+      rejectReady(
+        new Error(
+          "speculos already in use! Try `ledger-live cleanSpeculos` or check logs"
+        )
+      );
     }
   });
 
