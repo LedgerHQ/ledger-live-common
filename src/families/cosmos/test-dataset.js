@@ -246,6 +246,25 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
+              name: "redelegation - AmountRequired",
+              transaction: (t) => ({
+                ...t,
+                mode: "redelegate",
+                validators: [
+                  {
+                    address:
+                      "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
+                    amount: BigNumber(0),
+                  },
+                ],
+                cosmosSourceValidator: "cosmosvaloper1sd4tl9aljmmezzudugs7zlaya7pg2895ws8tfs",
+              }),
+              expectedStatus: {
+                errors: { amount: new AmountRequired() },
+                warnings: {},
+              },
+            },
+            {
               name: "Unbonding - success",
               transaction: (t) => ({
                 ...t,
@@ -264,6 +283,24 @@ const dataset: DatasetTest<Transaction> = {
                   errors: {},
                   warnings: {},
                 };
+              },
+            },
+            {
+              name: "Unbonding - AmountRequired",
+              transaction: (t) => ({
+                ...t,
+                mode: "undelegate",
+                validators: [
+                  {
+                    address:
+                      "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
+                    amount: BigNumber(0),
+                  },
+                ],
+              }),
+              expectedStatus: {
+                errors: { amount: new AmountRequired() },
+                warnings: {},
               },
             },
             {
