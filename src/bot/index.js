@@ -117,7 +117,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
     }
 
     specFatals.forEach(({ spec, error }) => {
-      body += `**Spec '${spec.name}' failed!**\n`;
+      body += `**Spec ${spec.name} failed!**\n`;
       body += "```\n" + String(error) + "\n```\n\n";
     });
 
@@ -135,7 +135,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
     results.forEach((specResults, i) => {
       const spec = specs[i];
       const logs = specsLogs[i];
-      body += `### Spec '${spec.name}'\n`;
+      body += `### Spec ${spec.name}\n`;
       body += "\n```\n";
       body += logs.join("\n");
       body += "\n```\n";

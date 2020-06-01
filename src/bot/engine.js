@@ -82,13 +82,14 @@ export async function runWithAppSpec<T: Transaction>(
     "engine",
     `spec ${spec.name} will use ${formatAppCandidate(appCandidate)}`
   );
-  const device = await createSpeculosDevice({
+  const deviceParams = {
     ...appCandidate,
     appName: spec.currency.managerAppName,
     seed,
     dependency,
     coinapps,
-  });
+  };
+  let device = await createSpeculosDevice(deviceParams);
 
   try {
     const bridge = getCurrencyBridge(currency);
@@ -128,7 +129,7 @@ export async function runWithAppSpec<T: Transaction>(
     const preloadStats =
       preloadTime > 10 ? ` (preload: ${formatTime(preloadTime)})` : "";
     reportLog(
-      `Spec '${spec.name}' found ${accounts.length} ${
+      `Spec ${spec.name} found ${accounts.length} ${
         currency.name
       } accounts${preloadStats}. Will use ${formatAppCandidate(
         appCandidate
@@ -175,6 +176,18 @@ export async function runWithAppSpec<T: Transaction>(
       });
       reportLog(formatReportForConsole(report));
       reports.push(report);
+
+      if (
+        report.latestSignOperationEvent &&
+        report.latestSignOperationEvent.type === "device-signature-requested"
+      ) {
+        log(
+          "engine",
+          `spec ${spec.name} is recreating the device because deviceAction didn't finished`
+        );
+        await releaseSpeculosDevice(device.id);
+        device = await createSpeculosDevice(deviceParams);
+      }
     }
   } catch (e) {
     log("engine", `spec ${spec.name} failed with ${String(e)}`);
@@ -205,6 +218,7 @@ export async function runOnAccount<T: Transaction>({
 }): Promise<MutationReport<T>> {
   const { mutations } = spec;
 
+  let latestSignOperationEvent;
   let report: MutationReport<T> = { spec, appCandidate, syncAllAccountsTime };
   try {
     const accountBridge = getAccountBridge(account);
@@ -288,6 +302,7 @@ export async function runOnAccount<T: Transaction>({
       .signOperation({ account, transaction, deviceId: device.id })
       .pipe(
         tap((e) => {
+          latestSignOperationEvent = e;
           log("engine", `spec ${spec.name}/${account.name}: ${e.type}`);
         }),
         autoSignTransaction({
@@ -353,6 +368,7 @@ export async function runOnAccount<T: Transaction>({
     log("mutation-error", spec.name + ": " + String(error));
     report.error = error;
   }
+  report.latestSignOperationEvent = latestSignOperationEvent;
   return report;
 }
 
@@ -390,10 +406,14 @@ export function autoSignTransaction<T: Transaction>({
     (e) => {
       if (e.type === "device-signature-requested") {
         return Observable.create((o) => {
-          invariant(
-            !observer,
-            "device-signature-requested should not be called twice!"
-          );
+          if (observer) {
+            o.error(
+              new Error(
+                "device-signature-requested should not be called twice!"
+              )
+            );
+            return;
+          }
           observer = o;
           o.next(e);
 
