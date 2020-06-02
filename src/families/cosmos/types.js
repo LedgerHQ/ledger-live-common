@@ -189,7 +189,7 @@ type CosmosMsgSend = {
 
 type CosmosMsgDelegate = {
   getValidatorAddress(): Promise<string>;
-  getAmount(): Promise<string>;
+  getCosmosAmount(): Promise<CosmosAmount>;
 } & CosmosMsgDelegateObject
 
 type CosmosMsgDelegateObject = {
@@ -201,9 +201,16 @@ type CosmosMsgDelegateObject = {
 type CosmosMsgUndelegate = CosmosMsgDelegate;
 type CosmosMsgUndelegateObject = CosmosMsgDelegateObject;
 
+type CosmosAmount = {
+  getAmount(): Promise<string>;
+  amount: string;
+  denom: string;
+}
+
 type CosmosMsgRedelegate = {
   getValidatorDestinationAddress(): Promise<string>;
-  getAmount(): Promise<string>;
+  getValidatorSourceAddress(): Promise<string>;
+  getCosmosAmount(): Promise<CosmosAmount>;
 } & CosmosMsgRedelegateObject
 
 type CosmosMsgRedelegateObject = {
@@ -435,51 +442,6 @@ export type CosmosSearchFilter = (
 ) => (delegation: CosmosMappedDelegation | CosmosMappedValidator) => boolean;
 
 export const reflect = (declare: (string, Spec) => void) => {
-   declare("CosmosLikeMsgDelegate", {
-      njsUsesPlainObject: true,
-      methods: {
-        getValidatorAddress: {
-          njsField: "validatorAddress"
-        },
-        getAmount: {
-          njsField: "amount.amount"
-        }
-      }
-    });
-
-  declare("CosmosLikeMsgBeginRedelegate", {
-    njsUsesPlainObject: true,
-    methods: {
-      getValidatorDestinationAddress: {
-        njsField: "validatorDestinationAddress"
-      },
-      getAmount: {
-        njsField: "amount.amount"
-      }
-    }
-  });
-
-  declare("CosmosLikeMsgUndelegate", {
-    njsUsesPlainObject: true,
-    methods: {
-      getValidatorAddress: {
-        njsField: "validatorAddress"
-      },
-      getAmount: {
-        njsField: "amount"
-      }
-    }
-  });
-  
-  declare("CosmosLikeMsgWithdrawDelegationReward", {
-    njsUsesPlainObject: true,
-    methods: {
-      getValidatorAddress: {
-        njsField: "validatorAddress"
-      },
-    }
-  });
-
   declare("CosmosLikeTransactionBuilder", {
     methods: {
       addMessage: {
@@ -659,24 +621,24 @@ export const reflect = (declare: (string, Spec) => void) => {
         njsBuggyMethodIsNotStatic: true,
       },
       unwrapMsgDelegate: {
-        njsBuggyMethodIsNotStatic: true,
         params: ["CosmosLikeMessage"],
         returns: "CosmosLikeMsgDelegate",
+        njsBuggyMethodIsNotStatic: true,
       },
       unwrapMsgBeginRedelegate: {
-        njsBuggyMethodIsNotStatic: true,
         params: ["CosmosLikeMessage"],
         returns: "CosmosLikeMsgBeginRedelegate",
+        njsBuggyMethodIsNotStatic: true,
       },
       unwrapMsgUndelegate: {
-        njsBuggyMethodIsNotStatic: true,
         params: ["CosmosLikeMessage"],
         returns: "CosmosLikeMsgUndelegate",
+        njsBuggyMethodIsNotStatic: true,
       },
       unwrapMsgWithdrawDelegationReward: {
-        njsBuggyMethodIsNotStatic: true,
         params: ["CosmosLikeMessage"],
         returns: "CosmosLikeMsgWithdrawDelegationReward",
+        njsBuggyMethodIsNotStatic: true,
       }
     },
     methods: {
@@ -685,6 +647,66 @@ export const reflect = (declare: (string, Spec) => void) => {
       getIndex: {},
     },
   });
+
+  declare("CosmosLikeMsgDelegate", {
+    njsUsesPlainObject: true,
+    methods: {
+      getValidatorAddress: {
+        njsField: "validatorAddress"
+      },
+      getCosmosAmount: {
+        njsField: "amount",
+        returns: "CosmosAmount"
+      }
+    }
+  });
+
+  declare("CosmosLikeMsgBeginRedelegate", {
+    njsUsesPlainObject: true,
+    methods: {
+      getValidatorDestinationAddress: {
+        njsField: "validatorDestinationAddress"
+      },
+      getValidatorSourceAddress: {
+        njsField: "validatorSourceAddress"
+      },
+      getCosmosAmount: {
+        njsField: "amount",
+        returns: "CosmosAmount"
+      }
+    }
+  });
+
+  declare("CosmosLikeMsgUndelegate", {
+    njsUsesPlainObject: true,
+    methods: {
+      getValidatorAddress: {
+        njsField: "validatorAddress"
+      },
+      getCosmosAmount: {
+        njsField: "amount",
+        returns: "CosmosAmount"
+      }
+    }
+  });
+  
+  declare("CosmosLikeMsgWithdrawDelegationReward", {
+    njsUsesPlainObject: true,
+    methods: {
+      getValidatorAddress: {
+        njsField: "validatorAddress"
+      },
+    }
+  });
+
+  declare("CosmosAmount", {
+    njsUsesPlainObject: true,
+    methods: {
+      getAmount: {
+        njsField: "amount",
+      }
+    }
+  })
 
   return {
     OperationMethods: {
