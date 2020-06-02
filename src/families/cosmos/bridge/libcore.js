@@ -300,6 +300,17 @@ const getTransactionStatus = async (a, t) => {
     }
   }
 
+  if (t.mode === "claimReward") {
+    const { cosmosResources } = a;
+    invariant(cosmosResources, "cosmosResources should exist");
+    const claimReward = cosmosResources.delegations.find(
+      (delegation) => delegation.validatorAddress === t.validators[0].address
+    );
+    if (claimReward && estimatedFees.gt(claimReward.pendingRewards)) {
+      warnings.claimReward = new CosmosClaimRewardsFeesWarning();
+    }
+  }
+
   if (
     !errors.recipient &&
     !errors.amount &&
