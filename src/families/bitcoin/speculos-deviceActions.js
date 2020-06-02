@@ -1,4 +1,5 @@
 // @flow
+import invariant from "invariant";
 import type { DeviceAction } from "../../bot/types";
 import type { Transaction } from "./types";
 import { formatCurrencyUnit } from "../../currencies";

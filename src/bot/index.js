@@ -176,6 +176,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
     if (uncoveredMutations.length) {
       subtitle += `> ⚠️ ${uncoveredMutations.length} mutations uncovered\n`;
     }
+    body += "\n\n";
 
     if (withoutFunds.length) {
       subtitle += `> ⚠️ ${
@@ -193,6 +194,10 @@ export async function bot({ currency, mutation }: Arg = {}) {
     body += subtitle;
 
     body += "\n\n";
+
+    body += "\n</details>\n\n";
+
+    body += "### Full report\n\n";
 
     if (specFatals.length) {
       body += "<details>\n";
@@ -225,7 +230,20 @@ export async function bot({ currency, mutation }: Arg = {}) {
     }
 
     if (errorCases.length) {
-      body += "----\n\n";
+      body += "<details>\n";
+
+      body += `<summary>${errorCases.length} critical mutation errors</summary>\n\n`;
+
+      errorCases.forEach((c) => {
+        body +=
+          "```\n" +
+          formatReportForConsole(c) +
+          "\n" +
+          String(c.error) +
+          "\n```\n\n";
+      });
+
+      body += "</details>\n";
     }
 
     body += "<details>\n";

@@ -102,6 +102,15 @@ export type SpecReport<T: Transaction> = {
   fatalError?: Error,
 };
 
+export type SpecReport<T: Transaction> = {
+  spec: AppSpec<T>,
+  scanTime?: number,
+  accountsBefore?: Account[],
+  accountsAfter?: Account[],
+  mutations?: MutationReport<T>[],
+  fatalError?: Error,
+};
+
 export type MutationReport<T: Transaction> = {
   syncAllAccountsTime: number,
   spec: AppSpec<T>,
