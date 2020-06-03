@@ -243,7 +243,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
           "\n```\n\n";
       });
 
-      body += "</details>\n";
+      body += "</details>\n\n";
     }
 
     body += "<details>\n";
