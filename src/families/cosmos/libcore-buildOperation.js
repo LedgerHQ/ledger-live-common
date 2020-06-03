@@ -72,7 +72,7 @@ async function cosmosBuildOperation({
   const hash = await cosmosLikeTransaction.getHash();
   const message = await cosmosLikeOperation.getMessage();
   const out: $Shape<Operation> = {
-    hash: `${hash}-${await message.getIndex()}`,
+    hash,
   };
 
   switch (await message.getRawMessageType()) {
@@ -100,6 +100,8 @@ async function cosmosBuildOperation({
       out.extra = await translateExtraInfo(core, message, out.type);
       break;
   }
+
+  out.extra = { ...out.extra, id: await message.getIndex() };
 
   return out;
 }
