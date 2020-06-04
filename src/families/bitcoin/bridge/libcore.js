@@ -113,7 +113,11 @@ const getTransactionStatus = async (a, t) => {
     errors.amount = new NotEnoughBalance();
   }
 
-  if (estimatedFees.gt(0) && estimatedFees.lt(getMinRelayFee(a.currency))) {
+  if (
+    process.env.EXPERIMENTAL_MIN_RELAY_FEE &&
+    estimatedFees.gt(0) &&
+    estimatedFees.lt(getMinRelayFee(a.currency))
+  ) {
     warnings.feePerByte = new LowerThanMinimumRelayFee();
   } else if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
     warnings.feeTooHigh = new FeeTooHigh();

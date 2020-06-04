@@ -16,6 +16,7 @@ import { getEnv } from "../env";
 import { getDependencies } from "../apps/polyfill";
 import { findCryptoCurrencyByKeyword } from "../currencies";
 import { formatAppCandidate } from "../bot/formatters";
+import { delay } from "../promise";
 
 let idCounter = 0;
 const data = {};
@@ -43,7 +44,7 @@ export async function createSpeculosDevice(
     // Folder where we have app binaries
     coinapps: string,
   },
-  maxRetry: number = 2
+  maxRetry: number = 3
 ): Promise<{
   transport: SpeculosTransport,
   id: string,
@@ -192,6 +193,7 @@ export async function createSpeculosDevice(
   const hasSucceed = await ready;
 
   if (!hasSucceed) {
+    await delay(1000);
     return createSpeculosDevice(arg, maxRetry - 1);
   }
 
