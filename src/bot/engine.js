@@ -14,9 +14,9 @@ import {
 } from "rxjs/operators";
 import { log } from "@ledgerhq/logs";
 import type {
+  TransactionStatus,
   Transaction,
   Account,
-  AccountBridge,
   Operation,
   SignOperationEvent,
   CryptoCurrency,
@@ -24,14 +24,13 @@ import type {
 import { getCurrencyBridge, getAccountBridge } from "../bridge";
 import { promiseAllBatched } from "../promise";
 import { isAccountEmpty, formatAccount } from "../account";
-import { isCurrencySupported } from "../currencies";
 import { getEnv } from "../env";
 import { delay } from "../promise";
 import {
   listAppCandidates,
   createSpeculosDevice,
   releaseSpeculosDevice,
-  appCandidatesMatches,
+  findAppCandidate,
 } from "../load/speculos";
 import deviceActions from "../generated/speculos-deviceActions";
 import type { AppCandidate } from "../load/speculos";
@@ -40,17 +39,19 @@ import {
   formatTime,
   formatAppCandidate,
 } from "./formatters";
-import type { AppSpec, MutationReport, DeviceAction } from "./types";
+import type {
+  AppSpec,
+  SpecReport,
+  MutationReport,
+  DeviceAction,
+} from "./types";
 
 let appCandidates;
 
 export async function runWithAppSpec<T: Transaction>(
   spec: AppSpec<T>,
   reportLog: (string) => void
-): Promise<MutationReport<T>[]> {
-  if (!isCurrencySupported(spec.currency)) {
-    return Promise.resolve([]);
-  }
+): Promise<SpecReport<T>> {
   log("engine", `spec ${spec.name}`);
 
   const seed = getEnv("SEED");
@@ -62,15 +63,11 @@ export async function runWithAppSpec<T: Transaction>(
   if (!appCandidates) {
     appCandidates = await listAppCandidates(coinapps);
   }
-  const reports = [];
+  const mutationReports: MutationReport<T>[] = [];
 
   const { appQuery, currency, dependency } = spec;
 
-  const appCandidate = sample(
-    appCandidates.filter((appCandidate) =>
-      appCandidatesMatches(appCandidate, appQuery)
-    )
-  );
+  const appCandidate = findAppCandidate(appCandidates, appQuery);
   invariant(
     appCandidate,
     "%s: no app found. Are you sure your COINAPPS is up to date?",
@@ -89,9 +86,13 @@ export async function runWithAppSpec<T: Transaction>(
     dependency,
     coinapps,
   };
-  let device = await createSpeculosDevice(deviceParams);
+  let device;
+
+  const appReport: SpecReport<T> = { spec };
 
   try {
+    device = await createSpeculosDevice(deviceParams);
+
     const bridge = getCurrencyBridge(currency);
     const syncConfig = { paginationConfig: {} };
 
@@ -101,6 +102,7 @@ export async function runWithAppSpec<T: Transaction>(
 
     // Scan all existing accounts
     t = now();
+    let scanTime = 0;
     const firstSyncDurations = {};
     let accounts = await bridge
       .scanAccounts({ currency, deviceId: device.id, syncConfig })
@@ -108,8 +110,10 @@ export async function runWithAppSpec<T: Transaction>(
         filter((e) => e.type === "discovered"),
         map((e) => e.account),
         tap((account) => {
-          firstSyncDurations[account.id] = now() - t;
+          const dt = now() - t;
+          firstSyncDurations[account.id] = dt;
           t = now();
+          scanTime += dt;
         }),
         reduce<Account>((all, a) => all.concat(a), []),
         timeoutWith(
@@ -120,6 +124,9 @@ export async function runWithAppSpec<T: Transaction>(
         )
       )
       .toPromise();
+
+    appReport.scanTime = scanTime;
+    appReport.accountsBefore = accounts;
 
     invariant(
       accounts.length > 0,
@@ -152,7 +159,8 @@ export async function runWithAppSpec<T: Transaction>(
           .map((a) => a.freshAddress)
           .join(" or ")}\n`
       );
-      return reports;
+      appReport.accountsAfter = accounts;
+      return appReport;
     }
 
     const mutationsCount = {};
@@ -163,6 +171,7 @@ export async function runWithAppSpec<T: Transaction>(
       // resync all accounts (necessary between mutations)
       t = now();
       accounts = await promiseAllBatched(5, accounts, syncAccount);
+      appReport.accountsAfter = accounts;
       const syncAllAccountsTime = now() - t;
       const account = accounts[i];
       const report = await runOnAccount({
@@ -175,11 +184,12 @@ export async function runWithAppSpec<T: Transaction>(
         syncAllAccountsTime,
       });
       reportLog(formatReportForConsole(report));
-      reports.push(report);
+      mutationReports.push(report);
 
       if (
-        report.latestSignOperationEvent &&
-        report.latestSignOperationEvent.type === "device-signature-requested"
+        report.error ||
+        (report.latestSignOperationEvent &&
+          report.latestSignOperationEvent.type === "device-signature-requested")
       ) {
         log(
           "engine",
@@ -189,14 +199,19 @@ export async function runWithAppSpec<T: Transaction>(
         device = await createSpeculosDevice(deviceParams);
       }
     }
+    accounts = await promiseAllBatched(5, accounts, syncAccount);
+
+    appReport.mutations = mutationReports;
+    appReport.accountsAfter = accounts;
   } catch (e) {
+    appReport.fatalError = e;
     log("engine", `spec ${spec.name} failed with ${String(e)}`);
-    throw e;
   } finally {
     log("engine", `spec ${spec.name} finished`);
-    await releaseSpeculosDevice(device.id);
+    if (device) await releaseSpeculosDevice(device.id);
   }
-  return reports;
+
+  return appReport;
 }
 
 export async function runOnAccount<T: Transaction>({
@@ -278,20 +293,47 @@ export async function runOnAccount<T: Transaction>({
     mutationsCount[mutation.name] = (mutationsCount[mutation.name] || 0) + 1;
 
     // prepare the transaction and ensure it's valid
-    const transaction = await accountBridge.prepareTransaction(account, tx);
+    let transaction = tx;
+    let status;
+    let errors = [];
+
+    transaction = await accountBridge.prepareTransaction(account, transaction);
     report.transaction = transaction;
     report.transactionTime = now();
 
-    const status = await accountBridge.getTransactionStatus(
-      account,
-      transaction
-    );
+    status = await accountBridge.getTransactionStatus(account, transaction);
     report.status = status;
     report.statusTime = now();
 
-    const errors = Object.values(status.errors);
+    errors = Object.values(status.errors);
+    const warnings = Object.values(status.warnings);
+
+    if (mutation.recoverBadTransactionStatus) {
+      if (errors.length || warnings.length) {
+        // there is something to recover from
+        const recovered = mutation.recoverBadTransactionStatus({
+          transaction,
+          status,
+          account,
+          bridge: accountBridge,
+        });
+
+        if (recovered) {
+          report.recoveredFromTransactionStatus = { transaction, status };
+          report.transaction = transaction = recovered;
+          report.transactionTime = now();
+          status = await accountBridge.getTransactionStatus(
+            account,
+            transaction
+          );
+          report.status = status;
+          report.statusTime = now();
+        }
+      }
+    }
+
+    // without recovering mecanism, we simply assume an error is a failure
     if (errors.length) {
-      // FIXME more errors to be included?
       throw errors[0];
     }
 
@@ -310,7 +352,9 @@ export async function runOnAccount<T: Transaction>({
           deviceAction:
             mutation.deviceAction || getImplicitDeviceAction(account.currency),
           appCandidate,
+          account,
           transaction,
+          status,
         }),
         first((e) => e.type === "signed"),
         map(
@@ -339,11 +383,53 @@ export async function runOnAccount<T: Transaction>({
     );
 
     // wait the condition are good (operation confirmed)
+    const testBefore = now();
+
+    const step = (account) => {
+      const timedOut =
+        now() - testBefore >
+        (mutation.testTimeout || spec.testTimeout || 60 * 1000);
+
+      const operation = account.operations.find(
+        (o) => o.id === optimisticOperation.id
+      );
+
+      if (timedOut && !operation) {
+        throw new Error(
+          "could not find optimisticOperation " + optimisticOperation.id
+        );
+      }
+
+      if (operation && mutation.test) {
+        try {
+          mutation.test({
+            accountBeforeTransaction,
+            transaction,
+            status,
+            optimisticOperation,
+            operation,
+            account,
+          });
+          report.testDuration = now() - testBefore;
+        } catch (e) {
+          // We never reach the final test success
+          if (timedOut) {
+            report.testDuration = now() - testBefore;
+            throw e;
+          }
+          // We will try again
+          return;
+        }
+      }
+
+      return operation;
+    };
+
     const result = await awaitAccountOperation({
       account,
       accountBridge,
       optimisticOperation,
-      timeout: 60 * 1000,
+      step,
     });
     report.finalAccount = result.account;
     report.operation = result.operation;
@@ -352,18 +438,6 @@ export async function runOnAccount<T: Transaction>({
       "engine",
       `spec ${spec.name}/${account.name}/${optimisticOperation.hash} confirmed`
     );
-
-    // do potential final tests
-    if (mutation.test) {
-      mutation.test({
-        accountBeforeTransaction,
-        transaction,
-        status,
-        optimisticOperation,
-        operation: result.operation,
-        account: result.account,
-      });
-    }
   } catch (error) {
     log("mutation-error", spec.name + ": " + String(error));
     report.error = error;
@@ -390,12 +464,16 @@ export function autoSignTransaction<T: Transaction>({
   transport,
   deviceAction,
   appCandidate,
+  account,
   transaction,
+  status,
 }: {
   transport: *,
   deviceAction: DeviceAction<T, *>,
   appCandidate: AppCandidate,
+  account: Account,
   transaction: T,
+  status: TransactionStatus,
 }) {
   let sub;
   let observer;
@@ -424,7 +502,7 @@ export function autoSignTransaction<T: Transaction>({
                   recentEvents.map((e) => JSON.stringify(e)).join("\n")
               )
             );
-          }, 10 * 1000);
+          }, 20 * 1000);
 
           sub = transport.automationEvents.subscribe({
             next: (event) => {
@@ -432,13 +510,19 @@ export function autoSignTransaction<T: Transaction>({
               if (recentEvents.length > 5) {
                 recentEvents.shift();
               }
-              state = deviceAction({
-                appCandidate,
-                transaction,
-                event,
-                transport,
-                state,
-              });
+              try {
+                state = deviceAction({
+                  appCandidate,
+                  account,
+                  transaction,
+                  event,
+                  transport,
+                  state,
+                  status,
+                });
+              } catch (e) {
+                o.error(e);
+              }
             },
             complete: () => {
               o.complete();
@@ -478,32 +562,20 @@ export function getImplicitDeviceAction(currency: CryptoCurrency) {
   return accept;
 }
 
-function awaitAccountOperation<T>({
+function awaitAccountOperation({
   account,
-  optimisticOperation,
-  timeout,
+  step,
 }: {
   account: Account,
-  accountBridge: AccountBridge<T>,
-  optimisticOperation: Operation,
-  timeout: number,
+  step: (Account) => ?Operation,
 }): Promise<{ account: Account, operation: Operation }> {
   log("engine", "awaitAccountOperation on " + account.name);
   let syncCounter = 0;
   let acc = account;
 
-  const startTime = Date.now();
-
   async function loop() {
-    if (Date.now() - startTime > timeout) {
-      throw new Error(
-        "could not find optimisticOperation " + optimisticOperation.id
-      );
-    }
+    const operation = step(acc);
 
-    const operation = acc.operations.find(
-      (o) => o.id === optimisticOperation.id
-    );
     if (operation) {
       log("engine", "found " + operation.id);
       return { account: acc, operation };

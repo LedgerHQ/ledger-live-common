@@ -8,42 +8,32 @@ import { BigNumber } from "bignumber.js";
 import broadcast from "../libcore-broadcast";
 import signOperation from "../libcore-signOperation";
 import { getMainAccount } from "../../../account";
-import { makeLRUCache } from "../../../cache";
 import { validateRecipient } from "../../../bridge/shared";
-import { getFeesForTransaction } from "../../../libcore/getFeesForTransaction";
 import {
   NotEnoughBalance,
   InvalidAddressBecauseDestinationIsAlsoSource,
   InvalidAddress,
+  AmountRequired,
 } from "@ledgerhq/errors";
-import { CosmosRedelegationInProgress } from "../../../errors";
+import {
+  CosmosRedelegationInProgress,
+  CosmosClaimRewardsFeesWarning,
+  CosmosDelegateAllFundsWarning,
+  CosmosTooManyValidators,
+  NotEnoughDelegationBalance,
+} from "../../../errors";
 import {
   setCosmosPreloadData,
   asSafeCosmosPreloadData,
 } from "../preloadedData";
 import { getValidators, hydrateValidators } from "../validators";
-import { getMaxEstimatedBalance } from "../utils";
-
-export const COSMOS_MAX_REDELEGATIONS = 6;
-export const COSMOS_MAX_UNBONDINGS = 6;
-
-const calculateFees = makeLRUCache(
-  async (a, t) => {
-    return getFeesForTransaction({
-      account: a,
-      transaction: t,
-    });
-  },
-  (a, t) =>
-    `${a.id}_${t.amount.toString()}_${t.recipient}_${
-      t.gasLimit ? t.gasLimit.toString() : ""
-    }_${t.fees ? t.fees.toString() : ""}
-    _${String(t.useAllAmount)}_${t.mode}_${
-      t.validators ? t.validators.map((v) => v.address).join("-") : ""
-    }_${t.memo ? t.memo.toString() : ""}_${
-      t.cosmosSourceValidator ? t.cosmosSourceValidator : ""
-    }`
-);
+import {
+  calculateFees,
+  getMaxEstimatedBalance,
+  COSMOS_MAX_REDELEGATIONS,
+  COSMOS_MAX_UNBONDINGS,
+  COSMOS_MAX_DELEGATIONS,
+} from "../logic";
 
 const createTransaction = () => ({
   family: "cosmos",
@@ -60,6 +50,21 @@ const createTransaction = () => ({
 });
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
+
+const isDelegable = (a, address, amount) => {
+  const { cosmosResources } = a;
+  invariant(cosmosResources, "cosmosResources should exist");
+  if (
+    cosmosResources.delegations.some(
+      (delegation) =>
+        delegation.validatorAddress === address && delegation.amount.lt(amount)
+    )
+  ) {
+    return new NotEnoughDelegationBalance();
+  }
+
+  return null;
+};
 
 const redelegationStatusError = (a, t) => {
   if (a.cosmosResources) {
@@ -80,15 +85,154 @@ const redelegationStatusError = (a, t) => {
       })
     )
       return new CosmosRedelegationInProgress();
+
+    if (t.cosmosSourceValidator === t.validators[0].address)
+      return new InvalidAddressBecauseDestinationIsAlsoSource();
   }
 
-  return null;
+  return isDelegable(a, t.cosmosSourceValidator, t.validators[0].amount);
 };
 
-const getTransactionStatus = async (a, t) => {
+const getEstimatedFees = async (a, t, errors) => {
+  let estimatedFees = BigNumber(0);
+
+  if (!errors.recipient && !errors.amount) {
+    if (t.useAllAmount) {
+      t.amount = getMaxEstimatedBalance(a, estimatedFees);
+    }
+    const res = await calculateFees({ a, t });
+    estimatedFees = res.estimatedFees;
+  }
+  return estimatedFees;
+};
+
+const getSendTransactionStatus = async (a, t) => {
   const errors = {};
   const warnings = {};
 
+  if (a.freshAddress === t.recipient) {
+    errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
+  } else {
+    const { recipientError, recipientWarning } = await validateRecipient(
+      a.currency,
+      t.recipient
+    );
+
+    if (recipientError) {
+      errors.recipient = recipientError;
+    }
+
+    if (recipientWarning) {
+      warnings.recipient = recipientWarning;
+    }
+  }
+
+  let amount = t.amount;
+
+  if (amount.eq(0) && t.useAllAmount !== true) {
+    errors.amount = new AmountRequired();
+  }
+
+  const estimatedFees = await getEstimatedFees(a, t, errors);
+
+  amount = t.useAllAmount ? getMaxEstimatedBalance(a, estimatedFees) : amount;
+
+  let totalSpent = amount.plus(estimatedFees);
+
+  if (
+    !errors.recipient &&
+    !errors.amount &&
+    (amount.lt(0) || totalSpent.gt(a.spendableBalance))
+  ) {
+    errors.amount = new NotEnoughBalance();
+    totalSpent = BigNumber(0);
+    amount = BigNumber(0);
+  }
+
+  return Promise.resolve({
+    errors,
+    warnings,
+    estimatedFees,
+    amount,
+    totalSpent,
+  });
+};
+
+const getDelegateTransactionStatus = async (a, t) => {
+  const errors = {};
+  const warnings = {};
+
+  if (
+    t.validators.some(
+      (v) => !v.address || !v.address.includes("cosmosvaloper")
+    ) ||
+    t.validators.length === 0
+  )
+    errors.recipient = new InvalidAddress(null, {
+      currencyName: a.currency.name,
+    });
+
+  if (t.validators.length > COSMOS_MAX_DELEGATIONS) {
+    errors.validators = new CosmosTooManyValidators();
+  }
+
+  let amount = t.validators.reduce(
+    (old, current) => old.plus(current.amount),
+    BigNumber(0)
+  );
+
+  if (amount.eq(0)) {
+    errors.amount = new AmountRequired();
+  }
+
+  const estimatedFees = await getEstimatedFees(a, t, errors);
+
+  let totalSpent = amount.plus(estimatedFees);
+
+  if (totalSpent.eq(a.spendableBalance)) {
+    warnings.delegate = new CosmosDelegateAllFundsWarning();
+  }
+
+  if (
+    !errors.recipient &&
+    !errors.amount &&
+    (amount.lt(0) || totalSpent.gt(a.spendableBalance))
+  ) {
+    errors.amount = new NotEnoughBalance();
+    amount = BigNumber(0);
+    totalSpent = BigNumber(0);
+  }
+
+  return Promise.resolve({
+    errors,
+    warnings,
+    estimatedFees,
+    amount,
+    totalSpent,
+  });
+};
+
+const getTransactionStatus = async (a, t) => {
+  if (t.mode === "send") {
+    // We isolate the send transaction that it's a little bit different from the rest
+    return await getSendTransactionStatus(a, t);
+  } else if (t.mode === "delegate") {
+    return await getDelegateTransactionStatus(a, t);
+  }
+
+  const errors = {};
+  const warnings = {};
+
+  // here we only treat about all other mode than delegate and send
+  if (
+    t.validators.some(
+      (v) => !v.address || !v.address.includes("cosmosvaloper")
+    ) ||
+    t.validators.length === 0
+  )
+    errors.recipient = new InvalidAddress(null, {
+      currencyName: a.currency.name,
+    });
   if (t.mode === "redelegate") {
     const redelegationError = redelegationStatusError(a, t);
     if (redelegationError) {
@@ -101,73 +245,58 @@ const getTransactionStatus = async (a, t) => {
         a.cosmosResources.unbondings.length < COSMOS_MAX_UNBONDINGS,
       "unbondings should not have more than 6 entries"
     );
-  } else if (
-    ["delegate", "claimReward", "claimRewardCompound"].includes(t.mode)
-  ) {
-    if (
-      t.validators.some(
-        (v) => !v.address || !v.address.includes("cosmosvaloper")
-      )
-    )
+    if (t.validators.length === 0)
       errors.recipient = new InvalidAddress(null, {
         currencyName: a.currency.name,
       });
-  } else {
-    if (a.freshAddress === t.recipient) {
-      errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
-    } else {
-      const { recipientError, recipientWarning } = await validateRecipient(
-        a.currency,
-        t.recipient
-      );
-
-      if (recipientError) {
-        errors.recipient = recipientError;
-      }
-
-      if (recipientWarning) {
-        warnings.recipient = recipientWarning;
-      }
+    const unbondingError = isDelegable(
+      a,
+      t.validators[0].address,
+      t.validators[0].amount
+    );
+    if (unbondingError) {
+      errors.unbonding = unbondingError;
     }
   }
 
-  let estimatedFees = BigNumber(0);
+  let validatorAmount = t.validators.reduce(
+    (old, current) => old.plus(current.amount),
+    BigNumber(0)
+  );
 
-  if (!errors.recipient) {
-    if (t.useAllAmount) {
-      t.amount = getMaxEstimatedBalance(a, t, estimatedFees);
-    }
-    const res = await calculateFees(a, t);
-    estimatedFees = res.estimatedFees;
+  if (t.mode !== "claimReward" && validatorAmount.lte(0)) {
+    errors.amount = new AmountRequired();
   }
 
-  let amount =
-    t.mode !== "send"
-      ? t.validators.reduce(
-          (old, current) => old.plus(current.amount),
-          BigNumber(0)
-        )
-      : !t.useAllAmount
-      ? t.amount
-      : getMaxEstimatedBalance(a, t, estimatedFees);
+  const estimatedFees = await getEstimatedFees(a, t, errors);
 
-  let totalSpent = amount.plus(estimatedFees);
+  let totalSpent = estimatedFees;
+
+  if (t.mode === "claimReward") {
+    const { cosmosResources } = a;
+    invariant(cosmosResources, "cosmosResources should exist");
+    const claimReward = cosmosResources.delegations.find(
+      (delegation) => delegation.validatorAddress === t.validators[0].address
+    );
+    if (claimReward && estimatedFees.gt(claimReward.pendingRewards)) {
+      warnings.claimReward = new CosmosClaimRewardsFeesWarning();
+    }
+  }
 
   if (
     !errors.recipient &&
     !errors.amount &&
-    (amount.lt(0) || totalSpent.gt(a.balance))
+    (validatorAmount.lt(0) || totalSpent.gt(a.spendableBalance))
   ) {
     errors.amount = new NotEnoughBalance();
     totalSpent = BigNumber(0);
-    amount = BigNumber(0);
   }
 
   return Promise.resolve({
     errors,
     warnings,
     estimatedFees,
-    amount,
+    amount: BigNumber(0),
     totalSpent,
   });
 };

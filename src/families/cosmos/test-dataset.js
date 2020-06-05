@@ -6,7 +6,9 @@ import {
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughBalance,
+  AmountRequired,
 } from "@ledgerhq/errors";
+import { CosmosClaimRewardsFeesWarning } from "../../errors";
 import invariant from "invariant";
 import type { Transaction } from "./types";
 import transactionTransformer from "./transaction";
@@ -18,10 +20,12 @@ const dataset: DatasetTest<Transaction> = {
   currencies: {
     cosmos: {
       FIXME_ignoreAccountFields: [
+        "cosmosResources.unbondingBalance", // They move once all unbonding are done
         "cosmosResources.pendingRewardsBalance", // They are always movings
         "cosmosResources.delegations", // They are always movings because of pending Rewards
         "cosmosResources.redelegations", // will change ince a redelegation it's done
         "cosmosResources.unbondings", // will change once a unbonding it's done
+        "spendableBalance", // will change with the rewards that automatically up
       ],
       scanAccounts: [
         {
@@ -150,9 +154,9 @@ const dataset: DatasetTest<Transaction> = {
                 const { cosmosResources } = account;
                 invariant(cosmosResources, "Should exist because it's cosmos");
                 const totalSpent = account.balance.minus(
-                  cosmosResources.pendingRewardsBalance
-                    .plus(cosmosResources.unbondingBalance)
-                    .plus(cosmosResources.delegatedBalance)
+                  cosmosResources.unbondingBalance.plus(
+                    cosmosResources.delegatedBalance
+                  )
                 );
                 return {
                   errors: {},
@@ -180,9 +184,9 @@ const dataset: DatasetTest<Transaction> = {
                 const { cosmosResources } = account;
                 invariant(cosmosResources, "Should exist because it's cosmos");
                 const totalSpent = account.balance.minus(
-                  cosmosResources.pendingRewardsBalance
-                    .plus(cosmosResources.unbondingBalance)
-                    .plus(cosmosResources.delegatedBalance)
+                  cosmosResources.unbondingBalance.plus(
+                    cosmosResources.delegatedBalance
+                  )
                 );
                 return {
                   errors: {},
@@ -227,6 +231,48 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
+              name: "redelegation - AmountRequired",
+              transaction: (t) => ({
+                ...t,
+                mode: "redelegate",
+                validators: [
+                  {
+                    address:
+                      "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
+                    amount: BigNumber(0),
+                  },
+                ],
+                cosmosSourceValidator:
+                  "cosmosvaloper1sd4tl9aljmmezzudugs7zlaya7pg2895ws8tfs",
+              }),
+              expectedStatus: {
+                errors: { amount: new AmountRequired() },
+                warnings: {},
+              },
+            },
+            {
+              name: "redelegation - Source is Destination",
+              transaction: (t) => ({
+                ...t,
+                mode: "redelegate",
+                validators: [
+                  {
+                    address:
+                      "cosmosvaloper1sd4tl9aljmmezzudugs7zlaya7pg2895ws8tfs",
+                    amount: BigNumber(100),
+                  },
+                ],
+                cosmosSourceValidator:
+                  "cosmosvaloper1sd4tl9aljmmezzudugs7zlaya7pg2895ws8tfs",
+              }),
+              expectedStatus: {
+                errors: {
+                  redelegation: new InvalidAddressBecauseDestinationIsAlsoSource(),
+                },
+                warnings: {},
+              },
+            },
+            {
               name: "Unbonding - success",
               transaction: (t) => ({
                 ...t,
@@ -241,6 +287,24 @@ const dataset: DatasetTest<Transaction> = {
               }),
               expectedStatus: {
                 errors: {},
+                warnings: {},
+              },
+            },
+            {
+              name: "Unbonding - AmountRequired",
+              transaction: (t) => ({
+                ...t,
+                mode: "undelegate",
+                validators: [
+                  {
+                    address:
+                      "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
+                    amount: BigNumber(0),
+                  },
+                ],
+              }),
+              expectedStatus: {
+                errors: { amount: new AmountRequired() },
                 warnings: {},
               },
             },
@@ -295,6 +359,25 @@ const dataset: DatasetTest<Transaction> = {
               expectedStatus: {
                 errors: {},
                 warnings: {},
+              },
+            },
+            {
+              name: "ClaimReward - Warning",
+              transaction: (t) => ({
+                ...t,
+                validators: [
+                  {
+                    address:
+                      "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7",
+                    amount: BigNumber(0),
+                  },
+                ],
+                fees: BigNumber(9999999999999999),
+                mode: "claimReward",
+              }),
+              expectedStatus: {
+                errors: {},
+                warnings: { claimReward: new CosmosClaimRewardsFeesWarning() },
               },
             },
             {

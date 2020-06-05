@@ -2,6 +2,7 @@
 // Ledger internal speculos testing framework.
 // loading this file have side effects and is only for Node.
 
+import sample from "lodash/sample";
 import invariant from "invariant";
 import path from "path";
 import semver from "semver";
@@ -15,6 +16,7 @@ import { getEnv } from "../env";
 import { getDependencies } from "../apps/polyfill";
 import { findCryptoCurrencyByKeyword } from "../currencies";
 import { formatAppCandidate } from "../bot/formatters";
+import { delay } from "../promise";
 
 let idCounter = 0;
 const data = {};
@@ -31,27 +33,32 @@ export function closeAllSpeculosDevices() {
   return Promise.all(Object.keys(data).map(releaseSpeculosDevice));
 }
 
-export async function createSpeculosDevice({
-  model,
-  firmware,
-  appName,
-  appVersion,
-  seed,
-  coinapps,
-  dependency,
-}: {
-  model: DeviceModelId,
-  firmware: string,
-  appName: string,
-  appVersion: string,
-  dependency?: string,
-  seed: string,
-  // Folder where we have app binaries
-  coinapps: string,
-}): Promise<{
+export async function createSpeculosDevice(
+  arg: {
+    model: DeviceModelId,
+    firmware: string,
+    appName: string,
+    appVersion: string,
+    dependency?: string,
+    seed: string,
+    // Folder where we have app binaries
+    coinapps: string,
+  },
+  maxRetry: number = 3
+): Promise<{
   transport: SpeculosTransport,
   id: string,
 }> {
+  const {
+    model,
+    firmware,
+    appName,
+    appVersion,
+    seed,
+    coinapps,
+    dependency,
+  } = arg;
+
   const speculosID = `speculosID-${++idCounter}`;
 
   const apduPort = 40000 + idCounter;
@@ -120,23 +127,11 @@ export async function createSpeculosDevice({
     rejectReady = reject;
   });
 
-  p.stdout.on("data", (data) => {
-    if (data) {
-      log("speculos-stdout", `${speculosID}: ${String(data).trim()}`);
-    }
-  });
+  let destroyed = false;
 
-  p.stderr.on("data", (data) => {
-    if (!data) return;
-    if (!data.includes("apdu: ")) {
-      log("speculos-stderr", `${speculosID}: ${String(data).trim()}`);
-    }
-    if (data.includes("using SDK")) {
-      setTimeout(resolveReady, 500);
-    }
-  });
-
-  const destroy = () =>
+  const destroy = () => {
+    if (destroyed) return;
+    destroyed = true;
     new Promise((resolve, reject) => {
       if (!data[speculosID]) return;
       delete data[speculosID];
@@ -153,18 +148,54 @@ export async function createSpeculosDevice({
         }
       });
     });
+  };
+
+  p.stdout.on("data", (data) => {
+    if (data) {
+      log("speculos-stdout", `${speculosID}: ${String(data).trim()}`);
+    }
+  });
+
+  let latestStderr;
+
+  p.stderr.on("data", (data) => {
+    if (!data) return;
+    latestStderr = data;
+    if (!data.includes("apdu: ")) {
+      log("speculos-stderr", `${speculosID}: ${String(data).trim()}`);
+    }
+
+    if (data.includes("using SDK")) {
+      setTimeout(() => resolveReady(true), 500);
+    } else if (data.includes("is already in use by container")) {
+      rejectReady(
+        new Error(
+          "speculos already in use! Try `ledger-live cleanSpeculos` or check logs"
+        )
+      );
+    } else if (data.includes("address already in use")) {
+      if (maxRetry > 0) {
+        log("speculos", "retrying speculos connection");
+        destroy();
+        resolveReady(false);
+      }
+    }
+  });
 
   p.on("close", () => {
     log("speculos", `${speculosID} closed`);
-    destroy();
-    rejectReady(
-      new Error(
-        "speculos process failure. Try `ledger-live cleanSpeculos` or check logs"
-      )
-    );
+    if (!destroyed) {
+      destroy();
+      rejectReady(new Error(`speculos process failure. ${latestStderr || ""}`));
+    }
   });
 
-  await ready;
+  const hasSucceed = await ready;
+
+  if (!hasSucceed) {
+    await delay(1000);
+    return createSpeculosDevice(arg, maxRetry - 1);
+  }
 
   const transport = await SpeculosTransport.open({
     apduPort,
@@ -273,7 +304,9 @@ export function appCandidatesMatches(
 ): boolean {
   return (
     (!search.model || search.model === appCandidate.model) &&
-    (!search.appName || search.appName === appCandidate.appName) &&
+    (!search.appName ||
+      search.appName.replace(/ /s, "").toLowerCase() ===
+        appCandidate.appName.replace(/ /s, "").toLowerCase()) &&
     (!search.firmware ||
       appCandidate.firmware === search.firmware ||
       semver.satisfies(
@@ -287,8 +320,27 @@ export function appCandidatesMatches(
 
 export const findAppCandidate = (
   appCandidates: AppCandidate[],
-  search: AppSearch
-): ?AppCandidate => appCandidates.find((c) => appCandidatesMatches(c, search));
+  search: AppSearch,
+  picker: (AppCandidate[]) => AppCandidate = sample
+): ?AppCandidate => {
+  let apps = appCandidates.filter((c) => appCandidatesMatches(c, search));
+  if (!search.appVersion && apps.length > 0) {
+    const appVersion = apps[0].appVersion;
+    apps = apps.filter((a) => a.appVersion === appVersion);
+  }
+  const app = picker(apps);
+  if (apps.length > 1) {
+    log(
+      "speculos",
+      apps.length +
+        " app candidates (out of " +
+        appCandidates.length +
+        "):\n" +
+        apps.map((a, i) => " [" + i + "] " + formatAppCandidate(a)).join("\n")
+    );
+  }
+  return app;
+};
 
 function eatDevice(
   parts: string[]
@@ -345,21 +397,8 @@ async function openImplicitSpeculos(query: string) {
     query
   );
   const { search, dependency, appName } = match;
-  const appCandidates = apps.filter((c) => appCandidatesMatches(c, search));
-  const appCandidate = appCandidates[0];
+  const appCandidate = findAppCandidate(apps, search);
   invariant(appCandidate, "could not find an app that matches '%s'", query);
-  if (appCandidates.length > 1) {
-    log(
-      "speculos",
-      appCandidates.length +
-        " app candidates (out of " +
-        apps.length +
-        "):\n" +
-        appCandidates
-          .map((a, i) => " [" + i + "] " + formatAppCandidate(a))
-          .join("\n")
-    );
-  }
   log("speculos", "using app " + formatAppCandidate(appCandidate));
 
   const device = await createSpeculosDevice({
@@ -390,6 +429,7 @@ registerTransportModule({
     if (id.startsWith("speculos")) {
       return Promise.resolve();
     }
+    // todo close the speculos: case
   },
   disconnect: releaseSpeculosDevice,
 });

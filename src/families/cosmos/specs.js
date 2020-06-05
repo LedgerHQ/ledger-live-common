@@ -7,6 +7,12 @@ import { getCurrentCosmosPreloadData } from "../../families/cosmos/preloadedData
 import { getCryptoCurrencyById } from "../../currencies";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
+import {
+  canClaimRewards,
+  canDelegate,
+  canUndelegate,
+  canRedelegate,
+} from "./logic";
 
 const cosmos: AppSpec<Transaction> = {
   name: "Cosmos",
@@ -21,7 +27,7 @@ const cosmos: AppSpec<Transaction> = {
       name: "split half to another account",
       maxRun: 6,
       transaction: ({ account, siblings, bridge, maxSpendable }) => {
-        invariant(maxSpendable.gt(2000), "balance is too low");
+        invariant(maxSpendable.gt(5000), "balance is too low");
         let t = bridge.createTransaction(account);
         const sibling = pickSiblings(siblings, 30);
         const recipient = sibling.freshAddress;
@@ -41,10 +47,7 @@ const cosmos: AppSpec<Transaction> = {
       name: "delegate 10% to a NEW validator",
       maxRun: 3,
       transaction: ({ account, bridge, maxSpendable }) => {
-        invariant(
-          maxSpendable.gt(100),
-          "account don't have remaining spendable"
-        );
+        invariant(canDelegate(account), "can delegate");
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         invariant(
@@ -82,8 +85,9 @@ const cosmos: AppSpec<Transaction> = {
       name: "undelegate an existing delegation without existing unbondings",
       maxRun: 1,
       transaction: ({ account, bridge, maxSpendable }) => {
+        invariant(canUndelegate(account), "can undelegate");
         invariant(
-          maxSpendable.gt(100),
+          maxSpendable.gt(5000),
           "account don't have remaining spendable"
         );
         const { cosmosResources } = account;
@@ -127,7 +131,7 @@ const cosmos: AppSpec<Transaction> = {
       maxRun: 1,
       transaction: ({ account, bridge, maxSpendable }) => {
         invariant(
-          maxSpendable.gt(100),
+          maxSpendable.gt(5000),
           "account don't have remaining spendable"
         );
         const { cosmosResources } = account;
@@ -144,7 +148,10 @@ const cosmos: AppSpec<Transaction> = {
           cosmosResources.redelegations.length === 0,
           "already ongoing redelegation"
         );
-        const sourceDelegation = sample(cosmosResources.delegations);
+        const sourceDelegation = sample(
+          cosmosResources.delegations.filter((d) => canRedelegate(account, d))
+        );
+        invariant(sourceDelegation, "none can redelegate");
         const delegation = sample(cosmosResources.delegations);
         let t = bridge.createTransaction(account);
         t = bridge.updateTransaction(t, {
@@ -169,13 +176,13 @@ const cosmos: AppSpec<Transaction> = {
       maxRun: 1,
       transaction: ({ account, bridge, maxSpendable }) => {
         invariant(
-          maxSpendable.gt(100),
+          maxSpendable.gt(5000),
           "account don't have remaining spendable"
         );
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
-        const delegation = cosmosResources.delegations.find((d) =>
-          d.pendingRewards.gt(100)
+        const delegation = sample(
+          cosmosResources.delegations.filter((d) => canClaimRewards(account, d))
         );
         invariant(delegation, "no delegation to claim");
         let t = bridge.createTransaction(account);

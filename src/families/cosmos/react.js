@@ -19,7 +19,7 @@ import {
   mapDelegations,
   mapDelegationInfo,
   searchFilter as defaultSearchFilter,
-} from "./utils";
+} from "./logic";
 import { getAccountUnit } from "../../account";
 import useMemoOnce from "../../hooks/useMemoOnce";
 import type { Account } from "../../types";

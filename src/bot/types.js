@@ -20,7 +20,9 @@ type DeviceActionEvent = { text: string, x: number, y: number };
 
 export type DeviceActionArg<T, S> = {
   appCandidate: AppCandidate,
+  account: Account,
   transaction: T,
+  status: TransactionStatus,
   transport: Transport<*> & { button: (string) => void },
   event: DeviceActionEvent,
   state: S,
@@ -29,7 +31,11 @@ export type DeviceActionArg<T, S> = {
 export type DeviceAction<T, S> = (DeviceActionArg<T, S>) => ?S;
 
 export type MutationSpec<T: Transaction> = {
+  // Name what this mutation is doing
   name: string,
+  // The maximum number of times to execute this mutation for a given test run
+  maxRun?: number,
+  // Express the transaction to be done
   transaction: ({
     appCandidate: AppCandidate,
     account: Account,
@@ -37,8 +43,18 @@ export type MutationSpec<T: Transaction> = {
     bridge: AccountBridge<T>,
     maxSpendable: BigNumber,
   }) => ?T,
+  // if there is a status errors/warnings of the defined transaction, this function, if define, can try to recover from it
+  recoverBadTransactionStatus?: ({
+    transaction: T,
+    status: TransactionStatus,
+    account: Account,
+    bridge: AccountBridge<T>,
+  }) => ?T,
+  // Express the device actions to do (buttons,..) and validate the device screen
   deviceAction?: DeviceAction<T, any>,
-  maxRun?: number,
+  // how much time to wait in maximum to reach the final state
+  testTimeout?: number,
+  // Implement a test that runs after the operation is applied to the account
   test?: ({
     account: Account,
     accountBeforeTransaction: Account,
@@ -53,6 +69,7 @@ export type AppSpec<T: Transaction> = {
   name: string,
   currency: CryptoCurrency,
   dependency?: string,
+  testTimeout?: number,
   appQuery: {
     model?: DeviceModelId,
     appName?: string,
@@ -60,6 +77,15 @@ export type AppSpec<T: Transaction> = {
     appVersion?: string,
   },
   mutations: MutationSpec<T>[],
+};
+
+export type SpecReport<T: Transaction> = {
+  spec: AppSpec<T>,
+  scanTime?: number,
+  accountsBefore?: Account[],
+  accountsAfter?: Account[],
+  mutations?: MutationReport<T>[],
+  fatalError?: Error,
 };
 
 export type MutationReport<T: Transaction> = {
@@ -75,6 +101,10 @@ export type MutationReport<T: Transaction> = {
   transactionTime?: number,
   status?: TransactionStatus,
   statusTime?: number,
+  recoveredFromTransactionStatus?: {
+    transaction: T,
+    status: TransactionStatus,
+  },
   latestSignOperationEvent?: SignOperationEvent,
   signedOperation?: SignedOperation,
   signedTime?: number,
@@ -83,5 +113,6 @@ export type MutationReport<T: Transaction> = {
   operation?: Operation,
   confirmedTime?: number,
   finalAccount?: Account,
+  testDuration?: number,
   error?: Error,
 };

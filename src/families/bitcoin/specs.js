@@ -2,31 +2,70 @@
 import expect from "expect";
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
+import { log } from "@ledgerhq/logs";
 import type { Transaction } from "./types";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
 import { pickSiblings } from "../../bot/specs";
 import type { MutationSpec, AppSpec } from "../../bot/types";
+import { LowerThanMinimumRelayFee } from "../../errors";
+import { getMinRelayFee } from "./fees";
+
+type Arg = $Shape<{
+  minimalAmount: BigNumber,
+  targetAccountSize: number,
+}>;
+
+const recoverBadTransactionStatus = ({
+  bridge,
+  account,
+  transaction,
+  status,
+}) => {
+  const hasErrors = Object.keys(status.errors).length > 0;
+
+  if (
+    !hasErrors &&
+    status.warnings.feePerByte instanceof LowerThanMinimumRelayFee &&
+    status.estimatedFees.gt(0)
+  ) {
+    const feePerByte = BigNumber(getMinRelayFee(account.currency))
+      .times(transaction.feePerByte || 0)
+      .div(status.estimatedFees)
+      .integerValue(BigNumber.ROUND_CEIL);
+    log("specs/bitcoin", "recovering with feePerByte=" + feePerByte.toString());
+    if (feePerByte.lt(1)) return;
+    return bridge.updateTransaction(transaction, { feePerByte });
+  }
+
+  if (!hasErrors) {
+    // ignore other warning cases. recover if there is no errors
+    return transaction;
+  }
+};
 
 const bitcoinLikeMutations = ({
   minimalAmount = BigNumber("10000"),
-  targetAccountSize = 2,
-}: $Shape<{
-  minimalAmount: BigNumber,
-  targetAccountSize: number,
-}> = {}): MutationSpec<Transaction>[] => [
+  targetAccountSize = 3,
+}: Arg = {}): MutationSpec<Transaction>[] => [
   {
-    name: "move 50% to another account",
+    name: "move ~50% to another account",
     maxRun: 2,
-    transaction: ({ account, siblings, bridge }) => {
-      invariant(account.balance.gt(minimalAmount), "balance is too low");
+    transaction: ({ account, siblings, bridge, maxSpendable }) => {
+      invariant(maxSpendable.gt(minimalAmount), "balance is too low");
       let t = bridge.createTransaction(account);
       const sibling = pickSiblings(siblings, targetAccountSize);
       const recipient = sibling.freshAddress;
-      const amount = account.balance.div(2).integerValue();
+      const amount = maxSpendable.div(1.9 + 0.2 * Math.random()).integerValue();
       t = bridge.updateTransaction(t, { amount, recipient });
       return t;
     },
+    recoverBadTransactionStatus,
     test: ({ account, accountBeforeTransaction, operation }) => {
+      // workaround for buggy explorer behavior (nodes desync)
+      invariant(
+        Date.now() - operation.date > 20000,
+        "operation time to be older than 20s"
+      );
       // can be generalized!
       expect(account.balance.toString()).toBe(
         accountBeforeTransaction.balance.minus(operation.value).toString()
@@ -36,15 +75,21 @@ const bitcoinLikeMutations = ({
   {
     name: "send max to another account",
     maxRun: 1,
-    transaction: ({ account, siblings, bridge }) => {
-      invariant(account.balance.gt(minimalAmount), "balance is too low");
+    transaction: ({ account, siblings, bridge, maxSpendable }) => {
+      invariant(maxSpendable.gt(minimalAmount), "balance is too low");
       let t = bridge.createTransaction(account);
       const sibling = pickSiblings(siblings, targetAccountSize);
       const recipient = sibling.freshAddress;
       t = bridge.updateTransaction(t, { useAllAmount: true, recipient });
       return t;
     },
-    test: ({ account }) => {
+    recoverBadTransactionStatus,
+    test: ({ account, operation }) => {
+      // workaround for buggy explorer behavior (nodes desync)
+      invariant(
+        Date.now() - operation.date > 20000,
+        "operation time to be older than 20s"
+      );
       expect(account.balance.toString()).toBe("0");
     },
   },
@@ -58,6 +103,23 @@ const bitcoin: AppSpec<Transaction> = {
     appName: "Bitcoin",
   },
   mutations: bitcoinLikeMutations(),
+};
+
+const bitcoinTestnet: AppSpec<Transaction> = {
+  name: "Bitcoin Testnet",
+  currency: getCryptoCurrencyById("bitcoin_testnet"),
+  dependency: "Bitcoin",
+  appQuery: {
+    model: "nanoS",
+    appName: "Bitcoin Test",
+  },
+  mutations: bitcoinLikeMutations({
+    targetAccountSize: 8,
+    minimalAmount: parseCurrencyUnit(
+      getCryptoCurrencyById("bitcoin_testnet").units[0],
+      "0.001"
+    ),
+  }),
 };
 
 const bitcoinGold: AppSpec<Transaction> = {
@@ -217,6 +279,7 @@ const digibyte: AppSpec<Transaction> = {
     appName: "Digibyte",
   },
   mutations: bitcoinLikeMutations({
+    targetAccountSize: 5,
     minimalAmount: parseCurrencyUnit(
       getCryptoCurrencyById("digibyte").units[0],
       "0.1"
@@ -249,7 +312,7 @@ const litecoin: AppSpec<Transaction> = {
     appName: "Litecoin",
   },
   mutations: bitcoinLikeMutations({
-    targetAccountSize: 3,
+    targetAccountSize: 5,
     minimalAmount: parseCurrencyUnit(
       getCryptoCurrencyById("litecoin").units[0],
       "0.001"
@@ -275,20 +338,21 @@ const stealthcoin: AppSpec<Transaction> = {
 
 export default {
   bitcoin,
-  dogecoin,
-  zcash,
-  zencash,
-  litecoin,
-  stealthcoin,
-  komodo,
-  digibyte,
-  bitcoinGold,
+  bitcoinTestnet,
   bitcoinCash,
+  bitcoinGold,
+  digibyte,
+  dogecoin,
+  komodo,
+  litecoin,
   peercoin,
   pivx,
   qtum,
   stakenet,
+  stealthcoin,
   stratis,
   vertcoin,
   viacoin,
+  zcash,
+  zencash,
 };

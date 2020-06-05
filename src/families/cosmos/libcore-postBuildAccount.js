@@ -9,6 +9,7 @@ import {
   libcoreBigIntToBigNumber,
 } from "../../libcore/buildBigNumber";
 import { promiseAllBatched } from "../../promise";
+import { getMaxEstimatedBalance } from "./logic";
 
 const getValidatorStatus = async (
   cosmosAccount: CoreCosmosLikeAccount,
@@ -136,6 +137,10 @@ const postBuildAccount = async ({
   log("cosmos/post-buildAccount", "getCosmosResources");
   account.cosmosResources = await getCosmosResources(account, coreAccount);
   log("cosmos/post-buildAccount", "getCosmosResources DONE");
+  account.spendableBalance = getMaxEstimatedBalance(account, BigNumber(0));
+  if (account.spendableBalance.lt(0)) {
+    account.spendableBalance = BigNumber(0);
+  }
   return account;
 };
 

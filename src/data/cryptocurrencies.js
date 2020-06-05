@@ -639,7 +639,7 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     ],
     explorerViews: [
       {
-        tx: "https://coin.atom.dev.ledger.fr/txs/$hash",
+        tx: "https://www.mintscan.io/txs/$hash",
       },
     ],
   },
@@ -1982,7 +1982,7 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     bitcoinLikeInfo: {
       P2PKH: 62,
       P2SH: 85,
-      hasTimestamp: true,
+      hasTimestamp: false,
     },
     units: [
       {
@@ -2428,6 +2428,7 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     color: "#00ff00",
     symbol: "Ƀ",
     units: bitcoinUnits.map(makeTestnetUnit),
+    deviceTicker: "TEST",
     supportsSegwit: true,
     supportsNativeSegwit: true,
     isTestnetFor: "bitcoin",
@@ -2451,6 +2452,7 @@ const cryptocurrenciesById: { [name: string]: CryptoCurrency } = {
     name: "Ethereum Ropsten",
     managerAppName: "Ethereum",
     ticker: "ETH",
+    deviceTicker: "ETH",
     scheme: "ethereum_ropsten",
     color: "#00ff00",
     units: ethereumUnits("ether", "ETH").map(makeTestnetUnit),

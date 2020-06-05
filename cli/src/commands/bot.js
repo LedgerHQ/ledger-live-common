@@ -18,12 +18,12 @@ export default {
       desc: "filter the mutation to run by a regexp pattern",
     },
   ],
-  job: (arg) => {
+  job: (arg: *) => {
     const SEED = getEnv("SEED");
 
     if (!SEED) {
       console.log(
-        "You didn't define SEED yet. Please use a new one SPECIFICALLY to this test and with NOT TOO MUCH funds. USE THIS BOT TO YOUR OWN RISK!\n" +
+        "You have not defined a SEED yet. Please use a new one SPECIFICALLY to this test and with NOT TOO MUCH funds. USE THIS BOT TO YOUR OWN RISK!\n" +
           "here is a possible software seed you can use:\n" +
           "SEED='" +
           generateMnemonic(256) +
