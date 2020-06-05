@@ -8,7 +8,7 @@ import invariant from "invariant";
 const addressFormatMap = {
   legacy: 0,
   p2sh: 1,
-  bech32: 2
+  bech32: 2,
 };
 
 /**
@@ -32,7 +32,7 @@ const getSerializedAddressParameters = (
   const buffer = bip32asBuffer(path);
   const addressParameters = Buffer.concat([
     Buffer.from([addressFormatMap[format]]),
-    buffer
+    buffer,
   ]);
   console.log(addressParameters.toString("hex"));
   return { addressParameters };

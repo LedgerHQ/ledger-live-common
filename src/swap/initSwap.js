@@ -1,11 +1,10 @@
 // @flow
 
-import { BigNumber } from "bignumber.js";
 import secp256k1 from "secp256k1";
 import Swap from "./hw-app-swap/Swap";
 import { mockInitSwap } from "./mock";
 import perFamily from "../generated/swap";
-import { getAccountCurrency, getAccountUnit, getMainAccount } from "../account";
+import { getAccountCurrency, getMainAccount } from "../account";
 import network from "../network";
 import { getAccountBridge } from "../bridge";
 import { SwapGenericAPIError } from "../errors";
@@ -13,14 +12,14 @@ import type {
   Exchange,
   ExchangeRate,
   InitSwap,
-  SwapRequestEvent
+  SwapRequestEvent,
 } from "./types";
 import { Observable } from "rxjs";
 import { withDevice } from "../hw/deviceAccess";
 import {
   getCurrencySwapConfig,
   getProviderNameAndSignature,
-  swapAPIBaseURL
+  swapAPIBaseURL,
 } from "./";
 import { getEnv } from "../env";
 
@@ -30,8 +29,8 @@ const initSwap: InitSwap = (
   deviceId: string
 ): Observable<SwapRequestEvent> => {
   if (getEnv("MOCK")) return mockInitSwap(exchange, exchangeRate, deviceId);
-  return withDevice(deviceId)(transport =>
-    Observable.create(o => {
+  return withDevice(deviceId)((transport) =>
+    Observable.create((o) => {
       let unsubscribed = false;
       const confirmSwap = async () => {
         const swap = new Swap(transport);
@@ -39,63 +38,44 @@ const initSwap: InitSwap = (
         // we need to start the flow again.
         const deviceTransactionId = await swap.startNewTransaction();
         const { provider, rateId } = exchangeRate;
-        const unitFrom = getAccountUnit(exchange.fromAccount);
-        const amountFrom = exchange.fromAmount.div(
-          BigNumber(10).pow(unitFrom.magnitude)
-        );
-
-        const refundCurrency = getAccountCurrency(exchange.fromAccount);
-        const payoutCurrency = getAccountCurrency(exchange.toAccount);
-        const refundAccount = getMainAccount(
-          exchange.fromAccount,
-          exchange.fromParentAccount
-        );
-        const payoutAccount = getMainAccount(
-          exchange.toAccount,
-          exchange.toParentAccount
-        );
+        const {
+          fromParentAccount,
+          fromAccount,
+          toParentAccount,
+          toAccount,
+        } = exchange;
+        let { transaction } = exchange;
+        const { amount } = transaction;
+        const refundCurrency = getAccountCurrency(fromAccount);
+        const payoutCurrency = getAccountCurrency(toAccount);
+        const refundAccount = getMainAccount(fromAccount, fromParentAccount);
+        const payoutAccount = getMainAccount(toAccount, toParentAccount);
 
         // Request a lock on the specified rate for 20 minutes,
         // user is expected to send funds after this.
         // NB Added the try/catch because of the API stability issues.
         let res;
         try {
-          o.next({
-            type: "init-swap-api-confirm",
-            payload: [
-              {
-                provider,
-                amountFrom,
-                from: refundCurrency.id,
-                to: payoutCurrency.id,
-                rateId,
-                address: payoutAccount.freshAddress,
-                refundAddress: refundAccount.freshAddress,
-                deviceTransactionId
-              }
-            ]
-          });
-
           res = await network({
             method: "POST",
             url: `${swapAPIBaseURL}/swap`,
             data: [
               {
                 provider,
-                amountFrom,
+                amountFrom: amount,
                 from: refundCurrency.id,
                 to: payoutCurrency.id,
                 rateId,
                 address: payoutAccount.freshAddress,
                 refundAddress: refundAccount.freshAddress,
-                deviceTransactionId
-              }
-            ]
+                deviceTransactionId,
+              },
+            ],
           });
         } catch (e) {
           o.next({
             type: "init-swap-error",
-            error: new SwapGenericAPIError()
+            error: new SwapGenericAPIError(),
           });
           o.complete();
           unsubscribed = true;
@@ -118,15 +98,8 @@ const initSwap: InitSwap = (
         }
 
         const accountBridge = getAccountBridge(refundAccount);
-        let transaction = accountBridge.createTransaction(refundAccount);
-
-        // FIXME we send decimals but swap wants satoshis
         transaction = accountBridge.updateTransaction(transaction, {
-          amount: BigNumber(
-            swapResult.amountExpectedFrom *
-              10 ** refundCurrency.units[0].magnitude
-          ),
-          recipient: swapResult.payinAddress
+          recipient: swapResult.payinAddress,
         });
 
         transaction = await accountBridge.prepareTransaction(
@@ -136,7 +109,7 @@ const initSwap: InitSwap = (
 
         const {
           errors,
-          estimatedFees
+          estimatedFees,
         } = await accountBridge.getTransactionStatus(
           refundAccount,
           transaction
@@ -166,7 +139,7 @@ const initSwap: InitSwap = (
 
         const {
           config: payoutAddressConfig,
-          signature: payoutAddressConfigSignature
+          signature: payoutAddressConfigSignature,
         } = getCurrencySwapConfig(payoutCurrency);
 
         await swap.checkPayoutAddress(
@@ -184,7 +157,7 @@ const initSwap: InitSwap = (
 
         const {
           config: refundAddressConfig,
-          signature: refundAddressConfigSignature
+          signature: refundAddressConfigSignature,
         } = getCurrencySwapConfig(refundCurrency);
 
         if (unsubscribed) return;
@@ -199,7 +172,7 @@ const initSwap: InitSwap = (
         if (unsubscribed) return;
         o.next({
           type: "init-swap-result",
-          initSwapResult: { transaction, swapId }
+          initSwapResult: { transaction, swapId },
         });
       };
       confirmSwap().then(
@@ -207,10 +180,10 @@ const initSwap: InitSwap = (
           o.complete();
           unsubscribed = true;
         },
-        e => {
+        (e) => {
           o.next({
             type: "init-swap-error",
-            error: e
+            error: e,
           });
           o.complete();
           unsubscribed = true;

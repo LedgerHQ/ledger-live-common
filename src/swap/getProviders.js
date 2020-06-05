@@ -12,7 +12,7 @@ const getProviders: GetProviders = async () => {
 
   const res = await network({
     method: "GET",
-    url: `${swapAPIBaseURL}/providers`
+    url: `${swapAPIBaseURL}/providers`,
   });
 
   if (!res.data.length) {

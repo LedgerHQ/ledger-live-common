@@ -12,25 +12,25 @@ export type CurrencyStatus = $Keys<typeof validCurrencyStatus>;
 export type CurrenciesStatus = { [string]: CurrencyStatus };
 
 export const initState: ({ okCurrencies: Currency[] }) => SwapState = ({
-  okCurrencies
+  okCurrencies,
 }) => {
   const fromCurrency = okCurrencies[0];
-  const toCurrency = okCurrencies.find(c => c !== fromCurrency);
+  const toCurrency = okCurrencies.find((c) => c !== fromCurrency);
 
   return {
     swap: {
       exchange: {
         fromAmount: BigNumber(0),
-        sendMax: false
+        sendMax: false,
       },
-      exchangeRate: undefined
+      exchangeRate: undefined,
     },
     error: null,
     isLoading: false,
     useAllAmount: false,
     okCurrencies,
     fromCurrency,
-    toCurrency
+    toCurrency,
   };
 };
 
@@ -44,16 +44,16 @@ export const canRequestRates = (state: SwapState) => {
 export const getCurrenciesWithStatus = ({
   accounts,
   selectableCurrencies,
-  installedApps
+  installedApps,
 }: {
   accounts: AccountLike[],
   selectableCurrencies: Currency[],
-  installedApps: InstalledItem[]
+  installedApps: InstalledItem[],
 }): CurrenciesStatus => {
   const statuses = {};
   const installedAppsStatus = {};
   const notEmptyCurrencies = flattenAccounts(accounts).map(
-    a => getAccountCurrency(a).id
+    (a) => getAccountCurrency(a).id
   );
 
   for (const { name, updated } of installedApps)
@@ -91,9 +91,9 @@ export const reducer = (
         swap: {
           ...state.swap,
           exchangeRate: null,
-          exchange: { ...state.swap.exchange, ...payload }
+          exchange: { ...state.swap.exchange, ...payload },
         },
-        error: null
+        error: null,
       };
       break;
     case "fetchRates":
@@ -105,13 +105,13 @@ export const reducer = (
         swap: { ...state.swap, exchangeRate: payload.rate },
         ratesTimestamp: new Date(),
         ratesExpired: false,
-        error: null
+        error: null,
       };
       break;
     }
     case "setFromCurrency": {
       const toCurrency = state.okCurrencies.find(
-        c => c !== payload.fromCurrency
+        (c) => c !== payload.fromCurrency
       );
       newState = {
         ...state,
@@ -122,12 +122,12 @@ export const reducer = (
             ...state.swap.exchange,
             fromAccount: undefined,
             fromAmount: BigNumber(0),
-            toAccount: undefined
-          }
+            toAccount: undefined,
+          },
         },
         fromCurrency: payload.fromCurrency,
         toCurrency,
-        error: null
+        error: null,
       };
       break;
     }
@@ -140,11 +140,11 @@ export const reducer = (
           exchange: {
             ...state.swap.exchange,
             toAccount: undefined,
-            fromAmount: BigNumber(0)
-          }
+            fromAmount: BigNumber(0),
+          },
         },
         toCurrency: payload.toCurrency,
-        error: null
+        error: null,
       };
       break;
     }
@@ -158,10 +158,10 @@ export const reducer = (
           exchange: {
             ...state.swap.exchange,
             fromAmount: BigNumber(0),
-            ...payload
-          }
+            ...payload,
+          },
         },
-        error: null
+        error: null,
       };
       break;
     }
@@ -183,10 +183,10 @@ export const reducer = (
           exchangeRate: null,
           exchange: {
             ...state.swap.exchange,
-            fromAmount: payload.fromAmount
-          }
+            fromAmount: payload.fromAmount,
+          },
         },
-        error
+        error,
       };
       break;
     }
@@ -197,8 +197,8 @@ export const reducer = (
         ...state,
         swap: {
           ...state.swap,
-          exchangeRate: null
-        }
+          exchangeRate: null,
+        },
       };
     default:
       return state;

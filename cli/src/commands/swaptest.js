@@ -7,7 +7,7 @@ import { initSwap } from "@ledgerhq/live-common/lib/swap";
 import { getExchangeRates } from "@ledgerhq/live-common/lib/swap";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import { deviceOpt } from "../scan";
-import { account1, account2 } from "../poc/accounts";
+import { account11, account12 } from "../poc/accounts";
 import { BigNumber } from "bignumber.js";
 
 const test = async (
@@ -20,8 +20,8 @@ const test = async (
   console.log(`\tSwaping ${reverse ? "LTC-BTC" : "BTC-LTC"}`);
   console.log(`\t${amount} satoshsis worth.\n`);
 
-  const accountToSendSwap = reverse ? account2(mock) : account1(mock);
-  const accountToReceiveSwap = reverse ? account1(mock) : account2(mock);
+  const accountToSendSwap = reverse ? account12(mock) : account11(mock);
+  const accountToReceiveSwap = reverse ? account11(mock) : account12(mock);
 
   const fromAccount = await getAccountBridge(accountToSendSwap, null)
     .sync(accountToSendSwap, { paginationConfig: {} })
@@ -34,7 +34,7 @@ const test = async (
     toAccount: accountToReceiveSwap,
     toParentAccount: undefined,
     fromAmount: BigNumber(amount),
-    sendMax: false
+    sendMax: false,
   };
 
   console.log("Getting exchange rates");
@@ -42,11 +42,15 @@ const test = async (
 
   console.log("Initialising swap");
   // NB using the first rate
-  const { transaction, swapId } = await initSwap(exchange, exchangeRates[0], deviceId)
+  const { transaction, swapId } = await initSwap(
+    exchange,
+    exchangeRates[0],
+    deviceId
+  )
     .pipe(
-      tap(e => console.log(e)),
-      filter(e => e.type === "init-swap-result"),
-      map(e => e.initSwapResult)
+      tap((e) => console.log(e)),
+      filter((e) => e.type === "init-swap-result"),
+      map((e) => e.initSwapResult)
     )
     .toPromise();
 
@@ -55,9 +59,9 @@ const test = async (
   const signedOperation = await bridge
     .signOperation({ account: exchange.fromAccount, deviceId, transaction })
     .pipe(
-      tap(e => console.log(e)),
-      first(e => e.type === "signed"),
-      map(e => e.signedOperation)
+      tap((e) => console.log(e)),
+      first((e) => e.type === "signed"),
+      map((e) => e.signedOperation)
     )
     .toPromise();
 
@@ -66,7 +70,7 @@ const test = async (
 
   const operation = await bridge.broadcast({
     account: exchange.fromAccount,
-    signedOperation
+    signedOperation,
   });
 
   console.log("resulting operation", { operation });
@@ -78,28 +82,28 @@ export default {
     {
       name: "mock",
       alias: "m",
-      type: Boolean
+      type: Boolean,
     },
     {
       name: "amount",
       alias: "a",
-      type: Number
+      type: Number,
     },
     {
       name: "reverse",
       alias: "r",
-      type: Boolean
-    }
+      type: Boolean,
+    },
   ],
   job: ({
     device,
     mock,
     amount,
-    reverse
+    reverse,
   }: $Shape<{
     device: string,
     mock: boolean,
     amount: number,
-    reverse: boolean
-  }>) => from(test(device, mock, amount, reverse))
+    reverse: boolean,
+  }>) => from(test(device, mock, amount, reverse)),
 };

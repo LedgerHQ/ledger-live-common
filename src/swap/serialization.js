@@ -5,9 +5,9 @@ import {
   fromAccountLikeRaw,
   fromAccountRaw,
   toAccountLikeRaw,
-  toAccountRaw
+  toAccountRaw,
 } from "../account";
-import { BigNumber } from "bignumber.js";
+import { fromTransactionRaw, toTransactionRaw } from "../transaction";
 
 export const fromExchangeRaw = (exchangeRaw: ExchangeRaw): Exchange => {
   const fromAccount = fromAccountLikeRaw(exchangeRaw.fromAccount);
@@ -18,14 +18,14 @@ export const fromExchangeRaw = (exchangeRaw: ExchangeRaw): Exchange => {
   const toParentAccount = exchangeRaw.toParentAccount
     ? fromAccountRaw(exchangeRaw.toParentAccount)
     : null;
+  const transaction = fromTransactionRaw(exchangeRaw.transaction);
 
   return {
     fromAccount,
     fromParentAccount,
     toAccount,
     toParentAccount,
-    fromAmount: BigNumber(exchangeRaw.fromAmount),
-    sendMax: exchangeRaw.sendMax
+    transaction,
   };
 };
 
@@ -35,8 +35,7 @@ export const toExchangeRaw = (exchange: Exchange): ExchangeRaw => {
     fromParentAccount,
     toAccount,
     toParentAccount,
-    fromAmount,
-    sendMax
+    transaction,
   } = exchange;
 
   return {
@@ -46,7 +45,6 @@ export const toExchangeRaw = (exchange: Exchange): ExchangeRaw => {
       : null,
     toAccount: toAccountLikeRaw(toAccount),
     toParentAccount: toParentAccount ? toAccountRaw(toParentAccount) : null,
-    fromAmount: fromAmount.toString(),
-    sendMax
+    transaction: toTransactionRaw(transaction),
   };
 };

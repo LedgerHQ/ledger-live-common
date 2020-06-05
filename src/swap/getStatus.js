@@ -7,7 +7,7 @@ import { getEnv } from "../env";
 import { mockGetStatus } from "./mock";
 import { SwapUnknownSwapId } from "../errors";
 
-export const getStatus: GetStatus = async status => {
+export const getStatus: GetStatus = async (status) => {
   const updatedStatus = await getMultipleStatus([status]);
   if (updatedStatus && updatedStatus.length) {
     return updatedStatus[0];
@@ -16,19 +16,19 @@ export const getStatus: GetStatus = async status => {
   throw new SwapUnknownSwapId({ ...status });
 };
 
-export const getMultipleStatus: GetMultipleStatus = async statusList => {
+export const getMultipleStatus: GetMultipleStatus = async (statusList) => {
   if (getEnv("MOCK")) return mockGetStatus(statusList);
 
   const res = await network({
     method: "POST",
     url: `${swapAPIBaseURL}/swap/status`,
-    data: statusList
+    data: statusList,
   });
 
   return res.data.map(({ swapId, provider, status }) => ({
     swapId,
     provider,
-    status
+    status,
   }));
 };
 

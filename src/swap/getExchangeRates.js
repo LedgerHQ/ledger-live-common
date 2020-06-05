@@ -27,9 +27,9 @@ const getExchangeRates: GetExchangeRates = async (exchange: Exchange) => {
       {
         from,
         to,
-        amountFrom: amountFrom.toString()
-      }
-    ]
+        amountFrom: amountFrom.toString(),
+      },
+    ],
   });
 
   return res.data.map(
@@ -38,7 +38,7 @@ const getExchangeRates: GetExchangeRates = async (exchange: Exchange) => {
         throw new SwapExchangeRateOutOfBounds(null, {
           unit: unitFrom.code,
           minAmountFrom,
-          maxAmountFrom
+          maxAmountFrom,
         });
       }
 
@@ -52,7 +52,7 @@ const getExchangeRates: GetExchangeRates = async (exchange: Exchange) => {
         rate,
         rateId,
         provider,
-        expirationDate: new Date()
+        expirationDate: new Date(),
       };
     }
   );

@@ -16,11 +16,11 @@ const getSwapOperationMap = (
     operationId,
     fromAmount,
     toAmount,
-    status
+    status,
   } = swapOperation;
 
-  const toAccount = accounts.find(a => a.id === receiverAccountId);
-  const operation = account.operations.find(o => o.id === operationId);
+  const toAccount = accounts.find((a) => a.id === receiverAccountId);
+  const operation = account.operations.find((o) => o.id === operationId);
 
   // NB future improvement, we could group the swapStatusRequests into an array and trigger
   // a single call to the backend. I didn't plan for that initially.
@@ -38,7 +38,7 @@ const getSwapOperationMap = (
       fromAccount: account,
       operation,
       fromAmount,
-      toAmount
+      toAmount,
     };
   }
 };

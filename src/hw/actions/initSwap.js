@@ -3,6 +3,7 @@ import { Observable } from "rxjs";
 import { useEffect, useState } from "react";
 import type { ConnectAppEvent, Input as ConnectAppInput } from "../connectApp";
 import type { Action, Device } from "./types";
+import type { Transaction } from "../../types";
 import { toExchangeRaw } from "../../swap/serialization";
 import type { AppState } from "./app";
 import { scan, tap } from "rxjs/operators";
@@ -13,23 +14,25 @@ import type {
   ExchangeRaw,
   ExchangeRate,
   InitSwapResult,
-  SwapRequestEvent
+  SwapRequestEvent,
 } from "../../swap/types";
 
 type State = {|
   initSwapResult: ?InitSwapResult,
   initSwapRequested: boolean,
-  initSwapError: ?Error
+  initSwapError: ?Error,
 |};
 
 type InitSwapState = {|
   ...AppState,
-  ...State
+  ...State,
 |};
 
 type InitSwapRequest = {
   exchange: Exchange,
-  exchangeRate: ExchangeRate
+  exchangeRate: ExchangeRate,
+  deviceId: string,
+  transaction: Transaction,
 };
 
 type Result =
@@ -37,7 +40,7 @@ type Result =
       initSwapResult: InitSwapResult,
     }
   | {
-      initSwapError: Error
+      initSwapError: Error,
     };
 
 type InitSwapAction = Action<InitSwapRequest, InitSwapState, Result>;
@@ -53,7 +56,7 @@ const initialState = {
   initSwapResult: null,
   initSwapError: null,
   initSwapRequested: false,
-  isLoading: true
+  isLoading: true,
 };
 
 const reducer = (state: any, e: SwapRequestEvent) => {
@@ -66,18 +69,19 @@ const reducer = (state: any, e: SwapRequestEvent) => {
       return {
         ...state,
         initSwapResult: e.initSwapResult,
-        isLoading: false
+        isLoading: false,
       };
   }
   return state;
 };
 
 export const createAction = (
-  connectAppExec: ConnectAppInput => Observable<ConnectAppEvent>,
+  connectAppExec: (ConnectAppInput) => Observable<ConnectAppEvent>,
   initSwapExec: ({
     exchange: ExchangeRaw,
     exchangeRate: ExchangeRate,
-    deviceId: string
+    deviceId: string,
+    transaction: Transaction,
   }) => Observable<SwapRequestEvent>
 ): InitSwapAction => {
   const useHook = (
@@ -85,7 +89,7 @@ export const createAction = (
     initSwapRequest: InitSwapRequest
   ): InitSwapState => {
     const appState = createAppAction(connectAppExec).useHook(reduxDevice, {
-      appName: "Bitcoin" // FIXME TODO until we have the silent mode swap app, we need to make it feel like it's bitcoin ¯\_(ツ)_/¯
+      appName: "Litecoin", // FIXME TODO until we have the silent mode swap app, we need to make it feel like it's bitcoin ¯\_(ツ)_/¯
     });
 
     const { device, opened } = appState;
@@ -98,14 +102,15 @@ export const createAction = (
         return;
       }
 
-      const { exchange, exchangeRate } = initSwapRequest;
+      const { exchange, exchangeRate, transaction } = initSwapRequest;
       const sub = initSwapExec({
         exchange: toExchangeRaw(exchange),
         exchangeRate,
-        deviceId: ""
+        deviceId: "",
+        transaction,
       })
         .pipe(
-          tap(e => {
+          tap((e) => {
             log("actions-initSwap-event", e.type, e);
             console.log("actions-initSwap-event", e.type, e);
           }),
@@ -121,12 +126,12 @@ export const createAction = (
 
     return {
       ...appState,
-      ...state
+      ...state,
     };
   };
 
   return {
     useHook,
-    mapResult
+    mapResult,
   };
 };

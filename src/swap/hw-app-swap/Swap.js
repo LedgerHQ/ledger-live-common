@@ -89,7 +89,7 @@ export default class Swap {
       Buffer.from([transaction.length]),
       transaction,
       Buffer.from([feeHex.length]),
-      feeHex
+      feeHex,
     ]);
 
     let result: Buffer = await this.transport.send(
@@ -103,17 +103,6 @@ export default class Swap {
 
     maybeThrowProtocolError(result);
   }
-  // async processTransaction(transaction: Buffer): Promise<void> {
-  //   let result: Buffer = await this.transport.send(
-  //     0xe0,
-  //     PROCESS_TRANSACTION_RESPONSE,
-  //     0x00,
-  //     0x00,
-  //     transaction,
-  //     this.allowedStatuses
-  //   );
-  //   maybeThrowProtocolError(result);
-  // }
 
   async checkTransactionSignature(transactionSignature: Buffer): Promise<void> {
     let result: Buffer = await this.transport.send(
@@ -126,6 +115,7 @@ export default class Swap {
     );
     maybeThrowProtocolError(result);
   }
+
   async checkPayoutAddress(
     payoutCurrencyConfig: Buffer,
     currencyConfigSignature: Buffer,

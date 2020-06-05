@@ -7,21 +7,17 @@ import type {
   AccountRaw,
   Operation,
   Transaction,
-  Currency
+  TransactionRaw,
+  Currency,
 } from "../types";
 import { Observable } from "rxjs";
 
-// in bridge? heuristic. error could happen later.
-export type EstimateMaxSpendable = (account: Account) => BigNumber;
-
-// description of the initial form
 export type Exchange = {
   fromParentAccount: ?Account,
   fromAccount: AccountLike,
   toParentAccount: ?Account,
   toAccount: AccountLike,
-  fromAmount: BigNumber,
-  sendMax: boolean
+  transaction: Transaction,
 };
 
 export type ExchangeRaw = {
@@ -29,8 +25,7 @@ export type ExchangeRaw = {
   fromAccount: AccountRawLike,
   toParentAccount: ?AccountRaw,
   toAccount: AccountRawLike,
-  fromAmount: string,
-  sendMax: boolean
+  transaction: TransactionRaw,
 };
 
 export type ExchangeRate = {
@@ -39,20 +34,20 @@ export type ExchangeRate = {
   rateId: string,
   provider: string,
   providerURL?: ?string,
-  expirationDate?: ?Date // FIXME not available? Asked channel where we get this from
+  expirationDate?: ?Date, // FIXME not available? Asked channel where we get this from
 };
 
 export type AvailableProvider = {
   provider: string,
-  supportedCurrencies: string[]
+  supportedCurrencies: string[],
 };
 
-export type GetExchangeRates = Exchange => Promise<ExchangeRate[]>;
+export type GetExchangeRates = (Exchange) => Promise<ExchangeRate[]>;
 export type GetProviders = () => Promise<AvailableProvider[]>;
 
 export type InitSwapResult = {
   transaction: Transaction,
-  swapId: string
+  swapId: string,
 };
 
 // init a swap with the Exchange app
@@ -61,17 +56,18 @@ export type InitSwapResult = {
 export type InitSwap = (
   exchange: Exchange,
   exchangeRate: ExchangeRate,
-  deviceId: string
+  deviceId: string,
+  transaction: Transaction
 ) => Observable<SwapRequestEvent>;
 
 export type SwapCurrencyNameAndSignature = {
   config: Buffer,
-  signature: Buffer
+  signature: Buffer,
 };
 
 export type SwapProviderNameAndSignature = {
   nameAndPubkey: Buffer,
-  signature: Buffer
+  signature: Buffer,
 };
 
 type ValidSwapStatus =
@@ -89,16 +85,16 @@ type ValidSwapStatus =
 
 export type SwapStatusRequest = {
   provider: string,
-  swapId: string
+  swapId: string,
 };
 
 export type SwapStatus = {
   provider: string,
   swapId: string,
-  status: ValidSwapStatus
+  status: ValidSwapStatus,
 };
 
-export type GetStatus = SwapStatusRequest => Promise<SwapStatus>;
+export type GetStatus = (SwapStatusRequest) => Promise<SwapStatus>;
 export type GetMultipleStatus = (SwapStatusRequest[]) => Promise<SwapStatus[]>;
 
 /*
@@ -128,7 +124,7 @@ export type MappedSwapOperation = {
   swapId: string,
   status: string,
   fromAmount: BigNumber,
-  toAmount: BigNumber
+  toAmount: BigNumber,
 };
 
 export type SwapOperation = {
@@ -141,7 +137,7 @@ export type SwapOperation = {
   operationId: string,
 
   fromAmount: BigNumber,
-  toAmount: BigNumber
+  toAmount: BigNumber,
 };
 
 export type SwapOperationRaw = {
@@ -154,13 +150,13 @@ export type SwapOperationRaw = {
   operationId: string,
 
   fromAmount: string,
-  toAmount: string
+  toAmount: string,
 };
 
 export type SwapState = {
   swap: {
     exchange: $Shape<Exchange>,
-    exchangeRate?: ?ExchangeRate
+    exchangeRate?: ?ExchangeRate,
   },
   error?: ?Error,
   ratesTimestamp?: number,
@@ -168,5 +164,5 @@ export type SwapState = {
   okCurrencies: Currency[],
   fromCurrency: ?Currency,
   toCurrency: ?Currency,
-  useAllAmount: boolean
+  useAllAmount: boolean,
 };
