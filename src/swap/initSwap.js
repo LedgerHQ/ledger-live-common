@@ -4,9 +4,10 @@ import secp256k1 from "secp256k1";
 import Swap from "./hw-app-swap/Swap";
 import { mockInitSwap } from "./mock";
 import perFamily from "../generated/swap";
-import { getAccountCurrency, getMainAccount } from "../account";
+import { getAccountCurrency, getMainAccount, getAccountUnit } from "../account";
 import network from "../network";
 import { getAccountBridge } from "../bridge";
+import { BigNumber } from "bignumber.js";
 import { SwapGenericAPIError } from "../errors";
 import type {
   Exchange,
@@ -29,7 +30,7 @@ const initSwap: InitSwap = (
   deviceId: string
 ): Observable<SwapRequestEvent> => {
   if (getEnv("MOCK")) return mockInitSwap(exchange, exchangeRate, deviceId);
-  return withDevice(deviceId)((transport) =>
+  return withDevice("")((transport) =>
     Observable.create((o) => {
       let unsubscribed = false;
       const confirmSwap = async () => {
@@ -47,9 +48,11 @@ const initSwap: InitSwap = (
         let { transaction } = exchange;
         const { amount } = transaction;
         const refundCurrency = getAccountCurrency(fromAccount);
+        const unitFrom = getAccountUnit(exchange.fromAccount);
         const payoutCurrency = getAccountCurrency(toAccount);
         const refundAccount = getMainAccount(fromAccount, fromParentAccount);
         const payoutAccount = getMainAccount(toAccount, toParentAccount);
+        const apiAmount = amount.div(BigNumber(10).pow(unitFrom.magnitude));
 
         // Request a lock on the specified rate for 20 minutes,
         // user is expected to send funds after this.
@@ -62,7 +65,7 @@ const initSwap: InitSwap = (
             data: [
               {
                 provider,
-                amountFrom: amount,
+                amountFrom: apiAmount,
                 from: refundCurrency.id,
                 to: payoutCurrency.id,
                 rateId,

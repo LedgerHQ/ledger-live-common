@@ -16,9 +16,8 @@ const getExchangeRates: GetExchangeRates = async (exchange: Exchange) => {
   const unitFrom = getAccountUnit(exchange.fromAccount);
   const unitTo = getAccountUnit(exchange.toAccount);
   const to = getAccountCurrency(exchange.toAccount).id;
-  const amountFrom = exchange.fromAmount.div(
-    BigNumber(10).pow(unitFrom.magnitude)
-  );
+  const amountFrom = exchange.transaction.amount;
+  const apiAmount = amountFrom.div(BigNumber(10).pow(unitFrom.magnitude));
 
   const res = await network({
     method: "POST",
@@ -27,14 +26,14 @@ const getExchangeRates: GetExchangeRates = async (exchange: Exchange) => {
       {
         from,
         to,
-        amountFrom: amountFrom.toString(),
+        amountFrom: apiAmount.toString(),
       },
     ],
   });
 
   return res.data.map(
     ({ rate, rateId, provider, minAmountFrom, maxAmountFrom }) => {
-      if (!rateId) {
+      if (!rate || !rateId) {
         throw new SwapExchangeRateOutOfBounds(null, {
           unit: unitFrom.code,
           minAmountFrom,

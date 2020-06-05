@@ -6,19 +6,21 @@ import type { Exchange } from "@ledgerhq/live-common/lib/swap/types";
 import { initSwap } from "@ledgerhq/live-common/lib/swap";
 import { getExchangeRates } from "@ledgerhq/live-common/lib/swap";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
+import { toTransactionRaw } from "@ledgerhq/live-common/lib/transaction";
 import { deviceOpt } from "../scan";
 import { account11, account12 } from "../poc/accounts";
-import { BigNumber } from "bignumber.js";
+import invariant from "invariant";
 
-const test = async (
-  deviceId,
+const exec = async ({
+  deviceId = "",
   mock = false,
   amount = 500000,
-  reverse = false
-) => {
+  reverse = false,
+  sendMax = false,
+}) => {
   console.log(`/!\\ Performing a ${mock ? "MOCK" : "REAL"} swap test`);
   console.log(`\tSwaping ${reverse ? "LTC-BTC" : "BTC-LTC"}`);
-  console.log(`\t${amount} satoshsis worth.\n`);
+  invariant(sendMax || amount, "We either need an amount, or sendMax");
 
   const accountToSendSwap = reverse ? account12(mock) : account11(mock);
   const accountToReceiveSwap = reverse ? account11(mock) : account12(mock);
@@ -28,13 +30,30 @@ const test = async (
     .pipe(reduce((a, f) => f(a), accountToSendSwap))
     .toPromise();
 
+  const bridge = getAccountBridge(fromAccount);
+  let transaction = bridge.createTransaction(fromAccount);
+
+  if (!sendMax) {
+    console.log(`\t${amount} satoshsis worth.\n`);
+    transaction = bridge.updateTransaction(transaction, { amount });
+  } else {
+    console.log(`\tWe are attempting a sendmax, calculate max spendable.\n`);
+    const amount = await bridge.estimateMaxSpendable({
+      account: fromAccount,
+      transaction,
+    });
+    transaction = bridge.updateTransaction(transaction, { amount });
+  }
+
+  console.log(`\tTransaction:\n`);
+  console.log(toTransactionRaw(transaction));
+
   const exchange: Exchange = {
     fromAccount,
     fromParentAccount: undefined,
     toAccount: accountToReceiveSwap,
     toParentAccount: undefined,
-    fromAmount: BigNumber(amount),
-    sendMax: false,
+    transaction,
   };
 
   console.log("Getting exchange rates");
@@ -42,11 +61,7 @@ const test = async (
 
   console.log("Initialising swap");
   // NB using the first rate
-  const { transaction, swapId } = await initSwap(
-    exchange,
-    exchangeRates[0],
-    deviceId
-  )
+  const initSwapResult = await initSwap(exchange, exchangeRates[0], deviceId)
     .pipe(
       tap((e) => console.log(e)),
       filter((e) => e.type === "init-swap-result"),
@@ -54,10 +69,15 @@ const test = async (
     )
     .toPromise();
 
-  console.log("got the tx, attempt to sign", { transaction, swapId });
-  const bridge = getAccountBridge(exchange.fromAccount);
+  const swapId = initSwapResult.swapId;
+  transaction = initSwapResult.transaction;
+
+  console.log("got the tx, attempt to sign", {
+    transaction: toTransactionRaw(transaction),
+    swapId,
+  });
   const signedOperation = await bridge
-    .signOperation({ account: exchange.fromAccount, deviceId, transaction })
+    .signOperation({ account: fromAccount, deviceId, transaction })
     .pipe(
       tap((e) => console.log(e)),
       first((e) => e.type === "signed"),
@@ -69,7 +89,7 @@ const test = async (
   console.log("broadcasting");
 
   const operation = await bridge.broadcast({
-    account: exchange.fromAccount,
+    account: fromAccount,
     signedOperation,
   });
 
@@ -94,16 +114,23 @@ export default {
       alias: "r",
       type: Boolean,
     },
+    {
+      name: "sendMax",
+      alias: "s",
+      type: Boolean,
+    },
   ],
   job: ({
     device,
     mock,
     amount,
     reverse,
+    sendMax,
   }: $Shape<{
     device: string,
     mock: boolean,
     amount: number,
     reverse: boolean,
-  }>) => from(test(device, mock, amount, reverse)),
+    sendMax: boolean,
+  }>) => from(exec({ device, mock, amount, reverse, sendMax })),
 };
