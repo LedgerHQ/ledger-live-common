@@ -18,11 +18,14 @@
 
 import type Transport from "@ledgerhq/hw-transport";
 import BIPPath from "bip32-path";
+import {serializePathv1} from "./helpersV1";
+import {serializePathv2} from "./helpersV2";
 
 const CHUNK_SIZE = 250;
 const CLA = 0x55;
 const APP_KEY = "CSM";
 const INS_GET_VERSION = 0x00;
+const INS_PUBLIC_KEY_SECP256K1 = 0x01;
 const INS_SIGN_SECP256K1 = 0x02;
 const INS_GET_ADDR_SECP256K1 = 0x04;
 
@@ -63,17 +66,15 @@ export default class Cosmos {
   }
 
   serializePath(path: Buffer) {
-    const buf = Buffer.alloc(20);
-    // HACK : without the >>>,
-    // the bitwise implicitly casts the result to be a signed int32,
-    // which fails the internal type check of Buffer in case of overload.
-    buf.writeUInt32LE((0x80000000 | path[0]) >>> 0, 0);
-    buf.writeUInt32LE((0x80000000 | path[1]) >>> 0, 4);
-    buf.writeUInt32LE((0x80000000 | path[2]) >>> 0, 8);
-    buf.writeUInt32LE(path[3], 12);
-    buf.writeUInt32LE(path[4], 16);
-
-    return buf;
+    const version = getAppConfiguration().version[0];
+    switch (int(version)) {
+      case 1:
+        return serializePathv1(path);
+      case 2:
+        return serializePathv2(path);
+      default:
+        throw new Error("App Version " + version + " is not supported");
+    }
   }
 
   serializeHRP(hrp: string) {
@@ -93,7 +94,7 @@ export default class Cosmos {
    * @option boolDisplay optionally enable or not the display
    * @return an object with a publicKey, address and (optionally) chainCode
    * @example
-   * cosmos.getAddress("44'/60'/0'/0/0", "cosmos").then(o => o.address)
+   * cosmos.getAddress("44'/118'/0'/0/0", "cosmos").then(o => o.address)
    */
   getAddress(
     path: string,
@@ -151,17 +152,27 @@ export default class Cosmos {
 
     let response = {};
 
+    const version = int(getAppConfiguration().version[0]);
+    if (version != 1 && version != 2) {
+        throw new Error("App Version " + version + " is not supported");
+    }
+
     return this.foreach(chunks, (data, j) =>
+      const arg2 =
+        version === 1
+          ? j
+          : j === 0
+          ? PAYLOAD_TYPE_INIT
+          : j + 1 === chunks.length
+          ? PAYLOAD_TYPE_LAST
+          : PAYLOAD_TYPE_ADD;
+      const arg3 = version === 1 ? chunks.length : 0;
       this.transport
         .send(
           CLA,
           INS_SIGN_SECP256K1,
-          j === 0
-            ? PAYLOAD_TYPE_INIT
-            : j + 1 === chunks.length
-            ? PAYLOAD_TYPE_LAST
-            : PAYLOAD_TYPE_ADD,
-          0,
+          arg2,
+          arg3,
           data,
           [SW_OK, SW_CANCEL]
         )
@@ -175,7 +186,7 @@ export default class Cosmos {
         signature = response.slice(0, response.length - 2);
       }
 
-      if (returnCode === 0x6986) {
+      if (returnCode === SW_CANCEL) {
         throw new Error("Transaction was rejected");
       }
 
