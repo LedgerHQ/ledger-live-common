@@ -1,5 +1,5 @@
 // @flow
-import type { Account } from "../../types";
+import type { Account, Operation } from "../../types";
 import type { CoreAccount } from "../../libcore/types";
 import type { CosmosResources, CoreCosmosLikeAccount } from "./types";
 import { BigNumber } from "bignumber.js";
@@ -10,6 +10,42 @@ import {
 } from "../../libcore/buildBigNumber";
 import { promiseAllBatched } from "../../promise";
 import { getMaxEstimatedBalance } from "./logic";
+
+// Logic : This function adds the Operation.value of FEES operations
+// as Operation.fee of all other operations that match the transaction hash.
+// The old FEES operation is not included in the `ops` accumulator
+const addCoreOperationToAccountOperations = async (
+  accountOpsFeeStore: Promise<{
+    ops: { [tx_hash: string]: [Operation] },
+    fees: { [tx_hash: string]: string },
+  }>,
+  newCoreOp: Operation
+): Promise<{
+  ops: { [id: string]: [Operation] },
+  fees: { [tx_hash: string]: BigNumber },
+}> => {
+  let result = await accountOpsFeeStore;
+  const id = newCoreOp.id;
+  // This split comes from the code in src/families/cosmos/libcore-buildOperation.js
+  const txHash = id.split("-")[1];
+  const index = newCoreOp.extra.id;
+  if (!(txHash in result.ops)) {
+    result.ops[txHash] = [];
+  }
+  if (index === "fees") {
+    result.fees[txHash] = newCoreOp.value;
+    for (var i = 0; i < result.ops[txHash].length; i++) {
+      result.ops[txHash][i].fee = newCoreOp.value;
+    }
+  } else {
+    const newOpToAdd = newCoreOp;
+    if (txHash in result.fees) {
+      newOpToAdd.fee = result.fees[txHash];
+    }
+    result.ops[txHash].push(newOpToAdd);
+  }
+  return result;
+};
 
 const getValidatorStatus = async (
   cosmosAccount: CoreCosmosLikeAccount,
@@ -141,6 +177,14 @@ const postBuildAccount = async ({
   if (account.spendableBalance.lt(0)) {
     account.spendableBalance = BigNumber(0);
   }
+  account.operations = await account.operations
+    .reduce(
+      addCoreOperationToAccountOperations,
+      Promise.resolve({ ops: {}, fees: {} })
+    )
+    .then((res) => {
+      return [].concat.apply([], Object.values(res.ops));
+    });
   return account;
 };
 
