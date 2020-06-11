@@ -21,13 +21,13 @@ const addCoreOperationToAccountOperations = async (
   }>,
   newCoreOp: Operation
 ): Promise<{
-  ops: { [id: string]: [Operation] },
-  fees: { [tx_hash: string]: BigNumber },
+  ops: { [tx_hash: string]: [Operation] }, // List of operations matching this transaction hash
+  fees: { [tx_hash: string]: BigNumber }, // Value of fees on that transaction hash
 }> => {
   let result = await accountOpsFeeStore;
   const id = newCoreOp.id;
   // This split comes from the code in src/families/cosmos/libcore-buildOperation.js
-  const txHash = id.split("-")[1];
+  const txHash = newCoreOp.hash;
   const index = newCoreOp.extra.id;
   if (!(txHash in result.ops)) {
     result.ops[txHash] = [];
