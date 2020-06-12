@@ -94,7 +94,7 @@ const redelegationStatusError = (a, t) => {
   return isDelegable(a, t.cosmosSourceValidator, t.validators[0].amount);
 };
 
-const getEstimatedFees = async (a, t, errors) => {
+const getEstimatedFees = async (a, t, errors = {}) => {
   let estimatedFees = BigNumber(0);
 
   if (!errors.recipient && !errors.amount) {
@@ -307,15 +307,41 @@ const getTransactionStatus = async (a, t) => {
   });
 };
 
+const isTransactionValidForEstimatedFees = async (a, t) => {
+ let errors = null;
+    if (t.mode === "send") {
+      errors = (await validateRecipient(
+        a.currency,
+        t.recipient
+      )).recipientError;
+    } else {
+      errors = t.validators.some(
+        (v) => !v.address || !v.address.includes("cosmosvaloper")
+      ) || t.mode !== "claimReward" && t.validators.reduce(
+        (old, current) => old.plus(current.amount),
+        BigNumber(0)
+      ).eq(0);
+    }
+
+    return errors;
+}
+
 const prepareTransaction = async (a, t) => {
   let memo = t.memo;
+  let fees = t.fees;
+
+  if (!fees && (t.mode === "send" && t.recipient || t.mode !== "send")) {
+    const errors = isTransactionValidForEstimatedFees(a, t);
+    if (!errors) 
+      fees = await getEstimatedFees(a, t)
+  }
 
   if (t.mode !== "send" && !memo) {
     memo = "Ledger Live";
   }
 
-  if (t.memo !== memo) {
-    return { ...t, memo };
+  if (t.memo !== memo || t.fees !== fees) {
+    return { ...t, memo, fees };
   }
 
   return t;
