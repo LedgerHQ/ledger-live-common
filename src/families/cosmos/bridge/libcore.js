@@ -308,32 +308,30 @@ const getTransactionStatus = async (a, t) => {
 };
 
 const isTransactionValidForEstimatedFees = async (a, t) => {
- let errors = null;
-    if (t.mode === "send") {
-      errors = (await validateRecipient(
-        a.currency,
-        t.recipient
-      )).recipientError;
-    } else {
-      errors = t.validators.some(
+  let errors = null;
+  if (t.mode === "send") {
+    errors = (await validateRecipient(a.currency, t.recipient)).recipientError;
+  } else {
+    errors =
+      t.validators.some(
         (v) => !v.address || !v.address.includes("cosmosvaloper")
-      ) || t.mode !== "claimReward" && t.validators.reduce(
-        (old, current) => old.plus(current.amount),
-        BigNumber(0)
-      ).eq(0);
-    }
+      ) ||
+      (t.mode !== "claimReward" &&
+        t.validators
+          .reduce((old, current) => old.plus(current.amount), BigNumber(0))
+          .eq(0));
+  }
 
-    return errors;
-}
+  return errors;
+};
 
 const prepareTransaction = async (a, t) => {
   let memo = t.memo;
   let fees = t.fees;
 
-  if (!fees && (t.mode === "send" && t.recipient || t.mode !== "send")) {
+  if (!fees && ((t.mode === "send" && t.recipient) || t.mode !== "send")) {
     const errors = isTransactionValidForEstimatedFees(a, t);
-    if (!errors) 
-      fees = await getEstimatedFees(a, t)
+    if (!errors) fees = await getEstimatedFees(a, t);
   }
 
   if (t.mode !== "send" && !memo) {
