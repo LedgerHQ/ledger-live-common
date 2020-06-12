@@ -325,6 +325,8 @@ const isTransactionValidForEstimatedFees = async (a, t) => {
   return errors;
 };
 
+const sameFees = (a, b) => (!a || !b ? a === b : a.eq(b));
+
 const prepareTransaction = async (a, t) => {
   let memo = t.memo;
   let fees = t.fees;
@@ -338,7 +340,7 @@ const prepareTransaction = async (a, t) => {
     memo = "Ledger Live";
   }
 
-  if (t.memo !== memo || t.fees !== fees) {
+  if (t.memo !== memo || !sameFees(t.fees, fees)) {
     return { ...t, memo, fees };
   }
 
