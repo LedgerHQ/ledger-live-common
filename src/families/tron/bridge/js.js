@@ -701,7 +701,7 @@ const estimateMaxSpendable = async ({
   const fees = await getEstimatedFees(mainAccount, {
     ...createTransaction(),
     subAccountId: account.type === "Account" ? null : account.id,
-    recipient: getAbandonSeedAddress(mainAccount.id),
+    recipient: getAbandonSeedAddress(mainAccount.currency.id),
     ...transaction,
     amount: BigNumber(0),
   });

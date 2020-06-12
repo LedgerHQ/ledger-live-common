@@ -42,7 +42,10 @@ export type AvailableProvider = {
   supportedCurrencies: string[],
 };
 
-export type GetExchangeRates = (Exchange) => Promise<ExchangeRate[]>;
+export type GetExchangeRates = (
+  Exchange,
+  Transaction
+) => Promise<ExchangeRate[]>;
 export type GetProviders = () => Promise<AvailableProvider[]>;
 
 export type InitSwapResult = {
@@ -56,8 +59,8 @@ export type InitSwapResult = {
 export type InitSwap = (
   exchange: Exchange,
   exchangeRate: ExchangeRate,
-  deviceId: string,
-  transaction: Transaction
+  transaction: Transaction,
+  deviceId: string
 ) => Observable<SwapRequestEvent>;
 
 export type SwapCurrencyNameAndSignature = {
@@ -165,4 +168,5 @@ export type SwapState = {
   fromCurrency: ?Currency,
   toCurrency: ?Currency,
   useAllAmount: boolean,
+  fromAmount: BigNumber,
 };

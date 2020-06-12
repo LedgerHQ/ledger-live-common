@@ -1,6 +1,7 @@
 // @flow
 
 import type { Exchange, GetExchangeRates } from "./types";
+import type { Transaction } from "../types";
 import { getAccountCurrency, getAccountUnit } from "../account";
 import { mockGetExchangeRates } from "./mock";
 import network from "../network";
@@ -9,14 +10,17 @@ import { getEnv } from "../env";
 import { BigNumber } from "bignumber.js";
 import { SwapExchangeRateOutOfBounds } from "../errors";
 
-const getExchangeRates: GetExchangeRates = async (exchange: Exchange) => {
+const getExchangeRates: GetExchangeRates = async (
+  exchange: Exchange,
+  transaction: Transaction
+) => {
   if (getEnv("MOCK")) return mockGetExchangeRates(exchange);
 
   const from = getAccountCurrency(exchange.fromAccount).id;
   const unitFrom = getAccountUnit(exchange.fromAccount);
   const unitTo = getAccountUnit(exchange.toAccount);
   const to = getAccountCurrency(exchange.toAccount).id;
-  const amountFrom = exchange.transaction.amount;
+  const amountFrom = transaction.amount;
   const apiAmount = amountFrom.div(BigNumber(10).pow(unitFrom.magnitude));
 
   const res = await network({

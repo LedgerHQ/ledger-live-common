@@ -9,7 +9,8 @@ import broadcast from "../libcore-broadcast";
 import signOperation from "../libcore-signOperation";
 import { getMainAccount } from "../../../account";
 import { validateRecipient } from "../../../bridge/shared";
-import { getAbandonSeedAddress } from "../../../data/abandonSeed";
+import { getAbandonSeedAddress } from "../../../data/abandonseed";
+
 import {
   NotEnoughBalance,
   InvalidAddressBecauseDestinationIsAlsoSource,

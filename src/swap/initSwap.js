@@ -1,6 +1,8 @@
 // @flow
 
 import secp256k1 from "secp256k1";
+import invariant from "invariant";
+import { getAbandonSeedAddress } from "../data/abandonseed";
 import Swap from "./hw-app-swap/Swap";
 import { mockInitSwap } from "./mock";
 import perFamily from "../generated/swap";
@@ -15,6 +17,7 @@ import type {
   InitSwap,
   SwapRequestEvent,
 } from "./types";
+import type { Transaction } from "../types";
 import { Observable } from "rxjs";
 import { withDevice } from "../hw/deviceAccess";
 import {
@@ -27,6 +30,7 @@ import { getEnv } from "../env";
 const initSwap: InitSwap = (
   exchange: Exchange,
   exchangeRate: ExchangeRate,
+  transaction: Transaction,
   deviceId: string
 ): Observable<SwapRequestEvent> => {
   if (getEnv("MOCK")) return mockInitSwap(exchange, exchangeRate, deviceId);
@@ -45,7 +49,6 @@ const initSwap: InitSwap = (
           toParentAccount,
           toAccount,
         } = exchange;
-        let { transaction } = exchange;
         const { amount } = transaction;
         const refundCurrency = getAccountCurrency(fromAccount);
         const unitFrom = getAccountUnit(exchange.fromAccount);
@@ -104,6 +107,12 @@ const initSwap: InitSwap = (
         transaction = accountBridge.updateTransaction(transaction, {
           recipient: swapResult.payinAddress,
         });
+
+        // Triplecheck we're not working with an abandonseed recipient anymore
+        invariant(
+          transaction.recipient !== getAbandonSeedAddress(refundCurrency.id),
+          "Recipient address should never be the abandonseed address"
+        );
 
         transaction = await accountBridge.prepareTransaction(
           refundAccount,

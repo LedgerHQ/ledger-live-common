@@ -89,7 +89,7 @@ export const createAction = (
     initSwapRequest: InitSwapRequest
   ): InitSwapState => {
     const appState = createAppAction(connectAppExec).useHook(reduxDevice, {
-      appName: "Litecoin", // FIXME TODO until we have the silent mode swap app, we need to make it feel like it's bitcoin ¯\_(ツ)_/¯
+      appName: "Litecoin", // FIXME TODO until we have the real devie working, since speculos can't report the app name twice
     });
 
     const { device, opened } = appState;
