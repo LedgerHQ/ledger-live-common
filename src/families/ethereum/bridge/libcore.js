@@ -8,6 +8,7 @@ import {
   FeeTooHigh,
   GasLessThanEstimate,
 } from "@ledgerhq/errors";
+import { getAbandonSeedAddress } from "../../../data/abandonSeed";
 import type { AccountLike } from "../../../types";
 import type { AccountBridge, CurrencyBridge } from "../../../types/bridge";
 import { scanAccounts } from "../../../libcore/scanAccounts";
@@ -197,7 +198,7 @@ const estimateMaxSpendable = async ({
   const t = await prepareTransaction(mainAccount, {
     ...createTransaction(mainAccount),
     subAccountId: account.type === "Account" ? null : account.id,
-    recipient: "0x0000000000000000000000000000000000000000",
+    recipient: getAbandonSeedAddress(mainAccount.currency.id),
     ...transaction,
     useAllAmount: true,
   });

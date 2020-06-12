@@ -24,6 +24,7 @@ import { findTokenById } from "../../../data/tokens";
 import { open, close } from "../../../hw";
 import signTransaction from "../../../hw/signTransaction";
 import { makeSync, makeScanAccounts } from "../../../bridge/jsHelpers";
+import { getAbandonSeedAddress } from "../../../data/abandonseed";
 import { formatCurrencyUnit } from "../../../currencies";
 import { getAccountUnit, getMainAccount } from "../../../account";
 import { getOperationsPageSize } from "../../../pagination";
@@ -700,7 +701,7 @@ const estimateMaxSpendable = async ({
   const fees = await getEstimatedFees(mainAccount, {
     ...createTransaction(),
     subAccountId: account.type === "Account" ? null : account.id,
-    recipient: "0x0000000000000000000000000000000000000000",
+    recipient: getAbandonSeedAddress(mainAccount.id),
     ...transaction,
     amount: BigNumber(0),
   });
