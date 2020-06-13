@@ -49,6 +49,11 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
       expectedValue: ({ transaction }) => transaction.recipient,
     },
     {
+      title: "Account",
+      button: "Rr",
+      expectedValue: ({ account }) => account.freshAddress,
+    },
+    {
       title: "Destination Tag",
       button: "Rr",
       expectedValue: ({ transaction }) => String(transaction.tag),
