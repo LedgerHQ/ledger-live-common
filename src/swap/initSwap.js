@@ -2,6 +2,7 @@
 
 import secp256k1 from "secp256k1";
 import invariant from "invariant";
+import { delay } from "../promise";
 import { getAbandonSeedAddress } from "../data/abandonseed";
 import Swap from "./hw-app-swap/Swap";
 import { mockInitSwap } from "./mock";
@@ -180,6 +181,10 @@ const initSwap: InitSwap = (
           refundAddressParameters.addressParameters
         );
         await swap.signCoinTransaction();
+
+        // NB Introduce an artificial delay to give time for the device to switch
+        // to the signing application.
+        await delay(800);
 
         if (unsubscribed) return;
         o.next({
