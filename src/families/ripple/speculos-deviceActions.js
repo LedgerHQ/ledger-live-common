@@ -46,12 +46,12 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
     {
       title: "Address",
       button: "Rr",
-      expectedValue: ({ transaction }) => transaction.recipient,
+      expectedValue: ({ transaction }) => transaction.recipient.replace(/ /g, ""),
     },
     {
       title: "Account",
       button: "Rr",
-      expectedValue: ({ account }) => account.freshAddress,
+      expectedValue: ({ account }) => account.freshAddress.replace(/ /g, ""),
     },
     {
       title: "Destination Tag",
