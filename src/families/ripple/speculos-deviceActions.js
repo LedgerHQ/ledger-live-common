@@ -7,6 +7,11 @@ import { deviceActionFlow } from "../../bot/specs";
 const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
   steps: [
     {
+      title: "Transaction Type",
+      button: "Rr",
+      expectedValue: () => "Payment",
+    },
+    {
       title: "Amount",
       button: "Rr",
       expectedValue: ({ account, status }) =>
