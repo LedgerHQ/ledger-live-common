@@ -98,6 +98,9 @@ const getEstimatedFees = async (a, t, errors = {}) => {
   let estimatedFees = BigNumber(0);
 
   if (!errors.recipient && !errors.amount) {
+    if (t.fees && !t.fees.lte(0)) {
+      return t.fees
+    }
     if (t.useAllAmount) {
       t.amount = getMaxEstimatedBalance(a, estimatedFees);
     }
