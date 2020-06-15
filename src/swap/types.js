@@ -98,6 +98,7 @@ export type SwapStatus = {
 };
 
 export type GetStatus = (SwapStatusRequest) => Promise<SwapStatus>;
+export type UpdateAccountSwapStatus = (AccountLike) => Promise<AccountLike>;
 export type GetMultipleStatus = (SwapStatusRequest[]) => Promise<SwapStatus[]>;
 
 /*
@@ -115,6 +116,11 @@ export type SwapRequestEvent =
   | { type: "init-swap-requested" }
   | { type: "init-swap-error", error: Error }
   | { type: "init-swap-result", initSwapResult: InitSwapResult };
+
+export type SwapHistorySection = {
+  day: Date,
+  data: MappedSwapOperation[],
+};
 
 export type MappedSwapOperation = {
   fromAccount: AccountLike,

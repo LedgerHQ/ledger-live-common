@@ -582,6 +582,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
 
   if (bitcoinResources) {
     res.bitcoinResources = fromBitcoinResourcesRaw(bitcoinResources);
+  }
   if (swapHistory) {
     res.swapHistory = swapHistory.map(fromSwapOperationRaw);
   }

@@ -19,10 +19,7 @@ export const initState: ({ okCurrencies: Currency[] }) => SwapState = ({
 
   return {
     swap: {
-      exchange: {
-        fromAmount: BigNumber(0),
-        sendMax: false,
-      },
+      exchange: {},
       exchangeRate: undefined,
     },
     error: null,
@@ -31,13 +28,14 @@ export const initState: ({ okCurrencies: Currency[] }) => SwapState = ({
     okCurrencies,
     fromCurrency,
     toCurrency,
+    fromAmount: BigNumber(0),
   };
 };
 
 export const canRequestRates = (state: SwapState) => {
-  const { swap, error } = state;
+  const { swap, error, fromAmount } = state;
   const { exchange, exchangeRate } = swap;
-  const { fromAccount, toAccount, fromAmount } = exchange;
+  const { fromAccount, toAccount } = exchange;
   return !!(fromAccount && toAccount && fromAmount && !exchangeRate && !error);
 };
 
@@ -121,10 +119,10 @@ export const reducer = (
           exchange: {
             ...state.swap.exchange,
             fromAccount: undefined,
-            fromAmount: BigNumber(0),
             toAccount: undefined,
           },
         },
+        fromAmount: BigNumber(0),
         fromCurrency: payload.fromCurrency,
         toCurrency,
         error: null,
@@ -140,9 +138,9 @@ export const reducer = (
           exchange: {
             ...state.swap.exchange,
             toAccount: undefined,
-            fromAmount: BigNumber(0),
           },
         },
+        fromAmount: BigNumber(0),
         toCurrency: payload.toCurrency,
         error: null,
       };
@@ -157,9 +155,9 @@ export const reducer = (
           exchangeRate: null,
           exchange: {
             ...state.swap.exchange,
-            fromAmount: BigNumber(0),
             ...payload,
           },
+          fromAmount: BigNumber(0),
         },
         error: null,
       };
@@ -181,11 +179,8 @@ export const reducer = (
         swap: {
           ...state.swap,
           exchangeRate: null,
-          exchange: {
-            ...state.swap.exchange,
-            fromAmount: payload.fromAmount,
-          },
         },
+        fromAmount: payload.fromAmount,
         error,
       };
       break;

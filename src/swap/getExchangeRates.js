@@ -14,7 +14,7 @@ const getExchangeRates: GetExchangeRates = async (
   exchange: Exchange,
   transaction: Transaction
 ) => {
-  if (getEnv("MOCK")) return mockGetExchangeRates(exchange);
+  if (getEnv("MOCK")) return mockGetExchangeRates(exchange, transaction);
 
   const from = getAccountCurrency(exchange.fromAccount).id;
   const unitFrom = getAccountUnit(exchange.fromAccount);

@@ -9,15 +9,20 @@ import type {
   SwapRequestEvent,
 } from "./types";
 import { getAccountCurrency, getAccountUnit } from "../account";
+import type { Transaction } from "../types";
 import { SwapExchangeRateOutOfBounds } from "../errors";
 import { Observable, of } from "rxjs";
 
-export const mockGetExchangeRates = async (exchange: Exchange) => {
-  const { fromAccount, toAccount, fromAmount } = exchange;
+export const mockGetExchangeRates = async (
+  exchange: Exchange,
+  transaction: Transaction
+) => {
+  const { fromAccount, toAccount } = exchange;
+  const amount = transaction.amount;
   const from = getAccountCurrency(fromAccount).id;
   const to = getAccountCurrency(toAccount).id;
   const unitFrom = getAccountUnit(fromAccount);
-  const amountFrom = fromAmount.div(BigNumber(10).pow(unitFrom.magnitude));
+  const amountFrom = amount.div(BigNumber(10).pow(unitFrom.magnitude));
 
   if (amountFrom.gte(0.00001) && amountFrom.lte(10)) {
     //Fake delay to show loading UI
