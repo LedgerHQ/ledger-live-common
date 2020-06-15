@@ -8,10 +8,8 @@ import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
 
 export type ExtraDeviceTransactionField =
-  | { type: "cosmos.memo", label: string }
   | { type: "cosmos.delegateValidators", label: string }
   | { type: "cosmos.validatorName", label: string }
-  | { type: "cosmos.validatorAmount", label: string }
   | { type: "cosmos.sourceValidatorName", label: string };
 
 const postCommon = (account, memo, estimatedFees, gas) => {
@@ -27,11 +25,8 @@ const postCommon = (account, memo, estimatedFees, gas) => {
 
   if (estimatedFees && !estimatedFees.isZero()) {
     fields.push({
-      type: "text",
+      type: "fees",
       label: "Fee",
-      value: formatCurrencyUnit(getAccountUnit(account), estimatedFees, {
-        showCode: true,
-      }),
     });
   }
 
@@ -86,7 +81,7 @@ function getDeviceTransactionConfig({
   transaction: Transaction,
   status: TransactionStatus,
 }): Array<DeviceTransactionField> {
-  const { mode, memo, gas, validators, cosmosSourceValidator } = transaction;
+  const { mode, memo, gas, validators } = transaction;
   const { estimatedFees } = status;
   const mainAccount = getMainAccount(account, parentAccount);
   const source = mainAccount.freshAddress;
@@ -129,9 +124,8 @@ function getDeviceTransactionConfig({
         ),
       });
       fields.push({
-        type: "text",
+        type: "cosmos.validatorName",
         label: "Validator",
-        value: validators[0].address,
       });
       break;
 
@@ -153,14 +147,12 @@ function getDeviceTransactionConfig({
         ),
       });
       fields.push({
-        type: "text",
+        type: "cosmos.validatorName",
         label: "Validator Dest",
-        value: validators[0].address,
       });
       fields.push({
-        type: "text",
+        type: "cosmos.sourceValidatorName",
         label: "Validator Source",
-        value: cosmosSourceValidator,
       });
       break;
     case "claimReward":
@@ -170,9 +162,8 @@ function getDeviceTransactionConfig({
         value: "Withdraw Reward",
       });
       fields.push({
-        type: "text",
+        type: "cosmos.validatorName",
         label: "Validator",
-        value: validators[0].address,
       });
       break;
     case "claimRewardCompound":
@@ -182,9 +173,8 @@ function getDeviceTransactionConfig({
         value: "Withdraw Reward",
       });
       fields.push({
-        type: "text",
+        type: "cosmos.validatorName",
         label: "Validator",
-        value: validators[0].address,
       });
 
       fields.push({
