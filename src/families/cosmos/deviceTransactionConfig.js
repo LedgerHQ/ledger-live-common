@@ -12,35 +12,6 @@ export type ExtraDeviceTransactionField =
   | { type: "cosmos.validatorName", label: string }
   | { type: "cosmos.sourceValidatorName", label: string };
 
-const postCommon = (account, memo, estimatedFees, gas) => {
-  const fields = [];
-
-  if (memo) {
-    fields.push({
-      type: "text",
-      label: "Memo",
-      value: memo,
-    });
-  }
-
-  if (estimatedFees && !estimatedFees.isZero()) {
-    fields.push({
-      type: "fees",
-      label: "Fee",
-    });
-  }
-
-  if (gas) {
-    fields.push({
-      type: "text",
-      label: "Gas",
-      value: gas.toString(),
-    });
-  }
-
-  return fields;
-};
-
 const getSendFields = (transaction, status, account, source) => {
   const { amount } = transaction;
   const fields = [];
@@ -192,7 +163,28 @@ function getDeviceTransactionConfig({
       break;
   }
 
-  fields = [...fields, ...postCommon(account, memo, estimatedFees, gas)];
+  if (memo) {
+    fields.push({
+      type: "text",
+      label: "Memo",
+      value: memo,
+    });
+  }
+
+  if (estimatedFees && !estimatedFees.isZero()) {
+    fields.push({
+      type: "fees",
+      label: "Fee",
+    });
+  }
+
+  if (gas) {
+    fields.push({
+      type: "text",
+      label: "Gas",
+      value: gas.toString(),
+    });
+  }
 
   return fields;
 }
