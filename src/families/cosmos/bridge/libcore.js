@@ -41,7 +41,7 @@ const createTransaction = () => ({
   mode: "send",
   amount: BigNumber(0),
   fees: null,
-  gasLimit: null,
+  gas: null,
   recipient: "",
   useAllAmount: false,
   networkInfo: null,
@@ -96,18 +96,20 @@ const redelegationStatusError = (a, t) => {
 
 const getEstimatedFees = async (a, t, errors = {}) => {
   let estimatedFees = BigNumber(0);
+  let estimatedGas = BigNumber(0);
 
   if (!errors.recipient && !errors.amount) {
-    if (t.fees && !t.fees.lte(0)) {
-      return t.fees
+    if (t.fees && t.fees.gt(0)) {
+      return { estimatedFees: t.fees, estimatedGas };
     }
     if (t.useAllAmount) {
       t.amount = getMaxEstimatedBalance(a, estimatedFees);
     }
     const res = await calculateFees({ a, t });
     estimatedFees = res.estimatedFees;
+    estimatedGas = res.estimatedGas;
   }
-  return estimatedFees;
+  return { estimatedFees, estimatedGas };
 };
 
 const getSendTransactionStatus = async (a, t) => {
@@ -137,7 +139,7 @@ const getSendTransactionStatus = async (a, t) => {
     errors.amount = new AmountRequired();
   }
 
-  const estimatedFees = await getEstimatedFees(a, t, errors);
+  const { estimatedFees } = await getEstimatedFees(a, t, errors);
 
   amount = t.useAllAmount ? getMaxEstimatedBalance(a, estimatedFees) : amount;
 
@@ -194,7 +196,7 @@ const getDelegateTransactionStatus = async (a, t) => {
     errors.amount = new AmountRequired();
   }
 
-  const estimatedFees = await getEstimatedFees(a, t, errors);
+  const { estimatedFees } = await getEstimatedFees(a, t, errors);
 
   let totalSpent = amount.plus(estimatedFees);
 
@@ -277,7 +279,7 @@ const getTransactionStatus = async (a, t) => {
     errors.amount = new AmountRequired();
   }
 
-  const estimatedFees = await getEstimatedFees(a, t, errors);
+  const { estimatedFees } = await getEstimatedFees(a, t, errors);
 
   let totalSpent = estimatedFees;
 
@@ -333,10 +335,15 @@ const sameFees = (a, b) => (!a || !b ? a === b : a.eq(b));
 const prepareTransaction = async (a, t) => {
   let memo = t.memo;
   let fees = t.fees;
+  let gas = t.gas;
 
   if (!fees && ((t.mode === "send" && t.recipient) || t.mode !== "send")) {
-    const errors = isTransactionValidForEstimatedFees(a, t);
-    if (!errors) fees = await getEstimatedFees(a, t);
+    const errors = await isTransactionValidForEstimatedFees(a, t);
+    if (!errors) {
+      const estimated = await getEstimatedFees(a, t);
+      fees = estimated.estimatedFees;
+      gas = estimated.estimatedGas;
+    }
   }
 
   if (t.mode !== "send" && !memo) {
@@ -344,7 +351,7 @@ const prepareTransaction = async (a, t) => {
   }
 
   if (t.memo !== memo || !sameFees(t.fees, fees)) {
-    return { ...t, memo, fees };
+    return { ...t, memo, fees, gas };
   }
 
   return t;
