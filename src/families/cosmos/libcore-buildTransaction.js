@@ -2,7 +2,6 @@
 import type { Transaction, CoreCosmosLikeTransaction } from "./types";
 import type { Account } from "../../types";
 import type { Core, CoreAccount, CoreCurrency } from "../../libcore/types";
-
 import {
   bigNumberToLibcoreAmount,
   libcoreBigIntToBigNumber,
