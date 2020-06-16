@@ -103,6 +103,10 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
     {
       title: "Approve",
       button: "LRlr",
+      final: true,
+    },
+    {
+      title: "Reject",
     },
   ],
 });
