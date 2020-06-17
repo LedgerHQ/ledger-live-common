@@ -13,7 +13,7 @@ import { getEnv } from "../../env";
 import { promiseAllBatched } from "../../promise";
 import { getMaxEstimatedBalance } from "./logic";
 import network from "../../network";
-import { FeesNotLoaded } from "@ledgerhq/errors"
+import { FeesNotLoaded } from "@ledgerhq/errors";
 
 const getBaseApiUrl = () =>
   getEnv("API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT");
@@ -34,7 +34,7 @@ export async function cosmosBuildTransaction({
   coreCurrency,
   transaction,
   isCancelled,
-  isPartial // is true if we just want to estimate fees and gas
+  isPartial, // is true if we just want to estimate fees and gas
 }: {
   account: Account,
   core: Core,
@@ -44,7 +44,7 @@ export async function cosmosBuildTransaction({
   isPartial: boolean,
   isCancelled: () => boolean,
 }): Promise<?CoreCosmosLikeTransaction> {
-  const { fees, gas, memo } = transaction;
+  const { gas, memo } = transaction;
 
   const cosmosLikeAccount = await coreAccount.asCosmosLikeAccount();
   if (isCancelled()) return;
@@ -78,8 +78,7 @@ export async function cosmosBuildTransaction({
     estimatedGas = await libcoreBigIntToBigNumber(
       await cosmosLikeAccount.estimateGas(gasRequest)
     );
-  }
-  else {
+  } else {
     estimatedGas = gas || BigNumber(0);
   }
 
