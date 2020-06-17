@@ -305,7 +305,9 @@ const cosmos: AppSpec<Transaction> = {
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         const delegation = sample(
-          cosmosResources.delegations.filter((d) => canClaimRewards(account, d))
+          cosmosResources.delegations.filter(
+            (d) => canClaimRewards(account, d) && d.pendingRewards.gt(2000)
+          )
         );
         invariant(delegation, "no delegation to claim");
         return {
@@ -324,13 +326,9 @@ const cosmos: AppSpec<Transaction> = {
           ],
         };
       },
-      test: ({ account, transaction, operation }) => {
+      test: ({ account, transaction }) => {
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
-        invariant(
-          Date.now() - operation.date > 20000,
-          "enough time has passed to assert no longer claimable"
-        );
         transaction.validators.forEach((v) => {
           const d = cosmosResources.delegations.find(
             (d) => d.validatorAddress === v.address
