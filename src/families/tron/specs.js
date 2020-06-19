@@ -2,15 +2,21 @@
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
 import expect from "expect";
+import sortBy from "lodash/sortBy";
+import sampleSize from "lodash/sampleSize";
 import get from "lodash/get";
 import type { Transaction } from "./types";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
+import { getTronSuperRepresentatives } from "../../api/Tron";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
-import deviceActions from "./speculos-deviceActions";
 
 const currency = getCryptoCurrencyById("tron");
 const minimalAmount = parseCurrencyUnit(currency.units[0], "10");
+
+let superRepresentatives;
+
+getTronSuperRepresentatives().then((r) => (superRepresentatives = r));
 
 const tron: AppSpec<Transaction> = {
   name: "Tron",
@@ -24,16 +30,16 @@ const tron: AppSpec<Transaction> = {
       name: "move 50% to another account",
       transaction: ({ account, siblings, bridge, maxSpendable }) => {
         invariant(maxSpendable.gt(minimalAmount), "balance is too low");
-        let t = bridge.createTransaction(account);
         const sibling = pickSiblings(siblings);
         const recipient = sibling.freshAddress;
         const amount = maxSpendable.div(2).integerValue();
-        t = bridge.updateTransaction(t, { amount, recipient });
-        return t;
+        return {
+          transaction: bridge.createTransaction(account),
+          updates: [{ recipient }, { amount }],
+        };
       },
-      deviceAction: deviceActions.acceptTransaction,
-      test: ({ accountBeforeTransaction, operation, maxSpendable }) => {
-        expect(maxSpendable.toString()).toBe(
+      test: ({ accountBeforeTransaction, operation, account }) => {
+        expect(account.spendableBalance.toString()).toBe(
           accountBeforeTransaction.balance.minus(operation.value).toString()
         );
       },
@@ -42,34 +48,32 @@ const tron: AppSpec<Transaction> = {
       name: "send max to another account",
       transaction: ({ account, siblings, bridge, maxSpendable }) => {
         invariant(maxSpendable.gt(minimalAmount), "balance is too low");
-        let t = bridge.createTransaction(account);
         const sibling = pickSiblings(siblings);
         const recipient = sibling.freshAddress;
-        t = bridge.updateTransaction(t, { useAllAmount: true, recipient });
-        return t;
+        return {
+          transaction: bridge.createTransaction(account),
+          updates: [{ recipient }, { useAllAmount: true }],
+        };
       },
-      deviceAction: deviceActions.acceptTransaction,
-      test: ({ maxSpendable }) => {
-        expect(maxSpendable.toString()).toBe("0");
+      test: ({ account }) => {
+        expect(account.spendableBalance.toString()).toBe("0");
       },
     },
     {
       name: "freeze 25% to bandwidth | energy",
       transaction: ({ account, bridge, maxSpendable }) => {
         invariant(maxSpendable.gt(minimalAmount), "balance is too low");
-        let t = bridge.createTransaction(account);
         const amount = maxSpendable.div(4).integerValue();
-
         const energy = get(account, `tronResources.energy`, BigNumber(0));
-
-        t = bridge.updateTransaction(t, {
-          mode: "freeze",
-          amount,
-          resource: energy.eq(0) ? "ENERGY" : "BANDWIDTH",
-        });
-        return t;
+        return {
+          transaction: bridge.createTransaction(account),
+          updates: [
+            { mode: "freeze" },
+            { resource: energy.eq(0) ? "ENERGY" : "BANDWIDTH" },
+            { amount },
+          ],
+        };
       },
-      deviceAction: deviceActions.acceptTransaction,
       test: ({ account, accountBeforeTransaction, transaction }) => {
         const resourceType = transaction.resource || "";
 
@@ -131,14 +135,11 @@ const tron: AppSpec<Transaction> = {
             ? "BANDWIDTH"
             : "ENERGY";
 
-        let t = bridge.createTransaction(account);
-        t = bridge.updateTransaction(t, {
-          mode: "unfreeze",
-          resource: resourceToUnfreeze,
-        });
-        return t;
+        return {
+          transaction: bridge.createTransaction(account),
+          updates: [{ mode: "unfreeze" }, { resource: resourceToUnfreeze }],
+        };
       },
-      deviceAction: deviceActions.acceptTransaction,
       test: ({ account, accountBeforeTransaction, transaction }) => {
         const TxResource = transaction.resource || "";
 
@@ -157,6 +158,52 @@ const tron: AppSpec<Transaction> = {
 
         const expectedTronPower = TPBeforeTx.minus(transaction.amount);
         expect(currentTP).toEqual(expectedTronPower);
+      },
+    },
+    {
+      name: "submit vote",
+      transaction: ({ account, bridge }) => {
+        const TP = BigNumber(get(account, "tronResources.tronPower", "0"));
+        invariant(TP.gt(0), "no tron power to vote");
+
+        const currentTPVoted = get(account, "tronResources.votes", []).reduce(
+          (acc, curr) => acc.plus(BigNumber(get(curr, "voteCount", 0))),
+          BigNumber(0)
+        );
+
+        invariant(TP.gt(currentTPVoted), "you have no tron power left");
+        invariant(
+          superRepresentatives && superRepresentatives.length,
+          "there are no super representatives to vote for, or the list has not been loaded yet"
+        );
+
+        const count = 1 + Math.floor(5 * Math.random());
+        const candidates = sampleSize(superRepresentatives.slice(0, 40), count);
+        let remaining = TP;
+        const votes = candidates.map((c) => {
+          const voteCount = remaining
+            .times(Math.random())
+            .integerValue()
+            .toNumber();
+
+          remaining = remaining.minus(voteCount);
+          return {
+            address: c.address,
+            voteCount,
+          };
+        });
+
+        return {
+          transaction: bridge.createTransaction(account),
+          updates: [{ mode: "vote" }, { votes }],
+        };
+      },
+      test: ({ account, transaction }) => {
+        const votes = sortBy(transaction.votes, ["address"]);
+        const currentVotes = sortBy(get(account, "tronResources.votes", []), [
+          "address",
+        ]);
+        expect(currentVotes).toEqual(votes);
       },
     },
   ],
