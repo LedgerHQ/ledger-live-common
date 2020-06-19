@@ -40,7 +40,9 @@ const tron: AppSpec<Transaction> = {
       },
       test: ({ accountBeforeTransaction, operation, account }) => {
         expect(account.spendableBalance.toString()).toBe(
-          accountBeforeTransaction.balance.minus(operation.value).toString()
+          accountBeforeTransaction.spendableBalance
+            .minus(operation.value)
+            .toString()
         );
       },
     },
