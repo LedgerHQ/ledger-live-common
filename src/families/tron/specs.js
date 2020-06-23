@@ -12,7 +12,7 @@ import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
 
 const currency = getCryptoCurrencyById("tron");
-const minimalAmount = parseCurrencyUnit(currency.units[0], "10");
+const minimalAmount = parseCurrencyUnit(currency.units[0], "5");
 
 let superRepresentatives;
 
@@ -182,18 +182,20 @@ const tron: AppSpec<Transaction> = {
         const count = 1 + Math.floor(5 * Math.random());
         const candidates = sampleSize(superRepresentatives.slice(0, 40), count);
         let remaining = TP;
-        const votes = candidates.map((c) => {
-          const voteCount = remaining
-            .times(Math.random())
-            .integerValue()
-            .toNumber();
+        const votes = candidates
+          .map((c) => {
+            const voteCount = remaining
+              .times(Math.random())
+              .integerValue()
+              .toNumber();
 
-          remaining = remaining.minus(voteCount);
-          return {
-            address: c.address,
-            voteCount,
-          };
-        });
+            remaining = remaining.minus(voteCount);
+            return {
+              address: c.address,
+              voteCount,
+            };
+          })
+          .filter((c) => c.voteCount > 0);
 
         return {
           transaction: bridge.createTransaction(account),

@@ -18,7 +18,8 @@ const acceptTransaction: DeviceAction<Transaction, {}> = ({
     event.text.startsWith("Freeze") ||
     event.text.startsWith("Token") ||
     event.text.startsWith("Send") ||
-    event.text.startsWith("From")
+    event.text.startsWith("From") ||
+    event.text.includes("...")
   ) {
     transport.button("Rr");
   }
