@@ -10,6 +10,7 @@ import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
 import { getTronSuperRepresentatives } from "../../api/Tron";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
+import { getUnfreezeData } from "./react";
 
 const currency = getCryptoCurrencyById("tron");
 const minimalAmount = parseCurrencyUnit(currency.units[0], "5");
@@ -115,27 +116,16 @@ const tron: AppSpec<Transaction> = {
       transaction: ({ account, bridge }) => {
         const TP = BigNumber(get(account, "tronResources.tronPower", "0"));
         invariant(TP.gt(0), "no frozen assets");
-        const currentDate = new Date();
-        const bandwithExpiredAt = get(
-          account,
-          "tronResources.frozen.bandwidth.expiredAt",
-          undefined
+        const { canUnfreezeBandwidth, canUnfreezeEnergy } = getUnfreezeData(
+          account
         );
-        const energyExpiredAt = get(
-          account,
-          "tronResources.frozen.energy.expiredAt",
-          undefined
-        );
-        // To be rewrited using helper
         invariant(
-          (bandwithExpiredAt && bandwithExpiredAt < currentDate) ||
-            (energyExpiredAt && energyExpiredAt < currentDate),
+          canUnfreezeBandwidth || canUnfreezeEnergy,
           "freeze period not expired yet"
         );
-        const resourceToUnfreeze =
-          bandwithExpiredAt && bandwithExpiredAt < currentDate
-            ? "BANDWIDTH"
-            : "ENERGY";
+        const resourceToUnfreeze = canUnfreezeBandwidth
+          ? "BANDWIDTH"
+          : "ENERGY";
 
         return {
           transaction: bridge.createTransaction(account),
@@ -184,18 +174,18 @@ const tron: AppSpec<Transaction> = {
         let remaining = TP;
         const votes = candidates
           .map((c) => {
-            const voteCount = remaining
-              .times(Math.random())
-              .integerValue()
-              .toNumber();
-
+            if (!remaining.gt(0)) return null;
+            const voteCount = remaining.eq(1)
+              ? remaining.integerValue().toNumber()
+              : remaining.times(Math.random()).integerValue().toNumber();
+            if (voteCount === 0) return null;
             remaining = remaining.minus(voteCount);
             return {
               address: c.address,
               voteCount,
             };
           })
-          .filter((c) => c.voteCount > 0);
+          .filter(Boolean);
 
         return {
           transaction: bridge.createTransaction(account),
