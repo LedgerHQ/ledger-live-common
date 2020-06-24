@@ -26,6 +26,7 @@ const tron: AppSpec<Transaction> = {
     model: "nanoS",
     appName: "Tron",
   },
+  testTimeout: 2 * 60 * 1000,
   mutations: [
     {
       name: "move 50% to another account",
