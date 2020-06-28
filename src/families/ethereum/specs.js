@@ -48,7 +48,7 @@ const ethereum: AppSpec<Transaction> = {
     appName: "Ethereum",
   },
   testTimeout: 2 * 60 * 1000,
-  transaction: ({ maxSpendable }) => {
+  transactionCheck: ({ maxSpendable }) => {
     invariant(
       maxSpendable.gt(
         parseCurrencyUnit(getCryptoCurrencyById("ethereum").units[0], "0.003")
@@ -118,7 +118,7 @@ const ethereumClassic: AppSpec<Transaction> = {
   },
   dependency: "Ethereum",
   testTimeout: 2 * 60 * 1000,
-  transaction: ({ maxSpendable }) => {
+  transactionCheck: ({ maxSpendable }) => {
     invariant(
       maxSpendable.gt(
         parseCurrencyUnit(
@@ -140,7 +140,7 @@ const ethereumRopsten: AppSpec<Transaction> = {
     appName: "Ethereum",
   },
   testTimeout: 2 * 60 * 1000,
-  transaction: ({ maxSpendable }) => {
+  transactionCheck: ({ maxSpendable }) => {
     invariant(
       maxSpendable.gt(
         parseCurrencyUnit(

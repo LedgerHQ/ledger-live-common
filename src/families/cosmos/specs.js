@@ -182,7 +182,7 @@ const cosmos: AppSpec<Transaction> = {
 
     {
       name: "undelegate",
-      maxRun: 2,
+      maxRun: 4,
       transaction: ({ account, bridge }) => {
         invariant(canUndelegate(account), "can undelegate");
         const { cosmosResources } = account;

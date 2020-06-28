@@ -28,6 +28,7 @@ const formatOp = (
       ? formatCurrencyUnit(unit, amountBN, {
           showCode: true,
           alwaysShowSign: true,
+          disableRounding: true,
         })
       : "? " + amountBN.toString();
     const spaces = Array((level + 1) * 2)

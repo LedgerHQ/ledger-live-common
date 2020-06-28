@@ -38,11 +38,6 @@ const recoverBadTransactionStatus = ({
     if (feePerByte.lt(1) || feePerByte.eq(transaction.feePerByte || 0)) return;
     return bridge.updateTransaction(transaction, { feePerByte });
   }
-
-  if (!hasErrors) {
-    // ignore other warning cases. recover if there is no errors
-    return transaction;
-  }
 };
 
 const genericTest = ({
