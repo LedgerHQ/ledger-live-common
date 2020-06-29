@@ -16,6 +16,7 @@ import flash from "./flash";
 import installFinalFirmware from "./installFinalFirmware";
 
 const wait2s = of({ type: "wait" }).pipe(delay(2000));
+const wait10s = of({ type: "wait" }).pipe(delay(10000));
 
 type Res = {
   installing: ?string,
@@ -49,7 +50,7 @@ const main = (
       ? throwError(new DeviceInOSUExpected())
       : withDeviceInfo.pipe(
           concatMap((deviceInfo) =>
-            deviceInfo.isOSU ? empty() : concat(wait2s, waitForOSU(maxTry - 1))
+            deviceInfo.isOSU ? empty() : concat(wait10s, waitForOSU(maxTry - 1))
           )
         );
 
@@ -71,7 +72,7 @@ const main = (
 
   const all = shouldFlashMCU
     ? concat(waitForBootloader, bootloaderLoop, finalStep)
-    : concat(waitForOSU(10), finalStep);
+    : concat(waitForOSU(2), finalStep);
 
   return all.pipe(
     scan(
