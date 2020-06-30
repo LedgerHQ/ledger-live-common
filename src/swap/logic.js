@@ -36,7 +36,14 @@ export const canRequestRates = (state: SwapState) => {
   const { swap, error, fromAmount } = state;
   const { exchange, exchangeRate } = swap;
   const { fromAccount, toAccount } = exchange;
-  return !!(fromAccount && toAccount && fromAmount && !exchangeRate && !error);
+  return !!(
+    fromAccount &&
+    toAccount &&
+    fromAmount &&
+    !exchangeRate &&
+    !error &&
+    fromAmount.gt(0)
+  );
 };
 
 export const getCurrenciesWithStatus = ({
@@ -101,7 +108,7 @@ export const reducer = (
       newState = {
         ...state,
         swap: { ...state.swap, exchangeRate: payload.rate },
-        ratesTimestamp: new Date(),
+        // ratesTimestamp: new Date(),
         ratesExpired: false,
         error: null,
       };
@@ -157,8 +164,8 @@ export const reducer = (
             ...state.swap.exchange,
             ...payload,
           },
-          fromAmount: BigNumber(0),
         },
+        fromAmount: BigNumber(0),
         error: null,
       };
       break;

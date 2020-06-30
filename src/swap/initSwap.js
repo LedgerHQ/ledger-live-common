@@ -56,7 +56,9 @@ const initSwap: InitSwap = (
         const payoutCurrency = getAccountCurrency(toAccount);
         const refundAccount = getMainAccount(fromAccount, fromParentAccount);
         const payoutAccount = getMainAccount(toAccount, toParentAccount);
-        const apiAmount = amount.div(BigNumber(10).pow(unitFrom.magnitude));
+        const apiAmount = BigNumber(amount).div(
+          BigNumber(10).pow(unitFrom.magnitude)
+        );
 
         // Request a lock on the specified rate for 20 minutes,
         // user is expected to send funds after this.

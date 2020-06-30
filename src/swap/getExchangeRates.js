@@ -21,7 +21,9 @@ const getExchangeRates: GetExchangeRates = async (
   const unitTo = getAccountUnit(exchange.toAccount);
   const to = getAccountCurrency(exchange.toAccount).id;
   const amountFrom = transaction.amount;
-  const apiAmount = amountFrom.div(BigNumber(10).pow(unitFrom.magnitude));
+  const apiAmount = BigNumber(amountFrom).div(
+    BigNumber(10).pow(unitFrom.magnitude)
+  );
 
   const res = await network({
     method: "POST",

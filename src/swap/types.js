@@ -17,7 +17,6 @@ export type Exchange = {
   fromAccount: AccountLike,
   toParentAccount: ?Account,
   toAccount: AccountLike,
-  transaction: Transaction,
 };
 
 export type ExchangeRaw = {
@@ -25,7 +24,6 @@ export type ExchangeRaw = {
   fromAccount: AccountRawLike,
   toParentAccount: ?AccountRaw,
   toAccount: AccountRawLike,
-  transaction: TransactionRaw,
 };
 
 export type ExchangeRate = {

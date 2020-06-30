@@ -1,6 +1,7 @@
 // @flow
 /* eslint-disable no-console */
 import { from } from "rxjs";
+import { BigNumber } from "bignumber.js";
 import { first, map, reduce, tap, filter } from "rxjs/operators";
 import type { Exchange } from "@ledgerhq/live-common/lib/swap/types";
 import { initSwap } from "@ledgerhq/live-common/lib/swap";
@@ -35,7 +36,9 @@ const exec = async ({
 
   if (!sendMax) {
     console.log(`\t${amount} satoshsis worth.\n`);
-    transaction = bridge.updateTransaction(transaction, { amount });
+    transaction = bridge.updateTransaction(transaction, {
+      amount: BigNumber(amount),
+    });
   } else {
     console.log(`\tWe are attempting a sendmax, calculate max spendable.\n`);
     const amount = await bridge.estimateMaxSpendable({
@@ -53,15 +56,19 @@ const exec = async ({
     fromParentAccount: undefined,
     toAccount: accountToReceiveSwap,
     toParentAccount: undefined,
-    transaction,
   };
 
   console.log("Getting exchange rates");
-  const exchangeRates = await getExchangeRates(exchange);
+  const exchangeRates = await getExchangeRates(exchange, transaction);
 
   console.log("Initialising swap");
   // NB using the first rate
-  const initSwapResult = await initSwap(exchange, exchangeRates[0], deviceId)
+  const initSwapResult = await initSwap(
+    exchange,
+    exchangeRates[0],
+    transaction,
+    deviceId
+  )
     .pipe(
       tap((e) => console.log(e)),
       filter((e) => e.type === "init-swap-result"),

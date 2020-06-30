@@ -3,8 +3,9 @@ import { Observable } from "rxjs";
 import { useEffect, useState } from "react";
 import type { ConnectAppEvent, Input as ConnectAppInput } from "../connectApp";
 import type { Action, Device } from "./types";
-import type { Transaction } from "../../types";
+import type { TransactionRaw } from "../../types";
 import { toExchangeRaw } from "../../swap/serialization";
+import { toTransactionRaw } from "../../transaction";
 import type { AppState } from "./app";
 import { scan, tap } from "rxjs/operators";
 import { log } from "@ledgerhq/logs";
@@ -81,7 +82,7 @@ export const createAction = (
     exchange: ExchangeRaw,
     exchangeRate: ExchangeRate,
     deviceId: string,
-    transaction: Transaction,
+    transaction: TransactionRaw,
   }) => Observable<SwapRequestEvent>
 ): InitSwapAction => {
   const useHook = (
@@ -89,7 +90,7 @@ export const createAction = (
     initSwapRequest: InitSwapRequest
   ): InitSwapState => {
     const appState = createAppAction(connectAppExec).useHook(reduxDevice, {
-      appName: "Litecoin", // FIXME TODO until we have the real devie working, since speculos can't report the app name twice
+      appName: "Swap", // TODO I'm assuming the final name will be Exchange
     });
 
     const { device, opened } = appState;
@@ -107,7 +108,7 @@ export const createAction = (
         exchange: toExchangeRaw(exchange),
         exchangeRate,
         deviceId: "",
-        transaction,
+        transaction: toTransactionRaw(transaction),
       })
         .pipe(
           tap((e) => {
