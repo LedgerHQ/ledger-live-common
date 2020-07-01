@@ -99,7 +99,8 @@
     "rxjs": "^6.5.5",
     "rxjs-compat": "^6.5.5",
     "semver": "^7.3.2",
-    "sha.js": "^2.4.11"
+    "sha.js": "^2.4.11",
+    "web3-eth-abi": "^1.2.9"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.3",

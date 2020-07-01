@@ -1,9 +1,7 @@
 // @flow
-import invariant from "invariant";
 import eip55 from "eip55";
 import { BigNumber } from "bignumber.js";
 import { log } from "@ledgerhq/logs";
-import { NotEnoughBalance } from "@ledgerhq/errors";
 import type {
   Transaction,
   TransactionRaw,
@@ -18,6 +16,7 @@ import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
 import { apiForCurrency } from "../../api/Ethereum";
 import { makeLRUCache } from "../../cache";
+import { getDataSerializerForMode } from "./transactionData";
 
 export const formatTransaction = (
   t: Transaction,
@@ -88,8 +87,6 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   };
 };
 
-const ethereumTransferMethodID = Buffer.from("a9059cbb", "hex");
-
 export function serializeTransactionData(
   account: Account,
   transaction: Transaction
@@ -99,34 +96,16 @@ export function serializeTransactionData(
     ? account.subAccounts &&
       account.subAccounts.find((t) => t.id === subAccountId)
     : null;
-  if (!subAccount) return;
-  const recipient = eip55.encode(transaction.recipient);
-  const { balance } = subAccount;
-  let amount;
-  if (transaction.useAllAmount) {
-    amount = balance;
-  } else {
-    if (!transaction.amount) return;
-    amount = BigNumber(transaction.amount);
-    if (amount.gt(subAccount.balance)) {
-      throw new NotEnoughBalance();
-    }
+
+  if (transaction.mode) {
+    const dataSerializer = getDataSerializerForMode(transaction.mode);
+    return dataSerializer(account, subAccount, transaction);
   }
-  const to256 = Buffer.concat([
-    Buffer.alloc(12),
-    Buffer.from(recipient.replace("0x", ""), "hex"),
-  ]);
-  invariant(to256.length === 32, "recipient is invalid");
-  const amountHex = amount.toString(16);
-  const amountBuf = Buffer.from(
-    amountHex.length % 2 === 0 ? amountHex : "0" + amountHex,
-    "hex"
-  );
-  const amount256 = Buffer.concat([
-    Buffer.alloc(32 - amountBuf.length),
-    amountBuf,
-  ]);
-  return Buffer.concat([ethereumTransferMethodID, to256, amount256]);
+
+  if (subAccount) {
+    const dataSerializer = getDataSerializerForMode("erc20.transfer");
+    return dataSerializer(account, subAccount, transaction);
+  }
 }
 
 export function inferEthereumGasLimitRequest(

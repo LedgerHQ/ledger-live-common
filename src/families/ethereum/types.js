@@ -130,6 +130,13 @@ export type CoreOperationSpecifics = {
   asEthereumLikeOperation(): Promise<CoreEthereumLikeOperation>,
 };
 
+export type EthereumOperationMode =
+  | "erc20.transfer"
+  | "erc20.approve"
+  | "cErc20.supply"
+  | "cErc20.redeem"
+  | "cErc20.redeemUnderlying";
+
 export type CoreCurrencySpecifics = {};
 
 export type NetworkInfo = {|
@@ -145,6 +152,7 @@ export type NetworkInfoRaw = {|
 export type Transaction = {|
   ...TransactionCommon,
   family: "ethereum",
+  mode: ?EthereumOperationMode,
   gasPrice: ?BigNumber,
   userGasLimit: ?BigNumber,
   estimatedGasLimit: ?BigNumber,
@@ -155,6 +163,7 @@ export type Transaction = {|
 export type TransactionRaw = {|
   ...TransactionCommonRaw,
   family: "ethereum",
+  mode: ?EthereumOperationMode,
   gasPrice: ?string,
   userGasLimit: ?string,
   estimatedGasLimit: ?string,
