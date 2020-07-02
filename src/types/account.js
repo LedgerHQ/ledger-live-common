@@ -31,7 +31,7 @@ export type BalanceHistoryRawMap = {
 export type TokenAccount = {
   type: "TokenAccount",
   id: string,
-  // id of the parent account this token accuont belongs to
+  // id of the parent account this token account belongs to
   parentId: string,
   token: TokenCurrency,
   balance: BigNumber,

@@ -1,5 +1,6 @@
 // @flow
 import { BigNumber } from "bignumber.js";
+import sample from "lodash/sample";
 import invariant from "invariant";
 import expect from "expect";
 import sortBy from "lodash/sortBy";
@@ -199,6 +200,124 @@ const tron: AppSpec<Transaction> = {
           "address",
         ]);
         expect(currentVotes).toEqual(votes);
+      },
+    },
+    {
+      name: "move some TRC10",
+      maxRun: 1,
+      transaction: ({ account, siblings, bridge }) => {
+        const trc10Account = sample(
+          (account.subAccounts || []).filter(
+            (a) => a.type === "TokenAccount" && a.token.tokenType === "trc10"
+          )
+        );
+        invariant(trc10Account, "no trc10 account");
+        invariant(trc10Account.gt(0), "trc10 account has no balance");
+        const sibling = pickSiblings(siblings);
+        const recipient = sibling.freshAddress;
+        return {
+          transaction: bridge.createTransaction(account),
+          updates: [
+            { recipient, subAccountId: trc10Account.id },
+            Math.random() < 0.5
+              ? { useAllAmount: true }
+              : {
+                  amount: trc10Account.balance
+                    .times(Math.random())
+                    .integerValue(),
+                },
+          ],
+        };
+      },
+      test: ({ accountBeforeTransaction, account, transaction }) => {
+        invariant(accountBeforeTransaction.subAccounts, "sub accounts before");
+        const trc10accountBefore = accountBeforeTransaction.subAccounts.find(
+          (s) => s.id === transaction.subAccountId
+        );
+        invariant(trc10accountBefore, "trc10 acc was here before");
+        invariant(account.subAccounts, "sub accounts");
+        const trc10account = account.subAccounts.find(
+          (s) => s.id === transaction.subAccountId
+        );
+        invariant(trc10account, "trc10 acc is still here");
+        if (transaction.useAllAmount) {
+          expect(trc10account.balance.toString()).toBe("0");
+        } else {
+          expect(trc10account.balance.toString()).toBe(
+            trc10accountBefore.balance.minus(transaction.amount).toString()
+          );
+        }
+      },
+    },
+    {
+      name: "move some TRC20",
+      maxRun: 1,
+      transaction: ({ account, siblings, bridge }) => {
+        const balance = account.spendableBalance;
+        const energy = get(account, "tronResources.energy", BigNumber(0));
+        invariant(energy.gt(0) || balance.gt(0), "trx and energy too low");
+        const trc20Account = sample(
+          (account.subAccounts || []).filter(
+            (a) => a.type === "TokenAccount" && a.token.tokenType === "trc20"
+          )
+        );
+        invariant(trc20Account, "no trc20 account");
+        invariant(trc20Account.gt(0), "trc20 account has no balance");
+        const sibling = pickSiblings(siblings);
+        const recipient = sibling.freshAddress;
+        return {
+          transaction: bridge.createTransaction(account),
+          updates: [
+            { recipient, subAccountId: trc20Account.id },
+            Math.random() < 0.5
+              ? { useAllAmount: true }
+              : {
+                  amount: trc20Account.balance
+                    .times(Math.random())
+                    .integerValue(),
+                },
+          ],
+        };
+      },
+      test: ({ accountBeforeTransaction, account, transaction }) => {
+        invariant(accountBeforeTransaction.subAccounts, "sub accounts before");
+        const trc20accountBefore = accountBeforeTransaction.subAccounts.find(
+          (s) => s.id === transaction.subAccountId
+        );
+        invariant(trc20accountBefore, "trc20 acc was here before");
+        invariant(account.subAccounts, "sub accounts");
+        const trc20account = account.subAccounts.find(
+          (s) => s.id === transaction.subAccountId
+        );
+        invariant(trc20account, "trc20 acc is still here");
+        if (transaction.useAllAmount) {
+          expect(trc20account.balance.toString()).toBe("0");
+        } else {
+          expect(trc20account.balance.toString()).toBe(
+            trc20accountBefore.balance.minus(transaction.amount).toString()
+          );
+        }
+
+        if (
+          get(trc20accountBefore, "tronResources.energy", BigNumber(0)).eq(0)
+        ) {
+          expect(account.balance.lt(accountBeforeTransaction.balance)).toBe(
+            true
+          );
+        } else {
+          expect(
+            get(account, "tronResources.energy", BigNumber(0)).lt(
+              get(
+                accountBeforeTransaction,
+                "tronResources.energy",
+                BigNumber(0)
+              )
+            )
+          ).toBe(true);
+          expect(account.balance.eq(accountBeforeTransaction.balance)).toBe(
+            true
+          );
+        }
       },
     },
   ],
