@@ -11,7 +11,7 @@ import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
 import { getTronSuperRepresentatives } from "../../api/Tron";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
-import { getUnfreezeData } from "./react";
+import { getUnfreezeData, getNextRewardDate } from "./react";
 
 const currency = getCryptoCurrencyById("tron");
 const minimalAmount = parseCurrencyUnit(currency.units[0], "5");
@@ -318,6 +318,38 @@ const tron: AppSpec<Transaction> = {
             true
           );
         }
+      },
+    },
+    {
+      name: "claim rewards",
+      maxRun: 1,
+      transaction: ({ account, bridge }) => {
+        const nextRewardDate = getNextRewardDate(account);
+        const today = Date.now();
+
+        const unwithdrawnReward = BigNumber(
+          get(account, "tronResources.unwithdrawnReward", "0")
+        );
+
+        invariant(unwithdrawnReward.gt(0), "no rewards to claim");
+        invariant(
+          nextRewardDate && nextRewardDate <= today,
+          "you can't claim twice in less than 24 hours"
+        );
+
+        return {
+          transaction: bridge.createTransaction(account),
+          updates: [{ mode: "claimReward" }],
+        };
+      },
+      test: ({ account }) => {
+        const rewards = BigNumber(
+          get(account, "tronResources.unwithdrawnReward", "0")
+        );
+
+        const nextRewardDate = getNextRewardDate(account);
+        expect(rewards.eq(0)).toBe(true);
+        expect(nextRewardDate && nextRewardDate > Date.now()).toBe(true);
       },
     },
   ],
