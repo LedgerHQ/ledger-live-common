@@ -5,7 +5,7 @@ import { listCryptoCurrencies } from "../../currencies";
 
 const ignore = ["bitcloud", "bitcore", "bitsend", "megacoin"];
 
-test("wadus", () => {
+test("all bitcoin forks that have a manager app have a defined address in abandonSeedLegacyPerCurrency", () => {
   const currenciyIds = listCryptoCurrencies(true)
     .filter(
       (c) =>

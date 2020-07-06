@@ -8,7 +8,7 @@ import {
   FeeTooHigh,
   GasLessThanEstimate,
 } from "@ledgerhq/errors";
-import { getAbandonSeedAddress } from "../../../data/abandonSeed";
+import { getAbandonSeedAddress } from "../../../data/abandonseed";
 import type { AccountLike } from "../../../types";
 import type { AccountBridge, CurrencyBridge } from "../../../types/bridge";
 import { scanAccounts } from "../../../libcore/scanAccounts";
