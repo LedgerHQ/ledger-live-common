@@ -61,6 +61,7 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
       ? BigNumber(tr.estimatedGasLimit)
       : null,
     feeCustomUnit: tr.feeCustomUnit, // FIXME this is not good.. we're dereferencing here. we should instead store an index (to lookup in currency.units on UI)
+    mode: tr.mode,
     networkInfo: networkInfo && {
       family: networkInfo.family,
       gasPrice: BigNumber(networkInfo.gasPrice),
@@ -80,6 +81,7 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
       ? t.estimatedGasLimit.toString()
       : null,
     feeCustomUnit: t.feeCustomUnit, // FIXME this is not good.. we're dereferencing here. we should instead store an index (to lookup in currency.units on UI)
+    mode: t.mode,
     networkInfo: networkInfo && {
       family: networkInfo.family,
       gasPrice: networkInfo.gasPrice.toString(),

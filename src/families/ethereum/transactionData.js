@@ -7,6 +7,9 @@ import abiCoder from "web3-eth-abi";
 import { NotEnoughBalance } from "@ledgerhq/errors";
 
 import contractAbis from "./contractAbis";
+import BigNumber from "bignumber.js";
+
+const UINT_MAX = new BigNumber(2).pow(256).minus(1);
 
 type EthereumOperationModeDataSerializer = (
   a: Account,
@@ -80,11 +83,12 @@ const erc20Transfer: EthereumOperationModeDataSerializer = (a, s, t) => {
   });
 };
 
-const erc20Approve: EthereumOperationModeDataSerializer = (a, s, t) =>
-  serializeTx(contractAbis.erc20, "approve", {
+const erc20Approve: EthereumOperationModeDataSerializer = (a, s, t) => {
+  return serializeTx(contractAbis.erc20, "approve", {
     _spender: t.recipient, // spender
-    _value: t.amount, // amount to approve
+    _value: t.useAllAmount ? UINT_MAX : t.amount, // amount to approve
   });
+};
 
 const cErc20Mint: EthereumOperationModeDataSerializer = (a, s, t) => {
   let amount;

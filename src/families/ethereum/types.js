@@ -133,7 +133,7 @@ export type CoreOperationSpecifics = {
 export type EthereumOperationMode =
   | "erc20.transfer"
   | "erc20.approve"
-  | "cErc20.supply"
+  | "cErc20.mint"
   | "cErc20.redeem"
   | "cErc20.redeemUnderlying";
 

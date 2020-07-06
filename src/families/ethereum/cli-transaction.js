@@ -20,6 +20,12 @@ const options = [
     multiple: true,
   },
   {
+    name: "mode",
+    alias: "m",
+    type: String,
+    desc: "data serialization mode (used to communicate with smart contracts)",
+  },
+  {
     name: "gasPrice",
     type: String,
     desc:
@@ -81,6 +87,7 @@ function inferTransactions(
       gasPrice: inferAmount(mainAccount, opts.gasPrice || "2gwei"),
       userGasLimit: opts.gasLimit ? new BigNumber(opts.gasLimit) : null,
       estimatedGasLimit: null,
+      mode: opts.mode,
     };
   });
 }
