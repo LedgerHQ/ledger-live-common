@@ -9,21 +9,25 @@ import { getExchangeRates } from "@ledgerhq/live-common/lib/swap";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import { toTransactionRaw } from "@ledgerhq/live-common/lib/transaction";
 import { deviceOpt } from "../scan";
-import { account11, account12 } from "../poc/accounts";
+import { account11, account12, account13 } from "../poc/accounts";
 import invariant from "invariant";
 
 const exec = async ({
   deviceId = "",
   mock = false,
-  amount = 500000,
+  // amount = 500000,
+  // amount =  17000000,
+  amount =  156306910000000000,
   reverse = false,
   sendMax = false,
 }) => {
   console.log(`/!\\ Performing a ${mock ? "MOCK" : "REAL"} swap test`);
-  console.log(`\tSwaping ${reverse ? "LTC-BTC" : "BTC-LTC"}`);
+  // console.log(`\tSwaping ${reverse ? "LTC-BTC" : "BTC-ETH"}`);
+  console.log(`\tSwaping ${reverse ? "LTC-BTC" : "ETH-LTC"}`);
   invariant(sendMax || amount, "We either need an amount, or sendMax");
 
-  const accountToSendSwap = reverse ? account12(mock) : account11(mock);
+  const accountToSendSwap = reverse ? account12(mock) : account13(mock);
+  // const accountToReceiveSwap = reverse ? account11(mock) : account13(mock);
   const accountToReceiveSwap = reverse ? account11(mock) : account12(mock);
 
   const fromAccount = await getAccountBridge(accountToSendSwap, null)

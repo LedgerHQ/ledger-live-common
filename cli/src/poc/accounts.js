@@ -166,3 +166,41 @@ export const account12 = (mock: boolean) => {
       "Ltub2Zx1tbqWB7AbC4fb7aWgsuyXBm2qt97gzG5av4PHAjdAhvdZQFHS7nmcScgtAvpgcGAkVQQvR9BXwu54ny6Yqwst4KQAnyD1Yx6VezNf1S8",
   });
 };
+
+export const account13 = (mock: boolean) => {
+  const id = `${
+    mock ? "mock" : "libcore"
+  }:1:ethereum:xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ:`;
+
+  return fromAccountRaw({
+    id,
+    seedIdentifier:
+      "04468680d27b26d4304a3c2aeb2c696d5d3a2d7fea4e28e9d7d296e0ecbc626fa8bd458c4d4db0cbcb36d6e0b51bcedf44653483e40f200c366e86cbb54d579c1c",
+    name: "Ethereum 1",
+    starred: false,
+    derivationMode: "",
+    index: 0,
+    freshAddress: "0x6Fb18BF2400b94C813FeDe3D2e816d5C811353D9",
+    freshAddressPath: "44'/60'/0'/0/0",
+    freshAddresses: [
+      {
+        address: "0x6Fb18BF2400b94C813FeDe3D2e816d5C811353D9",
+        derivationPath: "44'/60'/0'/0/0",
+      },
+    ],
+    blockHeight: 10379894,
+    creationDate: "2020-07-02T12:08:51.481Z",
+    operationsCount: 0,
+    operations: [],
+    pendingOperations: [],
+    currencyId: "ethereum",
+    unitMagnitude: 18,
+    lastSyncDate: "2020-07-02T12:08:51.481Z",
+    balance: "0",
+    spendableBalance: "0",
+    balanceHistory: {},
+    xpub:
+      "xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ",
+    subAccounts: [],
+  });
+};

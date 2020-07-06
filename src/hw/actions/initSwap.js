@@ -3,7 +3,7 @@ import { Observable } from "rxjs";
 import { useEffect, useState } from "react";
 import type { ConnectAppEvent, Input as ConnectAppInput } from "../connectApp";
 import type { Action, Device } from "./types";
-import type { TransactionRaw } from "../../types";
+import type { Transaction, TransactionRaw } from "../../types";
 import { toExchangeRaw } from "../../swap/serialization";
 import { toTransactionRaw } from "../../transaction";
 import type { AppState } from "./app";
@@ -90,7 +90,7 @@ export const createAction = (
     initSwapRequest: InitSwapRequest
   ): InitSwapState => {
     const appState = createAppAction(connectAppExec).useHook(reduxDevice, {
-      appName: "Swap", // TODO I'm assuming the final name will be Exchange
+      appName: "Exchange",
     });
 
     const { device, opened } = appState;
