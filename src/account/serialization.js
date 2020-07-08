@@ -508,7 +508,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     tronResources,
     cosmosResources,
     bitcoinResources,
-    swapHistory
+    swapHistory,
   } = rawAccount;
 
   const subAccounts =
@@ -617,7 +617,7 @@ export function toAccountRaw({
   tronResources,
   cosmosResources,
   bitcoinResources,
-  swapHistory
+  swapHistory,
 }: Account): AccountRaw {
   const res: $Exact<AccountRaw> = {
     id,

@@ -1,14 +1,14 @@
 // @flow
 
-import { Observable, concat, from, of, throwError } from "rxjs";
+import { Observable, concat, from, of, throwError, defer } from "rxjs";
 import { concatMap, catchError, delay } from "rxjs/operators";
-import { TransportStatusError } from "@ledgerhq/errors";
 import type { DeviceInfo } from "../types/manager";
 import type { ListAppsEvent } from "../apps";
 import { listApps } from "../apps/hw";
 import { withDevice } from "./deviceAccess";
 import getDeviceInfo from "./getDeviceInfo";
-
+import getAppAndVersion from "./getAppAndVersion";
+import { dashboardNames } from "./connectApp";
 export type Input = {
   devicePath: string,
 };
@@ -28,32 +28,37 @@ const cmd = ({ devicePath }: Input): Observable<ConnectManagerEvent> =>
         .pipe(delay(1000))
         .subscribe((e) => o.next(e));
 
-      const sub = from(getDeviceInfo(transport))
+      const sub = defer(() => from(getAppAndVersion(transport)))
         .pipe(
-          concatMap((deviceInfo) => {
+          concatMap((appAndVersion) => {
             timeoutSub.unsubscribe();
 
-            if (deviceInfo.isBootloader) {
-              return of({ type: "bootloader", deviceInfo });
+            if (dashboardNames.includes(appAndVersion.name)) {
+              // we're in dashboard
+              return from(getDeviceInfo(transport)).pipe(
+                concatMap((deviceInfo) => {
+                  timeoutSub.unsubscribe();
+
+                  if (deviceInfo.isBootloader) {
+                    return of({ type: "bootloader", deviceInfo });
+                  }
+
+                  if (deviceInfo.isOSU) {
+                    return of({ type: "osu", deviceInfo });
+                  }
+
+                  return concat(
+                    of({ type: "listingApps", deviceInfo }),
+                    listApps(transport, deviceInfo)
+                  );
+                })
+              );
             }
 
-            if (deviceInfo.isOSU) {
-              return of({ type: "osu", deviceInfo });
-            }
-
-            return concat(
-              of({ type: "listingApps", deviceInfo }),
-              listApps(transport, deviceInfo)
-            );
+            return of({ type: "appDetected" });
           }),
-          catchError((e: Error) => {
-            if (
-              e &&
-              e instanceof TransportStatusError &&
-              [0x6e00, 0x6d00, 0x6e01, 0x6d01, 0x6d02].includes(e.statusCode)
-            ) {
-              return of({ type: "appDetected" });
-            }
+          catchError((e) => {
+            // Handle specific responses?
             return throwError(e);
           })
         )
