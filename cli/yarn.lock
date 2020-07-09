@@ -1041,10 +1041,10 @@
     "@ledgerhq/errors" "^5.19.0"
     events "^3.1.0"
 
-"@ledgerhq/ledger-core@6.6.4":
-  version "6.6.4"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/ledger-core/-/ledger-core-6.6.4.tgz#259ac074a4b56aeb723feb9715832562310a7032"
-  integrity sha512-OaKIgRnq0Gq0BvsVQESg73fsaqgX3dKBAgVXbhFtArd+IHk56RIIo5hy5/trqW4BubFVCibUOxCoBAhfKSQwig==
+"@ledgerhq/ledger-core@6.7.0":
+  version "6.7.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/ledger-core/-/ledger-core-6.7.0.tgz#059ac1d068b9c9f600b4dfc274fd9c2f78941ad2"
+  integrity sha512-kCfk7vjZNbEN2cH1eQ+Nzzvwb4hEke2ukW4vK+j3ebYmkH7Omoe67Rz9JSG6hem+ZM9KLGw0h4cX/a5QoG7Bag==
   dependencies:
     bindings "1.5.0"
     nan "^2.14.1"
@@ -2716,10 +2716,10 @@ find-up@^4.1.0:
     locate-path "^5.0.0"
     path-exists "^4.0.0"
 
-flow-bin@^0.128.0:
-  version "0.128.0"
-  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.128.0.tgz#fd1232a64dc46874d8d499f16a1934b964f4c2ae"
-  integrity sha512-EnmMSOCrkx8F0r1+T1d1HODQ+ddy5yRfkT3CvwmK05IWZyXQy27OVdNwdXUWRqc0iMW75T4QkoXaVBYrMqfk+A==
+flow-bin@^0.129.0:
+  version "0.129.0"
+  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.129.0.tgz#50294d6e335dd97d095c27b096ea0b94c2415d55"
+  integrity sha512-WLXOj09oCK6nODVKM5uxvAzBpxXeI304E60tELMeQd/TJsyfbykNCZ+e4xml9eUOyoac9nDL3YrJpPZMzq0tMA==
 
 flow-typed@^3.1.0:
   version "3.1.0"
