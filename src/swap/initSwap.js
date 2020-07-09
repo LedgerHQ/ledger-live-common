@@ -1,5 +1,7 @@
 // @flow
 
+import { log } from "@ledgerhq/logs";
+import { from } from "rxjs";
 import secp256k1 from "secp256k1";
 import invariant from "invariant";
 import { delay } from "../promise";
@@ -28,6 +30,9 @@ import {
 } from "./";
 import { getEnv } from "../env";
 
+const withDevicePromise = (deviceId, fn) =>
+  withDevice(deviceId)((transport) => from(fn(transport))).toPromise();
+
 const initSwap: InitSwap = (
   exchange: Exchange,
   exchangeRate: ExchangeRate,
@@ -35,14 +40,19 @@ const initSwap: InitSwap = (
   deviceId: string
 ): Observable<SwapRequestEvent> => {
   if (getEnv("MOCK")) return mockInitSwap(exchange, exchangeRate, deviceId);
-  return withDevice(deviceId)((transport) =>
-    Observable.create((o) => {
-      let unsubscribed = false;
-      const confirmSwap = async () => {
+  //return withDevice(deviceId)((transport) =>
+  return Observable.create((o) => {
+    let unsubscribed = false;
+    const confirmSwap = async () => {
+      let unsafeSwap;
+      let swapId;
+      await withDevicePromise(deviceId, async (transport) => {
         const swap = new Swap(transport);
         // NB this id is crucial to prevent replay attacks, if it changes
         // we need to start the flow again.
         const deviceTransactionId = await swap.startNewTransaction();
+        if (unsubscribed) return;
+
         const { provider, rateId } = exchangeRate;
         const {
           fromParentAccount,
@@ -81,21 +91,20 @@ const initSwap: InitSwap = (
               },
             ],
           });
+          if (unsubscribed || !res || !res.data) return;
         } catch (e) {
           o.next({
             type: "init-swap-error",
             error: new SwapGenericAPIError(),
           });
           o.complete();
-          unsubscribed = true;
+          return;
         }
 
-        if (unsubscribed || !res || !res.data) return;
-
         const swapResult = res.data[0];
-        const { swapId, provider: providerName } = swapResult;
+        swapId = swapResult.swapId;
         const providerNameAndSignature = getProviderNameAndSignature(
-          providerName
+          swapResult.provider
         );
 
         // FIXME because this would break for tokens
@@ -121,6 +130,7 @@ const initSwap: InitSwap = (
           refundAccount,
           transaction
         );
+        if (unsubscribed) return;
 
         const {
           errors,
@@ -129,6 +139,7 @@ const initSwap: InitSwap = (
           refundAccount,
           transaction
         );
+        if (unsubscribed) return;
 
         if (errors.recipient || errors.amount) {
           throw errors.recipient || errors.amount;
@@ -136,21 +147,30 @@ const initSwap: InitSwap = (
 
         // Prepare swap app to receive the tx to forward.
         await swap.setPartnerKey(providerNameAndSignature.nameAndPubkey);
+        if (unsubscribed) return;
+
         await swap.checkPartner(providerNameAndSignature.signature);
+        if (unsubscribed) return;
+
         await swap.processTransaction(
           Buffer.from(swapResult.binaryPayload, "hex"),
           estimatedFees
         );
+        if (unsubscribed) return;
+
         const goodSign = secp256k1.signatureExport(
           Buffer.from(swapResult.signature, "hex")
         );
         await swap.checkTransactionSignature(goodSign);
+        if (unsubscribed) return;
+
         const payoutAddressParameters = await perFamily[
           payoutCurrency.family
         ].getSerializedAddressParameters(
           payoutAccount.freshAddressPath,
           payoutAccount.derivationMode
         );
+        if (unsubscribed) return;
 
         const {
           config: payoutAddressConfig,
@@ -162,6 +182,7 @@ const initSwap: InitSwap = (
           payoutAddressConfigSignature,
           payoutAddressParameters.addressParameters
         );
+        if (unsubscribed) return;
 
         const refundAddressParameters = await perFamily[
           refundCurrency.family
@@ -169,6 +190,7 @@ const initSwap: InitSwap = (
           refundAccount.freshAddressPath,
           refundAccount.derivationMode
         );
+        if (unsubscribed) return;
 
         const {
           config: refundAddressConfig,
@@ -182,37 +204,45 @@ const initSwap: InitSwap = (
           refundAddressConfigSignature,
           refundAddressParameters.addressParameters
         );
-        await swap.signCoinTransaction();
-
-        // NB Introduce an artificial delay to give time for the device to switch
-        // to the signing application.
-        await delay(800);
-
         if (unsubscribed) return;
-        o.next({
-          type: "init-swap-result",
-          initSwapResult: { transaction, swapId },
-        });
-      };
-      confirmSwap().then(
-        () => {
-          o.complete();
-          unsubscribed = true;
-        },
-        (e) => {
-          o.next({
-            type: "init-swap-error",
-            error: e,
-          });
-          o.complete();
-          unsubscribed = true;
-        }
-      );
-      return () => {
+
+        unsafeSwap = swap;
+      });
+
+      if (!unsafeSwap || !swapId) return;
+
+      // signCoinTransaction disconnects the transport so we need it outside of withDevice
+      // and wait some delay to give time for the device to switch to the signing application
+      await unsafeSwap.signCoinTransaction().catch(() => {});
+      log("swap", "awaiting device disconnection");
+      await delay(3000);
+
+      if (unsubscribed) return;
+
+      o.next({
+        type: "init-swap-result",
+        initSwapResult: { transaction, swapId },
+      });
+    };
+    confirmSwap().then(
+      () => {
+        o.complete();
         unsubscribed = true;
-      };
-    })
-  );
+      },
+      (e) => {
+        o.next({
+          type: "init-swap-error",
+          error: e,
+        });
+        o.complete();
+        unsubscribed = true;
+      }
+    );
+    return () => {
+      unsubscribed = true;
+    };
+  });
+  // );
 };
 
 export default initSwap;

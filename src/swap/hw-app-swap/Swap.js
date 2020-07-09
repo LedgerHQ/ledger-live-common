@@ -4,14 +4,14 @@ import { BigNumber } from "bignumber.js";
 import { TransportStatusError } from "@ledgerhq/errors";
 import invariant from "invariant";
 
-const START_NEW_TRANSACTION_COMMAND: number = 0x01;
-const SET_PARTNER_KEY_COMMAND: number = 0x02;
-const CHECK_PARTNER_COMMAND: number = 0x03;
-const PROCESS_TRANSACTION_RESPONSE: number = 0x04;
-const CHECK_TRANSACTION_SIGNATURE: number = 0x05;
-const CHECK_PAYOUT_ADDRESS: number = 0x06;
-const CHECK_REFUND_ADDRESS: number = 0x07;
-const SIGN_COIN_TRANSACTION: number = 0x08;
+const START_NEW_TRANSACTION_COMMAND: number = 0x03;
+const SET_PARTNER_KEY_COMMAND: number = 0x04;
+const CHECK_PARTNER_COMMAND: number = 0x05;
+const PROCESS_TRANSACTION_RESPONSE: number = 0x06;
+const CHECK_TRANSACTION_SIGNATURE: number = 0x07;
+const CHECK_PAYOUT_ADDRESS: number = 0x08;
+const CHECK_REFUND_ADDRESS: number = 0x09;
+const SIGN_COIN_TRANSACTION: number = 0x0a;
 
 const maybeThrowProtocolError = (result: Buffer): void => {
   invariant(result.length >= 2, "SwapTransport: Unexpected result length");

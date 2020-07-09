@@ -1,5 +1,6 @@
 // @flow
-import { Observable } from "rxjs";
+import { Observable, of, concat } from "rxjs";
+import { scan, tap, catchError } from "rxjs/operators";
 import { useEffect, useState } from "react";
 import type { ConnectAppEvent, Input as ConnectAppInput } from "../connectApp";
 import type { Action, Device } from "./types";
@@ -7,7 +8,6 @@ import type { Transaction, TransactionRaw } from "../../types";
 import { toExchangeRaw } from "../../swap/serialization";
 import { toTransactionRaw } from "../../transaction";
 import type { AppState } from "./app";
-import { scan, tap } from "rxjs/operators";
 import { log } from "@ledgerhq/logs";
 import { createAction as createAppAction } from "./app";
 import type {
@@ -22,6 +22,8 @@ type State = {|
   initSwapResult: ?InitSwapResult,
   initSwapRequested: boolean,
   initSwapError: ?Error,
+  isLoading: boolean,
+  freezeReduxDevice: boolean,
 |};
 
 type InitSwapState = {|
@@ -53,17 +55,24 @@ const mapResult = ({ initSwapResult, initSwapError }: InitSwapState): ?Result =>
     ? { initSwapError }
     : null;
 
-const initialState = {
+const initialState: State = {
   initSwapResult: null,
   initSwapError: null,
   initSwapRequested: false,
   isLoading: true,
+  freezeReduxDevice: false,
 };
 
-const reducer = (state: any, e: SwapRequestEvent) => {
+const reducer = (state: any, e: SwapRequestEvent | { type: "init-swap" }) => {
   switch (e.type) {
+    case "init-swap":
+      return { ...state, freezeReduxDevice: true };
     case "init-swap-error":
-      return { ...state, initSwapError: e.error, isLoading: false };
+      return {
+        ...state,
+        initSwapError: e.error,
+        isLoading: false,
+      };
     case "init-swap-requested":
       return { ...state, initSwapRequested: true, isLoading: false };
     case "init-swap-result":
@@ -75,6 +84,16 @@ const reducer = (state: any, e: SwapRequestEvent) => {
   }
   return state;
 };
+
+function useFrozenValue<T>(value: T, frozen: boolean): T {
+  const [state, setState] = useState(value);
+  useEffect(() => {
+    if (!frozen) {
+      setState(value);
+    }
+  }, [value, frozen]);
+  return state;
+}
 
 export const createAction = (
   connectAppExec: (ConnectAppInput) => Observable<ConnectAppEvent>,
@@ -89,32 +108,49 @@ export const createAction = (
     reduxDevice: ?Device,
     initSwapRequest: InitSwapRequest
   ): InitSwapState => {
-    const appState = createAppAction(connectAppExec).useHook(reduxDevice, {
-      appName: "Exchange",
-    });
-
-    const { device, opened } = appState;
-
     const [state, setState] = useState(initialState);
 
+    const reduxDeviceFrozen = useFrozenValue(
+      reduxDevice,
+      state.freezeReduxDevice
+    );
+
+    const appState = createAppAction(connectAppExec).useHook(
+      reduxDeviceFrozen,
+      {
+        appName: "Exchange",
+      }
+    );
+
+    const { device, opened } = appState;
+    const { exchange, exchangeRate, transaction } = initSwapRequest;
+
     useEffect(() => {
-      if (!opened || !initSwapRequest || !device) {
+      if (!opened || !device) {
         setState(initialState);
         return;
       }
 
-      const { exchange, exchangeRate, transaction } = initSwapRequest;
-      const sub = initSwapExec({
-        exchange: toExchangeRaw(exchange),
-        exchangeRate,
-        deviceId: "",
-        transaction: toTransactionRaw(transaction),
-      })
+      const sub = concat(
+        of({ type: "init-swap" }),
+        initSwapExec({
+          exchange: toExchangeRaw(exchange),
+          exchangeRate,
+          deviceId: "",
+          transaction: toTransactionRaw(transaction),
+        })
+      )
         .pipe(
           tap((e) => {
             log("actions-initSwap-event", e.type, e);
             console.log("actions-initSwap-event", e.type, e);
           }),
+          catchError((error) =>
+            of({
+              type: "init-swap-error",
+              error,
+            })
+          ),
           scan(reducer, initialState)
         )
         .subscribe(setState);
@@ -123,7 +159,7 @@ export const createAction = (
         console.log("exiting the useeffect code, and ruining everything");
         sub.unsubscribe();
       };
-    }, [initSwapRequest, device, opened]);
+    }, [exchange, exchangeRate, transaction, device, opened]);
 
     return {
       ...appState,
