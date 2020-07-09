@@ -38,7 +38,7 @@ export const estimateGasLimitAndStorage: EstimateGasLimitAndStorage = makeLRUCac
   (account, addr) =>
     withLibcore(async (core) => {
       const { coreAccount } = await getCoreAccount(core, account);
-      const tezosLikeAccount = core.CoreTezosLikeAccount.fromCoreAccount(
+      const tezosLikeAccount = core.Tezos.fromCoreAccount(
         coreAccount
       );
       invariant(tezosLikeAccount, "tezos account expected");

@@ -17,10 +17,14 @@ import type {
 } from "../../libcore/types";
 
 declare class CoreRipple {
-  registerInto(
+  static registerInto(
     services: CoreServices,
     walletStore: CoreWalletStore
   ): Promise<void>;
+  static fromCoreAccount(coreAccount: CoreAccount): ?CoreRippleLikeAccount;
+  static fromCoreOperation(
+    coreOperation: CoreOperation
+  ): ?CoreRippleLikeOperation;
 }
 
 declare class CoreRippleLikeAddress {
@@ -40,9 +44,6 @@ declare class CoreRippleLikeTransaction {
 }
 
 declare class CoreRippleLikeOperation {
-  static fromCoreOperation(
-    coreOperation: CoreOperation
-  ): ?CoreRippleLikeOperation;
   getTransaction(): Promise<CoreRippleLikeTransaction>;
 }
 
@@ -55,7 +56,6 @@ declare class CoreRippleLikeTransactionBuilder {
 }
 
 declare class CoreRippleLikeAccount {
-  static fromCoreAccount(coreAccount: CoreAccount): ?CoreRippleLikeAccount;
   buildTransaction(): Promise<CoreRippleLikeTransactionBuilder>;
   broadcastRawTransaction(signed: string): Promise<string>;
   getFees(): Promise<CoreAmount>;
@@ -120,7 +120,9 @@ export type TransactionRaw = {|
 export const reflect = (declare: (string, Spec) => void) => {
   declare("Ripple", {
     methods: {
-      registerInto: {}
+      registerInto: {},
+      fromCoreAccount: {},
+      fromCoreOperation: {}
     }
   });
 

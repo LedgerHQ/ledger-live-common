@@ -14,7 +14,7 @@ type Input = {
 type Output = Promise<NetworkInfo>;
 
 async function ethereum({ core, coreAccount }: Input): Output {
-  const ethereumLikeAccount = core.EthereumLikeAccount.fromCoreAccount(
+  const ethereumLikeAccount = core.Ethereum.fromCoreAccount(
     coreAccount
   );
   invariant(ethereumLikeAccount, "ethereum account expected");

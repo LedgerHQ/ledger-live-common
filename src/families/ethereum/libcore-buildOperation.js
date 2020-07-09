@@ -62,7 +62,7 @@ async function ethereumBuildOperation(
   },
   partialOp: $Shape<Operation>
 ) {
-  const ethereumLikeOperation = core.EthereumLikeOperation.fromCoreOperation(
+  const ethereumLikeOperation = core.Ethereum.fromCoreOperation(
     coreOperation
   );
   invariant(ethereumLikeOperation, "ethereum operation expected");

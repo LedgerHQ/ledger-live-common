@@ -18,7 +18,7 @@ type Output = Promise<NetworkInfo>;
 const speeds = ["high", "standard", "low"];
 
 async function bitcoin({ core, coreAccount }: Input): Output {
-  const bitcoinLikeAccount = core.RippleLikeAccount.fromCoreAccount(
+  const bitcoinLikeAccount = core.Ripple.fromCoreAccount(
     coreAccount
   );
   invariant(bitcoinLikeAccount, "bitcoin account expected");

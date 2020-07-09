@@ -10,6 +10,7 @@ import type {
   CoreAccount,
   CoreAmount,
   CoreBigInt,
+  CoreOperation,
   CoreServices,
   CoreWalletStore,
   OperationType,
@@ -27,10 +28,14 @@ export type EthereumGasLimitRequest = {
 };
 
 declare class CoreEthereum {
-  registerInto(
+  static registerInto(
     services: CoreServices,
     walletStore: CoreWalletStore
   ): Promise<void>;
+  static fromCoreAccount(coreAccount: CoreAccount): ?CoreEthereumLikeAccount;
+  static fromCoreOperation(
+    coreOperation: CoreOperation
+  ): ?CoreEthereumLikeOperation;
 }
 
 declare class CoreEthereumLikeAddress {
@@ -60,9 +65,6 @@ declare class CoreInternalTransaction {
 }
 
 declare class CoreEthereumLikeOperation {
-  static fromCoreOperation(
-    coreOperation: CoreOperation
-  ): ?CoreEthereumLikeOperation;
   getTransaction(): Promise<CoreEthereumLikeTransaction>;
   getInternalTransactions(): Promise<CoreInternalTransaction[]>;
 }
@@ -77,7 +79,6 @@ declare class CoreEthereumLikeTransactionBuilder {
 }
 
 declare class CoreEthereumLikeAccount {
-  static fromCoreAccount(coreAccount: CoreAccount): ?CoreEthereumLikeAccount;
   getERC20Accounts(): Promise<CoreERC20LikeAccount[]>;
   buildTransaction(): Promise<CoreEthereumLikeTransactionBuilder>;
   broadcastRawTransaction(signed: string): Promise<string>;
@@ -176,7 +177,9 @@ export type TransactionRaw = {|
 export const reflect = (declare: (string, Spec) => void) => {
   declare("Ethereum", {
     methods: {
-      registerInto: {}
+      registerInto: {},
+      fromCoreAccount: {},
+      fromCoreOperation: {}
     }
   });
 

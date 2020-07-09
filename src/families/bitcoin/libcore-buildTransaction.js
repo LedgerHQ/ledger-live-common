@@ -29,7 +29,7 @@ async function bitcoinBuildTransaction({
   isPartial: boolean,
   isCancelled: () => boolean,
 }): Promise<?CoreBitcoinLikeTransaction> {
-  const bitcoinLikeAccount = core.BitcoinLikeAccount.fromCoreAccount(
+  const bitcoinLikeAccount = core.Bitcoin.fromCoreAccount(
     coreAccount
   );
   invariant(bitcoinLikeAccount, "bitcoin account expected");

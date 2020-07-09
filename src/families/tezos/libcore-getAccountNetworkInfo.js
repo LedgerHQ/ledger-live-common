@@ -15,7 +15,7 @@ type Input = {
 type Output = Promise<NetworkInfo>;
 
 async function tezos({ core, coreAccount }: Input): Output {
-  const tezosLikeAccount: CoreTezosLikeAccount = await new core.Tezos().fromCoreAccount(
+  const tezosLikeAccount = core.Tezos.fromCoreAccount(
     coreAccount
   );
   invariant(tezosLikeAccount, "tezos account expected");

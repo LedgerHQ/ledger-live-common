@@ -14,14 +14,14 @@ import type {
 } from "../../libcore/types";
 
 declare class CoreTezos {
-  registerInto(
+  static registerInto(
     services: CoreServices,
     walletStore: CoreWalletStore
   ): Promise<void>;
-  fromCoreAccount(coreAccount: CoreAccount): Promise<?CoreTezosLikeAccount>;
-  fromCoreOperation(
+  static fromCoreAccount(coreAccount: CoreAccount): ?CoreTezosLikeAccount;
+  static fromCoreOperation(
     coreOperation: CoreOperation
-  ): Promise<?CoreTezosLikeOperation>;
+  ): ?CoreTezosLikeOperation;
 }
 
 import type {

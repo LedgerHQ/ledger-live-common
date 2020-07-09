@@ -81,7 +81,7 @@ async function ethereumBuildTokenAccounts({
   const { blacklistedTokenIds = [] } = syncConfig;
   if (listTokensForCryptoCurrency(currency).length === 0) return undefined;
   const tokenAccounts = [];
-  const ethAccount: CoreEthereumLikeAccount = core.EthereumLikeAccount.fromCoreAccount(
+  const ethAccount = core.Ethereum.fromCoreAccount(
     coreAccount
   );
   invariant(ethAccount, "ethereum account expected");

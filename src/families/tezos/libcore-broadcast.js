@@ -9,7 +9,7 @@ async function broadcast({
   coreAccount,
   signedOperation: { operation, signature },
 }): Promise<Operation> {
-  const tezosLikeAccount = await new core.Tezos().fromCoreAccount(coreAccount);
+  const tezosLikeAccount = core.Tezos.fromCoreAccount(coreAccount);
   invariant(tezosLikeAccount, "tezos account expected");
   const hash = await tezosLikeAccount.broadcastRawTransaction(signature);
   return patchOperationWithHash(operation, hash);

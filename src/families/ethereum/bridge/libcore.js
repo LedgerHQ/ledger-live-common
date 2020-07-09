@@ -149,7 +149,7 @@ const estimateGasLimitForERC20 = makeLRUCache(
   (account: Account, addr: string) =>
     withLibcore(async core => {
       const { coreAccount } = await getCoreAccount(core, account);
-      const ethereumLikeAccount = core.CoreEthereumLikeAccount.fromCoreAccount(
+      const ethereumLikeAccount = core.Ethereum.fromCoreAccount(
         coreAccount
       );
       invariant(ethereumLikeAccount, "ethereum account expected");

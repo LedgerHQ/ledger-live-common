@@ -20,8 +20,8 @@ export const isValidRecipient: F = withLibcoreF((core) => async (arg) => {
     const res = await custom(core, arg);
     return res;
   }
-  const poolInstance = core.getPoolInstance();
-  const currencyCore = await poolInstance.getCurrency(currency.id);
+  const walletStore = core.getWalletStore();
+  const currencyCore = await walletStore.getCurrency(currency.id);
   const value = await core.Address.isValid(recipient, currencyCore);
   if (value) {
     return Promise.resolve(null);

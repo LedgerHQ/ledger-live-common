@@ -55,14 +55,14 @@ export type BitcoinResourcesRaw = {
 };
 
 declare class CoreBitcoin {
-  registerInto(
+  static registerInto(
     services: CoreServices,
     walletStore: CoreWalletStore
   ): Promise<void>;
-  fromCoreAccount(coreAccount: CoreAccount): Promise<?CoreBitcoinLikeAccount>;
-  fromCoreOperation(
+  static fromCoreAccount(coreAccount: CoreAccount): ?CoreBitcoinLikeAccount;
+  static fromCoreOperation(
     coreOperation: CoreOperation
-  ): Promise<?CoreBitcoinLikeOperation>;
+  ): ?CoreBitcoinLikeOperation;
 }
 
 declare class CoreBitcoinLikeInput {

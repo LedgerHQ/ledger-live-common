@@ -167,7 +167,7 @@ export default (arg: { getNativeModule: (id: string) => any }) => {
     const rng = await cs.RandomNumberGenerator.newInstance();
     const backend = await cs.DatabaseBackend.getSqlite3Backend();
     const walletDynObject = await cs.DynamicObject.newInstance();
-    const walletPoolInstance = await cs.WalletPool.newInstance(
+    const services = await cs.Services.newInstance(
       "ledgerlive",
       "",
       httpClient,
@@ -179,6 +179,7 @@ export default (arg: { getNativeModule: (id: string) => any }) => {
       backend,
       walletDynObject
     );
+    const walletStore = await cs.WalletStore.newInstance(services);
 
     // $FlowFixMe
     const core: Core = {
@@ -186,7 +187,9 @@ export default (arg: { getNativeModule: (id: string) => any }) => {
 
       flush: () => Promise.all(flushes.map((f) => f())).then(() => undefined),
 
-      getPoolInstance: () => walletPoolInstance,
+      getServices: () => services,
+
+      getWalletStore: () => walletStore,
 
       getThreadDispatcher: () => threadDispatcher,
     };

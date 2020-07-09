@@ -10,7 +10,7 @@ async function bitcoinBuildOperation({
   core: Core,
   coreOperation: CoreOperation
 }) {
-  const bitcoinLikeOperation = core.BitcoinLikeOperation.fromCoreOperation(
+  const bitcoinLikeOperation = core.Bitcoin.fromCoreOperation(
     coreOperation
   );
   invariant(bitcoinLikeOperation, "bitcoin operation expected");

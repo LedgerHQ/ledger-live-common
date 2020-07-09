@@ -8,7 +8,7 @@ async function broadcast({
   coreAccount,
   signedOperation: { operation, signature },
 }) {
-  const ethereumLikeAccount = core.EthereumLikeAccount.fromCoreAccount(
+  const ethereumLikeAccount = core.Ethereum.fromCoreAccount(
     coreAccount
   );
   invariant(ethereumLikeAccount, "ethereum account expected");
