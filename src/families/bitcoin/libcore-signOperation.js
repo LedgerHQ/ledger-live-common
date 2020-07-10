@@ -187,6 +187,7 @@ async function signTransaction({
     onDeviceSignatureGranted,
     onDeviceSignatureRequested,
     onDeviceStreaming,
+    useTrustedInputForSegwit: true, //FIXME pass this through a tx param or something
   });
 
   const sendersInput = await coreTransaction.getInputs();
