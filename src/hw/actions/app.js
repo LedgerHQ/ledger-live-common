@@ -8,6 +8,8 @@ import {
   catchError,
   switchMap,
   tap,
+  first,
+  delay,
 } from "rxjs/operators";
 import { useEffect, useCallback, useState, useMemo } from "react";
 import { log } from "@ledgerhq/logs";
@@ -212,6 +214,42 @@ function inferCommandParams(appRequest: AppRequest) {
   };
 }
 
+const pollingRec = (a) =>
+  // this step gets interrupt as soon as we have a "opened" state
+  a.deviceSubject.pipe(
+    first(), // take first device (actually it's latest since it's a subject)
+    switchMap((device) =>
+      concat(
+        a.connectApp(device, a.params), // and try one connect app step
+        of().pipe(delay(2200)), // wait before polling again
+        pollingRec(a)
+      )
+    )
+  );
+
+const implementations = {
+  // in this paradigm, we know that deviceSubject is reflecting the device events
+  // so we just trust deviceSubject to reflect the device context (switch between apps, dashboard,...)
+  event: ({ deviceSubject, connectApp, params }) =>
+    deviceSubject.pipe(
+      // debounce a bit the connect/disconnect event that we don't need
+      debounceTime(1000),
+      // each time there is a device change, we pipe to the command
+      switchMap((device) => connectApp(device, params))
+    ),
+
+  // in this paradigm, we can't observe directly the device, so we have to poll it
+  polling: (a) => pollingRec(a),
+  // TODO because of deviceChange it doesn't get just one event through so can't work, we need to ask ourself if we want to have deviceChange only in events based mode
+  //.pipe(distinctUntilChanged(isEqual)),
+};
+
+let currentMode: $Keys<typeof implementations> = "event";
+
+export function setDeviceMode(mode: $Keys<typeof implementations>) {
+  currentMode = mode;
+}
+
 export const createAction = (
   connectAppExec: (ConnectAppInput) => Observable<ConnectAppEvent>
 ): AppAction => {
@@ -230,7 +268,6 @@ export const createAction = (
   const useHook = (device: ?Device, appRequest: AppRequest): AppState => {
     // repair modal will interrupt everything and be rendered instead of the background content
     const [state, setState] = useState(() => getInitialState(device));
-    const [resetIndex, setResetIndex] = useState(0);
     const deviceSubject = useReplaySubject(device);
 
     const params = useMemo(
@@ -247,12 +284,10 @@ export const createAction = (
     );
 
     useEffect(() => {
-      const sub = deviceSubject
+      if (state.opened) return;
+      const impl = implementations[currentMode];
+      const sub = impl({ deviceSubject, connectApp, params })
         .pipe(
-          // debounce a bit the connect/disconnect event that we don't need
-          debounceTime(1000),
-          // each time there is a device change, we pipe to the command
-          switchMap((device) => connectApp(device, params)),
           tap((e) => log("actions-app-event", e.type, e)),
           // tap(e => console.log("connectApp event", e)),
           // we gather all events with a reducer into the UI state
@@ -274,11 +309,11 @@ export const createAction = (
       return () => {
         sub.unsubscribe();
       };
-    }, [params, deviceSubject, resetIndex]);
+    }, [params, deviceSubject, state.opened]);
 
     const onRetry = useCallback(() => {
-      setResetIndex((currIndex) => currIndex + 1);
-    }, []);
+      setState(getInitialState(device));
+    }, [device]);
 
     const passWarning = useCallback(() => {
       setState((currState) => ({
