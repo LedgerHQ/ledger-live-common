@@ -37,7 +37,8 @@ const initSwap: InitSwap = (
   exchange: Exchange,
   exchangeRate: ExchangeRate,
   transaction: Transaction,
-  deviceId: string
+  deviceId: string,
+  cli?: boolean
 ): Observable<SwapRequestEvent> => {
   if (getEnv("MOCK")) return mockInitSwap(exchange, exchangeRate, deviceId);
   //return withDevice(deviceId)((transport) =>
@@ -205,7 +206,10 @@ const initSwap: InitSwap = (
           refundAddressParameters.addressParameters
         );
         if (unsubscribed) return;
-
+        if (cli) {
+          console.log("in cli mode, sending signCoinTransaction from inside");
+          await swap.signCoinTransaction();
+        }
         unsafeSwap = swap;
       });
 
@@ -213,7 +217,9 @@ const initSwap: InitSwap = (
 
       // signCoinTransaction disconnects the transport so we need it outside of withDevice
       // and wait some delay to give time for the device to switch to the signing application
-      await unsafeSwap.signCoinTransaction().catch(() => {});
+      if (!cli) {
+        await unsafeSwap.signCoinTransaction().catch((_) => {});
+      }
       log("swap", "awaiting device disconnection");
       await delay(3000);
 

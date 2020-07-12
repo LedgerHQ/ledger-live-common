@@ -58,7 +58,8 @@ export type InitSwap = (
   exchange: Exchange,
   exchangeRate: ExchangeRate,
   transaction: Transaction,
-  deviceId: string
+  deviceId: string,
+  cli?: boolean
 ) => Observable<SwapRequestEvent>;
 
 export type SwapCurrencyNameAndSignature = {

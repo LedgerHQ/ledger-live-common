@@ -33,7 +33,7 @@ import receive from "./commands/receive";
 import repl from "./commands/repl";
 import send from "./commands/send";
 import signMessage from "./commands/signMessage";
-import swaptest from "./commands/swaptest";
+import swap from "./commands/swap";
 import sync from "./commands/sync";
 import testDetectOpCollision from "./commands/testDetectOpCollision";
 import testGetTrustedInputFromTxHash from "./commands/testGetTrustedInputFromTxHash";
@@ -76,7 +76,7 @@ export default {
   repl,
   send,
   signMessage,
-  swaptest,
+  swap,
   sync,
   testDetectOpCollision,
   testGetTrustedInputFromTxHash,
