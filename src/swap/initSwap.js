@@ -37,15 +37,15 @@ const initSwap: InitSwap = (
   exchange: Exchange,
   exchangeRate: ExchangeRate,
   transaction: Transaction,
-  deviceId: string,
-  cli?: boolean
+  deviceId: string
 ): Observable<SwapRequestEvent> => {
   if (getEnv("MOCK")) return mockInitSwap(exchange, exchangeRate, deviceId);
   return Observable.create((o) => {
     let unsubscribed = false;
     const confirmSwap = async () => {
-      let unsafeSwap;
       let swapId;
+      let ignoreTransportError;
+
       await withDevicePromise(deviceId, async (transport) => {
         const swap = new Swap(transport);
         // NB this id is crucial to prevent replay attacks, if it changes
@@ -205,19 +205,15 @@ const initSwap: InitSwap = (
           refundAddressParameters.addressParameters
         );
         if (unsubscribed) return;
-        if (cli) {
-          await swap.signCoinTransaction();
-        }
-        unsafeSwap = swap;
+        ignoreTransportError = true;
+        await swap.signCoinTransaction();
+      }).catch((e) => {
+        if (ignoreTransportError) return;
+        throw e;
       });
 
-      if (!unsafeSwap || !swapId) return;
+      if (!swapId) return;
 
-      // signCoinTransaction disconnects the transport so we need it outside of withDevice
-      // and wait some delay to give time for the device to switch to the signing application
-      if (!cli) {
-        await unsafeSwap.signCoinTransaction().catch((_) => {});
-      }
       log("swap", "awaiting device disconnection");
       await delay(3000);
 
