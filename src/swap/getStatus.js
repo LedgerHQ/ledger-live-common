@@ -25,11 +25,7 @@ export const getMultipleStatus: GetMultipleStatus = async (statusList) => {
     data: statusList,
   });
 
-  return res.data.map(({ swapId, provider, status }) => ({
-    swapId,
-    provider,
-    status,
-  }));
+  return res.data;
 };
 
 export default getStatus;

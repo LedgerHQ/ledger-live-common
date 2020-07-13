@@ -28,13 +28,11 @@ const getSerializedAddressParameters = (
     format
   );
 
-  console.log("bip32asBuffer on", { path, format });
   const buffer = bip32asBuffer(path);
   const addressParameters = Buffer.concat([
     Buffer.from([addressFormatMap[format]]),
     buffer,
   ]);
-  console.log(addressParameters.toString("hex"));
   return { addressParameters };
 };
 

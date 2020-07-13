@@ -41,7 +41,6 @@ const initSwap: InitSwap = (
   cli?: boolean
 ): Observable<SwapRequestEvent> => {
   if (getEnv("MOCK")) return mockInitSwap(exchange, exchangeRate, deviceId);
-  //return withDevice(deviceId)((transport) =>
   return Observable.create((o) => {
     let unsubscribed = false;
     const confirmSwap = async () => {
@@ -207,7 +206,6 @@ const initSwap: InitSwap = (
         );
         if (unsubscribed) return;
         if (cli) {
-          console.log("in cli mode, sending signCoinTransaction from inside");
           await swap.signCoinTransaction();
         }
         unsafeSwap = swap;

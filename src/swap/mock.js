@@ -61,6 +61,12 @@ export const mockInitSwap = (
     feePerByte: BigNumber(10),
     networkInfo: null,
     useAllAmount: false,
+    rbf: false,
+    utxoStrategy: {
+      strategy: 0,
+      pickUnconfirmedRBF: false,
+      excludeUTXOs: [],
+    },
   };
 
   return of({

@@ -15,8 +15,9 @@ const SIGN_COIN_TRANSACTION: number = 0x0a;
 
 const maybeThrowProtocolError = (result: Buffer): void => {
   invariant(result.length >= 2, "SwapTransport: Unexpected result length");
-  if (result.readUInt16BE(result.length - 2) !== 0x9000) {
-    throw new TransportStatusError(result.readUInt16BE(result.length - 2));
+  const resultCode = result.readUInt16BE(result.length - 2);
+  if (resultCode !== 0x9000) {
+    throw new TransportStatusError(resultCode);
   }
 };
 
@@ -49,7 +50,6 @@ export default class Swap {
       this.allowedStatuses
     );
     maybeThrowProtocolError(result);
-    // invariant(result.length === 12, "APDU response length should be 12");
 
     return result.toString("ascii", 0, 10);
   }

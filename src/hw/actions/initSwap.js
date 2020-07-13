@@ -143,7 +143,6 @@ export const createAction = (
         .pipe(
           tap((e) => {
             log("actions-initSwap-event", e.type, e);
-            console.log("actions-initSwap-event", e.type, e);
           }),
           catchError((error) =>
             of({
@@ -156,7 +155,6 @@ export const createAction = (
         .subscribe(setState);
 
       return () => {
-        console.log("exiting the useeffect code, and ruining everything");
         sub.unsubscribe();
       };
     }, [exchange, exchangeRate, transaction, device, opened]);

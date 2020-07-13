@@ -7,7 +7,6 @@ import type {
   AccountRaw,
   Operation,
   Transaction,
-  TransactionRaw,
   Currency,
 } from "../types";
 import { Observable } from "rxjs";
