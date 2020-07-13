@@ -120,28 +120,67 @@ const reducer = (state: State, e: Event): State => {
 
     case "ask-open-app":
       return {
-        ...state,
+        isLoading: false,
+        requestQuitApp: false,
+        requiresAppInstallation: null,
+        allowOpeningRequestedWording: null,
+        allowOpeningGranted: false,
+        device: state.device,
+        opened: false,
+        appAndVersion: null,
+        error: null,
+        derivation: null,
+        displayUpgradeWarning: false,
         unresponsive: false,
         requestOpenApp: e.appName,
       };
 
     case "ask-quit-app":
       return {
-        ...state,
+        isLoading: false,
+        requestOpenApp: null,
+        requiresAppInstallation: null,
+        allowOpeningRequestedWording: null,
+        allowOpeningGranted: false,
+        device: state.device,
+        opened: false,
+        appAndVersion: null,
+        error: null,
+        derivation: null,
+        displayUpgradeWarning: false,
         unresponsive: false,
         requestQuitApp: true,
       };
 
     case "device-permission-requested":
       return {
-        ...state,
+        isLoading: false,
+        requestQuitApp: false,
+        requestOpenApp: null,
+        requiresAppInstallation: null,
+        allowOpeningGranted: false,
+        device: state.device,
+        opened: false,
+        appAndVersion: null,
+        error: null,
+        derivation: null,
+        displayUpgradeWarning: false,
         unresponsive: false,
         allowOpeningRequestedWording: e.wording,
       };
 
     case "device-permission-granted":
       return {
-        ...state,
+        isLoading: false,
+        requestQuitApp: false,
+        requestOpenApp: null,
+        requiresAppInstallation: null,
+        device: state.device,
+        opened: false,
+        appAndVersion: null,
+        error: null,
+        derivation: null,
+        displayUpgradeWarning: false,
         unresponsive: false,
         allowOpeningRequestedWording: null,
         allowOpeningGranted: true,
@@ -149,7 +188,15 @@ const reducer = (state: State, e: Event): State => {
 
     case "app-not-installed":
       return {
-        ...state,
+        requestQuitApp: false,
+        requestOpenApp: null,
+        allowOpeningGranted: false,
+        device: state.device,
+        opened: false,
+        appAndVersion: null,
+        error: null,
+        derivation: null,
+        displayUpgradeWarning: false,
         isLoading: false,
         unresponsive: false,
         allowOpeningRequestedWording: null,
@@ -158,7 +205,13 @@ const reducer = (state: State, e: Event): State => {
 
     case "opened":
       return {
-        ...state,
+        requestQuitApp: false,
+        requestOpenApp: null,
+        requiresAppInstallation: null,
+        allowOpeningRequestedWording: null,
+        allowOpeningGranted: false,
+        device: state.device,
+        error: null,
         isLoading: false,
         unresponsive: false,
         opened: true,
