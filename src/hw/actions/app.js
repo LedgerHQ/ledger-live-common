@@ -113,6 +113,7 @@ const reducer = (state: State, e: Event): State => {
     case "error":
       return {
         ...getInitialState(e.device),
+        device: e.device || null,
         error: e.error,
         isLoading: false,
       };
