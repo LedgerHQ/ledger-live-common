@@ -67,7 +67,7 @@ export type AppResult = {|
 type AppAction = Action<AppRequest, AppState, AppResult>;
 
 type Event =
-  | { type: "error", error: Error }
+  | { type: "error", error: Error, device?: ?Device }
   | { type: "deviceChange", device: ?Device }
   | ConnectAppEvent
   | { type: "display-upgrade-warning", displayUpgradeWarning: boolean };
@@ -112,7 +112,7 @@ const reducer = (state: State, e: Event): State => {
 
     case "error":
       return {
-        ...getInitialState(),
+        ...getInitialState(e.device),
         error: e.error,
         isLoading: false,
       };
@@ -251,7 +251,11 @@ const implementations = {
         }
         connectSub = connectApp(device, params).subscribe({
           next: (event) => {
-            o.next(event);
+            if (event.type === "error") {
+              o.next({ ...event, device });
+            } else {
+              o.next(event);
+            }
           },
           complete: () => {
             timeout = setTimeout(loop, POLLING);
