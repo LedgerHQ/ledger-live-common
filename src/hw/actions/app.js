@@ -8,9 +8,9 @@ import {
   catchError,
   switchMap,
   tap,
-  first,
-  delay,
+  distinctUntilChanged,
 } from "rxjs/operators";
+import isEqual from "lodash/isEqual";
 import { useEffect, useCallback, useState, useMemo } from "react";
 import { log } from "@ledgerhq/logs";
 import {
@@ -214,18 +214,7 @@ function inferCommandParams(appRequest: AppRequest) {
   };
 }
 
-const pollingRec = (a) =>
-  // this step gets interrupt as soon as we have a "opened" state
-  a.deviceSubject.pipe(
-    first(), // take first device (actually it's latest since it's a subject)
-    switchMap((device) =>
-      concat(
-        a.connectApp(device, a.params), // and try one connect app step
-        of().pipe(delay(2200)), // wait before polling again
-        pollingRec(a)
-      )
-    )
-  );
+const POLLING = 1000;
 
 const implementations = {
   // in this paradigm, we know that deviceSubject is reflecting the device events
@@ -235,13 +224,53 @@ const implementations = {
       // debounce a bit the connect/disconnect event that we don't need
       debounceTime(1000),
       // each time there is a device change, we pipe to the command
-      switchMap((device) => connectApp(device, params))
+      switchMap((device) =>
+        concat(of({ type: "deviceChange", device }), connectApp(device, params))
+      )
     ),
 
   // in this paradigm, we can't observe directly the device, so we have to poll it
-  polling: (a) => pollingRec(a),
-  // TODO because of deviceChange it doesn't get just one event through so can't work, we need to ask ourself if we want to have deviceChange only in events based mode
-  //.pipe(distinctUntilChanged(isEqual)),
+  polling: ({ deviceSubject, params, connectApp }) =>
+    Observable.create((o) => {
+      let device;
+      const sub = deviceSubject.subscribe((d) => {
+        device = d;
+        o.next({ type: "deviceChange", device });
+      });
+
+      let connectSub;
+      let finished;
+      let timeout;
+      function loop() {
+        if (finished) {
+          return;
+        }
+        if (!device) {
+          timeout = setTimeout(loop, POLLING);
+          return;
+        }
+        connectSub = connectApp(device, params).subscribe({
+          next: (event) => {
+            o.next(event);
+          },
+          complete: () => {
+            timeout = setTimeout(loop, POLLING);
+          },
+          error: (e) => {
+            o.error(e);
+          },
+        });
+      }
+
+      timeout = setTimeout(loop, POLLING);
+
+      return () => {
+        if (connectSub) connectSub.unsubscribe();
+        sub.unsubscribe();
+        finished = true;
+        clearTimeout(timeout);
+      };
+    }).pipe(distinctUntilChanged(isEqual)),
 };
 
 let currentMode: $Keys<typeof implementations> = "event";
@@ -254,16 +283,13 @@ export const createAction = (
   connectAppExec: (ConnectAppInput) => Observable<ConnectAppEvent>
 ): AppAction => {
   const connectApp = (device, params) =>
-    concat(
-      of({ type: "deviceChange", device }),
-      !device
-        ? empty()
-        : connectAppExec({
-            modelId: device.modelId,
-            devicePath: device.deviceId,
-            ...params,
-          }).pipe(catchError((error: Error) => of({ type: "error", error })))
-    );
+    !device
+      ? empty()
+      : connectAppExec({
+          modelId: device.modelId,
+          devicePath: device.deviceId,
+          ...params,
+        }).pipe(catchError((error: Error) => of({ type: "error", error })));
 
   const useHook = (device: ?Device, appRequest: AppRequest): AppState => {
     // repair modal will interrupt everything and be rendered instead of the background content
