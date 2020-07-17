@@ -3,10 +3,9 @@
 import type { AccountLike } from "../types";
 import type { SwapHistorySection, SwapOperation } from "./types";
 
-const getSwapOperationMap = (
-  account: AccountLike,
-  accounts: AccountLike[]
-) => async (swapOperation: SwapOperation) => {
+const getSwapOperationMap = (account: AccountLike, accounts: AccountLike[]) => (
+  swapOperation: SwapOperation
+) => {
   const {
     provider,
     swapId,
@@ -38,15 +37,15 @@ function startOfDay(t) {
   return new Date(t.getFullYear(), t.getMonth(), t.getDate());
 }
 
-const getCompleteSwapHistory = async (
+const getCompleteSwapHistory = (
   accounts: AccountLike[]
-): Promise<SwapHistorySection[]> => {
+): SwapHistorySection[] => {
   const swaps = [];
   for (const account of accounts) {
     const { swapHistory } = account;
     const mapFn = getSwapOperationMap(account, accounts);
     if (swapHistory) {
-      const mappedSwapHistory = await Promise.all(swapHistory.map(mapFn));
+      const mappedSwapHistory = swapHistory.map(mapFn);
 
       if (mappedSwapHistory) {
         swaps.push(...mappedSwapHistory.filter(Boolean));

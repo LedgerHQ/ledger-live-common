@@ -3,6 +3,8 @@
 
 import { BigNumber } from "bignumber.js";
 import compressjs from "@ledgerhq/compressjs";
+import type { SwapOperation, SwapOperationRaw } from "./swap/types";
+import { toSwapOperationRaw, fromSwapOperationRaw } from "./account/serialization";
 import type { Account, CryptoCurrencyIds } from "./types";
 import {
   runDerivationScheme,
@@ -21,6 +23,7 @@ export type AccountData = {
   name: string,
   index: number,
   balance: string,
+  swapHistory: SwapOperationRaw[],
 };
 
 export type CryptoSettings = {
@@ -110,6 +113,7 @@ const asResultAccount = (unsafe: mixed): AccountData => {
     name,
     index,
     balance,
+    swapHistory,
   } = unsafe;
   if (typeof id !== "string") {
     throw new Error("invalid account.id");
@@ -132,6 +136,20 @@ const asResultAccount = (unsafe: mixed): AccountData => {
   if (typeof balance !== "string") {
     throw new Error("invalid account.balance");
   }
+
+  if (swapHistory && Array.isArray(swapHistory)) {
+    for (let s of swapHistory) {
+      if (s && typeof s === "object") {
+        for (let k in s) {
+          const v = s[k];
+          if (v && typeof v !== "string") {
+            throw new Error(`invalid account.swapHistory.${k}`);
+          }
+        }
+      }
+    }
+  }
+
   const o: AccountData = {
     id,
     currencyId,
@@ -140,6 +158,8 @@ const asResultAccount = (unsafe: mixed): AccountData => {
     name,
     index,
     balance,
+    // $FlowFixMe No idea how to make flow like this
+    swapHistory,
   };
   if (typeof freshAddress === "string" && freshAddress) {
     o.freshAddress = freshAddress;
@@ -245,6 +265,7 @@ export function accountToAccountData({
   currency,
   index,
   balance,
+  swapHistory,
 }: Account): AccountData {
   return {
     id,
@@ -255,6 +276,7 @@ export function accountToAccountData({
     currencyId: currency.id,
     index,
     balance: balance.toString(),
+    swapHistory: (swapHistory || []).map(toSwapOperationRaw),
   };
 }
 
@@ -270,6 +292,7 @@ export const accountDataToAccount = ({
   balance,
   derivationMode: derivationModeStr,
   seedIdentifier,
+  swapHistory,
 }: AccountData): Account => {
   const { type, xpubOrAddress } = decodeAccountId(id); // TODO rename in AccountId xpubOrAddress
   const derivationMode = asDerivationMode(derivationModeStr);
@@ -306,6 +329,7 @@ export const accountDataToAccount = ({
     index,
     freshAddress,
     freshAddressPath,
+    swapHistory: swapHistory.map(fromSwapOperationRaw),
     // these fields will be completed as we will sync
     freshAddresses: [],
     blockHeight: 0,
