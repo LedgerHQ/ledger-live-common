@@ -174,11 +174,6 @@ const initSwap: InitSwap = (
           signature: payoutAddressConfigSignature,
         } = getCurrencySwapConfig(payoutCurrency);
 
-        console.log({
-          payoutAddressConfig,
-          payoutAddressConfigSignature,
-          payoutAddressParameters: payoutAddressParameters.addressParameters,
-        });
         await swap.checkPayoutAddress(
           payoutAddressConfig,
           payoutAddressConfigSignature,
