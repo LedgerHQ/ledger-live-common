@@ -3,8 +3,11 @@
 
 import { BigNumber } from "bignumber.js";
 import compressjs from "@ledgerhq/compressjs";
-import type { SwapOperation, SwapOperationRaw } from "./swap/types";
-import { toSwapOperationRaw, fromSwapOperationRaw } from "./account/serialization";
+import type { SwapOperationRaw } from "./swap/types";
+import {
+  toSwapOperationRaw,
+  fromSwapOperationRaw,
+} from "./account/serialization";
 import type { Account, CryptoCurrencyIds } from "./types";
 import {
   runDerivationScheme,
