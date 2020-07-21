@@ -107,7 +107,7 @@ const exec = async (opts: SwapJobOpts) => {
   if (tokenId2) {
     console.log("using token for toAccount");
     const token = findTokenById(tokenId2);
-    console.log({token})
+    console.log({ token });
     invariant(token, `No token currency found with id ${tokenId2}`);
     const subAccounts =
       accountWithMandatoryTokens(toAccount, [token]).subAccounts || [];
@@ -176,7 +176,7 @@ const exec = async (opts: SwapJobOpts) => {
   console.log(
     "Giving the device some time to switch to the currency app for signing"
   );
-  await delay(20000);
+  await delay(10000);
   const mainFromAccount = getMainAccount(fromAccount, fromParentAccount);
   const signedOperation = await bridge
     .signOperation({

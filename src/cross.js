@@ -140,13 +140,15 @@ const asResultAccount = (unsafe: mixed): AccountData => {
     throw new Error("invalid account.balance");
   }
 
+  let invalidSwapHistory = false;
   if (swapHistory && Array.isArray(swapHistory)) {
     for (let s of swapHistory) {
+      if (invalidSwapHistory) break;
       if (s && typeof s === "object") {
         for (let k in s) {
           const v = s[k];
           if (v && typeof v !== "string") {
-            throw new Error(`invalid account.swapHistory.${k}`);
+            invalidSwapHistory = true;
           }
         }
       }
@@ -162,7 +164,7 @@ const asResultAccount = (unsafe: mixed): AccountData => {
     index,
     balance,
     // $FlowFixMe No idea how to make flow like this
-    swapHistory,
+    swapHistory: invalidSwapHistory ? [] : swapHistory,
   };
   if (typeof freshAddress === "string" && freshAddress) {
     o.freshAddress = freshAddress;
