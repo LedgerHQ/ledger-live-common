@@ -16,6 +16,11 @@ export type OperationType =
   | "VOTE"
   | "REWARD"
   | "FEES"
+
+  // COMPOUND TYPE OPERATIONS
+  | "SUPPLY"
+  | "REDEEM"
+  | "APPROVE"
   | "OPT_IN"
   | "OPT_OUT"
   | "CLOSE_ACCOUNT"
