@@ -14,6 +14,7 @@ import type {
   AccountLike,
   Operation,
   CryptoCurrency,
+  TokenCurrency,
 } from "../types";
 import { getOperationAmountNumber } from "../operation";
 import { inferSubOperations } from "../account";
@@ -290,20 +291,22 @@ type GenAccountOptions = {
 
 function genTokenAccount(
   index: number,
-  account: Account
+  account: Account,
+  token?: TokenCurrency
 ): $Exact<TokenAccount> {
   const rng = new Prando(account.id + "|" + index);
+
   const tokens = listTokensForCryptoCurrency(account.currency).filter((t) =>
     hardcodedMarketcap.includes(t.id)
   );
-  const token = rng.nextArrayItem(tokens);
+  const tkn = token || rng.nextArrayItem(tokens);
 
   const tokenAccount = {
     type: "TokenAccount",
     starred: false,
     id: account.id + "|" + index,
     parentId: account.id,
-    token,
+    token: tkn,
     operationsCount: 0,
     operations: [],
     pendingOperations: [],
@@ -420,6 +423,19 @@ export function genAccount(
     account.subAccounts = Array(tokenCount)
       .fill(null)
       .map((_, i) => genTokenAccount(i, account));
+  }
+
+  if (["ethereum"].includes(currency.id)) {
+    const token = listTokensForCryptoCurrency(account.currency).find(
+      (tkn) => tkn.id === "ethereum/erc20/dai_stablecoin_v2_0"
+    );
+
+    const length = account?.subAccounts?.length;
+    if (length) {
+      account?.subAccounts?.push(genTokenAccount(length - 1, account, token));
+    } else {
+      account.subAccounts = [genTokenAccount(0, account, token)];
+    }
   }
 
   account.operations = Array(operationsSize)
