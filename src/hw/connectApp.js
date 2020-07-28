@@ -8,8 +8,6 @@ import {
   UserRefusedOnDevice,
   BtcUnmatchedApp,
   UpdateYourApp,
-} from "@ledgerhq/errors";
-import {
   DisconnectedDeviceDuringOperation,
   DisconnectedDevice,
 } from "@ledgerhq/errors";
