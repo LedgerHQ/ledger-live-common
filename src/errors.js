@@ -130,3 +130,9 @@ export const SwapUnknownSwapId = createCustomErrorClass("SwapUnknownSwapId");
 export const SwapGenericAPIError = createCustomErrorClass(
   "SwapGenericAPIError"
 );
+
+export const AlgorandASANotOptInInRecipient = createCustomErrorClass(
+  "AlgorandASANotOptInInRecipient"
+);
+
+export const AlgorandNoAssetId = createCustomErrorClass("AlgorandNoAssetId");
