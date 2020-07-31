@@ -310,7 +310,7 @@ export function accountToAccountData({
     currencyId: currency.id,
     index,
     balance: balance.toString(),
-    swapHistory: (swapHistory || []).map(toSwapOperationRaw),
+    swapHistory: swapHistory.map(toSwapOperationRaw),
   };
 }
 

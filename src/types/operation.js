@@ -18,7 +18,9 @@ export type OperationType =
   | "FEES"
   | "OPT_IN"
   | "OPT_OUT"
-  | "CLOSE_ACCOUNT";
+  | "CLOSE_ACCOUNT"
+  | "SUPPLY"
+  | "REDEEM";
 
 export type Operation = {
   // unique identifier (usually hash)

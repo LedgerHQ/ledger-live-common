@@ -40,6 +40,7 @@ export type TokenAccount = {
   parentId: string,
   token: TokenCurrency,
   balance: BigNumber,
+  spendableBalance: BigNumber,
   creationDate: Date,
   operationsCount: number,
   operations: Operation[],
@@ -208,6 +209,7 @@ export type TokenAccountRaw = {
   operations: OperationRaw[],
   pendingOperations: OperationRaw[],
   balance: string,
+  spendableBalance?: string,
   balanceHistory?: BalanceHistoryRawMap,
   swapHistory?: SwapOperationRaw[],
 };

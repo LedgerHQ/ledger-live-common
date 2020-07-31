@@ -1,6 +1,7 @@
 // @flow
 import invariant from "invariant";
 import eip55 from "eip55";
+import { Buffer } from "buffer";
 import { BigNumber } from "bignumber.js";
 import { log } from "@ledgerhq/logs";
 import { NotEnoughBalance } from "@ledgerhq/errors";
@@ -30,7 +31,7 @@ export const formatTransaction = (
       (mainAccount.subAccounts || []).find((a) => a.id === t.subAccountId)) ||
     mainAccount;
   return `
-SEND ${
+${t.mode.toUpperCase()} ${
     t.useAllAmount
       ? "MAX"
       : formatCurrencyUnit(getAccountUnit(account), t.amount, {
@@ -56,6 +57,9 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const { networkInfo } = tr;
   return {
     ...common,
+    mode: tr.mode,
+    nonce: tr.nonce,
+    data: tr.data ? Buffer.from(tr.data, "hex") : undefined,
     family: tr.family,
     gasPrice: tr.gasPrice ? BigNumber(tr.gasPrice) : null,
     userGasLimit: tr.userGasLimit ? BigNumber(tr.userGasLimit) : null,
@@ -75,7 +79,10 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const { networkInfo } = t;
   return {
     ...common,
+    mode: t.mode,
+    nonce: t.nonce,
     family: t.family,
+    data: t.data ? t.data.toString("hex") : undefined,
     gasPrice: t.gasPrice ? t.gasPrice.toString() : null,
     userGasLimit: t.userGasLimit ? t.userGasLimit.toString() : null,
     estimatedGasLimit: t.estimatedGasLimit
@@ -94,7 +101,7 @@ const ethereumTransferMethodID = Buffer.from("a9059cbb", "hex");
 export function serializeTransactionData(
   account: Account,
   transaction: Transaction
-): ?Buffer {
+): ?typeof Buffer {
   const { subAccountId } = transaction;
   const subAccount = subAccountId
     ? account.subAccounts &&

@@ -298,7 +298,7 @@ function genTokenAccount(
   );
   const token = rng.nextArrayItem(tokens);
 
-  const tokenAccount = {
+  const tokenAccount: $Exact<TokenAccount> = {
     type: "TokenAccount",
     starred: false,
     id: account.id + "|" + index,
@@ -308,6 +308,7 @@ function genTokenAccount(
     operations: [],
     pendingOperations: [],
     balance: BigNumber(0),
+    spendableBalance: BigNumber(0),
     creationDate: new Date(),
     swapHistory: [],
   };
@@ -320,7 +321,9 @@ function genTokenAccount(
       return ops.concat(op);
     }, []);
   tokenAccount.operationsCount = tokenAccount.operations.length;
-  tokenAccount.balance = ensureNoNegative(tokenAccount.operations);
+  tokenAccount.spendableBalance = tokenAccount.balance = ensureNoNegative(
+    tokenAccount.operations
+  );
   tokenAccount.creationDate =
     tokenAccount.operations.length > 0
       ? tokenAccount.operations[tokenAccount.operations.length - 1].date

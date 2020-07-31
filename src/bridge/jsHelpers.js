@@ -22,6 +22,8 @@ import {
   getAccountPlaceholderName,
   getNewAccountPlaceholderName,
   shouldRetainPendingOperation,
+  isAccountEmpty,
+  shouldShowNewAccount,
 } from "../account";
 import uniqBy from "lodash/uniqBy";
 import type {
@@ -29,14 +31,20 @@ import type {
   Account,
   ScanAccountEvent,
   SyncConfig,
+  CryptoCurrency,
 } from "../types";
 import type { CurrencyBridge, AccountBridge } from "../types/bridge";
 import getAddress from "../hw/getAddress";
 import { open, close } from "../hw";
 import { withDevice } from "../hw/deviceAccess";
 
-type GetAccountShape = (
-  { address: string, id: string, initialAccount?: Account },
+export type GetAccountShape = (
+  {
+    currency: CryptoCurrency,
+    address: string,
+    id: string,
+    initialAccount?: Account,
+  },
   SyncConfig
 ) => Promise<$Shape<Account>>;
 
@@ -66,6 +74,7 @@ export const makeSync = (
       try {
         const shape = await getAccountShape(
           {
+            currency: initial.currency,
             id: initial.id,
             address: initial.freshAddress,
             initialAccount: initial,
@@ -111,27 +120,27 @@ export const makeScanAccounts = (
       finished = true;
     };
 
+    const derivationsCache = {};
+
     // in future ideally what we want is:
     // return mergeMap(addressesObservable, address => fetchAccount(address))
 
-    let newAccountCount = 0;
-
-    async function stepAddress(
+    async function stepAccount(
       index,
       { address, path: freshAddressPath },
       derivationMode,
-      shouldSkipEmpty,
       seedIdentifier
-    ): { account?: Account, complete?: boolean } {
+    ): Promise<?Account> {
       const accountId = `js:2:${currency.id}:${address}:${derivationMode}`;
       const accountShape: Account = await getAccountShape(
         {
+          currency,
           id: accountId,
           address,
         },
         syncConfig
       );
-      if (finished) return { complete: true };
+      if (finished) return;
 
       const freshAddress = address;
       const operations = accountShape.operations || [];
@@ -145,66 +154,10 @@ export const makeScanAccounts = (
 
       if (balance.isNaN()) throw new Error("invalid balance NaN");
 
-      const isAccountEmpty =
-        currency.id === "tron" && accountShape.tronResources
-          ? accountShape.tronResources.bandwidth.freeLimit === 0
-          : operationsCount === 0 && balance.isZero();
-
-      if (isAccountEmpty) {
-        // this is an empty account
-        if (derivationMode === "") {
-          // is standard derivation
-          if (newAccountCount === 0) {
-            // first zero account will emit one account as opportunity to create a new account..
-            const account: Account = {
-              type: "Account",
-              id: accountId,
-              seedIdentifier,
-              freshAddress,
-              freshAddressPath,
-              freshAddresses: [
-                {
-                  address: freshAddress,
-                  derivationPath: freshAddressPath,
-                },
-              ],
-              derivationMode,
-              name: getNewAccountPlaceholderName({
-                currency,
-                index,
-                derivationMode,
-              }),
-              starred: false,
-              index,
-              currency,
-              operationsCount: 0,
-              operations: [],
-              pendingOperations: [],
-              unit: currency.units[0],
-              lastSyncDate: new Date(),
-              creationDate,
-              // overrides
-              balance,
-              spendableBalance,
-              blockHeight: 0,
-              ...accountShape,
-            };
-            return { account, complete: true };
-          }
-          newAccountCount++;
-        }
-
-        if (shouldSkipEmpty) {
-          return {};
-        }
-        // NB for legacy addresses maybe we will continue at least for the first 10 addresses
-        return { complete: true };
-      }
-
       const account: Account = {
         type: "Account",
         id: accountId,
-        seedIdentifier: freshAddress,
+        seedIdentifier,
         freshAddress,
         freshAddressPath,
         freshAddresses: [
@@ -214,11 +167,11 @@ export const makeScanAccounts = (
           },
         ],
         derivationMode,
-        name: getAccountPlaceholderName({ currency, index, derivationMode }),
+        name: "",
         starred: false,
         index,
         currency,
-        operationsCount: 0,
+        operationsCount,
         operations: [],
         pendingOperations: [],
         unit: currency.units[0],
@@ -230,7 +183,8 @@ export const makeScanAccounts = (
         blockHeight: 0,
         ...accountShape,
       };
-      return { account };
+
+      return account;
     }
 
     async function main() {
@@ -241,14 +195,21 @@ export const makeScanAccounts = (
         const derivationModes = getDerivationModesForCurrency(currency);
         for (const derivationMode of derivationModes) {
           const path = getSeedIdentifierDerivation(currency, derivationMode);
+          log(
+            "scanAccounts",
+            `scanning ${currency.id} on derivationMode=${derivationMode}`
+          );
 
-          let result;
+          let result = derivationsCache[path];
           try {
-            result = await getAddress(transport, {
-              currency,
-              path,
-              derivationMode,
-            });
+            if (!result) {
+              result = await getAddress(transport, {
+                currency,
+                path,
+                derivationMode,
+              });
+              derivationsCache[path] = result;
+            }
           } catch (e) {
             // feature detect any denying case that could happen
             if (
@@ -270,6 +231,7 @@ export const makeScanAccounts = (
             derivationMode,
             currency,
           });
+          const showNewAccount = shouldShowNewAccount(currency, derivationMode);
           const stopAt = isIterableDerivationMode(derivationMode) ? 255 : 1;
           const startsAt = getDerivationModeStartsAt(derivationMode);
           for (let index = startsAt; index < stopAt; index++) {
@@ -281,25 +243,53 @@ export const makeScanAccounts = (
                 account: index,
               }
             );
-            const res = await getAddress(transport, {
-              currency,
-              path: freshAddressPath,
-              derivationMode,
-            });
-            const r = await stepAddress(
+
+            let res = derivationsCache[freshAddressPath];
+            if (!res) {
+              res = await getAddress(transport, {
+                currency,
+                path: freshAddressPath,
+                derivationMode,
+              });
+              derivationsCache[freshAddressPath] = res;
+            }
+
+            const account = await stepAccount(
               index,
               res,
               derivationMode,
-              emptyCount < mandatoryEmptyAccountSkip,
               seedIdentifier
             );
-            if (r.account) {
-              o.next({ type: "discovered", account: r.account });
-            } else {
-              emptyCount++;
+
+            log(
+              "scanAccounts",
+              `scanning ${currency.id} at ${freshAddressPath}: ${
+                res.address
+              } resulted of ${
+                account
+                  ? `Account with ${account.operations.length} txs`
+                  : "no account"
+              }`
+            );
+            if (!account) return;
+
+            const isEmpty = isAccountEmpty(account);
+
+            account.name = isEmpty
+              ? getNewAccountPlaceholderName({
+                  currency,
+                  index,
+                  derivationMode,
+                })
+              : getAccountPlaceholderName({ currency, index, derivationMode });
+
+            if (!isEmpty || showNewAccount) {
+              o.next({ type: "discovered", account });
             }
-            if (r.complete) {
-              break;
+
+            if (isEmpty) {
+              if (emptyCount >= mandatoryEmptyAccountSkip) break;
+              emptyCount++;
             }
           }
         }

@@ -1,5 +1,6 @@
 // @flow
 
+import { Buffer } from "buffer";
 import type { BigNumber } from "bignumber.js";
 import type { Unit } from "../../types";
 import type {
@@ -142,9 +143,14 @@ export type NetworkInfoRaw = {|
   gasPrice: string,
 |};
 
+export type TransactionMode = "send";
+
 export type Transaction = {|
   ...TransactionCommon,
   family: "ethereum",
+  mode: TransactionMode,
+  nonce?: number,
+  data?: typeof Buffer,
   gasPrice: ?BigNumber,
   userGasLimit: ?BigNumber,
   estimatedGasLimit: ?BigNumber,
@@ -155,6 +161,9 @@ export type Transaction = {|
 export type TransactionRaw = {|
   ...TransactionCommonRaw,
   family: "ethereum",
+  mode: TransactionMode,
+  nonce?: number,
+  data?: string,
   gasPrice: ?string,
   userGasLimit: ?string,
   estimatedGasLimit: ?string,
