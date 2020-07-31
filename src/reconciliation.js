@@ -214,10 +214,12 @@ export function patchAccount(
     changed = true;
   }
   const { balanceHistory } = updatedRaw;
-  if (balanceHistory && shouldRefreshBalanceHistory(balanceHistory, account)) {
-    next.balanceHistory = fromBalanceHistoryRawMap(balanceHistory);
-    changed = true;
-  } else if (account.balanceHistory) {
+  if (balanceHistory) {
+    if (shouldRefreshBalanceHistory(balanceHistory, account)) {
+      next.balanceHistory = fromBalanceHistoryRawMap(balanceHistory);
+      changed = true;
+    }
+  } else if (next.balanceHistory) {
     delete next.balanceHistory;
     changed = true;
   }
@@ -358,6 +360,18 @@ export function patchSubAccount(
 
   if (updatedRaw.balance !== account.balance.toString()) {
     next.balance = BigNumber(updatedRaw.balance);
+    changed = true;
+  }
+
+  if (
+    next.type === "TokenAccount" &&
+    account.type === "TokenAccount" &&
+    updatedRaw.type === "TokenAccountRaw" &&
+    updatedRaw.spendableBalance !== account.spendableBalance.toString()
+  ) {
+    next.spendableBalance = BigNumber(
+      updatedRaw.spendableBalance || updatedRaw.balance
+    );
     changed = true;
   }
 

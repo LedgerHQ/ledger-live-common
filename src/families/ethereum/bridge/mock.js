@@ -27,6 +27,7 @@ const defaultGetFees = (a, t: *) =>
 
 const createTransaction = (account): Transaction => ({
   family: "ethereum",
+  mode: "send",
   amount: BigNumber(0),
   recipient: "",
   gasPrice: BigNumber(10000000000),

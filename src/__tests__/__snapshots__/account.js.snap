@@ -7,7 +7,7 @@ Array [
   "mock:1:ethereum::|2",
   "mock:1:ethereum::|3",
   "mock:1:ethereum::|4",
-  "mock:1:ethereum::+0xE41d2489571d322189246DaFA5ebDe1F4699F498",
+  "mock:1:ethereum::+ethereum%2Ferc20%2F0x_project",
 ]
 `;
 

@@ -71,11 +71,9 @@ test("encode/decode swapHistory", () => {
 test("encode/decode swapHistory resilience", () => {
   // swapHistory should be added even if the source doesn't have it
   const accountWithoutHistory = genAccount("account_without_swapHistory");
-  // $FlowFixMe
-  accountWithoutHistory.swapHistory = undefined;
   const data = accountToAccountData(accountWithoutHistory);
+  delete data.swapHistory;
   const res = accountToAccountData(accountDataToAccount(data));
-
   expect(res).toMatchObject(data);
   expect(res.swapHistory?.length).toBe(0);
 });
