@@ -1,4 +1,5 @@
 // @flow
+import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import {
   AmountRequired,
@@ -6,10 +7,7 @@ import {
   NotEnoughBalance,
   FeeNotLoaded,
 } from "@ledgerhq/errors";
-import {
-  AlgorandASANotOptInInRecipient,
-  AlgorandNoAssetId,
-} from "../../../errors";
+import { AlgorandASANotOptInInRecipient } from "../../../errors";
 import { validateRecipient } from "../../../bridge/shared";
 import type { AccountBridge, CurrencyBridge, Account } from "../../../types";
 import type { Transaction } from "../types";
@@ -25,8 +23,9 @@ import { getFeesForTransaction } from "../../../libcore/getFeesForTransaction";
 import { withLibcore } from "../../../libcore/access";
 import { getCoreAccount } from "../../../libcore/getCoreAccount";
 import { libcoreAmountToBigNumber } from "../../../libcore/buildBigNumber";
-
-const MAX_MEMO_SIZE = 32;
+import { extractTokenId } from "../tokens";
+import { getAbandonSeedAddress } from "../../../data/abandonseed";
+import { ALGORAND_MAX_MEMO_SIZE } from "../logic";
 
 export const calculateFees: CacheRes<
   Array<{ a: Account, t: Transaction }>,
@@ -136,8 +135,10 @@ const getTransactionStatus = async (a: Account, t) => {
 
       if (
         tokenAccount &&
+        tokenAccount.type === "TokenAccount" &&
+        !errors.recipient &&
         !(await recipientHasAsset(
-          tokenAccount.id.split("/")[2],
+          extractTokenId(tokenAccount.token.id),
           t.recipient,
           a
         ))
@@ -170,9 +171,7 @@ const getTransactionStatus = async (a: Account, t) => {
     }
 
     case "optIn": {
-      if (!t.assetId) {
-        errors.assetId = new AlgorandNoAssetId();
-      }
+      invariant(t.assetId, "AssetId is not set");
       const spendableBalance = await getSpendableMaxForOptIn(a);
       if (spendableBalance.lt(estimatedFees)) {
         errors.amount = new NotEnoughBalance();
@@ -188,7 +187,7 @@ const getTransactionStatus = async (a: Account, t) => {
     }
   }
 
-  if (t.memo && t.memo.length > MAX_MEMO_SIZE) {
+  if (t.memo && t.memo.length > ALGORAND_MAX_MEMO_SIZE) {
     throw new Error("Memo is too long");
   }
 
@@ -246,7 +245,7 @@ const estimateMaxSpendable = async ({
   const t = await prepareTransaction(mainAccount, {
     ...createTransaction(),
     subAccountId: account.type === "Account" ? null : account.id,
-    recipient: "fakeAddressToBeDetermined",
+    recipient: getAbandonSeedAddress(mainAccount.currency.id),
     ...transaction,
     useAllAmount: true,
   });

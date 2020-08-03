@@ -11,6 +11,7 @@ import { minimalOperationsBuilder } from "../../reconciliation";
 import { buildASAOperation } from "./buildASAOperation";
 import { BigNumber } from "bignumber.js";
 import { findTokenById, listTokensForCryptoCurrency } from "../../currencies";
+import { promiseAllBatched } from "../../promise";
 
 const OperationOrderKey = {
   date: 0,
@@ -55,6 +56,7 @@ async function buildAlgorandTokenAccount({
     operations,
     pendingOperations: [],
     balance,
+    swapHistory: [],
     creationDate:
       operations.length > 0
         ? operations[operations.length - 1].date
@@ -98,7 +100,7 @@ async function algorandBuildTokenAccounts({
   }
 
   // filter by token existence
-  accountASA.map(async (asa) => {
+  promiseAllBatched(3, accountASA, async (asa) => {
     const token = findTokenById(`algorand/asa/${await asa.getAssetId()}`);
     if (token && !blacklistedTokenIds.includes(token.id)) {
       const existingTokenAccount = existingAccountByTicker[token.ticker];

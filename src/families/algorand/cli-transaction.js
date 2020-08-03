@@ -8,6 +8,7 @@ import type {
   AccountLikeArray,
 } from "../../types";
 import { getAccountCurrency } from "../../account";
+import { extractTokenId } from "./tokens";
 
 const options = [
   {
@@ -52,7 +53,7 @@ function inferAccounts(account: Account, opts: Object): AccountLikeArray {
         const currency = getAccountCurrency(t);
         return (
           token.toLowerCase() === currency.ticker.toLowerCase() ||
-          token.toLowerCase() === currency.id.split("/")[2]
+          token.toLowerCase() === extractTokenId(currency.id)
         );
       });
       if (!subAccount) {

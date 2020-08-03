@@ -5,9 +5,9 @@ import type { Transaction } from "./types";
 import type { DeviceTransactionField } from "../../transaction";
 import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
+import { extractTokenId } from "./tokens";
 
 const getSendFields = (transaction, status, account) => {
-  const { token } = account;
   const { amount } = transaction;
   const { estimatedFees } = status;
   const fields = [];
@@ -15,7 +15,7 @@ const getSendFields = (transaction, status, account) => {
   fields.push({
     type: "text",
     label: "Type",
-    value: (account.type === "TokenAccount") ? "Asset xfer" : "Payment",
+    value: account.type === "TokenAccount" ? "Asset xfer" : "Payment",
   });
 
   if (estimatedFees && !estimatedFees.isZero()) {
@@ -29,7 +29,7 @@ const getSendFields = (transaction, status, account) => {
     fields.push({
       type: "text",
       label: "Asset id",
-      value: account.token.id.split("/")[2],
+      value: extractTokenId(account.token.id),
     });
   }
 
@@ -85,7 +85,7 @@ function getDeviceTransactionConfig({
       fields.push({
         type: "text",
         label: "Asset id",
-        value: assetId?.split("/")[2] || assetId || "",
+        value: assetId ? extractTokenId(assetId) : "",
       });
 
       fields.push({

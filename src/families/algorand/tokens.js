@@ -6,6 +6,10 @@ import { addTokens } from "../../data/tokens";
 
 type TokenType = "asa";
 
+export const extractTokenId = (tokenId: string) => {
+  return tokenId.split("/")[2];
+};
+
 const convertTokens = (type: TokenType) => ([
   id,
   abbr,

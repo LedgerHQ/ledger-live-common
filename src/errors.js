@@ -134,5 +134,3 @@ export const SwapGenericAPIError = createCustomErrorClass(
 export const AlgorandASANotOptInInRecipient = createCustomErrorClass(
   "AlgorandASANotOptInInRecipient"
 );
-
-export const AlgorandNoAssetId = createCustomErrorClass("AlgorandNoAssetId");

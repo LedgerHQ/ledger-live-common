@@ -4,6 +4,7 @@ import type { Account } from "../../types";
 import { libcoreAmountToBigNumber } from "../../libcore/buildBigNumber";
 import type { Core, CoreAccount } from "../../libcore/types";
 import type { CoreAlgorandTransaction, Transaction } from "./types";
+import { extractTokenId } from "./tokens";
 
 const setInfo = async (
   core,
@@ -17,10 +18,12 @@ const setInfo = async (
   if (subAccount || (assetId && mode === "optIn")) {
     let targetAssetId =
       subAccount && subAccount.type === "TokenAccount"
-        ? subAccount.token.id.split("/")[2]
-        : assetId?.split("/")[2] || assetId;
+        ? extractTokenId(subAccount.token.id)
+        : assetId
+        ? extractTokenId(assetId)
+        : "";
 
-    if (targetAssetId === "" || isNaN(parseInt(targetAssetId))) {
+    if (targetAssetId === "") {
       throw new Error("Token Asset Id not found");
     }
 
