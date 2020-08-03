@@ -50,9 +50,9 @@ async function signTransaction({
     id: `${id}--${type}`,
     hash: "",
     type,
-    value: subAccountId ? 
-      BigNumber(fee) : 
-      transaction.useAllAmount
+    value: subAccountId
+      ? BigNumber(fee)
+      : transaction.useAllAmount
       ? spendableBalance
       : transaction.amount.plus(fee),
     fee: BigNumber(fee),

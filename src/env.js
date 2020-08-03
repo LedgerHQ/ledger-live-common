@@ -33,7 +33,7 @@ const stringParser = (v: mixed): ?string =>
 
 const envDefinitions = {
   API_ALGORAND_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
-    def: "https://algorand.coin.staging.aws.ledger.com",
+    def: "https://algorand.coin.ledger.com/",
     parser: stringParser,
     desc: "Node API endpoint for algorand",
   },
