@@ -6,7 +6,7 @@ import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
 import { isAccountEmpty } from "../../account";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
-
+import { BigNumber } from "bignumber.js";
 import { extractTokenId } from "./tokens";
 
 const currency = getCryptoCurrencyById("algorand");
@@ -18,7 +18,7 @@ const minFees = parseCurrencyUnit(currency.units[0], "0.001");
 const minBalanceNewAccount = parseCurrencyUnit(currency.units[0], "0.1");
 
 // Minimum balance for a non-ASA account
-let getMinBalance = (account) => {
+const getMinBalance = (account) => {
   const minBalance = parseCurrencyUnit(currency.units[0], "0.1");
   const numberOfTokens = account.subAccounts
     ? account.subAccounts.filter((a) => a.type === "TokenAccount").length
@@ -27,7 +27,7 @@ let getMinBalance = (account) => {
 };
 
 // Spendable balance for a non-ASA account
-let getSpendableBalance = (maxSpendable) => {
+const getSpendableBalance = (maxSpendable) => {
   maxSpendable = maxSpendable.minus(minFees);
   invariant(maxSpendable.gt(0), "spendable balance is too low");
   return maxSpendable;
@@ -36,7 +36,7 @@ let getSpendableBalance = (maxSpendable) => {
 // Ensure that, when the recipient corresponds to an empty account,
 // the amount to send is greater or equal to the required minimum
 // balance for such a recipient
-let checkSendableToEmptyAccount = (amount, recipient) => {
+const checkSendableToEmptyAccount = (amount, recipient) => {
   if (isAccountEmpty(recipient) && amount.lte(minBalanceNewAccount)) {
     invariant(
       amount.gt(minBalanceNewAccount),
@@ -45,30 +45,21 @@ let checkSendableToEmptyAccount = (amount, recipient) => {
   }
 };
 
-// Extract asset ID from asset-type subaccount
-let extractAssetId = (subaccount) => {
-  if (subaccount.type !== "TokenAccount") {
-    return null;
-  }
-
-  return extractTokenId(subaccount.token) || null;
-};
-
 // Get list of ASAs associated with the account
-let getAssets = (account) => {
+const getAssets = (account) => {
   return account.subAccounts
     ? account.subAccounts.filter((a) => a.type === "TokenAccount")
     : [];
 };
 
 // Get list of ASAs IDs common between two accounts (intersection)
-let getCommonAssetsIds = (senderAccount, recipientAccount) => {
+const getCommonAssetsIds = (senderAccount, recipientAccount) => {
   const senderAssetsIds = getAssets(senderAccount)
     .filter((a) => a.balance.gt(0))
-    .map((a) => extractAssetId(a));
+    .map((a) => extractTokenId(a.id));
 
   const recipientAssetsIds = getAssets(recipientAccount).map((a) =>
-    extractAssetId(a)
+    extractTokenId(a.id)
   );
 
   return senderAssetsIds.filter((assetId) =>
@@ -76,16 +67,33 @@ let getCommonAssetsIds = (senderAccount, recipientAccount) => {
   );
 };
 
-// Get Subaccount ID
-// eslint-disable-next-line no-unused-vars
-let getSubaccountId = (account, assetId) => {
-  if (account.subAccounts == null) return null;
+const getSubAccountByAssetId = (account, assetId) => {
+  return account.subAccounts
+    ? account.subAccounts.find(
+        (a) => a.type === "TokenAccount" && a.id.endsWith(assetId)
+      )
+    : null;
+};
 
-  account.subAccounts.forEach((subaccount) => {
-    if (subaccount.id.endsWith(assetId)) {
-      return subaccount.id; // e.g., libcore:1:algorand:fef9 . . . 4d7af:+algorand/asa/342836
-    }
-  });
+// TODO: rework to perform _difference_ between
+// array of valid ASAs and array of ASAs currently
+// being opted-in by an account
+const getRandomAssetId = () => {
+  const ASAs = [
+    "438840",
+    "438839",
+    "438838",
+    "438837",
+    "438836",
+    "438833",
+    "438832",
+    "438831",
+    "438828",
+    "312769",
+    "163650",
+  ];
+
+  return "algorand/asa/" + ASAs[Math.floor(Math.random() * ASAs.length)];
 };
 
 const algorand: AppSpec<Transaction> = {
@@ -161,17 +169,12 @@ const algorand: AppSpec<Transaction> = {
       name: "send ASA", // WIP
       maxRun: 2,
       transaction: ({ account, siblings, bridge }) => {
-        // Debug
-        //console.log("ℹ - assets IDs")
-        //console.log(getAssetsIds(account));
-        //console.log("ℹ - non empty assets IDs");
-        //console.log(getNonEmptyAssetsIds(account);
-
         // Ensure that the sender has ASAs to send
         // i.e., opted-in ASAs with positive balance
-        const senderAssets = getAssets(account);
-
-        invariant(senderAssets.length > 0, "no ASA to send");
+        invariant(
+          getAssets(account).filter((a) => a.balance.gt(0)).length > 0,
+          "no ASA to send"
+        );
 
         const sibling = pickSiblings(siblings, 4);
 
@@ -182,19 +185,21 @@ const algorand: AppSpec<Transaction> = {
 
         let transaction = bridge.createTransaction(account);
 
-        //const recipient = sibling.freshAddress;
+        const recipient = sibling.freshAddress;
 
-        //const mode = "send";
+        const mode = "send";
 
         // Select a random common ASA
-        //const assetId = commonTokens[Math.floor(Math.random() * commonTokens.length)] || "";
+        const assetId =
+          "algorand/asa/" +
+          commonTokensIds[Math.floor(Math.random() * commonTokensIds.length)];
 
-        //const amount = BigNumber(0);
+        const amount = getSubAccountByAssetId(account, assetId)?.balance;
 
         //TODO: define amount of ASA to send
-
-        const updates = [];
-        //const updates = [{ mode }, { assetId }, { recipient }, { amount }];
+        //  errors: amount: AmountRequired
+        // ⚠️ AmountRequired: AmountRequired
+        const updates = [{ mode, assetId }, { recipient }, { amount }];
         return {
           transaction,
           updates,
@@ -202,35 +207,44 @@ const algorand: AppSpec<Transaction> = {
       },
       // eslint-disable-next-line no-unused-vars
       test: ({ account, accountBeforeTransaction, operation, transaction }) => {
-        // TODO: assertion
+        // TODO: create assertion
       },
     },
-    /*
     {
-       name: "opt-In USDt",
-       maxRun: 2,
-       transaction: ({ account, siblings, bridge, maxSpendable }) => {
-         const minBalance = getMinBalance(account);
+      name: "opt-In USDt",
+      maxRun: 2,
+      transaction: ({ account, bridge, maxSpendable }) => {
+        // maxSpendable is expected to be greater than 100,000 micro-Algos (+ 1,000 for fees)
+        // corresponding to the requirement that the main account will have
+        // one more ASA after the opt-in; its minimum balance is updated accordingly
+        invariant(maxSpendable.gt(BigNumber(101000)), "balance is too low");
 
-         invariant(maxSpendable .gt(0), "balance is too low");
-         let transaction = bridge.createTransaction(account);
-         const mode = "optIn";
-         const assetId = "312769";
+        let transaction = bridge.createTransaction(account);
+        const mode = "optIn";
 
-         console.log(transaction);
-         invariant(!account.subAccounts?.find(a => a.id.includes("assetId")), "already opt-in");
+        const assetId = getRandomAssetId();
 
-         const updates = [{ mode }, { assetId }];
-         return {
-           transaction,
-           updates,
-         };
-       },
-       test: ({ account, accountBeforeTransaction, operation, transaction }) => {
-         //expect(account.subAccounts?.find(a => a.id.includes(transaction.assetId || "fail"))).toBe(true);
-       },
-     },
-     */
+        const subAccount = account.subAccounts
+          ? account.subAccounts.find((a) => a.id.includes(assetId))
+          : null;
+        invariant(!subAccount, "already opt-in");
+
+        const updates = [{ assetId }, { mode }];
+        return {
+          transaction,
+          updates,
+        };
+      },
+      // eslint-disable-next-line no-unused-vars
+      test: ({ account, accountBeforeTransaction, operation, transaction }) => {
+        expect(
+          account.subAccounts &&
+            account.subAccounts.some((a) =>
+              a.id.endsWith(transaction.assetId || "fail")
+            )
+        ).toBe(true);
+      },
+    },
   ],
 };
 

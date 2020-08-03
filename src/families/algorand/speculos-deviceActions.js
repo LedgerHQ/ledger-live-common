@@ -3,6 +3,7 @@ import type { DeviceAction } from "../../bot/types";
 import type { Transaction } from "./types";
 // import { formatCurrencyUnit } from "../../currencies";
 import { deviceActionFlow } from "../../bot/specs";
+import { extractTokenId } from "./tokens";
 
 // Will be useful when unit is gonna be algo
 // const expectedAmount = ({ account, status }) =>
@@ -38,10 +39,11 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
       title: "Asset ID",
       button: "Rr",
       expectedValue: ({ transaction }) =>
-        transaction.assetId ||
-        (transaction.subAccountId
-          ? transaction.subAccountId.split("/")[2]
-          : ""),
+        transaction.assetId
+          ? extractTokenId(transaction.assetId)
+          : transaction.subAccountId
+          ? extractTokenId(transaction.subAccountId)
+          : "",
     },
     {
       title: "Asset amt",
