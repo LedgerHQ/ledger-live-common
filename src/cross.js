@@ -164,7 +164,7 @@ const asResultAccount = (unsafe: mixed): AccountData => {
     index,
     balance,
     // $FlowFixMe No idea how to make flow like this
-    swapHistory: invalidSwapHistory ? [] : swapHistory,
+    swapHistory: !swapHistory || invalidSwapHistory ? [] : swapHistory,
   };
   if (typeof freshAddress === "string" && freshAddress) {
     o.freshAddress = freshAddress;
@@ -334,7 +334,7 @@ export const accountDataToAccount = ({
     index,
     freshAddress,
     freshAddressPath,
-    swapHistory: swapHistory.map(fromSwapOperationRaw),
+    swapHistory: (swapHistory || []).map(fromSwapOperationRaw),
     // these fields will be completed as we will sync
     freshAddresses: [],
     blockHeight: 0,
