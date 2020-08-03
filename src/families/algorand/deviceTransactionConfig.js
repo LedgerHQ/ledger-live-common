@@ -63,9 +63,16 @@ function getDeviceTransactionConfig({
 
   switch (mode) {
     case "send":
-    case "claimReward":
-    case "claimRewards": //tmp waiting for desktop / mobile to be fix
       fields = getSendFields(transaction, status, account);
+      break;
+    case "claimReward":
+      fields = getSendFields(transaction, status, account);
+
+      fields.push({
+        type: "address",
+        label: "Recipient",
+        value: transaction.recipient,
+      });
       break;
 
     case "optIn":

@@ -386,9 +386,10 @@ export default (arg: {
                 log("libcore-call", id + "." + method, args);
               }
               let value;
-              if (params) { // it's seems statics method until now doesn't need to be unwrap
+              if (params) {
+                // it's seems statics method until now doesn't need to be unwrap
                 const hexArgs = unwrapArg(params, args);
-                value =  new m(...hexArgs)[method](...hexArgs);
+                value = new m(...hexArgs)[method](...hexArgs);
               } else {
                 const constructorArgs =
                   typeof njsBuggyMethodIsNotStatic === "function"

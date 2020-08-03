@@ -48,7 +48,7 @@ setSupportedCurrencies([
   "tron",
   "stellar",
   "cosmos",
-  "algorand"
+  "algorand",
 ]);
 
 for (const k in process.env) setEnvUnsafe(k, process.env[k]);

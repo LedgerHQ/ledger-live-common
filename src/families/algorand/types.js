@@ -1,4 +1,4 @@
-  // @flow
+// @flow
 
 import type { BigNumber } from "bignumber.js";
 import type {
@@ -13,13 +13,13 @@ export const AlgorandOperationTypeEnum = {
   PAYMENT: 0,
   ASSET_OPT_IN: 7,
   ASSET_OPT_OUT: 8,
-  ASSET_TRANSFER: 9
-}
+  ASSET_TRANSFER: 9,
+};
 
 export type CoreStatics = {
   AlgorandPaymentInfo: Class<AlgorandPaymentInfo>,
   AlgorandAssetTransferInfo: Class<AlgorandAssetTransferInfo>,
-  AlgorandAddress: Class<AlgorandAddress>
+  AlgorandAddress: Class<AlgorandAddress>,
 };
 
 export type CoreAccountSpecifics = {
@@ -31,18 +31,15 @@ export type CoreOperationSpecifics = {
 };
 
 declare class AlgorandAddress {
-  static fromPublicKey(
-    pubkey: string,
-  ): Promise<string>;
+  static fromPublicKey(pubkey: string): Promise<string>;
 }
-
 
 declare class AlgorandPaymentInfo {
   static init(
     amount: string,
     recipientAddress: string,
     closeAddress: ?string,
-    closeAmount: ?string,
+    closeAmount: ?string
   ): Promise<AlgorandPaymentInfo>;
 }
 
@@ -55,7 +52,6 @@ declare class AlgorandAssetTransferInfo {
     clawedBackAddress: ?string,
     closeAmount: ?string
   ): Promise<AlgorandAssetTransferInfo>;
-
 
   getAmount(): Promise<string>;
   getAssetId(): Promise<string>;
@@ -97,7 +93,7 @@ declare class CoreAlgorandAccount {
   getTotalRewards(): Promise<CoreAmount>;
   broadcastRawTransaction(transaction: string): Promise<string>;
   getSpendableBalance(operationType: number): Promise<CoreAmount>;
-  hasAsset(address : string, assetId: string) : Promise<boolean>
+  hasAsset(address: string, assetId: string): Promise<boolean>;
 }
 
 declare class CoreAlgorandOperation {
@@ -171,22 +167,22 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
       getFeeEstimate: {
         params: ["AlgorandTransaction"],
-        returns: "Amount"
+        returns: "Amount",
       },
       getAssetsBalances: {
-        returns: ["AlgorandAssetAmount"]
+        returns: ["AlgorandAssetAmount"],
       },
       getPendingRewards: {
-        returns: "Amount"
+        returns: "Amount",
       },
       getTotalRewards: {
-        returns: "Amount"
+        returns: "Amount",
       },
       getSpendableBalance: {
-        returns: "Amount"
+        returns: "Amount",
       },
-      hasAsset: {}
-    }
+      hasAsset: {},
+    },
   });
 
   declare("AlgorandAssetAmount", {
@@ -199,7 +195,7 @@ export const reflect = (declare: (string, Spec) => void) => {
         njsField: "amount",
       },
     },
-  })
+  });
 
   declare("AlgorandOperation", {
     methods: {
@@ -207,7 +203,7 @@ export const reflect = (declare: (string, Spec) => void) => {
         returns: "AlgorandTransaction",
       },
       getAlgorandOperationType: {},
-      getAssetAmount: {}
+      getAssetAmount: {},
     },
   });
 
@@ -234,7 +230,7 @@ export const reflect = (declare: (string, Spec) => void) => {
       getRound: {},
       getSender: {},
       getAssetTransferInfo: {
-        returns: "AlgorandAssetTransferInfo"
+        returns: "AlgorandAssetTransferInfo",
       },
       getNote: {},
     },
@@ -262,10 +258,10 @@ export const reflect = (declare: (string, Spec) => void) => {
     statics: {
       fromPublicKey: {
         params: ["hex"],
-        njsBuggyMethodIsNotStatic: true
-      }
-    }
-  })
+        njsBuggyMethodIsNotStatic: true,
+      },
+    },
+  });
 
   declare("AlgorandAssetTransferInfo", {
     njsUsesPlainObject: true,
@@ -280,7 +276,7 @@ export const reflect = (declare: (string, Spec) => void) => {
             recipientAddress: 2,
             closeAddress: 3,
             clawedBackAddress: 4,
-            closeAmount: 5
+            closeAmount: 5,
           },
         ],
       },
@@ -293,14 +289,14 @@ export const reflect = (declare: (string, Spec) => void) => {
         njsField: "amount",
       },
       getRecipientAddress: {
-        njsField: "recipientAddress",        
+        njsField: "recipientAddress",
       },
       getCloseAddress: {
-        njsField: "closeAddress"
+        njsField: "closeAddress",
       },
       getCloseAmount: {
-        njsField: "closeAmount"
-      }
+        njsField: "closeAmount",
+      },
     },
   });
 

@@ -7,6 +7,8 @@ import { isAccountEmpty } from "../../account";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
 
+import { extractTokenId } from "./tokens";
+
 const currency = getCryptoCurrencyById("algorand");
 
 // Minimum fees
@@ -49,9 +51,7 @@ let extractAssetId = (subaccount) => {
     return null;
   }
 
-  const assetIdRegex = /algorand\/asa\/(\d+)/g; // e.g, 'algorand/asa/312769'
-  const match = assetIdRegex.exec(subaccount.token.id);
-  return match !== null ? match[1] : null;
+  return extractTokenId(subaccount.token) || null;
 };
 
 // Get list of ASAs associated with the account

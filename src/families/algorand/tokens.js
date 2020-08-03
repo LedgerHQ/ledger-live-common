@@ -15,7 +15,7 @@ const convertTokens = (type: TokenType) => ([
   abbr,
   name,
   contractAddress,
-  precision,
+  precision
 ]): TokenCurrency => ({
   type: "TokenCurrency",
   id: `algorand/${type}/${id}`,
@@ -29,13 +29,13 @@ const convertTokens = (type: TokenType) => ([
     {
       name,
       code: abbr,
-      magnitude: precision,
-    },
-  ],
+      magnitude: precision
+    }
+  ]
 });
 
 const converters = {
-  asa: convertTokens("asa"),
+  asa: convertTokens("asa")
 };
 
 export function add(type: TokenType, list: any[]) {
