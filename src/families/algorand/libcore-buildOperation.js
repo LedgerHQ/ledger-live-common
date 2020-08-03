@@ -2,6 +2,7 @@
 
 import type { CoreOperation } from "../../libcore/types";
 import type { Operation } from "../../types";
+import { AlgorandOperationTypeEnum } from "./types";
 
 const getAssetId = async (transaction) => {
   if ((await transaction.getType()) === "axfer") {
@@ -15,11 +16,11 @@ const getOperationType = async (algorandOperation) => {
   const operationType = await algorandOperation.getAlgorandOperationType();
   let type;
 
-  if (operationType === 7) {
+  if (operationType === AlgorandOperationTypeEnum.ASSET_OPT_IN) {
     type = "OPT_IN";
   }
 
-  if (operationType === 8) {
+  if (operationType === AlgorandOperationTypeEnum.ASSET_OPT_OUT) {
     type = "OPT_OUT";
   }
 

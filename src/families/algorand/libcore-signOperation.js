@@ -44,12 +44,15 @@ async function signTransaction({
   const senders = [freshAddress];
   const recipients = [transaction.recipient];
   const fee = await coreTransaction.getFee();
+  const { subAccountId } = transaction;
 
   const op = {
     id: `${id}--${type}`,
     hash: "",
     type,
-    value: transaction.useAllAmount
+    value: subAccountId ? 
+      BigNumber(fee) : 
+      transaction.useAllAmount
       ? spendableBalance
       : transaction.amount.plus(fee),
     fee: BigNumber(fee),
