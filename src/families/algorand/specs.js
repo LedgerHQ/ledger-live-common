@@ -7,7 +7,9 @@ import { isAccountEmpty } from "../../account";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
 import { BigNumber } from "bignumber.js";
-import { extractTokenId } from "./tokens";
+import type { Account } from "../../types";
+import sample from "lodash/sample";
+import { listTokensForCryptoCurrency } from "../../currencies";
 
 const currency = getCryptoCurrencyById("algorand");
 
@@ -17,19 +19,10 @@ const minFees = parseCurrencyUnit(currency.units[0], "0.001");
 // Minimum balance required for a new non-ASA account
 const minBalanceNewAccount = parseCurrencyUnit(currency.units[0], "0.1");
 
-// Minimum balance for a non-ASA account
-const getMinBalance = (account) => {
-  const minBalance = parseCurrencyUnit(currency.units[0], "0.1");
-  const numberOfTokens = account.subAccounts
-    ? account.subAccounts.filter((a) => a.type === "TokenAccount").length
-    : 0;
-  return minBalance.multipliedBy(1 + numberOfTokens);
-};
-
 // Spendable balance for a non-ASA account
 const getSpendableBalance = (maxSpendable) => {
   maxSpendable = maxSpendable.minus(minFees);
-  invariant(maxSpendable.gt(0), "spendable balance is too low");
+  invariant(maxSpendable.gt(minFees), "spendable balance is too low");
   return maxSpendable;
 };
 
@@ -48,52 +41,40 @@ const checkSendableToEmptyAccount = (amount, recipient) => {
 // Get list of ASAs associated with the account
 const getAssets = (account) => {
   return account.subAccounts
-    ? account.subAccounts.filter((a) => a.type === "TokenAccount")
+    ? account.subAccounts.filter(
+        (a) => a.type === "TokenAccount" && a.balance.gt(0)
+      )
     : [];
 };
 
-// Get list of ASAs IDs common between two accounts (intersection)
-const getCommonAssetsIds = (senderAccount, recipientAccount) => {
-  const senderAssetsIds = getAssets(senderAccount)
-    .filter((a) => a.balance.gt(0))
-    .map((a) => extractTokenId(a.id));
-
-  const recipientAssetsIds = getAssets(recipientAccount).map((a) =>
-    extractTokenId(a.id)
+const pickSiblingsOptedIn = (siblings: Account[], assetId: string) => {
+  return sample(
+    siblings.filter((a) => {
+      return a.subAccounts?.some(
+        (sa) => sa.type === "TokenAccount" && sa.token.id.endsWith(assetId)
+      );
+    })
   );
-
-  return senderAssetsIds.filter((assetId) =>
-    recipientAssetsIds.includes(assetId)
-  );
-};
-
-const getSubAccountByAssetId = (account, assetId) => {
-  return account.subAccounts
-    ? account.subAccounts.find(
-        (a) => a.type === "TokenAccount" && a.id.endsWith(assetId)
-      )
-    : null;
 };
 
 // TODO: rework to perform _difference_ between
 // array of valid ASAs and array of ASAs currently
 // being opted-in by an account
-const getRandomAssetId = () => {
-  const ASAs = [
-    "438840",
-    "438839",
-    "438838",
-    "438837",
-    "438836",
-    "438833",
-    "438832",
-    "438831",
-    "438828",
-    "312769",
-    "163650",
-  ];
+const getRandomAssetId = (account) => {
+  const optedInASA = account.subAccounts?.reduce((old, current) => {
+    if (current.type === "TokenAccount") {
+      return [...old, current.token.id];
+    }
+    return old;
+  }, []);
+  const ASAs = listTokensForCryptoCurrency(account.currency).map(
+    (asa) => asa.id
+  );
+  const diff = ASAs?.filter((asa) => !optedInASA?.includes(asa));
 
-  return "algorand/asa/" + ASAs[Math.floor(Math.random() * ASAs.length)];
+  invariant(diff && diff.length > 0, "already got all optin");
+
+  return sample(diff);
 };
 
 const algorand: AppSpec<Transaction> = {
@@ -149,70 +130,70 @@ const algorand: AppSpec<Transaction> = {
           transaction: bridge.createTransaction(account),
           updates: [
             {
-              recipient: pickSiblings(siblings, 30).freshAddress,
+              recipient: sibling.freshAddress,
             },
             { useAllAmount: true },
           ],
         };
       },
       test: ({ account }) => {
-        const minBalance = getMinBalance(account);
-        const actualBalance = account.balance;
-
         // Ensure that there is no more than 20 μALGOs (discretionary value)
         // between the actual balance and the expected one to take into account
         // the eventual pending rewards added _after_ the transaction
-        expect(actualBalance.minus(minBalance).lt(20)).toBe(true);
+        expect(account.spendableBalance.lt(20)).toBe(true);
       },
     },
     {
-      name: "send ASA", // WIP
+      name: "send ASA ~50%",
       maxRun: 2,
-      transaction: ({ account, siblings, bridge }) => {
-        // Ensure that the sender has ASAs to send
-        // i.e., opted-in ASAs with positive balance
+      transaction: ({ account, siblings, bridge, maxSpendable }) => {
+        invariant(maxSpendable.gt(minFees), "not enough balance");
+        const subAccount = sample(getAssetsWithBalance(account));
+
         invariant(
-          getAssets(account).filter((a) => a.balance.gt(0)).length > 0,
-          "no ASA to send"
+          subAccount && subAccount.type === "TokenAccount",
+          "no subAccount with ASA"
         );
 
-        const sibling = pickSiblings(siblings, 4);
-
-        const commonTokensIds = getCommonAssetsIds(account, sibling);
-
-        // Ensure that the recipient has opted-in to the same ASA
-        invariant(commonTokensIds.length > 0, "no common opted-in ASA");
+        const assetId = subAccount.token.id;
+        const sibling = pickSiblingsOptedIn(siblings, assetId);
 
         let transaction = bridge.createTransaction(account);
-
         const recipient = sibling.freshAddress;
 
         const mode = "send";
 
-        // Select a random common ASA
-        const assetId =
-          "algorand/asa/" +
-          commonTokensIds[Math.floor(Math.random() * commonTokensIds.length)];
+        const amount = subAccount.balance
+          .div(1.9 + 0.2 * Math.random())
+          .integerValue();
 
-        const amount = getSubAccountByAssetId(account, assetId)?.balance;
-
-        //TODO: define amount of ASA to send
-        //  errors: amount: AmountRequired
-        // ⚠️ AmountRequired: AmountRequired
-        const updates = [{ mode, assetId }, { recipient }, { amount }];
+        const updates = [
+          { mode, subAccountId: subAccount.id },
+          { recipient },
+          { amount },
+        ];
         return {
           transaction,
           updates,
         };
       },
-      // eslint-disable-next-line no-unused-vars
-      test: ({ account, accountBeforeTransaction, operation, transaction }) => {
-        // TODO: create assertion
+      test: ({ account, accountBeforeTransaction, transaction, status }) => {
+        const subAccountId = transaction.subAccountId;
+
+        const subAccount = account.subAccounts?.find(
+          (sa) => sa.id === subAccountId
+        );
+        const subAccountBeforeTransaction = accountBeforeTransaction.subAccounts?.find(
+          (sa) => sa.id === subAccountId
+        );
+        expect(subAccount?.balance.toString()).toBe(
+          subAccountBeforeTransaction?.balance.minus(status.amount).toString()
+        );
       },
     },
     {
-      name: "opt-In USDt",
-      maxRun: 2,
+      name: "opt-In ASA available",
+      maxRun: 1,
       transaction: ({ account, bridge, maxSpendable }) => {
         // maxSpendable is expected to be greater than 100,000 micro-Algos (+ 1,000 for fees)
         // corresponding to the requirement that the main account will have
@@ -222,7 +203,7 @@ const algorand: AppSpec<Transaction> = {
         let transaction = bridge.createTransaction(account);
         const mode = "optIn";
 
-        const assetId = getRandomAssetId();
+        const assetId = getRandomAssetId(account);
 
         const subAccount = account.subAccounts
           ? account.subAccounts.find((a) => a.id.includes(assetId))
@@ -236,7 +217,7 @@ const algorand: AppSpec<Transaction> = {
         };
       },
       // eslint-disable-next-line no-unused-vars
-      test: ({ account, accountBeforeTransaction, operation, transaction }) => {
+      test: ({ account, transaction }) => {
         expect(
           account.subAccounts &&
             account.subAccounts.some((a) =>
