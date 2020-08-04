@@ -100,7 +100,7 @@ async function algorandBuildTokenAccounts({
   }
 
   // filter by token existence
-  promiseAllBatched(3, accountASA, async (asa) => {
+  await promiseAllBatched(3, accountASA, async (asa) => {
     const token = findTokenById(`algorand/asa/${await asa.getAssetId()}`);
     if (token && !blacklistedTokenIds.includes(token.id)) {
       const existingTokenAccount = existingAccountByTicker[token.ticker];
