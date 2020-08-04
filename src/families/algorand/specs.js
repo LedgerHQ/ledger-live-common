@@ -226,6 +226,28 @@ const algorand: AppSpec<Transaction> = {
         ).toBe(true);
       },
     },
+    {
+      name: "claim rewards",
+      maxRun: 1,
+      transaction: ({ account, siblings, bridge, maxSpendable }) => {
+
+        const rewards = account.algorandResources?.rewards
+        invariant(rewards && rewards.gt(0), "No pending rewards")
+
+        let transaction = bridge.createTransaction(account);
+
+        const mode = "claimReward";
+
+        const updates = [{ mode }];
+        return {
+          transaction,
+          updates,
+        };
+      },
+      test: ({ account }) => {
+        expect(account.algorandResources && account.algorandResources.rewards.eq(0)).toBe(true);
+      },
+    },
   ],
 };
 
