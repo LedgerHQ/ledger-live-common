@@ -7,7 +7,7 @@ import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
 import { extractTokenId } from "./tokens";
 
-const getSendFields = (transaction, status, account) => {
+const getSendFields = (transaction, status, account, addRecipient: boolean) => {
   const { amount } = transaction;
   const { estimatedFees } = status;
   const fields = [];
@@ -21,14 +21,22 @@ const getSendFields = (transaction, status, account) => {
   if (estimatedFees && !estimatedFees.isZero()) {
     fields.push({
       type: "fees",
-      label: "Fee",
+      label: "Fee(Alg)",
+    });
+  }
+
+  if (addRecipient) {
+    fields.push({
+      type: "address",
+      label: "Recipient",
+      address: transaction.recipient,
     });
   }
 
   if (account.type === "TokenAccount") {
     fields.push({
       type: "text",
-      label: "Asset id",
+      label: "Asset ID",
       value: extractTokenId(account.token.id),
     });
   }
@@ -36,7 +44,7 @@ const getSendFields = (transaction, status, account) => {
   if (amount) {
     fields.push({
       type: "text",
-      label: "Amount",
+      label: account.type === "TokenAccount" ? "Asset amt" : "Amount",
       value: formatCurrencyUnit(getAccountUnit(account), amount, {
         showCode: true,
         disableRounding: true,
@@ -63,16 +71,10 @@ function getDeviceTransactionConfig({
 
   switch (mode) {
     case "send":
-      fields = getSendFields(transaction, status, account);
+      fields = getSendFields(transaction, status, account, false);
       break;
     case "claimReward":
-      fields = getSendFields(transaction, status, account);
-
-      fields.push({
-        type: "address",
-        label: "Recipient",
-        value: transaction.recipient,
-      });
+      fields = getSendFields(transaction, status, account, true);
       break;
 
     case "optIn":
