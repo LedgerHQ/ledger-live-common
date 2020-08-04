@@ -39,7 +39,7 @@ const checkSendableToEmptyAccount = (amount, recipient) => {
 };
 
 // Get list of ASAs associated with the account
-const getAssets = (account) => {
+const getAssetsWithBalance = (account) => {
   return account.subAccounts
     ? account.subAccounts.filter(
         (a) => a.type === "TokenAccount" && a.balance.gt(0)
