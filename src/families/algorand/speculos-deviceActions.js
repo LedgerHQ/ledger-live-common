@@ -1,22 +1,23 @@
 // @flow
 import type { DeviceAction } from "../../bot/types";
 import type { Transaction } from "./types";
-// import { formatCurrencyUnit } from "../../currencies";
+import { formatCurrencyUnit } from "../../currencies";
 import { deviceActionFlow } from "../../bot/specs";
 import { extractTokenId } from "./tokens";
 
 // Will be useful when unit is gonna be algo
-// const expectedAmount = ({ account, status }) =>
-//   formatCurrencyUnit(account.unit, status.amount, {
-//     disableRounding: true,
-//   });
+const expectedAmount = ({ account, status }) =>
+  formatCurrencyUnit(account.unit, status.amount, {
+    disableRounding: true,
+  });
 
 const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
   steps: [
     {
       title: "Txn Type",
       button: "Rr",
-      // expectedValue: ({ transaction }) => transaction.subAccountId ? "Asset xfer" : "Payment",
+      expectedValue: ({ transaction }) =>
+        transaction.subAccountId ? "Asset xfer" : "Payment",
     },
     {
       title: "Asset xfer",
@@ -29,11 +30,10 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
     {
       title: "Fee",
       button: "Rr",
-      // // expectedValue: ({ account, status }) =>
-      //   formatCurrencyUnit(account.unit, status.estimatedFees, {
-      //     disableRounding: true,
-      //   }), this is gonna be this one on nano 1.3
-      // expectedValue: ({status}) => status.estimatedFees.toString()
+      expectedValue: ({ account, status }) =>
+        formatCurrencyUnit(account.unit, status.estimatedFees, {
+          disableRounding: true,
+        }),
     },
     {
       title: "Asset ID",
@@ -48,7 +48,8 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
     {
       title: "Asset amt",
       button: "Rr",
-      // expectedValue: ({transaction}) => transaction.mode === "optIn" ? "0" : transaction.amount.toString()
+      expectedValue: ({ transaction }) =>
+        transaction.mode === "optIn" ? "0" : transaction.amount.toString(),
     },
     {
       title: "Receiver",
@@ -63,12 +64,10 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
     {
       title: "Amount",
       button: "Rr",
-      expectedValue: ({ status, transaction }) =>
+      expectedValue: ({ account, status, transaction }) =>
         transaction.mode === "claimReward"
           ? "0"
-          : transaction.useAllAmount
-          ? status.amount.toString()
-          : transaction.amount.toString(),
+          : expectedAmount({ account, status }),
     },
     {
       title: "Sign",

@@ -229,10 +229,9 @@ const algorand: AppSpec<Transaction> = {
     {
       name: "claim rewards",
       maxRun: 1,
-      transaction: ({ account, siblings, bridge, maxSpendable }) => {
-
-        const rewards = account.algorandResources?.rewards
-        invariant(rewards && rewards.gt(0), "No pending rewards")
+      transaction: ({ account, bridge }) => {
+        const rewards = account.algorandResources?.rewards;
+        invariant(rewards && rewards.gt(0), "No pending rewards");
 
         let transaction = bridge.createTransaction(account);
 
@@ -245,7 +244,9 @@ const algorand: AppSpec<Transaction> = {
         };
       },
       test: ({ account }) => {
-        expect(account.algorandResources && account.algorandResources.rewards.eq(0)).toBe(true);
+        expect(
+          account.algorandResources && account.algorandResources.rewards.eq(0)
+        ).toBe(true);
       },
     },
   ],
