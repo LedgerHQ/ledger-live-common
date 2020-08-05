@@ -210,7 +210,7 @@ const algorand: AppSpec<Transaction> = {
           : null;
         invariant(!subAccount, "already opt-in");
 
-        const updates = [{ assetId }, { mode }];
+        const updates = [{ mode }, { assetId }];
         return {
           transaction,
           updates,

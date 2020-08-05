@@ -1,5 +1,4 @@
 // @flow
-import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import {
   AmountRequired,
@@ -43,7 +42,7 @@ export const calculateFees: CacheRes<
   ({ a, t }) =>
     `${a.id}_${t.amount.toString()}_${t.recipient}_${String(t.useAllAmount)}_${
       t.memo ? t.memo.toString() : ""
-    }`
+    }_${t.mode}_${t.assetId || ""}`
 );
 
 const getSpendableMaxForOptIn = async (account) =>
@@ -171,7 +170,16 @@ const getTransactionStatus = async (a: Account, t) => {
     }
 
     case "optIn": {
-      invariant(t.assetId, "AssetId is not set");
+      if (!t.fees || !t.fees.gt(0)) {
+        errors.fees = new FeeNotLoaded();
+      }
+
+      // This error doesn't need to be translate,
+      // it will use to block until the user choose an assetId
+      if (!t.assetId) {
+        errors.assetId = new Error("Asset Id is not set");
+      }
+
       const spendableBalance = await getSpendableMaxForOptIn(a);
       if (spendableBalance.lt(estimatedFees)) {
         errors.amount = new NotEnoughBalance();
@@ -213,8 +221,10 @@ const prepareTransaction = async (a, t) => {
   }
 
   if (recipient || t.mode !== "send") {
-    const errors = (await validateRecipient(a.currency, recipient))
+    let errors = (await validateRecipient(a.currency, recipient))
       .recipientError;
+
+    errors = errors || (t.mode === "optIn" && t.assetId);
     if (!errors) {
       const res = await calculateFees({
         a,
