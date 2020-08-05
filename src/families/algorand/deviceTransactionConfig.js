@@ -21,7 +21,7 @@ const getSendFields = (transaction, status, account, addRecipient: boolean) => {
   if (estimatedFees && !estimatedFees.isZero()) {
     fields.push({
       type: "fees",
-      label: "Fee(Alg)",
+      label: "Fee",
     });
   }
 
