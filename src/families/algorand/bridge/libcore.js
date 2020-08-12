@@ -224,7 +224,7 @@ const prepareTransaction = async (a, t) => {
     let errors = (await validateRecipient(a.currency, recipient))
       .recipientError;
 
-    errors = errors || (t.mode === "optIn" && t.assetId);
+    errors = errors || (t.mode === "optIn" && !t.assetId);
     if (!errors) {
       const res = await calculateFees({
         a,
