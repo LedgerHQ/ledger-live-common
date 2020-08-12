@@ -12,6 +12,7 @@ import { buildASAOperation } from "./buildASAOperation";
 import { BigNumber } from "bignumber.js";
 import { findTokenById, listTokensForCryptoCurrency } from "../../currencies";
 import { promiseAllBatched } from "../../promise";
+import { extractTokenId } from "./tokens";
 
 const OperationOrderKey = {
   date: 0,
@@ -24,7 +25,8 @@ async function buildAlgorandTokenAccount({
   existingTokenAccount,
   balance,
 }) {
-  const id = parentAccountId + "+" + token.id;
+  const extractedId = extractTokenId(token.id);
+  const id = parentAccountId + "+" + extractedId;
   const getAllOperations = async () => {
     const query = await coreAccount.queryOperations();
     await query.complete();
@@ -38,9 +40,9 @@ async function buildAlgorandTokenAccount({
         buildASAOperation({
           coreOperation,
           accountId: id,
+          tokenId: extractedId,
         })
     );
-
     return operations;
   };
 

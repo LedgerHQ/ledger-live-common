@@ -4,7 +4,6 @@ import { BigNumber } from "bignumber.js";
 import { AlgorandOperationTypeEnum } from "./types";
 import type { Operation } from "../../types";
 import type { CoreOperation } from "../../libcore/types";
-import { extractTokenId } from "./tokens";
 
 const OperationTypeMap = {
   "0": "OUT",
@@ -14,8 +13,9 @@ const OperationTypeMap = {
 export async function buildASAOperation(arg: {
   coreOperation: CoreOperation,
   accountId: string,
+  tokenId: string,
 }) {
-  const { coreOperation, accountId } = arg;
+  const { coreOperation, accountId, tokenId } = arg;
   const algorandOperation = await coreOperation.asAlgorandOperation();
   const transaction = await algorandOperation.getTransaction();
   const hash = await transaction.getId();
@@ -30,7 +30,7 @@ export async function buildASAOperation(arg: {
     return null;
   }
   const transferInfo = await transaction.getAssetTransferInfo();
-  if ((await transferInfo.getAssetId()) !== extractTokenId(accountId)) {
+  if ((await transferInfo.getAssetId()) !== tokenId) {
     return null;
   }
   const operationType = await coreOperation.getOperationType();

@@ -25,17 +25,15 @@ const dataset: DatasetTest<Transaction> = {
         {
           name: "algorand seed 1",
           apdus: `
-            => 800300000400000000
-            <= fef9cf3252121f000324dd819b2c1d76910413924acaf6779b30e1fa1874d7af9000
-            => 800300000480000000
-            <= fef9cf3252121f000324dd819b2c1d76910413924acaf6779b30e1fa1874d7af9000
-            => 800300000480000001
-            <= c5b2f1897dbc1e279837507ea01bf82ea0611897dff13933bd13c8f3a9a4d6649000
-            => 800300000480000002
-            <= 997011869f890d99597a22a364e9f085a649eba1847580e405de81838683ce3f9000
-            => 800300000480000003
-            <= c850bb742f67c10a77988650291a5c4fd49d5ebe70b632d21f08783aaf0a55099000
-            `,
+          => 800300000400000000
+          <= fef9cf3252121f000324dd819b2c1d76910413924acaf6779b30e1fa1874d7af9000
+          => 800300000480000000
+          <= fef9cf3252121f000324dd819b2c1d76910413924acaf6779b30e1fa1874d7af9000
+          => 800300000480000001
+          <= c5b2f1897dbc1e279837507ea01bf82ea0611897dff13933bd13c8f3a9a4d6649000
+          => 800300000480000002
+          <= 997011869f890d99597a22a364e9f085a649eba1847580e405de81838683ce3f9000
+          `,
         },
       ],
       accounts: [
@@ -131,7 +129,7 @@ const dataset: DatasetTest<Transaction> = {
               transaction: (t) => ({
                 ...t,
                 mode: "optIn",
-                assetId: "31231",
+                assetId: "algorand/asa/31231",
                 amount: BigNumber("1000"),
                 recipient:
                   "YWZPDCL5XQPCPGBXKB7KAG7YF2QGCGEX37YTSM55CPEPHKNE2ZSKRAXNQ4",
@@ -142,22 +140,23 @@ const dataset: DatasetTest<Transaction> = {
                 amount: BigNumber("0"),
               },
             },
-            {
-              name: "send Token",
-              transaction: (t) => ({
-                ...t,
-                subAccountId:
-                  "libcore:1:algorand:fef9cf3252121f000324dd819b2c1d76910413924acaf6779b30e1fa1874d7af:+algorand/asa/342836",
-                amount: BigNumber("1000"),
-                recipient:
-                  "YWZPDCL5XQPCPGBXKB7KAG7YF2QGCGEX37YTSM55CPEPHKNE2ZSKRAXNQ4",
-              }),
-              expectedStatus: {
-                errors: {},
-                warnings: {},
-                amount: BigNumber("1000"),
-              },
-            },
+            // We got no token on this account, it's best if the live can provide a frozen seed for Algorand later
+            // {
+            //   name: "send Token",
+            //   transaction: (t) => ({
+            //     ...t,
+            //     subAccountId:
+            //       "libcore:1:algorand:fef9cf3252121f000324dd819b2c1d76910413924acaf6779b30e1fa1874d7af:+312769",
+            //     amount: BigNumber("1000"),
+            //     recipient:
+            //       "YWZPDCL5XQPCPGBXKB7KAG7YF2QGCGEX37YTSM55CPEPHKNE2ZSKRAXNQ4",
+            //   }),
+            //   expectedStatus: {
+            //     errors: {},
+            //     warnings: {},
+            //     amount: BigNumber("1000"),
+            //   },
+            // },
             {
               name: "send Token - more than available",
               transaction: (t) => ({
