@@ -1,6 +1,6 @@
 // @flow
 import invariant from "invariant";
-import { concat, of, empty, interval, Observable } from "rxjs";
+import { concat, of, empty, interval, Observable, throwError } from "rxjs";
 import {
   scan,
   debounce,
@@ -273,9 +273,6 @@ function inferCommandParams(appRequest: AppRequest) {
   };
 }
 
-const timeoutConnectApp = (o) =>
-  timeout(10000)(o).pipe(catchError(() => new ConnectAppTimeout()));
-
 const implementations = {
   // in this paradigm, we know that deviceSubject is reflecting the device events
   // so we just trust deviceSubject to reflect the device context (switch between apps, dashboard,...)
@@ -321,7 +318,12 @@ const implementations = {
         }
         log("app/polling", "polling loop");
         connectSub = connectApp(pollingOnDevice, params)
-          .pipe(timeoutConnectApp)
+          .pipe(
+            timeout(20000),
+            catchError(() => {
+              return of({ type: "error", error: new ConnectAppTimeout() });
+            })
+          )
           .subscribe({
             next: (event) => {
               if (initT) {
