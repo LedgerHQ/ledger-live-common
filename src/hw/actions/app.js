@@ -1,6 +1,14 @@
 // @flow
 import invariant from "invariant";
-import { concat, of, empty, interval, Observable, throwError } from "rxjs";
+import {
+  concat,
+  of,
+  empty,
+  interval,
+  Observable,
+  throwError,
+  TimeoutError,
+} from "rxjs";
 import {
   scan,
   debounce,
@@ -292,6 +300,7 @@ const implementations = {
       const POLLING = 2000;
       const INIT_DEBOUNCE = 5000;
       const DISCONNECT_DEBOUNCE = 5000;
+      const DEVICE_POLLING_TIMEOUT = 20000;
 
       // this pattern allows to actually support events based (like if deviceSubject emits new device changes) but inside polling paradigm
       let pollingOnDevice;
@@ -319,10 +328,12 @@ const implementations = {
         log("app/polling", "polling loop");
         connectSub = connectApp(pollingOnDevice, params)
           .pipe(
-            timeout(20000),
-            catchError(() => {
-              return of({ type: "error", error: new ConnectAppTimeout() });
-            })
+            timeout(DEVICE_POLLING_TIMEOUT),
+            catchError((err) =>
+              err instanceof TimeoutError
+                ? of({ type: "error", error: new ConnectAppTimeout() })
+                : throwError(err)
+            )
           )
           .subscribe({
             next: (event) => {
