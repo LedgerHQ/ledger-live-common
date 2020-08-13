@@ -16,8 +16,8 @@ const dataset: DatasetTest<Transaction> = {
   currencies: {
     algorand: {
       FIXME_ignoreAccountFields: [
-        "algorandResources.pendingRewards", // We cant keep track of this since it's always move
-        "algorandResources.totalRewards", // same
+        "algorandResources.rewards", // We cant keep track of this since it's always move
+        "algorandResources.rewardsAccumulated", // same
         "balance", // I think rewards are included
         "spendableBalance", // same since the rewards are included here
       ],
