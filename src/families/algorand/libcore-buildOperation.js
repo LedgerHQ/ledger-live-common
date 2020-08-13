@@ -1,5 +1,6 @@
 // @flow
 
+import { BigNumber } from "bignumber.js";
 import type { CoreOperation } from "../../libcore/types";
 import type { Operation } from "../../types";
 import { AlgorandOperationTypeEnum } from "./types";
@@ -48,6 +49,11 @@ async function algorandBuildOperation({
   const assetId = await getAssetId(algorandLikeTransaction);
   if (assetId) {
     out.extra = { ...out.extra, assetId: assetId };
+  }
+
+  const rewards = await algorandLikeOperation.getRewards();
+  if (rewards) {
+    out.extra = { ...out.extra, rewards: BigNumber(rewards) };
   }
 
   return out;

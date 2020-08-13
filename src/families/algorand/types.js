@@ -100,6 +100,7 @@ declare class CoreAlgorandOperation {
   getTransaction(): Promise<CoreAlgorandTransaction>;
   getAlgorandOperationType(): Promise<number>;
   getAssetAmount(): Promise<string>;
+  getRewards(): Promise<string>
 }
 
 export type CoreCurrencySpecifics = {};
@@ -204,6 +205,7 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
       getAlgorandOperationType: {},
       getAssetAmount: {},
+      getRewards: {},
     },
   });
 
