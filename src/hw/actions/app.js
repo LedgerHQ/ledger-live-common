@@ -312,6 +312,7 @@ const implementations = {
       let initT = setTimeout(() => {
         // initial timeout to unset the device if it's still not connected
         o.next({ type: "deviceChange", device: null });
+        device = null;
         log("app/polling", "device init timeout");
       }, INIT_DEBOUNCE);
 
