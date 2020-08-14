@@ -410,6 +410,7 @@ export const createAction = (
   const useHook = (device: ?Device, appRequest: AppRequest): AppState => {
     // repair modal will interrupt everything and be rendered instead of the background content
     const [state, setState] = useState(() => getInitialState(device));
+    const [resetIndex, setResetIndex] = useState(0);
     const deviceSubject = useReplaySubject(device);
 
     const params = useMemo(
@@ -451,9 +452,10 @@ export const createAction = (
       return () => {
         sub.unsubscribe();
       };
-    }, [params, deviceSubject, state.opened]);
+    }, [params, deviceSubject, state.opened, resetIndex]);
 
     const onRetry = useCallback(() => {
+      setResetIndex((i) => i + 1);
       setState(getInitialState(device));
     }, [device]);
 
