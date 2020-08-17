@@ -340,7 +340,7 @@ const implementations = {
             timeout(DEVICE_POLLING_TIMEOUT),
             catchError((err) =>
               err instanceof TimeoutError
-                ? of({ type: "error", error: new ConnectAppTimeout() })
+                ? of({ type: "error", error: (new ConnectAppTimeout(): Error) })
                 : throwError(err)
             )
           )
