@@ -118,7 +118,8 @@ export const createAction = (
     const { exchange, exchangeRate, transaction } = initSwapRequest;
 
     useEffect(() => {
-      if (!opened || !device || !device.deviceId) {
+      // $FlowFixMe Fix types, why is device not having deviceId when wired?
+      if (!opened || !device || (device.type !== "hid" && !device.deviceId)) {
         setState(initialState);
         return;
       }
@@ -128,7 +129,7 @@ export const createAction = (
         initSwapExec({
           exchange,
           exchangeRate,
-          deviceId: device.deviceId,
+          deviceId: device.deviceId || "",
           transaction,
         })
       )
