@@ -81,8 +81,8 @@ export const CosmosRedelegationInProgress = createCustomErrorClass(
   "CosmosRedelegationInProgress"
 );
 
-export const CosmosClaimRewardsFeesWarning = createCustomErrorClass(
-  "CosmosClaimRewardsFeesWarning"
+export const ClaimRewardsFeesWarning = createCustomErrorClass(
+  "ClaimRewardsFeesWarning"
 );
 
 export const CosmosDelegateAllFundsWarning = createCustomErrorClass(
