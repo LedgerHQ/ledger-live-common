@@ -119,6 +119,8 @@ export async function createSpeculosDevice(
     "42000",
     "--automation-port",
     "43000",
+    "--deterministic-rng",
+    "0",
   ]);
 
   let resolveReady;
