@@ -21,6 +21,7 @@ import {
   fromCosmosResourcesRaw,
   fromBitcoinResourcesRaw,
   fromBalanceHistoryRawMap,
+  fromAlgorandResourcesRaw,
 } from "./account";
 import consoleWarnExpectToEqual from "./consoleWarnExpectToEqual";
 
@@ -137,10 +138,9 @@ function shouldRefreshBitcoinResources(updatedRaw, account) {
   if (!account.bitcoinResources) return true;
   if (updatedRaw.blockHeight !== account.blockHeight) return true;
   if (updatedRaw.operations.length !== account.operations.length) return true;
-  return (
-    updatedRaw.bitcoinResources.utxos.length !==
-    account.bitcoinResources.utxos.length
-  );
+  const { bitcoinResources: existing } = account;
+  const { bitcoinResources: raw } = updatedRaw;
+  return raw.utxos.length !== existing.utxos.length;
 }
 
 export function patchAccount(
@@ -270,6 +270,16 @@ export function patchAccount(
     account.cosmosResources !== updatedRaw.cosmosResources
   ) {
     next.cosmosResources = fromCosmosResourcesRaw(updatedRaw.cosmosResources);
+    changed = true;
+  }
+
+  if (
+    updatedRaw.algorandResources &&
+    account.algorandResources !== updatedRaw.algorandResources
+  ) {
+    next.algorandResources = fromAlgorandResourcesRaw(
+      updatedRaw.algorandResources
+    );
     changed = true;
   }
 
