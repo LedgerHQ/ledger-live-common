@@ -6,8 +6,8 @@ import type { Operation } from "../../types";
 import type { CoreOperation } from "../../libcore/types";
 
 const OperationTypeMap = {
-  "0": "OUT",
-  "1": "IN",
+  0: "OUT",
+  1: "IN",
 };
 
 export async function buildASAOperation(arg: {

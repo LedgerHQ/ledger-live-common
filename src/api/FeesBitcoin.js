@@ -4,9 +4,9 @@ import type { CryptoCurrency } from "../types";
 import { getEstimatedFees } from "./Fees";
 
 export const speeds = {
-  "1": "high",
-  "3": "standard",
-  "6": "low",
+  1: "high",
+  3: "standard",
+  6: "low",
 };
 
 export const defaultBlockCount = 3;

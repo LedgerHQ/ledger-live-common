@@ -14,8 +14,8 @@ import perFamily from "../../generated/libcore-buildOperation";
 import { getEnv } from "../../env";
 
 export const OperationTypeMap = {
-  "0": "OUT",
-  "1": "IN",
+  0: "OUT",
+  1: "IN",
 };
 
 export async function buildOperation(arg: {

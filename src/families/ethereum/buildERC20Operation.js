@@ -5,8 +5,8 @@ import { libcoreBigIntToBigNumber } from "../../libcore/buildBigNumber";
 import type { CoreERC20LikeOperation } from "./types";
 
 const OperationTypeMap = {
-  "0": "OUT",
-  "1": "IN",
+  0: "OUT",
+  1: "IN",
 };
 
 export async function buildERC20Operation(arg: {
