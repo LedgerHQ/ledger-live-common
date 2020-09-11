@@ -1,7 +1,7 @@
 // @flow
 
 import { Observable, concat, from, of, throwError, defer } from "rxjs";
-import { concatMap, map, catchError, delay } from "rxjs/operators";
+import { concatMap, map, catchError, delay, switchMap } from "rxjs/operators";
 import {
   TransportStatusError,
   FirmwareOrAppUpdateRequired,
@@ -12,6 +12,8 @@ import {
   DisconnectedDevice,
 } from "@ledgerhq/errors";
 import type { DeviceModelId } from "@ledgerhq/devices";
+import getDeviceInfo from "@ledgerhq/live-common/lib/hw/getDeviceInfo";
+import { listApps } from "@ledgerhq/live-common/lib/apps/hw";
 import { getEnv } from "../env";
 import type { DerivationMode } from "../types";
 import { getCryptoCurrencyById } from "../currencies";
@@ -20,6 +22,7 @@ import { isDashboardName } from "./isDashboardName";
 import getAppAndVersion from "./getAppAndVersion";
 import getAddress from "./getAddress";
 import openApp from "./openApp";
+
 import { mustUpgrade } from "../apps";
 
 export type RequiresDerivation = {|
@@ -56,9 +59,36 @@ export type ConnectAppEvent =
 const openAppFromDashboard = (
   transport,
   appName
-): Observable<ConnectAppEvent> =>
-  !getEnv("EXPERIMENTAL_DEVICE_FLOW")
-    ? of({ type: "ask-open-app", appName })
+): Observable<ConnectAppEvent> => {
+  return !getEnv("EXPERIMENTAL_DEVICE_FLOW")
+    ? defer(() =>
+        from(getDeviceInfo(transport)).pipe(
+          // fetch device info for list apps
+          switchMap((deviceInfo) =>
+            listApps(transport, deviceInfo).pipe(
+              // request list apps
+              map(({ type, result }) =>
+                type === "result" && result
+                  ? result.installed &&
+                    result.installed.some(({ name }) => name === appName)
+                    ? {
+                        type: "ask-open-app", // open app if installed
+                        appName,
+                      }
+                    : {
+                        type: "app-not-installed", // redirect to manager otherwise
+                        appName,
+                      }
+                  : {
+                      type: "device-permission-requested", // request manager for list app if needed
+                      wording: "Allow Ledger Manager",
+                    }
+              ),
+              catchError(() => of({ type: "app-not-installed", appName }))
+            )
+          )
+        )
+      )
     : concat(
         // TODO optim: the requested should happen a better in a deferred way because openApp might error straightaway instead
         of({ type: "device-permission-requested", wording: appName }),
@@ -79,6 +109,7 @@ const openAppFromDashboard = (
           })
         )
       );
+};
 
 const derivationLogic = (
   transport,
@@ -147,7 +178,6 @@ const cmd = ({
         .pipe(
           concatMap((appAndVersion): Observable<ConnectAppEvent> => {
             timeoutSub.unsubscribe();
-
             if (isDashboardName(appAndVersion.name)) {
               // we're in dashboard
               return openAppFromDashboard(transport, appName);
