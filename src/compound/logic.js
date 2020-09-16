@@ -1,12 +1,7 @@
 // @flow
 import { BigNumber } from "bignumber.js";
-import { listTokensForCryptoCurrency } from "../currencies";
-import type {
-  TokenAccount,
-  Account,
-  CryptoCurrency,
-  TokenCurrency,
-} from "../types";
+import { findCompoundToken } from "../currencies";
+import type { TokenAccount, Account } from "../types";
 import type { CompoundAccountSummary } from "./types";
 
 const calcInterests = (
@@ -17,14 +12,6 @@ const calcInterests = (
   const bigVal = BigNumber(value);
   return bigVal.times(closeOrCurrentRate).minus(bigVal.times(openRate));
 };
-
-export const isCompoundToken = (
-  currency: CryptoCurrency,
-  token: TokenCurrency
-): boolean =>
-  listTokensForCryptoCurrency(currency, { withDelisted: true }).some(
-    (c) => c.compoundFor === token.id
-  );
 
 export function makeCompoundSummaryForAccount(
   account: TokenAccount,
@@ -166,7 +153,7 @@ export const getAssetsData = (accounts: Account[]): AssetsRow[] => {
 
     account.subAccounts.forEach((s) => {
       if (s.type !== "TokenAccount") return;
-      if (!isCompoundToken(account.currency, s.token)) return;
+      if (!findCompoundToken(s.token)) return;
 
       const { totalSupplied, allTimeEarned } = makeCompoundSummaryForAccount(
         s,
