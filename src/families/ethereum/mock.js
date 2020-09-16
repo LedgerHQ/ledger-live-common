@@ -8,6 +8,7 @@ import type {
   OperationType,
 } from "../../types";
 import { genOperation } from "../../mock/account";
+import { findCompoundToken } from "../../currencies";
 
 let rate = 0.5;
 function getRate() {
@@ -64,9 +65,7 @@ function addOperationWithType(
 ) {
   const subAccounts = account?.subAccounts?.length ? account.subAccounts : [];
   const daiAccount = subAccounts.find(
-    (sub) =>
-      sub.type === "TokenAccount" &&
-      sub.token.id === "ethereum/erc20/dai_stablecoin_v2_0"
+    (sub) => sub.type === "TokenAccount" && findCompoundToken(sub.token)
   );
 
   genBaseOperation({
