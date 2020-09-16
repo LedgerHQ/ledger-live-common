@@ -67,7 +67,13 @@ export const getAccountBridge = (
       }
     );
   }
+  const jsBridge = jsBridges[family];
+
   if (type === "libcore") {
+    if (jsBridge && shouldUseJS(currency)) {
+      return jsBridge.accountBridge;
+    }
+
     // TODO at this point, we might want to check if an impl in JS exists
     // and if it's not flagged as experimental, we make an implicit migration that would happen to change ids and change bridge implementation
     // FIXME: how will addAccount reconciliate accounts?
@@ -80,7 +86,6 @@ export const getAccountBridge = (
       }
     );
   }
-  const jsBridge = jsBridges[family];
   if (jsBridge) return jsBridge.accountBridge;
   throw new CurrencyNotSupported("currency not supported " + currency.id, {
     currencyName: mainAccount.currency.name,

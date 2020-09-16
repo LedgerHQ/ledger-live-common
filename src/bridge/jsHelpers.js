@@ -82,9 +82,11 @@ export const makeSync = (
           syncConfig
         );
         o.next((a) => {
+          const accountId = `js:2:${a.currency.id}:${a.freshAddress}:${a.derivationMode}`;
           const operations = mergeOps(a.operations, shape.operations || []);
           return postSync({
             ...a,
+            id: accountId,
             spendableBalance: shape.balance || a.balance,
             operationsCount: shape.operationsCount || operations.length,
             lastSyncDate: new Date(),
