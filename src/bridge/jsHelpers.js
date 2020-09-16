@@ -71,18 +71,18 @@ export const makeSync = (
 ): Observable<AccountUpdater> =>
   Observable.create((o) => {
     async function main() {
+      const accountId = `js:2:${initial.currency.id}:${initial.freshAddress}:${initial.derivationMode}`;
       try {
         const shape = await getAccountShape(
           {
             currency: initial.currency,
-            id: initial.id,
+            id: accountId,
             address: initial.freshAddress,
             initialAccount: initial,
           },
           syncConfig
         );
         o.next((a) => {
-          const accountId = `js:2:${a.currency.id}:${a.freshAddress}:${a.derivationMode}`;
           const operations = mergeOps(a.operations, shape.operations || []);
           return postSync({
             ...a,

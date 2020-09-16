@@ -77,7 +77,10 @@ export const getAccountShape: GetAccountShape = async (
 
   const subAccountsExisting = {};
   initialAccount?.subAccounts?.forEach((a) => {
-    subAccountsExisting[a.id] = a;
+    // in case of coming from libcore, we need to converge to new ids
+    const { token } = decodeTokenAccountId(a.id);
+    const id = encodeTokenAccountId(infoInput.id, token);
+    subAccountsExisting[id] = a;
   });
   const subAccountsExistingIds = Object.keys(subAccountsExisting);
   const perTokenAccountChangedIds = Object.keys(perTokenAccountIdOperations);
