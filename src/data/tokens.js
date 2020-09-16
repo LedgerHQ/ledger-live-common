@@ -101,3 +101,10 @@ export function getTokenById(id: string): TokenCurrency {
   }
   return currency;
 }
+
+// if a given token account is a token that can be used in compound, give the associated compound token (cToken)
+export function findCompoundToken(token: TokenCurrency): ?TokenCurrency {
+  return listTokensForCryptoCurrency(token.parentCurrency, {
+    withDelisted: true,
+  }).find((t) => t.compoundFor === token.id);
+}

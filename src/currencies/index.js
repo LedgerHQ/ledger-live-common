@@ -46,6 +46,7 @@ import {
   findTokenByAddress,
   hasTokenId,
   getTokenById,
+  findCompoundToken,
 } from "../data/tokens";
 
 import { parseCurrencyUnit } from "./parseCurrencyUnit";
@@ -111,4 +112,5 @@ export {
   valueFromUnit,
   sanitizeValueString,
   getCurrencyColor,
+  findCompoundToken,
 };
