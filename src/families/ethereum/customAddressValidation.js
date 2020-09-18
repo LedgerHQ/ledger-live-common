@@ -1,7 +1,11 @@
 // @flow
 import eip55 from "eip55";
-import { InvalidAddress, ETHAddressNonEIP } from "@ledgerhq/errors";
-import type { CryptoCurrency } from "../../types";
+import {
+  InvalidAddress,
+  ETHAddressNonEIP,
+  RecipientRequired,
+} from "@ledgerhq/errors";
+import type { CryptoCurrency, TransactionStatus } from "../../types";
 
 export function isRecipientValid(currency: CryptoCurrency, recipient: string) {
   if (!recipient.match(/^0x[0-9a-fA-F]{40}$/)) return false;
@@ -34,6 +38,24 @@ export function getRecipientWarning(
     return new ETHAddressNonEIP();
   }
   return null;
+}
+
+export function validateRecipient(
+  currency: CryptoCurrency,
+  recipient: string,
+  { errors, warnings }: TransactionStatus
+) {
+  let recipientWarning = getRecipientWarning(currency, recipient);
+  if (recipientWarning) {
+    warnings.recipient = recipientWarning;
+  }
+  if (!recipient) {
+    errors.recipient = new RecipientRequired("");
+  } else if (!isRecipientValid(currency, recipient)) {
+    errors.recipient = new InvalidAddress("", {
+      currencyName: currency.name,
+    });
+  }
 }
 
 // FIXME this is used by libcore only. will be later dropped

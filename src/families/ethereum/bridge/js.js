@@ -2,15 +2,10 @@
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import {
-  AmountRequired,
-  NotEnoughBalance,
   NotEnoughGas,
   FeeNotLoaded,
-  FeeTooHigh,
-  InvalidAddress,
   FeeRequired,
   GasLessThanEstimate,
-  RecipientRequired,
 } from "@ledgerhq/errors";
 import type { CurrencyBridge, AccountBridge } from "../../../types";
 import {
@@ -32,10 +27,7 @@ import {
 import { getAccountShape } from "../synchronisation";
 import { preload, hydrate } from "../modules";
 import { signOperation } from "../signOperation";
-import {
-  isRecipientValid,
-  getRecipientWarning,
-} from "../customAddressValidation";
+import { modes } from "../modules";
 
 const receive = makeAccountBridgeReceive();
 
@@ -63,6 +55,7 @@ const createTransaction = () => ({
   estimatedGasLimit: null,
   networkInfo: null,
   feeCustomUnit: getCryptoCurrencyById("ethereum").units[1],
+  useAllAmount: false,
 });
 
 const updateTransaction = (t, patch) => {
@@ -73,58 +66,31 @@ const updateTransaction = (t, patch) => {
 };
 
 const getTransactionStatus = (a, t) => {
-  const errors = {};
-  const warnings = {};
-  const tokenAccount = !t.subAccountId
-    ? null
-    : a.subAccounts && a.subAccounts.find((ta) => ta.id === t.subAccountId);
-  const account = tokenAccount || a;
-
-  // validate recipient
-  let recipientWarning = getRecipientWarning(a.currency, t.recipient);
-  if (recipientWarning) {
-    warnings.recipient = recipientWarning;
-  }
-  if (!t.recipient) {
-    errors.recipient = new RecipientRequired("");
-  } else if (!isRecipientValid(a.currency, t.recipient)) {
-    errors.recipient = new InvalidAddress("", {
-      currencyName: a.currency.name,
-    });
-  }
-
-  // validate amount and fees
   const gasLimit = getGasLimit(t);
   const estimatedFees = (t.gasPrice || BigNumber(0)).times(gasLimit);
 
-  const totalSpent = t.useAllAmount
-    ? account.balance
-    : tokenAccount
-    ? BigNumber(t.amount || 0)
-    : BigNumber(t.amount || 0).plus(estimatedFees);
+  const errors = {};
+  const warnings = {};
+  const result = {
+    errors,
+    warnings,
+    estimatedFees,
+    amount: BigNumber(0),
+    totalSpent: BigNumber(0),
+  };
 
-  const amount = t.useAllAmount
-    ? tokenAccount
-      ? tokenAccount.balance
-      : account.balance.minus(estimatedFees)
-    : BigNumber(t.amount || 0);
+  const m = modes[t.mode];
+  invariant(m, "missing module for mode=" + t.mode);
+  m.fillTransactionStatus(a, t, result);
 
+  // generic gas error and warnings
   if (!t.gasPrice) {
     errors.gasPrice = new FeeNotLoaded();
   } else if (gasLimit.eq(0)) {
     errors.gasLimit = new FeeRequired();
   } else if (!errors.recipient) {
-    if (tokenAccount) {
-      if (!t.useAllAmount && amount.gt(tokenAccount.balance)) {
-        errors.amount = new NotEnoughBalance();
-      }
-      if (estimatedFees.gt(a.balance)) {
-        errors.gasPrice = new NotEnoughGas();
-      }
-    } else {
-      if (totalSpent.gt(a.balance)) {
-        errors.amount = new NotEnoughBalance();
-      }
+    if (estimatedFees.gt(a.balance)) {
+      errors.gasPrice = new NotEnoughGas();
     }
   }
 
@@ -132,21 +98,7 @@ const getTransactionStatus = (a, t) => {
     warnings.gasLimit = new GasLessThanEstimate();
   }
 
-  if (!tokenAccount && amount.gt(0) && estimatedFees.times(10).gt(amount)) {
-    warnings.feeTooHigh = new FeeTooHigh();
-  }
-
-  if (!errors.amount && amount.eq(0)) {
-    errors.amount = new AmountRequired();
-  }
-
-  return Promise.resolve({
-    errors,
-    warnings,
-    estimatedFees,
-    amount,
-    totalSpent,
-  });
+  return Promise.resolve(result);
 };
 
 const getNetworkInfo = async (c) => {
@@ -155,10 +107,6 @@ const getNetworkInfo = async (c) => {
 };
 
 const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
-  const tokenAccount = !t.subAccountId
-    ? null
-    : a.subAccounts && a.subAccounts.find((ta) => ta.id === t.subAccountId);
-
   const networkInfo = t.networkInfo || (await getNetworkInfo(a.currency));
   const gasPrice = t.gasPrice || networkInfo.gasPrice;
 
@@ -167,21 +115,9 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
   }
 
   let estimatedGasLimit = BigNumber(21000); // fallback in case we can't calculate
-  if (tokenAccount) {
-    invariant(tokenAccount.type === "TokenAccount", "eth have token accounts");
-    estimatedGasLimit = await estimateGasLimit(
-      a,
-      tokenAccount.token.contractAddress,
-      inferEthereumGasLimitRequest(a, t)
-    );
-  } else if (t.recipient) {
-    if (isRecipientValid(a.currency, t.recipient)) {
-      estimatedGasLimit = await estimateGasLimit(
-        a,
-        t.recipient,
-        inferEthereumGasLimitRequest(a, t)
-      );
-    }
+  const request = inferEthereumGasLimitRequest(a, t);
+  if (request.to) {
+    estimatedGasLimit = await estimateGasLimit(a, request.to, request);
   }
 
   if (

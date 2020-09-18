@@ -2,7 +2,13 @@
 
 import { Buffer } from "buffer";
 import type { BigNumber } from "bignumber.js";
-import type { Unit } from "../../types";
+import type {
+  Unit,
+  Account,
+  TransactionStatus,
+  TokenCurrency,
+  Operation,
+} from "../../types";
 import type {
   TransactionCommon,
   TransactionCommonRaw,
@@ -13,6 +19,7 @@ import type {
   OperationType,
   Spec,
 } from "../../libcore/types";
+import type { TransactionMode, ModeModule } from "./modules";
 
 export type EthereumGasLimitRequest = {
   from?: string,
@@ -23,6 +30,46 @@ export type EthereumGasLimitRequest = {
   gasPrice?: string,
   amplifier: string,
 };
+
+export type NetworkInfo = {|
+  family: "ethereum",
+  gasPrice: BigNumber,
+|};
+
+export type NetworkInfoRaw = {|
+  family: "ethereum",
+  gasPrice: string,
+|};
+
+export type { TransactionMode, ModeModule };
+
+export type Transaction = {|
+  ...TransactionCommon,
+  family: "ethereum",
+  mode: TransactionMode,
+  nonce?: number,
+  data?: typeof Buffer,
+  gasPrice: ?BigNumber,
+  userGasLimit: ?BigNumber,
+  estimatedGasLimit: ?BigNumber,
+  feeCustomUnit: ?Unit,
+  networkInfo: ?NetworkInfo,
+|};
+
+export type TransactionRaw = {|
+  ...TransactionCommonRaw,
+  family: "ethereum",
+  mode: TransactionMode,
+  nonce?: number,
+  data?: string,
+  gasPrice: ?string,
+  userGasLimit: ?string,
+  estimatedGasLimit: ?string,
+  feeCustomUnit: ?Unit,
+  networkInfo: ?NetworkInfoRaw,
+|};
+
+///// LIBCORE STUFF //////
 
 declare class CoreEthereumLikeAddress {
   toEIP55(): Promise<string>;
@@ -132,44 +179,6 @@ export type CoreOperationSpecifics = {
 };
 
 export type CoreCurrencySpecifics = {};
-
-export type NetworkInfo = {|
-  family: "ethereum",
-  gasPrice: BigNumber,
-|};
-
-export type NetworkInfoRaw = {|
-  family: "ethereum",
-  gasPrice: string,
-|};
-
-export type TransactionMode = "send";
-
-export type Transaction = {|
-  ...TransactionCommon,
-  family: "ethereum",
-  mode: TransactionMode,
-  nonce?: number,
-  data?: typeof Buffer,
-  gasPrice: ?BigNumber,
-  userGasLimit: ?BigNumber,
-  estimatedGasLimit: ?BigNumber,
-  feeCustomUnit: ?Unit,
-  networkInfo: ?NetworkInfo,
-|};
-
-export type TransactionRaw = {|
-  ...TransactionCommonRaw,
-  family: "ethereum",
-  mode: TransactionMode,
-  nonce?: number,
-  data?: string,
-  gasPrice: ?string,
-  userGasLimit: ?string,
-  estimatedGasLimit: ?string,
-  feeCustomUnit: ?Unit,
-  networkInfo: ?NetworkInfoRaw,
-|};
 
 export const reflect = (declare: (string, Spec) => void) => {
   declare("InternalTransaction", {

@@ -1,25 +1,25 @@
 // @flow
 import invariant from "invariant";
-import eip55 from "eip55";
 import { Buffer } from "buffer";
 import { BigNumber } from "bignumber.js";
 import { log } from "@ledgerhq/logs";
-import { NotEnoughBalance } from "@ledgerhq/errors";
 import type {
   Transaction,
   TransactionRaw,
   EthereumGasLimitRequest,
 } from "./types";
+import { Transaction as EthereumTx } from "ethereumjs-tx";
 import {
   fromTransactionCommonRaw,
   toTransactionCommonRaw,
 } from "../../transaction/common";
-import type { Account } from "../../types";
+import type { Account, CryptoCurrency } from "../../types";
 import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
 import { apiForCurrency } from "../../api/Ethereum";
 import { makeLRUCache } from "../../cache";
 import { getEnv } from "../../env";
+import { modes } from "./modules";
 
 export const formatTransaction = (
   t: Transaction,
@@ -88,7 +88,7 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
     estimatedGasLimit: t.estimatedGasLimit
       ? t.estimatedGasLimit.toString()
       : null,
-    feeCustomUnit: t.feeCustomUnit, // FIXME this is not good.. we're dereferencing here. we should instead store an index (to lookup in currency.units on UI)
+    feeCustomUnit: t.feeCustomUnit, // FIXME drop?
     networkInfo: networkInfo && {
       family: networkInfo.family,
       gasPrice: networkInfo.gasPrice.toString(),
@@ -96,45 +96,68 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   };
 };
 
-const ethereumTransferMethodID = Buffer.from("a9059cbb", "hex");
-
-export function serializeTransactionData(
-  account: Account,
-  transaction: Transaction
-): ?typeof Buffer {
-  const { subAccountId } = transaction;
-  const subAccount = subAccountId
-    ? account.subAccounts &&
-      account.subAccounts.find((t) => t.id === subAccountId)
-    : null;
-  if (!subAccount) return;
-  const recipient = eip55.encode(transaction.recipient);
-  const { balance } = subAccount;
-  let amount;
-  if (transaction.useAllAmount) {
-    amount = balance;
-  } else {
-    if (!transaction.amount) return;
-    amount = BigNumber(transaction.amount);
-    if (amount.gt(subAccount.balance)) {
-      throw new NotEnoughBalance();
-    }
+// see https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
+export function getNetworkId(currency: CryptoCurrency): ?number {
+  switch (currency.id) {
+    case "ethereum":
+      return 1;
+    case "ethereum_classic":
+      return 61;
+    case "ethereum_classic_ropsten":
+      return 62;
+    case "ethereum_ropsten":
+      return 3;
+    default:
+      return null;
   }
-  const to256 = Buffer.concat([
-    Buffer.alloc(12),
-    Buffer.from(recipient.replace("0x", ""), "hex"),
-  ]);
-  invariant(to256.length === 32, "recipient is invalid");
-  const amountHex = amount.toString(16);
-  const amountBuf = Buffer.from(
-    amountHex.length % 2 === 0 ? amountHex : "0" + amountHex,
-    "hex"
+}
+
+export function inferTokenAccount(a: Account, t: Transaction) {
+  const tokenAccount = !t.subAccountId
+    ? null
+    : a.subAccounts && a.subAccounts.find((ta) => ta.id === t.subAccountId);
+  if (tokenAccount && tokenAccount.type === "TokenAccount") {
+    return tokenAccount;
+  }
+}
+
+export function buildEthereumTx(
+  account: Account,
+  transaction: Transaction,
+  nonce: number
+) {
+  const { currency } = account;
+  const { gasPrice } = transaction;
+  const subAccount = inferTokenAccount(account, transaction);
+
+  invariant(
+    !subAccount || subAccount.type === "TokenAccount",
+    "only token accounts expected"
   );
-  const amount256 = Buffer.concat([
-    Buffer.alloc(32 - amountBuf.length),
-    amountBuf,
-  ]);
-  return Buffer.concat([ethereumTransferMethodID, to256, amount256]);
+
+  const chainId = getNetworkId(currency);
+  invariant(chainId, `chainId not found for currency ${currency.name}`);
+
+  const gasLimit = getGasLimit(transaction);
+
+  const ethTxObject: Object = {
+    nonce,
+    chainId,
+    gasPrice: `0x${BigNumber(gasPrice || 0).toString(16)}`,
+    gasLimit: `0x${BigNumber(gasLimit).toString(16)}`,
+  };
+
+  const m = modes[transaction.mode];
+  invariant(m, "missing module for mode=" + transaction.mode);
+  m.fillTransactionData(account, transaction, ethTxObject);
+
+  const tx = new EthereumTx(ethTxObject);
+  // these will be filled by device signature
+  tx.raw[6] = Buffer.from([chainId]); // v
+  tx.raw[7] = Buffer.from([]); // r
+  tx.raw[8] = Buffer.from([]); // s
+
+  return tx;
 }
 
 export function inferEthereumGasLimitRequest(
@@ -149,40 +172,18 @@ export function inferEthereumGasLimitRequest(
     r.gasPrice = "0x" + transaction.gasPrice.toString();
   }
   try {
-    const data = serializeTransactionData(account, transaction);
+    const { data, to, value } = buildEthereumTx(account, transaction, 1);
+    if (value) {
+      r.value = "0x" + value.toString();
+    }
+    if (to) {
+      r.to = "0x" + to.toString("hex");
+    }
     if (data) {
       r.data = "0x" + data.toString("hex");
     }
   } catch (e) {
     log("warn", "couldn't serializeTransactionData: " + e);
-  }
-
-  const { subAccountId } = transaction;
-  const subAccount = subAccountId
-    ? account.subAccounts &&
-      account.subAccounts.find((t) => t.id === subAccountId)
-    : null;
-
-  if (subAccount && subAccount.type === "TokenAccount") {
-    const { token } = subAccount;
-    r.value = "0x0";
-    r.to = token.contractAddress;
-  } else {
-    if (transaction.recipient) {
-      try {
-        const recipient = eip55.encode(transaction.recipient);
-        r.to = recipient;
-      } catch (e) {
-        log("warn", "couldn't encode recipient: " + e);
-      }
-    }
-    if (transaction.useAllAmount) {
-      r.value = "0x" + account.balance.toString();
-    } else {
-      if (transaction.amount) {
-        r.value = "0x" + transaction.amount.toString();
-      }
-    }
   }
 
   return r;
