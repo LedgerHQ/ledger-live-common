@@ -61,11 +61,15 @@ export const isExchangeSupportedByApp = (
   const minVersion = exchangeSupportAppVersions[appName];
   return valid(minVersion) && valid(appVersion) && gte(appVersion, minVersion);
 };
+const maybeAliasedCurrencyId = (id: string) =>
+  ({
+    zencash: "horizen",
+  }[id] || id);
 
 const getCurrencySwapConfig = (
   currency: CryptoCurrency | TokenCurrency
 ): SwapCurrencyNameAndSignature => {
-  const res = exchangeCurrencyConfigs[currency.id];
+  const res = exchangeCurrencyConfigs[maybeAliasedCurrencyId(currency.id)];
   if (!res) {
     throw new Error(`Swap, missing configuration for ${currency.id}`);
   }
