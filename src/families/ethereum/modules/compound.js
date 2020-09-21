@@ -15,10 +15,18 @@ import type {
   TokenCurrency,
   OperationType,
 } from "../../../types";
+import type { ModeModule } from "../types";
 import { listTokensForCryptoCurrency, getTokenById } from "../../../currencies";
 import network from "../../../network";
 import { promiseAllBatched } from "../../../promise";
 import { getEnv } from "../../../env";
+
+export type Modes =
+  | "compound.mint"
+  | "compound.redeem"
+  | "compound.redeemUnderlying";
+
+export const modes: { [_: Modes]: ModeModule } = {};
 
 // TODO: NB: this needs to be serializable
 type CompoundPreloaded = {};

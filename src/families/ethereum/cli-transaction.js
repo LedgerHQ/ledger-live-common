@@ -26,6 +26,12 @@ const options = [
       "how much gasPrice. default is 2gwei. (example format: 2gwei, 0.000001eth, in wei if no unit precised)",
   },
   {
+    name: "mode",
+    alias: "m",
+    type: String,
+    desc: "data serialization mode (used to communicate with smart contracts)",
+  },
+  {
     name: "gasLimit",
     type: String,
     desc: "how much gasLimit. default is estimated with the recipient",
@@ -78,9 +84,10 @@ function inferTransactions(
       ...transaction,
       family: "ethereum",
       subAccountId,
-      gasPrice: inferAmount(mainAccount, opts.gasPrice || "2gwei"),
+      gasPrice: opts.gasPrice ? inferAmount(mainAccount, opts.gasPrice) : null,
       userGasLimit: opts.gasLimit ? new BigNumber(opts.gasLimit) : null,
       estimatedGasLimit: null,
+      mode: opts.mode || "send",
     };
   });
 }
