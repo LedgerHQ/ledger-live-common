@@ -3,9 +3,9 @@ import { BigNumber } from "bignumber.js";
 import union from "lodash/union";
 import throttle from "lodash/throttle";
 import flatMap from "lodash/flatMap";
-import uniqBy from "lodash/uniqBy";
 import eip55 from "eip55";
 import { log } from "@ledgerhq/logs";
+import { mergeOps } from "../../bridge/jsHelpers";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import {
   encodeTokenAccountId,
@@ -398,17 +398,6 @@ async function loadERC20Balances(tokenAccounts, address, api) {
       a.spendableBalance = r.balance;
     }
   });
-}
-
-// FIXME rename reconciliateOps and make it performant. It shouldn't need to do this uniqBy id, this can assume it's already correctly ordered
-function mergeOps(existing: Operation[], newFetched: Operation[]) {
-  if (newFetched.length === 0) return existing;
-  const ids = existing.map((o) => o.id);
-  const all = newFetched.filter((o) => !ids.includes(o.id)).concat(existing);
-  return uniqBy(
-    all.sort((a, b) => b.date - a.date),
-    "id"
-  );
 }
 
 const SAFE_REORG_THRESHOLD = 80;

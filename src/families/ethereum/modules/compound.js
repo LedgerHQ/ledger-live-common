@@ -7,7 +7,6 @@
 
 import URL from "url";
 import { BigNumber } from "bignumber.js";
-import uniqBy from "lodash/uniqBy";
 import values from "lodash/values";
 import type {
   TokenAccount,
@@ -20,6 +19,7 @@ import { listTokensForCryptoCurrency, getTokenById } from "../../../currencies";
 import network from "../../../network";
 import { promiseAllBatched } from "../../../promise";
 import { getEnv } from "../../../env";
+import { mergeOps } from "../../../bridge/jsHelpers";
 
 export type Modes =
   | "compound.mint"
@@ -245,17 +245,6 @@ async function fetchHistoricalRates(token, dates: Date[]): Promise<Rate[]> {
     };
   });
   return all;
-}
-
-// TODO way to optimize this?
-function mergeOps(existing, newFetched) {
-  if (newFetched.length === 0) return existing;
-  const ids = existing.map((o) => o.id);
-  const all = newFetched.filter((o) => !ids.includes(o.id)).concat(existing);
-  return uniqBy(
-    all.sort((a, b) => b.date - a.date),
-    "id"
-  );
 }
 
 function inferSubAccountsCompound(currency, subAccounts) {

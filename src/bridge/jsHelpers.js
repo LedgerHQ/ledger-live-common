@@ -64,7 +64,7 @@ export function mergeOps(
 
 export const makeSync = (
   getAccountShape: GetAccountShape,
-  postSync: (Account) => Account = (a) => a
+  postSync: (initial: Account, synced: Account) => Account = (_, a) => a
 ): $PropertyType<AccountBridge<any>, "sync"> => (
   initial,
   syncConfig
@@ -84,7 +84,7 @@ export const makeSync = (
         );
         o.next((a) => {
           const operations = mergeOps(a.operations, shape.operations || []);
-          return postSync({
+          return postSync(a, {
             ...a,
             id: accountId,
             spendableBalance: shape.balance || a.balance,
