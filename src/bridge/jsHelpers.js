@@ -1,5 +1,4 @@
 // @flow
-
 import { BigNumber } from "bignumber.js";
 import { Observable, from } from "rxjs";
 import { log } from "@ledgerhq/logs";
@@ -25,7 +24,6 @@ import {
   isAccountEmpty,
   shouldShowNewAccount,
 } from "../account";
-import uniqBy from "lodash/uniqBy";
 import type {
   Operation,
   Account,
@@ -50,21 +48,49 @@ export type GetAccountShape = (
 
 type AccountUpdater = (Account) => Account;
 
+// efficiently prepend newFetched operations to existing operations
 export function mergeOps(
+  // existing operations. sorted (newer to older). deduped.
   existing: Operation[],
+  // new fetched operations. not sorted. not deduped. time is allowed to overlap inside existing.
   newFetched: Operation[]
-): Operation[] {
-  const ids = existing.map((o) => o.id);
-  const all = newFetched.filter((o) => !ids.includes(o.id)).concat(existing);
-  return uniqBy(
-    all.sort((a, b) => b.date - a.date),
-    "id"
-  );
+): // return a list of operations, deduped and sorted from newer to older
+Operation[] {
+  // there is new fetched
+  if (newFetched.length === 0) return existing;
+
+  // efficient lookup map of id.
+  const existingIds = {};
+  for (let o of existing) {
+    existingIds[o.id] = o;
+  }
+
+  // only keep the newFetched that are not in existing. this array will be mutated
+  const newOps = newFetched
+    .filter((o) => !existingIds[o.id])
+    .sort((a, b) => b.date - a.date);
+
+  // return existins when there is no real new operations
+  if (newOps.length === 0) return existing;
+
+  // edge case, existing can be empty. return the sorted list.
+  if (existing.length === 0) return newOps;
+
+  // building up merging the ops
+  const all = [];
+  for (let o of existing) {
+    // prepend all the new ops that have higher date
+    while (newOps.length > 0 && newOps[0].date > o.date) {
+      all.push(newOps.shift());
+    }
+    all.push(o);
+  }
+  return all;
 }
 
 export const makeSync = (
   getAccountShape: GetAccountShape,
-  postSync: (Account) => Account = (a) => a
+  postSync: (initial: Account, synced: Account) => Account = (_, a) => a
 ): $PropertyType<AccountBridge<any>, "sync"> => (
   initial,
   syncConfig
@@ -84,7 +110,7 @@ export const makeSync = (
         );
         o.next((a) => {
           const operations = mergeOps(a.operations, shape.operations || []);
-          return postSync({
+          return postSync(a, {
             ...a,
             id: accountId,
             spendableBalance: shape.balance || a.balance,

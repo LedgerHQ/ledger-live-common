@@ -1,6 +1,5 @@
 // @flow
 
-import { Buffer } from "buffer";
 import type { BigNumber } from "bignumber.js";
 import type {
   Unit,
@@ -48,7 +47,7 @@ export type Transaction = {|
   family: "ethereum",
   mode: TransactionMode,
   nonce?: number,
-  data?: typeof Buffer,
+  data?: Buffer,
   gasPrice: ?BigNumber,
   userGasLimit: ?BigNumber,
   estimatedGasLimit: ?BigNumber,

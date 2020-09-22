@@ -28,6 +28,7 @@ import { getAccountShape } from "../synchronisation";
 import { preload, hydrate } from "../modules";
 import { signOperation } from "../signOperation";
 import { modes } from "../modules";
+import postSyncPatch from "../libcore-postSyncPatch";
 
 const receive = makeAccountBridgeReceive();
 
@@ -42,8 +43,7 @@ const broadcast = async ({
 
 const scanAccounts = makeScanAccounts(getAccountShape);
 
-// TODO postSyncPatch ?
-const sync = makeSync(getAccountShape);
+const sync = makeSync(getAccountShape, postSyncPatch);
 
 const createTransaction = () => ({
   family: "ethereum",

@@ -10,15 +10,6 @@ import type {
 import { genOperation } from "../../mock/account";
 import { findCompoundToken } from "../../currencies";
 
-let rate = 0.5;
-function getRate() {
-  const max = 0.01;
-  const min = 0.005;
-  const x = Math.random() * (max - min) + min;
-  rate -= x;
-  return rate;
-}
-
 function genBaseOperation({
   account,
   parentAccount,
@@ -38,7 +29,8 @@ function genBaseOperation({
 
   if (["REDEEM", "SUPPLY"].includes(type)) {
     op.extra = {
-      rate: getRate(),
+      // FIXME make it more realistic using function of time
+      rate: rng.next(0.005, 0.01),
     };
   }
 

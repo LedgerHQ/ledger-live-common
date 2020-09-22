@@ -434,7 +434,7 @@ const scanAccounts = makeScanAccounts(getAccountShape);
 // the balance does not update straightaway so we should ignore recent operations if they are in pending for a bit
 const preferPendingOperationsUntilBlockValidation = 35;
 
-const postSync = (parent) => {
+const postSync = (initial: Account, parent: Account): Account => {
   function evictRecentOpsIfPending(a) {
     a.pendingOperations.forEach((pending) => {
       const i = a.operations.findIndex((o) => o.id === pending.id);
