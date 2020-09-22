@@ -54,7 +54,7 @@ export type CompoundNetworkInfo = {
 // sumCurrencyBalance: (Account[], Currency) => BigNumber
 
 // implement data needed for a row of the UI
-type OpenedLoanStatus = "???"; // NOTE: Not sure we need this
+type OpenedLoanStatus = "ENABLING" | "TO_SUPPLY" | "SUPPLYING" | "SUPPLIED"; // NOTE: Not sure we need this
 
 type LoanInternal = {
   amountSupplied: BigNumber, // in account.token unit
@@ -63,9 +63,7 @@ type LoanInternal = {
   percentageEarned: number,
 };
 
-export type OpenedLoan = LoanInternal & {
-  status: OpenedLoanStatus,
-};
+export type OpenedLoan = LoanInternal & {};
 
 export type ClosedLoan = LoanInternal & {
   endDate: Date,
@@ -81,6 +79,7 @@ export type CompoundAccountSummary = {
   parentAccount: Account,
   totalSupplied: BigNumber,
   allTimeEarned: BigNumber,
+  // status: OpenedLoanStatus, // TODO
   // ? history: TODO
 };
 

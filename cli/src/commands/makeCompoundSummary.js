@@ -5,12 +5,11 @@ import type {
   CompoundAccountSummary,
   LoansLikeArray,
 } from "@ledgerhq/live-common/lib/compound/types";
-import { formatCurrencyUnit } from "@ledgerhq/live-common/lib/currencies";
 import {
-  makeCompoundSummaryForAccount,
-  isCompoundToken,
-  getAllLoansHistory,
-} from "@ledgerhq/live-common/lib/compound/logic";
+  formatCurrencyUnit,
+  findCompoundToken,
+} from "@ledgerhq/live-common/lib/currencies";
+import { makeCompoundSummaryForAccount } from "@ledgerhq/live-common/lib/compound/logic";
 import type { TokenAccount, Account } from "@ledgerhq/live-common/lib/types";
 import { scan, scanCommonOpts } from "../scan";
 import type { ScanCommonOpts } from "../scan";
@@ -186,7 +185,7 @@ export default {
         const formatter = compoundSummaryFormatter[opts.format || "default"];
 
         account.subAccounts.forEach((s) => {
-          if (!isCompoundToken(account.currency, s.token)) return;
+          if (!findCompoundToken(s.token)) return;
 
           const sum = makeCompoundSummaryForAccount(s, account);
           const summary = formatter(sum);

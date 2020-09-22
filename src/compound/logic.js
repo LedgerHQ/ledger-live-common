@@ -39,7 +39,6 @@ export function makeCompoundSummaryForAccount(
             amountSupplied: operation.value,
             openRate: operation.extra.rate,
             compoundValue: operation.extra.compoundValue,
-            status: "",
           });
 
           return acc;
@@ -77,7 +76,6 @@ export function makeCompoundSummaryForAccount(
                   compoundValue:
                     closingOperation.compoundValue -
                     operation.extra.compoundValue,
-                  status: "",
                 });
               }
 
