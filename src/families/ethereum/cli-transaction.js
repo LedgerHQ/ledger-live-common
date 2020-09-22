@@ -11,6 +11,11 @@ import type {
   AccountLikeArray,
 } from "../../types";
 
+function hexAsBuffer(hex) {
+  if (!hex) return;
+  return Buffer.from(hex.startsWith("0x") ? hex.slice(2) : hex, "hex");
+}
+
 const options = [
   {
     name: "token",
@@ -35,6 +40,16 @@ const options = [
     name: "gasLimit",
     type: String,
     desc: "how much gasLimit. default is estimated with the recipient",
+  },
+  {
+    name: "nonce",
+    type: String,
+    desc: "set a nonce for this transaction",
+  },
+  {
+    name: "data",
+    type: String,
+    desc: "set the transaction data to use for signing the ETH transaction",
   },
 ];
 
@@ -88,6 +103,8 @@ function inferTransactions(
       userGasLimit: opts.gasLimit ? new BigNumber(opts.gasLimit) : null,
       estimatedGasLimit: null,
       mode: opts.mode || "send",
+      nonce: opts.nonce ? parseInt(opts.nonce) : undefined,
+      data: opts.data ? hexAsBuffer(opts.data) : undefined,
     };
   });
 }

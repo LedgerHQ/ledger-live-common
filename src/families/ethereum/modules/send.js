@@ -4,7 +4,6 @@
 import abi from "ethereumjs-abi";
 import invariant from "invariant";
 import eip55 from "eip55";
-import { Buffer } from "buffer";
 import { BigNumber } from "bignumber.js";
 import type { ModeModule } from "../types";
 import {
@@ -54,13 +53,15 @@ const send: ModeModule = {
         }
       }
 
-      if (!result.errors.amount && result.amount.eq(0)) {
-        result.errors.amount = new AmountRequired();
-      } else if (
-        !result.totalSpent.gt(0) ||
-        result.totalSpent.gt(account.balance)
-      ) {
-        result.errors.amount = new NotEnoughBalance();
+      if (!t.data) {
+        if (!result.errors.amount && result.amount.eq(0)) {
+          result.errors.amount = new AmountRequired();
+        } else if (
+          !result.totalSpent.gt(0) ||
+          result.totalSpent.gt(account.balance)
+        ) {
+          result.errors.amount = new NotEnoughBalance();
+        }
       }
     }
   },
@@ -85,8 +86,11 @@ const send: ModeModule = {
         invariant(t.amount, "amount is missing");
         amount = t.amount;
       }
+      if (t.data) {
+        tx.data = "0x" + t.data.toString("hex");
+      }
       tx.value = `0x${BigNumber(amount).toString(16)}`;
-      tx.to = eip55.encode(t.recipient);
+      tx.to = t.recipient;
     }
   },
 
@@ -115,7 +119,7 @@ const send: ModeModule = {
   },
 };
 
-function serializeTransactionData(account, transaction): ?typeof Buffer {
+function serializeTransactionData(account, transaction): ?Buffer {
   const { subAccountId } = transaction;
   const subAccount = subAccountId
     ? account.subAccounts &&

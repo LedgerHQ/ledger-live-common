@@ -1,6 +1,5 @@
 // @flow
 import invariant from "invariant";
-import { Buffer } from "buffer";
 import { BigNumber } from "bignumber.js";
 import { log } from "@ledgerhq/logs";
 import type {
@@ -150,6 +149,8 @@ export function buildEthereumTx(
   const m = modes[transaction.mode];
   invariant(m, "missing module for mode=" + transaction.mode);
   m.fillTransactionData(account, transaction, ethTxObject);
+
+  log("ethereum", "buildEthereumTx", ethTxObject);
 
   const tx = new EthereumTx(ethTxObject);
   // these will be filled by device signature
