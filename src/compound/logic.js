@@ -2,7 +2,7 @@
 import { BigNumber } from "bignumber.js";
 import { findCompoundToken } from "../currencies";
 import type { TokenAccount, Account } from "../types";
-import type { CompoundAccountSummary } from "./types";
+import type { CompoundAccountSummary, ClosedLoansHistory } from "./types";
 
 const calcInterests = (
   value: number,
@@ -26,6 +26,7 @@ export function makeCompoundSummaryForAccount(
     parentAccount,
     totalSupplied: BigNumber(0),
     allTimeEarned: BigNumber(0),
+    accruedInterests: BigNumber(0),
   };
 
   const data = operations
@@ -116,6 +117,9 @@ export function makeCompoundSummaryForAccount(
 
         if (key === "opened") {
           summary.totalSupplied = summary.totalSupplied.plus(amountSupplied);
+          summary.accruedInterests = summary.accruedInterests.plus(
+            interestsEarned
+          );
         }
 
         summary.allTimeEarned = summary.allTimeEarned.plus(interestsEarned);
@@ -143,6 +147,26 @@ type AssetsRow = {
   grossSupply?: number,
 };
 
+export const makeClosedHistoryForAccounts = (
+  summaries: CompoundAccountSummary[]
+): ClosedLoansHistory =>
+  summaries
+    .reduce((closedLoans, summary) => {
+      if (!summary.closed.length) return closedLoans;
+
+      return closedLoans.concat(
+        summary.closed.map((c) => ({
+          ...c,
+          account: summary.account,
+          parentAccount: summary.parentAccount,
+        }))
+      );
+    }, [])
+    .sort((a, b) => {
+      return a.endDate.getTime() - b.endDate.getTime();
+    });
+
+// TODO: Might not be needed or needs rework /shrug
 export const getAssetsData = (accounts: Account[]): AssetsRow[] => {
   let assets = {};
   accounts.forEach((account) => {
