@@ -290,6 +290,7 @@ export function calculate(
     to: Currency,
     disableRounding?: boolean,
     date?: ?Date,
+    reverse?: boolean,
   }
 ): ?number {
   const { from, to } = aliasPair({
@@ -303,25 +304,33 @@ export function calculate(
   const rate = lenseRate(map, query);
   if (!rate) return;
   const { value, disableRounding } = query;
-  const val = value * rate * magFromTo(from, to);
+  const val = !initialQuery.reverse
+    ? value * rate * magFromTo(from, to)
+    : (value / rate) * magFromTo(to, from);
   return disableRounding ? val : Math.round(val);
 }
 
 export function calculateMany(
   state: CounterValuesState,
   dataPoints: Array<{ value: number, date: ?Date }>,
-  initialQuery: { from: Currency, to: Currency, disableRounding?: boolean }
+  initialQuery: {
+    from: Currency,
+    to: Currency,
+    disableRounding?: boolean,
+    reverse?: boolean,
+  }
 ): Array<?number> {
   const query = aliasPair(initialQuery);
   const map = lenseRateMap(state, query);
   if (!map) return Array(dataPoints.length).fill(); // undefined array
   const { from, to } = query;
-  const mag = magFromTo(from, to);
   return dataPoints.map(({ value, date }) => {
     if (from === to) return value;
     const rate = lenseRate(map, { from, to, date });
     if (!rate) return;
-    const val = value * rate * mag;
+    const val = !initialQuery.reverse
+      ? value * rate * magFromTo(from, to)
+      : (value / rate) * magFromTo(to, from);
     return initialQuery.disableRounding ? val : Math.round(val);
   });
 }

@@ -133,6 +133,7 @@ export function useCalculate(query: {
   to: Currency,
   disableRounding?: boolean,
   date?: ?Date,
+  reverse?: boolean,
 }): ?number {
   const state = useCountervaluesState();
   return calculate(state, query);
@@ -140,7 +141,12 @@ export function useCalculate(query: {
 
 export function useCalculateMany(
   dataPoints: Array<{ value: number, date: ?Date }>,
-  query: { from: Currency, to: Currency, disableRounding?: boolean }
+  query: {
+    from: Currency,
+    to: Currency,
+    disableRounding?: boolean,
+    reverse?: boolean,
+  }
 ): Array<?number> {
   const state = useCountervaluesState();
   // TODO how to approach perf for this? hash function of the datapoints? responsability on user land?
