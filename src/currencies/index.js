@@ -18,12 +18,6 @@ import {
   findFiatCurrencyByTicker,
   getFiatCurrencyByTicker,
   hasFiatCurrencyTicker,
-  isFiatSupported,
-  listSupportedFiats,
-  setSupportedFiats,
-} from "../data/fiat";
-
-import {
   listCryptoCurrencies,
   getCryptoCurrencyById,
   hasCryptoCurrencyId,
@@ -32,12 +26,6 @@ import {
   findCryptoCurrencyByScheme,
   findCryptoCurrencyByKeyword,
   findCryptoCurrencyByTicker,
-  isCurrencySupported,
-  setSupportedCurrencies,
-  listSupportedCurrencies,
-} from "../data/cryptocurrencies";
-
-import {
   listTokens,
   listTokensForCryptoCurrency,
   listTokenTypesForCryptoCurrency,
@@ -47,7 +35,9 @@ import {
   hasTokenId,
   getTokenById,
   findCompoundToken,
-} from "../data/tokens";
+} from "@ledgerhq/cryptoassets";
+
+export * from "./support";
 
 import { parseCurrencyUnit } from "./parseCurrencyUnit";
 
@@ -76,13 +66,7 @@ export {
   currenciesByMarketcap,
   useCurrenciesByMarketcap,
   listFiatCurrencies,
-  isFiatSupported,
-  listSupportedFiats,
-  setSupportedFiats,
   listCryptoCurrencies,
-  setSupportedCurrencies,
-  listSupportedCurrencies,
-  isCurrencySupported,
   getFiatCurrencyByTicker,
   findCurrencyByTicker,
   findCryptoCurrency,
