@@ -1,6 +1,5 @@
 // @flow
 import "../__tests__/test-helpers/staticTime";
-import "../load/tokens/ethereum/erc20";
 import { initialState, loadCountervalues, calculate } from "./logic";
 import CountervaluesAPI from "./api";
 import { setEnv } from "../env";
