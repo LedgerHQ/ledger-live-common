@@ -1,7 +1,6 @@
 // @flow
 
 import type { PortfolioRange, PortfolioRangeConfig } from "../types";
-import { getEnv } from "../env";
 
 export const hourIncrement = 60 * 60 * 1000;
 export const dayIncrement = 24 * hourIncrement;

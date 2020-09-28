@@ -125,7 +125,6 @@ function createCounterValues<State>({
   addExtraPollingHooks,
   log,
   getDailyRatesImplementation,
-  getHourlyRatesImplementation,
   fetchExchangesForPairImplementation,
   fetchTickersByMarketcapImplementation,
 }: Input<State>): Module<State> {
@@ -140,7 +139,6 @@ function createCounterValues<State>({
   const aliases = tickerAliases || defaultTickerAliases;
 
   const getDailyRates = getDailyRatesImplementation || getRatesBatched(8);
-  const getHourlyRates = getHourlyRatesImplementation || getRatesBatched(2);
 
   const maxHours = maximumHours || 7 * 24;
 
