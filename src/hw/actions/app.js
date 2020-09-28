@@ -81,7 +81,8 @@ type Event =
   | { type: "error", error: Error, device?: ?Device }
   | { type: "deviceChange", device: ?Device }
   | ConnectAppEvent
-  | { type: "display-upgrade-warning", displayUpgradeWarning: boolean };
+  | { type: "display-upgrade-warning", displayUpgradeWarning: boolean }
+  | { type: "loading" };
 
 const mapResult = ({
   opened,
@@ -113,6 +114,14 @@ const reducer = (state: State, e: Event): State => {
       return {
         ...state,
         unresponsive: true,
+      };
+
+    case "loading":
+      return {
+        ...state,
+        isLoading: true,
+        requestOpenApp: null,
+        allowOpeningRequestedWording: null,
       };
 
     case "disconnected":
@@ -357,11 +366,13 @@ const implementations = {
               }
               if (disconnectT) {
                 // any connect app event unschedule the disconnect debounced event
-                disconnectT = null;
                 clearTimeout(disconnectT);
+                disconnectT = null;
               }
               if (event.type === "unresponsiveDevice") {
-                return; // ignore unresponsive case which happens for polling
+                o.next({
+                  type: "loading",
+                }); // force loading UI in case of unresponsive case which happens for polling
               } else if (event.type === "disconnected") {
                 // the disconnect event is delayed to debounce the reconnection that happens when switching apps
                 disconnectT = setTimeout(() => {
