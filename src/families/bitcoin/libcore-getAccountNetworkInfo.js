@@ -14,6 +14,7 @@ type Input = {
 type Output = Promise<NetworkInfo>;
 
 const speeds = ["high", "standard", "low"];
+const speedStepIfEqual = 1;
 
 async function bitcoin({ coreAccount }: Input): Output {
   const bitcoinLikeAccount = await coreAccount.asBitcoinLikeAccount();
@@ -23,9 +24,15 @@ async function bitcoin({ coreAccount }: Input): Output {
     bigInts,
     libcoreBigIntToBigNumber
   );
-  const normalized = bigNumbers.map((bn) =>
-    bn.div(1000).integerValue(BigNumber.ROUND_CEIL)
-  );
+  const normalized = bigNumbers
+    .map((bn) => bn.div(1000).integerValue(BigNumber.ROUND_CEIL))
+    .reduce(
+      (out, num, i) => [
+        ...out,
+        i > 0 && out[i - 1].gte(num) ? out[i - 1].plus(speedStepIfEqual) : num,
+      ],
+      []
+    );
   const feeItems = {
     items: normalized.map((feePerByte, i) => ({
       key: String(i),
