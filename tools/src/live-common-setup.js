@@ -1,6 +1,6 @@
 // @flow
 import { Observable } from "rxjs";
-import { setSupportedCurrencies } from "@ledgerhq/live-common/lib/data/cryptocurrencies";
+import { setSupportedCurrencies } from "@ledgerhq/live-common/lib/currencies";
 import { map } from "rxjs/operators";
 import { listen } from "@ledgerhq/logs";
 import TransportWebHID from "@ledgerhq/hw-transport-webhid";
@@ -8,11 +8,6 @@ import TransportWebUSB from "@ledgerhq/hw-transport-webusb";
 import TransportWebBLE from "@ledgerhq/hw-transport-web-ble";
 import { registerTransportModule } from "@ledgerhq/live-common/lib/hw";
 import { setEnv, getEnv } from "@ledgerhq/live-common/lib/env";
-
-import "@ledgerhq/live-common/lib/load/tokens/ethereum/erc20";
-import "@ledgerhq/live-common/lib/load/tokens/tron/trc10";
-import "@ledgerhq/live-common/lib/load/tokens/tron/trc20";
-import "@ledgerhq/live-common/lib/load/tokens/algorand/asa";
 
 listen(({ id: _id, date: _date, type, message, ...rest }) => {
   Object.keys(rest).length === 0

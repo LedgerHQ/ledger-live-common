@@ -93,7 +93,7 @@ export type SwapStatus = {
 };
 
 export type GetStatus = (SwapStatusRequest) => Promise<SwapStatus>;
-export type UpdateAccountSwapStatus = (AccountLike) => Promise<AccountLike>;
+export type UpdateAccountSwapStatus = (Account) => Promise<?Account>;
 export type GetMultipleStatus = (SwapStatusRequest[]) => Promise<SwapStatus[]>;
 
 /*
@@ -164,8 +164,7 @@ export type SwapState = {
     exchangeRate?: ?ExchangeRate,
   },
   error?: ?Error,
-  ratesTimestamp?: number,
-  ratesExpired?: boolean,
+  ratesTimestamp?: Date,
   okCurrencies: (CryptoCurrency | TokenCurrency)[],
   fromCurrency: ?(CryptoCurrency | TokenCurrency),
   toCurrency: ?(CryptoCurrency | TokenCurrency),

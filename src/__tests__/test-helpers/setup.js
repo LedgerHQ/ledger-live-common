@@ -1,10 +1,4 @@
-/* eslint-disable no-console */
-import { setSupportedCurrencies } from "../../data/cryptocurrencies";
-
-import "../../load/tokens/ethereum/erc20";
-import "../../load/tokens/tron/trc10";
-import "../../load/tokens/tron/trc20";
-import "../../load/tokens/algorand/asa";
+import { setSupportedCurrencies } from "../../currencies";
 
 setSupportedCurrencies([
   "bitcoin",

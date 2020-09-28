@@ -1,6 +1,6 @@
 // @flow
 import { BigNumber } from "bignumber.js";
-import type { DatasetTest } from "../../__tests__/test-helpers/bridge";
+import type { DatasetTest } from "../../types";
 import {
   FeeTooHigh,
   GasLessThanEstimate,
@@ -138,7 +138,6 @@ const dataset: DatasetTest<Transaction> = {
               const blacklistedTokenIds = [
                 "ethereum/erc20/weth",
                 "ethereum/erc20/amber_token",
-                "ethereum/erc20/ampleforth",
               ];
 
               const rawTokenIds = account.subAccounts

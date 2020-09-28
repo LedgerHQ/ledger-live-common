@@ -23,7 +23,7 @@ const minBalanceNewAccount = parseCurrencyUnit(currency.units[0], "0.1");
 // Spendable balance for a non-ASA account
 const getSpendableBalance = (maxSpendable) => {
   maxSpendable = maxSpendable.minus(minFees);
-  invariant(maxSpendable.gt(minFees), "spendable balance is too low");
+  invariant(maxSpendable.gt(0), "Spendable balance is too low");
   return maxSpendable;
 };
 
@@ -110,7 +110,10 @@ const algorand: AppSpec<Transaction> = {
         };
       },
       test: ({ account, accountBeforeTransaction, operation }) => {
-        expect(account.balance.toString()).toBe(
+        const rewards =
+          accountBeforeTransaction.algorandResources?.rewards || 0;
+
+        expect(account.balance.plus(rewards).toString()).toBe(
           accountBeforeTransaction.balance.minus(operation.value).toString()
         );
       },
@@ -148,7 +151,7 @@ const algorand: AppSpec<Transaction> = {
       name: "send ASA ~50%",
       maxRun: 2,
       transaction: ({ account, siblings, bridge, maxSpendable }) => {
-        invariant(maxSpendable.gt(minFees), "not enough balance");
+        invariant(maxSpendable.gt(minFees), "Spendable balance is too low");
         const subAccount = sample(getAssetsWithBalance(account));
 
         invariant(
@@ -231,9 +234,14 @@ const algorand: AppSpec<Transaction> = {
     {
       name: "claim rewards",
       maxRun: 1,
-      transaction: ({ account, bridge }) => {
+      transaction: ({ account, bridge, maxSpendable }) => {
         const rewards = account.algorandResources?.rewards;
+
         invariant(rewards && rewards.gt(0), "No pending rewards");
+
+        // Ensure that the rewards can effectively be claimed
+        // (fees have to be paid in order to claim the rewards)
+        invariant(maxSpendable.gt(minFees), "Spendable balance is too low");
 
         let transaction = bridge.createTransaction(account);
 

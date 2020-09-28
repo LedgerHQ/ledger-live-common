@@ -19,14 +19,14 @@ export function shouldUpgrade(
     appName === "Bitcoin"
   ) {
     // https://donjon.ledger.com/lsb/010/
-    return !semver.satisfies(appVersion, ">= 1.4.0");
+    return !semver.satisfies(semver.coerce(appVersion), ">= 1.4.0");
   }
   return false;
 }
 
 const appVersionsRequired = {
   Cosmos: ">= 2.14",
-  Algorand: ">= 1.2.6",
+  Algorand: ">= 1.2.9",
 };
 
 export function mustUpgrade(

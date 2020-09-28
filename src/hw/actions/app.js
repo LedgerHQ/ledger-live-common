@@ -352,8 +352,8 @@ const implementations = {
           .subscribe({
             next: (event) => {
               if (initT) {
-                initT = null;
                 clearTimeout(initT);
+                initT = null;
               }
               if (disconnectT) {
                 // any connect app event unschedule the disconnect debounced event
@@ -403,7 +403,7 @@ const implementations = {
     }).pipe(distinctUntilChanged(isEqual)),
 };
 
-let currentMode: $Keys<typeof implementations> = "event";
+export let currentMode: $Keys<typeof implementations> = "event";
 
 export function setDeviceMode(mode: $Keys<typeof implementations>) {
   currentMode = mode;

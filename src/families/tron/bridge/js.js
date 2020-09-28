@@ -5,6 +5,7 @@ import flatMap from "lodash/flatMap";
 import compact from "lodash/compact";
 import get from "lodash/get";
 import sumBy from "lodash/sumBy";
+import { findTokenById } from "@ledgerhq/cryptoassets";
 import type {
   Account,
   Operation,
@@ -20,7 +21,6 @@ import {
   getEstimatedBlockSize,
 } from "../utils";
 import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
-import { findTokenById } from "../../../data/tokens";
 import { open, close } from "../../../hw";
 import signTransaction from "../../../hw/signTransaction";
 import { makeSync, makeScanAccounts } from "../../../bridge/jsHelpers";
@@ -727,8 +727,9 @@ const estimateMaxSpendable = async ({
     {
       ...createTransaction(),
       subAccountId: account.type === "Account" ? null : account.id,
-      recipient: "0x0000000000000000000000000000000000000000",
       ...transaction,
+      recipient:
+        transaction?.recipient || "0x0000000000000000000000000000000000000000",
       amount: BigNumber(0),
     },
     false
