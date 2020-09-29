@@ -15,7 +15,11 @@ import type {
   OperationType,
 } from "../../../types";
 import type { ModeModule } from "../types";
-import { listTokensForCryptoCurrency, getTokenById } from "../../../currencies";
+import {
+  listTokens,
+  listTokensForCryptoCurrency,
+  getTokenById,
+} from "../../../currencies";
 import network from "../../../network";
 import { promiseAllBatched } from "../../../promise";
 import { getEnv } from "../../../env";
@@ -29,23 +33,49 @@ export type Modes =
 export const modes: { [_: Modes]: ModeModule } = {};
 
 // TODO: NB: this needs to be serializable
-type CompoundPreloaded = {};
-
-let compoundPreloadedValue: CompoundPreloaded = {
-  // this is the not loaded state, it will be filled by hydrate
+type CompoundPreloaded = {
+  [tokenId: string]: {
+    rate: string,
+    supplyAPY: string,
+  },
 };
+
+let compoundPreloadedValue: CompoundPreloaded = {};
 
 // FIXME: if the current rate is needed at global level, we should consider having it in preload() stuff
 // NB we might want to preload at each sync too.
 // if that's the case we need to see how to implement this in bridge cycle.
 // => allow to define strategy to reload preload()
-export function preload(): Promise<CompoundPreloaded> {
-  return Promise.resolve({});
+
+export async function preload(): Promise<CompoundPreloaded> {
+  if (!getEnv("COMPOUND")) return Promise.resolve({});
+  const ctokens = listTokens({ withDelisted: true }).filter(
+    (t) => t.compoundFor
+  );
+  const currentRates = await fetchCurrentRates(ctokens);
+  const preloaded = {};
+  currentRates.forEach((r) => {
+    preloaded[r.token.id] = {
+      rate: r.rate.toString(10),
+      supplyAPY: r.supplyAPY,
+    };
+  });
+  compoundPreloadedValue = preloaded;
+  return preloaded;
 }
 
 export function hydrate(value: CompoundPreloaded) {
   compoundPreloadedValue = value;
-  console.warn("NOT USED yet", compoundPreloadedValue);
+}
+
+export function getCTokenRate(ctoken: TokenCurrency) {
+  const value = compoundPreloadedValue[ctoken.id];
+  return value ? BigNumber(value.rate) : BigNumber(0);
+}
+
+export function getCTokenSupplyAPY(ctoken: TokenCurrency) {
+  const value = compoundPreloadedValue[ctoken.id];
+  return value ? value.supplyAPY : "";
 }
 
 export function prepareTokenAccounts(
@@ -99,14 +129,6 @@ export async function digestTokenAccounts(
   const compoundByTokenId = inferSubAccountsCompound(currency, subAccounts);
   if (Object.keys(compoundByTokenId).length === 0) return subAccounts;
 
-  const ctokensWithBalance = values(compoundByTokenId)
-    .filter(
-      (c) => c.tokenAccount && c.ctokenAccount && c.tokenAccount.balance.gt(0)
-    )
-    .map((c) => c.ctoken);
-
-  const latestRates = await fetchCurrentRates(ctokensWithBalance);
-
   // TODO:
   // for each C* tokens when both C* and * exists:
   // - merge the C* ops in * and dedup
@@ -134,12 +156,20 @@ export async function digestTokenAccounts(
         // balance = balance + rate * cbalance
         let balance = a.balance;
         let spendableBalance = a.balance;
-        const latestRate = latestRates.find((r) => r.token === ctoken);
-        if (latestRate) {
-          balance = balance.plus(
-            ctokenAccount.balance.times(latestRate.rate).integerValue()
-          );
-        }
+        const latestRate = getCTokenRate(ctoken);
+        balance = balance.plus(
+          ctokenAccount.balance.times(latestRate).integerValue()
+        );
+
+        // TODO balanceHistory
+        /*
+        const minBlockTimestamp = 0; // oldest operation in either token/ctoken account
+        const maxBlockTimestamp = 0; // today at 00:00
+        const numBuckets = 0; // nb of days between two
+        const dailyRates = [];
+        const balanceHistory = {};
+        // (getBalanceHistoryImpl for dai) + dailyRates[i] * (getBalanceHistoryImpl for cdai)
+        */
 
         // operations, C* to * conversions with the historical rates
         // cIN => SUPPLY
@@ -192,12 +222,13 @@ const fetch = (path, query = {}) =>
     }),
   });
 
-type Rate = {
+type CurrentRate = {
   token: TokenCurrency,
   rate: BigNumber,
+  supplyAPY: string,
 };
 
-async function fetchCurrentRates(tokens): Promise<Rate[]> {
+async function fetchCurrentRates(tokens): Promise<CurrentRate[]> {
   if (tokens.length === 0) return [];
   const { data } = await fetch("/ctoken", {
     block_timestamp: 0,
@@ -208,21 +239,29 @@ async function fetchCurrentRates(tokens): Promise<Rate[]> {
       (ct) =>
         ct.token_address.toLowerCase() === token.contractAddress.toLowerCase()
     );
-    if (!cToken) return { token, rate: BigNumber("0") };
+    if (!cToken) return { token, rate: BigNumber("0"), supplyAPY: "" };
     const rawRate = cToken.exchange_rate.value;
     const otoken = getTokenById(token.compoundFor || "");
     const magnitudeRatio = BigNumber(10).pow(
       otoken.units[0].magnitude - token.units[0].magnitude
     );
     const rate = BigNumber(rawRate).times(magnitudeRatio);
-    return {
-      token,
-      rate,
-    };
+    const supplyAPY =
+      BigNumber(cToken.comp_supply_apy.value).decimalPlaces(2).toString() + "%";
+    const r: CurrentRate = { token, rate, supplyAPY };
+    return r;
   });
 }
 
-async function fetchHistoricalRates(token, dates: Date[]): Promise<Rate[]> {
+type HistoRate = {
+  token: TokenCurrency,
+  rate: BigNumber,
+};
+
+async function fetchHistoricalRates(
+  token,
+  dates: Date[]
+): Promise<HistoRate[]> {
   const all = await promiseAllBatched(3, dates, async (date) => {
     const { data } = await fetch("/ctoken", {
       block_timestamp: Math.round(date.getTime() / 1000),

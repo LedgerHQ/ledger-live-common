@@ -1,7 +1,7 @@
 // @flow
 
 import { BigNumber } from "bignumber.js";
-import { Observable, from, defer, of, throwError } from "rxjs";
+import { Observable, from, defer, of, throwError, concat } from "rxjs";
 import {
   skip,
   take,
@@ -184,6 +184,23 @@ function requiredCurrency(cur) {
   return cur;
 }
 
+const prepareCurrency = (fn) => (observable) =>
+  observable.pipe(
+    concatMap((item) => {
+      const maybeCurrency = fn(item);
+      if (maybeCurrency) {
+        const bridge = getCurrencyBridge(maybeCurrency);
+        return from(bridge.preload()).pipe(
+          mergeMap((preloaded) => {
+            bridge.hydrate(preloaded);
+            return of(item);
+          })
+        );
+      }
+      return of(item);
+    })
+  );
+
 export function scan(arg: ScanCommonOpts): Observable<Account> {
   const {
     device,
@@ -224,6 +241,7 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
   if (typeof file === "string") {
     return jsonFromFile(file).pipe(
       map(fromAccountRaw),
+      prepareCurrency((a) => a.currency),
       concatMap((account) =>
         getAccountBridge(account, null)
           .sync(account, syncConfig)
@@ -352,11 +370,11 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
               operationsCount: 0,
               operations: [],
               pendingOperations: [],
-              swapHistory: [],
             };
             return account;
           })
         ).pipe(
+          prepareCurrency((a) => a.currency),
           concatMap((account) =>
             getAccountBridge(account, null)
               .sync(account, syncConfig)
@@ -367,17 +385,18 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
 
       const currency = requiredCurrency(cur);
       // otherwise we just scan for accounts
-      return getCurrencyBridge(currency)
-        .scanAccounts({
+      return concat(
+        of(currency).pipe(prepareCurrency((a) => a)),
+        getCurrencyBridge(currency).scanAccounts({
           currency,
           deviceId: device || "",
           scheme: scheme && asDerivationMode(scheme),
           syncConfig,
         })
-        .pipe(
-          filter((e) => e.type === "discovered"),
-          map((e) => e.account)
-        );
+      ).pipe(
+        filter((e) => e.type === "discovered"),
+        map((e) => e.account)
+      );
     }),
     skip(index || 0),
     take(length === undefined ? (index !== undefined ? 1 : Infinity) : length)
