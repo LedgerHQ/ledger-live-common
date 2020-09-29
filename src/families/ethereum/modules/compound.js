@@ -236,12 +236,15 @@ export async function digestTokenAccounts(
           .filter(Boolean);
 
         // TODO: for perf, we can be a slightly more conservative and keep refs as much as possible to not have a ref changes above
+
+        const approvalsMatch = approvals.find(({ token }) => a.token === token);
+
         return {
           ...a,
           spendableBalance,
           balance,
           operations: mergeOps(a.operations, newOps),
-          approvals: approvals.find(({ token }) => a.token === token),
+          approvals: approvalsMatch ? approvalsMatch.approvals : undefined,
         };
       }
     }
