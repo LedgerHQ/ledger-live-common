@@ -34,13 +34,14 @@ export const modes: { [_: Modes]: ModeModule } = {};
 
 type CurrentRate = {
   token: TokenCurrency,
+  ctoken: TokenCurrency,
   rate: BigNumber,
   supplyAPY: string,
   totalSupply: BigNumber, // in the associated token unit (e.g. dai)
 };
 
 type CurrentRateRaw = {
-  tokenId: string,
+  ctokenId: string,
   rate: string,
   supplyAPY: string,
   totalSupply: string,
@@ -48,7 +49,7 @@ type CurrentRateRaw = {
 
 function toCurrentRateRaw(cr: CurrentRate): CurrentRateRaw {
   return {
-    tokenId: cr.token.id,
+    ctokenId: cr.ctoken.id,
     rate: cr.rate.toString(10),
     supplyAPY: cr.supplyAPY,
     totalSupply: cr.totalSupply.toString(10),
@@ -56,8 +57,10 @@ function toCurrentRateRaw(cr: CurrentRate): CurrentRateRaw {
 }
 
 function fromCurrentRateRaw(raw: CurrentRateRaw): CurrentRate {
+  const ctoken = getTokenById(raw.ctokenId);
   return {
-    token: getTokenById(raw.tokenId),
+    ctoken,
+    token: getTokenById(ctoken.compoundFor || ""),
     rate: BigNumber(raw.rate),
     supplyAPY: raw.supplyAPY,
     totalSupply: BigNumber(raw.totalSupply),
@@ -72,8 +75,10 @@ export function listCurrentRates(): CurrentRate[] {
   return compoundPreloadedValue;
 }
 
-export function findCurrentRate(ctoken: TokenCurrency): ?CurrentRate {
-  return compoundPreloadedValue.find((c) => c.token === ctoken);
+export function findCurrentRate(tokenOrCtoken: TokenCurrency): ?CurrentRate {
+  return compoundPreloadedValue.find(
+    (c) => c.ctoken === tokenOrCtoken || c.token === tokenOrCtoken
+  );
 }
 
 // FIXME: if the current rate is needed at global level, we should consider having it in preload() stuff
@@ -248,32 +253,34 @@ async function fetchCurrentRates(tokens): Promise<CurrentRate[]> {
     block_timestamp: 0,
     addresses: tokens.map((c) => c.contractAddress).join(","),
   });
-  return tokens.map((token) => {
-    const cToken = data.cToken.find(
-      (ct) =>
-        ct.token_address.toLowerCase() === token.contractAddress.toLowerCase()
-    );
-    if (!cToken)
+  return tokens
+    .map((token) => {
+      const cToken = data.cToken.find(
+        (ct) =>
+          ct.token_address.toLowerCase() === token.contractAddress.toLowerCase()
+      );
+      if (!cToken) return;
+      const otoken = getTokenById(token.compoundFor || "");
+      const rawRate = cToken.exchange_rate.value;
+      const magnitudeRatio = BigNumber(10).pow(
+        otoken.units[0].magnitude - token.units[0].magnitude
+      );
+      const rate = BigNumber(rawRate).times(magnitudeRatio);
+      const supplyAPY =
+        BigNumber(cToken.comp_supply_apy.value).decimalPlaces(2).toString() +
+        "%";
+      const totalSupply = BigNumber(cToken.total_supply.value)
+        .times(rawRate)
+        .times(otoken.units[0].magnitude);
       return {
-        token,
-        rate: BigNumber("0"),
-        supplyAPY: "",
-        totalSupply: BigNumber("0"),
+        token: otoken,
+        ctoken: token,
+        rate,
+        supplyAPY,
+        totalSupply,
       };
-    const rawRate = cToken.exchange_rate.value;
-    const otoken = getTokenById(token.compoundFor || "");
-    const magnitudeRatio = BigNumber(10).pow(
-      otoken.units[0].magnitude - token.units[0].magnitude
-    );
-    const rate = BigNumber(rawRate).times(magnitudeRatio);
-    const supplyAPY =
-      BigNumber(cToken.comp_supply_apy.value).decimalPlaces(2).toString() + "%";
-    const totalSupply = BigNumber(cToken.total_supply.value)
-      .times(rawRate)
-      .times(otoken.units[0].magnitude);
-    const r: CurrentRate = { token, rate, supplyAPY, totalSupply };
-    return r;
-  });
+    })
+    .filter(Boolean);
 }
 
 type HistoRate = {
