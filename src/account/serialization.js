@@ -362,6 +362,7 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
     spendableBalance,
     balanceHistory,
     swapHistory,
+    approvals,
   } = raw;
   const token = getTokenById(tokenId);
   const convertOperation = (op) => fromOperationRaw(op, id);
@@ -384,6 +385,7 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
     operations: (operations || []).map(convertOperation),
     pendingOperations: (pendingOperations || []).map(convertOperation),
     swapHistory: (swapHistory || []).map(fromSwapOperationRaw),
+    approvals,
   };
 }
 
@@ -400,6 +402,7 @@ export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
     spendableBalance,
     balanceHistory,
     swapHistory,
+    approvals,
   } = ta;
   return {
     type: "TokenAccountRaw",
@@ -417,6 +420,7 @@ export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
     operations: operations.map((o) => toOperationRaw(o)),
     pendingOperations: pendingOperations.map((o) => toOperationRaw(o)),
     swapHistory: (swapHistory || []).map(toSwapOperationRaw),
+    approvals,
   };
 }
 

@@ -366,13 +366,22 @@ export function patchSubAccount(
   if (
     next.type === "TokenAccount" &&
     account.type === "TokenAccount" &&
-    updatedRaw.type === "TokenAccountRaw" &&
-    updatedRaw.spendableBalance !== account.spendableBalance.toString()
+    updatedRaw.type === "TokenAccountRaw"
   ) {
-    next.spendableBalance = BigNumber(
-      updatedRaw.spendableBalance || updatedRaw.balance
-    );
-    changed = true;
+    if (updatedRaw.spendableBalance !== account.spendableBalance.toString()) {
+      next.spendableBalance = BigNumber(
+        updatedRaw.spendableBalance || updatedRaw.balance
+      );
+      changed = true;
+    }
+
+    if (
+      updatedRaw.approvals &&
+      !isEqual(updatedRaw.approvals, account.approvals)
+    ) {
+      next.approvals = updatedRaw.approvals;
+      changed = true;
+    }
   }
 
   if (!changed) return account; // nothing changed at all

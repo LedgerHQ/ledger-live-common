@@ -67,25 +67,27 @@ export function hydrate(value: Object) {
 
 export const prepareTokenAccounts = (
   currency: CryptoCurrency,
-  subAccounts: TokenAccount[]
+  subAccounts: TokenAccount[],
+  address: string
 ): Promise<TokenAccount[]> =>
   values(modules)
     .map((m) => m.prepareTokenAccounts)
     .filter(Boolean)
     .reduce(
-      (p, fn) => p.then((s) => fn(currency, s)),
+      (p, fn) => p.then((s) => fn(currency, s, address)),
       Promise.resolve(subAccounts)
     );
 
 export const digestTokenAccounts = (
   currency: CryptoCurrency,
-  subAccounts: TokenAccount[]
+  subAccounts: TokenAccount[],
+  address: string
 ): Promise<TokenAccount[]> =>
   values(modules)
     .map((m) => m.digestTokenAccounts)
     .filter(Boolean)
     .reduce(
-      (p, fn) => p.then((s) => fn(currency, s)),
+      (p, fn) => p.then((s) => fn(currency, s, address)),
       Promise.resolve(subAccounts)
     );
 

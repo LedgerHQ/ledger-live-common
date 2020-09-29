@@ -129,11 +129,11 @@ export const getAccountShape: GetAccountShape = async (
     })
     .filter(Boolean);
 
-  tokenAccounts = await prepareTokenAccounts(currency, tokenAccounts);
+  tokenAccounts = await prepareTokenAccounts(currency, tokenAccounts, address);
 
   await loadERC20Balances(tokenAccounts, address, api);
 
-  tokenAccounts = await digestTokenAccounts(currency, tokenAccounts);
+  tokenAccounts = await digestTokenAccounts(currency, tokenAccounts, address);
 
   const subAccounts = reconciliateSubAccounts(tokenAccounts, initialAccount);
 

@@ -49,6 +49,10 @@ export type TokenAccount = {
   balanceHistory?: BalanceHistoryMap,
   // Swap operations linked to this account
   swapHistory: SwapOperation[],
+  approvals?: Array<{
+    sender: string,
+    value: string,
+  }>,
 };
 
 // A child account belongs to an Account but has its own address
@@ -212,6 +216,10 @@ export type TokenAccountRaw = {
   spendableBalance?: string,
   balanceHistory?: BalanceHistoryRawMap,
   swapHistory?: SwapOperationRaw[],
+  approvals?: Array<{
+    sender: string,
+    value: string,
+  }>,
 };
 
 export type ChildAccountRaw = {

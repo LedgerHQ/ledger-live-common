@@ -25,6 +25,7 @@ import network from "../../../network";
 import { promiseAllBatched } from "../../../promise";
 import { getEnv } from "../../../env";
 import { mergeOps } from "../../../bridge/jsHelpers";
+import { apiForCurrency } from "../../../api/Ethereum";
 
 export type Modes =
   | "compound.mint"
@@ -147,12 +148,23 @@ const cdaiToDaiOpMapping: { [_: OperationType]: ?OperationType } = {
 
 export async function digestTokenAccounts(
   currency: CryptoCurrency,
-  subAccounts: TokenAccount[]
+  subAccounts: TokenAccount[],
+  address: string
 ): Promise<TokenAccount[]> {
   if (currency.id !== "ethereum" || !getEnv("COMPOUND")) return subAccounts;
 
   const compoundByTokenId = inferSubAccountsCompound(currency, subAccounts);
   if (Object.keys(compoundByTokenId).length === 0) return subAccounts;
+
+  const api = apiForCurrency(currency);
+  const approvals = await promiseAllBatched(
+    3,
+    values(compoundByTokenId),
+    async ({ token }) =>
+      api
+        .getERC20ApprovalsPerContract(address, token.contractAddress)
+        .then((approvals) => ({ approvals, token }))
+  );
 
   // TODO:
   // for each C* tokens when both C* and * exists:
@@ -229,6 +241,7 @@ export async function digestTokenAccounts(
           spendableBalance,
           balance,
           operations: mergeOps(a.operations, newOps),
+          approvals: approvals.find(({ token }) => a.token === token),
         };
       }
     }

@@ -77,6 +77,10 @@ export type API = {
   getERC20Balances: (input: ERC20BalancesInput) => Promise<ERC20BalanceOutput>,
   getAccountBalance: (address: string) => Promise<BigNumber>,
   roughlyEstimateGasLimit: (address: string) => Promise<BigNumber>,
+  getERC20ApprovalsPerContract: (
+    owner: string,
+    contract: string
+  ) => Promise<Array<{ sender: string, value: string }>>,
   getDryRunGasLimit: (
     address: string,
     request: EthereumGasLimitRequest
@@ -159,6 +163,34 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
         data: input,
       });
       return data;
+    },
+
+    async getERC20ApprovalsPerContract(owner, contract) {
+      try {
+        const { data } = await network({
+          method: "GET",
+          url: URL.format({
+            pathname: `${baseURL}/erc20/approvals`,
+            query: {
+              owner,
+              contract,
+            },
+          }),
+        });
+        return data
+          .map((m: mixed) => {
+            if (!m || typeof m !== "object") return;
+            const { sender, value } = m;
+            if (typeof sender !== "string" || typeof value !== "string") return;
+            return { sender, value };
+          })
+          .filter(Boolean);
+      } catch (e) {
+        if (e.status === 404) {
+          return [];
+        }
+        throw e;
+      }
     },
 
     async roughlyEstimateGasLimit(address) {
