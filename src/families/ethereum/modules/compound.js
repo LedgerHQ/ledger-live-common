@@ -6,6 +6,7 @@
 // IDEA: to me we need to reborn the idea that we will pull daily rates and just stick to it (even if it means some approximation)
 
 import URL from "url";
+import { log } from "@ledgerhq/logs";
 import { BigNumber } from "bignumber.js";
 import values from "lodash/values";
 import type {
@@ -94,6 +95,7 @@ export async function preload(): Promise<CompoundPreloaded> {
   const currentRates = await fetchCurrentRates(ctokens);
   compoundPreloadedValue = currentRates;
   const preloaded = currentRates.map(toCurrentRateRaw);
+  log("compound", "preloaded data", { preloaded });
   return preloaded;
 }
 
@@ -271,7 +273,7 @@ async function fetchCurrentRates(tokens): Promise<CurrentRate[]> {
         "%";
       const totalSupply = BigNumber(cToken.total_supply.value)
         .times(rawRate)
-        .times(otoken.units[0].magnitude);
+        .times(BigNumber(10).pow(otoken.units[0].magnitude));
       return {
         token: otoken,
         ctoken: token,
