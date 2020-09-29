@@ -37,9 +37,6 @@ export type Polling = {
 
 export type Props = {
   initialCountervalues: ?CounterValuesState,
-  updateCountervalues: (
-    updater: (CounterValuesState) => CounterValuesState
-  ) => void,
   children: React$Node,
   userSettings: CountervaluesSettings,
 };
