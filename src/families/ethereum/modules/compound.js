@@ -32,15 +32,49 @@ export type Modes =
 
 export const modes: { [_: Modes]: ModeModule } = {};
 
-// TODO: NB: this needs to be serializable
-type CompoundPreloaded = {
-  [tokenId: string]: {
-    rate: string,
-    supplyAPY: string,
-  },
+type CurrentRate = {
+  token: TokenCurrency,
+  rate: BigNumber,
+  supplyAPY: string,
+  totalSupply: BigNumber, // in the associated token unit (e.g. dai)
 };
 
-let compoundPreloadedValue: CompoundPreloaded = {};
+type CurrentRateRaw = {
+  tokenId: string,
+  rate: string,
+  supplyAPY: string,
+  totalSupply: string,
+};
+
+function toCurrentRateRaw(cr: CurrentRate): CurrentRateRaw {
+  return {
+    tokenId: cr.token.id,
+    rate: cr.rate.toString(10),
+    supplyAPY: cr.supplyAPY,
+    totalSupply: cr.totalSupply.toString(10),
+  };
+}
+
+function fromCurrentRateRaw(raw: CurrentRateRaw): CurrentRate {
+  return {
+    token: getTokenById(raw.tokenId),
+    rate: BigNumber(raw.rate),
+    supplyAPY: raw.supplyAPY,
+    totalSupply: BigNumber(raw.totalSupply),
+  };
+}
+
+type CompoundPreloaded = CurrentRateRaw[];
+
+let compoundPreloadedValue: CurrentRate[] = [];
+
+export function listCurrentRates(): CurrentRate[] {
+  return compoundPreloadedValue;
+}
+
+export function findCurrentRate(ctoken: TokenCurrency): ?CurrentRate {
+  return compoundPreloadedValue.find((c) => c.token === ctoken);
+}
 
 // FIXME: if the current rate is needed at global level, we should consider having it in preload() stuff
 // NB we might want to preload at each sync too.
@@ -48,34 +82,18 @@ let compoundPreloadedValue: CompoundPreloaded = {};
 // => allow to define strategy to reload preload()
 
 export async function preload(): Promise<CompoundPreloaded> {
-  if (!getEnv("COMPOUND")) return Promise.resolve({});
+  if (!getEnv("COMPOUND")) return Promise.resolve([]);
   const ctokens = listTokens({ withDelisted: true }).filter(
     (t) => t.compoundFor
   );
   const currentRates = await fetchCurrentRates(ctokens);
-  const preloaded = {};
-  currentRates.forEach((r) => {
-    preloaded[r.token.id] = {
-      rate: r.rate.toString(10),
-      supplyAPY: r.supplyAPY,
-    };
-  });
-  compoundPreloadedValue = preloaded;
+  compoundPreloadedValue = currentRates;
+  const preloaded = currentRates.map(toCurrentRateRaw);
   return preloaded;
 }
 
 export function hydrate(value: CompoundPreloaded) {
-  compoundPreloadedValue = value;
-}
-
-export function getCTokenRate(ctoken: TokenCurrency) {
-  const value = compoundPreloadedValue[ctoken.id];
-  return value ? BigNumber(value.rate) : BigNumber(0);
-}
-
-export function getCTokenSupplyAPY(ctoken: TokenCurrency) {
-  const value = compoundPreloadedValue[ctoken.id];
-  return value ? value.supplyAPY : "";
+  compoundPreloadedValue = value.map(fromCurrentRateRaw);
 }
 
 export function prepareTokenAccounts(
@@ -156,10 +174,12 @@ export async function digestTokenAccounts(
         // balance = balance + rate * cbalance
         let balance = a.balance;
         let spendableBalance = a.balance;
-        const latestRate = getCTokenRate(ctoken);
-        balance = balance.plus(
-          ctokenAccount.balance.times(latestRate).integerValue()
-        );
+        const latestRate = findCurrentRate(ctoken);
+        if (latestRate) {
+          balance = balance.plus(
+            ctokenAccount.balance.times(latestRate.rate).integerValue()
+          );
+        }
 
         // TODO balanceHistory
         /*
@@ -168,7 +188,7 @@ export async function digestTokenAccounts(
         const numBuckets = 0; // nb of days between two
         const dailyRates = [];
         const balanceHistory = {};
-        // (getBalanceHistoryImpl for dai) + dailyRates[i] * (getBalanceHistoryImpl for cdai)
+        // (getBalanceHistoryImpl for dai) + dailyRates[i] * (balance history for cdai)
         */
 
         // operations, C* to * conversions with the historical rates
@@ -222,12 +242,6 @@ const fetch = (path, query = {}) =>
     }),
   });
 
-type CurrentRate = {
-  token: TokenCurrency,
-  rate: BigNumber,
-  supplyAPY: string,
-};
-
 async function fetchCurrentRates(tokens): Promise<CurrentRate[]> {
   if (tokens.length === 0) return [];
   const { data } = await fetch("/ctoken", {
@@ -239,7 +253,13 @@ async function fetchCurrentRates(tokens): Promise<CurrentRate[]> {
       (ct) =>
         ct.token_address.toLowerCase() === token.contractAddress.toLowerCase()
     );
-    if (!cToken) return { token, rate: BigNumber("0"), supplyAPY: "" };
+    if (!cToken)
+      return {
+        token,
+        rate: BigNumber("0"),
+        supplyAPY: "",
+        totalSupply: BigNumber("0"),
+      };
     const rawRate = cToken.exchange_rate.value;
     const otoken = getTokenById(token.compoundFor || "");
     const magnitudeRatio = BigNumber(10).pow(
@@ -248,7 +268,10 @@ async function fetchCurrentRates(tokens): Promise<CurrentRate[]> {
     const rate = BigNumber(rawRate).times(magnitudeRatio);
     const supplyAPY =
       BigNumber(cToken.comp_supply_apy.value).decimalPlaces(2).toString() + "%";
-    const r: CurrentRate = { token, rate, supplyAPY };
+    const totalSupply = BigNumber(cToken.total_supply.value)
+      .times(rawRate)
+      .times(otoken.units[0].magnitude);
+    const r: CurrentRate = { token, rate, supplyAPY, totalSupply };
     return r;
   });
 }
