@@ -74,7 +74,7 @@ export async function ethereumBuildTransaction({
     const { token } = subAccount;
 
     // NB we don't care about the nonce for the data
-    const { data } = buildEthereumTx(account, transaction, 1);
+    const { data } = buildEthereumTx(account, transaction, 1).tx;
     invariant(data, "serializeTransactionData provided no data");
 
     await transactionBuilder.setInputData(data.toString("hex"));

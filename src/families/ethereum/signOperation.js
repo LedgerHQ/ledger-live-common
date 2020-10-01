@@ -52,7 +52,11 @@ export const signOperation = ({
               throw new FeeNotLoaded();
             }
 
-            const tx = buildEthereumTx(account, transaction, nonce);
+            const { tx, fillTransactionDataResult } = buildEthereumTx(
+              account,
+              transaction,
+              nonce
+            );
             const to = eip55.encode("0x" + tx.to.toString("hex"));
             const chainId = tx.getChainId();
             const value = tx.value;
@@ -60,6 +64,18 @@ export const signOperation = ({
             const eth = new Eth(transport);
 
             if (cancelled) return;
+
+            const addrs =
+              (fillTransactionDataResult &&
+                fillTransactionDataResult.erc20contracts) ||
+              [];
+            for (const addr of addrs) {
+              const tokenInfo = byContractAddress(addr);
+              // if the destination happens to be a contract address of a token, we need to provide to device meta info
+              if (tokenInfo) {
+                await eth.provideERC20TokenInformation(tokenInfo);
+              }
+            }
 
             const tokenInfo = byContractAddress(to);
             // if the destination happens to be a contract address of a token, we need to provide to device meta info

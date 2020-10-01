@@ -23,7 +23,11 @@ type BufferLike = Buffer | string | number;
 
 export type ModeModule = {
   fillTransactionStatus: (Account, Transaction, TransactionStatus) => void,
-  fillTransactionData: (Account, Transaction, TxData) => void,
+  fillTransactionData: (
+    Account,
+    Transaction,
+    TxData
+  ) => ?{ erc20contracts?: string[] },
   fillOptimisticOperation: (Account, Transaction, Operation) => void,
 };
 
@@ -54,7 +58,8 @@ export async function preload(): Promise<Object> {
   return value;
 }
 
-export function hydrate(value: Object) {
+export function hydrate(value: mixed) {
+  if (!value || typeof value !== "object") return;
   for (let k in value) {
     if (k in modules) {
       const m = modules[k];

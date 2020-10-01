@@ -148,7 +148,11 @@ export function buildEthereumTx(
 
   const m = modes[transaction.mode];
   invariant(m, "missing module for mode=" + transaction.mode);
-  m.fillTransactionData(account, transaction, ethTxObject);
+  const fillTransactionDataResult = m.fillTransactionData(
+    account,
+    transaction,
+    ethTxObject
+  );
 
   log("ethereum", "buildEthereumTx", ethTxObject);
 
@@ -158,7 +162,7 @@ export function buildEthereumTx(
   tx.raw[7] = Buffer.from([]); // r
   tx.raw[8] = Buffer.from([]); // s
 
-  return tx;
+  return { tx, fillTransactionDataResult };
 }
 
 export function inferEthereumGasLimitRequest(
@@ -173,7 +177,7 @@ export function inferEthereumGasLimitRequest(
     r.gasPrice = "0x" + transaction.gasPrice.toString();
   }
   try {
-    const { data, to, value } = buildEthereumTx(account, transaction, 1);
+    const { data, to, value } = buildEthereumTx(account, transaction, 1).tx;
     if (value) {
       r.value = "0x" + value.toString();
     }

@@ -32,6 +32,7 @@ export type Modes =
   | "compound.redeem"
   | "compound.redeemUnderlying";
 
+// transaction.amount => amount
 export const modes: { [_: Modes]: ModeModule } = {};
 
 type CurrentRate = {

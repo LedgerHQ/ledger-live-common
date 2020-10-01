@@ -141,7 +141,7 @@ function serializeTransactionData(account, transaction): ?Buffer {
   return abi.simpleEncode(
     "transfer(address,uint256)",
     recipient,
-    amount.toString()
+    amount.toString(10)
   );
 }
 
