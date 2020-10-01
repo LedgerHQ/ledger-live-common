@@ -1,8 +1,52 @@
 // @flow
 import { BigNumber } from "bignumber.js";
-import { findCompoundToken } from "../currencies";
+import { findCompoundToken, findCompoundToken } from "../currencies";
 import type { TokenAccount, Account } from "../types";
 import type { CompoundAccountSummary, ClosedLoansHistory } from "./types";
+
+// to confirm in practice if this threshold is high enough / too high
+const unlimitedThreshold = BigNumber(2).pow(250);
+
+export function getAccountCapabilities(
+  account: TokenAccount
+): {
+  enabledAmount: BigNumber,
+  enabledAmountIsUnlimited: boolean,
+  canSupply: boolean,
+  canSupplyMax: boolean,
+  canWithdraw: boolean,
+} {
+  const { token } = account;
+  const ctoken = findCompoundToken(token);
+  if (!ctoken) {
+    return {
+      enabledAmount: BigNumber(0),
+      enabledAmountIsUnlimited: false,
+      canSupply: false,
+      canSupplyMax: false,
+      canWithdraw: false,
+    };
+  }
+  const approval = (account.approvals || []).find(
+    (a) => a.sender === ctoken.contractAddress
+  );
+  const enabledAmount = approval ? BigNumber(approval.value) : BigNumber(0);
+  const enabledAmountIsUnlimited = enabledAmount.gt(unlimitedThreshold);
+  const canSupply = enabledAmount.gt(0) && account.spendableBalance.gt(0);
+  const canSupplyMax = canSupply && account.spendableBalance.lte(enabledAmount);
+  const cdaiBalanceInDai = account.balance.minus(account.spendableBalance);
+  const canWithdraw = cdaiBalanceInDai.gt(0);
+  return {
+    enabledAmount,
+    enabledAmountIsUnlimited,
+    // can supply at least the full amount of the balance
+    canSupplyMax,
+    // can supply anything at all
+    canSupply,
+    // can withdraw anything at all
+    canWithdraw,
+  };
+}
 
 const calcInterests = (
   value: number,
