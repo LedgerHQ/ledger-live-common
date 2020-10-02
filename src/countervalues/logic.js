@@ -73,7 +73,7 @@ export function inferTrackingPairForAccounts(
   );
 }
 
-export const initialState = {
+export const initialState: CounterValuesState = {
   data: {},
   status: {},
   cache: {},

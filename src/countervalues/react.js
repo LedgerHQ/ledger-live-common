@@ -57,11 +57,11 @@ export const Countervalues = ({
   userSettings,
 }: Props) => {
   // FIXME later switch to reducer?
-  const [{ state, pending, error }, setState] = useState(() => ({
+  const [{ state, pending, error }, setState] = useState({
     pending: false,
     error: null,
-    state: initialCountervalues || initialState,
-  }));
+    state: initialCountervalues ?? initialState,
+  });
 
   const updateNow = useCallback(() => {
     if (pending) return Promise.resolve(false);
@@ -77,6 +77,12 @@ export const Countervalues = ({
       }
     );
   }, [pending, state, userSettings]);
+
+  // update countervalues by cache from local store when it's retrieved asynchronously
+  useEffect(() => {
+    if (!initialCountervalues) return;
+    setState((s) => ({ ...s, state: initialCountervalues }));
+  }, [initialCountervalues]);
 
   // TODO auto fetching mechanism
   // TODO throttling mechanism
