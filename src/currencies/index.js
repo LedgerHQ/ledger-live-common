@@ -35,6 +35,7 @@ import {
   hasTokenId,
   getTokenById,
   findCompoundToken,
+  getAbandonSeedAddress,
 } from "@ledgerhq/cryptoassets";
 
 export * from "./support";
@@ -84,6 +85,7 @@ export {
   findTokenById,
   hasTokenId,
   getTokenById,
+  getAbandonSeedAddress,
   parseCurrencyUnit,
   chopCurrencyUnitDecimals,
   formatCurrencyUnit,
