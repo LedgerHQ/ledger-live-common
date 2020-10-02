@@ -7,7 +7,10 @@
 
 import URL from "url";
 import { log } from "@ledgerhq/logs";
+import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
+import eip55 from "eip55";
+import abi from "ethereumjs-abi";
 import values from "lodash/values";
 import type {
   TokenAccount,
@@ -26,14 +29,63 @@ import { promiseAllBatched } from "../../../promise";
 import { getEnv } from "../../../env";
 import { mergeOps } from "../../../bridge/jsHelpers";
 import { apiForCurrency } from "../../../api/Ethereum";
+import { inferTokenAccount } from "../transaction";
 
 export type Modes =
   | "compound.mint"
   | "compound.redeem"
   | "compound.redeemUnderlying";
 
+const compoundMint: ModeModule = {
+  fillTransactionStatus() {},
+  fillTransactionData(a, t, tx) {
+    const subAccount = inferTokenAccount(a, t);
+    invariant(subAccount, "sub account missing");
+    invariant(t.amount, "amount missing");
+    const amount = BigNumber(t.amount);
+    const data = abi.simpleEncode("mint(uint256)", amount.toString(10));
+    tx.data = "0x" + data.toString("hex");
+    tx.value = "0x00";
+  },
+  fillOptimisticOperation() {},
+};
+
+const compoundRedeem: ModeModule = {
+  fillTransactionStatus() {},
+  fillTransactionData(a, t, tx) {
+    const subAccount = inferTokenAccount(a, t);
+    invariant(subAccount, "sub account missing");
+    invariant(t.amount, "amount missing");
+    const amount = BigNumber(t.amount);
+    const data = abi.simpleEncode("redeem(uint256)", amount.toString(10));
+    tx.data = "0x" + data.toString("hex");
+    tx.value = "0x00";
+  },
+  fillOptimisticOperation() {},
+};
+const compoundRedeemUnderlying: ModeModule = {
+  fillTransactionStatus() {},
+  fillTransactionData(a, t, tx) {
+    const subAccount = inferTokenAccount(a, t);
+    invariant(subAccount, "sub account missing");
+    invariant(t.amount, "amount missing");
+    const amount = BigNumber(t.amount);
+    const data = abi.simpleEncode(
+      "redeemUnderlying(uint256)",
+      amount.toString(10)
+    );
+    tx.data = "0x" + data.toString("hex");
+    tx.value = "0x00";
+  },
+  fillOptimisticOperation() {},
+};
+
 // transaction.amount => amount
-export const modes: { [_: Modes]: ModeModule } = {};
+export const modes: { [_: Modes]: ModeModule } = {
+  "compound.mint": compoundMint,
+  "compound.redeem": compoundRedeem,
+  "compound.redeemUnderlying": compoundRedeemUnderlying,
+};
 
 type CurrentRate = {
   token: TokenCurrency,
