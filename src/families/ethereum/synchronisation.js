@@ -391,7 +391,10 @@ async function loadERC20Balances(tokenAccounts, address, api) {
   );
   tokenAccounts.forEach((a) => {
     const r = erc20balances.find(
-      (b) => b.contract.toLowerCase() === a.token.contractAddress.toLowerCase()
+      (b) =>
+        b.contract &&
+        b.balance &&
+        b.contract.toLowerCase() === a.token.contractAddress.toLowerCase()
     );
     if (r && !a.balance.eq(r.balance)) {
       a.balance = r.balance;
