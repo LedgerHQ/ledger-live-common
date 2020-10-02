@@ -31,6 +31,14 @@ const histoFormatters = {
     ((100 * histo.filter((h) => h.value).length) / histo.length).toFixed(0) +
     "%",
 
+  supportedFiats: (histo, _currency, countervalue) => {
+    const availability = (
+      (100 * histo.filter((h) => h.value).length) /
+      histo.length
+    ).toFixed(0);
+    return availability === "100" ? `"${countervalue.ticker}",` : undefined;
+  },
+
   default: (histo, currency, countervalue) =>
     histo
       .map(
