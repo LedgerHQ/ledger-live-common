@@ -59,7 +59,7 @@ export const signOperation = ({
             );
             const to = eip55.encode("0x" + tx.to.toString("hex"));
             const chainId = tx.getChainId();
-            const value = tx.value;
+            const value = BigNumber("0x" + tx.value.toString("hex"));
 
             const eth = new Eth(transport);
 

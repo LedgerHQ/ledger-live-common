@@ -9,9 +9,9 @@ import URL from "url";
 import { log } from "@ledgerhq/logs";
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
-import eip55 from "eip55";
 import abi from "ethereumjs-abi";
 import values from "lodash/values";
+import { NotEnoughBalance, AmountRequired } from "@ledgerhq/errors";
 import type {
   TokenAccount,
   CryptoCurrency,
@@ -23,6 +23,7 @@ import {
   listTokens,
   listTokensForCryptoCurrency,
   getTokenById,
+  findCompoundToken,
 } from "../../../currencies";
 import network from "../../../network";
 import { promiseAllBatched } from "../../../promise";
@@ -33,42 +34,82 @@ import { inferTokenAccount } from "../transaction";
 
 export type Modes =
   | "compound.mint"
-  | "compound.redeem"
+  //  | "compound.redeem"
   | "compound.redeemUnderlying";
 
 const compoundMint: ModeModule = {
-  fillTransactionStatus() {},
+  fillTransactionStatus(a, t, result) {
+    const subAccount = inferTokenAccount(a, t);
+    invariant(subAccount, "sub account missing");
+    if (result.amount.eq(0)) {
+      result.errors.amount = new AmountRequired();
+    } else if (result.amount.gt(subAccount.spendableBalance)) {
+      result.errors.amount = new NotEnoughBalance();
+    }
+  },
   fillTransactionData(a, t, tx) {
     const subAccount = inferTokenAccount(a, t);
     invariant(subAccount, "sub account missing");
+    const cToken = findCompoundToken(subAccount.token);
+    invariant(cToken, "is not a compound supported token");
     invariant(t.amount, "amount missing");
     const amount = BigNumber(t.amount);
     const data = abi.simpleEncode("mint(uint256)", amount.toString(10));
     tx.data = "0x" + data.toString("hex");
+    tx.to = cToken.contractAddress;
     tx.value = "0x00";
   },
-  fillOptimisticOperation() {},
+  fillOptimisticOperation(a, t, op) {
+    const subAccount = inferTokenAccount(a, t);
+    if (subAccount) {
+      const currentRate = findCurrentRate(subAccount.token);
+      const rate = currentRate ? currentRate.rate : BigNumber(0);
+      const value = BigNumber(t.amount || 0);
+      const compoundValue = value.div(rate).integerValue();
+      // ERC20 transfer
+      op.subOperations = [
+        {
+          id: `${subAccount.id}-${op.hash}-SUPPLY`,
+          hash: op.hash,
+          transactionSequenceNumber: op.transactionSequenceNumber,
+          type: "SUPPLY",
+          value,
+          fee: op.fee,
+          blockHash: null,
+          blockHeight: null,
+          senders: op.senders,
+          recipients: [t.recipient],
+          accountId: subAccount.id,
+          date: new Date(),
+          extra: {
+            compoundValue: compoundValue.toString(10),
+            rate: rate.toString(10),
+          },
+        },
+      ];
+    }
+  },
 };
 
-const compoundRedeem: ModeModule = {
-  fillTransactionStatus() {},
-  fillTransactionData(a, t, tx) {
-    const subAccount = inferTokenAccount(a, t);
-    invariant(subAccount, "sub account missing");
-    invariant(t.amount, "amount missing");
-    const amount = BigNumber(t.amount);
-    const data = abi.simpleEncode("redeem(uint256)", amount.toString(10));
-    tx.data = "0x" + data.toString("hex");
-    tx.value = "0x00";
-  },
-  fillOptimisticOperation() {},
-};
 const compoundRedeemUnderlying: ModeModule = {
-  fillTransactionStatus() {},
+  fillTransactionStatus(a, t, result) {
+    const subAccount = inferTokenAccount(a, t);
+    invariant(subAccount, "sub account missing");
+    const nonSpendableBalance = subAccount.balance.minus(
+      subAccount.spendableBalance
+    );
+    if (result.amount.eq(0)) {
+      result.errors.amount = new AmountRequired();
+    } else if (result.amount.gt(nonSpendableBalance)) {
+      result.errors.amount = new NotEnoughBalance(); // FIXME new error? not enough to redeem?!
+    }
+  },
   fillTransactionData(a, t, tx) {
     const subAccount = inferTokenAccount(a, t);
     invariant(subAccount, "sub account missing");
     invariant(t.amount, "amount missing");
+    const cToken = findCompoundToken(subAccount.token);
+    invariant(cToken, "is not a compound supported token");
     const amount = BigNumber(t.amount);
     const data = abi.simpleEncode(
       "redeemUnderlying(uint256)",
@@ -76,14 +117,63 @@ const compoundRedeemUnderlying: ModeModule = {
     );
     tx.data = "0x" + data.toString("hex");
     tx.value = "0x00";
+    tx.to = cToken.contractAddress;
+  },
+  fillOptimisticOperation(a, t, op) {
+    const subAccount = inferTokenAccount(a, t);
+    if (subAccount) {
+      const currentRate = findCurrentRate(subAccount.token);
+      const rate = currentRate ? currentRate.rate : BigNumber(0);
+      const value = BigNumber(t.amount || 0);
+      const compoundValue = value.div(rate).integerValue();
+      // ERC20 transfer
+      op.subOperations = [
+        {
+          id: `${subAccount.id}-${op.hash}-REDEEM`,
+          hash: op.hash,
+          transactionSequenceNumber: op.transactionSequenceNumber,
+          type: "REDEEM",
+          value,
+          fee: op.fee,
+          blockHash: null,
+          blockHeight: null,
+          senders: op.senders,
+          recipients: [t.recipient],
+          accountId: subAccount.id,
+          date: new Date(),
+          extra: {
+            compoundValue: compoundValue.toString(10),
+            rate: rate.toString(10),
+          },
+        },
+      ];
+    }
+  },
+};
+
+/*
+const compoundRedeem: ModeModule = {
+  fillTransactionStatus() {},
+  fillTransactionData(a, t, tx) {
+    const subAccount = inferTokenAccount(a, t);
+    invariant(subAccount, "sub account missing");
+    invariant(t.amount, "amount missing");
+    const cToken = findCompoundToken(subAccount.token);
+    invariant(cToken, "is not a compound supported token");
+    const amount = BigNumber(t.amount);
+    const data = abi.simpleEncode("redeem(uint256)", amount.toString(10));
+    tx.data = "0x" + data.toString("hex");
+    tx.value = "0x00";
+    tx.to = cToken.contractAddress;
   },
   fillOptimisticOperation() {},
 };
+*/
 
 // transaction.amount => amount
 export const modes: { [_: Modes]: ModeModule } = {
   "compound.mint": compoundMint,
-  "compound.redeem": compoundRedeem,
+  // "compound.redeem": compoundRedeem,
   "compound.redeemUnderlying": compoundRedeemUnderlying,
 };
 
@@ -283,7 +373,10 @@ export async function digestTokenAccounts(
               type,
               value,
               accountId: a.id,
-              extra: { compoundValue: op.value, rate: rate.toString() },
+              extra: {
+                compoundValue: op.value.toString(10),
+                rate: rate.toString(10),
+              },
             };
           })
           .filter(Boolean);

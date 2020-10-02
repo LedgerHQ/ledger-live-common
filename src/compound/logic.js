@@ -49,12 +49,11 @@ export function getAccountCapabilities(
 }
 
 const calcInterests = (
-  value: number,
-  openRate: number,
-  closeOrCurrentRate: number
+  value: BigNumber,
+  openRate: BigNumber,
+  closeOrCurrentRate: BigNumber
 ): BigNumber => {
-  const bigVal = BigNumber(value);
-  return bigVal.times(closeOrCurrentRate).minus(bigVal.times(openRate));
+  return value.times(closeOrCurrentRate).minus(value.times(openRate));
 };
 
 export function makeCompoundSummaryForAccount(
@@ -82,8 +81,8 @@ export function makeCompoundSummaryForAccount(
           acc.opened.push({
             startingDate: operation.date,
             amountSupplied: operation.value,
-            openRate: operation.extra.rate,
-            compoundValue: operation.extra.compoundValue,
+            openRate: BigNumber(operation.extra.rate),
+            compoundValue: BigNumber(operation.extra.compoundValue),
           });
 
           return acc;
@@ -98,19 +97,19 @@ export function makeCompoundSummaryForAccount(
                 acc.closed.push({
                   amountSupplied: closingOperation.amountSupplied,
                   openRate: closingOperation.openRate,
-                  closeRate: operation.extra.rate,
+                  closeRate: BigNumber(operation.extra.rate),
                   endDate: operation.date,
                   startingDate: closingOperation.startingDate,
-                  compoundValue: operation.extra.compoundValue,
+                  compoundValue: BigNumber(operation.extra.compoundValue),
                 });
               } else {
                 acc.closed.push({
                   amountSupplied: amountToClose,
                   openRate: closingOperation.openRate,
-                  closeRate: operation.extra.rate,
+                  closeRate: BigNumber(operation.extra.rate),
                   endDate: operation.date,
                   startingDate: closingOperation.startingDate,
-                  compoundValue: operation.extra.compoundValue,
+                  compoundValue: BigNumber(operation.extra.compoundValue),
                 });
                 acc.opened.unshift({
                   amountSupplied: closingOperation.amountSupplied.minus(
@@ -118,9 +117,9 @@ export function makeCompoundSummaryForAccount(
                   ),
                   openRate: closingOperation.openRate,
                   startingDate: closingOperation.startingDate,
-                  compoundValue:
-                    closingOperation.compoundValue -
-                    operation.extra.compoundValue,
+                  compoundValue: closingOperation.compoundValue.minus(
+                    BigNumber(operation.extra.compoundValue)
+                  ),
                 });
               }
 
@@ -137,7 +136,7 @@ export function makeCompoundSummaryForAccount(
     );
 
   /* TODO: Fetch current rate */
-  const currentRate = 0.020639854861495898;
+  const currentRate = BigNumber(0.020639854861495898);
 
   for (let key in data) {
     const current = data[key].map(
