@@ -10,6 +10,7 @@ import type {
   AccountLike,
   AccountLikeArray,
 } from "../../types";
+import { modes } from "./modules";
 
 function hexAsBuffer(hex) {
   if (!hex) return;
@@ -34,7 +35,8 @@ const options = [
     name: "mode",
     alias: "m",
     type: String,
-    desc: "data serialization mode (used to communicate with smart contracts)",
+    desc:
+      "action to do (possible modes: " + Object.keys(modes).join(" | ") + ")",
   },
   {
     name: "gasLimit",

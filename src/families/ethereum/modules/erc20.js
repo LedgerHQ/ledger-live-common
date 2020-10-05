@@ -12,10 +12,13 @@ import { inferTokenAccount } from "../transaction";
 
 export type Modes = "erc20.approve";
 
-// approve(address spender, uint256 amount) → bool
-// transaction.recipient => address spender
-// transaction.amount => amount
-// transaction.useAllAmount => set max
+/**
+ * "erc20.approve" allows a "spender" (e.g. contract address) to consume some erc20 tokens.
+ * transaction params:
+ * - transaction.recipient address of the spender
+ * - transaction.amount in the token unit to allow
+ * - transaction.useAllAmount intend to allow infinite amount (setting a very high value)
+ */
 const erc20approve: ModeModule = {
   fillTransactionStatus(a, t, result) {
     validateRecipient(a.currency, t.recipient, result);

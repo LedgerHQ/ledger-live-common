@@ -27,7 +27,7 @@ export type ModeModule = {
     Account,
     Transaction,
     TxData
-  ) => ?{ erc20contracts?: string[] },
+  ) => { erc20contracts?: string[] } | void,
   fillOptimisticOperation: (Account, Transaction, Operation) => void,
 };
 

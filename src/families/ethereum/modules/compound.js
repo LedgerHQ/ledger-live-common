@@ -32,18 +32,21 @@ import { mergeOps } from "../../../bridge/jsHelpers";
 import { apiForCurrency } from "../../../api/Ethereum";
 import { inferTokenAccount } from "../transaction";
 
-export type Modes =
-  | "compound.mint"
-  //  | "compound.redeem"
-  | "compound.redeemUnderlying";
+export type Modes = "compound.supply" | "compound.withdraw";
 
-const compoundMint: ModeModule = {
+/**
+ * "compound.supply" will allocate some compound underlying funds (e.g. DAI) into the compound token (e.g. CDAI)
+ * transaction params:
+ * - transaction.amount is the supplied amount in underlying unit (e.g. DAI not CDAI). range: ]0, spendableBalance]
+ * (NB: transaction.useAllAmount is NOT used. just set amount yourself)
+ */
+const compoundSupply: ModeModule = {
   fillTransactionStatus(a, t, result) {
     const subAccount = inferTokenAccount(a, t);
     invariant(subAccount, "sub account missing");
-    if (result.amount.eq(0)) {
+    if (t.amount.eq(0)) {
       result.errors.amount = new AmountRequired();
-    } else if (result.amount.gt(subAccount.spendableBalance)) {
+    } else if (t.amount.gt(subAccount.spendableBalance)) {
       result.errors.amount = new NotEnoughBalance();
     }
   },
@@ -91,30 +94,48 @@ const compoundMint: ModeModule = {
   },
 };
 
-const compoundRedeemUnderlying: ModeModule = {
+/**
+ * "compound.withdraw" will take back some previously supplied compound tokens back into the underlying asset (e.g. transforming CDAI back into DAI, getting the accumulated profits)
+ * transaction params:
+ * - transaction.amount in underlying unit (expressed in DAI not CDAI). range: ]0, balance-spendableBalance]
+ * - transaction.useAllAmount MUST BE USED in the intend to withdraw all. it will use a different contract method.
+ */
+const compoundWithdraw: ModeModule = {
   fillTransactionStatus(a, t, result) {
     const subAccount = inferTokenAccount(a, t);
     invariant(subAccount, "sub account missing");
     const nonSpendableBalance = subAccount.balance.minus(
       subAccount.spendableBalance
     );
-    if (result.amount.eq(0)) {
+    if (t.amount.eq(0)) {
       result.errors.amount = new AmountRequired();
-    } else if (result.amount.gt(nonSpendableBalance)) {
+    } else if (!t.useAllAmount && t.amount.gt(nonSpendableBalance)) {
       result.errors.amount = new NotEnoughBalance(); // FIXME new error? not enough to redeem?!
     }
   },
   fillTransactionData(a, t, tx) {
     const subAccount = inferTokenAccount(a, t);
     invariant(subAccount, "sub account missing");
-    invariant(t.amount, "amount missing");
     const cToken = findCompoundToken(subAccount.token);
     invariant(cToken, "is not a compound supported token");
-    const amount = BigNumber(t.amount);
-    const data = abi.simpleEncode(
-      "redeemUnderlying(uint256)",
-      amount.toString(10)
-    );
+
+    // FIXME this is a huge hack. to make it reliable, we keep to track the C* balance.
+    const currentRate = findCurrentRate(subAccount.token);
+    const cdaiAmount = currentRate
+      ? subAccount.balance
+          .minus(subAccount.spendableBalance)
+          .div(currentRate.rate)
+          .integerValue()
+      : BigNumber(0);
+    ///////////////
+
+    const data = t.useAllAmount
+      ? abi.simpleEncode("redeem(uint256)", cdaiAmount.toString(10))
+      : abi.simpleEncode(
+          "redeemUnderlying(uint256)",
+          (invariant(t.amount, "amount missing"),
+          BigNumber(t.amount).toString(10))
+        );
     tx.data = "0x" + data.toString("hex");
     tx.value = "0x00";
     tx.to = cToken.contractAddress;
@@ -123,9 +144,12 @@ const compoundRedeemUnderlying: ModeModule = {
     const subAccount = inferTokenAccount(a, t);
     if (subAccount) {
       const currentRate = findCurrentRate(subAccount.token);
-      const rate = currentRate ? currentRate.rate : BigNumber(0);
-      const value = BigNumber(t.amount || 0);
-      const compoundValue = value.div(rate).integerValue();
+      const value = t.useAllAmount
+        ? subAccount.balance.minus(subAccount.spendableBalance)
+        : BigNumber(t.amount || 0);
+      const compoundValue = !currentRate
+        ? BigNumber(0)
+        : value.div(currentRate.rate).integerValue();
       // ERC20 transfer
       op.subOperations = [
         {
@@ -143,7 +167,7 @@ const compoundRedeemUnderlying: ModeModule = {
           date: new Date(),
           extra: {
             compoundValue: compoundValue.toString(10),
-            rate: rate.toString(10),
+            rate: !currentRate ? BigNumber(0) : currentRate.rate.toString(10),
           },
         },
       ];
@@ -151,30 +175,9 @@ const compoundRedeemUnderlying: ModeModule = {
   },
 };
 
-/*
-const compoundRedeem: ModeModule = {
-  fillTransactionStatus() {},
-  fillTransactionData(a, t, tx) {
-    const subAccount = inferTokenAccount(a, t);
-    invariant(subAccount, "sub account missing");
-    invariant(t.amount, "amount missing");
-    const cToken = findCompoundToken(subAccount.token);
-    invariant(cToken, "is not a compound supported token");
-    const amount = BigNumber(t.amount);
-    const data = abi.simpleEncode("redeem(uint256)", amount.toString(10));
-    tx.data = "0x" + data.toString("hex");
-    tx.value = "0x00";
-    tx.to = cToken.contractAddress;
-  },
-  fillOptimisticOperation() {},
-};
-*/
-
-// transaction.amount => amount
 export const modes: { [_: Modes]: ModeModule } = {
-  "compound.mint": compoundMint,
-  // "compound.redeem": compoundRedeem,
-  "compound.redeemUnderlying": compoundRedeemUnderlying,
+  "compound.supply": compoundSupply,
+  "compound.withdraw": compoundWithdraw,
 };
 
 type CurrentRate = {
