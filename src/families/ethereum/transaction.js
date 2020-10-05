@@ -179,7 +179,7 @@ export function inferEthereumGasLimitRequest(
   try {
     const { data, to, value } = buildEthereumTx(account, transaction, 1).tx;
     if (value) {
-      r.value = "0x" + value.toString();
+      r.value = "0x" + (value.toString("hex") || "0");
     }
     if (to) {
       r.to = "0x" + to.toString("hex");
