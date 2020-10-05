@@ -1,4 +1,5 @@
 // @flow
+import isEqual from "lodash/isEqual";
 import { BigNumber } from "bignumber.js";
 import { Observable, from } from "rxjs";
 import { log } from "@ledgerhq/logs";
@@ -48,6 +49,16 @@ export type GetAccountShape = (
 
 type AccountUpdater = (Account) => Account;
 
+// an operation is relatively immutable, however we saw that sometimes it can temporarily change due to reorg,..
+export const sameOp = (a: Operation, b: Operation) =>
+  a === b ||
+  (a.id === b.id && // hash, accountId, type are in id
+    (a.fee ? a.fee.isEqualTo(b.fee) : a.fee === b.fee) &&
+    (a.value ? a.value.isEqualTo(b.value) : a.value === b.value) &&
+    a.blockHeight === a.blockHeight &&
+    isEqual(a.senders, b.senders) &&
+    isEqual(a.recipients, b.recipients));
+
 // efficiently prepend newFetched operations to existing operations
 export function mergeOps(
   // existing operations. sorted (newer to older). deduped.
@@ -66,9 +77,13 @@ Operation[] {
   }
 
   // only keep the newFetched that are not in existing. this array will be mutated
+  const newOpsIds = {};
   const newOps = newFetched
-    .filter((o) => !existingIds[o.id])
+    .filter((o) => !existingIds[o.id] || !sameOp(existingIds[o.id], o))
     .sort((a, b) => b.date - a.date);
+  newOps.forEach((op) => {
+    newOpsIds[op.id] = op;
+  });
 
   // return existins when there is no real new operations
   if (newOps.length === 0) return existing;
@@ -83,7 +98,9 @@ Operation[] {
     while (newOps.length > 0 && newOps[0].date > o.date) {
       all.push(newOps.shift());
     }
-    all.push(o);
+    if (!newOpsIds[o.id]) {
+      all.push(o);
+    }
   }
   return all;
 }

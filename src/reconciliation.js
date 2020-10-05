@@ -4,6 +4,7 @@
 
 import isEqual from "lodash/isEqual";
 import { BigNumber } from "bignumber.js";
+import { sameOp } from "./bridge/jsHelpers";
 import type {
   Operation,
   OperationRaw,
@@ -401,14 +402,6 @@ export function patchOperations(
     (raw) => fromOperationRaw(raw, accountId, subAccounts)
   );
 }
-
-const sameOp = (a: Operation, b: Operation) =>
-  a === b ||
-  (a.id === b.id && // hash, accountId, type are in id
-    (a.fee ? a.fee.isEqualTo(b.fee) : a.fee === b.fee) &&
-    (a.value ? a.value.isEqualTo(b.value) : a.value === b.value) &&
-    isEqual(a.senders, b.senders) &&
-    isEqual(a.recipients, b.recipients));
 
 function findExistingOp(ops, op) {
   return ops.find((o) => o.id === op.id);
