@@ -39,12 +39,10 @@ export type Props = {
   initialCountervalues: ?CounterValuesState,
   children: React$Node,
   userSettings: CountervaluesSettings,
-  // the minimum time between two polls. to prevent spamming the API. It should not be too high otherwise the UI won't feel right (like if you have a poll button, it should poll mostly each time, unless you spam it twice in a second)
-  pollThrottle: number,
   // the time to wait before the first poll when app starts (allow things to render to not do all at boot time)
-  pollInitDelay: number,
+  pollInitDelay?: number,
   // the minimum time to wait before two automatic polls (then one that happen whatever network/appstate events)
-  autopollInterval: number,
+  autopollInterval?: number,
 };
 
 const CountervaluesPollingContext = createContext<Polling>({
@@ -61,7 +59,6 @@ export const Countervalues = ({
   initialCountervalues,
   children,
   userSettings,
-  // pollThrottle = 1 * 1000,
   pollInitDelay = 1 * 1000,
   autopollInterval = 120 * 1000,
 }: Props) => {
