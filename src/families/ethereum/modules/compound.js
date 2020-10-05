@@ -30,9 +30,27 @@ import { promiseAllBatched } from "../../../promise";
 import { getEnv } from "../../../env";
 import { mergeOps } from "../../../bridge/jsHelpers";
 import { apiForCurrency } from "../../../api/Ethereum";
+import type { Transaction } from "../types";
 import { inferTokenAccount } from "../transaction";
+import {
+  findTokenByAddress,
+  findTokenById,
+  formatCurrencyUnit,
+} from "../../../currencies";
 
 export type Modes = "compound.supply" | "compound.withdraw";
+
+export function contractField(transaction: Transaction) {
+  const recipientToken = findTokenByAddress(transaction.recipient);
+  const maybeCompoundToken = findTokenById(recipientToken?.compoundFor || "");
+  return {
+    type: "text",
+    label: maybeCompoundToken ? "Contract" : "Address",
+    value: maybeCompoundToken
+      ? "Compound " + maybeCompoundToken.ticker
+      : transaction.recipient,
+  };
+}
 
 /**
  * "compound.supply" will allocate some compound underlying funds (e.g. DAI) into the compound token (e.g. CDAI)
@@ -61,6 +79,26 @@ const compoundSupply: ModeModule = {
     tx.data = "0x" + data.toString("hex");
     tx.to = cToken.contractAddress;
     tx.value = "0x00";
+  },
+
+  fillDeviceTransactionConfig({ transaction, account }, fields) {
+    invariant(account.type === "TokenAccount", "token account expected");
+    const ctoken = findCompoundToken(account.token);
+    invariant(ctoken, "is not a compound supported token");
+
+    fields.push({
+      type: "text",
+      label: "Type",
+      value: "Lend Assets",
+    });
+
+    // TODO amount should be just text in future
+    fields.push({
+      type: "amount",
+      label: "Amount",
+    });
+
+    fields.push(contractField(transaction));
   },
   fillOptimisticOperation(a, t, op) {
     const subAccount = inferTokenAccount(a, t);
@@ -136,6 +174,40 @@ const compoundWithdraw: ModeModule = {
     tx.data = "0x" + data.toString("hex");
     tx.value = "0x00";
     tx.to = cToken.contractAddress;
+  },
+  fillDeviceTransactionConfig({ transaction, account }, fields) {
+    invariant(account.type === "TokenAccount", "token account expected");
+    const ctoken = findCompoundToken(account.token);
+    invariant(ctoken, "is not a compound supported token");
+
+    fields.push({
+      type: "text",
+      label: "Type",
+      value: "Redeem Assets",
+    });
+
+    if (transaction.useAllAmount) {
+      fields.push({
+        type: "text",
+        label: "Amount",
+        value: formatCurrencyUnit(
+          ctoken.units[0],
+          account.compoundBalance || BigNumber(0),
+          {
+            showCode: true,
+            disableRounding: true,
+          }
+        ),
+      });
+    } else {
+      // TODO amount should be just text in future
+      fields.push({
+        type: "amount",
+        label: "Amount",
+      });
+    }
+
+    fields.push(contractField(transaction));
   },
   fillOptimisticOperation(a, t, op) {
     const subAccount = inferTokenAccount(a, t);

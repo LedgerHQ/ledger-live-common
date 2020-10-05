@@ -9,6 +9,8 @@ import type { ModeModule } from "../types";
 import { AmountRequired } from "@ledgerhq/errors";
 import { validateRecipient } from "../customAddressValidation";
 import { inferTokenAccount } from "../transaction";
+import { getAccountCurrency } from "../../../account";
+import { contractField } from "./compound";
 
 export type Modes = "erc20.approve";
 
@@ -35,7 +37,7 @@ const erc20approve: ModeModule = {
     if (t.useAllAmount) {
       amount = BigNumber(2).pow(256).minus(1);
     } else {
-      invariant(!t.amount, "amount missing");
+      invariant(t.amount, "amount missing");
       amount = BigNumber(t.amount);
     }
     const data = abi.simpleEncode(
@@ -49,6 +51,29 @@ const erc20approve: ModeModule = {
     return {
       erc20contracts: [recipient],
     };
+  },
+
+  fillDeviceTransactionConfig({ transaction, account }, fields) {
+    fields.push({
+      type: "text",
+      label: "Type",
+      value: "Approve",
+    });
+    if (transaction.useAllAmount) {
+      fields.push({
+        type: "text",
+        label: "Amount",
+        value: "Unlimited " + getAccountCurrency(account).ticker,
+      });
+    } else {
+      // TODO amount should be just text in future
+      fields.push({
+        type: "amount",
+        label: "Amount",
+      });
+    }
+
+    fields.push(contractField(transaction));
   },
 
   fillOptimisticOperation() {},

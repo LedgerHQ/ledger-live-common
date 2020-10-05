@@ -6,8 +6,10 @@ import type {
   Account,
   TransactionStatus,
   Operation,
+  AccountLike,
 } from "../../../types";
 import type { Transaction } from "../types";
+import type { DeviceTransactionField } from "../../../transaction";
 
 import * as compound from "./compound";
 import * as erc20 from "./erc20";
@@ -29,6 +31,15 @@ export type ModeModule = {
     TxData
   ) => { erc20contracts?: string[] } | void,
   fillOptimisticOperation: (Account, Transaction, Operation) => void,
+  fillDeviceTransactionConfig: (
+    input: {
+      account: AccountLike,
+      parentAccount: ?Account,
+      transaction: Transaction,
+      status: TransactionStatus,
+    },
+    fields: DeviceTransactionField[]
+  ) => void,
 };
 
 export const modes: { [_: TransactionMode]: ModeModule } = {};

@@ -94,6 +94,15 @@ const send: ModeModule = {
     }
   },
 
+  fillDeviceTransactionConfig({ status: { amount } }, fields) {
+    if (!amount.isZero()) {
+      fields.push({
+        type: "amount",
+        label: "Amount",
+      });
+    }
+  },
+
   fillOptimisticOperation(a, t, op) {
     const subAccount = inferTokenAccount(a, t);
     if (subAccount) {
