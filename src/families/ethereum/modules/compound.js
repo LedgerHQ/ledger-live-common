@@ -107,9 +107,14 @@ const compoundWithdraw: ModeModule = {
     const nonSpendableBalance = subAccount.balance.minus(
       subAccount.spendableBalance
     );
+    const { compoundBalance } = subAccount;
+    invariant(compoundBalance, "missing compoundBalance");
     if (t.amount.eq(0)) {
       result.errors.amount = new AmountRequired();
-    } else if (!t.useAllAmount && t.amount.gt(nonSpendableBalance)) {
+    } else if (
+      compoundBalance.eq(0) ||
+      (!t.useAllAmount && t.amount.gt(nonSpendableBalance))
+    ) {
       result.errors.amount = new NotEnoughBalance(); // FIXME new error? not enough to redeem?!
     }
   },
@@ -118,19 +123,11 @@ const compoundWithdraw: ModeModule = {
     invariant(subAccount, "sub account missing");
     const cToken = findCompoundToken(subAccount.token);
     invariant(cToken, "is not a compound supported token");
-
-    // FIXME this is a huge hack. to make it reliable, we keep to track the C* balance.
-    const currentRate = findCurrentRate(subAccount.token);
-    const cdaiAmount = currentRate
-      ? subAccount.balance
-          .minus(subAccount.spendableBalance)
-          .div(currentRate.rate)
-          .integerValue()
-      : BigNumber(0);
-    ///////////////
-
     const data = t.useAllAmount
-      ? abi.simpleEncode("redeem(uint256)", cdaiAmount.toString(10))
+      ? abi.simpleEncode(
+          "redeem(uint256)",
+          subAccount.compoundBalance?.toString(10)
+        )
       : abi.simpleEncode(
           "redeemUnderlying(uint256)",
           (invariant(t.amount, "amount missing"),
@@ -147,7 +144,9 @@ const compoundWithdraw: ModeModule = {
       const value = t.useAllAmount
         ? subAccount.balance.minus(subAccount.spendableBalance)
         : BigNumber(t.amount || 0);
-      const compoundValue = !currentRate
+      const compoundValue = t.useAllAmount
+        ? subAccount.compoundBalance || BigNumber(0)
+        : !currentRate
         ? BigNumber(0)
         : value.div(currentRate.rate).integerValue();
       // ERC20 transfer
@@ -391,6 +390,7 @@ export async function digestTokenAccounts(
         return {
           ...a,
           spendableBalance,
+          compoundBalance: ctokenAccount.balance,
           balance,
           operations: mergeOps(a.operations, newOps),
           approvals: approvalsMatch ? approvalsMatch.approvals : undefined,

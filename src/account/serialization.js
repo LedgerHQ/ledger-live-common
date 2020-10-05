@@ -360,6 +360,7 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
     creationDate,
     balance,
     spendableBalance,
+    compoundBalance,
     balanceHistory,
     swapHistory,
     approvals,
@@ -376,6 +377,7 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
     spendableBalance: spendableBalance
       ? BigNumber(spendableBalance)
       : BigNumber(balance),
+    compoundBalance: compoundBalance ? BigNumber(compoundBalance) : undefined,
     balanceHistory: balanceHistory
       ? fromBalanceHistoryRawMap(balanceHistory)
       : undefined,
@@ -400,6 +402,7 @@ export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
     pendingOperations,
     balance,
     spendableBalance,
+    compoundBalance,
     balanceHistory,
     swapHistory,
     approvals,
@@ -412,6 +415,7 @@ export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
     tokenId: token.id,
     balance: balance.toString(),
     spendableBalance: spendableBalance.toString(),
+    compoundBalance: compoundBalance ? compoundBalance.toString() : undefined,
     balanceHistory: balanceHistory
       ? toBalanceHistoryRawMap(balanceHistory)
       : undefined,

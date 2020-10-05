@@ -376,6 +376,13 @@ export function patchSubAccount(
       changed = true;
     }
 
+    if (updatedRaw.compoundBalance !== account.compoundBalance?.toString()) {
+      next.compoundBalance = updatedRaw.compoundBalance
+        ? BigNumber(updatedRaw.compoundBalance)
+        : undefined;
+      changed = true;
+    }
+
     if (
       updatedRaw.approvals &&
       !isEqual(updatedRaw.approvals, account.approvals)
