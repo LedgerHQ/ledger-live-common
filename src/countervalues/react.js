@@ -30,6 +30,10 @@ export type Polling = {
   // TODO: is there any usecases returning promise here?
   // It's a bit tricky to return Promise with current impl
   poll: () => void,
+  // start background polling
+  start: () => void,
+  // stop background polling
+  stop: () => void,
   // true when the polling is in progress
   pending: boolean,
   // if the last polling failed, there will be an error
@@ -49,6 +53,8 @@ export type Props = {
 const CountervaluesPollingContext = createContext<Polling>({
   wipe: () => {},
   poll: () => {},
+  start: () => {},
+  stop: () => {},
   pending: false,
   error: null,
 });
@@ -67,7 +73,7 @@ export const Countervalues = ({
     initialFetchState
   );
 
-  // workaround to trigger pollNow but not every time poll callback changed
+  // trigger poll but not every time poll callback is changed
   const [triggerPoll, setTriggerPoll] = useState(false);
 
   useEffect(() => {
@@ -85,6 +91,7 @@ export const Countervalues = ({
     );
   }, [pending, state, userSettings, triggerPoll]);
 
+  // trigger poll only when userSettings is not exactly the same
   const userSettingsRef = useRef(userSettings);
   useEffect(() => {
     if (
@@ -95,17 +102,19 @@ export const Countervalues = ({
     userSettingsRef.current = userSettings;
   }, [userSettings]);
 
+  const [isPolling, setIsPolling] = useState(true);
   useEffect(() => {
+    if (!isPolling) return;
+
     let pollingTimeout;
 
     function pollingLoop() {
       setTriggerPoll(true);
       pollingTimeout = setTimeout(pollingLoop, autopollInterval);
     }
-
     pollingTimeout = setTimeout(pollingLoop, pollInitDelay);
     return () => clearTimeout(pollingTimeout);
-  }, [autopollInterval, pollInitDelay]);
+  }, [autopollInterval, pollInitDelay, isPolling]);
 
   // update countervalues by cache from local store when it's retrieved asynchronously
   useEffect(() => {
@@ -122,6 +131,8 @@ export const Countervalues = ({
         dispatch({ type: "wipe" });
       },
       poll: () => setTriggerPoll(true),
+      start: () => setIsPolling(true),
+      stop: () => setIsPolling(false),
       pending,
       error,
     }),
