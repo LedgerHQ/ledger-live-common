@@ -3,9 +3,10 @@ import React, {
   createContext,
   useMemo,
   useContext,
-  useState,
   useEffect,
-  useCallback,
+  useReducer,
+  useState,
+  useRef,
 } from "react";
 import type { Currency } from "../types";
 import {
@@ -25,10 +26,10 @@ import type {
 export type Polling = {
   // completely wipe all countervalues
   wipe: () => void,
-  // ask for a re-poll of countervalues
-  poll: () => Promise<boolean>,
-  // force any potential scheduled polling to happen now
-  flush: () => void,
+  // one shot poll function
+  // TODO: is there any usecases returning promise here?
+  // It's a bit tricky to return Promise with current impl
+  poll: () => void,
   // true when the polling is in progress
   pending: boolean,
   // if the last polling failed, there will be an error
@@ -47,8 +48,7 @@ export type Props = {
 
 const CountervaluesPollingContext = createContext<Polling>({
   wipe: () => {},
-  poll: () => Promise.resolve(false),
-  flush: () => {},
+  poll: () => {},
   pending: false,
   error: null,
 });
@@ -62,57 +62,70 @@ export const Countervalues = ({
   pollInitDelay = 1 * 1000,
   autopollInterval = 120 * 1000,
 }: Props) => {
-  // FIXME later switch to reducer?
-  const [{ state, pending, error }, setState] = useState({
-    pending: false,
-    error: null,
-    state: initialCountervalues ?? initialState,
-  });
-  const updateNow = useCallback(() => {
-    if (pending) return Promise.resolve(false);
-    setState(({ state }) => ({ state, pending: true, error: null }));
-    return loadCountervalues(state, userSettings).then(
+  const [{ state, pending, error }, dispatch] = useReducer<FetchState, Action>(
+    fetchReducer,
+    initialFetchState
+  );
+
+  // workaround to trigger pollNow but not every time poll callback changed
+  const [triggerPoll, setTriggerPoll] = useState(false);
+
+  useEffect(() => {
+    if (pending || !triggerPoll) return;
+    dispatch({ type: "pending" });
+    loadCountervalues(state, userSettings).then(
       (state) => {
-        setState({ state, pending: false, error: null });
-        return true;
+        dispatch({ type: "success", payload: state });
+        setTriggerPoll(false);
       },
       (error) => {
-        setState(({ state }) => ({ state, pending: false, error }));
-        return false;
+        dispatch({ type: "success", payload: error });
+        setTriggerPoll(false);
       }
     );
-  }, [pending, state, userSettings]);
+  }, [pending, state, userSettings, triggerPoll]);
+
+  const userSettingsRef = useRef(userSettings);
+  useEffect(() => {
+    if (
+      JSON.stringify(userSettings) === JSON.stringify(userSettingsRef.current)
+    )
+      return;
+    setTriggerPoll(true);
+    userSettingsRef.current = userSettings;
+  }, [userSettings]);
+
+  useEffect(() => {
+    let pollingTimeout;
+
+    function pollingLoop() {
+      setTriggerPoll(true);
+      pollingTimeout = setTimeout(pollingLoop, autopollInterval);
+    }
+
+    pollingTimeout = setTimeout(pollingLoop, pollInitDelay);
+    return () => clearTimeout(pollingTimeout);
+  }, [autopollInterval, pollInitDelay]);
 
   // update countervalues by cache from local store when it's retrieved asynchronously
   useEffect(() => {
     if (!initialCountervalues) return;
-    setState((s) => ({ ...s, state: initialCountervalues }));
+    dispatch({
+      type: "setCachedCounterValueState",
+      payload: initialCountervalues,
+    });
   }, [initialCountervalues]);
 
-  useEffect(() => {
-    let syncTimeout;
-
-    function syncLoop() {
-      updateNow();
-      syncTimeout = setTimeout(syncLoop, autopollInterval);
-    }
-
-    syncTimeout = setTimeout(syncLoop, pollInitDelay);
-    return () => clearTimeout(syncTimeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autopollInterval, pollInitDelay]);
-
-  const polling: Polling = useMemo(
+  const polling = useMemo<Polling>(
     () => ({
       wipe: () => {
-        setState({ pending: false, error: null, state: initialState });
+        dispatch({ type: "wipe" });
       },
-      poll: updateNow,
-      flush: () => {},
+      poll: () => setTriggerPoll(true),
       pending,
       error,
     }),
-    [pending, error, updateNow]
+    [pending, error]
   );
 
   return (
@@ -123,6 +136,51 @@ export const Countervalues = ({
     </CountervaluesPollingContext.Provider>
   );
 };
+
+type Action =
+  | {
+      type: "success",
+      payload: CounterValuesState,
+    }
+  | {
+      type: "error",
+      payload: Error,
+    }
+  | {
+      type: "pending",
+    }
+  | {
+      type: "wipe",
+    }
+  | {
+      type: "setCachedCounterValueState",
+      payload: CounterValuesState,
+    };
+
+type FetchState = {
+  state: CounterValuesState,
+  pending: boolean,
+  error?: Error,
+};
+
+const initialFetchState: FetchState = { state: initialState, pending: false };
+
+function fetchReducer(state, action) {
+  switch (action.type) {
+    case "success":
+      return { state: action.payload, pending: false, error: undefined };
+    case "error":
+      return { ...state, pending: false, error: action.payload };
+    case "pending":
+      return { ...state, pending: true, error: undefined };
+    case "wipe":
+      return { state: initialState, pending: false, error: undefined };
+    case "setCachedCounterValueState":
+      return { ...state, state: action.payload };
+    default:
+      return state;
+  }
+}
 
 export function useCountervaluesPolling(): Polling {
   const polling = useContext(CountervaluesPollingContext);
