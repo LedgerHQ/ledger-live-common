@@ -234,7 +234,7 @@ const envDefinitions = {
     desc: "overrides the gap limit specified by BIP44 (default to 20)",
   },
   LEDGER_COUNTERVALUES_API: {
-    def: "https://countervalue-service.staging.aws.ledger.fr",
+    def: "https://countervalue-service.prod.aws.ledger.fr",
     parser: stringParser,
     desc: "Ledger countervalues API",
   },
