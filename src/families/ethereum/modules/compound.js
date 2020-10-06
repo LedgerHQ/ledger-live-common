@@ -251,7 +251,7 @@ export const modes: { [_: Modes]: ModeModule } = {
   "compound.withdraw": compoundWithdraw,
 };
 
-type CurrentRate = {
+export type CurrentRate = {
   token: TokenCurrency,
   ctoken: TokenCurrency,
   rate: BigNumber,
