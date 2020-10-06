@@ -34,25 +34,25 @@ const createLoanHeader = (
       parentAccount ? parentAccount.id : account ? account.id : ""
     }`
   );
-  strings.push("\n\n");
+  strings.push("\n");
   strings.push("-------------------------------");
-  strings.push("\n\n");
-  strings.push(`${account.token.ticker} supplied`.padStart(22));
+  strings.push("\n");
+  strings.push(`${account.token.ticker} supplied`.padStart(16));
   strings.push(" | ");
-  strings.push(`${account.token.ticker} earned`.padStart(22));
+  strings.push(`${account.token.ticker} earned`.padStart(16));
   strings.push(" | ");
   strings.push("\n");
   strings.push(
-    `${formatCurrencyUnit(account.token.units[0], totalSupplied)}`.padStart(22)
+    `${formatCurrencyUnit(account.token.units[0], totalSupplied)}`.padStart(16)
   );
   strings.push(" | ");
   strings.push(
-    `${formatCurrencyUnit(account.token.units[0], allTimeEarned)}`.padStart(22)
+    `${formatCurrencyUnit(account.token.units[0], allTimeEarned)}`.padStart(16)
   );
   strings.push(" | ");
-  strings.push("\n\n");
+  strings.push("\n");
   strings.push("-------------------------------");
-  strings.push("\n\n");
+  strings.push("\n");
 
   return strings;
 };
@@ -64,20 +64,20 @@ const createLoanDisplay = (
   account: TokenAccount
 ): string[] => {
   strings.push(title);
-  strings.push("\n\n");
+  strings.push("\n");
   strings.push(`Starting Date`.padStart(16));
   strings.push(" | ");
   strings.push(`Ending Date`.padStart(16));
   strings.push(" | ");
-  strings.push(`${account.token.ticker}`.padStart(22));
+  strings.push(`${account.token.ticker}`.padStart(16));
   strings.push(" | ");
-  strings.push(`${account.token.ticker} Earned`.padStart(22));
+  strings.push(`${account.token.ticker} Earned`.padStart(16));
   strings.push(" | ");
-  strings.push(`Interests Accrued (%)`.padStart(22));
+  strings.push(`Interests Accrued (%)`.padStart(16));
   strings.push(" | ");
-  strings.push(`Status`.padStart(22));
+  strings.push(`Status`.padStart(16));
   strings.push(" | ");
-  strings.push("\n\n");
+  strings.push("\n");
   loans.forEach(
     ({
       startingDate,
@@ -97,59 +97,63 @@ const createLoanDisplay = (
         `${formatCurrencyUnit(
           account.token.units[0],
           amountSupplied
-        )}`.padStart(22)
+        )}`.padStart(16)
       );
       strings.push(" | ");
       strings.push(
         `${formatCurrencyUnit(
           account.token.units[0],
           interestsEarned
-        )}`.padStart(22)
+        )}`.padStart(16)
       );
       strings.push(" | ");
-      strings.push(`${percentageEarned}`.padStart(22));
+      strings.push(`${Math.round(percentageEarned * 100) / 100}`.padStart(16));
       strings.push(" | ");
-      strings.push(`${status || ""}`.padStart(22));
+      strings.push(`${status || ""}`.padStart(16));
       strings.push(" | ");
       strings.push("\n");
     }
   );
-
-  strings.push("\n");
   strings.push("-------------------------------");
-  strings.push("\n\n");
+  strings.push("\n");
 
   return strings;
 };
 
 const compoundSummaryFormatter = {
-  default: (summary: CompoundAccountSummary) => {
-    const { opened, closed } = summary;
-    return {
-      ...summary,
+  summary: (summary: CompoundAccountSummary): string => {
+    const {
+      account,
+      totalSupplied,
+      allTimeEarned,
+      accruedInterests,
+      opened,
+      closed,
+    } = summary;
+    return JSON.stringify({
+      accountId: account.id,
+      totalSupplied: totalSupplied.toString(),
+      allTimeEarned: allTimeEarned.toString(),
+      accruedInterests: accruedInterests.toString(),
       opened: opened.map(({ ...op }) => ({
-        ...op,
+        startingDate: op.startingDate.toString(),
         interestsEarned: op.interestsEarned.toString(),
         amountSupplied: op.amountSupplied.toString(),
         percentageEarned: op.percentageEarned.toString(),
       })),
       closed: closed.map(({ ...op }) => ({
-        ...op,
+        startingDate: op.startingDate.toString(),
         amountSupplied: op.amountSupplied.toString(),
         interestsEarned: op.interestsEarned.toString(),
         percentageEarned: op.percentageEarned.toString(),
       })),
-      totalSupplied: summary.totalSupplied.toString(),
-      allTimeEarned: summary.allTimeEarned.toString(),
-    };
+    });
   },
-  json: (summary: CompoundAccountSummary) => JSON.stringify(summary),
-  cli: (summary: CompoundAccountSummary) => {
+  default: (summary: CompoundAccountSummary): string => {
     const { opened, closed, account, parentAccount } = summary;
 
-    if (opened.length === 0 && closed.length === 0) return summary;
-
-    if (account.type !== "TokenAccount") return;
+    if (opened.length === 0 && closed.length === 0) return "";
+    if (account.type !== "TokenAccount") return "";
 
     const strings = [];
 
@@ -180,7 +184,7 @@ export default {
     scan(opts).pipe(
       map((account) => {
         let result = [];
-        if (!account.subAccounts.length) return result;
+        if (!account.subAccounts.length) return "";
 
         const formatter = compoundSummaryFormatter[opts.format || "default"];
 
@@ -192,7 +196,7 @@ export default {
           result.push(summary);
         });
 
-        return result.join("\n\n\n");
+        return result.join("");
       })
     ),
 };

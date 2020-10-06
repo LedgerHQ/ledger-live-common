@@ -3,6 +3,7 @@ import { BigNumber } from "bignumber.js";
 import { findCompoundToken } from "../currencies";
 import type { TokenAccount, Account } from "../types";
 import type { CompoundAccountSummary, ClosedLoansHistory } from "./types";
+import { findCurrentRate } from "../families/ethereum/modules/compound";
 
 // to confirm in practice if this threshold is high enough / too high
 const unlimitedThreshold = BigNumber(2).pow(250);
@@ -62,6 +63,8 @@ export function makeCompoundSummaryForAccount(
 ): CompoundAccountSummary {
   const { operations } = account;
 
+  // FIXME flowtype coverage is bad here
+
   let summary = {
     opened: [],
     closed: [],
@@ -71,6 +74,9 @@ export function makeCompoundSummaryForAccount(
     allTimeEarned: BigNumber(0),
     accruedInterests: BigNumber(0),
   };
+
+  const currentRate = findCurrentRate(account.token);
+  if (!currentRate) return summary;
 
   const data = operations
     .slice(0)
@@ -135,9 +141,6 @@ export function makeCompoundSummaryForAccount(
       { opened: [], closed: [] }
     );
 
-  /* TODO: Fetch current rate */
-  const currentRate = BigNumber(0.020639854861495898);
-
   for (let key in data) {
     const current = data[key].map(
       ({
@@ -151,7 +154,7 @@ export function makeCompoundSummaryForAccount(
       }) => {
         const interestsEarned =
           key === "opened"
-            ? calcInterests(compoundValue, openRate, currentRate)
+            ? calcInterests(compoundValue, openRate, currentRate.rate)
             : key === "closed"
             ? calcInterests(compoundValue, openRate, closeRate)
             : BigNumber(0);
