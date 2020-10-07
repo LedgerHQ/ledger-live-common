@@ -48,7 +48,6 @@ export type Props = {
   pollInitDelay?: number,
   // the minimum time to wait before two automatic polls (then one that happen whatever network/appstate events)
   autopollInterval?: number,
-  startPollingImmediately?: boolean,
 };
 
 const CountervaluesPollingContext = createContext<Polling>({
@@ -68,7 +67,6 @@ export const Countervalues = ({
   userSettings,
   pollInitDelay = 1 * 1000,
   autopollInterval = 120 * 1000,
-  startPollingImmediately = true,
 }: Props) => {
   const [{ state, pending, error }, dispatch] = useReducer<FetchState, Action>(
     fetchReducer,
@@ -109,7 +107,7 @@ export const Countervalues = ({
     userSettingsRef.current = userSettings;
   }, [userSettings]);
 
-  const [isPolling, setIsPolling] = useState(startPollingImmediately);
+  const [isPolling, setIsPolling] = useState(true);
   useEffect(() => {
     if (!isPolling) return;
 
