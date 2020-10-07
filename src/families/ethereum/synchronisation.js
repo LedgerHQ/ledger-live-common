@@ -152,6 +152,7 @@ export const getAccountShape: GetAccountShape = async (
     spendableBalance: balance,
     blockHeight,
     lastSyncDate: new Date(),
+    balanceHistory: undefined,
   };
 
   return accountShape;
