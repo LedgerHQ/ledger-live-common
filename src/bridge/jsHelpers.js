@@ -49,12 +49,16 @@ export type GetAccountShape = (
 
 type AccountUpdater = (Account) => Account;
 
+// compare that two dates are roughly the same date in order to update the case it would have drastically changed
+const sameDate = (a, b) => Math.abs(a - b) < 1000 * 60 * 30;
+
 // an operation is relatively immutable, however we saw that sometimes it can temporarily change due to reorg,..
 export const sameOp = (a: Operation, b: Operation) =>
   a === b ||
   (a.id === b.id && // hash, accountId, type are in id
     (a.fee ? a.fee.isEqualTo(b.fee) : a.fee === b.fee) &&
     (a.value ? a.value.isEqualTo(b.value) : a.value === b.value) &&
+    sameDate(a.date, b.date) &&
     a.blockHeight === b.blockHeight &&
     isEqual(a.senders, b.senders) &&
     isEqual(a.recipients, b.recipients));
