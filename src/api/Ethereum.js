@@ -14,17 +14,17 @@ export type Block = { height: BigNumber }; // TODO more fields actually
 
 export type Tx = {
   hash: string,
-  status: BigNumber, // 0: fail, 1: success
-  received_at: string,
+  status?: BigNumber, // 0: fail, 1: success
+  received_at?: string,
   nonce: string,
   value: BigNumber,
   gas: BigNumber,
   gas_price: BigNumber,
   from: string,
   to: string,
-  input: string,
-  cumulative_gas_used: BigNumber,
-  gas_used: BigNumber,
+  input?: string,
+  cumulative_gas_used?: BigNumber,
+  gas_used?: BigNumber,
   transfer_events?: {
     list: Array<{
       contract: string,

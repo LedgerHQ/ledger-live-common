@@ -175,8 +175,8 @@ const txToOps = ({ address, id }) => (tx: Tx): Operation[] => {
   const sending = addr === from;
   const receiving = addr === to;
   const value = BigNumber(tx.value);
-  const fee = BigNumber(tx.gas_price).times(tx.gas_used);
-  const hasFailed = BigNumber(tx.status).eq(0);
+  const fee = BigNumber(tx.gas_price).times(tx.gas_used || 0);
+  const hasFailed = BigNumber(tx.status || 0).eq(0);
   const blockHeight = block && block.height.toNumber();
   const blockHash = block && block.hash;
   const date = tx.received_at ? new Date(tx.received_at) : new Date();
