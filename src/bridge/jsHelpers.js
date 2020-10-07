@@ -24,6 +24,7 @@ import {
   shouldRetainPendingOperation,
   isAccountEmpty,
   shouldShowNewAccount,
+  clearAccount,
 } from "../account";
 import type {
   Operation,
@@ -119,17 +120,20 @@ export const makeSync = (
   Observable.create((o) => {
     async function main() {
       const accountId = `js:2:${initial.currency.id}:${initial.freshAddress}:${initial.derivationMode}`;
+      const needClear = initial.id !== accountId;
       try {
         const shape = await getAccountShape(
           {
             currency: initial.currency,
             id: accountId,
             address: initial.freshAddress,
-            initialAccount: initial,
+            initialAccount: needClear ? clearAccount(initial) : initial,
           },
           syncConfig
         );
-        o.next((a) => {
+        o.next((acc) => {
+          const a = needClear ? clearAccount(acc) : acc;
+          // FIXME reconsider doing mergeOps here. work is redundant for impl like eth
           const operations = mergeOps(a.operations, shape.operations || []);
           return postSync(a, {
             ...a,
