@@ -20,10 +20,11 @@ import type {
 } from "../../../types";
 import type { ModeModule } from "../types";
 import {
-  listTokens,
-  listTokensForCryptoCurrency,
   getTokenById,
   findCompoundToken,
+  findTokenByAddress,
+  findTokenById,
+  formatCurrencyUnit,
 } from "../../../currencies";
 import network from "../../../network";
 import { promiseAllBatched } from "../../../promise";
@@ -32,11 +33,20 @@ import { mergeOps } from "../../../bridge/jsHelpers";
 import { apiForCurrency } from "../../../api/Ethereum";
 import type { Transaction } from "../types";
 import { inferTokenAccount } from "../transaction";
-import {
-  findTokenByAddress,
-  findTokenById,
-  formatCurrencyUnit,
-} from "../../../currencies";
+
+const compoundWhitelist = [
+  "ethereum/erc20/compound_dai",
+  "ethereum/erc20/compound_usd_coin",
+  "ethereum/erc20/compound_usdt",
+];
+
+export function listSupportedCompoundTokens(): TokenCurrency[] {
+  return compoundWhitelist.map(getTokenById);
+}
+
+export function isCompoundTokenSupported(token: TokenCurrency): boolean {
+  return compoundWhitelist.includes(token);
+}
 
 export type Modes = "compound.supply" | "compound.withdraw";
 
@@ -92,10 +102,13 @@ const compoundSupply: ModeModule = {
       value: "Lend Assets",
     });
 
-    // TODO amount should be just text in future
     fields.push({
-      type: "amount",
+      type: "text",
       label: "Amount",
+      value: formatCurrencyUnit(account.token.units[0], transaction.amount, {
+        showCode: true,
+        disableRounding: true,
+      }),
     });
 
     fields.push(contractField(transaction));
@@ -186,26 +199,25 @@ const compoundWithdraw: ModeModule = {
       value: "Redeem Assets",
     });
 
-    if (transaction.useAllAmount) {
-      fields.push({
-        type: "text",
-        label: "Amount",
-        value: formatCurrencyUnit(
+    const value = transaction.useAllAmount
+      ? formatCurrencyUnit(
           ctoken.units[0],
           account.compoundBalance || BigNumber(0),
           {
             showCode: true,
             disableRounding: true,
           }
-        ),
-      });
-    } else {
-      // TODO amount should be just text in future
-      fields.push({
-        type: "amount",
-        label: "Amount",
-      });
-    }
+        )
+      : formatCurrencyUnit(account.token.units[0], transaction.amount, {
+          showCode: true,
+          disableRounding: true,
+        });
+
+    fields.push({
+      type: "text",
+      label: "Amount",
+      value,
+    });
 
     fields.push(contractField(transaction));
   },
@@ -307,9 +319,7 @@ export function findCurrentRate(tokenOrCtoken: TokenCurrency): ?CurrentRate {
 
 export async function preload(): Promise<CompoundPreloaded> {
   if (!getEnv("COMPOUND")) return Promise.resolve([]);
-  const ctokens = listTokens({ withDelisted: true }).filter(
-    (t) => t.compoundFor
-  );
+  const ctokens = listSupportedCompoundTokens();
   const currentRates = await fetchCurrentRates(ctokens);
   compoundPreloadedValue = currentRates;
   const preloaded = currentRates.map(toCurrentRateRaw);
@@ -394,7 +404,7 @@ export async function digestTokenAccounts(
   const all = await promiseAllBatched(2, subAccounts, async (a) => {
     // C* tokens are digested by the related ERC20 account so they completely disappear for the user
     const { compoundFor } = a.token;
-    if (compoundFor) {
+    if (compoundFor && isCompoundTokenSupported(a.token)) {
       // however, if the related ERC20 account would not exist, we would allow its display
       if (!compoundByTokenId[compoundFor]) {
         return a;
@@ -564,24 +574,20 @@ function inferSubAccountsCompound(currency, subAccounts) {
       ctokenAccount: ?TokenAccount,
     },
   } = {};
-  listTokensForCryptoCurrency(currency, { withDelisted: true }).forEach(
-    (ctoken) => {
-      const { compoundFor } = ctoken;
-      if (compoundFor) {
-        const tokenAccount = subAccounts.find(
-          (a) => a.token.id === compoundFor
-        );
-        const ctokenAccount = subAccounts.find((a) => a.token === ctoken);
-        if (!tokenAccount && !ctokenAccount) return;
-        const token = getTokenById(compoundFor);
-        compoundByTokenId[compoundFor] = {
-          tokenAccount,
-          token,
-          ctoken,
-          ctokenAccount,
-        };
-      }
+  listSupportedCompoundTokens().forEach((ctoken) => {
+    const { compoundFor } = ctoken;
+    if (compoundFor) {
+      const tokenAccount = subAccounts.find((a) => a.token.id === compoundFor);
+      const ctokenAccount = subAccounts.find((a) => a.token === ctoken);
+      if (!tokenAccount && !ctokenAccount) return;
+      const token = getTokenById(compoundFor);
+      compoundByTokenId[compoundFor] = {
+        tokenAccount,
+        token,
+        ctoken,
+        ctokenAccount,
+      };
     }
-  );
+  });
   return compoundByTokenId;
 }
