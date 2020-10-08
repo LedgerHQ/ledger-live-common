@@ -25,9 +25,9 @@ const createLoanHeader = (
   summary: CompoundAccountSummary,
   strings: string[],
   account: TokenAccount,
-  parentAccount: Account
+  parentAccount: ?Account
 ) => {
-  const { totalSupplied, allTimeEarned } = summary;
+  const { totalSupplied, allTimeEarned, status } = summary;
   strings.push("\n");
   strings.push(
     `Compound Summary for account ${
@@ -35,6 +35,10 @@ const createLoanHeader = (
     }`
   );
   strings.push("\n");
+  if (status) {
+    strings.push(`Status: ${status}`);
+    strings.push("\n");
+  }
   strings.push("-------------------------------");
   strings.push("\n");
   strings.push(`${account.token.ticker} supplied`.padStart(16));
@@ -73,9 +77,7 @@ const createLoanDisplay = (
   strings.push(" | ");
   strings.push(`${account.token.ticker} Earned`.padStart(16));
   strings.push(" | ");
-  strings.push(`Interests Accrued (%)`.padStart(16));
-  strings.push(" | ");
-  strings.push(`Status`.padStart(16));
+  strings.push(`Interests Accrued (%)`.padStart(22));
   strings.push(" | ");
   strings.push("\n");
   loans.forEach(
@@ -86,8 +88,6 @@ const createLoanDisplay = (
       amountSupplied,
       interestsEarned,
       percentageEarned,
-      // $FlowFixMe it's amazing how much you piss me off
-      status,
     }) => {
       strings.push(formatDate(startingDate).padStart(16));
       strings.push(" | ");
@@ -107,9 +107,7 @@ const createLoanDisplay = (
         )}`.padStart(16)
       );
       strings.push(" | ");
-      strings.push(`${Math.round(percentageEarned * 100) / 100}`.padStart(16));
-      strings.push(" | ");
-      strings.push(`${status || ""}`.padStart(16));
+      strings.push(`${Math.round(percentageEarned * 100) / 100}`.padStart(22));
       strings.push(" | ");
       strings.push("\n");
     }
@@ -122,6 +120,7 @@ const createLoanDisplay = (
 
 const compoundSummaryFormatter = {
   summary: (summary: CompoundAccountSummary): string => {
+    if (!summary) return "";
     const {
       account,
       totalSupplied,
@@ -190,8 +189,8 @@ export default {
 
         account.subAccounts.forEach((s) => {
           if (!findCompoundToken(s.token)) return;
-
           const sum = makeCompoundSummaryForAccount(s, account);
+          if (!sum) return;
           const summary = formatter(sum);
           result.push(summary);
         });

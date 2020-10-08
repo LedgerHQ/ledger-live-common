@@ -76,7 +76,12 @@ const erc20approve: ModeModule = {
     fields.push(contractField(transaction));
   },
 
-  fillOptimisticOperation() {},
+  fillOptimisticOperation(_account, _transaction, operation) {
+    operation.extra = {
+      ...operation.extra,
+      approving: true, // workaround to track the status ENABLING
+    };
+  },
 };
 
 export const modes: { [_: Modes]: ModeModule } = {

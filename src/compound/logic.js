@@ -7,7 +7,13 @@ import type {
   AccountLike,
   TokenCurrency,
 } from "../types";
-import type { CompoundAccountSummary, ClosedLoansHistory } from "./types";
+import type {
+  CompoundAccountSummary,
+  ClosedLoansHistory,
+  OpenedLoan,
+  ClosedLoan,
+  CompoundAccountStatus,
+} from "./types";
 import { findCurrentRate } from "../families/ethereum/modules/compound";
 
 // to confirm in practice if this threshold is high enough / too high
@@ -22,13 +28,16 @@ export function isCompoundAvailable(account: AccountLike): ?TokenCurrency {
 
 export function getAccountCapabilities(
   account: TokenAccount
-): {
+): ?{
   enabledAmount: BigNumber,
   enabledAmountIsUnlimited: boolean,
   canSupply: boolean,
   canSupplyMax: boolean,
   canWithdraw: boolean,
+  status: CompoundAccountStatus,
 } {
+  if (account.balance.eq(0)) return;
+
   const { token } = account;
   const ctoken = findCompoundToken(token);
   if (!ctoken) {
@@ -38,6 +47,7 @@ export function getAccountCapabilities(
       canSupply: false,
       canSupplyMax: false,
       canWithdraw: false,
+      status: null,
     };
   }
 
@@ -46,10 +56,35 @@ export function getAccountCapabilities(
   );
   const enabledAmount = approval ? BigNumber(approval.value) : BigNumber(0);
   const enabledAmountIsUnlimited = enabledAmount.gt(unlimitedThreshold);
+  // TODO: we might want to keep things to false if there are pending actions
   const canSupply = enabledAmount.gt(0) && account.spendableBalance.gt(0);
   const canSupplyMax = canSupply && account.spendableBalance.lte(enabledAmount);
   const cdaiBalanceInDai = account.balance.minus(account.spendableBalance);
   const canWithdraw = cdaiBalanceInDai.gt(0);
+
+  const notEnabled = enabledAmount.eq(0);
+  const pendingOps = account.pendingOperations.filter(
+    (op) => !account.operations.some((o) => o.hash === op.hash)
+  );
+  const enabling = pendingOps.some((op) => op.extra?.approving);
+  const supplying = pendingOps.some((op) => op.type === "SUPPLY");
+
+  let status;
+
+  if (canWithdraw) {
+    status = "SUPPLIED";
+  } else if (notEnabled) {
+    if (enabling) {
+      status = "ENABLING";
+    } else {
+      status = null;
+    }
+  } else if (supplying) {
+    status = "SUPPLYING";
+  } else {
+    status = "TO_SUPPLY";
+  }
+
   return {
     enabledAmount,
     enabledAmountIsUnlimited,
@@ -59,6 +94,7 @@ export function getAccountCapabilities(
     canSupply,
     // can withdraw anything at all
     canWithdraw,
+    status,
   };
 }
 
@@ -66,137 +102,157 @@ const calcInterests = (
   value: BigNumber,
   openRate: BigNumber,
   closeOrCurrentRate: BigNumber
-): BigNumber => {
-  return value.times(closeOrCurrentRate).minus(value.times(openRate));
-};
+): BigNumber => value.times(closeOrCurrentRate).minus(value.times(openRate));
 
 export function makeCompoundSummaryForAccount(
   account: TokenAccount,
   parentAccount: ?Account
-): CompoundAccountSummary {
+): ?CompoundAccountSummary {
+  const capabilities = getAccountCapabilities(account);
+  if (!capabilities) return;
+  const { status } = capabilities;
+  if (!status) return;
+
   const { operations } = account;
 
-  // FIXME flowtype coverage is bad here
-
-  let summary = {
-    opened: [],
-    closed: [],
-    account,
-    parentAccount,
-    totalSupplied: BigNumber(0),
-    allTimeEarned: BigNumber(0),
-    accruedInterests: BigNumber(0),
-  };
+  const opened: Array<{|
+    startingDate: Date,
+    amountSupplied: BigNumber,
+    openRate: BigNumber,
+    compoundValue: BigNumber,
+  |}> = [];
+  const closed: Array<{|
+    startingDate: Date,
+    endDate: Date,
+    amountSupplied: BigNumber,
+    openRate: BigNumber,
+    compoundValue: BigNumber,
+    closeRate: BigNumber,
+  |}> = [];
+  let totalSupplied = BigNumber(0);
+  let allTimeEarned = BigNumber(0);
+  let accruedInterests = BigNumber(0);
 
   const currentRate = findCurrentRate(account.token);
-  if (!currentRate) return summary;
-
-  const data = operations
-    .slice(0)
-    .reverse()
-    .reduce(
-      (acc, operation) => {
-        if (operation.type === "SUPPLY") {
-          acc.opened.push({
-            startingDate: operation.date,
-            amountSupplied: operation.value,
-            openRate: BigNumber(operation.extra.rate),
-            compoundValue: BigNumber(operation.extra.compoundValue),
-          });
-
-          return acc;
-        }
-
-        if (operation.type === "REDEEM") {
-          let amountToClose = operation.value;
-          while (amountToClose.gt(0)) {
-            const closingOperation = acc.opened.shift();
-            if (closingOperation) {
-              if (amountToClose.gte(closingOperation.amountSupplied)) {
-                acc.closed.push({
-                  amountSupplied: closingOperation.amountSupplied,
-                  openRate: closingOperation.openRate,
-                  closeRate: BigNumber(operation.extra.rate),
-                  endDate: operation.date,
-                  startingDate: closingOperation.startingDate,
-                  compoundValue: BigNumber(operation.extra.compoundValue),
-                });
-              } else {
-                acc.closed.push({
-                  amountSupplied: amountToClose,
-                  openRate: closingOperation.openRate,
-                  closeRate: BigNumber(operation.extra.rate),
-                  endDate: operation.date,
-                  startingDate: closingOperation.startingDate,
-                  compoundValue: BigNumber(operation.extra.compoundValue),
-                });
-                acc.opened.unshift({
-                  amountSupplied: closingOperation.amountSupplied.minus(
-                    amountToClose
-                  ),
-                  openRate: closingOperation.openRate,
-                  startingDate: closingOperation.startingDate,
-                  compoundValue: closingOperation.compoundValue.minus(
-                    BigNumber(operation.extra.compoundValue)
-                  ),
-                });
-              }
-
-              amountToClose = amountToClose.minus(
-                closingOperation.amountSupplied
-              );
-            }
-          }
-        }
-
-        return acc;
-      },
-      { opened: [], closed: [] }
-    );
-
-  for (let key in data) {
-    const current = data[key].map(
-      ({
-        amountSupplied,
-        startingDate,
-        endDate,
-        compoundValue,
-        openRate,
-        closeRate,
-        status,
-      }) => {
-        const interestsEarned =
-          key === "opened"
-            ? calcInterests(compoundValue, openRate, currentRate.rate)
-            : key === "closed"
-            ? calcInterests(compoundValue, openRate, closeRate)
-            : BigNumber(0);
-
-        const percentageEarned = interestsEarned.div(amountSupplied).times(100);
-
-        if (key === "opened") {
-          summary.totalSupplied = summary.totalSupplied.plus(amountSupplied);
-          summary.accruedInterests = summary.accruedInterests.plus(
-            interestsEarned
-          );
-        }
-
-        summary.allTimeEarned = summary.allTimeEarned.plus(interestsEarned);
-
-        return {
-          startingDate,
-          endDate,
-          amountSupplied,
-          interestsEarned,
-          percentageEarned,
-          status,
-        };
-      }
-    );
-    summary[key] = summary[key].concat(current);
+  if (!currentRate) {
+    return {
+      opened: [],
+      closed: [],
+      account,
+      parentAccount,
+      totalSupplied,
+      allTimeEarned,
+      accruedInterests,
+      status,
+    };
   }
 
-  return summary;
+  operations
+    .slice(0)
+    .reverse()
+    .forEach((operation) => {
+      if (operation.type === "SUPPLY") {
+        opened.push({
+          startingDate: operation.date,
+          amountSupplied: operation.value,
+          openRate: BigNumber(operation.extra.rate),
+          compoundValue: BigNumber(operation.extra.compoundValue),
+        });
+      }
+
+      if (operation.type === "REDEEM") {
+        let amountToClose = operation.value;
+        while (amountToClose.gt(0)) {
+          const closingOperation = opened.shift();
+          if (closingOperation) {
+            if (amountToClose.gte(closingOperation.amountSupplied)) {
+              closed.push({
+                amountSupplied: closingOperation.amountSupplied,
+                openRate: closingOperation.openRate,
+                closeRate: BigNumber(operation.extra.rate),
+                endDate: operation.date,
+                startingDate: closingOperation.startingDate,
+                compoundValue: BigNumber(operation.extra.compoundValue),
+              });
+            } else {
+              closed.push({
+                amountSupplied: amountToClose,
+                openRate: closingOperation.openRate,
+                closeRate: BigNumber(operation.extra.rate),
+                endDate: operation.date,
+                startingDate: closingOperation.startingDate,
+                compoundValue: BigNumber(operation.extra.compoundValue),
+              });
+              opened.unshift({
+                amountSupplied: closingOperation.amountSupplied.minus(
+                  amountToClose
+                ),
+                openRate: closingOperation.openRate,
+                startingDate: closingOperation.startingDate,
+                compoundValue: closingOperation.compoundValue.minus(
+                  BigNumber(operation.extra.compoundValue)
+                ),
+              });
+            }
+          }
+
+          amountToClose = amountToClose.minus(closingOperation.amountSupplied);
+        }
+      }
+    });
+
+  const o: OpenedLoan[] = opened.map((op) => {
+    const { compoundValue, openRate, amountSupplied, startingDate } = op;
+    const interestsEarned = calcInterests(
+      compoundValue,
+      openRate,
+      currentRate.rate
+    );
+    const percentageEarned = interestsEarned.div(amountSupplied).times(100);
+    totalSupplied = totalSupplied.plus(amountSupplied);
+    accruedInterests = accruedInterests.plus(interestsEarned);
+    allTimeEarned = allTimeEarned.plus(interestsEarned);
+
+    return {
+      startingDate,
+      amountSupplied,
+      interestsEarned,
+      percentageEarned: percentageEarned.toNumber(),
+    };
+  });
+
+  const c: ClosedLoan[] = closed.map((op) => {
+    const {
+      compoundValue,
+      openRate,
+      amountSupplied,
+      startingDate,
+      endDate,
+      closeRate,
+    } = op;
+    const interestsEarned = calcInterests(compoundValue, openRate, closeRate);
+    const percentageEarned = interestsEarned.div(amountSupplied).times(100);
+    allTimeEarned = allTimeEarned.plus(interestsEarned);
+
+    return {
+      startingDate,
+      endDate,
+      amountSupplied,
+      interestsEarned,
+      percentageEarned: percentageEarned.toNumber(),
+    };
+  });
+
+  return {
+    account,
+    parentAccount,
+    opened: o,
+    closed: c,
+    totalSupplied,
+    allTimeEarned,
+    accruedInterests,
+    status,
+  };
 }
 
 export const makeClosedHistoryForAccounts = (

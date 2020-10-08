@@ -14,7 +14,8 @@ export type CompoundNetworkInfo = {
 };
 
 // implement data needed for a row of the UI
-export type OpenedLoanStatus =
+export type CompoundAccountStatus =
+  | null
   | "ENABLING"
   | "TO_SUPPLY"
   | "SUPPLYING"
@@ -27,9 +28,7 @@ type LoanInternal = {
   percentageEarned: number,
 };
 
-export type OpenedLoan = LoanInternal & {
-  status: OpenedLoanStatus,
-};
+export type OpenedLoan = LoanInternal & {};
 
 export type ClosedLoan = LoanInternal & {
   endDate: Date,
@@ -52,4 +51,5 @@ export type CompoundAccountSummary = {
   totalSupplied: BigNumber,
   allTimeEarned: BigNumber,
   accruedInterests: BigNumber,
+  status: CompoundAccountStatus,
 };
