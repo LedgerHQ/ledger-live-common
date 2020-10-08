@@ -152,12 +152,6 @@ const envDefinitions = {
     parser: stringParser,
     desc: "enable JS integration of currencies (comma separated)",
   },
-  EXPERIMENTAL_DEVICE_FLOW: {
-    def: false,
-    parser: boolParser,
-    desc:
-      "enable a new flow implementation (at the moment we're having early support of 'openApp')",
-  },
   EXPERIMENTAL_EXPLORERS: {
     def: false,
     parser: boolParser,
