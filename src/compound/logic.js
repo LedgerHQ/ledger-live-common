@@ -28,8 +28,9 @@ export function getAccountCapabilities(
       canWithdraw: false,
     };
   }
+
   const approval = (account.approvals || []).find(
-    (a) => a.sender === ctoken.contractAddress
+    (a) => a.sender.toLowerCase() === ctoken.contractAddress.toLowerCase()
   );
   const enabledAmount = approval ? BigNumber(approval.value) : BigNumber(0);
   const enabledAmountIsUnlimited = enabledAmount.gt(unlimitedThreshold);
@@ -59,7 +60,7 @@ const calcInterests = (
 
 export function makeCompoundSummaryForAccount(
   account: TokenAccount,
-  parentAccount: Account
+  parentAccount: ?Account
 ): CompoundAccountSummary {
   const { operations } = account;
 
@@ -186,13 +187,6 @@ export function makeCompoundSummaryForAccount(
   return summary;
 }
 
-type AssetsRow = {
-  name: string,
-  availableBalance: BigNumber,
-  APY?: number,
-  grossSupply?: number,
-};
-
 export const makeClosedHistoryForAccounts = (
   summaries: CompoundAccountSummary[]
 ): ClosedLoansHistory =>
@@ -211,39 +205,3 @@ export const makeClosedHistoryForAccounts = (
     .sort((a, b) => {
       return a.endDate.getTime() - b.endDate.getTime();
     });
-
-// TODO: Might not be needed or needs rework /shrug
-export const getAssetsData = (accounts: Account[]): AssetsRow[] => {
-  let assets = {};
-  accounts.forEach((account) => {
-    if (account.type !== "Account") return;
-    if (!account.subAccounts?.length) return;
-
-    account.subAccounts.forEach((s) => {
-      if (s.type !== "TokenAccount") return;
-      if (!findCompoundToken(s.token)) return;
-
-      const { totalSupplied, allTimeEarned } = makeCompoundSummaryForAccount(
-        s,
-        account
-      );
-
-      if (assets[s.token.ticker]) {
-        assets[s.token.ticker]["balance"] = assets[s.token.ticker][
-          "availableBalance"
-        ].plus(s.balance.minus(totalSupplied));
-      } else {
-        assets[s.token.ticker] = {
-          name: s.token.name,
-          availableBalance: s.balance.plus(allTimeEarned).minus(totalSupplied), // TODO: not good here
-          // grossSupply: ??
-          // APY: ??
-        };
-      }
-    });
-  });
-
-  return Object.keys(assets).reduce((rows, key) => {
-    return rows.concat(assets[key]);
-  }, []);
-};

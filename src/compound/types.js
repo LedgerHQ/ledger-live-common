@@ -75,7 +75,7 @@ export type ClosedLoan = LoanInternal & {
 
 export type ClosedLoanHistory = ClosedLoan & {
   account: TokenAccount,
-  parentAccount: Account,
+  parentAccount: ?Account,
 };
 export type ClosedLoansHistory = ClosedLoanHistory[];
 
@@ -86,7 +86,7 @@ export type CompoundAccountSummary = {
   opened: OpenedLoan[],
   closed: ClosedLoan[],
   account: TokenAccount,
-  parentAccount: Account,
+  parentAccount: ?Account,
   totalSupplied: BigNumber,
   allTimeEarned: BigNumber,
   accruedInterests: BigNumber,
