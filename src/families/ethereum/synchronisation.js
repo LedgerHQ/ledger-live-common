@@ -169,6 +169,9 @@ const safeEncodeEIP55 = (addr) => {
 
 // in case of a SELF send, 2 ops are returned.
 const txToOps = ({ address, id }) => (tx: Tx): Operation[] => {
+  // workaround bugs in our explorer that don't treat partial/optimistic operation really well
+  if (!tx.gas_used) return [];
+
   const { hash, block, actions, transfer_events } = tx;
   const addr = address;
   const from = safeEncodeEIP55(tx.from);
