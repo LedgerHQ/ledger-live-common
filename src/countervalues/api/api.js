@@ -12,7 +12,10 @@ const latest = async (pairs, direct) => {
   const { data } = await network({
     method: "POST",
     url: `${baseURL()}/latest${direct ? "?method=direct" : ""}`,
-    data: pairs.map((p) => ({ from: p.from.ticker, to: p.to.ticker })),
+    data: pairs.map((p) => ({
+      from: p.from.countervalueTicker ?? p.from.ticker,
+      to: p.to.countervalueTicker ?? p.to.ticker,
+    })),
   });
   return data;
 };
@@ -28,10 +31,12 @@ const api: CounterValuesAPI = {
       // for anything else than fiat, we use direct
       query.method = "direct";
     }
+    const fromTicker = from.countervalueTicker ?? from.ticker;
+    const toTicker = to.countervalueTicker ?? to.ticker;
     const { data } = await network({
       method: "GET",
       url: URL.format({
-        pathname: `${baseURL()}/${granularity}/${from.ticker}/${to.ticker}`,
+        pathname: `${baseURL()}/${granularity}/${fromTicker}/${toTicker}`,
         query,
       }),
     });

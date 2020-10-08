@@ -48,7 +48,9 @@ export const formatPerGranularity: {
 };
 
 export function pairId({ from, to }: { from: Currency, to: Currency }) {
-  return `${from.ticker}-${to.ticker}`;
+  const fromTicker = from.countervalueTicker ?? from.ticker;
+  const toTicker = to.countervalueTicker ?? to.ticker;
+  return `${fromTicker}-${toTicker}`;
 }
 
 export function magFromTo(from: Currency, to: Currency) {
