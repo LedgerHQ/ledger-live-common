@@ -45,7 +45,7 @@ export function listSupportedCompoundTokens(): TokenCurrency[] {
 }
 
 export function isCompoundTokenSupported(token: TokenCurrency): boolean {
-  return compoundWhitelist.includes(token);
+  return compoundWhitelist.includes(token.id);
 }
 
 export type Modes = "compound.supply" | "compound.withdraw";
