@@ -8,6 +8,7 @@ import React, {
   useReducer,
   useState,
   useRef,
+  useCallback,
 } from "react";
 import type {
   Account,
@@ -21,8 +22,13 @@ import {
   getBalanceHistoryWithCountervalue,
   getPortfolio,
   getCurrencyPortfolio,
+  getAssetsDistribution,
 } from "../portfolio";
-import { getAccountCurrency, flattenAccounts } from "../account";
+import {
+  getAccountCurrency,
+  flattenAccounts,
+  getAccountUnit,
+} from "../account";
 import {
   initialState,
   calculate,
@@ -348,4 +354,84 @@ export function useCurrencyPortfolio({
       }),
     [accounts, range, state, to]
   );
+}
+
+export function useDistribution({
+  accounts,
+  to,
+}: {
+  accounts: Account[],
+  to: Currency,
+}) {
+  const calc = useCalculateCountervalueCallback({ to });
+
+  return useMemo(() => {
+    return getAssetsDistribution(accounts, calc, {
+      minShowFirst: 6,
+      maxShowFirst: 6,
+      showFirstThreshold: 0.95,
+    });
+  }, [accounts, calc]);
+}
+
+export function useCalculateCountervalueCallback({ to }: { to: Currency }) {
+  const state = useCountervaluesState();
+
+  return useCallback(
+    (from: Currency, value: BigNumber): ?BigNumber => {
+      const countervalue = calculate(state, {
+        value: value.toNumber(),
+        from,
+        to,
+        disableRounding: true,
+      });
+      return typeof countervalue === "number"
+        ? BigNumber(countervalue)
+        : countervalue;
+    },
+    [to, state]
+  );
+}
+
+export function useRequestAmount({
+  account,
+  fiatCurrency,
+  cryptoAmount,
+}: {
+  account: AccountLike,
+  fiatCurrency: Currency,
+  cryptoAmount: BigNumber,
+}) {
+  const cryptoCurrency = getAccountCurrency(account);
+  const fiatCountervalue = useCalculate({
+    from: cryptoCurrency,
+    to: fiatCurrency,
+    value: cryptoAmount.toNumber(),
+    disableRounding: true,
+  });
+  const fiatVal = BigNumber(fiatCountervalue ?? 0);
+  const fiatUnit = fiatCurrency.units[0];
+  const cryptoUnit = getAccountUnit(account);
+  const state = useCountervaluesState();
+  const calculateCryptoAmount = useCallback(
+    (fiatAmount: BigNumber) => {
+      const cryptoAmount = BigNumber(
+        calculate(state, {
+          from: cryptoCurrency,
+          to: fiatCurrency,
+          value: fiatAmount.toNumber(),
+          reverse: true,
+        }) ?? 0
+      );
+      return cryptoAmount;
+    },
+    [state, cryptoCurrency, fiatCurrency]
+  );
+
+  return {
+    cryptoUnit,
+    fiatVal,
+    fiatUnit,
+    calculateCryptoAmount,
+  };
 }
