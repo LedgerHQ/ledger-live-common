@@ -1,4 +1,5 @@
 // @flow
+import { BigNumber } from "bignumber.js";
 import React, {
   createContext,
   useMemo,
@@ -8,7 +9,20 @@ import React, {
   useState,
   useRef,
 } from "react";
-import type { Currency } from "../types";
+import type {
+  Account,
+  AccountLike,
+  PortfolioRange,
+  Currency,
+  CryptoCurrency,
+  TokenCurrency,
+} from "../types";
+import {
+  getBalanceHistoryWithCountervalue,
+  getPortfolio,
+  getCurrencyPortfolio,
+} from "../portfolio";
+import { getAccountCurrency, flattenAccounts } from "../account";
 import {
   initialState,
   calculate,
@@ -199,19 +213,16 @@ function fetchReducer(state, action) {
 }
 
 export function useCountervaluesPolling(): Polling {
-  const polling = useContext(CountervaluesPollingContext);
-  return polling;
+  return useContext(CountervaluesPollingContext);
 }
 
 export function useCountervaluesState(): CounterValuesState {
-  const s = useContext(CountervaluesContext);
-  return s;
+  return useContext(CountervaluesContext);
 }
 
 export function useCountervaluesExport(): CounterValuesStateRaw {
   const state = useContext(CountervaluesContext);
-  const exported = useMemo(() => exportCountervalues(state), [state]);
-  return exported;
+  return useMemo(() => exportCountervalues(state), [state]);
 }
 
 export function useCalculate(query: {
@@ -241,5 +252,100 @@ export function useCalculateMany(
 }
 
 // TODO perf of the useCalculate*, does it even worth worrying?
-// TODO see what other suited hooks / helpers we need?
-// TODO portfolio.js: should it be refined to be more perf? usePortfolio?
+
+// TODO move to portfolio module (I couldn't make useCountervaluesState to work there)
+export function useBalanceHistoryWithCountervalue({
+  account,
+  range,
+  to,
+}: {
+  account: AccountLike,
+  range: PortfolioRange,
+  to: Currency,
+}) {
+  const from = getAccountCurrency(account);
+  const state = useCountervaluesState();
+
+  return useMemo(
+    () =>
+      getBalanceHistoryWithCountervalue(account, range, (_, value, date) => {
+        const countervalue = calculate(state, {
+          value: value.toNumber(),
+          from,
+          to,
+          disableRounding: true,
+          date,
+        });
+
+        return typeof countervalue === "number"
+          ? BigNumber(countervalue)
+          : countervalue;
+      }),
+    [account, from, to, range, state]
+  );
+}
+
+export function usePortfolio({
+  accounts,
+  range,
+  to,
+}: {
+  accounts: Account[],
+  range: PortfolioRange,
+  to: Currency,
+}) {
+  const state = useCountervaluesState();
+
+  return useMemo(
+    () =>
+      getPortfolio(accounts, range, (from, value, date) => {
+        const countervalue = calculate(state, {
+          value: value.toNumber(),
+          from,
+          to,
+          disableRounding: true,
+          date,
+        });
+
+        return typeof countervalue === "number"
+          ? BigNumber(countervalue)
+          : countervalue;
+      }),
+    [accounts, range, state, to]
+  );
+}
+
+export function useCurrencyPortfolio({
+  accounts: rawAccounts,
+  range,
+  to,
+  currency,
+}: {
+  accounts: Account[],
+  range: PortfolioRange,
+  to: Currency,
+  currency: CryptoCurrency | TokenCurrency,
+}) {
+  const accounts = flattenAccounts(rawAccounts).filter(
+    (a) => getAccountCurrency(a) === currency
+  );
+  const state = useCountervaluesState();
+
+  return useMemo(
+    () =>
+      getCurrencyPortfolio(accounts, range, (from, value, date) => {
+        const countervalue = calculate(state, {
+          value: value.toNumber(),
+          from,
+          to,
+          disableRounding: true,
+          date,
+        });
+
+        return typeof countervalue === "number"
+          ? BigNumber(countervalue)
+          : countervalue;
+      }),
+    [accounts, range, state, to]
+  );
+}
