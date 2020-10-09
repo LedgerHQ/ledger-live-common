@@ -393,7 +393,7 @@ export function useCalculateCountervalueCallback({ to }: { to: Currency }) {
   );
 }
 
-export function useRequestAmount({
+export function useSendAmount({
   account,
   fiatCurrency,
   cryptoAmount,
@@ -409,7 +409,7 @@ export function useRequestAmount({
     value: cryptoAmount.toNumber(),
     disableRounding: true,
   });
-  const fiatVal = BigNumber(fiatCountervalue ?? 0);
+  const fiatAmount = BigNumber(fiatCountervalue ?? 0);
   const fiatUnit = fiatCurrency.units[0];
   const cryptoUnit = getAccountUnit(account);
   const state = useCountervaluesState();
@@ -430,7 +430,7 @@ export function useRequestAmount({
 
   return {
     cryptoUnit,
-    fiatVal,
+    fiatAmount,
     fiatUnit,
     calculateCryptoAmount,
   };
