@@ -160,7 +160,7 @@ const compoundWithdraw: ModeModule = {
     );
     const { compoundBalance } = subAccount;
     invariant(compoundBalance, "missing compoundBalance");
-    if (t.amount.eq(0)) {
+    if (t.amount.eq(0) && !t.useAllAmount) {
       result.errors.amount = new AmountRequired();
     } else if (
       compoundBalance.eq(0) ||
