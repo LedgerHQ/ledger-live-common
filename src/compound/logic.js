@@ -19,13 +19,6 @@ import { findCurrentRate } from "../families/ethereum/modules/compound";
 // to confirm in practice if this threshold is high enough / too high
 const unlimitedThreshold = BigNumber(2).pow(250);
 
-// return CTokenCurrency if compound available for account
-export function isCompoundAvailable(account: AccountLike): ?TokenCurrency {
-  return account.type === "TokenAccount"
-    ? findCompoundToken(account.token)
-    : null;
-}
-
 export function getAccountCapabilities(
   account: TokenAccount
 ): ?{
