@@ -1,12 +1,7 @@
 // @flow
 import { BigNumber } from "bignumber.js";
 import { findCompoundToken } from "../currencies";
-import type {
-  TokenAccount,
-  Account,
-  AccountLike,
-  TokenCurrency,
-} from "../types";
+import type { TokenAccount, Account } from "../types";
 import type {
   CompoundAccountSummary,
   ClosedLoansHistory,
