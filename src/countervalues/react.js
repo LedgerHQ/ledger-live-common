@@ -35,6 +35,7 @@ import {
   calculateMany,
   loadCountervalues,
   exportCountervalues,
+  importCountervalues,
 } from "./logic";
 import type {
   CounterValuesState,
@@ -61,13 +62,13 @@ export type Polling = {
 };
 
 export type Props = {
-  initialCountervalues: ?CounterValuesState,
   children: React$Node,
   userSettings: CountervaluesSettings,
   // the time to wait before the first poll when app starts (allow things to render to not do all at boot time)
   pollInitDelay?: number,
   // the minimum time to wait before two automatic polls (then one that happen whatever network/appstate events)
   autopollInterval?: number,
+  savedState?: CounterValuesStateRaw,
 };
 
 const CountervaluesPollingContext = createContext<Polling>({
@@ -81,13 +82,13 @@ const CountervaluesPollingContext = createContext<Polling>({
 
 const CountervaluesContext = createContext<CounterValuesState>(initialState);
 
-export const Countervalues = ({
-  initialCountervalues,
+export function Countervalues({
   children,
   userSettings,
   pollInitDelay = 1 * 1000,
   autopollInterval = 120 * 1000,
-}: Props) => {
+  savedState,
+}: Props) {
   const [{ state, pending, error }, dispatch] = useReducer<FetchState, Action>(
     fetchReducer,
     initialFetchState
@@ -101,15 +102,25 @@ export const Countervalues = ({
     dispatch({ type: "pending" });
     loadCountervalues(state, userSettings).then(
       (state) => {
+        if (!Object.keys(state.status).length) return;
         dispatch({ type: "success", payload: state });
         setTriggerPoll(false);
       },
       (error) => {
-        dispatch({ type: "success", payload: error });
+        dispatch({ type: "error", payload: error });
         setTriggerPoll(false);
       }
     );
   }, [pending, state, userSettings, triggerPoll]);
+
+  useEffect(() => {
+    if (!savedState || !Object.keys(savedState.status).length) return;
+    dispatch({
+      type: "setCounterValueState",
+      payload: importCountervalues(savedState, userSettings),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedState]);
 
   // trigger poll for the frist render and when userSettings is not exactly the same
   const isFirstRender = useRef(true);
@@ -141,15 +152,6 @@ export const Countervalues = ({
     return () => clearTimeout(pollingTimeout);
   }, [autopollInterval, pollInitDelay, isPolling]);
 
-  // update countervalues by cache from local store when it's retrieved asynchronously
-  useEffect(() => {
-    if (!initialCountervalues) return;
-    dispatch({
-      type: "setCachedCounterValueState",
-      payload: initialCountervalues,
-    });
-  }, [initialCountervalues]);
-
   const polling = useMemo<Polling>(
     () => ({
       wipe: () => {
@@ -171,7 +173,7 @@ export const Countervalues = ({
       </CountervaluesContext.Provider>
     </CountervaluesPollingContext.Provider>
   );
-};
+}
 
 type Action =
   | {
@@ -189,7 +191,7 @@ type Action =
       type: "wipe",
     }
   | {
-      type: "setCachedCounterValueState",
+      type: "setCounterValueState",
       payload: CounterValuesState,
     };
 
@@ -211,7 +213,7 @@ function fetchReducer(state, action) {
       return { ...state, pending: true, error: undefined };
     case "wipe":
       return { state: initialState, pending: false, error: undefined };
-    case "setCachedCounterValueState":
+    case "setCounterValueState":
       return { ...state, state: action.payload };
     default:
       return state;
@@ -229,6 +231,14 @@ export function useCountervaluesState(): CounterValuesState {
 export function useCountervaluesExport(): CounterValuesStateRaw {
   const state = useContext(CountervaluesContext);
   return useMemo(() => exportCountervalues(state), [state]);
+}
+
+export function useStoreUpdater(
+  save: (rawState: CounterValuesStateRaw) => void
+) {
+  const rawState = useCountervaluesExport();
+  if (!Object.keys(rawState.status).length) return;
+  save(rawState);
 }
 
 export function useCalculate(query: {

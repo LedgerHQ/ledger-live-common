@@ -35,29 +35,30 @@ import {
 } from "./modules";
 
 // yield raw version of the countervalues state to be saved in a db
-export function exportCountervalues(
-  s: CounterValuesState
-): CounterValuesStateRaw {
-  return { ...s.data, status: s.status };
+export function exportCountervalues({
+  data,
+  status,
+}: CounterValuesState): CounterValuesStateRaw {
+  return { ...data, status };
 }
 
 // restore a countervalues state from the raw version
 export function importCountervalues(
-  obj: CounterValuesStateRaw,
+  { status, ...data }: CounterValuesStateRaw,
   settings: CountervaluesSettings
 ): CounterValuesState {
-  const data = {};
-  const cache = {};
-  let status = {};
-  Object.keys(obj).forEach((key) => {
-    if (key === "status") {
-      status = obj[key];
-    } else {
-      data[key] = obj[key];
-      cache[key] = generateCache(key, obj[key], settings);
-    }
-  });
-  return { data, status, cache };
+  return {
+    data,
+    status,
+    cache: Object.entries(data).reduce(
+      (prev, [key, val]) => ({
+        ...prev,
+        // $FlowFixMe
+        [key]: generateCache(key, val, settings),
+      }),
+      {}
+    ),
+  };
 }
 
 // infer the tracking pair from user accounts to know which pairs are concerned
