@@ -116,7 +116,10 @@ const compoundSupply: ModeModule = {
   fillOptimisticOperation(a, t, op) {
     const subAccount = inferTokenAccount(a, t);
     if (subAccount) {
+      const currentRate = findCurrentRate(subAccount.token);
+      const rate = currentRate ? currentRate.rate : BigNumber(0);
       const value = BigNumber(t.amount || 0);
+      const compoundValue = value.div(rate).integerValue();
       // ERC20 transfer
       op.subOperations = [
         {
@@ -132,7 +135,10 @@ const compoundSupply: ModeModule = {
           recipients: [t.recipient],
           accountId: subAccount.id,
           date: new Date(),
-          extra: {},
+          extra: {
+            compoundValue: compoundValue.toString(10),
+            rate: rate.toString(10),
+          },
         },
       ];
     }
@@ -218,9 +224,15 @@ const compoundWithdraw: ModeModule = {
   fillOptimisticOperation(a, t, op) {
     const subAccount = inferTokenAccount(a, t);
     if (subAccount) {
+      const currentRate = findCurrentRate(subAccount.token);
       const value = t.useAllAmount
         ? subAccount.balance.minus(subAccount.spendableBalance)
         : BigNumber(t.amount || 0);
+      const compoundValue = t.useAllAmount
+        ? subAccount.compoundBalance || BigNumber(0)
+        : !currentRate
+        ? BigNumber(0)
+        : value.div(currentRate.rate).integerValue();
       // ERC20 transfer
       op.subOperations = [
         {
@@ -236,7 +248,10 @@ const compoundWithdraw: ModeModule = {
           recipients: [t.recipient],
           accountId: subAccount.id,
           date: new Date(),
-          extra: {},
+          extra: {
+            compoundValue: compoundValue.toString(10),
+            rate: !currentRate ? BigNumber(0) : currentRate.rate.toString(10),
+          },
         },
       ];
     }
