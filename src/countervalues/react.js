@@ -237,8 +237,10 @@ export function useStoreUpdater(
   save: (rawState: CounterValuesStateRaw) => void
 ) {
   const rawState = useCountervaluesExport();
-  if (!Object.keys(rawState.status).length) return;
-  save(rawState);
+  useEffect(() => {
+    if (!Object.keys(rawState.status).length) return;
+    save(rawState);
+  }, [save, rawState]);
 }
 
 export function useCalculate(query: {

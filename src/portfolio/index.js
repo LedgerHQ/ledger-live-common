@@ -120,7 +120,7 @@ const meaningfulPercentage = (
   }
 };
 
-const getBHWCV: GetBalanceHistoryWithCountervalue = (
+export const getBalanceHistoryWithCountervalue: GetBalanceHistoryWithCountervalue = (
   account,
   r,
   calc,
@@ -195,8 +195,6 @@ const getBHWCV: GetBalanceHistoryWithCountervalue = (
   accountCVstableCache[stableHash] = copy;
   return copy;
 };
-
-export const getBalanceHistoryWithCountervalue = getBHWCV;
 
 const portfolioMemo: { [_: *]: Portfolio } = {};
 /**
