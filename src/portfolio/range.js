@@ -28,7 +28,7 @@ export function startOfWeek(t: Date) {
 
 const ranges: { [k: PortfolioRange]: PortfolioRangeConfig } = {
   year: {
-    count: 365,
+    count: 52,
     increment: weekIncrement,
     startOf: startOfWeek,
     granularityId: "WEEK",
