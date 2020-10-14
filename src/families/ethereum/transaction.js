@@ -13,7 +13,7 @@ import {
   fromTransactionCommonRaw,
   toTransactionCommonRaw,
 } from "../../transaction/common";
-import type { Account, CryptoCurrency } from "../../types";
+import type { Account } from "../../types";
 import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
 import { apiForCurrency } from "../../api/Ethereum";
