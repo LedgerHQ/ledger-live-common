@@ -400,6 +400,7 @@ async function loadERC20Balances(tokenAccounts, address, api) {
         b.balance &&
         b.contract.toLowerCase() === a.token.contractAddress.toLowerCase()
     );
+    // TODO: in case balance is not even found, the TokenAccount should be dropped because it likely means the token no longer is valid.
     if (r && !a.balance.eq(r.balance)) {
       a.balance = r.balance;
       a.spendableBalance = r.balance;
