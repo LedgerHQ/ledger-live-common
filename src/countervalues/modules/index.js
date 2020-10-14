@@ -6,9 +6,8 @@ import type { RateGranularity, TrackingPair, RateMap } from "../types";
 import type { Module } from "./types";
 import api from "../api";
 import weth from "./weth";
-import compound from "./compound";
 
-const modules: Module[] = [weth, compound];
+const modules: Module[] = [weth];
 
 export const fetchHistorical = (
   granularity: RateGranularity,
