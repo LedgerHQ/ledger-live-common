@@ -82,24 +82,24 @@ function loadModes() {
 
 loadModes();
 
-export async function preload(): Promise<Object> {
+export async function preload(currency: CryptoCurrency): Promise<Object> {
   const value = {};
   for (let k in modules) {
     const m = modules[k];
     if (m.preload) {
-      value[k] = await m.preload();
+      value[k] = await m.preload(currency);
     }
   }
   return value;
 }
 
-export function hydrate(value: mixed) {
+export function hydrate(value: mixed, currency: CryptoCurrency) {
   if (!value || typeof value !== "object") return;
   for (let k in value) {
     if (k in modules) {
       const m = modules[k];
       if (m.hydrate) {
-        m.hydrate(value[k]);
+        m.hydrate(value[k], currency);
       }
     }
   }

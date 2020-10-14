@@ -317,8 +317,12 @@ export function findCurrentRate(tokenOrCtoken: TokenCurrency): ?CurrentRate {
 // if that's the case we need to see how to implement this in bridge cycle.
 // => allow to define strategy to reload preload()
 
-export async function preload(): Promise<CompoundPreloaded> {
-  if (!getEnv("COMPOUND")) return Promise.resolve([]);
+export async function preload(
+  currency: CryptoCurrency
+): Promise<?CompoundPreloaded> {
+  if (currency.id !== "ethereum" || !getEnv("COMPOUND")) {
+    return Promise.resolve();
+  }
   const ctokens = listSupportedCompoundTokens();
   const currentRates = await fetchCurrentRates(ctokens);
   compoundPreloadedValue = currentRates;
@@ -327,7 +331,8 @@ export async function preload(): Promise<CompoundPreloaded> {
   return preloaded;
 }
 
-export function hydrate(value: CompoundPreloaded) {
+export function hydrate(value: ?CompoundPreloaded, currency: CryptoCurrency) {
+  if (!value || currency.id !== "ethereum") return;
   compoundPreloadedValue = value.map(fromCurrentRateRaw);
 }
 
