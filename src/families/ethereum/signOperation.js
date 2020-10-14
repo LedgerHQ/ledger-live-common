@@ -90,19 +90,25 @@ export const signOperation = ({
               freshAddressPath,
               tx.serialize().toString("hex")
             );
+
             o.next({ type: "device-signature-granted" });
 
             // Second, we re-set some tx fields from the device signature
 
-            tx.v = Buffer.from(result.v, "hex");
-            tx.r = Buffer.from(result.r, "hex");
-            tx.s = Buffer.from(result.s, "hex");
-            const signedChainId = Math.floor((tx.v[0] - 35) / 2); // EIP155: v should be chain_id * 2 + {35, 36}
-            const validChainId = chainId & 0xff; // eslint-disable-line no-bitwise
-            invariant(
-              signedChainId === validChainId,
-              `Invalid chainId signature returned. Expected: ${chainId}, Got: ${signedChainId}`
-            );
+            let v = result.v;
+            if (chainId > 0) {
+              // EIP155 support. check/recalc signature v value.
+              let rv = parseInt(v, 16);
+              let cv = chainId * 2 + 35;
+              if (rv !== cv && (rv & cv) !== rv) {
+                cv += 1; // add signature v bit.
+              }
+              v = cv.toString(16);
+            }
+
+            tx.v = "0x" + v;
+            tx.r = "0x" + result.r;
+            tx.s = "0x" + result.s;
 
             // Generate the signature ready to be broadcasted
             const signature = `0x${tx.serialize().toString("hex")}`;

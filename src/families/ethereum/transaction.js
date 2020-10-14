@@ -7,6 +7,7 @@ import type {
   TransactionRaw,
   EthereumGasLimitRequest,
 } from "./types";
+import Common from "ethereumjs-common";
 import { Transaction as EthereumTx } from "ethereumjs-tx";
 import {
   fromTransactionCommonRaw,
@@ -96,16 +97,32 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
 };
 
 // see https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
-export function getNetworkId(currency: CryptoCurrency): ?number {
+export function getEthereumjsTxCommon(currency: CryptoCurrency): ?number {
   switch (currency.id) {
     case "ethereum":
-      return 1;
+      return new Common("mainnet");
     case "ethereum_classic":
-      return 61;
+      return Common.forCustomChain(
+        "mainnet",
+        {
+          name: "ETC",
+          chainId: 61,
+          networkId: 1,
+        },
+        "dao"
+      );
     case "ethereum_classic_ropsten":
-      return 62;
+      return Common.forCustomChain(
+        "ropsten",
+        {
+          name: "ETC",
+          chainId: 62,
+          networkId: 1,
+        },
+        "dao"
+      );
     case "ethereum_ropsten":
-      return 3;
+      return new Common("ropsten");
     default:
       return null;
   }
@@ -134,14 +151,13 @@ export function buildEthereumTx(
     "only token accounts expected"
   );
 
-  const chainId = getNetworkId(currency);
-  invariant(chainId, `chainId not found for currency ${currency.name}`);
+  const common = getEthereumjsTxCommon(currency);
+  invariant(common, `common not found for currency ${currency.name}`);
 
   const gasLimit = getGasLimit(transaction);
 
   const ethTxObject: Object = {
     nonce,
-    chainId,
     gasPrice: `0x${BigNumber(gasPrice || 0).toString(16)}`,
     gasLimit: `0x${BigNumber(gasLimit).toString(16)}`,
   };
@@ -156,9 +172,9 @@ export function buildEthereumTx(
 
   log("ethereum", "buildEthereumTx", ethTxObject);
 
-  const tx = new EthereumTx(ethTxObject);
+  const tx = new EthereumTx(ethTxObject, { common });
   // these will be filled by device signature
-  tx.raw[6] = Buffer.from([chainId]); // v
+  tx.raw[6] = Buffer.from([common.chainId()]); // v
   tx.raw[7] = Buffer.from([]); // r
   tx.raw[8] = Buffer.from([]); // s
 
