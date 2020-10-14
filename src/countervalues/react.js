@@ -114,7 +114,7 @@ export function Countervalues({
   }, [pending, state, userSettings, triggerPoll]);
 
   useEffect(() => {
-    if (!savedState || !Object.keys(savedState.status).length) return;
+    if (!savedState?.status || !Object.keys(savedState.status).length) return;
     dispatch({
       type: "setCounterValueState",
       payload: importCountervalues(savedState, userSettings),
