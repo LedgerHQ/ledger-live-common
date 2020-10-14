@@ -97,7 +97,7 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
 };
 
 // see https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
-export function getEthereumjsTxCommon(currency: CryptoCurrency): ?number {
+function getEthereumjsTxCommon(currency) {
   switch (currency.id) {
     case "ethereum":
       return new Common("mainnet");
