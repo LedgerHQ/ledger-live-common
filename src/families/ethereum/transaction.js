@@ -100,7 +100,7 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
 function getEthereumjsTxCommon(currency) {
   switch (currency.id) {
     case "ethereum":
-      return new Common("mainnet");
+      return new Common("mainnet", "petersburg");
     case "ethereum_classic":
       return Common.forCustomChain(
         "mainnet",
@@ -122,7 +122,7 @@ function getEthereumjsTxCommon(currency) {
         "dao"
       );
     case "ethereum_ropsten":
-      return new Common("ropsten");
+      return new Common("ropsten", "petersburg");
     default:
       return null;
   }
