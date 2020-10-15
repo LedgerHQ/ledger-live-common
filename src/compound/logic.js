@@ -182,9 +182,11 @@ export function makeCompoundSummaryForAccount(
                 ),
               });
             }
-          }
 
-          amountToClose = amountToClose.minus(closingOperation.amountSupplied);
+            amountToClose = amountToClose.minus(
+              closingOperation.amountSupplied
+            );
+          }
         }
       }
     });
