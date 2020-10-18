@@ -5,7 +5,7 @@ import type { CryptoCurrency, DerivationMode, TokenCurrency } from "../types";
 import { asDerivationMode } from "../derivation";
 import {
   getCryptoCurrencyById,
-  getTokenById,
+  findTokenById,
   findTokenByAddress,
 } from "../currencies";
 
@@ -48,11 +48,11 @@ export function encodeTokenAccountId(accountId: string, token: TokenCurrency) {
 
 export function decodeTokenAccountId(
   id: string
-): { accountId: string, token: TokenCurrency } {
+): { accountId: string, token: ?TokenCurrency } {
   const [accountId, tokenId] = id.split("+");
   const decodedTokenId = decodeURIComponent(tokenId);
   const token =
-    findTokenByAddress(decodedTokenId) || getTokenById(decodedTokenId);
+    findTokenByAddress(decodedTokenId) || findTokenById(decodedTokenId);
   return { accountId, token };
 }
 

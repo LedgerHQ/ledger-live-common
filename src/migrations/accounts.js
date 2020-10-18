@@ -33,6 +33,7 @@ export const implicitMigration = (accounts: Account[]): Account[] => {
       const parent = accounts.find((p) => p.id === a.parentId);
       if (parent) {
         const { token } = decodeTokenAccountId(a.id);
+        if (!token) return a.id;
         return encodeTokenAccountId(targetEthereumJSaccountId(parent), token);
       }
     }
