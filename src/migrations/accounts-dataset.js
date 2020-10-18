@@ -178,6 +178,45 @@ const accounts: Account[] = [
           },
         ],
       },
+      {
+        type: "TokenAccountRaw",
+        id:
+          "libcore:1:ethereum:xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ:+imaginary",
+        parentId:
+          "libcore:1:ethereum:xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ:",
+        starred: false,
+        tokenId: "ethereum/erc20/_imaginary_token_",
+        balance: "0",
+        balanceHistory: {},
+        creationDate: "2020-09-15T11:18:22.000Z",
+        operationsCount: 15,
+        operations: [],
+        pendingOperations: [],
+        swapHistory: [
+          {
+            status: "finished",
+            provider: "changelly",
+            operationId:
+              "libcore:1:ethereum:xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ:+imaginary-0x3e044ee188d1b8a43d293fbc7faba1619f0b55e1180d4848547573c3b26d4140-OUT",
+            swapId: "8qk2zvsg5fsz69ma",
+            receiverAccountId:
+              "libcore:1:ethereum:xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ:",
+            fromAmount: "120961160",
+            toAmount: "310338883496932000",
+          },
+          {
+            status: "finished",
+            provider: "changelly",
+            operationId:
+              "libcore:1:ethereum:xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ:+imaginary-0x4b520ea9fb040761ff4f12da7945757e6130c954f29b5c4e994c068be6d3d56e-OUT",
+            swapId: "x563tt1pjvyezkq1",
+            receiverAccountId:
+              "libcore:1:bitcoin:xpub6DACJs4ZgE67MoaVKEveVNW5XkSgS9BMDsFLcjcWmdRC3DThwyPrpVuGomZYa6gk7SxuFMzEeNE6dAwzPmozzdNJuXDzNNhVjfppFLwwDgM:native_segwit",
+            fromAmount: "53820289",
+            toAmount: "497175.6836953",
+          },
+        ],
+      },
     ],
     swapHistory: [
       {
