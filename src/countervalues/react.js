@@ -237,10 +237,18 @@ export function useStoreUpdater(
   save: (rawState: CounterValuesStateRaw) => void
 ) {
   const rawState = useCountervaluesExport();
+  const { wipe } = useCountervaluesPolling();
+
   useEffect(() => {
+    // when cache is cleared
+    if (Object.keys(rawState).length === 1) {
+      wipe();
+      save(rawState);
+      return;
+    }
     if (!Object.keys(rawState.status).length) return;
     save(rawState);
-  }, [save, rawState]);
+  }, [save, rawState, wipe]);
 }
 
 export function useCalculate(query: {
