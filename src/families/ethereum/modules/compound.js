@@ -166,7 +166,7 @@ const compoundWithdraw: ModeModule = {
       compoundBalance.eq(0) ||
       (!t.useAllAmount && t.amount.gt(nonSpendableBalance))
     ) {
-      result.errors.amount = new NotEnoughBalance(); // FIXME new error? not enough to redeem?!
+      result.errors.amount = new NotEnoughBalance();
     }
   },
   fillTransactionData(a, t, tx) {

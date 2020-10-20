@@ -22,7 +22,6 @@ export type Tx = {
   gas_price: BigNumber,
   from: string,
   to: string,
-  input?: string,
   cumulative_gas_used?: BigNumber,
   gas_used?: BigNumber,
   transfer_events?: {
@@ -40,7 +39,6 @@ export type Tx = {
     from: string,
     to: string,
     value: BigNumber,
-    input?: string,
     gas?: BigNumber,
     gas_used?: BigNumber,
   }>,
@@ -102,6 +100,7 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
           pathname: `${baseURL}/addresses/${address}/transactions`,
           query: {
             batch_size,
+            noinput: true,
             no_token: true,
             block_hash,
           },
