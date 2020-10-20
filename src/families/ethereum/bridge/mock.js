@@ -20,6 +20,7 @@ import {
 } from "../../../bridge/mockHelpers";
 import { getGasLimit } from "../transaction";
 import { makeAccountBridgeReceive } from "../../../bridge/mockHelpers";
+import { inferDynamicRange } from "../../../range";
 
 const receive = makeAccountBridgeReceive();
 
@@ -126,9 +127,7 @@ const prepareTransaction = async (a, t) => {
       ...res,
       networkInfo: {
         family: "ethereum",
-        low: BigNumber(300000),
-        initial: BigNumber(400000),
-        high: BigNumber(1000000),
+        gasPrice: inferDynamicRange(BigNumber(300000)),
       },
     };
   }

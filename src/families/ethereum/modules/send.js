@@ -12,8 +12,11 @@ import {
   NotEnoughBalanceInParentAccount,
   AmountRequired,
 } from "@ledgerhq/errors";
-import { validateRecipient } from "../customAddressValidation";
-import { inferTokenAccount, getGasLimit } from "../transaction";
+import {
+  inferTokenAccount,
+  getGasLimit,
+  validateRecipient,
+} from "../transaction";
 
 export type Modes = "send";
 

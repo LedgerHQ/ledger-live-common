@@ -7,8 +7,7 @@ import eip55 from "eip55";
 import { BigNumber } from "bignumber.js";
 import type { ModeModule } from "../types";
 import { AmountRequired } from "@ledgerhq/errors";
-import { validateRecipient } from "../customAddressValidation";
-import { inferTokenAccount } from "../transaction";
+import { inferTokenAccount, validateRecipient } from "../transaction";
 import { getAccountCurrency } from "../../../account";
 import { contractField } from "./compound";
 
