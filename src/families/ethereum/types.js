@@ -68,3 +68,11 @@ export type TransactionRaw = {|
   feeCustomUnit: ?Unit,
   networkInfo: ?NetworkInfoRaw,
 |};
+
+//
+
+export type CoreStatics = {};
+export type CoreAccountSpecifics = {};
+export type CoreOperationSpecifics = {};
+export type CoreCurrencySpecifics = {};
+export const reflect = (_declare: *) => {};
