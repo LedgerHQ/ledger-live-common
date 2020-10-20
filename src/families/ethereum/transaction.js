@@ -20,6 +20,7 @@ import { apiForCurrency } from "../../api/Ethereum";
 import { makeLRUCache } from "../../cache";
 import { getEnv } from "../../env";
 import { modes } from "./modules";
+import { fromRangeRaw, toRangeRaw } from "../../range";
 
 export const formatTransaction = (
   t: Transaction,
@@ -69,7 +70,7 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     feeCustomUnit: tr.feeCustomUnit, // FIXME this is not good.. we're dereferencing here. we should instead store an index (to lookup in currency.units on UI)
     networkInfo: networkInfo && {
       family: networkInfo.family,
-      gasPrice: BigNumber(networkInfo.gasPrice),
+      gasPrice: fromRangeRaw(networkInfo.gasPrice),
     },
   };
 };
@@ -91,7 +92,7 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
     feeCustomUnit: t.feeCustomUnit, // FIXME drop?
     networkInfo: networkInfo && {
       family: networkInfo.family,
-      gasPrice: networkInfo.gasPrice.toString(),
+      gasPrice: toRangeRaw(networkInfo.gasPrice),
     },
   };
 };

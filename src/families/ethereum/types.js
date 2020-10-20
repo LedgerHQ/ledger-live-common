@@ -19,6 +19,7 @@ import type {
   Spec,
 } from "../../libcore/types";
 import type { TransactionMode, ModeModule } from "./modules";
+import type { Range, RangeRaw } from "../../range";
 
 export type EthereumGasLimitRequest = {
   from?: string,
@@ -32,12 +33,12 @@ export type EthereumGasLimitRequest = {
 
 export type NetworkInfo = {|
   family: "ethereum",
-  gasPrice: BigNumber,
+  gasPrice: Range,
 |};
 
 export type NetworkInfoRaw = {|
   family: "ethereum",
-  gasPrice: string,
+  gasPrice: RangeRaw,
 |};
 
 export type { TransactionMode, ModeModule };

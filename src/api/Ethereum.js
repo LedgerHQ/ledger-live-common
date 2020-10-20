@@ -9,6 +9,7 @@ import type { EthereumGasLimitRequest } from "../families/ethereum/types";
 import network from "../network";
 import { blockchainBaseURL } from "./Ledger";
 import { FeeEstimationFailed } from "../errors";
+import { makeLRUCache } from "../cache";
 
 export type Block = { height: BigNumber }; // TODO more fields actually
 
@@ -83,6 +84,11 @@ export type API = {
     address: string,
     request: EthereumGasLimitRequest
   ) => Promise<BigNumber>,
+  getGasTrackerBarometer: () => Promise<{
+    low: BigNumber,
+    medium: BigNumber,
+    high: BigNumber,
+  }>,
 };
 
 export const apiForCurrency = (currency: CryptoCurrency): API => {
@@ -215,5 +221,21 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
       invariant(!value.isNaN(), "invalid server data");
       return value;
     },
+
+    getGasTrackerBarometer: makeLRUCache(
+      async () => {
+        const { data } = await network({
+          method: "GET",
+          url: `${baseURL}/gastracker/barometer`,
+        });
+        return {
+          low: BigNumber(data.low),
+          medium: BigNumber(data.medium),
+          high: BigNumber(data.high),
+        };
+      },
+      () => "",
+      { maxAge: 30 * 1000 }
+    ),
   };
 };

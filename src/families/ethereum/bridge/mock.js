@@ -126,7 +126,9 @@ const prepareTransaction = async (a, t) => {
       ...res,
       networkInfo: {
         family: "ethereum",
-        gasPrice: BigNumber(300000),
+        low: BigNumber(300000),
+        initial: BigNumber(400000),
+        high: BigNumber(1000000),
       },
     };
   }
