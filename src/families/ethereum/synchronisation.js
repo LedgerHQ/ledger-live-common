@@ -41,22 +41,24 @@ export const getAccountShape: GetAccountShape = async (
       ? mostRecentStableOperation.blockHash
       : undefined;
 
-  const [txs, currentBlock, balance] = await Promise.all([
-    fetchAllTransactions(api, address, pullFromBlockHash),
-    fetchCurrentBlock(currency),
-    api.getAccountBalance(address),
-  ]);
+  const txsP = fetchAllTransactions(api, address, pullFromBlockHash);
+  const currentBlockP = fetchCurrentBlock(currency);
+  const balanceP = api.getAccountBalance(address);
+
+  const [txs, currentBlock] = await Promise.all([txsP, currentBlockP]);
 
   const blockHeight = currentBlock.height.toNumber();
 
   if (!pullFromBlockHash && txs.length === 0) {
     log("ethereum", "no ops on " + address);
     return {
-      balance,
+      balance: BigNumber(0),
       subAccounts: [],
       blockHeight,
     };
   }
+
+  const balance = await balanceP;
 
   // transform transactions into operations
   let newOps = flatMap(txs, txToOps(info));
