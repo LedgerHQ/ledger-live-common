@@ -28,7 +28,7 @@ import { getAccountShape } from "../synchronisation";
 import { preload, hydrate } from "../modules";
 import { signOperation } from "../signOperation";
 import { modes } from "../modules";
-import postSyncPatch from "../libcore-postSyncPatch";
+import postSyncPatch from "../postSyncPatch";
 
 const receive = makeAccountBridgeReceive();
 
