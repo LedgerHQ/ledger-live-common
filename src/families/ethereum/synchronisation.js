@@ -137,7 +137,7 @@ export const getAccountShape: GetAccountShape = async (
 
   tokenAccounts = await prepareTokenAccounts(currency, tokenAccounts, address);
 
-  await loadERC20Balances(tokenAccounts, address, api);
+  tokenAccounts = await loadERC20Balances(tokenAccounts, address, api);
 
   tokenAccounts = await digestTokenAccounts(currency, tokenAccounts, address);
 
@@ -399,19 +399,28 @@ async function loadERC20Balances(tokenAccounts, address, api) {
       address,
     }))
   );
-  tokenAccounts.forEach((a) => {
-    const r = erc20balances.find(
-      (b) =>
-        b.contract &&
-        b.balance &&
-        b.contract.toLowerCase() === a.token.contractAddress.toLowerCase()
-    );
-    // TODO: in case balance is not even found, the TokenAccount should be dropped because it likely means the token no longer is valid.
-    if (r && !a.balance.eq(r.balance)) {
-      a.balance = r.balance;
-      a.spendableBalance = r.balance;
-    }
-  });
+  return tokenAccounts
+    .map((a) => {
+      const r = erc20balances.find(
+        (b) =>
+          b.contract &&
+          b.balance &&
+          b.contract.toLowerCase() === a.token.contractAddress.toLowerCase()
+      );
+      if (!r) {
+        // when backend have failed in the balance, the TokenAccount should be dropped because it likely means the token no longer is valid.
+        return null;
+      }
+      if (!a.balance.eq(r.balance)) {
+        return {
+          ...a,
+          balance: r.balance,
+          spendableBalance: r.balance,
+        };
+      }
+      return a;
+    })
+    .filter(Boolean);
 }
 
 const SAFE_REORG_THRESHOLD = 80;
