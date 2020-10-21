@@ -84,11 +84,6 @@ const envDefinitions = {
     desc:
       "(dev feature) defines the folder for speculos mode that contains Nano apps binaries (.elf) in a specific structure: <device>/<firmware>/<appName>/app_<appVersion>.elf",
   },
-  COMPOUND: {
-    def: false,
-    parser: boolParser,
-    desc: "enable compound features",
-  },
   COSMOS_GAS_AMPLIFIER: {
     def: 4,
     parser: intParser,

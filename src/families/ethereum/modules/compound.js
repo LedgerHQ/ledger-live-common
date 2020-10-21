@@ -28,7 +28,6 @@ import {
 } from "../../../currencies";
 import network from "../../../network";
 import { promiseAllBatched } from "../../../promise";
-import { getEnv } from "../../../env";
 import { mergeOps } from "../../../bridge/jsHelpers";
 import { apiForCurrency } from "../../../api/Ethereum";
 import type { Transaction } from "../types";
@@ -320,7 +319,7 @@ export function findCurrentRate(tokenOrCtoken: TokenCurrency): ?CurrentRate {
 export async function preload(
   currency: CryptoCurrency
 ): Promise<?CompoundPreloaded> {
-  if (currency.id !== "ethereum" || !getEnv("COMPOUND")) {
+  if (currency.id !== "ethereum") {
     return Promise.resolve();
   }
   const ctokens = listSupportedCompoundTokens();
@@ -340,7 +339,7 @@ export function prepareTokenAccounts(
   currency: CryptoCurrency,
   subAccounts: TokenAccount[]
 ): TokenAccount[] {
-  if (currency.id !== "ethereum" || !getEnv("COMPOUND")) return subAccounts;
+  if (currency.id !== "ethereum") return subAccounts;
 
   const compoundByTokenId = inferSubAccountsCompound(currency, subAccounts);
 
@@ -383,7 +382,7 @@ export async function digestTokenAccounts(
   subAccounts: TokenAccount[],
   address: string
 ): Promise<TokenAccount[]> {
-  if (currency.id !== "ethereum" || !getEnv("COMPOUND")) return subAccounts;
+  if (currency.id !== "ethereum") return subAccounts;
 
   const compoundByTokenId = inferSubAccountsCompound(currency, subAccounts);
   if (Object.keys(compoundByTokenId).length === 0) return subAccounts;
