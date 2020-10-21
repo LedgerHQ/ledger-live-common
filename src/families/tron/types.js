@@ -184,6 +184,7 @@ export type TronResources = {|
   unwithdrawnReward: BigNumber,
   lastWithdrawnRewardDate: ?Date,
   lastVotedDate: ?Date,
+  cacheTransactionInfoById: { [_: string]: TronTransactionInfo },
 |};
 
 export type TronResourcesRaw = {|
@@ -202,6 +203,7 @@ export type TronResourcesRaw = {|
   unwithdrawnReward: string,
   lastWithdrawnRewardDate: ?string,
   lastVotedDate: ?string,
+  cacheTransactionInfoById?: { [_: string]: TronTransactionInfoRaw },
 |};
 
 export type Vote = {|
@@ -240,3 +242,12 @@ export type BandwidthInfoRaw = {|
   gainedUsed: string,
   gainedLimit: string,
 |};
+
+export type TronTransactionInfo = {|
+  fee: number,
+  blockNumber: number,
+  withdraw_amount: number,
+  unfreeze_amount: number,
+|};
+
+export type TronTransactionInfoRaw = [number, number, number, number];
