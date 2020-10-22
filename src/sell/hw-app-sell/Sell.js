@@ -25,7 +25,7 @@ const maybeThrowProtocolError = (result: Buffer): void => {
   }
 };
 
-export default class Swap {
+export default class Exchange {
   transport: Transport<*>;
   transactionType: TransactionType;
   allowedStatuses: Array<number> = [
@@ -65,9 +65,7 @@ export default class Swap {
     return result.toString("ascii", 0, 10);
   }
 
-  async setPartnerKey(
-    partnerNameAndPublicKey: Buffer
-  ): Promise<void> {
+  async setPartnerKey(partnerNameAndPublicKey: Buffer): Promise<void> {
     let result: Buffer = await this.transport.send(
       0xe0,
       SET_PARTNER_KEY_COMMAND,
@@ -80,9 +78,7 @@ export default class Swap {
     maybeThrowProtocolError(result);
   }
 
-  async checkPartner(
-    signatureOfPartnerData: Buffer
-  ): Promise<void> {
+  async checkPartner(signatureOfPartnerData: Buffer): Promise<void> {
     let result: Buffer = await this.transport.send(
       0xe0,
       CHECK_PARTNER_COMMAND,
@@ -95,10 +91,7 @@ export default class Swap {
     maybeThrowProtocolError(result);
   }
 
-  async processTransaction(
-    transaction: Buffer,
-    fee: BigNumber
-  ): Promise<void> {
+  async processTransaction(transaction: Buffer, fee: BigNumber): Promise<void> {
     var hex: string = fee.toString(16);
     hex = hex.padStart(hex.length + (hex.length % 2), "0");
     var feeHex: Buffer = Buffer.from(hex, "hex");
@@ -122,9 +115,7 @@ export default class Swap {
     maybeThrowProtocolError(result);
   }
 
-  async checkTransactionSignature(
-    transactionSignature: Buffer
-  ): Promise<void> {
+  async checkTransactionSignature(transactionSignature: Buffer): Promise<void> {
     let result: Buffer = await this.transport.send(
       0xe0,
       CHECK_TRANSACTION_SIGNATURE,

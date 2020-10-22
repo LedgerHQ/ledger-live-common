@@ -68,17 +68,17 @@ const initialState: State = {
 
 const reducer = (state: any, e: SwapRequestEvent | { type: "init-swap" }) => {
   switch (e.type) {
-    case "init-swap":
+    case "init-sell":
       return { ...state, freezeReduxDevice: true };
-    case "init-swap-error":
+    case "init-sell-error":
       return {
         ...state,
         initSwapError: e.error,
         isLoading: false,
       };
-    case "init-swap-requested":
+    case "init-sell-get-transaction-id":
       return { ...state, initSwapRequested: true, isLoading: false };
-    case "init-swap-result":
+    case "init-sell-result":
       return {
         ...state,
         initSwapResult: e.initSwapResult,
@@ -133,20 +133,19 @@ export const createAction = (
       }
 
       const sub = concat(
-        of({ type: "init-swap" }),
+        of({ type: "init-sell" }),
         getTransactionId({
           deviceId: device.deviceId,
         }).pipe(
           map((txId) => ({
-            type: "get-transaction-id",
+            type: "init-sell-get-transaction-id",
             value: txId,
           }))
         )
       )
         .pipe(
           tap((e) => {
-            if (e && e.type === "get-transaction-id") {
-              console.log("GET T ID CALLED", onTransactionId);
+            if (e && e.type === "init-sell-get-transaction-id") {
               onTransactionId(e.value).then((context) => {
                 const bridge = getAccountBridge(account, parentAccount);
                 const t = bridge.createTransaction(account);
@@ -156,18 +155,33 @@ export const createAction = (
                 const transaction = bridge.updateTransaction(t, {
                   amount: parseCurrencyUnit(
                     currency.units[0],
-                    context.inAmount.toString()
+                    context.inAmount.toString(10)
                   ),
                   recipient: context.transferIn.details.account,
                 });
 
-                bridge.prepareTransaction(mainAccount, transaction).then(() => {
-                  bridge
-                    .getTransactionStatus(mainAccount, transaction)
-                    .then((status) => {
-                      setCoinifyContext({ context, transaction, status });
-                    });
-                });
+                console.log(
+                  "HEYY: ",
+                  { context, currency, mainAccount },
+                  context.inAmount.toString(),
+                  {
+                    balance: mainAccount.balance.toString(10),
+                  }
+                );
+
+                bridge
+                  .prepareTransaction(mainAccount, transaction)
+                  .then((preparedTx) => {
+                    bridge
+                      .getTransactionStatus(mainAccount, preparedTx)
+                      .then((status) => {
+                        setCoinifyContext({
+                          context,
+                          transaction: preparedTx,
+                          status,
+                        });
+                      });
+                  });
               });
             }
             log("actions-initSell-event", e.type, e);
@@ -192,35 +206,30 @@ export const createAction = (
 
       const { context, transaction, status } = coinifyContext;
 
-      console.log("SECOND PART", { context, transaction });
+      console.log("INIT SELL STATUS: ", status);
 
-      const test = checkSignatureAndPrepare({
+      const sub = checkSignatureAndPrepare({
         deviceId: device.deviceId,
-        binaryPayload: context.providerSig,
+        binaryPayload: context.providerSig.payload,
         receiver: context.transferIn.details.account,
         payloadSignature: context.providerSig.signature,
         account,
         transaction,
         status,
-      });
-      console.log("CHECK AND PREPARE = ", test);
-
-      const sub = concat(
-        of({ type: "check-signature-and-prepare" }),
-        test.pipe(
-          map((txId) => ({
-            type: "get-transaction-id",
-            value: txId,
+      })
+        .pipe(
+          map(() => ({
+            type: "init-sell-result",
+            initSwapResult: { transaction },
           }))
         )
-      )
         .pipe(
           tap((e) => {
             log("actions-initSell-event", e);
           }),
           catchError((error) =>
             of({
-              type: "init-swap-error",
+              type: "init-sell-error",
               error,
             })
           ),

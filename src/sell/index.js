@@ -11,20 +11,40 @@ const sellProviders: {
 } = {
   changelly: {
     nameAndPubkey: Buffer.from(
-      "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEzqfcixifoNelqXUwtQVWywwUB5w5zURTLXA38rlvD6nC3liOGECzUbcRFO5AIfwmD3kKby0M3xw+GJnM+X08yw",
-      "base64"
+      "094368616e67656c6c790480d7c0d3a9183597395f58dda05999328da6f18fabd5cda0aff8e8e3fc633436a2dbf48ecb23d40df7c3c7d3e774b77b4b5df0e9f7e08cf1cdf2dba788eb085b",
+      "hex"
     ),
+    signature: Buffer.from(
+      "3045022100e73339e5071b5d232e8cacecbd7c118c919122a43f8abb8b2062d4bfcd58274e022050b11605d8b7e199f791266146227c43fd11d7645b1d881f705a2f8841d21de5",
+      "hex"
+    ),
+    curve: "secpk256k1",
+  },
+  coinify: {
+    nameAndPubkey: Buffer.concat([
+      Buffer.from([7]),
+      Buffer.from("Coinify", "ascii"),
+      Buffer.from(
+        "04CEA7DC8B189FA0D7A5A97530B50556CB0C14079C39CD44532D7037F2B96F0FA9C2DE588E1840B351B71114EE4021FC260F790A6F2D0CDF1C3E1899CCF97D3CCB",
+        "hex"
+      ),
+    ]),
+
     signature: Buffer.from(
       "3043021f023ecbbb1dfd44f390944bd1f6c039942943009a51ca4f134589441476651a02200cbfdf2ebe32eb0b0a88be9b1fec343ed5b230a69e65a1d15b4e34ef4206a9dd",
       "hex"
     ),
     curve: "secpk256k1",
   },
-  coinifySandbox: {
-    nameAndPubkey: Buffer.from(
-      "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAETyJmj18yHTeEJmyTKioxQcPsGW3dUfQs+XUmftoj06iwIXDkxccFNufQO6TmbuPh+dZedy0yF4cagwp89g2jZg",
-      "base64"
-    ),
+  coinifysandbox: {
+    nameAndPubkey: Buffer.concat([
+      Buffer.from([7]),
+      Buffer.from("Coinify", "ascii"),
+      Buffer.from(
+        "04CEA7DC8B189FA0D7A5A97530B50556CB0C14079C39CD44532D7037F2B96F0FA9C2DE588E1840B351B71114EE4021FC260F790A6F2D0CDF1C3E1899CCF97D3CCB",
+        "hex"
+      ),
+    ]),
     signature: Buffer.from(
       "3043021f023ecbbb1dfd44f390944bd1f6c039942943009a51ca4f134589441476651a02200cbfdf2ebe32eb0b0a88be9b1fec343ed5b230a69e65a1d15b4e34ef4206a9dd",
       "hex"

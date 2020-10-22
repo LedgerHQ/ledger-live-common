@@ -3,20 +3,16 @@ import type Transport from "@ledgerhq/hw-transport";
 import Sell from "./hw-app-sell/Sell";
 import { getAccountCurrency, getAccountUnit, getMainAccount } from "../account";
 import { BigNumber } from "bignumber.js";
-import network from "../network";
+import { log } from "@ledgerhq/logs";
 import {
   getCurrencySwapConfig,
-  getProviderNameAndSignature,
-  getSwapAPIBaseURL,
 } from "../swap";
-import { getAccountBridge } from "../bridge";
-import invariant from "invariant";
-import secp256k1 from "secp256k1";
 import perFamily from "../generated/swap";
 import { TransportStatusError } from "@ledgerhq/hw-transport";
 import { WrongDeviceForAccount } from "@ledgerhq/errors";
 import type { Account, AccountLike, Transaction } from "../types";
 import { getProvider } from "./index";
+import { delay } from "../promise";
 
 type SellInput = {
   parentAccount: ?Account,
@@ -41,27 +37,38 @@ export default async (
     status,
   } = input;
 
+  log("gre", "________ 1");
   const sell = new Sell(transport, 0x01);
 
+  log("gre", "________ 2");
   const { errors, estimatedFees } = status;
 
+  log("gre", "________ 3");
   const provider = getProvider("coinifySandbox");
 
   // Prepare swap app to receive the tx to forward.
+  log("gre", "________ Set partner key");
   await sell.setPartnerKey(provider.nameAndPubkey);
 
+  log("gre", "________ Check partner");
   await sell.checkPartner(provider.signature);
 
+  log("gre", "________ Process transaction, ", {
+    payload: binaryPayload,
+    estimatedFees,
+    status,
+    type: typeof estimatedFees,
+  });
   await sell.processTransaction(
-    Buffer.from(binaryPayload, "base64"),
+    Buffer.from(binaryPayload, "ascii"),
     estimatedFees
   );
-  const goodSign = secp256k1.signatureExport(
-    Buffer.from(payloadSignature, "base64")
-  );
-  await sell.checkTransactionSignature(goodSign);
 
+  log("gre", "________ Check transaction signature", { payloadSignature });
+  await sell.checkTransactionSignature(Buffer.from(payloadSignature, "base64"));
   const payoutCurrency = getAccountCurrency(account);
+
+  log("gre", "________ Get serializer address parameters");
 
   const payoutAddressParameters = await perFamily[
     payoutCurrency.family
@@ -76,6 +83,12 @@ export default async (
     signature: payoutAddressConfigSignature,
   } = getCurrencySwapConfig(payoutCurrency);
   try {
+    log("gre", "________ Check payout address", {
+      payoutAddressConfig,
+      payoutAddressConfigSignature,
+      payoutAddressParameters,
+    });
+
     await sell.checkPayoutAddress(
       payoutAddressConfig,
       payoutAddressConfigSignature,
@@ -89,6 +102,14 @@ export default async (
     }
     throw e;
   }
+
+  log("gre", "________ Sign coin transaction");
   await sell.signCoinTransaction();
-  return "done !";
+
+  await delay(3000);
+
+  return {
+    type: "init-sell-result",
+    initSwapResult: { transaction },
+  };
 };
