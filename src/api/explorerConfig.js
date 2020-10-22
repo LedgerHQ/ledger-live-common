@@ -73,7 +73,7 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
     },
     experimental: {
       base: "EXPLORER_BETA",
-      version: "v3"
+      version: "v3",
     },
   },
   dogecoin: {
