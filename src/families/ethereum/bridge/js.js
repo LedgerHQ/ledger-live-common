@@ -114,7 +114,7 @@ const getNetworkInfoByGasTrackerBarometer = async (c) => {
   const { low, high } = await api.getGasTrackerBarometer();
   const minValue = low;
   const maxValue = high.lte(low) ? low.times(2) : high;
-  const initial = minValue.plus(maxValue.minus(minValue).times(0.1));
+  const initial = minValue.plus(maxValue.minus(minValue).times(0.2));
   const gasPrice = inferDynamicRange(initial, { minValue, maxValue });
   return { family: "ethereum", gasPrice };
 };
