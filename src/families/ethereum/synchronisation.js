@@ -290,7 +290,7 @@ const txToOps = ({ address, id }) => (tx: Tx): Operation[] => {
   const ops = [];
 
   if (sending) {
-    const type = value.eq(0) && subOperations.length ? "FEES" : "OUT";
+    const type = value.eq(0) ? "FEES" : "OUT";
     ops.push({
       id: `${id}-${hash}-${type}`,
       hash,
