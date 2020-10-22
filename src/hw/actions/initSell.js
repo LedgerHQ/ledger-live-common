@@ -1,87 +1,86 @@
 // @flow
 import { Observable, of, concat } from "rxjs";
-import { scan, tap, catchError, map } from "rxjs/operators";
+import { scan, tap, catchError } from "rxjs/operators";
 import { useEffect, useState } from "react";
 import type { ConnectAppEvent, Input as ConnectAppInput } from "../connectApp";
-import type { InitSwapInput } from "../../swap/types";
 import type { Action, Device } from "./types";
-import type { AccountLike, Transaction, Account } from "../../types";
+import type {
+  AccountLike,
+  Transaction,
+  TransactionStatus,
+  Account,
+} from "../../types";
 import type { AppState } from "./app";
 import { log } from "@ledgerhq/logs";
 import { createAction as createAppAction } from "./app";
-
 import type {
-  Exchange,
-  ExchangeRate,
-  InitSwapResult,
-  SwapRequestEvent,
-} from "../../swap/types";
+  InitSellResult,
+  SellRequestEvent,
+} from "../../exchange/sell/types";
 import { getAccountBridge } from "../../bridge";
 import { getAccountCurrency, getMainAccount } from "../../account";
 import { parseCurrencyUnit } from "../../currencies";
 
 type State = {|
-  initSwapResult: ?InitSwapResult,
-  initSwapRequested: boolean,
-  initSwapError: ?Error,
+  initSellResult: ?InitSellResult,
+  initSellRequested: boolean,
+  initSellError: ?Error,
   isLoading: boolean,
   freezeReduxDevice: boolean,
 |};
 
-type InitSwapState = {|
+type InitSellState = {|
   ...AppState,
   ...State,
 |};
 
-type InitSwapRequest = {
-  exchange: Exchange,
-  exchangeRate: ExchangeRate,
+type InitSellRequest = {
   transaction: Transaction,
-  account: ?AccountLike,
+  account: AccountLike,
   parentAccount: ?Account,
 };
 
 type Result =
   | {
-      initSwapResult: InitSwapResult,
+      initSellResult: InitSellResult,
     }
   | {
-      initSwapError: Error,
+      initSellError: Error,
     };
 
-type InitSwapAction = Action<InitSwapRequest, InitSwapState, Result>;
+type InitSellAction = Action<InitSellRequest, InitSellState, Result>;
 
-const mapResult = ({ initSwapResult, initSwapError }: InitSwapState): ?Result =>
-  initSwapResult
-    ? { initSwapResult }
-    : initSwapError
-    ? { initSwapError }
+const mapResult = ({ initSellResult, initSellError }: InitSellState): ?Result =>
+  initSellResult
+    ? { initSellResult }
+    : initSellError
+    ? { initSellError }
     : null;
 
 const initialState: State = {
-  initSwapResult: null,
-  initSwapError: null,
-  initSwapRequested: false,
+  initSellResult: null,
+  initSellError: null,
+  initSellRequested: false,
   isLoading: true,
   freezeReduxDevice: false,
 };
 
-const reducer = (state: any, e: SwapRequestEvent | { type: "init-swap" }) => {
+const reducer = (state: any, e: SellRequestEvent | { type: "init-sell" }) => {
   switch (e.type) {
     case "init-sell":
       return { ...state, freezeReduxDevice: true };
     case "init-sell-error":
       return {
         ...state,
-        initSwapError: e.error,
+        initSellError: e.error,
         isLoading: false,
       };
     case "init-sell-get-transaction-id":
-      return { ...state, initSwapRequested: true, isLoading: false };
+      return { ...state, initSellRequested: true, isLoading: false };
     case "init-sell-result":
       return {
         ...state,
-        initSwapResult: e.initSwapResult,
+        initSellResult: e.initSellResult,
         isLoading: false,
       };
   }
@@ -100,14 +99,22 @@ function useFrozenValue<T>(value: T, frozen: boolean): T {
 
 export const createAction = (
   connectAppExec: (ConnectAppInput) => Observable<ConnectAppEvent>,
-  getTransactionId: (InitSwapInput) => Observable<SwapRequestEvent>,
-  checkSignatureAndPrepare: (CSAPInput) => Observable<CSAPEvent>,
-  onTransactionId: (string) => void
-): InitSwapAction => {
+  getTransactionId: ({ deviceId: string }) => Observable<SellRequestEvent>,
+  checkSignatureAndPrepare: ({
+    deviceId: string,
+    binaryPayload: string,
+    receiver: string,
+    payloadSignature: string,
+    account: AccountLike,
+    transaction: Transaction,
+    status: TransactionStatus,
+  }) => Observable<SellRequestEvent>,
+  onTransactionId: (string) => Promise<any> // FIXME define the type for the context?
+): InitSellAction => {
   const useHook = (
     reduxDevice: ?Device,
-    initSwapRequest: InitSwapRequest
-  ): InitSwapState => {
+    initSellRequest: InitSellRequest
+  ): InitSellState => {
     const [state, setState] = useState(initialState);
     const [coinifyContext, setCoinifyContext] = useState(null);
 
@@ -124,7 +131,7 @@ export const createAction = (
     );
 
     const { device, opened } = appState;
-    const { transaction, parentAccount, account } = initSwapRequest;
+    const { transaction, parentAccount, account } = initSellRequest;
 
     useEffect(() => {
       if (!opened || !device) {
@@ -137,19 +144,13 @@ export const createAction = (
         getTransactionId({
           deviceId: device.deviceId,
         }).pipe(
-          map((txId) => ({
-            type: "init-sell-get-transaction-id",
-            value: txId,
-          }))
-        )
-      )
-        .pipe(
-          tap((e) => {
+          tap((e: SellRequestEvent) => {
             if (e && e.type === "init-sell-get-transaction-id") {
               onTransactionId(e.value).then((context) => {
+                // FIXME move this part to LLD/LLM
                 const bridge = getAccountBridge(account, parentAccount);
-                const t = bridge.createTransaction(account);
                 const mainAccount = getMainAccount(account, parentAccount);
+                const t = bridge.createTransaction(mainAccount);
                 const currency = getAccountCurrency(mainAccount);
 
                 const transaction = bridge.updateTransaction(t, {
@@ -159,15 +160,6 @@ export const createAction = (
                   ),
                   recipient: context.transferIn.details.account,
                 });
-
-                console.log(
-                  "HEYY: ",
-                  { context, currency, mainAccount },
-                  context.inAmount.toString(),
-                  {
-                    balance: mainAccount.balance.toString(10),
-                  }
-                );
 
                 bridge
                   .prepareTransaction(mainAccount, transaction)
@@ -188,25 +180,22 @@ export const createAction = (
           }),
           catchError((error) =>
             of({
-              type: "init-swap-error",
+              type: "init-sell-error",
               error,
             })
           ),
           scan(reducer, initialState)
         )
-        .subscribe(setState);
+      ).subscribe(setState);
 
       return () => {
         sub.unsubscribe();
       };
-    }, [transaction, device, opened]);
+    }, [transaction, device, opened, account, parentAccount]);
 
     useEffect(() => {
-      if (!coinifyContext) return;
-
+      if (!coinifyContext || !device) return;
       const { context, transaction, status } = coinifyContext;
-
-      console.log("INIT SELL STATUS: ", status);
 
       const sub = checkSignatureAndPrepare({
         deviceId: device.deviceId,
@@ -218,15 +207,6 @@ export const createAction = (
         status,
       })
         .pipe(
-          map(() => ({
-            type: "init-sell-result",
-            initSwapResult: { transaction },
-          }))
-        )
-        .pipe(
-          tap((e) => {
-            log("actions-initSell-event", e);
-          }),
           catchError((error) =>
             of({
               type: "init-sell-error",
@@ -240,7 +220,7 @@ export const createAction = (
       return () => {
         sub.unsubscribe();
       };
-    }, [coinifyContext, transaction, device, opened]);
+    }, [coinifyContext, transaction, device, opened, account]);
 
     return {
       ...appState,
