@@ -280,7 +280,7 @@ export const estimateGasLimit: (
       .then((value) =>
         value.eq(21000) // regular ETH send should not be amplified
           ? value
-          : value.times(getEnv("ETHEREUM_GAS_LIMIT_AMPLIFIER")).intValue()
+          : value.times(getEnv("ETHEREUM_GAS_LIMIT_AMPLIFIER")).integerValue()
       )
       .catch(() => api.roughlyEstimateGasLimit(addr));
   },

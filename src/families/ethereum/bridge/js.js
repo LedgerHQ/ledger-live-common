@@ -136,7 +136,7 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
     t = { ...t, networkInfo, gasPrice };
   }
 
-  let estimatedGasLimit = BigNumber(21000); // fallback in case we can't calculate
+  let estimatedGasLimit;
   const request = inferEthereumGasLimitRequest(a, t);
   if (request.to) {
     estimatedGasLimit = await estimateGasLimit(a, request.to, request);
