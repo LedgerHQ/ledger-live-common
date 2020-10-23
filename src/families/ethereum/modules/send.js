@@ -110,6 +110,7 @@ const send: ModeModule = {
     const subAccount = inferTokenAccount(a, t);
     if (subAccount) {
       // ERC20 transfer
+      op.type = "FEES";
       op.subOperations = [
         {
           id: `${subAccount.id}-${op.hash}-OUT`,
