@@ -106,6 +106,7 @@ export const createAction = (
     receiver: string,
     payloadSignature: string,
     account: AccountLike,
+    parentAccount: ?Account,
     transaction: Transaction,
     status: TransactionStatus,
   }) => Observable<SellRequestEvent>,
@@ -203,6 +204,7 @@ export const createAction = (
         receiver: context.transferIn.details.account,
         payloadSignature: context.providerSig.signature,
         account,
+        parentAccount,
         transaction,
         status,
       })
