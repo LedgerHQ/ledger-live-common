@@ -47,6 +47,10 @@ import signTransaction from "../../../hw/signTransaction";
 import type { Transaction, NetworkInfo } from "../types";
 import { makeAccountBridgeReceive, mergeOps } from "../../../bridge/jsHelpers";
 
+const checkAccountNotFound = (e) => {
+  return e.message !== "actNotFound" && e.data.error !== "actNotFound";
+};
+
 const receive = makeAccountBridgeReceive();
 
 const signOperation = ({ account, transaction, deviceId }) =>
@@ -301,7 +305,7 @@ const recipientIsNew = async (endpointConfig, recipient) => {
       await api.getAccountInfo(recipient);
       return false;
     } catch (e) {
-      if (e.message !== "actNotFound") {
+      if (checkAccountNotFound(e)) {
         throw e;
       }
       return true;
@@ -384,7 +388,7 @@ const currencyBridge: CurrencyBridge = {
               try {
                 info = await api.getAccountInfo(address);
               } catch (e) {
-                if (e.message !== "actNotFound") {
+                if (checkAccountNotFound(e)) {
                   throw e;
                 }
               }
@@ -537,7 +541,7 @@ const sync = ({
         try {
           info = await api.getAccountInfo(freshAddress);
         } catch (e) {
-          if (e.message !== "actNotFound") {
+          if (checkAccountNotFound(e)) {
             throw e;
           }
         }
