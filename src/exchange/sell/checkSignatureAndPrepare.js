@@ -21,9 +21,7 @@ type SellInput = {
   parentAccount: ?Account,
   account: AccountLike,
   transaction: Transaction,
-  signature: string,
   status: TransactionStatus,
-  signature: string,
   binaryPayload: string,
   payloadSignature: string,
 };
