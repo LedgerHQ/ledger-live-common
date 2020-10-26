@@ -71,6 +71,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
+    },
   },
   dogecoin: {
     id: "doge",
@@ -98,6 +102,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
     },
   },
   peercoin: {
