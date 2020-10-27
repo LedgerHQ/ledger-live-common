@@ -17,9 +17,6 @@ import type {
   InitSellResult,
   SellRequestEvent,
 } from "../../exchange/sell/types";
-import { getAccountBridge } from "../../bridge";
-import { getAccountCurrency, getMainAccount } from "../../account";
-import { parseCurrencyUnit } from "../../currencies";
 
 type State = {|
   initSellResult: ?InitSellResult,
@@ -35,7 +32,6 @@ type InitSellState = {|
 |};
 
 type InitSellRequest = {
-  transaction: Transaction,
   account: AccountLike,
   parentAccount: ?Account,
 };
@@ -103,7 +99,6 @@ export const createAction = (
   checkSignatureAndPrepare: ({
     deviceId: string,
     binaryPayload: string,
-    receiver: string,
     payloadSignature: string,
     account: AccountLike,
     parentAccount: ?Account,
@@ -132,7 +127,7 @@ export const createAction = (
     );
 
     const { device, opened } = appState;
-    const { transaction, parentAccount, account } = initSellRequest;
+    const { parentAccount, account } = initSellRequest;
 
     useEffect(() => {
       if (!opened || !device) {
@@ -147,35 +142,7 @@ export const createAction = (
         }).pipe(
           tap((e: SellRequestEvent) => {
             if (e && e.type === "init-sell-get-transaction-id") {
-              onTransactionId(e.value).then((context) => {
-                // FIXME move this part to LLD/LLM
-                const bridge = getAccountBridge(account, parentAccount);
-                const mainAccount = getMainAccount(account, parentAccount);
-                const t = bridge.createTransaction(mainAccount);
-                const currency = getAccountCurrency(mainAccount);
-
-                const transaction = bridge.updateTransaction(t, {
-                  amount: parseCurrencyUnit(
-                    currency.units[0],
-                    context.inAmount.toString(10)
-                  ),
-                  recipient: context.transferIn.details.account,
-                });
-
-                bridge
-                  .prepareTransaction(mainAccount, transaction)
-                  .then((preparedTx) => {
-                    bridge
-                      .getTransactionStatus(mainAccount, preparedTx)
-                      .then((status) => {
-                        setCoinifyContext({
-                          context,
-                          transaction: preparedTx,
-                          status,
-                        });
-                      });
-                  });
-              });
+              onTransactionId(e.value).then(setCoinifyContext);
             }
             log("actions-initSell-event", e.type, e);
           }),
@@ -192,17 +159,22 @@ export const createAction = (
       return () => {
         sub.unsubscribe();
       };
-    }, [transaction, device, opened, account, parentAccount]);
+    }, [device, opened, account, parentAccount]);
 
     useEffect(() => {
       if (!coinifyContext || !device) return;
-      const { context, transaction, status } = coinifyContext;
+
+      const {
+        binaryPayload,
+        payloadSignature,
+        transaction,
+        status,
+      } = coinifyContext;
 
       const sub = checkSignatureAndPrepare({
         deviceId: device.deviceId,
-        binaryPayload: context.providerSig.payload,
-        receiver: context.transferIn.details.account,
-        payloadSignature: context.providerSig.signature,
+        binaryPayload,
+        payloadSignature,
         account,
         parentAccount,
         transaction,
@@ -222,7 +194,7 @@ export const createAction = (
       return () => {
         sub.unsubscribe();
       };
-    }, [coinifyContext, transaction, device, opened, account]);
+    }, [coinifyContext, device, opened, account, parentAccount]);
 
     return {
       ...appState,

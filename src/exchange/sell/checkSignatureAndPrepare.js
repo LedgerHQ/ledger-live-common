@@ -8,6 +8,7 @@ import { getAccountCurrency, getMainAccount } from "../../account";
 import { getCurrencyExchangeConfig } from "../";
 import perFamily from "../../generated/exchange";
 import type { SellRequestEvent } from "./types";
+
 import type {
   Account,
   AccountLike,
@@ -42,7 +43,7 @@ export default async (
   const exchange = new Exchange(transport, 0x01);
   const mainAccount = getMainAccount(account, parentAccount);
   const { estimatedFees } = status;
-  const provider = getProvider("coinifySandbox"); // FIXME Don't forget to switch to prod
+  const provider = getProvider("coinify"); // FIXME Don't forget to switch to prod
   await exchange.setPartnerKey(provider.nameAndPubkey);
   await exchange.checkPartner(provider.signature);
   await exchange.processTransaction(
