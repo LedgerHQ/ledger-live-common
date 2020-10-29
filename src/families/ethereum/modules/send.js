@@ -150,6 +150,7 @@ function serializeTransactionData(account, transaction): ?Buffer {
     amount = balance;
   } else {
     if (!transaction.amount) return;
+    if (subAccount.type !== "TokenAccount") return;
     amount = BigNumber(transaction.amount);
     if (amount.gt(subAccount.spendableBalance)) {
       throw new NotEnoughBalance();
