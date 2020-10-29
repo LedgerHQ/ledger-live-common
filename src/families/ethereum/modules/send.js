@@ -53,7 +53,7 @@ const send: ModeModule = {
           result.warnings.feeTooHigh = new FeeTooHigh();
         }
 
-        if (result.estimatedFees.gt(a.balance)) {
+        if (result.estimatedFees.gt(a.spendableBalance)) {
           result.errors.amount = new NotEnoughBalanceInParentAccount();
         }
       }
@@ -63,7 +63,7 @@ const send: ModeModule = {
           result.errors.amount = new AmountRequired();
         } else if (
           !result.totalSpent.gt(0) ||
-          result.totalSpent.gt(account.balance)
+          result.totalSpent.gt(account.spendableBalance)
         ) {
           result.errors.amount = new NotEnoughBalance();
         }
@@ -137,22 +137,17 @@ const send: ModeModule = {
 };
 
 function serializeTransactionData(account, transaction): ?Buffer {
-  const { subAccountId } = transaction;
-  const subAccount = subAccountId
-    ? account.subAccounts &&
-      account.subAccounts.find((t) => t.id === subAccountId)
-    : null;
-  if (!subAccount) return;
+  const tokenAccount = inferTokenAccount(account, transaction);
+  if (!tokenAccount) return;
   const recipient = eip55.encode(transaction.recipient);
-  const { balance } = subAccount;
+  const { spendableBalance } = tokenAccount;
   let amount;
   if (transaction.useAllAmount) {
-    amount = balance;
+    amount = spendableBalance;
   } else {
     if (!transaction.amount) return;
-    if (subAccount.type !== "TokenAccount") return;
     amount = BigNumber(transaction.amount);
-    if (amount.gt(subAccount.spendableBalance)) {
+    if (amount.gt(tokenAccount.spendableBalance)) {
       throw new NotEnoughBalance();
     }
   }
