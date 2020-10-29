@@ -30,16 +30,18 @@ const send: ModeModule = {
     if (!result.errors.recipient) {
       if (tokenAccount) {
         // SEND TOKEN
-        result.totalSpent = t.useAllAmount ? account.balance : t.amount;
-        result.amount = t.useAllAmount ? account.balance : t.amount;
+        result.totalSpent = t.useAllAmount
+          ? account.spendableBalance
+          : t.amount;
+        result.amount = t.useAllAmount ? account.spendableBalance : t.amount;
       } else {
         // SEND ETHEREUM
         result.totalSpent = t.useAllAmount
-          ? account.balance
+          ? account.spendableBalance
           : t.amount.plus(result.estimatedFees);
         result.amount = BigNumber.max(
           t.useAllAmount
-            ? account.balance.minus(result.estimatedFees)
+            ? account.spendableBalance.minus(result.estimatedFees)
             : t.amount,
           0
         );
@@ -84,7 +86,7 @@ const send: ModeModule = {
       let amount;
       if (t.useAllAmount) {
         const gasLimit = getGasLimit(t);
-        amount = a.balance.minus(gasLimit.times(t.gasPrice || 0));
+        amount = a.spendableBalance.minus(gasLimit.times(t.gasPrice || 0));
       } else {
         invariant(t.amount, "amount is missing");
         amount = t.amount;
@@ -117,7 +119,9 @@ const send: ModeModule = {
           hash: op.hash,
           transactionSequenceNumber: op.transactionSequenceNumber,
           type: "OUT",
-          value: t.useAllAmount ? subAccount.balance : BigNumber(t.amount || 0),
+          value: t.useAllAmount
+            ? subAccount.spendableBalance
+            : BigNumber(t.amount || 0),
           fee: op.fee,
           blockHash: null,
           blockHeight: null,
@@ -147,7 +151,7 @@ function serializeTransactionData(account, transaction): ?Buffer {
   } else {
     if (!transaction.amount) return;
     amount = BigNumber(transaction.amount);
-    if (amount.gt(subAccount.balance)) {
+    if (amount.gt(subAccount.spendableBalance)) {
       throw new NotEnoughBalance();
     }
   }
