@@ -352,7 +352,7 @@ const currencyBridge: CurrencyBridge = {
         try {
           transport = await open(deviceId);
           await api.connect();
-          const serverInfo = await getServerInfo();
+          const serverInfo = await api.getServerInfo();
           const ledgers = serverInfo.completeLedgers.split("-");
           const minLedgerVersion = Number(ledgers[0]);
           const maxLedgerVersion = Number(ledgers[1]);
@@ -531,7 +531,7 @@ const sync = ({
       try {
         await api.connect();
         if (finished) return;
-        const serverInfo = await getServerInfo(endpointConfig);
+        const serverInfo = await api.getServerInfo();
         if (finished) return;
         const ledgers = serverInfo.completeLedgers.split("-");
         const minLedgerVersion = Number(ledgers[0]);
