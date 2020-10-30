@@ -1,14 +1,19 @@
 // @flow
 /* eslint-disable no-console */
+/* eslint-disable no-fallthrough */
 import { scan, scanCommonOpts } from "../scan";
 import type { ScanCommonOpts } from "../scan";
+import { from } from "rxjs";
 import { first, tap, map, take } from "rxjs/operators";
 import { Observable } from "rxjs";
 import { log, listen } from "@ledgerhq/logs";
 import WalletConnect from "@walletconnect/client";
 import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
+import { withDevice } from "@ledgerhq/live-common/lib/hw/deviceAccess";
+import signMessage from "@ledgerhq/live-common/lib/hw/signMessage";
 import { convertHexToNumber } from "@walletconnect/utils";
 import { BigNumber } from "bignumber.js";
+import { getCryptoCurrencyById } from "@ledgerhq/live-common/lib/currencies";
 
 type Opts = ScanCommonOpts &
   $Shape<{
@@ -105,21 +110,42 @@ export default {
         log("walletconnect", payload);
 
         let transactionRaw;
+        let message;
         let errorMsg;
         let result;
 
         try {
           switch (payload.method) {
             case "eth_sign":
+              payload.params = payload.params.reverse();
             case "personal_sign":
+              message = {
+                path: account.freshAddressPath,
+                message: Buffer.from(
+                  payload.params[0].slice(2),
+                  "hex"
+                ).toString(),
+                currency: getCryptoCurrencyById("ethereum"),
+                derivationMode: account.derivationMode,
+              };
+
+              log("walletconnect", "message to sign");
+              log("walletconnect", (message: any));
+
+              result = await withDevice(opts.device || "")((t) =>
+                from(signMessage(t, message))
+              )
+                .pipe(take(1))
+                .toPromise();
+              result = result.signature;
+
+              log("walletconnect", "message signature");
+              log("walletconnect", result);
 
               break;
             case "eth_signTransaction":
             case "eth_sendTransaction":
               transactionRaw = payload.params[0];
-
-              log("walletconnect", convertHexToNumber(transactionRaw.value));
-              log("walletconnect", convertHexToNumber(transactionRaw.gas));
 
               if (
                 account.freshAddress.toLowerCase() ===
@@ -204,7 +230,9 @@ export default {
               break;
           }
         } catch (e) {
-          console.log(e);
+          log("walletconnect", "error");
+          log("walletconnect", e);
+          errorMsg = e.message;
         }
 
         if (result) {
@@ -223,7 +251,13 @@ export default {
             message = errorMsg;
           }
 
+          const rejection: any = {
+            id: payload.id,
+            error: { message },
+          };
+
           log("walletconnect", "rejected");
+          log("walletconnect", rejection);
 
           connector.rejectRequest({
             id: payload.id,
