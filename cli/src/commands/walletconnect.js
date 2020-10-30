@@ -116,15 +116,16 @@ export default {
 
         try {
           switch (payload.method) {
+            case "eth_signTypedData":
             case "eth_sign":
               payload.params = payload.params.reverse();
             case "personal_sign":
               message = {
                 path: account.freshAddressPath,
-                message: Buffer.from(
-                  payload.params[0].slice(2),
-                  "hex"
-                ).toString(),
+                message:
+                  payload.method === "eth_signTypedData"
+                    ? JSON.parse(payload.params[0])
+                    : Buffer.from(payload.params[0].slice(2), "hex").toString(),
                 currency: getCryptoCurrencyById("ethereum"),
                 derivationMode: account.derivationMode,
               };
@@ -208,7 +209,7 @@ export default {
                 log("walletconnect", "operation");
                 log("walletconnect", signedOperation);
 
-                if (payload.type === "eth_signTransaction") {
+                if (payload.method === "eth_signTransaction") {
                   result = signedOperation.signature;
                   break;
                 }

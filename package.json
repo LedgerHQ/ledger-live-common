@@ -90,6 +90,7 @@
     "ethereumjs-abi": "^0.6.8",
     "ethereumjs-common": "^1.5.2",
     "ethereumjs-tx": "^2.1.2",
+    "ethereumjs-util": "^7.0.7",
     "expect": "^26.5.3",
     "invariant": "^2.2.2",
     "isomorphic-ws": "^4.0.1",
