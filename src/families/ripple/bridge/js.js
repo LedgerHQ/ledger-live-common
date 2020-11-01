@@ -6,7 +6,6 @@ import { BigNumber } from "bignumber.js";
 import { Observable } from "rxjs";
 import { RippleAPI } from "ripple-lib";
 import bs58check from "ripple-bs58check";
-import throttle from "lodash/throttle";
 import {
   AmountRequired,
   NotEnoughBalanceBecauseDestinationNotCreated,
@@ -42,6 +41,7 @@ import {
   parseAPICurrencyObject,
   formatAPICurrencyXRP,
 } from "../../../api/Ripple";
+import { makeLRUCache } from "../../../cache";
 import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
 import signTransaction from "../../../hw/signTransaction";
 import type { Transaction, NetworkInfo } from "../types";
@@ -118,7 +118,9 @@ const signOperation = ({ account, transaction, deviceId }) =>
           transactionSequenceNumber:
             (account.operations.length > 0
               ? account.operations[0].transactionSequenceNumber || 0
-              : 0) + account.pendingOperations.length,
+              : 0) +
+            account.pendingOperations.length +
+            1,
           extra: {},
         };
 
@@ -276,26 +278,6 @@ const txToOperation = (account: Account) => ({
   return op;
 };
 
-const getServerInfo = ((map) => (endpointConfig) => {
-  if (!endpointConfig) endpointConfig = "";
-  if (map[endpointConfig]) return map[endpointConfig]();
-  const f = throttle(async () => {
-    const api = apiForEndpointConfig(RippleAPI, endpointConfig);
-    try {
-      await api.connect();
-      const res = await api.getServerInfo();
-      return res;
-    } catch (e) {
-      f.cancel();
-      throw e;
-    } finally {
-      api.disconnect();
-    }
-  }, 60000);
-  map[endpointConfig] = f;
-  return f();
-})({});
-
 const recipientIsNew = async (endpointConfig, recipient) => {
   if (!isRecipientValid(recipient)) return false;
   const api = apiForEndpointConfig(RippleAPI, endpointConfig);
@@ -336,6 +318,30 @@ const cachedRecipientIsNew = (endpointConfig, recipient) => {
   return cacheRecipientsNew[recipient];
 };
 
+const serverInfoCache = makeLRUCache(
+  async (endpointConfig: string): Promise<*> => getServerInfo(endpointConfig),
+  (endpointConfig: string) => endpointConfig,
+  {
+    max: 5,
+    maxAge: 10000, // 1min
+  }
+);
+
+export const getServerInfo = async (endpointConfig: string): Promise<*> => {
+  if (!endpointConfig) endpointConfig = "";
+  const api = apiForEndpointConfig(RippleAPI, endpointConfig);
+
+  try {
+    await api.connect();
+    const res = await api.getServerInfo();
+
+    serverInfoCache.hydrate(endpointConfig, res);
+    return res;
+  } finally {
+    api.disconnect();
+  }
+};
+
 const currencyBridge: CurrencyBridge = {
   preload: () => Promise.resolve(),
   hydrate: () => {},
@@ -352,7 +358,7 @@ const currencyBridge: CurrencyBridge = {
         try {
           transport = await open(deviceId);
           await api.connect();
-          const serverInfo = await api.getServerInfo();
+          const serverInfo = await getServerInfo("");
           const ledgers = serverInfo.completeLedgers.split("-");
           const minLedgerVersion = Number(ledgers[0]);
           const maxLedgerVersion = Number(ledgers[1]);
@@ -531,7 +537,7 @@ const sync = ({
       try {
         await api.connect();
         if (finished) return;
-        const serverInfo = await api.getServerInfo();
+        const serverInfo = await getServerInfo(endpointConfig || "");
         if (finished) return;
         const ledgers = serverInfo.completeLedgers.split("-");
         const minLedgerVersion = Number(ledgers[0]);
@@ -658,7 +664,7 @@ const prepareTransaction = async (a: Account, t: Transaction) => {
 const getTransactionStatus = async (a, t) => {
   const errors = {};
   const warnings = {};
-  const r = await getServerInfo(a.endpointConfig);
+  const r = await getServerInfo(a.endpointConfig || "");
   const reserveBaseXRP = parseAPIValue(r.validatedLedger.reserveBaseXRP);
 
   const estimatedFees = BigNumber(t.fee || 0);
@@ -727,7 +733,7 @@ const estimateMaxSpendable = async ({
   transaction,
 }) => {
   const mainAccount = getMainAccount(account, parentAccount);
-  const r = await getServerInfo(mainAccount.endpointConfig);
+  const r = await getServerInfo(mainAccount.endpointConfig || "");
   const reserveBaseXRP = parseAPIValue(r.validatedLedger.reserveBaseXRP);
   const t = await prepareTransaction(mainAccount, {
     ...createTransaction(),
