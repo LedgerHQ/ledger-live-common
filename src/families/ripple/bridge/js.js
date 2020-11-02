@@ -53,6 +53,19 @@ const checkAccountNotFound = (e) => {
 
 const receive = makeAccountBridgeReceive();
 
+const getSequenceNumber = async (account, api) => {
+  const lastOp = account.operations.find((op) => op.type === "OUT");
+  if (!lastOp) {
+    const info = await api.getAccountInfo(account.freshAddress);
+
+    return info.sequence + account.pendingOperations.length;
+  }
+
+  return (
+    lastOp.transactionSequenceNumber + account.pendingOperations.length + 1
+  );
+};
+
 const signOperation = ({ account, transaction, deviceId }) =>
   Observable.create((o) => {
     delete cacheRecipientsNew[transaction.recipient];
@@ -115,12 +128,7 @@ const signOperation = ({ account, transaction, deviceId }) =>
           recipients: [transaction.recipient],
           date: new Date(),
           // we probably can't get it so it's a predictive value
-          transactionSequenceNumber:
-            (account.operations.length > 0
-              ? account.operations[0].transactionSequenceNumber || 0
-              : 0) +
-            account.pendingOperations.length +
-            1,
+          transactionSequenceNumber: await getSequenceNumber(account, api),
           extra: {},
         };
 
