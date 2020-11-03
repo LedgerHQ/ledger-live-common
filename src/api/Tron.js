@@ -518,7 +518,7 @@ export const getTronResources = async (
     .toNumber();
 
   const votes = get(acc, "votes", []).map((v) => ({
-    address: encode58Check(v.vote_address),
+    address: v.vote_address,
     voteCount: v.vote_count,
   }));
 
