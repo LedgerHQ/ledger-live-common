@@ -5,24 +5,7 @@ import type Transport from "@ledgerhq/hw-transport";
 import { TypedDataUtils } from "eth-sig-util";
 import { bufferToHex } from "ethereumjs-util";
 import type { MessageData, Result } from "../../hw/signMessage/types";
-import type { CryptoCurrency } from "../../types";
-import type { DerivationMode } from "../../derivation";
-
-type TypedMessageData = {
-  currency: CryptoCurrency,
-  path: string,
-  verify?: boolean,
-  derivationMode: DerivationMode,
-  message: {
-    types: {
-      EIP712Domain: [{ type: string, name: string }],
-      [key: string]: [{ type: string, name: string }],
-    },
-    primaryType: string,
-    domain: any,
-    message: any,
-  },
-};
+import type { TypedMessageData } from "./types";
 
 type EthResolver = (
   Transport<*>,
