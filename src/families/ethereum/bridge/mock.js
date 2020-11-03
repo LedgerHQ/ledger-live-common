@@ -10,6 +10,7 @@ import {
 import type { Transaction } from "../types";
 import type { AccountBridge, CurrencyBridge } from "../../../types";
 import { getMainAccount } from "../../../account";
+import { getCryptoCurrencyById } from "../../../currencies";
 import {
   scanAccounts,
   signOperation,
@@ -19,20 +20,22 @@ import {
 } from "../../../bridge/mockHelpers";
 import { getGasLimit } from "../transaction";
 import { makeAccountBridgeReceive } from "../../../bridge/mockHelpers";
+import { inferDynamicRange } from "../../../range";
 
 const receive = makeAccountBridgeReceive();
 
 const defaultGetFees = (a, t: *) =>
   (t.gasPrice || BigNumber(0)).times(getGasLimit(t));
 
-const createTransaction = (account): Transaction => ({
+const createTransaction = (): Transaction => ({
   family: "ethereum",
+  mode: "send",
   amount: BigNumber(0),
   recipient: "",
   gasPrice: BigNumber(10000000000),
   userGasLimit: BigNumber(21000),
   estimatedGasLimit: null,
-  feeCustomUnit: account.currency.units[1],
+  feeCustomUnit: getCryptoCurrencyById("ethereum").units[1],
   networkInfo: null,
   useAllAmount: false,
   subAccountId: null,
@@ -124,7 +127,7 @@ const prepareTransaction = async (a, t) => {
       ...res,
       networkInfo: {
         family: "ethereum",
-        gasPrice: BigNumber(300000),
+        gasPrice: inferDynamicRange(BigNumber(300000)),
       },
     };
   }

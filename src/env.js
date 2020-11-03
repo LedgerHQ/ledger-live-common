@@ -70,7 +70,6 @@ const envDefinitions = {
   },
   API_TRONGRID_PROXY: {
     parser: stringParser,
-    //def: "https://api.trongrid.io",
     def: "https://tron.coin.ledger.com",
     desc: "proxy url for trongrid API",
   },
@@ -78,12 +77,6 @@ const envDefinitions = {
     def: "wss://scriptrunner.api.live.ledger.com/update",
     parser: stringParser,
     desc: "Ledger script runner API",
-  },
-  BRIDGE_FORCE_IMPLEMENTATION: {
-    def: "",
-    parser: stringParser,
-    desc:
-      "force implementation for ALL currency bridges (affects scanning accounts)",
   },
   COINAPPS: {
     def: "",
@@ -134,7 +127,7 @@ const envDefinitions = {
     desc: "disable a problematic mechanism of our API",
   },
   ETHEREUM_GAS_LIMIT_AMPLIFIER: {
-    def: 2,
+    def: 1.2,
     parser: floatParser,
     desc:
       "Ethereum gasLimit multiplier for contracts to prevent out of gas issue",
@@ -148,6 +141,11 @@ const envDefinitions = {
     def: "",
     parser: stringParser,
     desc: "enable experimental support of currencies (comma separated)",
+  },
+  EXPERIMENTAL_CURRENCIES_JS_BRIDGE: {
+    def: "",
+    parser: stringParser,
+    desc: "enable JS integration of currencies (comma separated)",
   },
   EXPERIMENTAL_EXPLORERS: {
     def: false,
@@ -191,10 +189,20 @@ const envDefinitions = {
     parser: boolParser,
     desc: "enable an experimental implementation of USB support",
   },
+  EXPERIMENTAL_QUIT_APP: {
+    def: false,
+    parser: boolParser,
+    desc: "enable attempting to quit the device app if needed via apdu",
+  },
   EXPLORER: {
     def: "https://explorers.api.live.ledger.com",
     parser: stringParser,
-    desc: "Ledger main explorer API (multi currencies)",
+    desc: "Ledger generic explorer API",
+  },
+  EXPLORER_BETA: {
+    def: "https://explorers.api.live.ledger.com",
+    parser: stringParser,
+    desc: "Ledger generic explorer beta API",
   },
   DISABLE_APP_VERSION_REQUIREMENTS: {
     def: false,

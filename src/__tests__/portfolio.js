@@ -31,7 +31,7 @@ test("getBalanceHistory(*,month) returns an array of 30 items", () => {
 test("getBalanceHistory(*,year) works as well", () => {
   const history = getBalanceHistory(genAccount("seed_2"), "year");
   expect(history).toBeInstanceOf(Array);
-  expect(history.length).toBe(365);
+  expect(history.length).toBe(52);
   expect(history).toMatchSnapshot();
 });
 

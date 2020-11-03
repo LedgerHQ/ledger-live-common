@@ -32,6 +32,7 @@ import {
 import { getBalanceHistoryJS, getRanges } from "../../portfolio";
 import { getAccountBridge, getCurrencyBridge } from "../../bridge";
 import { mockDeviceWithAPDUs, releaseMockDevice } from "./mockDevice";
+import { implicitMigration } from "../../migrations/accounts";
 
 // FIXME move out into DatasetTest to be defined in
 const blacklistOpsSumEq = {
@@ -130,7 +131,7 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
           )
           .toPromise();
 
-        return accounts;
+        return implicitMigration(accounts);
       } finally {
         releaseMockDevice(deviceId);
       }
@@ -289,15 +290,15 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
       });
 
       test("preload and rehydrate", async () => {
-        const data1 = await bridge.preload();
+        const data1 = await bridge.preload(currency);
         const serialized = JSON.stringify(data1);
         if (data1) {
           expect(serialized).toBeDefined();
-          const data2 = await bridge.preload();
+          const data2 = await bridge.preload(currency);
           expect(data1).toMatchObject(data2);
           const serialized2 = JSON.stringify(data2);
           expect(JSON.parse(serialized)).toMatchObject(JSON.parse(serialized2));
-          bridge.hydrate(data1);
+          bridge.hydrate(data1, currency);
         }
       });
 
@@ -364,7 +365,8 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
         describe("sync", () => {
           makeTest("succeed", async () => {
             const account = await getSynced();
-            expect(fromAccountRaw(toAccountRaw(account))).toBeDefined();
+            const [account2] = implicitMigration([account]);
+            expect(fromAccountRaw(toAccountRaw(account2))).toBeDefined();
           });
 
           if (impl !== "mock") {

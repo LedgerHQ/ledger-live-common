@@ -1,4 +1,5 @@
 // @flow
+import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import type { DatasetTest } from "../../types";
 import { fromTransactionRaw } from "./transaction";
@@ -26,12 +27,23 @@ import {
 const unactivatedAddress = "TXFeV31qgUQYMLog3axKJeEBbXpQFtHsXD";
 const activatedAddress1 = "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9";
 
+const expectedTokenAccount = (a) => {
+  invariant(a && a.type === "TokenAccount", "expected token account");
+  return a;
+};
+
+const getTokenAccountId = (account, id) =>
+  expectedTokenAccount(
+    (account.subAccounts || []).find(
+      (a) => expectedTokenAccount(a).token.id === id
+    )
+  ).id;
+
 const dataset: DatasetTest<Transaction> = {
   implementations: ["tronjs"],
   currencies: {
     tron: {
       FIXME_ignoreAccountFields: [
-        "tronResources.cacheTransactionInfoById", // this is a cache, don't save it
         "tronResources.unwithdrawnReward", // it changes every vote cycles
         "tronResources.bandwidth", // it changes if a tx is made
         "tronResources.energy", // it keep changing?
@@ -352,17 +364,14 @@ const dataset: DatasetTest<Transaction> = {
             },
             {
               name: "tronSendTrc20ToContractAddressSuccess",
-              transaction: fromTransactionRaw({
-                family: "tron",
+              transaction: (t, account) => ({
+                ...t,
                 recipient: "TYmGYpY3LuHHge9jmTtq2aQmSpUpqKcZtJ", // corresponds to a valid deposit contract address
-                subAccountId:
-                  "tronjs:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:+TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7",
-                amount: "1000000",
-                networkInfo: null,
-                mode: "send",
-                duration: undefined,
-                resource: undefined,
-                votes: [],
+                subAccountId: getTokenAccountId(
+                  account,
+                  "tron/trc20/TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7"
+                ),
+                amount: BigNumber("1000000"),
               }),
               expectedStatus: {
                 amount: BigNumber("1000000"),
@@ -374,17 +383,14 @@ const dataset: DatasetTest<Transaction> = {
             },
             {
               name: "tronSendTrc20ToNewAccountForbidden",
-              transaction: fromTransactionRaw({
-                family: "tron",
+              transaction: (t, account) => ({
+                ...t,
                 recipient: unactivatedAddress,
-                subAccountId:
-                  "tronjs:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:+TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7",
-                amount: "1000000",
-                networkInfo: null,
-                mode: "send",
-                duration: undefined,
-                resource: undefined,
-                votes: [],
+                subAccountId: getTokenAccountId(
+                  account,
+                  "tron/trc20/TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7"
+                ),
+                amount: BigNumber("1000000"),
               }),
               expectedStatus: {
                 amount: BigNumber("1000000"),
@@ -421,17 +427,14 @@ const dataset: DatasetTest<Transaction> = {
             */
             {
               name: "tronSendTrc20Success",
-              transaction: fromTransactionRaw({
-                family: "tron",
+              transaction: (t, account) => ({
+                ...t,
                 recipient: activatedAddress1,
-                subAccountId:
-                  "tronjs:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:+TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7",
-                amount: "1000000",
-                networkInfo: null,
-                mode: "send",
-                duration: undefined,
-                resource: undefined,
-                votes: [],
+                subAccountId: getTokenAccountId(
+                  account,
+                  "tron/trc20/TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7"
+                ),
+                amount: BigNumber("1000000"),
               }),
               expectedStatus: {
                 amount: BigNumber("1000000"),

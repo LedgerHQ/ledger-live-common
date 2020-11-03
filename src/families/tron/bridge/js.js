@@ -25,7 +25,11 @@ import { open, close } from "../../../hw";
 import signTransaction from "../../../hw/signTransaction";
 import { makeSync, makeScanAccounts } from "../../../bridge/jsHelpers";
 import { formatCurrencyUnit } from "../../../currencies";
-import { getAccountUnit, getMainAccount } from "../../../account";
+import {
+  getAccountUnit,
+  getMainAccount,
+  encodeTokenAccountId,
+} from "../../../account";
 import { getOperationsPageSize } from "../../../pagination";
 import {
   InvalidAddress,
@@ -287,12 +291,6 @@ const getAccountShape = async (info, syncConfig) => {
   const acc = tronAcc[0];
   const spendableBalance = acc.balance ? BigNumber(acc.balance) : BigNumber(0);
 
-  const cacheTransactionInfoById = {
-    ...(info.initialAccount &&
-      info.initialAccount.tronResources &&
-      info.initialAccount.tronResources.cacheTransactionInfoById),
-  };
-
   const operationsPageSize = Math.min(
     1000,
     getOperationsPageSize(
@@ -305,15 +303,10 @@ const getAccountShape = async (info, syncConfig) => {
   // use minimalOperationsBuilderSync to reconciliate and KEEP REF
   const txs = await fetchTronAccountTxs(
     info.address,
-    (txs) => txs.length < operationsPageSize,
-    cacheTransactionInfoById
+    (txs) => txs.length < operationsPageSize
   );
 
-  const tronResources = await getTronResources(
-    acc,
-    txs,
-    cacheTransactionInfoById
-  );
+  const tronResources = await getTronResources(acc, txs);
 
   const balance = spendableBalance
     .plus(
@@ -362,7 +355,7 @@ const getAccountShape = async (info, syncConfig) => {
       const tokenId = `tron/${type}/${key}`;
       const token = findTokenById(tokenId);
       if (!token || blacklistedTokenIds.includes(tokenId)) return;
-      const id = info.id + "+" + key;
+      const id = encodeTokenAccountId(info.id, token);
       const tokenTxs = txs.filter((tx) => tx.tokenId === key);
       const operations = compact(
         tokenTxs.map((tx) => txInfoToOperation(id, info.address, tx))
@@ -371,13 +364,15 @@ const getAccountShape = async (info, syncConfig) => {
         info.initialAccount &&
         info.initialAccount.subAccounts &&
         info.initialAccount.subAccounts.find((a) => a.id === id);
+      const balance = BigNumber(value);
       const sub: TokenAccount = {
         type: "TokenAccount",
         id,
         starred: false,
         parentId: info.id,
         token,
-        balance: BigNumber(value),
+        balance,
+        spendableBalance: balance,
         operationsCount: operations.length,
         operations,
         pendingOperations: maybeExistingSubAccount
@@ -428,7 +423,7 @@ const scanAccounts = makeScanAccounts(getAccountShape);
 // the balance does not update straightaway so we should ignore recent operations if they are in pending for a bit
 const preferPendingOperationsUntilBlockValidation = 35;
 
-const postSync = (parent) => {
+const postSync = (initial: Account, parent: Account): Account => {
   function evictRecentOpsIfPending(a) {
     a.pendingOperations.forEach((pending) => {
       const i = a.operations.findIndex((o) => o.id === pending.id);
