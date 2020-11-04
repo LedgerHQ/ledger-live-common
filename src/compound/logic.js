@@ -9,7 +9,10 @@ import type {
   ClosedLoan,
   CompoundAccountStatus,
 } from "./types";
-import { findCurrentRate } from "../families/ethereum/modules/compound";
+import {
+  findCurrentRate,
+  getEnabledAmount,
+} from "../families/ethereum/modules/compound";
 
 // to confirm in practice if this threshold is high enough / too high
 const unlimitedThreshold = BigNumber(2).pow(250);
@@ -39,10 +42,7 @@ export function getAccountCapabilities(
     };
   }
 
-  const approval = (account.approvals || []).find(
-    (a) => a.sender.toLowerCase() === ctoken.contractAddress.toLowerCase()
-  );
-  const enabledAmount = approval ? BigNumber(approval.value) : BigNumber(0);
+  const enabledAmount = getEnabledAmount(account);
   const enabledAmountIsUnlimited = enabledAmount.gt(unlimitedThreshold);
   // TODO: we might want to keep things to false if there are pending actions
   const canSupply = enabledAmount.gt(0) && account.spendableBalance.gt(0);
@@ -141,6 +141,7 @@ export function makeCompoundSummaryForAccount(
   operations
     .slice(0)
     .reverse()
+    .filter((op) => !op.hasFailed)
     .forEach((operation) => {
       if (operation.type === "SUPPLY") {
         opened.push({
@@ -153,43 +154,39 @@ export function makeCompoundSummaryForAccount(
 
       if (operation.type === "REDEEM") {
         let amountToClose = operation.value;
-        while (amountToClose.gt(0)) {
+        while (amountToClose.gt(0) && opened.length > 0) {
           const closingOperation = opened.shift();
-          if (closingOperation) {
-            if (amountToClose.gte(closingOperation.amountSupplied)) {
-              closed.push({
-                amountSupplied: closingOperation.amountSupplied,
-                openRate: closingOperation.openRate,
-                closeRate: BigNumber(operation.extra.rate),
-                endDate: operation.date,
-                startingDate: closingOperation.startingDate,
-                compoundValue: BigNumber(operation.extra.compoundValue),
-              });
-            } else {
-              closed.push({
-                amountSupplied: amountToClose,
-                openRate: closingOperation.openRate,
-                closeRate: BigNumber(operation.extra.rate),
-                endDate: operation.date,
-                startingDate: closingOperation.startingDate,
-                compoundValue: BigNumber(operation.extra.compoundValue),
-              });
-              opened.unshift({
-                amountSupplied: closingOperation.amountSupplied.minus(
-                  amountToClose
-                ),
-                openRate: closingOperation.openRate,
-                startingDate: closingOperation.startingDate,
-                compoundValue: closingOperation.compoundValue.minus(
-                  BigNumber(operation.extra.compoundValue)
-                ),
-              });
-            }
-
-            amountToClose = amountToClose.minus(
-              closingOperation.amountSupplied
-            );
+          if (amountToClose.gte(closingOperation.amountSupplied)) {
+            closed.push({
+              amountSupplied: closingOperation.amountSupplied,
+              openRate: closingOperation.openRate,
+              closeRate: BigNumber(operation.extra.rate),
+              endDate: operation.date,
+              startingDate: closingOperation.startingDate,
+              compoundValue: BigNumber(operation.extra.compoundValue),
+            });
+          } else {
+            closed.push({
+              amountSupplied: amountToClose,
+              openRate: closingOperation.openRate,
+              closeRate: BigNumber(operation.extra.rate),
+              endDate: operation.date,
+              startingDate: closingOperation.startingDate,
+              compoundValue: BigNumber(operation.extra.compoundValue),
+            });
+            opened.unshift({
+              amountSupplied: closingOperation.amountSupplied.minus(
+                amountToClose
+              ),
+              openRate: closingOperation.openRate,
+              startingDate: closingOperation.startingDate,
+              compoundValue: closingOperation.compoundValue.minus(
+                BigNumber(operation.extra.compoundValue)
+              ),
+            });
           }
+
+          amountToClose = amountToClose.minus(closingOperation.amountSupplied);
         }
       }
     });
@@ -256,6 +253,7 @@ export const makeClosedHistoryForAccounts = (
       if (!summary.closed.length) return closedLoans;
 
       return closedLoans.concat(
+        // $FlowFixMe issue on LLD side
         summary.closed.map((c) => ({
           ...c,
           account: summary.account,

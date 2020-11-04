@@ -44,13 +44,28 @@ export function isCompoundTokenSupported(token: TokenCurrency): boolean {
   return compoundWhitelist.includes(token.id);
 }
 
+export function getEnabledAmount(account: TokenAccount): BigNumber {
+  const ctoken = findCompoundToken(account.token);
+  const approval =
+    ctoken &&
+    (account.approvals || []).find(
+      (a) => a.sender.toLowerCase() === ctoken.contractAddress.toLowerCase()
+    );
+  return approval ? BigNumber(approval.value) : BigNumber(0);
+}
+
+export function getSupplyMax(a: TokenAccount): BigNumber {
+  return BigNumber.min(a.spendableBalance, getEnabledAmount(a));
+}
+
 export type Modes = "compound.supply" | "compound.withdraw";
 
-function contractField(ctoken) {
+function contractField(ctoken: TokenCurrency) {
+  const token = getTokenById(ctoken.compoundFor || "");
   return {
     type: "text",
     label: "Contract",
-    value: "Compound " + ctoken.ticker,
+    value: "Compound " + token.ticker,
   };
 }
 
@@ -66,9 +81,10 @@ const compoundSupply: ModeModule = {
     invariant(subAccount, "sub account missing");
     if (t.amount.eq(0)) {
       result.errors.amount = new AmountRequired();
-    } else if (t.amount.gt(subAccount.spendableBalance)) {
+    } else if (t.amount.gt(getSupplyMax(subAccount))) {
       result.errors.amount = new NotEnoughBalance();
     }
+    result.amount = t.amount;
   },
   fillTransactionData(a, t, tx) {
     const subAccount = inferTokenAccount(a, t);
@@ -106,6 +122,7 @@ const compoundSupply: ModeModule = {
     fields.push(contractField(ctoken));
   },
   fillOptimisticOperation(a, t, op) {
+    op.type = "FEES";
     const subAccount = inferTokenAccount(a, t);
     if (subAccount) {
       const currentRate = findCurrentRate(subAccount.token);
@@ -152,14 +169,13 @@ const compoundWithdraw: ModeModule = {
     );
     const { compoundBalance } = subAccount;
     invariant(compoundBalance, "missing compoundBalance");
-    if (t.amount.eq(0) && !t.useAllAmount) {
-      result.errors.amount = new AmountRequired();
-    } else if (
+    if (
       compoundBalance.eq(0) ||
       (!t.useAllAmount && t.amount.gt(nonSpendableBalance))
     ) {
       result.errors.amount = new NotEnoughBalance();
     }
+    result.amount = t.useAllAmount ? compoundBalance : t.amount;
   },
   fillTransactionData(a, t, tx) {
     const subAccount = inferTokenAccount(a, t);
@@ -214,6 +230,7 @@ const compoundWithdraw: ModeModule = {
     fields.push(contractField(ctoken));
   },
   fillOptimisticOperation(a, t, op) {
+    op.type = "FEES";
     const subAccount = inferTokenAccount(a, t);
     if (subAccount) {
       const currentRate = findCurrentRate(subAccount.token);

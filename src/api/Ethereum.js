@@ -208,10 +208,16 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
     },
 
     async getDryRunGasLimit(address, request) {
+      const post: Object = {
+        ...request,
+      };
+      delete post.to;
+      post.gas_price = request.gasPrice;
+      delete post.gasPrice;
       const { data } = await network({
         method: "POST",
         url: `${baseURL}/addresses/${address}/estimate-gas-limit`,
-        data: request,
+        data: post,
         transformResponse: JSONBigNumber.parse,
       });
       if (data.error_message) {
