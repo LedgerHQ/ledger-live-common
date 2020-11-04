@@ -42,6 +42,7 @@ import type {
   CounterValuesStateRaw,
   CountervaluesSettings,
 } from "./types";
+import { pairId } from "./helpers";
 
 // Polling is the control object you get from the high level <PollingConsumer>{ polling => ...
 export type Polling = {
@@ -96,19 +97,16 @@ export function Countervalues({
 
   // trigger poll but not every time poll callback is changed
   const [triggerPoll, setTriggerPoll] = useState(false);
-
   useEffect(() => {
     if (pending || !triggerPoll) return;
+    setTriggerPoll(false);
     dispatch({ type: "pending" });
     loadCountervalues(state, userSettings).then(
       (state) => {
-        if (!Object.keys(state.status).length) return;
         dispatch({ type: "success", payload: state });
-        setTriggerPoll(false);
       },
       (error) => {
         dispatch({ type: "error", payload: error });
-        setTriggerPoll(false);
       }
     );
   }, [pending, state, userSettings, triggerPoll]);
@@ -122,21 +120,13 @@ export function Countervalues({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedState]);
 
-  // trigger poll for the frist render and when userSettings is not exactly the same
-  const isFirstRender = useRef(true);
-  const userSettingsRef = useRef(userSettings);
+  // trigger poll only when trackingParis is not exactly the same
+  const pairs = useMemo(() => userSettings.trackingPairs.map(pairId).join(), [
+    userSettings.trackingPairs,
+  ]);
   useEffect(() => {
-    if (isFirstRender) {
-      isFirstRender.current = false;
-    } else {
-      if (
-        JSON.stringify(userSettings) === JSON.stringify(userSettingsRef.current)
-      )
-        return;
-    }
     setTriggerPoll(true);
-    userSettingsRef.current = userSettings;
-  }, [userSettings]);
+  }, [pairs]);
 
   const [isPolling, setIsPolling] = useState(true);
   useEffect(() => {
