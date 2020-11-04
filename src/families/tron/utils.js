@@ -164,7 +164,6 @@ export const formatTrongridTxResponse = (tx: Object): ?TrongridTxInfo => {
       asset_name,
       owner_address,
       to_address,
-      resource_type,
       contract_address,
       quant,
       frozen_balance,
@@ -183,8 +182,6 @@ export const formatTrongridTxResponse = (tx: Object): ?TrongridTxInfo => {
     const from = encode58Check(owner_address);
 
     const to = to_address ? encode58Check(to_address) : undefined;
-
-    const resource = resource_type;
 
     const getValue = (): BigNumber => {
       switch (type) {
@@ -212,7 +209,6 @@ export const formatTrongridTxResponse = (tx: Object): ?TrongridTxInfo => {
       to,
       value,
       fee,
-      resource,
       blockHeight,
       hasFailed,
     };
@@ -222,12 +218,10 @@ export const formatTrongridTxResponse = (tx: Object): ?TrongridTxInfo => {
         case "FreezeBalanceContract":
           return {
             frozenAmount: BigNumber(frozen_balance),
-            resource,
           };
         case "UnfreezeBalanceContract":
           return {
             unfreezeAmount: BigNumber(detail.unfreeze_amount),
-            resource,
           };
         case "VoteWitnessContract":
           return {
