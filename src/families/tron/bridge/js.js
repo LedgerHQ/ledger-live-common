@@ -182,7 +182,6 @@ const signOperation = ({ account, transaction, deviceId }) =>
             case "freeze":
               return {
                 frozenAmount: transaction.amount,
-                resource,
               };
             case "unfreeze":
               return {
@@ -191,7 +190,6 @@ const signOperation = ({ account, transaction, deviceId }) =>
                   `frozen.${resource.toLocaleLowerCase()}.amount`,
                   BigNumber(0)
                 ),
-                resource,
               };
             case "vote":
               return {

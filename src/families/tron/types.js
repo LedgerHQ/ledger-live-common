@@ -94,12 +94,10 @@ export type TrongridExtraTxInfo =
 
 export type TrongridFreezeTxInfo = {|
   frozenAmount: BigNumber,
-  resource: TronResource,
 |};
 
 export type TrongridUnfreezeTxInfo = {|
   unfreezeAmount: BigNumber,
-  resource: TronResource,
 |};
 
 export type TrongridVotesTxInfo = {|

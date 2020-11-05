@@ -186,9 +186,9 @@ export const formatTrongridTxResponse = (tx: Object): ?TrongridTxInfo => {
     const getValue = (): BigNumber => {
       switch (type) {
         case "WithdrawBalanceContract":
-          return BigNumber(detail.withdraw_amount);
+          return BigNumber(detail.withdraw_amount || 0);
         case "ExchangeTransactionContract":
-          return BigNumber(quant);
+          return BigNumber(quant || 0);
         default:
           return amount ? BigNumber(amount) : BigNumber(0);
       }
@@ -207,7 +207,7 @@ export const formatTrongridTxResponse = (tx: Object): ?TrongridTxInfo => {
       tokenId,
       from,
       to,
-      value,
+      value: !isNaN(value) ? value : BigNumber(0),
       fee,
       blockHeight,
       hasFailed,
