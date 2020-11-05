@@ -211,9 +211,12 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
       const post: Object = {
         ...request,
       };
+      // .to not needed by backend as it's part of URL:
       delete post.to;
+      // backend use gas_price casing:
       post.gas_price = request.gasPrice;
       delete post.gasPrice;
+
       const { data } = await network({
         method: "POST",
         url: `${baseURL}/addresses/${address}/estimate-gas-limit`,
