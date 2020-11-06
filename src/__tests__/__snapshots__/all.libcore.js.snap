@@ -74444,7 +74444,6 @@ Array [
       "blockHeight": 11594376,
       "extra": Object {
         "frozenAmount": "20000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -74517,7 +74516,6 @@ Array [
       "blockHeight": 16685834,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -74590,7 +74588,6 @@ Array [
       "blockHeight": 16685884,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -74609,7 +74606,6 @@ Array [
       "blockHeight": 16685876,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -74772,7 +74768,6 @@ Array [
       "blockHeight": 16685898,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -74813,8 +74808,7 @@ Array [
       "blockHash": null,
       "blockHeight": 16220303,
       "extra": Object {
-        "resource": undefined,
-        "unfreezeAmount": "NaN",
+        "unfreezeAmount": "46422359",
       },
       "fee": "0",
       "hasFailed": false,
@@ -74851,7 +74845,6 @@ Array [
       "blockHeight": 11595257,
       "extra": Object {
         "frozenAmount": "3000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -75024,7 +75017,6 @@ Array [
       "blockHeight": 16685810,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -75061,7 +75053,6 @@ Array [
       "blockHeight": 16685804,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -75098,7 +75089,6 @@ Array [
       "blockHeight": 16685843,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -75117,7 +75107,6 @@ Array [
       "blockHeight": 11109621,
       "extra": Object {
         "frozenAmount": "3000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -75303,7 +75292,6 @@ Array [
       "blockHeight": 16050543,
       "extra": Object {
         "frozenAmount": "12000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -75358,7 +75346,6 @@ Array [
       "blockHeight": 11594100,
       "extra": Object {
         "frozenAmount": "3000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -75485,7 +75472,6 @@ Array [
       "blockHeight": 16685793,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -75558,7 +75544,6 @@ Array [
       "blockHeight": 16685880,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -75613,7 +75598,6 @@ Array [
       "blockHeight": 10390295,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -75631,8 +75615,7 @@ Array [
       "blockHash": null,
       "blockHeight": 12425496,
       "extra": Object {
-        "resource": undefined,
-        "unfreezeAmount": "NaN",
+        "unfreezeAmount": "6000000",
       },
       "fee": "0",
       "hasFailed": false,
@@ -75705,7 +75688,6 @@ Array [
       "blockHeight": 16685857,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -75956,7 +75938,6 @@ Array [
       "blockHeight": 16685816,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -76016,7 +75997,6 @@ Array [
       "blockHeight": 8939043,
       "extra": Object {
         "frozenAmount": "10000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -76071,7 +76051,6 @@ Array [
       "blockHeight": 16685799,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -76090,7 +76069,6 @@ Array [
       "blockHeight": 16685955,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -76126,8 +76104,7 @@ Array [
       "blockHash": null,
       "blockHeight": 11109550,
       "extra": Object {
-        "resource": undefined,
-        "unfreezeAmount": "NaN",
+        "unfreezeAmount": "3000000",
       },
       "fee": "0",
       "hasFailed": false,
@@ -76164,7 +76141,6 @@ Array [
       "blockHeight": 16685946,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -76250,8 +76226,7 @@ Array [
       "blockHash": null,
       "blockHeight": 16050392,
       "extra": Object {
-        "resource": undefined,
-        "unfreezeAmount": "NaN",
+        "unfreezeAmount": "20000000",
       },
       "fee": "0",
       "hasFailed": false,
@@ -76306,7 +76281,6 @@ Array [
       "blockHeight": 16685905,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -76379,7 +76353,6 @@ Array [
       "blockHeight": 16685850,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -76398,7 +76371,6 @@ Array [
       "blockHeight": 16220194,
       "extra": Object {
         "frozenAmount": "5000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -76516,7 +76488,6 @@ Array [
       "blockHeight": 10511653,
       "extra": Object {
         "frozenAmount": "3000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -76589,7 +76560,6 @@ Array [
       "blockHeight": 16107775,
       "extra": Object {
         "frozenAmount": "34422359",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -76857,8 +76827,7 @@ Array [
       "blockHash": null,
       "blockHeight": 11593944,
       "extra": Object {
-        "resource": undefined,
-        "unfreezeAmount": "NaN",
+        "unfreezeAmount": "3000000",
       },
       "fee": "0",
       "hasFailed": false,
@@ -76877,7 +76846,6 @@ Array [
       "blockHeight": 16685962,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -76895,8 +76863,7 @@ Array [
       "blockHash": null,
       "blockHeight": 16686355,
       "extra": Object {
-        "resource": undefined,
-        "unfreezeAmount": "NaN",
+        "unfreezeAmount": "31000000",
       },
       "fee": "0",
       "hasFailed": false,
@@ -76951,7 +76918,6 @@ Array [
       "blockHeight": 16685822,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -77006,7 +76972,6 @@ Array [
       "blockHeight": 16220341,
       "extra": Object {
         "frozenAmount": "26000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -77025,7 +76990,6 @@ Array [
       "blockHeight": 16685889,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -77080,7 +77044,6 @@ Array [
       "blockHeight": 16685828,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -77132,8 +77095,7 @@ Array [
       "blockHash": null,
       "blockHeight": 10511409,
       "extra": Object {
-        "resource": undefined,
-        "unfreezeAmount": "NaN",
+        "unfreezeAmount": "1000000",
       },
       "fee": "0",
       "hasFailed": false,
@@ -77206,7 +77168,6 @@ Array [
       "blockHeight": 16685860,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -77477,7 +77438,6 @@ Array [
       "blockHeight": 16222319,
       "extra": Object {
         "frozenAmount": "5000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -77531,8 +77491,7 @@ Array [
       "blockHash": null,
       "blockHeight": 9277271,
       "extra": Object {
-        "resource": undefined,
-        "unfreezeAmount": "NaN",
+        "unfreezeAmount": "10000000",
       },
       "fee": "0",
       "hasFailed": false,
@@ -78610,8 +78569,7 @@ Array [
       "blockHash": null,
       "blockHeight": 18903817,
       "extra": Object {
-        "resource": undefined,
-        "unfreezeAmount": "NaN",
+        "unfreezeAmount": "9400000",
       },
       "fee": "0",
       "hasFailed": false,
@@ -78630,7 +78588,6 @@ Array [
       "blockHeight": 16113293,
       "extra": Object {
         "frozenAmount": "3200000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -78703,7 +78660,6 @@ Array [
       "blockHeight": 16113270,
       "extra": Object {
         "frozenAmount": "5200000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -78740,7 +78696,6 @@ Array [
       "blockHeight": 18670033,
       "extra": Object {
         "frozenAmount": "1000000",
-        "resource": undefined,
       },
       "fee": "0",
       "hasFailed": false,
@@ -79252,6 +79207,26 @@ Array [
     Object {
       "accountId": "js:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:+tron%2Ftrc20%2FTLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7",
       "blockHash": null,
+      "blockHeight": 16112143,
+      "extra": Object {},
+      "fee": "0",
+      "hasFailed": false,
+      "hash": "f6551432995fc64e304f0ca205d12918873ebca880192f8f110c5cb93aa5cfe8",
+      "id": "js:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:+tron%2Ftrc20%2FTLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7-f6551432995fc64e304f0ca205d12918873ebca880192f8f110c5cb93aa5cfe8-IN",
+      "recipients": Array [
+        "THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi",
+      ],
+      "senders": Array [
+        "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
+      ],
+      "type": "IN",
+      "value": "1000000",
+    },
+  ],
+  Array [
+    Object {
+      "accountId": "js:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:+tron%2Ftrc20%2FTR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+      "blockHash": null,
       "blockHeight": undefined,
       "extra": Object {},
       "fee": "0",
@@ -79287,26 +79262,6 @@ Array [
       "type": "IN",
       "value": "2003400",
     },
-    Object {
-      "accountId": "js:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:+tron%2Ftrc20%2FTR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
-      "blockHash": null,
-      "blockHeight": undefined,
-      "extra": Object {},
-      "fee": "0",
-      "hasFailed": false,
-      "hash": "967093a06de21daa4e4f1dc90b46621c3968954f32d7c915bd9a0d6aad2f81f3",
-      "id": "js:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:+tron%2Ftrc20%2FTR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t-967093a06de21daa4e4f1dc90b46621c3968954f32d7c915bd9a0d6aad2f81f3-IN",
-      "recipients": Array [
-        "THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi",
-      ],
-      "senders": Array [
-        "TMn5m53QQBhg2VU1acpZpAbcccxUH2eZzr",
-      ],
-      "type": "IN",
-      "value": "10000",
-    },
-  ],
-  Array [
     Object {
       "accountId": "js:2:tron:TWepUnyBzHx2aoEgNGotZHCybZJZe1AHdW:",
       "blockHash": null,
