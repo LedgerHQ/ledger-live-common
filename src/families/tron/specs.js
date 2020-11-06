@@ -79,18 +79,17 @@ const tron: AppSpec<Transaction> = {
         };
       },
       test: ({ account, accountBeforeTransaction, transaction }) => {
-        const resourceType = transaction.resource || "";
+        const resourceType = (transaction.resource || "").toLocaleLowerCase();
 
-        // We need Lenses or Getter for this 😱
         const resourceBeforeTransaction = get(
           accountBeforeTransaction,
           `tronResources.frozen.${resourceType}.amount`,
           BigNumber(0)
         );
 
-        const expectedAmount = BigNumber(transaction.amount)
-          .times(10e6)
-          .plus(resourceBeforeTransaction);
+        const expectedAmount = BigNumber(transaction.amount).plus(
+          resourceBeforeTransaction
+        );
 
         const currentRessourceAmount = get(
           account,
