@@ -274,7 +274,9 @@ export function getPortfolio(
     const history = histories[i];
     for (let j = 0; j < history.length; j++) {
       const res = balanceHistory[j];
-      res.value = res.value.plus(history[j].countervalue);
+      if (res) {
+        res.value = res.value.plus(history[j].countervalue);
+      }
     }
   }
 
