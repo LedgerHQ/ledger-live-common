@@ -70,10 +70,13 @@ const tron: AppSpec<Transaction> = {
       maxRun: 1,
       transaction: ({ account, bridge, maxSpendable }) => {
         invariant(maxSpendable.gt(minimalAmount), "balance is too low");
-        const amount = getDecimalPart(
+        let amount = getDecimalPart(
           maxSpendable.div(4),
           currency.units[0].magnitude
-        ).integerValue(BigNumber.ROUND_CEIL);
+        ).integerValue();
+        if (amount.eq(0)) {
+          amount = BigNumber(1).times(currency.units[0].magnitude);
+        }
         const energy = get(account, `tronResources.energy`, BigNumber(0));
         return {
           transaction: bridge.createTransaction(account),
@@ -93,9 +96,9 @@ const tron: AppSpec<Transaction> = {
           BigNumber(0)
         );
 
-        const expectedAmount = BigNumber(transaction.amount)
-          .times(10e6)
-          .plus(resourceBeforeTransaction);
+        const expectedAmount = BigNumber(transaction.amount).plus(
+          resourceBeforeTransaction
+        );
 
         const currentRessourceAmount = get(
           account,
@@ -106,15 +109,6 @@ const tron: AppSpec<Transaction> = {
         expect(expectedAmount.toString()).toBe(
           currentRessourceAmount.toString()
         );
-
-        const TPBefore = get(
-          accountBeforeTransaction,
-          "tronResources.tronPower",
-          BigNumber(0)
-        );
-        const currentTP = BigNumber(get(account, "tronResources.tronPower", 0));
-        const expectedTP = transaction.amount.plus(TPBefore);
-        expect(expectedTP.toString()).toBe(currentTP.toString());
       },
     },
     {
