@@ -73,6 +73,7 @@ const modes = Object.freeze({
     skipFirst: true, // already included in the normal bip44,
     tag: "metamask",
   },
+  // Deprecated and should no longer be used.
   bch_on_bitcoin_segwit: {
     overridesCoinType: 0,
     isInvalid: true,
@@ -176,6 +177,13 @@ const modes = Object.freeze({
     },
     isInvalid: true,
   },
+  legacy_on_native_segwit: {
+    purpose: 84,
+    libcoreConfig: {
+      KEYCHAIN_ENGINE: "BIP32_P2PKH",
+    },
+    isInvalid: true,
+  },
   segwit_unsplit: {
     isSegwit: true,
     purpose: 49,
@@ -199,7 +207,7 @@ const modes = Object.freeze({
 
 const legacyDerivations: $Shape<CryptoCurrencyConfig<DerivationMode[]>> = {
   aeternity: ["aeternity"],
-  bitcoin_cash: ["bch_on_bitcoin_segwit"],
+  bitcoin_cash: [],
   bitcoin: ["legacy_on_bch"],
   vertcoin: ["vertcoin_128", "vertcoin_128_segwit"],
   ethereum: ["ethM", "ethMM"],
@@ -403,6 +411,7 @@ export const getDerivationModesForCurrency = (
   if (currency.supportsSegwit) {
     all.push("segwit_on_legacy");
     all.push("legacy_on_segwit");
+    all.push("legacy_on_native_segwit");
   }
   if (!disableBIP44[currency.id]) {
     all.push("");
