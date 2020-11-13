@@ -27,6 +27,7 @@ test-specifics.js \
 mock.js \
 account.js \
 exchange.js \
+presync.js \
 "
 
 withoutNetworkInfo=("algorand")

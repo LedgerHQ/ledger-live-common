@@ -33,6 +33,8 @@ import portfolio from "./commands/portfolio";
 import proxy from "./commands/proxy";
 import receive from "./commands/receive";
 import repl from "./commands/repl";
+import satstack from "./commands/satstack";
+import satstackStatus from "./commands/satstackStatus";
 import scanDescriptors from "./commands/scanDescriptors";
 import send from "./commands/send";
 import signMessage from "./commands/signMessage";
@@ -42,6 +44,7 @@ import testDetectOpCollision from "./commands/testDetectOpCollision";
 import testGetTrustedInputFromTxHash from "./commands/testGetTrustedInputFromTxHash";
 import validRecipient from "./commands/validRecipient";
 import version from "./commands/version";
+import walletconnect from "./commands/walletconnect";
 
 export default {
   app,
@@ -79,6 +82,8 @@ export default {
   proxy,
   receive,
   repl,
+  satstack,
+  satstackStatus,
   scanDescriptors,
   send,
   signMessage,
@@ -88,4 +93,5 @@ export default {
   testGetTrustedInputFromTxHash,
   validRecipient,
   version,
+  walletconnect,
 };
