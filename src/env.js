@@ -204,6 +204,11 @@ const envDefinitions = {
     parser: stringParser,
     desc: "Ledger generic explorer beta API",
   },
+  EXPLORER_SATSTACK: {
+    def: "http://localhost:20000",
+    parser: stringParser,
+    desc: "Ledger satstack Bitcoin explorer API",
+  },
   DISABLE_APP_VERSION_REQUIREMENTS: {
     def: false,
     parser: boolParser,
@@ -304,6 +309,11 @@ const envDefinitions = {
     parser: intParser,
     desc: "defines the initial default operation length page to use",
   },
+  SATSTACK: {
+    def: false,
+    parser: boolParser,
+    desc: "Switch to satstack mode",
+  },
   SCAN_FOR_INVALID_PATHS: {
     def: false,
     parser: boolParser,
@@ -360,6 +370,11 @@ const envDefinitions = {
     parser: stringParser,
     desc:
       "unique identifier of app instance. used to derivate dissociated ids for difference purposes (e.g. the firmware update incremental deployment).",
+  },
+  WALLETCONNECT: {
+    def: false,
+    parser: boolParser,
+    desc: "is walletconnect enabled",
   },
   WITH_DEVICE_POLLING_DELAY: {
     def: 500,
