@@ -55,14 +55,24 @@ const receive = makeAccountBridgeReceive();
 
 const getSequenceNumber = async (account, api) => {
   const lastOp = account.operations.find((op) => op.type === "OUT");
-  if (!lastOp) {
-    const info = await api.getAccountInfo(account.freshAddress);
-
-    return info.sequence + account.pendingOperations.length;
+  if (lastOp && lastOp.transactionSequenceNumber) {
+    return (
+      lastOp.transactionSequenceNumber + account.pendingOperations.length + 1
+    );
   }
+  const info = await api.getAccountInfo(account.freshAddress);
 
+  return info.sequence + account.pendingOperations.length;
+};
+
+const uint32maxPlus1 = BigNumber(2).pow(32);
+const validateTag = (tag) => {
   return (
-    lastOp.transactionSequenceNumber + account.pendingOperations.length + 1
+    !tag.isNaN() &&
+    tag.isFinite() &&
+    tag.isInteger() &&
+    tag.isPositive() &&
+    tag.lt(uint32maxPlus1)
   );
 };
 
@@ -77,6 +87,7 @@ const signOperation = ({ account, transaction, deviceId }) =>
       try {
         await api.connect();
         const amount = formatAPICurrencyXRP(transaction.amount);
+        const tag = transaction.tag ? transaction.tag : undefined;
         const payment = {
           source: {
             address: account.freshAddress,
@@ -85,13 +96,20 @@ const signOperation = ({ account, transaction, deviceId }) =>
           destination: {
             address: transaction.recipient,
             minAmount: amount,
-            tag: transaction.tag ? transaction.tag : undefined,
+            tag,
           },
         };
         const instruction = {
           fee: formatAPICurrencyXRP(fee).value,
           maxLedgerVersionOffset: 12,
         };
+
+        invariant(
+          tag && validateTag(BigNumber(tag)),
+          `tag is set but is not in a valid format, should be between [0 - ${
+            uint32maxPlus1.minus(1).toString()
+          }]`
+        );
 
         const prepared = await api.preparePayment(
           account.freshAddress,
