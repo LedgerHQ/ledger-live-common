@@ -31,6 +31,7 @@ import {
   fetchLatest,
   isCountervalueEnabled,
   aliasPair,
+  mapRate,
   resolveTrackingPair,
 } from "./modules";
 
@@ -302,12 +303,15 @@ export function calculate(
   const query = { ...initialQuery, from, to };
   const map = lenseRateMap(state, query);
   if (!map) return;
-  const rate = lenseRate(map, query);
+  let rate = lenseRate(map, query);
   if (!rate) return;
-  const { value, disableRounding } = query;
-  const val = !initialQuery.reverse
-    ? value * rate * magFromTo(from, to)
-    : (value / rate) * magFromTo(to, from);
+  const { value, disableRounding, reverse } = query;
+  const mult = reverse ? magFromTo(from, to) : magFromTo(to, from);
+  rate = mapRate(initialQuery, rate);
+  if (reverse) {
+    rate = 1 / rate;
+  }
+  const val = value * rate * mult;
   return disableRounding ? val : Math.round(val);
 }
 
@@ -321,17 +325,21 @@ export function calculateMany(
     reverse?: boolean,
   }
 ): Array<?number> {
+  const { reverse } = initialQuery;
   const query = aliasPair(initialQuery);
   const map = lenseRateMap(state, query);
   if (!map) return Array(dataPoints.length).fill(); // undefined array
   const { from, to } = query;
+  const mult = reverse ? magFromTo(from, to) : magFromTo(to, from);
   return dataPoints.map(({ value, date }) => {
     if (from === to) return value;
-    const rate = lenseRate(map, { from, to, date });
+    let rate = lenseRate(map, { from, to, date });
     if (!rate) return;
-    const val = !initialQuery.reverse
-      ? value * rate * magFromTo(from, to)
-      : (value / rate) * magFromTo(to, from);
+    rate = mapRate(initialQuery, rate);
+    if (reverse) {
+      rate = 1 / rate;
+    }
+    const val = value * rate * mult;
     return initialQuery.disableRounding ? val : Math.round(val);
   });
 }
