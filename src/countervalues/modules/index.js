@@ -6,8 +6,9 @@ import type { RateGranularity, TrackingPair, RateMap } from "../types";
 import type { Module } from "./types";
 import api from "../api";
 import weth from "./weth";
+import ethbtc from "./ethbtc";
 
-const modules: Module[] = [weth];
+const modules: Module[] = [weth, ethbtc];
 
 export const fetchHistorical = (
   granularity: RateGranularity,
@@ -84,6 +85,12 @@ export const fetchLatest = async (
   );
   return result;
 };
+
+export const mapRate = (
+  pair: { from: Currency, to: Currency },
+  rate: number
+): number =>
+  modules.reduce((rate, m) => (m.mapRate ? m.mapRate(pair, rate) : rate), rate);
 
 export const aliasPair = (pair: {
   from: Currency,
