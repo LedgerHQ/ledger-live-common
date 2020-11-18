@@ -45,13 +45,25 @@ async function signTransaction({
 
   if (isCancelled()) return;
 
-  const type = transaction.mode === "optIn" ? "OPT_IN" : "OUT";
-
   // Add fees, senders (= account.freshAddress) and recipients.
   const senders = [freshAddress];
   const recipients = [transaction.recipient];
   const fee = await coreTransaction.getFee();
   const { subAccountId } = transaction;
+
+  const getType = () => {
+    return subAccountId
+      ? "FEES"
+      : transaction.mode === "optIn"
+      ? "OPT_IN"
+      : "OUT";
+  };
+
+  const type = getType();
+
+  const tokenAccount = !subAccountId
+    ? null
+    : subAccounts && subAccounts.find((ta) => ta.id === subAccountId);
 
   const op: $Exact<Operation> = {
     id: `${id}--${type}`,
@@ -72,16 +84,12 @@ async function signTransaction({
     extra: {},
   };
 
-  const tokenAccount = !subAccountId
-    ? null
-    : subAccounts && subAccounts.find((ta) => ta.id === subAccountId);
-
   if (tokenAccount && subAccountId) {
     op.subOperations = [
       {
-        id: `${subAccountId}--${type}`,
+        id: `${subAccountId}--OUT`,
         hash: "",
-        type,
+        type: "OUT",
         value: transaction.useAllAmount
           ? tokenAccount.balance
           : transaction.amount,
