@@ -3,11 +3,18 @@
 import { makeSignOperation } from "../../libcore/signOperation";
 import buildTransaction from "./libcore-buildTransaction";
 import type { Transaction, CoreAlgorandTransaction } from "./types";
+import type { Operation } from "../../types";
 import Algorand from "./ledger-app/Algorand";
 import { BigNumber } from "bignumber.js";
 
 async function signTransaction({
-  account: { freshAddressPath, spendableBalance, id, freshAddress },
+  account: {
+    freshAddressPath,
+    spendableBalance,
+    id,
+    freshAddress,
+    subAccounts,
+  },
   transport,
   transaction,
   coreTransaction,
@@ -46,7 +53,7 @@ async function signTransaction({
   const fee = await coreTransaction.getFee();
   const { subAccountId } = transaction;
 
-  const op = {
+  const op: $Exact<Operation> = {
     id: `${id}--${type}`,
     hash: "",
     type,
@@ -64,6 +71,31 @@ async function signTransaction({
     date: new Date(),
     extra: {},
   };
+
+  const tokenAccount = !subAccountId
+    ? null
+    : subAccounts && subAccounts.find((ta) => ta.id === subAccountId);
+
+  if (tokenAccount && subAccountId) {
+    op.subOperations = [
+      {
+        id: `${subAccountId}--${type}`,
+        hash: "",
+        type,
+        value: transaction.useAllAmount
+          ? tokenAccount.balance
+          : transaction.amount,
+        fee: BigNumber(0),
+        blockHash: null,
+        blockHeight: null,
+        senders,
+        recipients,
+        accountId: subAccountId,
+        date: new Date(),
+        extra: {},
+      },
+    ];
+  }
 
   return {
     operation: op,
