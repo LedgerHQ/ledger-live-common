@@ -104,12 +104,13 @@ const signOperation = ({ account, transaction, deviceId }) =>
           maxLedgerVersionOffset: 12,
         };
 
-        invariant(
-          tag && validateTag(BigNumber(tag)),
-          `tag is set but is not in a valid format, should be between [0 - ${
-            uint32maxPlus1.minus(1).toString()
-          }]`
-        );
+        if (tag)
+          invariant(
+            validateTag(BigNumber(tag)),
+            `tag is set but is not in a valid format, should be between [0 - ${uint32maxPlus1
+              .minus(1)
+              .toString()}]`
+          );
 
         const prepared = await api.preparePayment(
           account.freshAddress,
