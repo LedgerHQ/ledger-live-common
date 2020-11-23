@@ -3,15 +3,31 @@ import { BigNumber } from "bignumber.js";
 import { getAccountBridge } from "../bridge";
 import { parseCallRequest } from "./index";
 import { getCryptoCurrencyById, setSupportedCurrencies } from "../currencies";
-import type { AccountLike } from "../types/account";
+import type { Account } from "../types/account";
 
 describe("walletconnect", () => {
-  const account: AccountLike = {
+  const account: Account = {
     type: "Account",
     id: "js:2:ethereum:0xCA220B75b7aF206bFCc67E2EcE06E2e144FA294a:",
     derivationMode: "",
     freshAddressPath: "44'/60'/0'/0/0",
     currency: getCryptoCurrencyById("ethereum"),
+    seedIdentifier: "",
+    index: 0,
+    freshAddress: "",
+    freshAddresses: [],
+    name: "test",
+    starred: false,
+    balance: BigNumber(0),
+    spendableBalance: BigNumber(0),
+    creationDate: new Date(),
+    blockHeight: 1,
+    unit: getCryptoCurrencyById("ethereum").units[0],
+    operationsCount: 0,
+    operations: [],
+    pendingOperations: [],
+    lastSyncDate: new Date(),
+    swapHistory: [],
   };
 
   beforeAll(() => {
@@ -20,14 +36,18 @@ describe("walletconnect", () => {
 
   test("should fail on wrong payload", async () => {
     await expect(
-      parseCallRequest(account, { method: "pouet" })
+      parseCallRequest(account, {
+        method: "pouet",
+        params: [],
+        id: "pouet",
+      })
     ).rejects.toThrow("wrong payload");
   });
 
   test("should parse personal_sign payloads", async () => {
     expect(
       await parseCallRequest(account, {
-        id: 1606134269395933,
+        id: "1606134269395933",
         jsonrpc: "2.0",
         method: "personal_sign",
         params: [
@@ -52,7 +72,7 @@ describe("walletconnect", () => {
 
     expect(
       await parseCallRequest(account, {
-        id: 1606135178131543,
+        id: "1606135178131543",
         jsonrpc: "2.0",
         method: "eth_signTypedData",
         params: ["0xCA220B75b7aF206bFCc67E2EcE06E2e144FA294a", raw],
@@ -97,7 +117,7 @@ describe("walletconnect", () => {
 
     expect(
       await parseCallRequest(account, {
-        id: 1606135657415541,
+        id: "1606135657415541",
         jsonrpc: "2.0",
         method: "eth_sendTransaction",
         params: [raw],

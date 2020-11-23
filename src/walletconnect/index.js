@@ -31,7 +31,8 @@ export type WCPayload =
         | "eth_sendRawTransaction"
         | "eth_signTypedData"
         | "eth_sign"
-        | "personal_sign",
+        | "personal_sign"
+        | string,
       params: [string],
       id: string,
     };
