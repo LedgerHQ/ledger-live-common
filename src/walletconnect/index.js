@@ -125,6 +125,6 @@ export const parseCallRequest: Parser = async (account, payload) => {
         data: transaction,
       };
     default:
-      throw "wrong payload";
+      throw new Error("wrong payload");
   }
 };
