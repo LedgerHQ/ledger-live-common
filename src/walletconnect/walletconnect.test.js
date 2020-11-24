@@ -2,6 +2,7 @@
 import { BigNumber } from "bignumber.js";
 import { getAccountBridge } from "../bridge";
 import { parseCallRequest } from "./index";
+import type { WCPayloadTransaction } from "./index";
 import { getCryptoCurrencyById, setSupportedCurrencies } from "../currencies";
 import type { Account } from "../types/account";
 
@@ -89,7 +90,7 @@ describe("walletconnect", () => {
   });
 
   test("should parse eth_sendTransaction payloads", async () => {
-    const raw = {
+    const raw: WCPayloadTransaction = {
       data: "0x",
       from: "0xCA220B75b7aF206bFCc67E2EcE06E2e144FA294a",
       gas: "0x5208",
@@ -104,12 +105,15 @@ describe("walletconnect", () => {
 
     transaction = bridge.updateTransaction(transaction, {
       data: Buffer.from(raw.data.slice(2), "hex"),
+      // $FlowFixMe
       amount: BigNumber(raw.value, 16),
       recipient: raw.to,
+      // $FlowFixMe
       gasPrice: BigNumber(raw.gasPrice, 16),
       nonce: raw.nonce,
     });
     transaction = bridge.updateTransaction(transaction, {
+      // $FlowFixMe
       userGasLimit: BigNumber(raw.gas, 16),
     });
 
@@ -120,7 +124,7 @@ describe("walletconnect", () => {
         id: "1606135657415541",
         jsonrpc: "2.0",
         method: "eth_sendTransaction",
-        params: [raw],
+        params: ([raw]: [WCPayloadTransaction]),
       })
     ).toMatchObject({
       data: transaction,

@@ -10,20 +10,20 @@ import type {
 } from "../families/ethereum/types";
 import type { MessageData } from "../hw/signMessage/types";
 
+export type WCPayloadTransaction = {
+  from: string,
+  to?: string,
+  data: string,
+  gas?: string,
+  gasPrice?: string,
+  value?: string,
+  nonce?: string,
+};
+
 export type WCPayload =
   | {
       method: "eth_signTransaction" | "eth_sendTransaction",
-      params: [
-        {
-          from: string,
-          to?: string,
-          data: string,
-          gas?: string,
-          gasPrice?: string,
-          value?: string,
-          nonce?: string,
-        }
-      ],
+      params: [WCPayloadTransaction],
       id: string,
     }
   | {
@@ -33,7 +33,7 @@ export type WCPayload =
         | "eth_sign"
         | "personal_sign"
         | string,
-      params: [string],
+      params: string[],
       id: string,
     };
 
