@@ -20,22 +20,11 @@ export type WCPayloadTransaction = {
   nonce?: string,
 };
 
-export type WCPayload =
-  | {
-      method: "eth_signTransaction" | "eth_sendTransaction",
-      params: [WCPayloadTransaction],
-      id: string,
-    }
-  | {
-      method:
-        | "eth_sendRawTransaction"
-        | "eth_signTypedData"
-        | "eth_sign"
-        | "personal_sign"
-        | string,
-      params: string[],
-      id: string,
-    };
+export type WCPayload = {
+  method: string,
+  params: any[],
+  id: string,
+};
 
 export type WCCallRequest =
   | {
@@ -84,7 +73,7 @@ export const parseCallRequest: Parser = async (account, payload) => {
       };
     case "eth_signTransaction":
     case "eth_sendTransaction":
-      wcTransactionData = payload.params[0];
+      wcTransactionData = (payload.params[0]: WCPayloadTransaction);
       bridge = getAccountBridge(account);
       transaction = bridge.createTransaction(account);
 

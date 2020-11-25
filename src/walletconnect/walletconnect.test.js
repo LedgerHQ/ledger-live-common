@@ -124,7 +124,7 @@ describe("walletconnect", () => {
         id: "1606135657415541",
         jsonrpc: "2.0",
         method: "eth_sendTransaction",
-        params: ([raw]: [WCPayloadTransaction]),
+        params: [raw],
       })
     ).toMatchObject({
       data: transaction,
