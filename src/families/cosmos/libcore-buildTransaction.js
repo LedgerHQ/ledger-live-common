@@ -1,7 +1,7 @@
 // @flow
 import { FeeNotLoaded } from "@ledgerhq/errors";
 import type { Transaction, CoreCosmosLikeTransaction } from "./types";
-import type { Account } from "../../types";
+import type { Account, CryptoCurrency } from "../../types";
 import type { Core, CoreAccount, CoreCurrency } from "../../libcore/types";
 
 import {
@@ -15,16 +15,43 @@ import { promiseAllBatched } from "../../promise";
 import { getMaxEstimatedBalance } from "./logic";
 import network from "../../network";
 
-const getBaseApiUrl = () =>
-  getEnv("API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT");
+const getBaseApiUrl = (currency: CryptoCurrency) => {
+  if (currency.id === "cosmos_testnet") {
+    return getEnv("API_COSMOS_TESTNET_BLOCKCHAIN_EXPLORER_API_ENDPOINT");
+  } else {
+    return getEnv("API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT");
+  }
+};
 
-async function fetch(url: string) {
-  const { data } = await network({
-    method: "GET",
-    url,
-  });
+const isStargate = (currency: CryptoCurrency) => {
+  if (currency.id === "cosmos_testnet") {
+    return getEnv("API_COSMOS_TESTNET_NODE") == "STARGATE_NODE";
+  } else {
+    return getEnv("API_COSMOS_NODE") == "STARGATE_NODE";
+  }
+};
 
-  return data.result;
+async function fetch_sequence(address: string, currency: CryptoCurrency) {
+  const namespace = "cosmos";
+  const version = "v1beta1";
+  if (isStargate(currency)) {
+    const url = `${getBaseApiUrl(
+      currency
+    )}/${namespace}/auth/${version}/accounts/${address}`;
+    const { data } = await network({
+      method: "GET",
+      url,
+    });
+    return data.account.sequence;
+  } else {
+    const url = `${getBaseApiUrl(currency)}/auth/accounts/${address}`;
+    const { data } = await network({
+      method: "GET",
+      url,
+    });
+
+    return data.result.value.sequence;
+  }
 }
 
 export async function cosmosBuildTransaction({
@@ -60,7 +87,8 @@ export async function cosmosBuildTransaction({
         ? getMaxEstimatedBalance(account, BigNumber(0))
         : transaction.amount,
     },
-    core
+    core,
+    account.currency
   );
 
   const memoTransaction = memo || "";
@@ -76,6 +104,12 @@ export async function cosmosBuildTransaction({
       String(getEnv("COSMOS_GAS_AMPLIFIER"))
     );
     estimatedGas = await libcoreBigIntToBigNumber(
+      // NOTE: With new cosmos code, this call might fail if the account hasn't been synchronized
+      // and missed a new transaction. This is because now the account sequence needs to be exact,
+      // and can't be a dummy 0 like pre-Stargate.
+      //
+      // LibCore internally calls for sequence number synchronization here, but this is a data race between the
+      // last time we read the sequence number and the instant we send the gas estimation request
       await cosmosLikeAccount.estimateGas(gasRequest)
     );
   } else {
@@ -116,7 +150,8 @@ export async function cosmosBuildTransaction({
         ...transaction,
         amount: getMaxEstimatedBalance(account, feesBigNumber),
       },
-      core
+      core,
+      account.currency
     );
   }
 
@@ -127,16 +162,14 @@ export async function cosmosBuildTransaction({
   );
 
   // Signature information
-  const accountData = await fetch(
-    `${getBaseApiUrl()}/auth/accounts/${account.freshAddress}`
-  );
-  const seq = accountData.value.sequence;
   const accNum = await cosmosLikeAccount.getAccountNumber();
-
   await transactionBuilder.setAccountNumber(accNum);
+
+  const seq = await fetch_sequence(account.freshAddress, account.currency);
   await transactionBuilder.setSequence(seq);
 
-  return await transactionBuilder.build();
+  const tx = await transactionBuilder.build();
+  return tx;
 }
 
 export default cosmosBuildTransaction;

@@ -1085,10 +1085,8 @@
     "@ledgerhq/errors" "^5.41.0"
     events "^3.2.0"
 
-"@ledgerhq/ledger-core@6.10.0":
-  version "6.10.0"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/ledger-core/-/ledger-core-6.10.0.tgz#37159932eae7024ecb956e3000e847990b98e408"
-  integrity sha512-9SGbuMqOhsSVSMm3U7jkooMD1ZwocmlKrSZombDTwiJ/5OYD9MZ1bddK4S6byrQIAyU+NtDXsVQg5zRqg4seOQ==
+"@ledgerhq/ledger-core@file:.yalc/@ledgerhq/ledger-core":
+  version "6.10.0-stargate-66f3dc21"
   dependencies:
     bindings "1.5.0"
     nan "^2.14.2"
@@ -4530,9 +4528,9 @@ napi-build-utils@^1.0.1:
   integrity sha512-ONmRUqK7zj7DWX0D9ADe03wbwOBZxNAfF20PlGfCWQcD3+/MakShIHrMqx9YwPTfxDdF1zLeL+RGZiR9kGMLdg==
 
 needle@^2.5.2:
-  version "2.5.2"
-  resolved "https://registry.yarnpkg.com/needle/-/needle-2.5.2.tgz#cf1a8fce382b5a280108bba90a14993c00e4010a"
-  integrity sha512-LbRIwS9BfkPvNwNHlsA41Q29kL2L/6VaOJ0qisM5lLWsTV3nP15abO5ITL6L81zqFhzjRKDAYjpcBcwM0AVvLQ==
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/needle/-/needle-2.6.0.tgz#24dbb55f2509e2324b4a99d61f413982013ccdbe"
+  integrity sha512-KKYdza4heMsEfSWD7VPUIz3zX2XDwOyX2d+geb4vrERZMT5RMU6ujjaD+I5Yr54uZxQ2w6XRTAhHBbSCyovZBg==
   dependencies:
     debug "^3.2.6"
     iconv-lite "^0.4.4"
