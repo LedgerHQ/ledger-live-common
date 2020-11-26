@@ -50,7 +50,23 @@ const envDefinitions = {
   API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
     def: "https://cosmos.coin.ledger.com/",
     parser: stringParser,
-    desc: "Node API for cosmos",
+    desc: "Node endpoint for cosmos",
+  },
+  API_COSMOS_NODE: {
+    def: "COSMOS_NODE",
+    parser: stringParser,
+    desc: "Node API to use for cosmos (COSMOS_NODE or STARGATE_NODE are known)",
+  },
+  API_COSMOS_TESTNET_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
+    def: "https://cosmos.staging.ledger.com/",
+    parser: stringParser,
+    desc: "Node endpoint for cosmos",
+  },
+  API_COSMOS_TESTNET_NODE: {
+    def: "STARGATE_NODE",
+    parser: stringParser,
+    desc:
+      "Node API to use for cosmos_testnet (COSMOS_NODE or STARGATE_NODE are known)",
   },
   API_RIPPLE_WS: {
     parser: stringParser,
