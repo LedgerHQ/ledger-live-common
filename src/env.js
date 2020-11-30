@@ -216,7 +216,7 @@ const envDefinitions = {
       "force an old application version to be accepted regardless of its version",
   },
   FORCE_PROVIDER: {
-    def: 1,
+    def: false,
     parser: intParser,
     desc: "use a different provider for app store (for developers only)",
   },
