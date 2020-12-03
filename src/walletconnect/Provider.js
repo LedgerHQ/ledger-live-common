@@ -14,9 +14,7 @@ export const STATUS = {
 const clientMeta = {
   description: "LedgerLive",
   url: "https://ledger.fr",
-  icons: [
-    "https://play-lh.googleusercontent.com/RVKjd96rcTjiAnr45Gy6Nj2kCJ4_opdU2mrop7KftfyRhPWJf5ukvUR_Gi9AtOA920I",
-  ],
+  icons: ["https://cdn.live.ledger.com/live/icon-512.png"],
   name: "LedgerLive",
 };
 
