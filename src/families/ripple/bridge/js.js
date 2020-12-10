@@ -80,7 +80,7 @@ const signOperation = ({ account, transaction, deviceId }) =>
   Observable.create((o) => {
     delete cacheRecipientsNew[transaction.recipient];
     const api = apiForEndpointConfig(RippleAPI, account.endpointConfig);
-    const fee = BigNumber(10);
+    const { fee } = transaction;
     if (!fee) throw new FeeNotLoaded();
 
     async function main() {
