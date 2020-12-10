@@ -80,7 +80,7 @@ const signOperation = ({ account, transaction, deviceId }) =>
   Observable.create((o) => {
     delete cacheRecipientsNew[transaction.recipient];
     const api = apiForEndpointConfig(RippleAPI, account.endpointConfig);
-    const { fee } = transaction;
+    const fee = BigNumber(10);
     if (!fee) throw new FeeNotLoaded();
 
     async function main() {
@@ -183,10 +183,16 @@ const broadcast = async ({ signedOperation: { signature, operation } }) => {
   const api = apiForEndpointConfig(RippleAPI);
   try {
     await api.connect();
-    const submittedPayment = await api.submit(signature);
+    const submittedPayment = await api.request("submit", {
+      tx_blob: signature,
+      fail_hard: false,
+    });
 
-    if (submittedPayment.resultCode !== "tesSUCCESS") {
-      throw new Error(submittedPayment.resultMessage);
+    if (
+      submittedPayment.engine_result !== "tesSUCCESS" &&
+      submittedPayment.queued !== true
+    ) {
+      throw new Error(submittedPayment.engine_result_message);
     }
 
     const { hash } = submittedPayment.tx_json;
