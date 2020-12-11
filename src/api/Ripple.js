@@ -44,7 +44,7 @@ async function withApi(
   if (api) {
     try {
       if (!(await api.isConnected)) {
-        throw new Error("XRP WS isnot connected");
+        throw new Error("XRP WS is not connected");
       }
     } catch (err) {
       // definitely not connected...
@@ -151,7 +151,7 @@ export const preparePayment = async (
 
 export const submit = async (signature: string): Promise<*> =>
   withApi(async (api: typeof RippleAPI) => {
-    return api.request("submit", { txblob: signature });
+    return api.request("submit", { tx_blob: signature });
   });
 
 // endpointConfig does not seem to be undestood by linter

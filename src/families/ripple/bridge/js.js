@@ -180,12 +180,10 @@ const signOperation = ({ account, transaction, deviceId }) =>
   });
 
 const broadcast = async ({ signedOperation: { signature, operation } }) => {
-  console.log("sign");
   const submittedPayment = await submit(signature);
-  console.log(submittedPayment);
   if (
     submittedPayment.engine_result !== "tesSUCCESS" &&
-    submittedPayment.queued !== true
+    submittedPayment.engine_result !== "terQUEUED"
   ) {
     throw new Error(submittedPayment.engine_result_message);
   }
