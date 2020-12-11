@@ -294,3 +294,42 @@ test("getAssetsDistribution mult", () => {
     }
   }
 });
+
+test("getPortfolio do not crash if range history have different size", () => {
+  let account1 = genAccount("seed_8", {
+    currency: getCryptoCurrencyById("bitcoin"),
+  });
+  let account2 = genAccount("seed_9", {
+    currency: getCryptoCurrencyById("bitcoin"),
+  });
+  let account3 = genAccount("seed_10", {
+    currency: getCryptoCurrencyById("bitcoin"),
+  });
+  const history1 = getBalanceHistory(account1, "month");
+  const history2 = getBalanceHistory(account2, "month");
+  const calc = (c, value) => value;
+  getPortfolio([account1, account2, account3], "month", calc);
+  account1 = {
+    ...account1,
+    balanceHistory: {
+      month: history1.concat(history1),
+    },
+  };
+  getPortfolio([account1, account2, account3], "month", calc);
+  account2 = {
+    ...account2,
+    balanceHistory: {
+      month: history2.slice(5),
+    },
+  };
+  getPortfolio([account1, account2, account3], "month", calc);
+  account3 = {
+    ...account3,
+    balanceHistory: {
+      month: [],
+    },
+  };
+  const portfolio = getPortfolio([account1, account2, account3], "month", calc);
+  expect(portfolio.balanceAvailable).toBe(true);
+  expect(portfolio.unavailableCurrencies.length).toBe(0);
+});
