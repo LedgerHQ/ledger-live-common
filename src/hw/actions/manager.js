@@ -214,8 +214,14 @@ const implementations = {
           .pipe(
             timeout(DEVICE_POLLING_TIMEOUT),
             catchError((err) => {
-              const productName = getDeviceModel(pollingOnDevice.modelId)
-                .productName;
+              let productName;
+              try {
+                // this one throws if a wrong modelId is passed
+                const deviceModel = getDeviceModel(pollingOnDevice?.modelId);
+                productName = deviceModel.productName;
+              } catch {
+                productName = "product name unknown";
+              }
 
               return err instanceof TimeoutError
                 ? of({
