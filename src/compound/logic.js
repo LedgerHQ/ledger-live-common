@@ -157,7 +157,7 @@ export function makeCompoundSummaryForAccount(
         while (amountToClose.gt(0) && opened.length > 0) {
           const closingOperation = opened.shift();
           if (amountToClose.gte(closingOperation.amountSupplied)) {
-            closed.push({
+            closed.unshift({
               amountSupplied: closingOperation.amountSupplied,
               openRate: closingOperation.openRate,
               closeRate: BigNumber(operation.extra.rate),
@@ -166,7 +166,7 @@ export function makeCompoundSummaryForAccount(
               compoundValue: BigNumber(operation.extra.compoundValue),
             });
           } else {
-            closed.push({
+            closed.unshift({
               amountSupplied: amountToClose,
               openRate: closingOperation.openRate,
               closeRate: BigNumber(operation.extra.rate),
