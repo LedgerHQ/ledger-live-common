@@ -91,7 +91,7 @@ declare class CoreBitcoinLikeOutput {
   getAddress(): Promise<?string>;
   isReplaceable(): Promise<boolean>;
   getScript(): Promise<Uint8Array>;
-  parseScriptSig(): Promise<CoreBitcoinLikeScript>;
+  parseScript(): Promise<CoreBitcoinLikeScript>;
 }
 
 declare class CoreBitcoinLikeTransaction {
@@ -260,7 +260,8 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
       getAddress: {},
       isReplaceable: {},
-      getScriptPubKey: {},
+      getScript: {},
+      parseScript: {},
     },
   });
 

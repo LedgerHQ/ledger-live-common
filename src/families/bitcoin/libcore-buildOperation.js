@@ -2,7 +2,11 @@
 
 import type { CryptoCurrency, Account, Operation } from "../../types";
 import type { CoreOperation } from "../../libcore/types";
-import { perCoinLogic } from "./transaction";
+import {
+  parseBitcoinInput,
+  parseBitcoinOutput,
+  perCoinLogic,
+} from "./transaction";
 
 async function bitcoinBuildOperation(
   {
@@ -32,6 +36,17 @@ async function bitcoinBuildOperation(
       syncReplaceAddress(existingAccount, addr)
     );
   }
+
+  shape.inputs = await Promise.all(
+    (await bitcoinLikeTransaction.getInputs()).map(
+      async (libcoreInput) => await parseBitcoinInput(libcoreInput)
+    )
+  );
+  shape.outputs = await Promise.all(
+    (await bitcoinLikeTransaction.getOutputs()).map(
+      async (libcoreOutput) => await parseBitcoinOutput(libcoreOutput)
+    )
+  );
 
   return shape;
 }

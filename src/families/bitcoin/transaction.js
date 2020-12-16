@@ -115,8 +115,8 @@ export async function parseBitcoinInput(
   const previousOutputIndex = await input.getPreviousOutputIndex();
   const coinbase = await input.getCoinbase();
   const scriptSig = {
-    hex: Buffer.from(await input.getScriptSig()).toString("hex"),
-    asm: await (await input.parseScriptSig()).toString(),
+    hex: "",
+    asm: "",
   };
 
   return {
@@ -150,8 +150,8 @@ export async function parseBitcoinOutput(
   const value = await libcoreAmountToBigNumber(await output.getValue());
   const rbf = false; // this is unsafe to generically call this at the moment. libcore segfault.
   const scriptPubKey = {
-    hex: Buffer.from(await output.getScript()).toString("hex"),
-    asm: await (await output.parseScriptSig()).toString(),
+    hex: "",
+    asm: "",
   };
 
   return {
