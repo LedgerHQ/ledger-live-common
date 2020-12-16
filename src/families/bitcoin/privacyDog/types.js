@@ -12,8 +12,8 @@ export type Heuristic = {
 
 export type HeuristicReport = {
   heuristicId: string,
-  transactions: Operation[],
-  context: any,
+  operations: Operation[],
+  context?: string,
   penalty: number,
 };
 

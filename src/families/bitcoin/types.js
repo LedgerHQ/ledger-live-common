@@ -15,7 +15,7 @@ import type {
 export type BitcoinScript = {
   hex: string,
   asm: string,
-}
+};
 
 export type BitcoinInput = {
   address: ?string,
@@ -23,7 +23,7 @@ export type BitcoinInput = {
   previousTxHash: ?string,
   previousOutputIndex: number,
   coinbase: ?string,
-  scriptSig: ?BitcoinScript
+  scriptSig: ?BitcoinScript,
 };
 
 export type BitcoinInputRaw = [
@@ -32,7 +32,7 @@ export type BitcoinInputRaw = [
   ?string,
   number,
   ?string,
-  ?BitcoinScript,
+  ?BitcoinScript
 ];
 
 export type BitcoinOutput = {
@@ -54,8 +54,13 @@ export type BitcoinOutputRaw = [
   ?string,
   string,
   number, // rbf 0/1 for compression
-  BitcoinScript,
+  BitcoinScript
 ];
+
+export type BitcoinLikeTransaction = {
+  inputs: BitcoinInput[],
+  outputs: BitcoinOutput[],
+};
 
 export type BitcoinResources = {
   utxos: BitcoinOutput[],
