@@ -17,15 +17,12 @@ import type { BitcoinLikeTransaction } from "../../types";
  */
 export const receiveAddressReuse: HeuristicHandler = (account: Account) => {
   const groupedOps = groupBy(account.operations, (op) =>
-    (op.transaction: BitcoinLikeTransaction).inputs.map(
-      (input) => input.address
-    )
+    op.transaction.inputs.map((input) => input.address)
   );
 
   const reusedAddrsMap = pickBy(groupedOps, (x) => x.length > 1);
   const matchedOps = flatten(Object.values(reusedAddrsMap));
-
-  const uniqOps = (uniqBy(matchedOps, (op) => op.hash): Operation[]);
+  const uniqOps = uniqBy(matchedOps, (op) => op.hash);
 
   return {
     heuristicId: "receive-address-reuse",
