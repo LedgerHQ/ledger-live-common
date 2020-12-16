@@ -1,13 +1,20 @@
 // @flow
 
 import type { Account } from "../../../types";
-import {roundValue} from "./heuristics/roundValue";
+import { heuristics } from "./heuristics";
+import type { GlobalHeuristicReport } from "./types";
 
 export function generateSecurityAudit(account: Account) {
+  const globalReport: GlobalHeuristicReport = heuristics.reduce(
+    (globalReport, heuristic) => {
+      globalReport.reports.push(heuristic.handler(account));
+      return globalReport;
+    },
+    {
+      reports: [],
+    }
+  );
 
-  const res = account.operations.map((op) => roundValue(op))
-
-  return {
-
-  };
+  console.log("REPORT: ", globalReport);
+  return globalReport;
 }
