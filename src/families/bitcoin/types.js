@@ -78,7 +78,7 @@ declare class CoreBitcoinLikeInput {
   getDerivationPath(): Promise<CoreDerivationPath[]>;
   getAddress(): Promise<?string>;
   getCoinbase(): Promise<?string>;
-  getScriptSig(): Promise<Uint8Array>;
+  getScriptSig(): Promise<?string>;
   parseScriptSig(): Promise<CoreBitcoinLikeScript>;
 }
 
@@ -260,7 +260,8 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
       getAddress: {},
       isReplaceable: {},
-      getScriptPubKey: {},
+      getScript: {},
+      parseScript: {},
     },
   });
 
