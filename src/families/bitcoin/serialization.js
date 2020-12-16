@@ -15,12 +15,16 @@ export function toBitcoinInputRaw({
   value,
   previousTxHash,
   previousOutputIndex,
+  coinbase,
+  scriptSig,
 }: BitcoinInput): BitcoinInputRaw {
   return [
     address,
     value ? value.toString() : undefined,
     previousTxHash,
     previousOutputIndex,
+    coinbase,
+    scriptSig,
   ];
 }
 
@@ -29,12 +33,16 @@ export function fromBitcoinInputRaw([
   value,
   previousTxHash,
   previousOutputIndex,
+  coinbase,
+  scriptSig,
 ]: BitcoinInputRaw): BitcoinInput {
   return {
     address: address || undefined,
     value: value ? BigNumber(value) : undefined,
     previousTxHash: previousTxHash || undefined,
     previousOutputIndex,
+    coinbase: coinbase || undefined,
+    scriptSig: scriptSig || undefined,
   };
 }
 
@@ -46,6 +54,7 @@ export function toBitcoinOutputRaw({
   path,
   value,
   rbf,
+  scriptPubKey,
 }: BitcoinOutput): BitcoinOutputRaw {
   return [
     hash,
@@ -55,6 +64,7 @@ export function toBitcoinOutputRaw({
     path,
     value.toString(),
     rbf ? 1 : 0,
+    scriptPubKey,
   ];
 }
 
@@ -66,6 +76,7 @@ export function fromBitcoinOutputRaw([
   path,
   value,
   rbf,
+  scriptPubKey,
 ]: BitcoinOutputRaw): BitcoinOutput {
   return {
     hash,
@@ -75,6 +86,7 @@ export function fromBitcoinOutputRaw([
     path: path || undefined,
     value: BigNumber(value),
     rbf: !!rbf,
+    scriptPubKey,
   };
 }
 
