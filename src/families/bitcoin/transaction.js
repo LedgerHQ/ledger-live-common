@@ -114,9 +114,14 @@ export async function parseBitcoinInput(
   const previousTxHash = await input.getPreviousTxHash();
   const previousOutputIndex = await input.getPreviousOutputIndex();
   const coinbase = await input.getCoinbase();
+  // const scriptSig = {
+  //   hex: (await input.getScriptSig()).toString("hex"),
+  //   asm: await (await input.parseScriptSig()).toString(),
+  // };
+
   const scriptSig = {
-    hex: (await input.getScriptSig()).toString("hex"),
-    asm: await (await input.parseScriptSig()).toString(),
+    hex: "",
+    asm: "",
   };
 
   return {
