@@ -205,6 +205,7 @@ export const bitcoinPickingStrategy = {
   DEEP_OUTPUTS_FIRST: 0,
   OPTIMIZE_SIZE: 1,
   MERGE_OUTPUTS: 2,
+  PRIVACY_FIRST: 3,
 };
 
 export type BitcoinPickingStrategy = $Values<typeof bitcoinPickingStrategy>;
