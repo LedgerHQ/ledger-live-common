@@ -2,9 +2,12 @@
 
 import groupBy from "lodash/groupBy";
 import pickBy from "lodash/pickBy";
+import uniqBy from "lodash/uniqBy";
+import flatten from "lodash/flatten";
 
 import type { HeuristicHandler } from "../types";
-import type { Account } from "../../../../types";
+import type { Account, Operation } from "../../../../types";
+import type { BitcoinLikeTransaction } from "../../types";
 
 /**
  * Heuristic that checks if at least one address appears in the inputs of more
@@ -17,17 +20,13 @@ export const receiveAddressReuse: HeuristicHandler = (account: Account) => {
     op.transaction.inputs.map((input) => input.address)
   );
 
-  const matchedOps = Object.values(pickBy(groupedOps, (x) => x.length > 1));
+  const reusedAddrsMap = pickBy(groupedOps, (x) => x.length > 1);
+  const matchedOps = flatten(Object.values(reusedAddrsMap));
+  const uniqOps = uniqBy(matchedOps, (op) => op.hash);
 
-  return matchedOps.length > 0
-    ? {
-        heuristicId: "receive-address-reuse",
-        operations: matchedOps,
-        penalty: 4,
-      }
-    : {
-        heuristicId: "receive-address-reuse",
-        operations: [],
-        penalty: 0,
-      };
+  return {
+    heuristicId: "receive-address-reuse",
+    operations: uniqOps,
+    penalty: matchedOps.length > 0 ? 4 : 0,
+  };
 };

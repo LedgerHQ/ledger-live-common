@@ -4,13 +4,11 @@ import trimEnd from "lodash/trimEnd";
 
 import type { HeuristicHandler } from "../types";
 import type { Account } from "../../../../types";
-import type { BitcoinLikeTransaction } from "../../types";
 
 export const roundValue: HeuristicHandler = (account: Account) => {
   return account.operations.reduce(
-    (report, operation) => {
-      const transaction: BitcoinLikeTransaction = operation.transaction;
-      const isRound = transaction.outputs.some((output) => {
+    (report, op) => {
+      const isRound = op.transaction.outputs.some((output) => {
         const roundingFactor =
           trimEnd(output.value.toString(), "0").length /
           output.value.toString().length;
@@ -19,7 +17,7 @@ export const roundValue: HeuristicHandler = (account: Account) => {
       });
 
       if (isRound) {
-        report.operations.push(operation);
+        report.operations.push(op);
         report.penalty += 1; // The penalty costs 1 unit.
       }
 
