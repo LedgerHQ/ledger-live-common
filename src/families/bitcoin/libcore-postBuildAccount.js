@@ -8,6 +8,7 @@ import { promiseAllBatched } from "../../promise";
 import { parseBitcoinUTXO, perCoinLogic } from "./transaction";
 import { isSatStackEnabled, checkDescriptorExists } from "./satstack";
 import { inferDescriptorFromAccount } from "./descriptor";
+import { generateSecurityAudit } from "./privacyDog";
 
 const postBuildAccount = async ({
   account,
@@ -58,6 +59,11 @@ const postBuildAccount = async ({
   }
   account.bitcoinResources = bitcoinResources;
   log("bitcoin/post-buildAccount", "bitcoinResources DONE");
+
+  return {
+    ...account,
+    audit: generateSecurityAudit(account),
+  };
   return account;
 };
 
