@@ -12,14 +12,28 @@ import type {
   Spec,
 } from "../../libcore/types";
 
+export type BitcoinScript = {
+  hex: string,
+  asm: string,
+}
+
 export type BitcoinInput = {
   address: ?string,
   value: ?BigNumber,
   previousTxHash: ?string,
   previousOutputIndex: number,
+  coinbase: ?string,
+  scriptSig: ?BitcoinScript
 };
 
-export type BitcoinInputRaw = [?string, ?string, ?string, number];
+export type BitcoinInputRaw = [
+  ?string,
+  ?string,
+  ?string,
+  number,
+  ?string,
+  ?BitcoinScript,
+];
 
 export type BitcoinOutput = {
   hash: string,
@@ -29,6 +43,7 @@ export type BitcoinOutput = {
   path: ?string,
   value: BigNumber,
   rbf: boolean,
+  scriptPubKey: BitcoinScript,
 };
 
 export type BitcoinOutputRaw = [
@@ -38,7 +53,8 @@ export type BitcoinOutputRaw = [
   ?string,
   ?string,
   string,
-  number // rbf 0/1 for compression
+  number, // rbf 0/1 for compression
+  BitcoinScript,
 ];
 
 export type BitcoinResources = {
@@ -49,6 +65,10 @@ export type BitcoinResourcesRaw = {
   utxos: BitcoinOutputRaw[],
 };
 
+declare class CoreBitcoinLikeScript {
+  toString(): Promise<string>;
+}
+
 declare class CoreBitcoinLikeInput {
   getPreviousTransaction(): Promise<string>;
   getPreviousTxHash(): Promise<?string>;
@@ -57,6 +77,9 @@ declare class CoreBitcoinLikeInput {
   getSequence(): Promise<number>;
   getDerivationPath(): Promise<CoreDerivationPath[]>;
   getAddress(): Promise<?string>;
+  getCoinbase(): Promise<?string>;
+  getScriptSig(): Promise<Uint8Array>;
+  parseScriptSig(): Promise<CoreBitcoinLikeScript>;
 }
 
 declare class CoreBitcoinLikeOutput {
@@ -67,6 +90,8 @@ declare class CoreBitcoinLikeOutput {
   getDerivationPath(): Promise<?CoreDerivationPath>;
   getAddress(): Promise<?string>;
   isReplaceable(): Promise<boolean>;
+  getScript(): Promise<Uint8Array>;
+  parseScriptSig(): Promise<CoreBitcoinLikeScript>;
 }
 
 declare class CoreBitcoinLikeTransaction {
@@ -122,6 +147,7 @@ export type {
   CoreBitcoinLikeNetworkParameters,
   CoreBitcoinLikeOperation,
   CoreBitcoinLikeOutput,
+  CoreBitcoinLikeScript,
   CoreBitcoinLikeTransaction,
   CoreBitcoinLikeTransactionBuilder,
 };
@@ -218,6 +244,8 @@ export const reflect = (declare: (string, Spec) => void) => {
       getSequence: {},
       getDerivationPath: { returns: ["DerivationPath"] },
       getAddress: {},
+      getCoinbase: {},
+      getScriptSig: {},
     },
   });
 
@@ -232,6 +260,7 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
       getAddress: {},
       isReplaceable: {},
+      getScriptPubKey: {},
     },
   });
 

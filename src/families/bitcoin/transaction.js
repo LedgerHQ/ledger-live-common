@@ -113,7 +113,20 @@ export async function parseBitcoinInput(
   const value = rawValue ? await libcoreAmountToBigNumber(rawValue) : null;
   const previousTxHash = await input.getPreviousTxHash();
   const previousOutputIndex = await input.getPreviousOutputIndex();
-  return { address, value, previousTxHash, previousOutputIndex };
+  const coinbase = await input.getCoinbase();
+  const scriptSig = {
+    hex: Buffer.from(await input.getScriptSig()).toString("hex"),
+    asm: await (await input.parseScriptSig()).toString(),
+  };
+
+  return {
+    address,
+    value,
+    previousTxHash,
+    previousOutputIndex,
+    coinbase,
+    scriptSig,
+  };
 }
 
 export async function parseBitcoinOutput(
@@ -136,7 +149,21 @@ export async function parseBitcoinOutput(
   }
   const value = await libcoreAmountToBigNumber(await output.getValue());
   const rbf = false; // this is unsafe to generically call this at the moment. libcore segfault.
-  return { hash, outputIndex, blockHeight, address, path, value, rbf };
+  const scriptPubKey = {
+    hex: Buffer.from(await output.getScript()).toString("hex"),
+    asm: await (await output.parseScriptSig()).toString(),
+  };
+
+  return {
+    hash,
+    outputIndex,
+    blockHeight,
+    address,
+    path,
+    value,
+    rbf,
+    scriptPubKey,
+  };
 }
 
 export async function parseBitcoinUTXO(
