@@ -82,6 +82,8 @@ export type Operation = {
   // in context of accounts that have internal transactions that belong to a parent transaction
   // we have internal operations. Those are not included in the top level operations but can be presented to UI at that same level
   internalOperations?: Operation[],
+
+  transaction?: any,
 };
 
 export type OperationRaw = {

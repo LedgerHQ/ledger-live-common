@@ -37,16 +37,21 @@ async function bitcoinBuildOperation(
     );
   }
 
-  shape.inputs = await Promise.all(
+  const inputs = await Promise.all(
     (await bitcoinLikeTransaction.getInputs()).map(
       async (libcoreInput) => await parseBitcoinInput(libcoreInput)
     )
   );
-  shape.outputs = await Promise.all(
+  const outputs = await Promise.all(
     (await bitcoinLikeTransaction.getOutputs()).map(
       async (libcoreOutput) => await parseBitcoinOutput(libcoreOutput)
     )
   );
+
+  shape.transaction = {
+    inputs,
+    outputs,
+  };
 
   return shape;
 }
