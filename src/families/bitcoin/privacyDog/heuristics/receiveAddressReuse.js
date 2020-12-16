@@ -6,8 +6,7 @@ import uniqBy from "lodash/uniqBy";
 import flatten from "lodash/flatten";
 
 import type { HeuristicHandler } from "../types";
-import type { Account, Operation } from "../../../../types";
-import type { BitcoinLikeTransaction } from "../../types";
+import type { Account } from "../../../../types";
 
 /**
  * Heuristic that checks if at least one address appears in the inputs of more
