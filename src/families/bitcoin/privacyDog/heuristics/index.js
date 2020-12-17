@@ -5,6 +5,7 @@ import { roundValue } from "./roundValue";
 import { receiveAddressReuse } from "./receiveAddressReuse";
 import { outputValue1000x } from "./outputValue1000x";
 import { simpleCoinjoin } from "./simpleCoinjoin";
+import { samouraiWhirlpool } from "./samouraiWhirlpool";
 
 export const heuristics: Heuristic[] = [
   {
@@ -25,6 +26,11 @@ export const heuristics: Heuristic[] = [
   {
     id: "simple-coinjoin",
     handler: simpleCoinjoin,
+    penaltyFactor: 0,
+  },
+  {
+    id: "samourai-whirlpool",
+    handler: samouraiWhirlpool,
     penaltyFactor: 0,
   },
 ];
