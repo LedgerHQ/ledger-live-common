@@ -9,17 +9,16 @@ import type { HeuristicHandler } from "../types";
 import type { Account } from "../../../../types";
 
 /**
- * Heuristic that checks if at least one address appears in the inputs of more
+ * Heuristic that checks if at least one address appears in the outputs of more
  * than one operation.
  *
- * Example: using the same address everytime while receiving funds from an
- * exchange.
+ * Example: sending funds to the same address every time, like an scam exchange.
  *
  * It may produce false positives when used with pending operations.
  */
-export const receiveAddressReuse: HeuristicHandler = (account: Account) => {
+export const sendAddressReuse: HeuristicHandler = (account: Account) => {
   const groupedOps = groupBy(account.operations, (op) =>
-    op.extra.inputs.map((input) => input.address)
+    op.extra.outputs.map((output) => output.address)
   );
 
   const reusedAddrsMap = pickBy(groupedOps, (x) => x.length > 1);
@@ -27,7 +26,7 @@ export const receiveAddressReuse: HeuristicHandler = (account: Account) => {
   const uniqOps = uniqBy(matchedOps, (op) => op.hash);
 
   return {
-    heuristicId: "receive-address-reuse",
+    heuristicId: "send-address-reuse",
     operations: uniqOps,
     penalty: matchedOps.length > 0 ? 4 : 0,
   };
