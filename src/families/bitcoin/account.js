@@ -69,15 +69,15 @@ function formatAccountSpecifics(account: Account): string {
 
 export function fromOperationExtraRaw(extra: ?Object) {
   return {
-    inputs: extra.inputs.map(fromBitcoinInputRaw),
-    outputs: extra.outputs.map(fromBitcoinOutputRaw),
+    inputs: extra.inputs ? extra.inputs.map(fromBitcoinInputRaw) : [],
+    outputs: extra.inputs ? extra.outputs.map(fromBitcoinOutputRaw) : [],
   };
 }
 
 export function toOperationExtraRaw(extra: ?Object) {
   return {
-    inputs: extra.inputs.map(toBitcoinInputRaw),
-    outputs: extra.outputs.map(toBitcoinOutputRaw),
+    inputs: extra.inputs ? extra.inputs.map(toBitcoinInputRaw) : [],
+    outputs: extra.outputs ? extra.outputs.map(toBitcoinOutputRaw) : [],
   };
 }
 
