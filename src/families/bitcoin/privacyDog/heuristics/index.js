@@ -3,9 +3,11 @@
 import type { Heuristic } from "../types";
 import { roundValue } from "./roundValue";
 import { receiveAddressReuse } from "./receiveAddressReuse";
+import { sendAddressReuse } from "./sendAddressReuse";
 import { outputValue1000x } from "./outputValue1000x";
 import { simpleCoinjoin } from "./simpleCoinjoin";
 import { samouraiWhirlpool } from "./samouraiWhirlpool";
+import { scriptTypes } from "./scriptTypes";
 
 export const heuristics: Heuristic[] = [
   {
@@ -16,6 +18,11 @@ export const heuristics: Heuristic[] = [
   {
     id: "receive-address-reuse",
     handler: receiveAddressReuse,
+    penaltyFactor: 0,
+  },
+  {
+    id: "send-address-reuse",
+    handler: sendAddressReuse,
     penaltyFactor: 0,
   },
   {
@@ -31,6 +38,11 @@ export const heuristics: Heuristic[] = [
   {
     id: "samourai-whirlpool",
     handler: samouraiWhirlpool,
+    penaltyFactor: 0,
+  },
+  {
+    id: "script-types",
+    handler: scriptTypes,
     penaltyFactor: 0,
   },
 ];

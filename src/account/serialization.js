@@ -650,7 +650,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
 
   if (bitcoinResources) {
     res.bitcoinResources = fromBitcoinResourcesRaw(bitcoinResources);
-    console.log("DESERIALIZING: ", res)
+    console.log("DESERIALIZING: ", res);
   }
   if (swapHistory) {
     res.swapHistory = swapHistory.map(fromSwapOperationRaw);
@@ -734,7 +734,7 @@ export function toAccountRaw({
   }
   if (bitcoinResources) {
     res.bitcoinResources = toBitcoinResourcesRaw(bitcoinResources);
-    console.log("SERIALIZING: ", res)
+    console.log("SERIALIZING: ", res);
   }
   if (swapHistory) {
     res.swapHistory = swapHistory.map(toSwapOperationRaw);
