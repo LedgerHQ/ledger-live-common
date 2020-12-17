@@ -6,11 +6,12 @@ import type { Account } from "../../../../types";
 export const outputValue1000x: HeuristicHandler = (account: Account) => {
   return account.operations.reduce(
     (report, op) => {
-      if (op.transaction.outputs.length !== 2) {
+      const { outputs } = op.extra;
+      if (outputs.length !== 2) {
         return report;
       }
 
-      const [out1, out2] = op.transaction.outputs;
+      const [out1, out2] = op.extra.outputs;
 
       if (
         out1.value.div(out2.value) > 1000 ||

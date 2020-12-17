@@ -23,15 +23,15 @@ const maxSamouraiPoolFee = BigNumber(110000);
 export const samouraiWhirlpool: HeuristicHandler = (account: Account) => {
   return account.operations.reduce(
     (report, op) => {
-      const tx = op.transaction;
+      const { inputs, outputs } = op.extra;
 
       if (
-        tx.inputs.length === 5 &&
-        tx.outputs.length === 5 &&
-        uniq(tx.outputs.map((out) => out.value.toString())).length === 1 &&
+        inputs.length === 5 &&
+        outputs.length === 5 &&
+        uniq(outputs.map((out) => out.value.toString())).length === 1 &&
         samouraiPools.some((pool) =>
           pool
-            .minus(tx.outputs[0].value)
+            .minus(outputs[0].value)
             .abs()
             .isLessThanOrEqualTo(maxSamouraiPoolFee)
         )

@@ -48,7 +48,7 @@ async function bitcoinBuildOperation(
     )
   );
 
-  shape.transaction = {
+  shape.extra = {
     inputs,
     outputs,
   };

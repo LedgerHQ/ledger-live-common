@@ -36,6 +36,7 @@ const postBuildAccount = async ({
   let bitcoinResources: BitcoinResources = {
     ...account.bitcoinResources,
     utxos,
+    privacyReport: generateSecurityAudit(account),
   };
   if (perCoin) {
     if (perCoin.postBuildBitcoinResources) {
@@ -57,13 +58,10 @@ const postBuildAccount = async ({
       }));
     }
   }
-  account.bitcoinResources = bitcoinResources;
   log("bitcoin/post-buildAccount", "bitcoinResources DONE");
 
-  return {
-    ...account,
-    audit: generateSecurityAudit(account),
-  };
+  account.bitcoinResources = bitcoinResources;
+
   return account;
 };
 

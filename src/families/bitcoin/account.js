@@ -5,6 +5,13 @@ import { formatCurrencyUnit } from "../../currencies";
 import { getEnv } from "../../env";
 import { perCoinLogic } from "./transaction";
 
+import {
+  fromBitcoinInputRaw,
+  fromBitcoinOutputRaw,
+  toBitcoinInputRaw,
+  toBitcoinOutputRaw,
+} from "./serialization";
+
 const sortUTXO = (a, b) => b.value.minus(a.value).toNumber();
 
 function injectGetAddressParams(account: Account) {
@@ -60,4 +67,23 @@ function formatAccountSpecifics(account: Account): string {
   return str;
 }
 
-export default { injectGetAddressParams, formatAccountSpecifics };
+export function fromOperationExtraRaw(extra: ?Object) {
+  return {
+    inputs: extra.inputs.map(fromBitcoinInputRaw),
+    outputs: extra.outputs.map(fromBitcoinOutputRaw),
+  };
+}
+
+export function toOperationExtraRaw(extra: ?Object) {
+  return {
+    inputs: extra.inputs.map(toBitcoinInputRaw),
+    outputs: extra.outputs.map(toBitcoinOutputRaw),
+  };
+}
+
+export default {
+  injectGetAddressParams,
+  formatAccountSpecifics,
+  toOperationExtraRaw,
+  fromOperationExtraRaw,
+};

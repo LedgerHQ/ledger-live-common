@@ -14,23 +14,23 @@ import type { Account } from "../../../../types";
 export const simpleCoinjoin: HeuristicHandler = (account: Account) => {
   return account.operations.reduce(
     (report, op) => {
-      const tx = op.transaction;
+      const { inputs, outputs } = op.extra;
 
-      if (tx.inputs.length < 2 || tx.outputs.length < 3) {
+      if (inputs.length < 2 || outputs.length < 3) {
         return report;
       }
 
-      const participantCount = (tx.outputs.length + 1) / 2;
-      if (participantCount > tx.inputs.length) {
+      const participantCount = (outputs.length + 1) / 2;
+      if (participantCount > inputs.length) {
         return report;
       }
 
-      const inputAddresses = tx.inputs.map((input) => input.address);
+      const inputAddresses = inputs.map((input) => input.address);
       if (participantCount > inputAddresses.length) {
         return report;
       }
 
-      const outputValues = countBy(tx.outputs.map((output) => output.value));
+      const outputValues = countBy(outputs.map((output) => output.value));
       const maxOutputValueCount = Object.keys(outputValues).reduce(
         (a, v) => Math.max(a, outputValues[v]),
         -Infinity

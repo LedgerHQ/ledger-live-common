@@ -11,6 +11,7 @@ import type {
   CoreDerivationPath,
   Spec,
 } from "../../libcore/types";
+import type { GlobalHeuristicReport } from "./privacyDog/types";
 
 export type BitcoinScript = {
   hex: string,
@@ -64,6 +65,7 @@ export type BitcoinLikeTransaction = {
 
 export type BitcoinResources = {
   utxos: BitcoinOutput[],
+  privacyReport: GlobalHeuristicReport,
 };
 
 export type BitcoinResourcesRaw = {

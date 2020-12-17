@@ -94,6 +94,7 @@ export function toBitcoinResourcesRaw(
   r: BitcoinResources
 ): BitcoinResourcesRaw {
   return {
+    ...r,
     utxos: r.utxos.map(toBitcoinOutputRaw),
   };
 }
@@ -102,6 +103,7 @@ export function fromBitcoinResourcesRaw(
   r: BitcoinResourcesRaw
 ): BitcoinResources {
   return {
+    ...r,
     utxos: r.utxos.map(fromBitcoinOutputRaw),
   };
 }

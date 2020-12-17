@@ -16,7 +16,7 @@ import type { Account } from "../../../../types";
  */
 export const receiveAddressReuse: HeuristicHandler = (account: Account) => {
   const groupedOps = groupBy(account.operations, (op) =>
-    op.transaction.inputs.map((input) => input.address)
+    op.extra.inputs.map((input) => input.address)
   );
 
   const reusedAddrsMap = pickBy(groupedOps, (x) => x.length > 1);

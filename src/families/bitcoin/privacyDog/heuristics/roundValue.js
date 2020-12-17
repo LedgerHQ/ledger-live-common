@@ -8,7 +8,8 @@ import type { Account } from "../../../../types";
 export const roundValue: HeuristicHandler = (account: Account) => {
   return account.operations.reduce(
     (report, op) => {
-      const isRound = op.transaction.outputs.some((output) => {
+      const { outputs } = op.extra;
+      const isRound = outputs.some((output) => {
         const roundingFactor =
           trimEnd(output.value.toString(), "0").length /
           output.value.toString().length;
