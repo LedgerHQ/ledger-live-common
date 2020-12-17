@@ -28,6 +28,6 @@ export const sendAddressReuse: HeuristicHandler = (account: Account) => {
   return {
     heuristicId: "send-address-reuse",
     operations: uniqOps,
-    penalty: matchedOps.length > 0 ? 4 : 0,
+    penalty: uniqOps.length,
   };
 };

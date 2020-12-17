@@ -29,6 +29,6 @@ export const receiveAddressReuse: HeuristicHandler = (account: Account) => {
   return {
     heuristicId: "receive-address-reuse",
     operations: uniqOps,
-    penalty: matchedOps.length > 0 ? 4 : 0,
+    penalty: uniqOps.length,
   };
 };
