@@ -60,15 +60,18 @@ export function decodeURIScheme(str: string): Data {
           if (cValue) {
             data.amount = cValue;
           }
+          delete specificFields.value;
           break;
         case "gas":
           data.userGasLimit = BigNumber(specificFields.gas);
+          delete specificFields.gas;
           break;
         case "gasPrice":
           cValue = convertedValue(specificFields.gasPrice, currency);
           if (cValue) {
             data.gasPrice = cValue;
           }
+          delete specificFields.gasPrice;
           break;
         case "gasLimit":
           // ?
