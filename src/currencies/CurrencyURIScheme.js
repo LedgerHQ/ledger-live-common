@@ -10,6 +10,8 @@ type Data = {
   currency?: CryptoCurrency,
   amount?: BigNumber, // IN SATOSHI !! not in actual 'real' value
   // ... any other field specific to a coin that will be put in query
+  userGasLimit?: BigNumber,
+  gasPrice?: BigNumber,
 };
 
 export function encodeURIScheme(data: Data): string {
@@ -23,6 +25,14 @@ export function encodeURIScheme(data: Data): string {
   const queryStr = querystring.stringify(query);
   return currency.scheme + ":" + address + (queryStr ? "?" + queryStr : "");
 }
+
+const convertedValue = (value, currency: CryptoCurrency) => {
+  let float = BigNumber(value);
+  if (!float.isNaN() && float.gt(0)) {
+    const { magnitude } = currency.units[0];
+    return float.times(BigNumber(10).pow(magnitude));
+  }
+};
 
 export function decodeURIScheme(str: string): Data {
   const m = str.match(/(([a-zA-Z]+):)?([^?]+)(\?(.+))?/);
@@ -41,12 +51,39 @@ export function decodeURIScheme(str: string): Data {
     address,
   };
   const { amount, ...specificFields } = { ...query };
+  if (currency.name === "Ethereum") {
+    (specificFields.parameters || []).forEach((param) => {
+      let cValue;
+      switch (param) {
+        case "value":
+          cValue = convertedValue(specificFields.value, currency);
+          if (cValue) {
+            data.amount = cValue;
+          }
+          break;
+        case "gas":
+          data.userGasLimit = BigNumber(specificFields.gas);
+          break;
+        case "gasPrice":
+          cValue = convertedValue(specificFields.gasPrice, currency);
+          if (cValue) {
+            data.gasPrice = cValue;
+          }
+          break;
+        case "gasLimit":
+          // ?
+          break;
+        default:
+          break;
+      }
+    });
+    delete specificFields.parameters;
+  }
   Object.assign(data, specificFields);
   if (amount) {
-    const amountFloat = BigNumber(amount);
-    if (!amountFloat.isNaN() && amountFloat.gt(0)) {
-      const { magnitude } = currency.units[0];
-      data.amount = amountFloat.times(BigNumber(10).pow(magnitude));
+    const cValue = convertedValue(amount, currency);
+    if (cValue) {
+      data.amount = cValue;
     }
   }
   return data;
