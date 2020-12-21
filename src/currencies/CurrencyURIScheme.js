@@ -53,13 +53,9 @@ export function decodeURIScheme(str: string): Data {
   const { amount, ...specificFields } = { ...query };
   if (currency.name === "Ethereum") {
     (specificFields.parameters || []).forEach((param) => {
-      let cValue;
       switch (param) {
         case "value":
-          cValue = convertedValue(specificFields.value, currency);
-          if (cValue) {
-            data.amount = cValue;
-          }
+          data.amount = BigNumber(specificFields.value);
           delete specificFields.value;
           break;
         case "gas":
@@ -67,10 +63,7 @@ export function decodeURIScheme(str: string): Data {
           delete specificFields.gas;
           break;
         case "gasPrice":
-          cValue = convertedValue(specificFields.gasPrice, currency);
-          if (cValue) {
-            data.gasPrice = cValue;
-          }
+          data.gasPrice = BigNumber(specificFields.gasPrice);
           delete specificFields.gasPrice;
           break;
         case "gasLimit":
