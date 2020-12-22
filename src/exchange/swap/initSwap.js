@@ -25,7 +25,10 @@ import { withDevice } from "../../hw/deviceAccess";
 import { getProviderNameAndSignature, getSwapAPIBaseURL } from "./";
 import { getCurrencyExchangeConfig } from "../";
 import { getEnv } from "../../env";
-
+import {
+  TRANSACTION_RATES,
+  TRANSACTION_TYPES,
+} from "../hw-app-exchange/Exchange";
 const withDevicePromise = (deviceId, fn) =>
   withDevice(deviceId)((transport) => from(fn(transport))).toPromise();
 
@@ -43,7 +46,11 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
 
       log("swap", `attempt to connect to ${deviceId}`);
       await withDevicePromise(deviceId, async (transport) => {
-        const swap = new Exchange(transport, 0x00);
+        const ratesFlag =
+          exchangeRate.tradeMethod === "fixed"
+            ? TRANSACTION_RATES.FIXED
+            : TRANSACTION_RATES.FLOATING;
+        const swap = new Exchange(transport, TRANSACTION_TYPES.SWAP, ratesFlag);
 
         // NB this id is crucial to prevent replay attacks, if it changes
         // we need to start the flow again.
@@ -75,18 +82,16 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
           res = await network({
             method: "POST",
             url: `${getSwapAPIBaseURL()}/swap`,
-            data: [
-              {
-                provider,
-                amountFrom: apiAmount,
-                from: refundCurrency.id,
-                to: payoutCurrency.id,
-                rateId,
-                address: payoutAccount.freshAddress,
-                refundAddress: refundAccount.freshAddress,
-                deviceTransactionId,
-              },
-            ],
+            data: {
+              provider,
+              amountFrom: apiAmount,
+              from: refundCurrency.id,
+              to: payoutCurrency.id,
+              address: payoutAccount.freshAddress,
+              refundAddress: refundAccount.freshAddress,
+              deviceTransactionId,
+              ...(rateId ? { rateId } : {}), // NB float rates dont need rate ids.
+            },
           });
           if (unsubscribed || !res || !res.data) return;
         } catch (e) {
@@ -98,7 +103,7 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
           return;
         }
 
-        const swapResult = res.data[0];
+        const swapResult = res.data;
         swapId = swapResult.swapId;
         const providerNameAndSignature = getProviderNameAndSignature(
           swapResult.provider
@@ -290,7 +295,6 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
       unsubscribed = true;
     };
   });
-  // );
 };
 
 export default initSwap;
