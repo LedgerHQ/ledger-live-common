@@ -31,6 +31,8 @@ export type ExchangeRate = {
   magnitudeAwareRate: BigNumber, // NB rate between satoshi units
   rateId: string,
   provider: string,
+  tradeMethod: "fixed" | "float",
+  error?: Error,
   providerURL?: ?string,
 };
 
@@ -39,6 +41,8 @@ export type ExchangeRateRaw = {
   magnitudeAwareRate: string,
   rateId: string,
   provider: string,
+  tradeMethod: "fixed" | "float",
+  error?: string,
   providerURL?: ?string,
 };
 

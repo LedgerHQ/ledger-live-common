@@ -75,18 +75,16 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
           res = await network({
             method: "POST",
             url: `${getSwapAPIBaseURL()}/swap`,
-            data: [
-              {
-                provider,
-                amountFrom: apiAmount,
-                from: refundCurrency.id,
-                to: payoutCurrency.id,
-                rateId,
-                address: payoutAccount.freshAddress,
-                refundAddress: refundAccount.freshAddress,
-                deviceTransactionId,
-              },
-            ],
+            data: {
+              provider,
+              amountFrom: apiAmount,
+              from: refundCurrency.id,
+              to: payoutCurrency.id,
+              address: payoutAccount.freshAddress,
+              refundAddress: refundAccount.freshAddress,
+              deviceTransactionId,
+              ...(rateId ? { rateId } : {}), // NB float rates dont need rate ids.
+            },
           });
           if (unsubscribed || !res || !res.data) return;
         } catch (e) {
@@ -98,7 +96,7 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
           return;
         }
 
-        const swapResult = res.data[0];
+        const swapResult = res.data;
         swapId = swapResult.swapId;
         const providerNameAndSignature = getProviderNameAndSignature(
           swapResult.provider
@@ -290,7 +288,6 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
       unsubscribed = true;
     };
   });
-  // );
 };
 
 export default initSwap;
