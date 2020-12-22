@@ -29,16 +29,21 @@ export type ExchangeRaw = {
 export type ExchangeRate = {
   rate: BigNumber, // NB Raw rate, for display
   magnitudeAwareRate: BigNumber, // NB rate between satoshi units
-  rateId: string,
+  rateId?: string,
   provider: string,
+  tradeMethod: "fixed" | "float",
+  error?: Error,
   providerURL?: ?string,
 };
 
+export type TradeMethod = "fixed" | "float";
 export type ExchangeRateRaw = {
   rate: string,
   magnitudeAwareRate: string,
-  rateId: string,
+  rateId?: string,
   provider: string,
+  tradeMethod: TradeMethod,
+  error?: string,
   providerURL?: ?string,
 };
 
@@ -138,17 +143,19 @@ export type SwapOperationRaw = {
 };
 
 export type SwapState = {
-  swap: {
-    exchange: $Shape<Exchange>,
-    exchangeRate?: ?ExchangeRate,
-  },
+  // NB fromAccount and fromParentAccount and amount come from `useBridgeTransaction`
+  useAllAmount?: boolean,
+  loadingRates?: boolean,
+  isTimerVisible?: boolean,
   error?: ?Error,
-  ratesTimestamp?: Date,
-  okCurrencies: (CryptoCurrency | TokenCurrency)[],
-  fromCurrency: ?(CryptoCurrency | TokenCurrency),
-  toCurrency: ?(CryptoCurrency | TokenCurrency),
-  useAllAmount: boolean,
-  fromAmount: BigNumber,
+
+  fromCurrency?: ?(CryptoCurrency | TokenCurrency),
+  toCurrency?: ?(CryptoCurrency | TokenCurrency),
+  toAccount?: ?AccountLike,
+  toParentAccount?: ?Account,
+  ratesExpiration?: ?Date,
+  exchangeRate?: ?ExchangeRate,
+  withExpiration?: boolean,
 };
 
 export type InitSwapInput = {

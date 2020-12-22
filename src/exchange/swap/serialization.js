@@ -13,6 +13,7 @@ import {
   toAccountLikeRaw,
   toAccountRaw,
 } from "../../account";
+import { deserializeError, serializeError } from "@ledgerhq/errors";
 
 export const fromExchangeRaw = (exchangeRaw: ExchangeRaw): Exchange => {
   const fromAccount = fromAccountLikeRaw(exchangeRaw.fromAccount);
@@ -59,6 +60,8 @@ export const toExchangeRateRaw = (
     rateId,
     provider,
     providerURL,
+    tradeMethod,
+    error,
   } = exchangeRate;
 
   return {
@@ -67,6 +70,8 @@ export const toExchangeRateRaw = (
     rateId,
     provider,
     providerURL,
+    tradeMethod,
+    error: JSON.stringify(serializeError(error)) || "{}",
   };
 };
 
@@ -79,6 +84,8 @@ export const fromExchangeRateRaw = (
     rateId,
     provider,
     providerURL,
+    tradeMethod,
+    error,
   } = exchangeRateRaw;
 
   return {
@@ -87,5 +94,7 @@ export const fromExchangeRateRaw = (
     rateId,
     provider,
     providerURL,
+    tradeMethod,
+    error: error ? deserializeError(JSON.parse(error)) : undefined,
   };
 };
