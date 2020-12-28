@@ -15,6 +15,7 @@ tz1KfEsrtDaA1sX7vdM4qmEPWuSytuqCDp5j
 tz1QLXqnfN51dkjeghXvKHkJfhvGiM5gK4tc
 tz1V4qCyvPKZ5UeqdH14HN42rxvNPQfc9UZg
 tz1Lhf4J9Qxoe3DZ2nfe8FGDnvVj7oKjnMY6
+tz1Pwgj6j55akKCyvTwwr9X4np1RskSXpQY4
 tz1Ldzz6k1BHdhuKvAtMRX7h5kJSMHESMHLC
 tz1NortRftucvAkD1J58L32EhSVrQEWJCEnB
 tz1Kf25fX1VdmYGSEzwFy1wNmkbSEZ2V83sY
@@ -44,7 +45,8 @@ tz1WpeqFaBG9Jm73Dmgqamy8eF8NWLz9JCoY
 tz1MQJPGNMijnXnVoBENFz9rUhaPt3S7rWoz
 tz1dRKU4FQ9QRRQPdaH4zCR6gmCmXfcvcgtB
 tz1hTFcQk2KJRPzZyHkCwbj7E1zY1xBkiHsk
-tz1ZcTRk5uxD86EFEn1vvNffWWqJy7q5eVhc`.split("\n");
+tz1ZcTRk5uxD86EFEn1vvNffWWqJy7q5eVhc
+tz1aDiEJf9ztRrAJEXZfcG3CKimoKsGhwVAi`.split("\n");
 
 // we give no ordering preference. it's settled at module load time
 whitelist.sort(() => Math.random() - 0.5);
