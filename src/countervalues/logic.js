@@ -20,7 +20,6 @@ import {
   magFromTo,
   formatPerGranularity,
   formatCounterValueDay,
-  formatCounterValueHour,
   formatCounterValueHashes,
   parseFormattedDate,
   incrementPerGranularity,
