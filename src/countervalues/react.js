@@ -120,7 +120,7 @@ export function Countervalues({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedState]);
 
-  // trigger poll only when trackingParis is not exactly the same
+  // trigger poll only when trackingPairs is not exactly the same
   const pairs = useMemo(
     () => userSettings.trackingPairs.map(pairId).sort().join(),
     [userSettings.trackingPairs]
