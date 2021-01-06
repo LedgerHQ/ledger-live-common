@@ -8,6 +8,7 @@ import React, {
   useReducer,
   useState,
   useCallback,
+  useRef,
 } from "react";
 import type {
   Account,
@@ -120,10 +121,17 @@ export function Countervalues({
   }, [savedState]);
 
   // trigger poll only when trackingParis is not exactly the same
-  const pairs = useMemo(() => userSettings.trackingPairs.map(pairId).join(), [
-    userSettings.trackingPairs,
-  ]);
+  const pairs = useMemo(
+    () => userSettings.trackingPairs.map(pairId).sort().join(),
+    [userSettings.trackingPairs]
+  );
+
+  const isFirstRender = useRef(true);
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     setTriggerPoll(true);
   }, [pairs]);
 
@@ -137,7 +145,9 @@ export function Countervalues({
       setTriggerPoll(true);
       pollingTimeout = setTimeout(pollingLoop, autopollInterval);
     }
+
     pollingTimeout = setTimeout(pollingLoop, pollInitDelay);
+
     return () => clearTimeout(pollingTimeout);
   }, [autopollInterval, pollInitDelay, isPolling]);
 
