@@ -105,7 +105,6 @@ describe("walletconnect", () => {
       value: "0x0",
     };
 
-
     const bridge = getAccountBridge(account);
     let transaction = bridge.createTransaction(account);
 
