@@ -33,8 +33,8 @@ describe("walletconnect", () => {
   };
 
   beforeAll(() => {
-    setSupportedCurrencies(["ethereum"]);
     setEnv("MOCK", true);
+    setSupportedCurrencies(["ethereum"]);
   });
   afterAll(() => {
     setEnv("MOCK", false);
@@ -123,6 +123,7 @@ describe("walletconnect", () => {
     });
 
     transaction = await bridge.prepareTransaction(account, transaction);
+    delete transaction.networkInfo;
 
     expect(
       await parseCallRequest(account, {
