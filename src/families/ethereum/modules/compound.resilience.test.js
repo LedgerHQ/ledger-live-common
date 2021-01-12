@@ -29,5 +29,14 @@ test("if API is down, an account still sync fine", async () => {
     .sync(account, { paginationConfig: {} })
     .pipe(reduce((a, f: (Account) => Account) => f(a), account))
     .toPromise();
-  expect(toAccountRaw(synced)).toMatchSnapshot();
+  const raw = toAccountRaw(synced);
+  // empty unstable fields
+  raw.lastSyncDate = "";
+  raw.creationDate = "";
+  raw.operations = raw.operations.map((op) => {
+    op.blockHeight = 0;
+    op.date = "";
+    return op;
+  });
+  expect(raw).toMatchSnapshot();
 });
