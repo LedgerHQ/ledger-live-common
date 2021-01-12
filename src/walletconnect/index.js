@@ -1,6 +1,7 @@
 // @flow
 /* eslint-disable no-fallthrough */
 import { BigNumber } from "bignumber.js";
+import eip55 from "eip55";
 import { getAccountBridge } from "../bridge";
 import { getCryptoCurrencyById } from "../currencies";
 import type { Account, Transaction } from "../types";
@@ -87,8 +88,12 @@ export const parseCallRequest: Parser = async (account, payload) => {
         });
       }
       if (wcTransactionData.to) {
+        let to = wcTransactionData.to;
+        if (to.toLowerCase() === to) {
+          to = eip55.encode(to);
+        }
         transaction = bridge.updateTransaction(transaction, {
-          recipient: wcTransactionData.to,
+          recipient: to,
         });
       }
       if (wcTransactionData.gas) {
