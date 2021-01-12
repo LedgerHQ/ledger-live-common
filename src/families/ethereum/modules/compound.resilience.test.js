@@ -31,6 +31,7 @@ test("if API is down, an account still sync fine", async () => {
     .toPromise();
   const raw = toAccountRaw(synced);
   // empty unstable fields
+  raw.blockHeight = 0;
   raw.lastSyncDate = "";
   raw.creationDate = "";
   raw.operations = raw.operations.map((op) => {

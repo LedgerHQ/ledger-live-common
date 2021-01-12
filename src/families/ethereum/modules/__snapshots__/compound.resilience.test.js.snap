@@ -3,7 +3,7 @@
 exports[`if API is down, an account still sync fine 1`] = `
 Object {
   "balance": "2092658623260253",
-  "blockHeight": 11640915,
+  "blockHeight": 0,
   "creationDate": "",
   "currencyId": "ethereum",
   "derivationMode": "",
