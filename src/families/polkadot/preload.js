@@ -105,6 +105,8 @@ export const preload = async (): Promise<PolkadotPreloadData> => {
   let validators = previousValidators;
 
   if (
+    !validators ||
+    !validators.length ||
     shouldRefreshValidators(previousStakingProgress, currentStakingProgress)
   ) {
     log("polkadot/preload", "refreshing polkadot validators...");
