@@ -423,6 +423,7 @@ export function genAccount(
       unlockedBalance: BigNumber(0),
       unlockings: [],
       nominations: [],
+      numSlashingSpans: 0,
     };
   }
 
