@@ -1,7 +1,7 @@
 // @flow
 import { BigNumber } from "bignumber.js";
 import { decodeAddress } from "@polkadot/util-crypto";
-import type { Account } from "../../types";
+import type { Account, OperationType } from "../../types";
 
 import type { Transaction } from "./types";
 
@@ -81,12 +81,15 @@ export const canBond = (a: Account): boolean => {
 };
 
 /**
- * Return true if some BOND operation is pending and not yet synchronized
+ * Return true if some operation with type is pending and not yet synchronized
  *
  * @param {Account} a
  */
-export const hasPendingBond = (a: Account): boolean => {
-  return a.pendingOperations?.some((op) => op.type === "BOND") ?? false;
+export const hasPendingOperationType = (
+  a: Account,
+  type: OperationType
+): boolean => {
+  return a.pendingOperations?.some((op) => op.type === type) ?? false;
 };
 
 /**
