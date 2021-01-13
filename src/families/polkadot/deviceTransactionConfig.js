@@ -25,7 +25,7 @@ const getSendFields = ({
   fields.push({
     type: "text",
     label: "Balances",
-    value: "Transfer (keep alive)",
+    value: "Transfer keep alive",
   });
 
   fields.push({
