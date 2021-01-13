@@ -36,6 +36,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
+    },
   },
   bitcoin_gold: {
     id: "btg",
@@ -57,6 +61,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
+    },
   },
   decred: {
     id: "dcr",
@@ -77,6 +85,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
     },
   },
   hcash: {
@@ -106,6 +118,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
+    },
   },
   pivx: {
     id: "pivx",
@@ -127,12 +143,20 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
+    },
   },
   stakenet: {
     id: "xsn",
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
     },
   },
   stratis: {
@@ -162,6 +186,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
+    },
   },
   zcash: {
     id: "zec",
@@ -175,6 +203,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
     },
   },
   bitcoin_testnet: {
