@@ -51,7 +51,7 @@ function getDeviceTransactionConfig({
   transaction: Transaction,
   status: TransactionStatus,
 }): Array<DeviceTransactionField> {
-  const { mode, recipient, rewardDestination, numSlashingSpans } = transaction;
+  const { mode, recipient, rewardDestination } = transaction;
   const { amount } = status;
   const mainAccount = getMainAccount(account, parentAccount);
 
@@ -172,12 +172,6 @@ function getDeviceTransactionConfig({
         type: "text",
         label: "Staking",
         value: "Withdraw Unbonded",
-      });
-
-      fields.push({
-        type: "text",
-        label: "Num slashing span",
-        value: numSlashingSpans,
       });
       break;
 

@@ -43,7 +43,7 @@ const hashTransactionParams = (a: Account, t: Transaction) => {
     case "nominate":
       return `${prefix}_${t.validators?.length ?? "0"}`;
     case "withdrawUnbonded":
-      return `${prefix}_${t.numSlashingSpans}`;
+      return `${prefix}_${t.numSlashingSpans ?? "0"}`;
     case "chill":
       return `${prefix}`;
     case "claimReward":

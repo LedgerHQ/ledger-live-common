@@ -23,6 +23,7 @@ export function toPolkadotResourcesRaw(
       value: n.value.toString(),
       status: n.status,
     })),
+    numSlashingSpans: r.numSlashingSpans,
   };
 }
 
@@ -46,5 +47,6 @@ export function fromPolkadotResourcesRaw(
       value: BigNumber(n.value),
       status: n.status,
     })),
+    numSlashingSpans: Number(r.numSlashingSpans) || 0,
   };
 }

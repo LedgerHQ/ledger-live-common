@@ -26,6 +26,7 @@ type AsyncApiFunction = (api: typeof ApiPromise) => Promise<any>;
 
 const VALIDATOR_COMISSION_RATIO = 1000000000;
 
+//$FlowFixMe
 const getWsUrl = () => getEnv("API_POLKADOT_NODE");
 const WEBSOCKET_DEBOUNCE_DELAY = 30000;
 
