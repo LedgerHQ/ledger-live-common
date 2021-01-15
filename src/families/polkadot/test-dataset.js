@@ -21,7 +21,8 @@ import type { DatasetTest } from "../../types";
 import { fromTransactionRaw } from "./transaction";
 import type { Transaction } from "./types";
 
-const ACCOUNT_SAME_STASHCONTROLLER = "12YA86tRQhHgwU3SSj56aesUKB7GKvdnZTTTXRop4vd3YgDV";
+const ACCOUNT_SAME_STASHCONTROLLER =
+  "12YA86tRQhHgwU3SSj56aesUKB7GKvdnZTTTXRop4vd3YgDV";
 const ACCOUNT_STASH = "13jAJfhpFkRZj1TSSdFopaiFeKnof2q7g4GNdcxcg8Lvx6QN";
 const ACCOUNT_CONTROLLER = "15oodc5d8DWJodZhTD6qsxxSQRYWhdkWCrwqNHajDirXRrAD";
 const ACCOUNT_EMPTY = "111111111111111111111111111111111HC1";
@@ -58,8 +59,7 @@ const dataset: DatasetTest<Transaction> = {
         {
           // Account which is stash and controller
           raw: {
-            id:
-              `js:2:polkadot:${ACCOUNT_SAME_STASHCONTROLLER}:polkadotbip44`,
+            id: `js:2:polkadot:${ACCOUNT_SAME_STASHCONTROLLER}:polkadotbip44`,
             seedIdentifier: ACCOUNT_SAME_STASHCONTROLLER,
             name: "Polkadot 1",
             derivationMode: "polkadotbip44",
@@ -218,9 +218,7 @@ const dataset: DatasetTest<Transaction> = {
                 amount: "0",
                 mode: "nominate",
                 era: null,
-                validators: [
-                  ACCOUNT_SAME_STASHCONTROLLER,
-                ],
+                validators: [ACCOUNT_SAME_STASHCONTROLLER],
                 fees: null,
                 rewardDestination: null,
                 numSlashingSpans: 0,
@@ -415,8 +413,7 @@ const dataset: DatasetTest<Transaction> = {
         },
         {
           raw: {
-            id:
-              `js:2:polkadot:${ACCOUNT_STASH}:polkadotbip44`,
+            id: `js:2:polkadot:${ACCOUNT_STASH}:polkadotbip44`,
             seedIdentifier: ACCOUNT_STASH,
             name: "Polkadot 2",
             derivationMode: "polkadotbip44",
@@ -441,9 +438,7 @@ const dataset: DatasetTest<Transaction> = {
                 amount: "0",
                 mode: "nominate",
                 era: null,
-                validators: [
-                  ACCOUNT_SAME_STASHCONTROLLER,
-                ],
+                validators: [ACCOUNT_SAME_STASHCONTROLLER],
                 fees: null,
                 rewardDestination: null,
                 numSlashingSpans: 0,
@@ -519,8 +514,7 @@ const dataset: DatasetTest<Transaction> = {
         },
         {
           raw: {
-            id:
-              `js:2:polkadot:${ACCOUNT_CONTROLLER}:polkadotbip44`,
+            id: `js:2:polkadot:${ACCOUNT_CONTROLLER}:polkadotbip44`,
             seedIdentifier: ACCOUNT_CONTROLLER,
             name: "Polkadot 3",
             derivationMode: "polkadotbip44",
