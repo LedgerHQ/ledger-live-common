@@ -21,12 +21,12 @@ import type { DatasetTest } from "../../types";
 import { fromTransactionRaw } from "./transaction";
 import type { Transaction } from "./types";
 
-// const ACCOUNT_SAME_STASHCONTROLLER = "12JHbw1vnXxqsD6U5yA3u9Kqvp9A7Zi3qM2rhAreZqP5zUmS";
-const ACCOUNT_STASH = "13SGsuG6S1SeLfenuSauQMCzctr3z9SNKr8gbnXsEtyYijkT";
-const ACCOUNT_CONTROLLER = "15FwDL7TkRJFyGK9o6iYiqjFM1Mrq6VXXvdFQ9a7m5TQayUY";
+const ACCOUNT_SAME_STASHCONTROLLER = "12YA86tRQhHgwU3SSj56aesUKB7GKvdnZTTTXRop4vd3YgDV";
+const ACCOUNT_STASH = "13jAJfhpFkRZj1TSSdFopaiFeKnof2q7g4GNdcxcg8Lvx6QN";
+const ACCOUNT_CONTROLLER = "15oodc5d8DWJodZhTD6qsxxSQRYWhdkWCrwqNHajDirXRrAD";
 const ACCOUNT_EMPTY = "111111111111111111111111111111111HC1";
 const ACCOUNT_WITH_NO_OPERATION =
-  "1jJ2WTbK7LbgjdkJSB5tLvPQM6GKZGZjjBzoK4pjn1RQ6Di";
+  "12EsPA79dvhtjp1bYvCiEWPsQmmdKGss44GzE3CT9tTo9g4Q";
 
 const dataset: DatasetTest<Transaction> = {
   implementations: ["js"],
@@ -42,25 +42,15 @@ const dataset: DatasetTest<Transaction> = {
           name: "polkadot seed 1",
           apdus: `
           => 90010000142c00008062010080000000000000000000000000
-          <= 7001f89e1fccbbd92e6c5fc9b6ae4f442d791450eb8d03c1e42392dda5f1d40831335872783245775644554b4a566551695833755878576b3677504d4171557641576d38315a466b48357632436a6b799000
+          <= e283d1b141c1048635420b7138132acbe0ff47b71fc9f6a9089f78ab29a6b8143136377a7973345778677954514e6743744e6f597852463463784867385766516a4248414c7666615a585070776331549000
           => 90010000142c00008062010080000000800000008000000080
-          <= 396b4b24c10b595938876d4a804106803fa2c08b7943e37b001376da0c40009931324a48627731766e587871734436553579413375394b7176703941375a6933714d3272684172655a7150357a556d539000
+          <= 43ff8cc36e9804eb1f5d45cd834ebbae1d490c22b8f8a61af20b48e566dc53dc31325941383674525168486777553353536a3536616573554b4237474b76646e5a54545458526f7034766433596744569000
           => 90010000142c00008062010080010000800000008000000080
-          <= 72783c94f6640b13ba5ce47f7eae3c9b5a06baca681bb169720c48773cb13e7c3133623642463634434e3770343263553479394e3571574b7036474b477377667a7a6841385233656d694e66674159369000
+          <= 78a0189312a3f2817d89c71cec7e63bfbfbfa7145c384b3870ff1167a74c76d831336a414a666870466b525a6a3154535364466f70616946654b6e6f663271376734474e6463786367384c767836514e9000
           => 90010000142c00008062010080020000800000008000000080
-          <= 6bbf0d00e55aa723fe219927787040d7126e5ad7c55659890bad6787092ba7713133534773754736533153654c66656e75536175514d437a637472337a39534e4b723867626e587345747959696a6b549000
+          <= d4a3325e08977a29f19270b96a192eb73ce768e4bdf79565ba9cdbe3f0be6e9531356f6f646335643844574a6f645a6854443671737878535152595768646b57437277714e48616a44697258527241449000
           => 90010000142c00008062010080030000800000008000000080
-          <= bc54dd82d1a0a63e2290bb8d24b106a6d32208ec6444027264e3ba4ab0d6024c31354677444c37546b524a4679474b396f36695969716a464d314d727136565858766446513961376d355451617955599000
-          => 90010000142c00008062010080040000800000008000000080
-          <= b89a1a114ff8d16a9cb1da919a74a728b02c75f4f7a47641b280df2b0a816942313542336239317a6e70783452734273337374714636436d734d756341377a7859374b334c425237346d78676b3976459000
-          => 90010000142c00008062010080050000800000008000000080
-          <= 187352e26a94609923ee72792e70dff4b5f2daaef6a4160f6ab296263efde583315a3451647a52727056626767596f474b35706662654d797a705656444b3757786865566a57467866763673786a569000
-          => 90010000142c00008062010080060000800000008000000080
-          <= 35b082532e6c550970354690400abbfc52f76f1ae875d5eb11c645fdac12a1be31324450794e7754707a45794562556f38735a3173355a51463967767744646d62446d425a6f703942776a4d73376e4e9000
-          => 90010000142c00008062010080070000800000008000000080
-          <= bfc15999c7636f5642cb7b0bc9ec742ab43c7f5ad888323f97cb30f34129b40531354c52616f787a553331754e59503967744e446d4b42436d326438697138313732484d767a794a656f7650593650709000
-          => 90010000142c00008062010080080000800000008000000080
-          <= 20419f215b8220121cb439f15ad595dcc8c2392ad1ab65a4aca7585efa461c45316a4a325754624b374c62676a646b4a534235744c7650514d36474b5a475a6a6a427a6f4b34706a6e3152513644699000
+          <= ffcc00cd09cbe8fd741a91269bd5f50445f4b0c3ad9f8b134341ba5e65bc24e131366e507037435537596d5a6a445248524437644d35434579505a6256615a3637435575356b4d77353957527a6f346a9000
           `,
         },
       ],
@@ -69,12 +59,12 @@ const dataset: DatasetTest<Transaction> = {
           // Account which is stash and controller
           raw: {
             id:
-              "js:2:polkadot:12JHbw1vnXxqsD6U5yA3u9Kqvp9A7Zi3qM2rhAreZqP5zUmS:polkadotbip44",
-            seedIdentifier: "12JHbw1vnXxqsD6U5yA3u9Kqvp9A7Zi3qM2rhAreZqP5zUmS",
+              `js:2:polkadot:${ACCOUNT_SAME_STASHCONTROLLER}:polkadotbip44`,
+            seedIdentifier: ACCOUNT_SAME_STASHCONTROLLER,
             name: "Polkadot 1",
             derivationMode: "polkadotbip44",
             index: 0,
-            freshAddress: "12JHbw1vnXxqsD6U5yA3u9Kqvp9A7Zi3qM2rhAreZqP5zUmS",
+            freshAddress: ACCOUNT_SAME_STASHCONTROLLER,
             freshAddressPath: "44'/354'/0'/0'/0'",
             freshAddresses: [],
             blockHeight: 0,
@@ -90,7 +80,7 @@ const dataset: DatasetTest<Transaction> = {
               name: "recipient and sender must not be the same",
               transaction: fromTransactionRaw({
                 family: "polkadot",
-                recipient: "12JHbw1vnXxqsD6U5yA3u9Kqvp9A7Zi3qM2rhAreZqP5zUmS",
+                recipient: ACCOUNT_SAME_STASHCONTROLLER,
                 amount: "100000000",
                 mode: "send",
                 era: null,
@@ -224,12 +214,12 @@ const dataset: DatasetTest<Transaction> = {
               name: "nominate without true validator",
               transaction: fromTransactionRaw({
                 family: "polkadot",
-                recipient: "12JHbw1vnXxqsD6U5yA3u9Kqvp9A7Zi3qM2rhAreZqP5zUmS",
+                recipient: ACCOUNT_SAME_STASHCONTROLLER,
                 amount: "0",
                 mode: "nominate",
                 era: null,
                 validators: [
-                  "12JHbw1vnXxqsD6U5yA3u9Kqvp9A7Zi3qM2rhAreZqP5zUmS",
+                  ACCOUNT_SAME_STASHCONTROLLER,
                 ],
                 fees: null,
                 rewardDestination: null,
@@ -246,7 +236,7 @@ const dataset: DatasetTest<Transaction> = {
               name: "nominate is empty",
               transaction: fromTransactionRaw({
                 family: "polkadot",
-                recipient: "12JHbw1vnXxqsD6U5yA3u9Kqvp9A7Zi3qM2rhAreZqP5zUmS",
+                recipient: ACCOUNT_SAME_STASHCONTROLLER,
                 amount: "0",
                 mode: "nominate",
                 era: null,
@@ -266,7 +256,7 @@ const dataset: DatasetTest<Transaction> = {
               name: "bond extra - success",
               transaction: fromTransactionRaw({
                 family: "polkadot",
-                recipient: "12JHbw1vnXxqsD6U5yA3u9Kqvp9A7Zi3qM2rhAreZqP5zUmS",
+                recipient: ACCOUNT_SAME_STASHCONTROLLER,
                 amount: "2000000",
                 mode: "bond",
                 era: null,
@@ -285,7 +275,7 @@ const dataset: DatasetTest<Transaction> = {
               name: "bond extra - not enought spendable",
               transaction: fromTransactionRaw({
                 family: "polkadot",
-                recipient: "12JHbw1vnXxqsD6U5yA3u9Kqvp9A7Zi3qM2rhAreZqP5zUmS",
+                recipient: ACCOUNT_SAME_STASHCONTROLLER,
                 amount: "2000000000000000000",
                 mode: "bond",
                 era: null,
@@ -426,7 +416,7 @@ const dataset: DatasetTest<Transaction> = {
         {
           raw: {
             id:
-              "js:2:polkadot:13SGsuG6S1SeLfenuSauQMCzctr3z9SNKr8gbnXsEtyYijkT:polkadotbip44",
+              `js:2:polkadot:${ACCOUNT_STASH}:polkadotbip44`,
             seedIdentifier: ACCOUNT_STASH,
             name: "Polkadot 2",
             derivationMode: "polkadotbip44",
@@ -447,12 +437,12 @@ const dataset: DatasetTest<Transaction> = {
               name: "stash can't nominate",
               transaction: fromTransactionRaw({
                 family: "polkadot",
-                recipient: "12JHbw1vnXxqsD6U5yA3u9Kqvp9A7Zi3qM2rhAreZqP5zUmS",
+                recipient: ACCOUNT_SAME_STASHCONTROLLER,
                 amount: "0",
                 mode: "nominate",
                 era: null,
                 validators: [
-                  "12JHbw1vnXxqsD6U5yA3u9Kqvp9A7Zi3qM2rhAreZqP5zUmS",
+                  ACCOUNT_SAME_STASHCONTROLLER,
                 ],
                 fees: null,
                 rewardDestination: null,
@@ -530,7 +520,7 @@ const dataset: DatasetTest<Transaction> = {
         {
           raw: {
             id:
-              "js:2:polkadot:15FwDL7TkRJFyGK9o6iYiqjFM1Mrq6VXXvdFQ9a7m5TQayUY:polkadotbip44",
+              `js:2:polkadot:${ACCOUNT_CONTROLLER}:polkadotbip44`,
             seedIdentifier: ACCOUNT_CONTROLLER,
             name: "Polkadot 3",
             derivationMode: "polkadotbip44",
