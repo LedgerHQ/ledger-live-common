@@ -81,6 +81,20 @@ export const canBond = (a: Account): boolean => {
 };
 
 /**
+ * Get the minimum bond amount required to rebond
+ *
+ * @param {Account} a
+ */
+export const getMinimalLockedBalance = (a: Account): BigNumber => {
+  const remainingActiveLockedBalance = calculateMaxUnbond(a);
+
+  if (remainingActiveLockedBalance.lt(MINIMUM_BOND_AMOUNT)) {
+    return MINIMUM_BOND_AMOUNT.minus(remainingActiveLockedBalance);
+  }
+  return BigNumber(0);
+};
+
+/**
  * Return true if some operation with type is pending and not yet synchronized
  *
  * @param {Account} a

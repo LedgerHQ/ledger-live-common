@@ -36,6 +36,7 @@ import {
   hasLockedBalance,
   hasMaxUnlockings,
   calculateAmount,
+  getMinimalLockedBalance,
 } from "./logic";
 import { getCurrentPolkadotPreloadData } from "./preload";
 import { isControllerAddress, isNewAccount, isElectionClosed } from "./cache";
@@ -145,6 +146,14 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
             ),
           });
         }
+      } else if (amount.lt(getMinimalLockedBalance(a))) {
+        errors.amount = new PolkadotBondMinimumAmount("", {
+          minimalAmount: formatCurrencyUnit(
+            a.currency.units[0],
+            getMinimalLockedBalance(a),
+            { showCode: true }
+          ),
+        });
       }
 
       if (t.useAllAmount) {
@@ -183,6 +192,14 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
         errors.amount = new AmountRequired();
       } else if (amount.gt(unlockingBalance)) {
         errors.amount = new NotEnoughBalance();
+      } else if (amount.lt(getMinimalLockedBalance(a))) {
+        errors.amount = new PolkadotBondMinimumAmount("", {
+          minimalAmount: formatCurrencyUnit(
+            a.currency.units[0],
+            getMinimalLockedBalance(a),
+            { showCode: true }
+          ),
+        });
       }
       break;
 
