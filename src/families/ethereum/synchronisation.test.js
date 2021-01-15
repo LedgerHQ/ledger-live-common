@@ -1,14 +1,12 @@
 // @flow
+import "../../__tests__/test-helpers/setup";
 import { reduce } from "rxjs/operators";
-import { setSupportedCurrencies } from "../../currencies";
 import { fromAccountRaw } from "../../account";
 import { getAccountCurrency } from "../../account/helpers";
 import type { Account } from "../../types";
 import { getAccountBridge } from "../../bridge";
 import { makeBridgeCacheSystem } from "../../bridge/cache";
 import { ethereum1 } from "./test-dataset";
-
-setSupportedCurrencies(["ethereum"]);
 
 describe("blacklistedTokenIds functionality", () => {
   const account = fromAccountRaw(ethereum1);
