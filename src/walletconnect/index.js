@@ -83,9 +83,9 @@ export const parseCallRequest: Parser = async (account, payload) => {
             };
       return {
         type: "message",
+        // $FlowFixMe (can't figure out MessageData | TypedMessageData)
         data: {
           path: account.freshAddressPath,
-          // $FlowFixMe (can't figure out MessageData | TypedMessageData)
           message,
           currency: getCryptoCurrencyById("ethereum"),
           derivationMode: account.derivationMode,
