@@ -11,11 +11,7 @@ import type {
   TypedMessageData,
   TypedMessage,
 } from "../families/ethereum/types";
-import {
-  stringHash,
-  domainHash,
-  messageHash,
-} from "../families/ethereum/hw-signMessage";
+import { domainHash, messageHash } from "../families/ethereum/hw-signMessage";
 import type { MessageData } from "../hw/signMessage/types";
 
 export type WCPayloadTransaction = {
