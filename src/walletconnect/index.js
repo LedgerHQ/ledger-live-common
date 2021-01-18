@@ -2,7 +2,8 @@
 /* eslint-disable no-fallthrough */
 import { BigNumber } from "bignumber.js";
 import eip55 from "eip55";
-import { sha256 } from "../crypto";
+import sha from "sha.js";
+import { bufferToHex } from "ethereumjs-util";
 import { getAccountBridge } from "../bridge";
 import { getCryptoCurrencyById } from "../currencies";
 import type { Account, Transaction } from "../types";
@@ -72,13 +73,17 @@ export const parseCallRequest: Parser = async (account, payload) => {
         payload.method === "eth_signTypedData"
           ? {
               // $FlowFixMe
-              domainHash: sha256(domainHash(message)),
+              domainHash: bufferToHex(domainHash(message)),
               // $FlowFixMe
-              messageHash: sha256(messageHash(message)),
+              messageHash: bufferToHex(messageHash(message)),
             }
           : {
-              // $FlowFixMe
-              stringHash: sha256(stringHash(message)),
+              stringHash:
+                "0x" +
+                sha("sha256")
+                  // $FlowFixMe
+                  .update(message)
+                  .digest("hex"),
             };
       return {
         type: "message",
