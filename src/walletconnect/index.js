@@ -2,6 +2,7 @@
 /* eslint-disable no-fallthrough */
 import { BigNumber } from "bignumber.js";
 import eip55 from "eip55";
+import { sha256 } from "../crypto";
 import { getAccountBridge } from "../bridge";
 import { getCryptoCurrencyById } from "../currencies";
 import type { Account, Transaction } from "../types";
@@ -71,13 +72,13 @@ export const parseCallRequest: Parser = async (account, payload) => {
         payload.method === "eth_signTypedData"
           ? {
               // $FlowFixMe
-              domainHash: domainHash(message),
+              domainHash: sha256(domainHash(message)),
               // $FlowFixMe
-              messageHash: messageHash(message),
+              messageHash: sha256(messageHash(message)),
             }
           : {
               // $FlowFixMe
-              stringHash: stringHash(message),
+              stringHash: sha256(stringHash(message)),
             };
       return {
         type: "message",
