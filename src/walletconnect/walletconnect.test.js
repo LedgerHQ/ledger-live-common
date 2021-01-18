@@ -140,6 +140,68 @@ describe("walletconnect", () => {
     });
   });
 
+  test.only("should parse eth_sendTransaction payloads and include abi if erc20", async () => {
+    const raw: WCPayloadTransaction = {
+      data:
+        "0x095ea7b30000000000000000000000007a250d5630b4cf539739df2c5dacb4c659f2488dffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      from: "0xCA220B75b7aF206bFCc67E2EcE06E2e144FA294a",
+      gas: "0x5208",
+      gasPrice: "0xb2d05e000",
+      nonce: "0x15",
+      to: "0xCA220B75b7aF206bFCc67E2EcE06E2e144FA294a",
+      value: "0x0",
+    };
+
+    const bridge = getAccountBridge(account);
+    let transaction = bridge.createTransaction(account);
+
+    transaction = bridge.updateTransaction(transaction, {
+      data: Buffer.from(raw.data.slice(2), "hex"),
+      // $FlowFixMe
+      amount: BigNumber(raw.value, 16),
+      recipient: raw.to,
+      // $FlowFixMe
+      gasPrice: BigNumber(raw.gasPrice, 16),
+      nonce: raw.nonce,
+    });
+    transaction = bridge.updateTransaction(transaction, {
+      // $FlowFixMe
+      userGasLimit: BigNumber(raw.gas, 16),
+    });
+
+    transaction = await bridge.prepareTransaction(account, transaction);
+    delete transaction.networkInfo;
+
+    expect(
+      await parseCallRequest(account, {
+        id: "1606135657415541",
+        jsonrpc: "2.0",
+        method: "eth_sendTransaction",
+        params: [raw],
+      })
+    ).toMatchObject({
+      data: transaction,
+      method: "send",
+      type: "transaction",
+      abi: {
+        name: "approve",
+        params: [
+          {
+            name: "_spender",
+            value: "0x7a250d5630b4cf539739df2c5dacb4c659f2488d",
+            type: "address"
+          },
+          {
+            name: "_value",
+            value:
+              "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+            type: "uint256",
+          },
+        ],
+      },
+    });
+  });
+
   test("should parse eth_sendTransaction payloads and eip55 encode lowercase addresses", async () => {
     const raw: WCPayloadTransaction = {
       data: "0x",

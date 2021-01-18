@@ -2,6 +2,7 @@
 /* eslint-disable no-fallthrough */
 import { BigNumber } from "bignumber.js";
 import eip55 from "eip55";
+import abiDecoder from "abi-decoder";
 import { getAccountBridge } from "../bridge";
 import { getCryptoCurrencyById } from "../currencies";
 import type { Account, Transaction } from "../types";
@@ -15,6 +16,7 @@ import {
   messageHash,
 } from "../families/ethereum/hw-signMessage";
 import type { MessageData } from "../hw/signMessage/types";
+import erc20abi from "./erc20.abi.json";
 
 export type WCPayloadTransaction = {
   from: string,
@@ -45,12 +47,13 @@ export type WCCallRequest =
       type: "transaction",
       method: "send" | "sign",
       data: Transaction,
+      abi?: *,
     };
 
 type Parser = (Account, WCPayload) => Promise<WCCallRequest>;
 
 export const parseCallRequest: Parser = async (account, payload) => {
-  let wcTransactionData, bridge, transaction, message, hashes;
+  let wcTransactionData, bridge, transaction, message, hashes, abi;
 
   switch (payload.method) {
     case "eth_sendRawTransaction":
@@ -96,9 +99,16 @@ export const parseCallRequest: Parser = async (account, payload) => {
       bridge = getAccountBridge(account);
       transaction = bridge.createTransaction(account);
 
-      transaction = bridge.updateTransaction(transaction, {
-        data: Buffer.from(wcTransactionData.data.slice(2), "hex"),
-      });
+      if (wcTransactionData.data) {
+        transaction = bridge.updateTransaction(transaction, {
+          data: Buffer.from(wcTransactionData.data.slice(2), "hex"),
+        });
+        try {
+          abiDecoder.addABI(erc20abi);
+          abi = abiDecoder.decodeMethod(wcTransactionData.data);
+          // eslint-disable-next-line no-empty
+        } catch {}
+      }
 
       if (wcTransactionData.value) {
         transaction = bridge.updateTransaction(transaction, {
@@ -136,6 +146,7 @@ export const parseCallRequest: Parser = async (account, payload) => {
         type: "transaction",
         method: payload.method === "eth_signTransaction" ? "sign" : "send",
         data: transaction,
+        abi,
       };
     default:
       throw new Error("wrong payload");
