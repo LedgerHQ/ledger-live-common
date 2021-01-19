@@ -36,10 +36,13 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    // FIXME ongoing issue. uncomment to retest.
+    /*
     experimental: {
       base: "EXPLORER_BETA",
       version: "v3",
     },
+    */
   },
   bitcoin_gold: {
     id: "btg",
