@@ -2,7 +2,7 @@
 /* eslint-disable no-fallthrough */
 import { BigNumber } from "bignumber.js";
 import eip55 from "eip55";
-import abiDecoder from "abi-decoder";
+import InputDataDecoder from "ethereum-input-data-decoder";
 import { getAccountBridge } from "../bridge";
 import { getCryptoCurrencyById } from "../currencies";
 import type { Account, Transaction } from "../types";
@@ -16,7 +16,8 @@ import {
   messageHash,
 } from "../families/ethereum/hw-signMessage";
 import type { MessageData } from "../hw/signMessage/types";
-import erc20abi from "./erc20.abi.json";
+
+const decoder = new InputDataDecoder(`${__dirname}/erc20.abi.json`);
 
 export type WCPayloadTransaction = {
   from: string,
@@ -104,8 +105,7 @@ export const parseCallRequest: Parser = async (account, payload) => {
           data: Buffer.from(wcTransactionData.data.slice(2), "hex"),
         });
         try {
-          abiDecoder.addABI(erc20abi);
-          abi = abiDecoder.decodeMethod(wcTransactionData.data);
+          abi = decoder.decodeData(wcTransactionData.data);
           // eslint-disable-next-line no-empty
         } catch {}
       }

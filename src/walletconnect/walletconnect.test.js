@@ -184,20 +184,7 @@ describe("walletconnect", () => {
       method: "send",
       type: "transaction",
       abi: {
-        name: "approve",
-        params: [
-          {
-            name: "_spender",
-            value: "0x7a250d5630b4cf539739df2c5dacb4c659f2488d",
-            type: "address",
-          },
-          {
-            name: "_value",
-            value:
-              "115792089237316195423570985008687907853269984665640564039457584007913129639935",
-            type: "uint256",
-          },
-        ],
+        method: "approve",
       },
     });
   });
