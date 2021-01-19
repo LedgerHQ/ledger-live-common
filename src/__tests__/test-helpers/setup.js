@@ -1,5 +1,7 @@
 import { setSupportedCurrencies } from "../../currencies";
 
+jest.setTimeout(180000);
+
 setSupportedCurrencies([
   "bitcoin",
   "ethereum",
@@ -30,4 +32,5 @@ setSupportedCurrencies([
   "stellar",
   "cosmos",
   "algorand",
+  "polkadot",
 ]);

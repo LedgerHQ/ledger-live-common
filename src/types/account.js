@@ -18,6 +18,10 @@ import type {
   AlgorandResourcesRaw,
 } from "../families/algorand/types";
 import type {
+  PolkadotResources,
+  PolkadotResourcesRaw,
+} from "../families/polkadot/types";
+import type {
   BalanceHistory,
   BalanceHistoryRaw,
   PortfolioRange,
@@ -191,9 +195,13 @@ export type Account = {
   tronResources?: TronResources,
   cosmosResources?: CosmosResources,
   algorandResources?: AlgorandResources,
+  polkadotResources?: PolkadotResources,
 
   // Swap operations linked to this account
   swapHistory: SwapOperation[],
+
+  // Hash used to discard tx history on sync if blacklisted token ids change
+  blacklistedTokensCache?: string,
 };
 
 export type SubAccount = TokenAccount | ChildAccount;
@@ -271,8 +279,10 @@ export type AccountRaw = {
   tronResources?: TronResourcesRaw,
   cosmosResources?: CosmosResourcesRaw,
   algorandResources?: AlgorandResourcesRaw,
+  polkadotResources?: PolkadotResourcesRaw,
   // Swap operations linked to this account
   swapHistory?: SwapOperationRaw[],
+  blacklistedTokensCache?: string,
 };
 
 export type SubAccountRaw = TokenAccountRaw | ChildAccountRaw;

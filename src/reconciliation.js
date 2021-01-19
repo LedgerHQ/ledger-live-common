@@ -23,6 +23,7 @@ import {
   fromBitcoinResourcesRaw,
   fromBalanceHistoryRawMap,
   fromAlgorandResourcesRaw,
+  fromPolkadotResourcesRaw,
 } from "./account";
 import consoleWarnExpectToEqual from "./consoleWarnExpectToEqual";
 
@@ -260,6 +261,11 @@ export function patchAccount(
     changed = true;
   }
 
+  if (account.blacklistedTokensCache !== updatedRaw.blacklistedTokensCache) {
+    next.blacklistedTokensCache = updatedRaw.blacklistedTokensCache;
+    changed = true;
+  }
+
   if (
     updatedRaw.tronResources &&
     account.tronResources !== updatedRaw.tronResources
@@ -292,6 +298,16 @@ export function patchAccount(
   ) {
     next.bitcoinResources = fromBitcoinResourcesRaw(
       updatedRaw.bitcoinResources
+    );
+    changed = true;
+  }
+
+  if (
+    updatedRaw.polkadotResources &&
+    account.polkadotResources !== updatedRaw.polkadotResources
+  ) {
+    next.polkadotResources = fromPolkadotResourcesRaw(
+      updatedRaw.polkadotResources
     );
     changed = true;
   }
