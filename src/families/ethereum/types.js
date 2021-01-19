@@ -79,7 +79,7 @@ export type TypedMessage = {
   primaryType: string,
   domain: any,
   message: any,
-  hahes: {
+  hashes: {
     domainHash: string,
     messageHash: string,
   }
@@ -91,7 +91,7 @@ export type TypedMessageData = {
   verify?: boolean,
   derivationMode: DerivationMode,
   message: TypedMessage,
-  hahes: {
+  hashes: {
     stringHash: string,
   }
 };
