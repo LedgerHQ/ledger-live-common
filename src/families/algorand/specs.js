@@ -79,6 +79,8 @@ const getRandomAssetId = (account) => {
 };
 
 const algorand: AppSpec<Transaction> = {
+  disabled: true, // disabled in context of Staging testing.
+
   name: "Algorand",
   currency,
   appQuery: {

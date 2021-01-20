@@ -20,6 +20,8 @@ const getDecimalPart = (value: BigNumber, magnitude: number) =>
   value.minus(value.modulo(10 ** magnitude));
 
 const tron: AppSpec<Transaction> = {
+  disabled: true, // disabled in context of Staging testing.
+
   name: "Tron",
   currency,
   appQuery: {

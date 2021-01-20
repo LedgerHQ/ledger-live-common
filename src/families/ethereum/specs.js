@@ -103,6 +103,8 @@ function getCompoundResult({ account, transaction, accountBeforeTransaction }) {
 }
 
 const ethereum: AppSpec<Transaction> = {
+  disabled: true, // disabled in context of Staging testing.
+
   name: "Ethereum",
   currency: getCryptoCurrencyById("ethereum"),
   appQuery: {
@@ -345,6 +347,8 @@ const ethereumClassic: AppSpec<Transaction> = {
 };
 
 const ethereumRopsten: AppSpec<Transaction> = {
+  disabled: true, // disabled in context of Staging testing.
+
   name: "Ethereum Ropsten",
   currency: getCryptoCurrencyById("ethereum_ropsten"),
   appQuery: {

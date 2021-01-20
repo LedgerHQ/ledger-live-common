@@ -36,19 +36,20 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
-    // FIXME ongoing issue. uncomment to retest.
-    /*
     experimental: {
       base: "EXPLORER_BETA",
       version: "v3",
     },
-    */
   },
   bitcoin_gold: {
     id: "btg",
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
     },
   },
   clubcoin: {
@@ -75,12 +76,20 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
+    },
   },
   digibyte: {
     id: "dgb",
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
     },
   },
   dogecoin: {
@@ -107,6 +116,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
+    },
   },
   litecoin: {
     id: "ltc",
@@ -131,6 +144,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
     },
   },
   poswallet: {
@@ -175,12 +192,20 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
+    },
   },
   vertcoin: {
     id: "vtc",
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
     },
   },
   viacoin: {
@@ -199,6 +224,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER_BETA",
+      version: "v3",
     },
   },
   zencash: {

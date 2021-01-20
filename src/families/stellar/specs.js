@@ -14,6 +14,8 @@ const minAmountCutoff = parseCurrencyUnit(currency.units[0], "0.1");
 const reserve = parseCurrencyUnit(currency.units[0], "1");
 
 const stellar: AppSpec<Transaction> = {
+  disabled: true, // disabled in context of Staging testing.
+
   name: "Stellar",
   currency,
   appQuery: {

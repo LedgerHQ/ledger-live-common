@@ -24,6 +24,8 @@ const POLKADOT_MIN_SAFE = parseCurrencyUnit(currency.units[0], "0.05");
 const EXISTENTIAL_DEPOSIT = parseCurrencyUnit(currency.units[0], "1.0");
 
 const polkadot: AppSpec<Transaction> = {
+  disabled: true, // disabled in context of Staging testing.
+
   name: "Polkadot",
   currency: getCryptoCurrencyById("polkadot"),
   appQuery: {

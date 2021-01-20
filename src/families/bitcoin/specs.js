@@ -215,6 +215,7 @@ const bitcoinLikeMutations = ({
   },
 ];
 
+/*
 const bitcoin: AppSpec<Transaction> = {
   name: "Bitcoin",
   currency: getCryptoCurrencyById("bitcoin"),
@@ -243,6 +244,7 @@ const bitcoinTestnet: AppSpec<Transaction> = {
     ),
   }),
 };
+*/
 
 const bitcoinGold: AppSpec<Transaction> = {
   name: "Bitcoin Gold",
@@ -330,6 +332,7 @@ const stakenet: AppSpec<Transaction> = {
   test: genericTest,
   mutations: bitcoinLikeMutations(),
 };
+/*
 
 const stratis: AppSpec<Transaction> = {
   name: "Stratis",
@@ -341,7 +344,7 @@ const stratis: AppSpec<Transaction> = {
   },
   test: genericTest,
   mutations: bitcoinLikeMutations(),
-};
+};*/
 
 const vertcoin: AppSpec<Transaction> = {
   name: "Vertcoin",
@@ -508,23 +511,22 @@ const stealthcoin: AppSpec<Transaction> = {
 };
 
 export default {
-  bitcoin,
-  bitcoinTestnet,
+  litecoin,
+  digibyte,
   bitcoinCash,
   bitcoinGold,
   dash,
-  digibyte,
-  dogecoin,
-  komodo,
-  litecoin,
-  peercoin,
-  pivx,
-  qtum,
-  stakenet,
   stealthcoin,
-  stratis,
-  vertcoin,
-  viacoin,
   zcash,
   zencash,
+  qtum,
+  komodo,
+  // decred, // TODO MISSING
+  peercoin,
+  viacoin,
+  stakenet,
+  dogecoin,
+  pivx,
+  // stratis, // issue
+  vertcoin,
 };
