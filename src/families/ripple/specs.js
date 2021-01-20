@@ -14,6 +14,8 @@ const minAmountCutoff = parseCurrencyUnit(currency.units[0], "0.1");
 const reserve = parseCurrencyUnit(currency.units[0], "20");
 
 const ripple: AppSpec<Transaction> = {
+  disable: true, // no need to test on staging
+
   name: "XRP",
   currency,
   appQuery: {

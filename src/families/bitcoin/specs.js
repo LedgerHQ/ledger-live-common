@@ -511,7 +511,6 @@ const stealthcoin: AppSpec<Transaction> = {
 };
 
 export default {
-  litecoin,
   digibyte,
   bitcoinCash,
   bitcoinGold,
