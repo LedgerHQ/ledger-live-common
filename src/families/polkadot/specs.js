@@ -137,14 +137,22 @@ const polkadot: AppSpec<Transaction> = {
       name: "rebond",
       maxRun: 1,
       transaction: ({ account, bridge }) => {
-        invariant(account.polkadotResources?.unlockingBalance.gt(MIN_LOCKED_BALANCE_REQ), "can't rebond");
+        invariant(
+          account.polkadotResources?.unlockingBalance.gt(
+            MIN_LOCKED_BALANCE_REQ
+          ),
+          "can't rebond"
+        );
         const { polkadotResources } = account;
         invariant(polkadotResources, "polkadot");
         invariant(
           account.spendableBalance.gt(POLKADOT_MIN_SAFE),
           "cant cover fee"
         );
-        const amount = BigNumber.maximum(polkadotResources.unlockingBalance.times(0.2), MIN_LOCKED_BALANCE_REQ);
+        const amount = BigNumber.maximum(
+          polkadotResources.unlockingBalance.times(0.2),
+          MIN_LOCKED_BALANCE_REQ
+        );
 
         return {
           transaction: bridge.createTransaction(account),
