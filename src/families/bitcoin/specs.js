@@ -309,18 +309,6 @@ const pivx: AppSpec<Transaction> = {
   mutations: bitcoinLikeMutations(),
 };
 
-const decred: AppSpec<Transaction> = {
-  name: "Decred",
-  currency: getCryptoCurrencyById("decred"),
-  dependency: "Bitcoin",
-  appQuery: {
-    model: "nanoS",
-    appName: "Decred",
-  },
-  test: genericTest,
-  mutations: bitcoinLikeMutations(),
-};
-
 const qtum: AppSpec<Transaction> = {
   name: "Qtum",
   currency: getCryptoCurrencyById("qtum"),
@@ -527,7 +515,6 @@ export default {
   bitcoinCash,
   bitcoinGold,
   dash,
-  decred,
   stealthcoin,
   zcash,
   zencash,
