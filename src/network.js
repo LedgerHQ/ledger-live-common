@@ -6,6 +6,13 @@ import { NetworkDown, LedgerAPI5xx, LedgerAPI4xx } from "@ledgerhq/errors";
 import { retry } from "./promise";
 import { getEnv } from "./env";
 
+let httpsAgent;
+const httpsProxy = process.env.HTTPS_PROXY;
+if (httpsProxy) {
+  const HttpsProxyAgent = require("https-proxy-agent");
+  httpsAgent = new HttpsProxyAgent(httpsProxy);
+}
+
 const makeError = (msg, status, url, method) => {
   const obj = {
     status,
@@ -91,6 +98,7 @@ const userFriendlyError = <A>(p: Promise<A>, meta): Promise<A> =>
 
 const implementation = (arg: Object): Promise<*> => {
   invariant(typeof arg === "object", "network takes an object as parameter");
+  arg.httpsAgent = httpsAgent;
   let promise;
   if (arg.method === "GET") {
     if (!("timeout" in arg)) {
