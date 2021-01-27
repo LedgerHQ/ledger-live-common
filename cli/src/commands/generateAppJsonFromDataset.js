@@ -1,18 +1,19 @@
 // @flow
 /* eslint-disable no-console */
-const { reduce, filter, map } = require("rxjs/operators");
-const {
+
+import { reduce, filter, map, tap } from "rxjs/operators";
+import {
   mockDeviceWithAPDUs,
   releaseMockDevice,
-} = require("../lib/__tests__/test-helpers/mockDevice");
-const { getCurrencyBridge } = require("../lib/bridge");
-const { implicitMigration } = require("../lib/migrations/accounts");
-const implementLibcore = require("../lib/libcore/platforms/nodejs").default;
-const {
+} from "@ledgerhq/live-common/lib/__tests__/test-helpers/mockDevice";
+import { getCurrencyBridge } from "@ledgerhq/live-common/lib/bridge";
+import { implicitMigration } from "@ledgerhq/live-common/lib/migrations/accounts";
+import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
+import {
   getCryptoCurrencyById,
   setSupportedCurrencies,
-} = require("../lib/currencies");
-const datasets = require("../lib/generated/test-dataset").default;
+} from "@ledgerhq/live-common/lib/currencies";
+import datasets from "@ledgerhq/live-common/lib/generated/test-dataset";
 
 setSupportedCurrencies([
   "bitcoin",
@@ -85,12 +86,12 @@ const syncAccount = async (data) => {
         syncConfig: defaultSyncConfig,
       })
       .pipe(
+        tap((e) => console.log("ok we in", e)),
         filter((e) => e.type === "discovered"),
         map((e) => e.account),
         reduce((all, a) => all.concat(a), [])
       )
       .toPromise();
-
     return implicitMigration(accounts);
   } finally {
     releaseMockDevice(deviceId);
@@ -101,11 +102,16 @@ async function main() {
   // 1. from data sets extract apdus
   // 2. import accounts
   const data = extraCurrenciesData();
-  const accountsPromise = Promise.all(data.map((d) => syncAccount(d)));
-  const accounts = await accountsPromise();
+  const accounts = await Promise.all(data.map((d) => syncAccount(d)));
   console.log(accounts);
   // 3. make a sync of each accounts in //
   // 4. combine into one app.json
 }
 
 main();
+
+export default {
+  description: "Extract accounts from test datasets",
+  args: [],
+  job: () => main(),
+};
