@@ -13,25 +13,25 @@ import {
   StellarWrongMemoFormat,
   SourceHasMultiSign,
   AccountAwaitingSendPendingOperations,
-} from "../../../errors";
-import { validateRecipient } from "../../../bridge/shared";
-import type { AccountBridge, CurrencyBridge, Account } from "../../../types";
-import type { Transaction } from "../types";
-import { scanAccounts } from "../../../libcore/scanAccounts";
-import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
-import { sync } from "../../../libcore/syncAccount";
-import broadcast from "../libcore-broadcast";
-import signOperation from "../libcore-signOperation";
-import { withLibcore } from "../../../libcore/access";
-import type { CacheRes } from "../../../cache";
-import { makeLRUCache } from "../../../cache";
-import { getWalletName } from "../../../account";
-import { getOrCreateWallet } from "../../../libcore/getOrCreateWallet";
-import { getCoreAccount } from "../../../libcore/getCoreAccount";
-import { getMainAccount } from "../../../account";
-import { formatCurrencyUnit } from "../../../currencies";
-import { notCreatedStellarMockAddress } from "../test-dataset";
-import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
+} from "../../errors";
+import { validateRecipient } from "../../bridge/shared";
+import type { AccountBridge, CurrencyBridge, Account } from "../../types";
+import type { Transaction } from "./types";
+import { scanAccounts } from "../../libcore/scanAccounts";
+import { getAccountNetworkInfo } from "../../libcore/getAccountNetworkInfo";
+import { sync } from "../../libcore/syncAccount";
+import broadcast from "./libcore-broadcast";
+import signOperation from "./libcore-signOperation";
+import { withLibcore } from "../../libcore/access";
+import type { CacheRes } from "../../cache";
+import { makeLRUCache } from "../../cache";
+import { getWalletName } from "../../account";
+import { getOrCreateWallet } from "../../libcore/getOrCreateWallet";
+import { getCoreAccount } from "../../libcore/getCoreAccount";
+import { getMainAccount } from "../../account";
+import { formatCurrencyUnit } from "../../currencies";
+import { notCreatedStellarMockAddress } from "./test-dataset";
+import { makeAccountBridgeReceive } from "../../bridge/jsHelpers";
 
 const receive = makeAccountBridgeReceive();
 

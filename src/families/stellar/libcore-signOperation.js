@@ -8,7 +8,7 @@ import {
   libcoreBigIntToBigNumber,
 } from "../../libcore/buildBigNumber";
 import buildTransaction from "./libcore-buildTransaction";
-import { checkRecipientExist } from "./bridge/libcore";
+import { checkRecipientExist } from "./libcore";
 
 async function signTransaction({
   account: { freshAddress, freshAddressPath, balance, id },
