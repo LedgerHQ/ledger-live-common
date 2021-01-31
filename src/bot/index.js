@@ -112,6 +112,14 @@ export async function bot({ currency, mutation }: Arg = {}) {
       : BigNumber(0);
   const portfolio = getPortfolio(allAccountsAfter, period, calc);
 
+  const totalUSD = countervaluesState
+    ? formatCurrencyUnit(
+        usd.units[0],
+        portfolio.balanceHistory[portfolio.balanceHistory.length - 1].value,
+        { showCode: true }
+      )
+    : "";
+
   const allMutationReports = flatMap(results, (r) => r.mutations || []);
 
   const mutationReports = allMutationReports.filter(
@@ -209,6 +217,8 @@ export async function bot({ currency, mutation }: Arg = {}) {
     }
     if (countervaluesError) {
       title += `❌ countervalues`;
+    } else {
+      title += ` (${totalUSD})`;
     }
 
     let subtitle = "";
@@ -312,13 +322,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
       body += "</details>\n\n";
     }
 
-    const totalUSD = formatCurrencyUnit(
-      usd.units[0],
-      portfolio.balanceHistory[portfolio.balanceHistory.length - 1].value,
-      { showCode: true }
-    );
-
-    body += "### Portfolio (" + totalUSD + ")\n\n";
+    body += "### Portfolio" + (totalUSD ? " (" + totalUSD + ")" : "") + "\n\n";
 
     body += "<details>\n";
     body += `<summary>Details of the ${results.length} currencies</summary>\n\n`;
