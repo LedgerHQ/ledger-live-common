@@ -382,7 +382,9 @@ function generateCache(
     const now = Date.now();
     const oldestTime = oldestDate.getTime();
     let shiftingValue = map[oldest];
-    fallback = shiftingValue;
+    if (settings.autofillGaps) {
+      fallback = shiftingValue;
+    }
     for (let t = oldestTime; t < now; t += incrementPerGranularity.daily) {
       const d = new Date(t);
       const k = formatCounterValueDay(d);
