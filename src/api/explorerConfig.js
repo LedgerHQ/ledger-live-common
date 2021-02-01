@@ -23,10 +23,6 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
     id: "btc",
     stable: {
       base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
-      base: "EXPLORER",
       version: "v3",
     },
   },
