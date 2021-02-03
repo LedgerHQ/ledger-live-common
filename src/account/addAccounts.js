@@ -43,7 +43,7 @@ export function groupAddAccounts(
   scannedAccounts: Account[],
   context: {
     scanning: boolean,
-    preferredNewAccountScheme?: DerivationMode[],
+    preferredNewAccountSchemes?: DerivationMode[],
   }
 ): AddAccountsSectionResult {
   const importedAccounts = [];
@@ -118,8 +118,10 @@ export function groupAddAccounts(
       data:
         context.preferredNewAccountSchemes &&
         context.preferredNewAccountSchemes.length > 0
-          ? creatableAccounts.filter((a) =>
-              context.preferredNewAccountSchemes.includes(a.derivationMode)
+          ? creatableAccounts.filter(
+              (a) =>
+                context.preferredNewAccountSchemes &&
+                context.preferredNewAccountSchemes.includes(a.derivationMode)
             )
           : creatableAccounts,
     });
