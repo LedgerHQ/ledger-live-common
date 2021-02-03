@@ -1,19 +1,27 @@
-# Countervalues (NEW API)
+# Countervalues
 
-> NB: This documents the incoming countervalues-new new implementation.
+## Paradigm shift from previous Countervalues API (redux)
 
-_...TODO document live-common api..._
+> TODO: motivation to migrate: what was the issues we faced (both backend & frontend)
 
-## Environement variables
+- BigNumber -> js number: no need for precision, bignumber have perf overhead.
+- no longer depending on redux and react (loosely coupled) so we can use it in CLI and bot.
+- no more "intermediary" currencies to calculate paths like DAI to EUR. -> easier to use, better performance
+- moved to a new backend API, older API is no longer maintained. the new backend API no longer have knowledge of magnitude which ease support of colliding tickers. (e.g: USDT can have different magnitude on different chains) (we were doing conversion on both side)
 
-If you want a lot of more verbosity, you can run with
+## Quick preview of calculating a coutervalues with live-common and React
 
-```
-VERBOSE=1
-DEBUG_HTTP_RESPONSE=1
-```
+> give a quick gist example of using React's provider and calculate one countervalues
 
-## Testing countervalues
+## core API and types
+
+> showing the types and function helpers
+
+## React API
+
+## Internal: modules system
+
+## Testing countervalues with CLI
 
 The CLI implements tools to test the countervalues.
 
@@ -111,3 +119,12 @@ Total availability: 96%
 ```
 
 We'll try to add more metrics in future. (like request times)
+
+### Environement variables
+
+If you want a lot of more verbosity, you can run with
+
+```
+VERBOSE=1
+DEBUG_HTTP_RESPONSE=1
+```
