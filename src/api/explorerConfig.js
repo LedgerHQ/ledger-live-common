@@ -23,6 +23,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
     id: "btc",
     stable: {
       base: "EXPLORER",
+      version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER",
       version: "v3",
     },
   },
@@ -32,12 +36,20 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
+    },
   },
   bitcoin_gold: {
     id: "btg",
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
     },
   },
   clubcoin: {
@@ -53,6 +65,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
+    },
   },
   decred: {
     id: "dcr",
@@ -67,12 +83,20 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
+    },
   },
   dogecoin: {
     id: "doge",
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
     },
   },
   hcash: {
@@ -88,6 +112,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
+    },
   },
   litecoin: {
     id: "ltc",
@@ -102,12 +130,20 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
+    },
   },
   pivx: {
     id: "pivx",
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
     },
   },
   poswallet: {
@@ -123,12 +159,20 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
+    },
   },
   stakenet: {
     id: "xsn",
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
     },
   },
   stratis: {
@@ -151,12 +195,20 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
+    },
   },
   viacoin: {
     id: "via",
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
     },
   },
   zcash: {
@@ -171,6 +223,10 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
     },
   },
   bitcoin_testnet: {
@@ -188,10 +244,6 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
     id: "eth",
     stable: {
       base: "EXPLORER",
-      version: "v3",
-    },
-    experimental: {
-      base: "EXPLORER_BETA",
       version: "v3",
     },
   },
