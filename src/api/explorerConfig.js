@@ -36,10 +36,12 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    /*
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
+    */
   },
   bitcoin_gold: {
     id: "btg",
@@ -83,10 +85,12 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    /*
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
+    */
   },
   dogecoin: {
     id: "doge",
@@ -112,10 +116,12 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    /*
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
+    */
   },
   litecoin: {
     id: "ltc",
@@ -170,10 +176,12 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    /*
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
+    */
   },
   stratis: {
     id: "strat",
@@ -206,10 +214,12 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
+    /*
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
+    */
   },
   zcash: {
     id: "zec",
