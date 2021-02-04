@@ -24,7 +24,10 @@ Backend API also involved and the old API is no longer maintained. The new backe
 First of all, wrap your app component with `Countervalues` provider and provide trackingPairs as a prop.
 
 ```jsx
-import { Countervalues } from "@ledgerhq/live-common/lib/countervalues/react"
+import {
+  Countervalues,
+  useTrackingPairForAccounts
+} from "@ledgerhq/live-common/lib/countervalues/react"
 
 
 function App() {
@@ -50,7 +53,7 @@ function App() {
 
 *Currently in Ledger Live, `accounts` and `countervalueCurrency` are managed by two different implementation on desktop and mobile side. Therefore, `useTrackingPairForAccounts` still has to accept these as arguments. In the future we may want to move all the logic inside live-common to provide even simpler API.
 
-and useCalculate hook inside a React component or a custom hook.
+useCalculate hook inside a React component or a custom hook.
 
 ```js
 import { useCalculate } from "@ledgerhq/live-common/lib/countervalues/react"
@@ -65,12 +68,14 @@ const countervalue = useCalculate({
 });
 ```
 
-### Example 2: Store cache of coutnervalues state
+### Example 2: Store raw coutnervalues state locally
 ```jsx
 import { useCountervaluesExport } from "@ledgerhq/live-common/lib/countervalues/react"
 
 // inside component or custom hook
 const rawState = useCountervaluesExport()
+
+function save() {...}
 
 useCallback(() => {
   save(rawState)
@@ -103,14 +108,13 @@ const { wipe, poll, start, stop, pending, error } = useCountervaluesPolling();
 - useDistribution
   - used in Asset distribution screen
 
-## core and helper API
+## Core and helper API
 
 In most of cases, it's enough to use hooks which are exported from `@ledgerhq/live-common/lib/countervalues/react`.
 
 But core (`@ledgerhq/live-common/lib/countervalues/logic`) module comes in handy when you want to use these logic outside React component or inside some callback functions.
 
 `@ledgerhq/live-common/lib/countervalues/helper` also export some useful util funcitons although it is mostly consumed internaly by core module.
-
 
 ## Internal: modules system
 
