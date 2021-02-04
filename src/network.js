@@ -10,7 +10,7 @@ let httpsAgent;
 const httpsProxy = process.env.HTTPS_PROXY;
 if (httpsProxy) {
   const HttpsProxyAgent = require("https-proxy-agent");
-  httpsAgent = new HttpsProxyAgent(httpsProxy);
+  httpsAgent = new HttpsProxyAgent("http://" + httpsProxy);
 }
 
 const makeError = (msg, status, url, method) => {
@@ -99,6 +99,7 @@ const userFriendlyError = <A>(p: Promise<A>, meta): Promise<A> =>
 const implementation = (arg: Object): Promise<*> => {
   invariant(typeof arg === "object", "network takes an object as parameter");
   arg.httpsAgent = httpsAgent;
+  arg.proxy = false;
   let promise;
   if (arg.method === "GET") {
     if (!("timeout" in arg)) {
