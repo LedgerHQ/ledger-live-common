@@ -58,7 +58,7 @@ const envDefinitions = {
     desc: "Node API to use for cosmos (COSMOS_NODE or STARGATE_NODE are known)",
   },
   API_COSMOS_TESTNET_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
-    def: "https://cosmos.staging.ledger.com/",
+    def: "https://cosmoshub4.coin.staging.aws.ledger.com",
     parser: stringParser,
     desc: "Node endpoint for cosmos",
   },
