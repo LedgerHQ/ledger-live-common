@@ -1,4 +1,4 @@
-# Countervalues v1
+# Countervalues v2
 
 ## Paradigm shift from previous Countervalues API (redux)
 
