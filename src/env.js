@@ -48,12 +48,12 @@ const envDefinitions = {
     desc: "Node API key for algorand",
   },
   API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
-    def: "https://cosmos.coin.ledger.com/",
+    def: "https://cosmoshub4.coin.ledger.com/",
     parser: stringParser,
     desc: "Node endpoint for cosmos",
   },
   API_COSMOS_NODE: {
-    def: "COSMOS_NODE",
+    def: "STARGATE_NODE",
     parser: stringParser,
     desc: "Node API to use for cosmos (COSMOS_NODE or STARGATE_NODE are known)",
   },
