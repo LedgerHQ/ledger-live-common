@@ -28,10 +28,12 @@ const fields: Field[] = [
   {
     title: "Operation Amount",
     cell: (account, parentAccount, op) =>
-      formatCurrencyUnit(getAccountCurrency(account).units[0], op.value, {
-        disableRounding: true,
-        useGrouping: false,
-      }),
+      ["FEES"].includes(op.type)
+        ? ""
+        : formatCurrencyUnit(getAccountCurrency(account).units[0], op.value, {
+            disableRounding: true,
+            useGrouping: false,
+          }),
   },
   {
     title: "Operation Fees",
