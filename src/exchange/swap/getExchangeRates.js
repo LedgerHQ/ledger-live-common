@@ -92,8 +92,10 @@ const getExchangeRates: GetExchangeRates = async (
         magnitudeAwareRate,
         provider,
         tradeMethod,
-        ...(tradeMethod === "fixed" ? { rate, rateId } : {}),
-        ...(error || {}),
+        ...(tradeMethod === "fixed"
+          ? { rate, rateId }
+          : { rate: BigNumber(amountTo).div(amountFrom) }),
+        error,
       };
     }
   );
