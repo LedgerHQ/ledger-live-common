@@ -16,6 +16,14 @@ import { cancelDeviceAction } from "../hw/deviceAccess";
 import { getEnv } from "../env";
 import type { SocketEvent } from "../types/manager";
 
+let proxyAgent;
+
+const socksProxy = process.env.SOCKS_PROXY;
+if (socksProxy) {
+  const SocksProxyAgent = require("socks-proxy-agent");
+  proxyAgent = new SocksProxyAgent(socksProxy);
+}
+
 const warningsSubject = new Subject();
 export const warnings: Observable<string> = warningsSubject.asObservable();
 
@@ -42,7 +50,7 @@ export const createDeviceSocket = (
     let inBulk = false; // bulk is a mode where we have many apdu to run on device and no longer need the connection
     let timeoutForAllowManager = null; // track if there is an ongoing allow manager step
 
-    const ws = new WS(url);
+    const ws = new WS(url, { agent: proxyAgent });
 
     ws.onopen = () => {
       log("socket-opened", url);

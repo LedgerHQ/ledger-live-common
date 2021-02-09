@@ -6,6 +6,14 @@ import { NetworkDown, LedgerAPI5xx, LedgerAPI4xx } from "@ledgerhq/errors";
 import { retry } from "./promise";
 import { getEnv } from "./env";
 
+let proxyAgent;
+
+const socksProxy = process.env.SOCKS_PROXY;
+if (socksProxy) {
+  const SocksProxyAgent = require("socks-proxy-agent");
+  proxyAgent = new SocksProxyAgent(socksProxy);
+}
+
 const makeError = (msg, status, url, method) => {
   const obj = {
     status,
@@ -92,6 +100,8 @@ const userFriendlyError = <A>(p: Promise<A>, meta): Promise<A> =>
 const implementation = (arg: Object): Promise<*> => {
   invariant(typeof arg === "object", "network takes an object as parameter");
   let promise;
+  arg.httpsAgent = proxyAgent;
+  arg.proxy = false;
   if (arg.method === "GET") {
     if (!("timeout" in arg)) {
       arg.timeout = getEnv("GET_CALLS_TIMEOUT");
