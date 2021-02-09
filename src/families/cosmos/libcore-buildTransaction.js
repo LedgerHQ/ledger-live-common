@@ -54,6 +54,26 @@ async function fetch_sequence(address: string, currency: CryptoCurrency) {
   }
 }
 
+/// Return true if this address can be used to estimate gas.
+/// Stargate API will refuse to estimate gas for a sender that does not
+/// exist in the state, so we check the account endpoint for a non-error response
+async function can_estimate_gas(address: string, currency: CryptoCurrency) {
+  const namespace = "cosmos";
+  const version = "v1beta1";
+  if (isStargate(currency)) {
+    const url = `${getBaseApiUrl(
+      currency
+    )}/${namespace}/auth/${version}/accounts/${address}`;
+    const { status } = await network({
+      method: "GET",
+      url,
+    });
+    return status < 300;
+  } else {
+    return true;
+  }
+}
+
 export async function cosmosBuildTransaction({
   account,
   core,
@@ -79,6 +99,12 @@ export async function cosmosBuildTransaction({
   const transactionBuilder = await cosmosLikeAccount.buildTransaction();
   if (isCancelled()) return;
 
+  const accountCanEstimateGas = await can_estimate_gas(
+    account.freshAddress,
+    account.currency
+  );
+  if (isCancelled()) return;
+
   let messages = await cosmosCreateMessage(
     account.freshAddress,
     {
@@ -97,7 +123,7 @@ export async function cosmosBuildTransaction({
   // Gas
   let estimatedGas: BigNumber;
 
-  if (isPartial) {
+  if (isPartial && accountCanEstimateGas) {
     const gasRequest = await core.CosmosGasLimitRequest.init(
       memoTransaction,
       messages,
@@ -113,7 +139,8 @@ export async function cosmosBuildTransaction({
       await cosmosLikeAccount.estimateGas(gasRequest)
     );
   } else {
-    estimatedGas = gas || BigNumber(0);
+    // 60000 is the default gas here.
+    estimatedGas = gas || BigNumber(60000);
   }
 
   if (!estimatedGas.gt(0)) {
@@ -165,8 +192,12 @@ export async function cosmosBuildTransaction({
   const accNum = await cosmosLikeAccount.getAccountNumber();
   await transactionBuilder.setAccountNumber(accNum);
 
-  const seq = await fetch_sequence(account.freshAddress, account.currency);
-  await transactionBuilder.setSequence(seq);
+  if (accountCanEstimateGas) {
+    const seq = await fetch_sequence(account.freshAddress, account.currency);
+    await transactionBuilder.setSequence(seq);
+  } else {
+    await transactionBuilder.setSequence("0");
+  }
 
   const tx = await transactionBuilder.build();
   return tx;
