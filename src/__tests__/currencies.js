@@ -436,7 +436,9 @@ test("decodeURIScheme", () => {
   });
 
   expect(
-    decodeURIScheme("bitcoin:BC1QT9TP4FY4UANKJSW9JWGS9APWAGZ8EE9XKWA9QG?amount=12345.67")
+    decodeURIScheme(
+      "bitcoin:BC1QT9TP4FY4UANKJSW9JWGS9APWAGZ8EE9XKWA9QG?amount=12345.67"
+    )
   ).toMatchObject({
     currency: getCryptoCurrencyById("bitcoin"),
     address: "bc1qt9tp4fy4uankjsw9jwgs9apwagz8ee9xkwa9qg",
