@@ -15,7 +15,7 @@ import transactionTransformer from "./transaction";
 
 const dataset: DatasetTest<Transaction> = {
   implementations: ["libcore"],
-  currencies: {
+  currencies: {} || { // Reactivate once stargate is on mainnet, or if we can use setEnv correctly
     cosmos: {
       FIXME_ignoreAccountFields: [
         "cosmosResources.unbondingBalance", // They move once all unbonding are done
