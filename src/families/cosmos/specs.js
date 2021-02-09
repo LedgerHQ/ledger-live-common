@@ -339,8 +339,6 @@ const cosmos: AppSpec<Transaction> = {
 };
 
 const cosmos_testnet: AppSpec<Transaction> = {
-  disabled: false,
-
   name: "Cosmos (Testnet)",
   currency: getCryptoCurrencyById("cosmos_testnet"),
   appQuery: {
