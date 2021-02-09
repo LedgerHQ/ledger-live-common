@@ -258,10 +258,6 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v3",
     },
-    experimental: {
-      base: "EXPLORER_BETA",
-      version: "v3",
-    },
   },
   ethereum_ropsten: {
     id: "eth_ropsten",
