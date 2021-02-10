@@ -21,5 +21,3 @@ export type Announcement = {
   language?: string, // optional language targeting.
   currencies?: string[], // optional per currency account ownership targeting.
 };
-
-export type Annoucements = Announcement[];
