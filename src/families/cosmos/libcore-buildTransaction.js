@@ -1,4 +1,6 @@
 // @flow
+import axios from "axios";
+import { retry } from "../../promise";
 import { FeeNotLoaded } from "@ledgerhq/errors";
 import type { Transaction, CoreCosmosLikeTransaction } from "./types";
 import type { Account, CryptoCurrency } from "../../types";
@@ -64,11 +66,22 @@ async function can_estimate_gas(address: string, currency: CryptoCurrency) {
     const url = `${getBaseApiUrl(
       currency
     )}/${namespace}/auth/${version}/accounts/${address}`;
-    const { status } = await network({
+    const request = {
       method: "GET",
       url,
+      timeout: getEnv("GET_CALLS_TIMEOUT"),
+    };
+    const retriable = retry(() => axios(request), {
+      maxRetry: getEnv("GET_CALLS_RETRY"),
     });
-    return status < 300;
+
+    return await retriable
+      .then((_response) => {
+        return true;
+      })
+      .catch((_err) => {
+        return false;
+      });
   } else {
     return true;
   }
