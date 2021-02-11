@@ -324,6 +324,8 @@ const ethereum: AppSpec<Transaction> = {
 };
 
 const ethereumClassic: AppSpec<Transaction> = {
+  disabled: true,
+
   name: "Ethereum Classic",
   currency: getCryptoCurrencyById("ethereum_classic"),
   appQuery: {

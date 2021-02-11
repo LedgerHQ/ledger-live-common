@@ -2,7 +2,7 @@
 import expect from "expect";
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
-import bchaddrjs from "bchaddrjs";
+// import bchaddrjs from "bchaddrjs";
 import sample from "lodash/sample";
 import { log } from "@ledgerhq/logs";
 import type { Transaction } from "./types";
@@ -244,7 +244,6 @@ const bitcoinTestnet: AppSpec<Transaction> = {
     ),
   }),
 };
-*/
 
 const bitcoinGold: AppSpec<Transaction> = {
   name: "Bitcoin Gold",
@@ -344,7 +343,7 @@ const stratis: AppSpec<Transaction> = {
   },
   test: genericTest,
   mutations: bitcoinLikeMutations(),
-};*/
+};
 
 const vertcoin: AppSpec<Transaction> = {
   name: "Vertcoin",
@@ -405,6 +404,7 @@ const dogecoin: AppSpec<Transaction> = {
     ),
   }),
 };
+*/
 
 const zcash: AppSpec<Transaction> = {
   name: "ZCash",
@@ -423,6 +423,7 @@ const zcash: AppSpec<Transaction> = {
   }),
 };
 
+/*
 const zencash: AppSpec<Transaction> = {
   name: "Horizen",
   currency: getCryptoCurrencyById("zencash"),
@@ -439,6 +440,7 @@ const zencash: AppSpec<Transaction> = {
     ),
   }),
 };
+*/
 
 const digibyte: AppSpec<Transaction> = {
   name: "Digibyte",
@@ -458,6 +460,7 @@ const digibyte: AppSpec<Transaction> = {
   }),
 };
 
+/*
 const komodo: AppSpec<Transaction> = {
   name: "Komodo",
   currency: getCryptoCurrencyById("komodo"),
@@ -509,23 +512,9 @@ const stealthcoin: AppSpec<Transaction> = {
     ),
   }),
 };
+*/
 
 export default {
   digibyte,
-  bitcoinCash,
-  bitcoinGold,
-  dash,
-  stealthcoin,
   zcash,
-  zencash,
-  qtum,
-  komodo,
-  // decred, // TODO MISSING
-  peercoin,
-  viacoin,
-  stakenet,
-  dogecoin,
-  pivx,
-  // stratis, // issue
-  vertcoin,
 };
