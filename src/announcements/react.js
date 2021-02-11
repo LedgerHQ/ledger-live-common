@@ -1,19 +1,17 @@
 // @flow
 import uniq from "lodash/uniq";
 import intersection from "lodash/intersection";
-import difference from "lodash/difference";
 import React, {
   createContext,
-  useReducer,
-  useMemo,
   useContext,
   useEffect,
+  useMemo,
+  useReducer,
 } from "react";
 import type { Announcement } from "./types";
 import { fetchAnnouncements } from "./logic";
-// import { createSelector } from "reselect";
 
-type Filters = {
+type Context = {
   language: string,
   currencies: string[],
   date: Date,
@@ -21,10 +19,15 @@ type Filters = {
 
 type Props = {
   children: React$Node,
-  onNewAnnoucement: (string) => void,
-  onLoad: () => Promise<Announcement[]>,
-  onSave: (Announcement[]) => void,
-  filters: Filters,
+  onLoad: () => Promise<{
+    announcements: Announcement[],
+    seenIds: string[],
+  }>,
+  onSave: ({
+    announcements: Announcement[],
+    seenIds: string[],
+  }) => Promise<void>,
+  context: Context,
 };
 
 type Cache = {
@@ -44,7 +47,7 @@ type API = {
   setAsSeen: (seenIds: string[]) => void,
 };
 
-type Context = State & API;
+type AnnouncementContext = State & API;
 
 type SetAsSeenAction = { type: "setAsSeen", seenIds: string[] };
 
@@ -62,13 +65,20 @@ type UpdateCachePendingAction = {
   type: "updateCachePending",
 };
 
+type LoadCacheAction = {
+  type: "updateCachePending",
+  announcements: Announcement[],
+  seenIds: string[],
+};
+
 type Action =
   | SetAsSeenAction
   | UpdateCacheSuccessAction
   | UpdateCacheErrorAction
-  | UpdateCachePendingAction;
+  | UpdateCachePendingAction
+  | LoadCacheAction;
 
-const AnnoucementsContext = createContext<Context>({});
+const AnnoucementsContext = createContext<AnnouncementContext>({});
 
 const initialState: State = {
   cache: {},
@@ -84,6 +94,23 @@ const reducer = (state: State, action: Action) => {
         ...state,
         seenIds: uniq([...state.seenIds, ...action.seenIds]),
       };
+
+    case "loadCache": {
+      const cache = action.announcements.reduce((acc, curr) => {
+        acc[curr.uuid] = curr;
+        return acc;
+      }, {});
+      const allIds = Object.keys(cache);
+      const seenIds = action.seenIds;
+      return {
+        ...state,
+        cache,
+        seenIds,
+        allIds,
+        isLoading: false,
+        error: null,
+      };
+    }
 
     case "updateCacheSuccess": {
       const cache = action.announcements.reduce((acc, curr) => {
@@ -124,15 +151,19 @@ const reducer = (state: State, action: Action) => {
 
 function filterAnnouncements(
   announcements: Announcement[],
-  filters: Filters
+  context: Context
 ): Announcement[] {
-  const { language, currencies, date } = filters;
+  const { language, currencies, date } = context;
 
-  const filtered = announcements.filter((announcement) => {
-    if (announcement?.language !== language) {
+  return announcements.filter((announcement) => {
+    if (announcement.language && announcement.language !== language) {
       return false;
     }
-    if (!announcement?.currencies?.some((c) => currencies.includes(c))) {
+
+    if (
+      announcement.currencies &&
+      !announcement.currencies.some((c) => currencies.includes(c))
+    ) {
       return false;
     }
 
@@ -150,12 +181,6 @@ function filterAnnouncements(
 
     return true;
   });
-
-  return filtered;
-}
-
-function getFreshAnnouncements(oldIds, newIds) {
-  return difference(oldIds, newIds);
 }
 
 // SELECTORS
@@ -170,12 +195,13 @@ function getFreshAnnouncements(oldIds, newIds) {
 
 export const AnnoucementProvider = ({
   children,
-  filters,
-  onNewAnnoucement, // FOR THE TOAST
+  context,
   onLoad, // LOAD ANNOUNCEMENTS FROM DB
   onSave, // SAVE ANNOUNCEMENTS TO DB
 }: Props) => {
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  const { cache, seenIds, allIds } = state;
 
   const api = useMemo(
     () => ({
@@ -183,12 +209,8 @@ export const AnnoucementProvider = ({
         dispatch({ type: "updateCachePending" });
         try {
           const allAnnouncements = await fetchAnnouncements();
-          const announcements = filterAnnouncements(allAnnouncements, filters);
-          const newIds = announcements.map((a) => a.uuid);
-          const freshIds = getFreshAnnouncements(state.allIds, newIds);
-          freshIds.forEach((id) => onNewAnnoucement(id));
+          const announcements = filterAnnouncements(allAnnouncements, context);
           dispatch({ type: "updateCacheSuccess", announcements });
-          onSave(announcements);
         } catch (e) {
           dispatch({ type: "updateCacheError", error: e });
         }
@@ -197,13 +219,18 @@ export const AnnoucementProvider = ({
         dispatch({ type: "setAsSeen", seenIds });
       },
     }),
-    [dispatch, filters, state.allIds, onNewAnnoucement, onSave]
+    [dispatch, context]
   );
+
+  useEffect(() => {
+    const announcements = allIds.map((id: string) => cache[id]);
+    onSave({ announcements, seenIds });
+  }, [cache, seenIds]);
 
   // onDidMount
   useEffect(() => {
-    onLoad().then((announcements) => {
-      dispatch({ type: "updateCacheSuccess", announcements });
+    onLoad().then(({ announcements, seenIds }) => {
+      dispatch({ type: "loadCache", announcements, seenIds });
     });
   }, []); /* eslint-disable-line */
 
