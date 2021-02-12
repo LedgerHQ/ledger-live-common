@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
 } from "react";
 import type { Announcement } from "./types";
 import { fetchAnnouncements } from "./logic";
@@ -14,7 +15,7 @@ import { fetchAnnouncements } from "./logic";
 type Context = {
   language: string,
   currencies: string[],
-  date: Date,
+  getDate: () => Date,
 };
 
 type Props = {
@@ -153,7 +154,9 @@ function filterAnnouncements(
   announcements: Announcement[],
   context: Context
 ): Announcement[] {
-  const { language, currencies, date } = context;
+  const { language, currencies, getDate } = context;
+
+  const date = getDate();
 
   return announcements.filter((announcement) => {
     if (announcement.language && announcement.language !== language) {
@@ -200,6 +203,7 @@ export const AnnoucementProvider = ({
   onSave, // SAVE ANNOUNCEMENTS TO DB
 }: Props) => {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const initialised = useRef(false);
 
   const { cache, seenIds, allIds } = state;
 
@@ -223,14 +227,17 @@ export const AnnoucementProvider = ({
   );
 
   useEffect(() => {
-    const announcements = allIds.map((id: string) => cache[id]);
-    onSave({ announcements, seenIds });
+    if (initialised.current) {
+      const announcements = allIds.map((id: string) => cache[id]);
+      onSave({ announcements, seenIds });
+    }
   }, [cache, seenIds]);
 
   // onDidMount
   useEffect(() => {
     onLoad().then(({ announcements, seenIds }) => {
       dispatch({ type: "loadCache", announcements, seenIds });
+      initialised.current = true;
     });
   }, []); /* eslint-disable-line */
 
@@ -246,4 +253,5 @@ export const AnnoucementProvider = ({
   );
 };
 
-export const useAnnouncements = (): AnnouncementContextType => useContext(AnnoucementsContext);
+export const useAnnouncements = (): AnnouncementContextType =>
+  useContext(AnnoucementsContext);
