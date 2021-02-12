@@ -47,7 +47,7 @@ type API = {
   setAsSeen: (seenIds: string[]) => void,
 };
 
-type AnnouncementContext = State & API;
+type AnnouncementContextType = State & API;
 
 type SetAsSeenAction = { type: "setAsSeen", seenIds: string[] };
 
@@ -66,7 +66,7 @@ type UpdateCachePendingAction = {
 };
 
 type LoadCacheAction = {
-  type: "updateCachePending",
+  type: "loadCache",
   announcements: Announcement[],
   seenIds: string[],
 };
@@ -78,7 +78,7 @@ type Action =
   | UpdateCachePendingAction
   | LoadCacheAction;
 
-const AnnoucementsContext = createContext<AnnouncementContext>({});
+const AnnoucementsContext = createContext<AnnouncementContextType>({});
 
 const initialState: State = {
   cache: {},
@@ -246,4 +246,4 @@ export const AnnoucementProvider = ({
   );
 };
 
-export const useAnnouncements = (): Context => useContext(AnnoucementsContext);
+export const useAnnouncements = (): AnnouncementContextType => useContext(AnnoucementsContext);
