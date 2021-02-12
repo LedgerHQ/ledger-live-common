@@ -36,12 +36,13 @@ export type ExchangeRate = {
   providerURL?: ?string,
 };
 
+export type TradeMethod = "fixed" | "float";
 export type ExchangeRateRaw = {
   rate: string,
   magnitudeAwareRate: string,
   rateId?: string,
   provider: string,
-  tradeMethod: "fixed" | "float",
+  tradeMethod: TradeMethod,
   error?: string,
   providerURL?: ?string,
 };

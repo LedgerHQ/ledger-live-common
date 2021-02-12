@@ -1,15 +1,15 @@
 // @flow
 
-import type { SwapState } from "./types";
+import type { SwapState, TradeMethod } from "./types";
 import { isExchangeSupportedByApp } from "../";
 import type { AccountLike, TokenCurrency, CryptoCurrency } from "../../types";
 import type { InstalledItem } from "../../apps";
 import { flattenAccounts, getAccountCurrency } from "../../account";
-const validCurrencyStatus = { ok: 1, noApp: 1, noAccounts: 1, outdatedApp: 1 };
 export type CurrencyStatus = $Keys<typeof validCurrencyStatus>;
 export type CurrenciesStatus = { [string]: CurrencyStatus };
 import uniq from "lodash/uniq";
 
+const validCurrencyStatus = { ok: 1, noApp: 1, noAccounts: 1, outdatedApp: 1 };
 export const getCurrenciesWithStatus = ({
   accounts,
   selectableCurrencies,
@@ -53,7 +53,7 @@ export const getCurrenciesWithStatus = ({
 };
 
 const reset = {
-  isTimerVisible: false,
+  isTimerVisible: true,
   ratesExpiration: undefined,
   error: undefined,
   exchangeRate: undefined,
@@ -65,32 +65,40 @@ export const getValidToCurrencies = ({
   selectableCurrencies,
   fromCurrency,
 }: {
-  selectableCurrencies: { [string]: (TokenCurrency | CryptoCurrency)[] },
+  selectableCurrencies: { [TradeMethod]: (TokenCurrency | CryptoCurrency)[] },
   fromCurrency: ?(TokenCurrency | CryptoCurrency),
 }): (TokenCurrency | CryptoCurrency)[] => {
   const out = [];
-  for (const tradeMethod in selectableCurrencies) {
+  const tradeMethods = Object.keys(selectableCurrencies);
+  for (const tradeMethod of tradeMethods) {
     const currenciesForTradeMethod = selectableCurrencies[tradeMethod];
     if (currenciesForTradeMethod.includes(fromCurrency)) {
-      out.push(...selectableCurrencies[tradeMethod]);
+      out.push(
+        ...selectableCurrencies[tradeMethod].filter((c) => c !== fromCurrency)
+      );
     }
   }
   return uniq(out);
 };
+
+const allTradeMethods: TradeMethod[] = ["fixed", "float"]; // Flow i give up
 
 export const getEnabledTradeMethods = ({
   selectableCurrencies,
   fromCurrency,
   toCurrency,
 }: {
-  selectableCurrencies: { [string]: (TokenCurrency | CryptoCurrency)[] },
+  selectableCurrencies: { [TradeMethod]: (TokenCurrency | CryptoCurrency)[] },
   toCurrency: ?(TokenCurrency | CryptoCurrency),
   fromCurrency: ?(TokenCurrency | CryptoCurrency),
-}): string[] => {
-  const tradeMethods = Object.keys(selectableCurrencies);
+}): TradeMethod[] => {
+  const tradeMethods = Object.keys(selectableCurrencies).filter((m) =>
+    allTradeMethods.includes(m)
+  );
   return fromCurrency && toCurrency
     ? tradeMethods.filter(
         (method) =>
+          allTradeMethods.includes(method) &&
           selectableCurrencies[method].includes(fromCurrency) &&
           selectableCurrencies[method].includes(toCurrency)
       )
@@ -155,6 +163,14 @@ export const reducer = (
       return {
         ...state,
         loadingRates: payload.loadingRates,
+      };
+    case "onFlip":
+      return {
+        ...state,
+        fromCurrency: state.toCurrency,
+        toCurrency: state.fromCurrency,
+        toAccount: payload.toAccount,
+        toParentAccount: payload.toParentAccount,
       };
   }
   return state || {};
