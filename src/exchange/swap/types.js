@@ -142,17 +142,19 @@ export type SwapOperationRaw = {
 };
 
 export type SwapState = {
-  swap: {
-    exchange: $Shape<Exchange>,
-    exchangeRate?: ?ExchangeRate,
-  },
+  // NB fromAccount and fromParentAccount and amount come from `useBridgeTransaction`
+  useAllAmount?: boolean,
+  loadingRates?: boolean,
+  isTimerVisible?: boolean,
   error?: ?Error,
-  ratesTimestamp?: Date,
-  okCurrencies: (CryptoCurrency | TokenCurrency)[],
-  fromCurrency: ?(CryptoCurrency | TokenCurrency),
-  toCurrency: ?(CryptoCurrency | TokenCurrency),
-  useAllAmount: boolean,
-  fromAmount: BigNumber,
+
+  fromCurrency?: ?(CryptoCurrency | TokenCurrency),
+  toCurrency?: ?(CryptoCurrency | TokenCurrency),
+  toAccount?: ?AccountLike,
+  toParentAccount?: ?Account,
+  ratesExpiration?: ?Date,
+  exchangeRate?: ?ExchangeRate,
+  withExpiration?: boolean,
 };
 
 export type InitSwapInput = {
