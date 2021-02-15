@@ -1,7 +1,6 @@
 // @flow
+import invariant from "invariant";
 import getAccountNetworkInfo from "./js-getAccountNetworkInfo";
-
-// FIXME: imports
 
 const prepareTransaction = async (a, t) => {
   const networkInfo = t.networkInfo || (await getAccountNetworkInfo(a));

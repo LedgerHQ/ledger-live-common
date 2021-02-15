@@ -4,14 +4,12 @@ import type { AccountBridge, CurrencyBridge } from "../../../types";
 import type { Transaction } from "../types";
 
 import { scanAccounts, sync } from "../js-synchronization";
-import { getTransactionStatus } from "../js-getTransactionStatus";
-import { estimateMaxSpendable } from "../js-estimateMaxSpendable";
-import { createTransaction } from "../js-createTransaction";
-import { prepareTransaction } from "../js-prepareTransaction";
-
-// TODO: Replace & remove these imports
-import signOperation from "../../../libcore/signOperation";
-import broadcast from "../../../libcore/broadcast";
+import getTransactionStatus from "../js-getTransactionStatus";
+import estimateMaxSpendable from "../js-estimateMaxSpendable";
+import createTransaction from "../js-createTransaction";
+import prepareTransaction from "../js-prepareTransaction";
+import signOperation from "../js-signOperation";
+import broadcast from "../js-broadcast";
 
 const preload = async () => {};
 

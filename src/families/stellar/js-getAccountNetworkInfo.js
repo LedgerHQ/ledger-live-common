@@ -1,8 +1,18 @@
 // @flow
+import { BigNumber } from "bignumber.js";
 import type { Account, NetworkInfo } from "../../types";
 
-// TODO: move to api
+// Placeholder, TODO: implement in api
+async function getBaseReserve(a: Account) {
+  return 1;
+}
 
+// Placeholder, TODO: implement in api
+async function getFeeStats(a: Account) {
+  return { modeAcceptedFee: BigNumber(0.1) };
+}
+
+// TODO: move to api
 async function getAccountNetworkInfo(account: Account): Promise<NetworkInfo> {
   const baseReserve = await getBaseReserve(account);
   const baseFees = await getFeeStats(account);
@@ -10,8 +20,8 @@ async function getAccountNetworkInfo(account: Account): Promise<NetworkInfo> {
 
   return {
     family: "stellar",
-    fees, // FIXME: is this syntax ok?
-    baseReserve, // FIXME: is this syntax ok?
+    fees,
+    baseReserve,
   };
 }
 

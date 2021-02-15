@@ -1,22 +1,27 @@
 // @flow
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
-import { FeeNotLoaded } from "@ledgerhq/errors";
+import { AmountRequired, FeeNotLoaded } from "@ledgerhq/errors";
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
-import type { addressExists, getSequence } from "../api";
+//import { getSequence } from "../api"; // TODO:
+import { addressExists } from "./logic";
 
-// TODO: Implement XDR encode(/decode)
-// TODO: Replace libcore tx builder mechanism
+// Placeholder, TODO: implement in api
+async function getSequence(a: Account) {
+  return 1;
+}
+
+// TODO: Replace libcore transactionBuilder by SDK
 
 /**
  * @param {Account} a
  * @param {Transaction} t
  */
 export const buildTransaction = async (
-  a: Account,
-  t: Transaction
-) => /* TODO: return type? */ {
+  account: Account,
+  transaction: Transaction
+) => {
   const {
     recipient,
     useAllAmount,
@@ -36,17 +41,16 @@ export const buildTransaction = async (
     ? account.balance.minus(networkInfo.baseReserve).minus(fees)
     : transaction.amount;
 
-  // FIXME: more specific type of error?
-  if (!amount) throw new Error("amount is missing");
+  if (!amount) throw new AmountRequired();
 
-  const recipientExists = await addressExists(t.recipient); // FIXME: use cache with checkRecipientExist instead?
+  const recipientExists = await addressExists(transaction.recipient); // FIXME: use cache with checkRecipientExist instead?
   if (recipientExists) {
     await transactionBuilder.addNativePayment(recipient, amount);
   } else {
     await transactionBuilder.addCreateAccount(recipient, amount);
   }
 
-  const sequence = await getSequence();
+  const sequence = await getSequence(account);
   await transactionBuilder.setSequence(sequence);
 
   if (memoType && memoValue) {
@@ -74,7 +78,10 @@ export const buildTransaction = async (
 
   const built = await transactionBuilder.build();
 
+  console.log("XXXXX - buildTransaction returns:");
+  console.log(built);
+
   return built;
 };
 
-export default stellarBuildTransaction;
+export default buildTransaction;
