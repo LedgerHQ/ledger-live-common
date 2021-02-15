@@ -1,6 +1,6 @@
 // @flow
 import network from "../network";
-import type { Announcement } from "./types";
+import type {RawAnnouncement} from "./types";
 
 // expose a function to fetch data from the cdn (data from ledger-live-assets)
 // https://cdn.live.ledger.com/
@@ -8,7 +8,7 @@ import type { Announcement } from "./types";
 const BASE_URL = "https://cdn.live.ledger.com/announcements";
 const VERSION = "v1";
 
-export const fetchAnnouncements = async (): Promise<Announcement[]> => {
+export const fetchAnnouncements = async (): Promise<RawAnnouncement[]> => {
   const url = `${BASE_URL}/${VERSION}/data.json`;
 
   const { data } = await network({

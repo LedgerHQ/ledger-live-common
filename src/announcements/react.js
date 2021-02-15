@@ -9,7 +9,7 @@ import React, {
   useReducer,
   useRef,
 } from "react";
-import type { Announcement } from "./types";
+import type { Announcement, RawAnnouncement } from "./types";
 import { fetchAnnouncements } from "./logic";
 
 type UserSettings = {
@@ -137,6 +137,18 @@ const reducer = (state: State, action: Action) => {
   }
 };
 
+function localizeAnnouncements(
+  rawAnnouncements: RawAnnouncement[],
+  context: UserSettings
+): Announcement[] {
+  return rawAnnouncements.map((rawAnnouncement: RawAnnouncement) => ({
+    ...rawAnnouncement,
+    content:
+      rawAnnouncement.content[context.language] ||
+      rawAnnouncement.content["en"],
+  }));
+}
+
 function filterAnnouncements(
   announcements: Announcement[],
   context: UserSettings
@@ -146,7 +158,7 @@ function filterAnnouncements(
   const date = getDate();
 
   return announcements.filter((announcement) => {
-    if (announcement.language && announcement.language !== language) {
+    if (announcement.languages && !announcement.languages.includes(language)) {
       return false;
     }
 
@@ -196,8 +208,15 @@ export const AnnoucementProvider = ({
       updateCache: async () => {
         dispatch({ type: "updateCachePending" });
         try {
-          const allAnnouncements = await fetchAnnouncements();
-          const announcements = filterAnnouncements(allAnnouncements, context);
+          const rawAnnouncements = await fetchAnnouncements();
+          const localizedAnnouncements = localizeAnnouncements(
+            rawAnnouncements,
+            context
+          );
+          const announcements = filterAnnouncements(
+            localizedAnnouncements,
+            context
+          );
           dispatch({ type: "updateCacheSuccess", announcements });
         } catch (e) {
           dispatch({ type: "updateCacheError", error: e });
