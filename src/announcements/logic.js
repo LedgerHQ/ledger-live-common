@@ -1,5 +1,4 @@
 // @flow
-import { log } from "@ledgerhq/logs";
 import network from "../network";
 import type { Announcement } from "./types";
 
@@ -16,6 +15,5 @@ export const fetchAnnouncements = async (): Promise<Announcement[]> => {
     method: "GET",
     url,
   });
-  log("http", url);
   return data;
 };

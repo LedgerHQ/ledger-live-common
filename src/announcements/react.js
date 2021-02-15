@@ -12,7 +12,7 @@ import React, {
 import type { Announcement } from "./types";
 import { fetchAnnouncements } from "./logic";
 
-type Context = {
+type UserSettings = {
   language: string,
   currencies: string[],
   getDate: () => Date,
@@ -28,7 +28,7 @@ type Props = {
     announcements: Announcement[],
     seenIds: string[],
   }) => Promise<void>,
-  context: Context,
+  context: UserSettings,
 };
 
 type Cache = {
@@ -96,30 +96,17 @@ const reducer = (state: State, action: Action) => {
         seenIds: uniq([...state.seenIds, ...action.seenIds]),
       };
 
-    case "loadCache": {
-      const cache = action.announcements.reduce((acc, curr) => {
-        acc[curr.uuid] = curr;
-        return acc;
-      }, {});
-      const allIds = Object.keys(cache);
-      const seenIds = action.seenIds;
-      return {
-        ...state,
-        cache,
-        seenIds,
-        allIds,
-        isLoading: false,
-        error: null,
-      };
-    }
-
+    case "loadCache":
     case "updateCacheSuccess": {
-      const cache = action.announcements.reduce((acc, curr) => {
-        acc[curr.uuid] = curr;
-        return acc;
-      }, {});
+      const cache = {};
+      action.announcements.forEach((announcement) => {
+        cache[announcement.uuid] = announcement;
+      });
       const allIds = Object.keys(cache);
-      const seenIds = intersection(allIds, state.seenIds);
+      const seenIds =
+        action.type === "updateCacheSuccess"
+          ? intersection(allIds, state.seenIds)
+          : action.seenIds;
       return {
         ...state,
         cache,
@@ -152,7 +139,7 @@ const reducer = (state: State, action: Action) => {
 
 function filterAnnouncements(
   announcements: Announcement[],
-  context: Context
+  context: UserSettings
 ): Announcement[] {
   const { language, currencies, getDate } = context;
 
@@ -171,14 +158,11 @@ function filterAnnouncements(
     }
 
     const publishedAt = new Date(announcement.published_at);
-    if (publishedAt.getTime() > date.getTime()) {
+    if (publishedAt > date) {
       return false;
     }
 
-    if (
-      announcement.expired_at &&
-      new Date(announcement.expired_at).getTime() < date.getTime()
-    ) {
+    if (announcement.expired_at && new Date(announcement.expired_at) < date) {
       return false;
     }
 
@@ -231,7 +215,7 @@ export const AnnoucementProvider = ({
       const announcements = allIds.map((id: string) => cache[id]);
       onSave({ announcements, seenIds });
     }
-  }, [cache, seenIds]);
+  }, [cache, seenIds, onSave, allIds]);
 
   // onDidMount
   useEffect(() => {
