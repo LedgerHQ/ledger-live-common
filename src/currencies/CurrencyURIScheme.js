@@ -44,11 +44,7 @@ export function decodeURIScheme(str: string): Data {
   const query: Object = queryStr ? querystring.parse(queryStr) : {};
   const currency = findCryptoCurrencyByScheme(scheme);
   if (!currency) {
-    const data = { address };
-    if (data.address.toLowerCase().indexOf("bc1") === 0) {
-      data.address = data.address.toLowerCase();
-    }
-    return data;
+    return { address };
   }
   const data: Data = {
     currency,
@@ -79,12 +75,6 @@ export function decodeURIScheme(str: string): Data {
     }
   }
   Object.assign(data, specificFields);
-  if (
-    currency.id === "bitcoin" &&
-    data.address.toLowerCase().indexOf("bc1") === 0
-  ) {
-    data.address = data.address.toLowerCase();
-  }
   if (amount) {
     const cValue = convertedValue(amount, currency);
     if (cValue) {
