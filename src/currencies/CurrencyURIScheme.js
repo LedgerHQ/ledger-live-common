@@ -44,7 +44,11 @@ export function decodeURIScheme(str: string): Data {
   const query: Object = queryStr ? querystring.parse(queryStr) : {};
   const currency = findCryptoCurrencyByScheme(scheme);
   if (!currency) {
-    return { address };
+    const data = { address };
+    if (data.address.toLowerCase().indexOf("bc1") === 0) {
+      data.address = data.address.toLowerCase();
+    }
+    return data;
   }
   const data: Data = {
     currency,

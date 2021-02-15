@@ -446,6 +446,12 @@ test("decodeURIScheme", () => {
   });
 
   expect(
+    decodeURIScheme("BC1QT9TP4FY4UANKJSW9JWGS9APWAGZ8EE9XKWA9QG")
+  ).toMatchObject({
+    address: "bc1qt9tp4fy4uankjsw9jwgs9apwagz8ee9xkwa9qg",
+  });
+
+  expect(
     decodeURIScheme(
       "ethereum:0x931d387731bbbc988b312206c74f77d004d6b84b?gas=100&gasPrice=200&value=" +
         10 ** 18
