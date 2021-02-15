@@ -1,9 +1,9 @@
 // @flow
-import { patchOperationWithHash } from "../../../operation";
+import { patchOperationWithHash } from "../../operation";
 import type {
   Operation,
   SignedOperation,
-} from "../../../types";
+} from "../../types";
 //import { broadcastTransaction as apiBroadcast } from "../api"; // TODO:
 
 /**

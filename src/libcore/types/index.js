@@ -11,11 +11,6 @@ import type {
   CoreCurrencySpecifics,
 } from "../../generated/types";
 
-// This is an exception because Stellar is the only one who need a specific methods
-// Need to talk about this in a PR with @gre
-
-import type { CoreStellarLikeWallet } from "../../families/stellar/types";
-
 declare class CoreWalletPool {
   static newInstance(
     name: string,
@@ -59,7 +54,6 @@ declare class CoreWallet {
   newAccountWithExtendedKeyInfo(
     keys?: CoreExtendedKeyAccountCreationInfo
   ): Promise<CoreAccount>;
-  asStellarLikeWallet(): Promise<CoreStellarLikeWallet>;
 }
 
 export const TimePeriod = {

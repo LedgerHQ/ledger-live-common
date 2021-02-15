@@ -4,6 +4,7 @@ import {
   AmountRequired,
   NotEnoughBalance,
   FeeNotLoaded,
+  InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughSpendableBalance,
   NotEnoughBalanceBecauseDestinationNotCreated,
@@ -33,7 +34,7 @@ const getTransactionStatus = async (a: Account, t) => {
   if (a.freshAddress === t.recipient) {
     errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
   } else if (!isAddressValid(t.recipient)) {
-    errors.recipient = new InvalidAddress(null); // FIXME: Is just null ok?
+    errors.recipient = new InvalidAddress("");
   }
 
   if (await isAccountMultiSign(a)) {
@@ -87,7 +88,7 @@ const getTransactionStatus = async (a: Account, t) => {
     errors.amount = new AmountRequired();
   }
 
-  // if amount < 1.0 you can't
+  // if amount < 1.0 you can't send to an empty address
   if (
     t.recipient &&
     !errors.amount &&
