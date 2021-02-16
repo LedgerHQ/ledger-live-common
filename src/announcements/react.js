@@ -8,6 +8,8 @@ import React, {
   useMemo,
   useReducer,
   useRef,
+  useState,
+  useCallback,
 } from "react";
 import type { Announcement, RawAnnouncement } from "./types";
 import { fetchAnnouncements } from "./logic";
@@ -41,6 +43,7 @@ type State = {
   cache: Cache,
   isLoading: boolean,
   error: ?Error,
+  initialized: boolean,
 };
 
 type API = {
@@ -48,7 +51,7 @@ type API = {
   setAsSeen: (seenIds: string[]) => void,
 };
 
-type AnnouncementContextType = State & API;
+export type AnnouncementContextType = State & API;
 
 type SetAsSeenAction = { type: "setAsSeen", seenIds: string[] };
 
@@ -87,6 +90,7 @@ const initialState: State = {
   allIds: [],
   error: null,
   isLoading: false,
+  initialized: false,
 };
 const reducer = (state: State, action: Action) => {
   switch (action.type) {
@@ -114,6 +118,7 @@ const reducer = (state: State, action: Action) => {
         allIds,
         isLoading: false,
         error: null,
+        initialized: true,
       };
     }
 
@@ -308,4 +313,37 @@ export const useGroupedAnnouncements = (cache: {
   }, [cache]);
 
   return groupedAnnouncements;
+};
+
+export const useNewAnnouncements = ({
+  cache,
+  allIds,
+}: AnnouncementContextType): [
+  Announcement[],
+  (uuid: string) => void,
+  () => void
+] => {
+  const currentIds = useRef(allIds);
+  const [newAnnouncements, setNewAnnouncements] = useState([]);
+
+  useEffect(() => {
+    const diff = allIds.filter((id) => !currentIds.current.includes(id));
+    if (diff.length > 0) {
+      currentIds.current = allIds;
+      setNewAnnouncements((state) => [
+        ...diff.map((id) => cache[id]),
+        ...state,
+      ]);
+    }
+  }, [allIds, cache, currentIds]);
+
+  const clearAnnouncement = useCallback((uuid: string) => {
+    setNewAnnouncements((state) => state.filter((a) => a.uuid !== uuid));
+  }, []);
+
+  const clearAllAnouncements = useCallback(() => {
+    setNewAnnouncements([]);
+  }, []);
+
+  return [newAnnouncements, clearAnnouncement, clearAllAnouncements];
 };
