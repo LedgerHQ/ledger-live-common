@@ -2,8 +2,8 @@
 import { BigNumber } from "bignumber.js";
 import StellarSdk from "stellar-sdk";
 import { getEnv } from "../../../env";
-import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
 import { encodeOperationId } from "../../../operation";
+import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
 import type { Operation, OperationType } from "../../../types";
 import type { RawAccount, RawOperation, RawTransaction } from "./horizon.types";
 import { getAccountSpendableBalance, formatOperation } from "../logic";
@@ -89,6 +89,7 @@ const fetchTransactionsList = async (
   addr: string,
   startAt: number
 ): Promise<RawTransaction[]> => {
+  const server = getSDKInstance();
   let transactions = {};
   let mergedTransactions = [];
 
@@ -122,6 +123,7 @@ const fetchOperationList = async (
   addr: string,
   transactions: RawTransaction[]
 ): Promise<Operation[]> => {
+  const server = getSDKInstance();
   let formattedMergedOp = [];
 
   for (let i = 0; i < transactions.length; i++) {
