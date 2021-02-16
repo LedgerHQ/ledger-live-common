@@ -1,11 +1,12 @@
 //@flow
-
+import { BigNumber } from "bignumber.js";
 import StellarSdk from "stellar-sdk";
-import { getAccountSpendableBalance, formatOperation } from "../logic";
-import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
-import type { Operation } from "../../../types";
-import type { RawTransaction, RawAccount } from "./horizon.types";
 import { getEnv } from "../../../env";
+import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
+import { encodeOperationId } from "../../../operation";
+import type { Operation, OperationType } from "../../../types";
+import type { RawTransaction, RawAccount } from "./horizon.types";
+import { getAccountSpendableBalance, formatOperation } from "../logic";
 
 const LIMIT = 200;
 const FALLBACK_BASE_FEE = 100;
