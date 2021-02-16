@@ -9,18 +9,13 @@ import { open, close } from "../../hw";
 
 import type { Transaction } from "./types";
 import { buildTransaction } from "./js-buildTransaction";
-
-// Placeholder, TODO: implement in api
-async function getSequence(a: Account) {
-  return 1;
-}
+import { getSequence } from "./api";
 
 const buildOptimisticOperation = async (
   account: Account,
   transaction: Transaction
 ): Operation => {
   
-  // TODO: implement getSequence in api
   const transactionSequenceNumber = await getSequence(account);
 
   // FIXME: DEBUG, TO BE REMOVED

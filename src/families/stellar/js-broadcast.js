@@ -4,7 +4,7 @@ import type {
   Operation,
   SignedOperation,
 } from "../../types";
-//import { broadcastTransaction as apiBroadcast } from "../api"; // TODO:
+import { broadcastTransaction as apiBroadcast } from "./api";
 
 /**
  * Broadcast a signed transaction
@@ -15,9 +15,7 @@ const broadcast = async ({
 }: {
   signedOperation: SignedOperation,
 }): Promise<Operation> => {
-  // TODO: Implement broadcastTransaction in api.js
-  //const hash = await apiBroadcast(signature);
-  const hash = ""; 
+  const hash = await apiBroadcast(signature);
 
   return patchOperationWithHash(operation, hash);
 };

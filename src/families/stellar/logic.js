@@ -135,7 +135,7 @@ const getValue = (
   }
 };
 
-// TODO: Move to cache
+// TODO: Move to cache.js
 export const checkRecipientExist: CacheRes<
   Array<{ account: Account, recipient: string }>,
   boolean

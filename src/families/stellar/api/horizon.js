@@ -1,10 +1,11 @@
 //@flow
 import { BigNumber } from "bignumber.js";
+import { BigNumber } from "bignumber.js";
 import StellarSdk from "stellar-sdk";
 import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
-import type { Operation, OperationType } from "../../../types";
+import type { Account, NetworkInfo, Operation, OperationType } from "../../../types";
 import type { RawAccount, RawOperation, RawTransaction } from "./horizon.types";
 import { getAccountSpendableBalance, formatOperation } from "../logic";
 
@@ -151,3 +152,40 @@ const fetchOperationList = async (
 
   return formattedMergedOp;
 };
+
+const getBaseReserve = async (a: Account) => {
+  // TODO: implement using SDK
+  return 1;
+}
+
+const getFeeStats = async (a: Account) => {
+  // TODO: implement using SDK
+  return { modeAcceptedFee: BigNumber(0.1) };
+}
+
+export const getAccountNetworkInfo = async (account: Account): Promise<NetworkInfo> => {
+  const baseReserve = await getBaseReserve(account);
+  const baseFees = await getFeeStats(account);
+  const fees = baseFees.modeAcceptedFee;
+
+  return {
+    family: "stellar",
+    fees,
+    baseReserve,
+  };
+}
+
+export const getSequence = async (a: Account) => {
+  // TODO: implement using SDK
+  return 1;
+}
+
+export const getSigners = async (a: Account) => {
+  // TODO: implement using SDK
+  return 0;
+}
+
+export const broadcastTransaction = async (signedTransaction) => {
+  // TODO: actually broadcast and return hash
+  return "dummy hash";
+}

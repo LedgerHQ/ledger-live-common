@@ -1,3 +1,10 @@
 //@flow
 
-export { getAccount, getOperations, fetchBaseFee } from "./horizon";
+export {
+  getAccount,
+  getOperations,
+  fetchBaseFee,
+  getSequence,
+  getAccountNetworkInfo,
+  broadcastTransaction
+} from "./horizon";
