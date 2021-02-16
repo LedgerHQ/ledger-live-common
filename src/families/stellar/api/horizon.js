@@ -5,7 +5,7 @@ import { getEnv } from "../../../env";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
 import { encodeOperationId } from "../../../operation";
 import type { Operation, OperationType } from "../../../types";
-import type { RawTransaction, RawAccount } from "./horizon.types";
+import type { RawAccount, RawOperation, RawTransaction } from "./horizon.types";
 import { getAccountSpendableBalance, formatOperation } from "../logic";
 
 const LIMIT = 200;
