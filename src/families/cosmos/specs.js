@@ -19,7 +19,6 @@ import {
 } from "./logic";
 
 const cosmos: AppSpec<Transaction> = {
-  disabled: true,
   name: "Cosmos",
   currency: getCryptoCurrencyById("cosmos"),
   appQuery: {
