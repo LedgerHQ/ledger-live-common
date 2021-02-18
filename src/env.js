@@ -426,6 +426,16 @@ const envDefinitions = {
     parser: intParser,
     desc: "version used for the announcements api",
   },
+  STATUS_API_URL: {
+    def: "https://ledger.statuspage.io/api",
+    parser: stringParser,
+    desc: "url used to fetch ledger status",
+  },
+  STATUS_API_VERSION: {
+    def: 2,
+    parser: intParser,
+    desc: "version used for ledger status api",
+  },
 };
 
 const getDefinition = (name: string): ?EnvDef<any> => envDefinitions[name];

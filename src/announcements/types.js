@@ -15,8 +15,8 @@ type AnnouncementBase = {
 
 export type AnnouncementContent = {
   title: string, // article title
-  text: string, // article text
-  link?: {
+  text: ?string, // article text
+  link?: ?{
     // optional link to content
     href: string, // content URL
     label?: string, // optional link label
@@ -31,4 +31,32 @@ export type RawAnnouncement = AnnouncementBase & {
 
 export type Announcement = AnnouncementBase & {
   content: AnnouncementContent,
+};
+
+export type RawStatusSummary = {
+  incidents: ?({
+    created_at: string,
+    id: string,
+    impact: string,
+    incident_updates: ?({
+      body: string,
+      created_at?: string,
+      display_at?: string,
+      id?: string,
+      incident_id?: string,
+      status?: string,
+      updated_at?: string,
+    }[]),
+    monitoring_at: ?string,
+    name: string,
+    page_id: ?string,
+    resolved_at: ?string,
+    shortlink: ?string,
+    status: string,
+    updated_at: ?string,
+  }[]),
+};
+
+export type StatusIncident = Announcement & {
+  status?: string,
 };
