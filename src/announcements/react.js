@@ -272,7 +272,7 @@ function startOfDayTime(date: string): number {
 
 export const useGroupedAnnouncements = (cache: {
   [key: string]: Announcement,
-}): { day: ?string, data: Announcement[] }[] => {
+}): { day: ?Date, data: Announcement[] }[] => {
   const groupedAnnouncements = useMemo(() => {
     // first group by published_at or if theres a priority set
     const announcementsByDayOrPriority: {
@@ -305,7 +305,7 @@ export const useGroupedAnnouncements = (cache: {
         return bb - aa;
       })
       .map((date) => ({
-        day: date === 0 ? null : new Date(date).toLocaleDateString(), // format Day if available
+        day: date === 0 ? null : new Date(date), // format Day if available
         data: announcementsByDayOrPriority[`${date}`].sort(
           (a, b) => (a.priority || 0) - (b.priority || 0)
         ), // resort data by priority if it is set
