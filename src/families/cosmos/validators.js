@@ -181,7 +181,7 @@ const getRewardsState = makeLRUCache(
 );
 
 const getStargateRewardsState = makeLRUCache(
-  async (currency: CryptoCurrency) => {
+  async (_currency: CryptoCurrency) => {
     // Fake numbers until Gaia fixes its endpoints
     return {
       targetBondedRatio: 0.01,
