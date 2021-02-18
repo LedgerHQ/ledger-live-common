@@ -2,7 +2,7 @@
 import expect from "expect";
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
-// import bchaddrjs from "bchaddrjs";
+import bchaddrjs from "bchaddrjs";
 import sample from "lodash/sample";
 import { log } from "@ledgerhq/logs";
 import type { Transaction } from "./types";
@@ -244,6 +244,7 @@ const bitcoinTestnet: AppSpec<Transaction> = {
     ),
   }),
 };
+*/
 
 const bitcoinGold: AppSpec<Transaction> = {
   name: "Bitcoin Gold",
@@ -284,6 +285,7 @@ const bitcoinCash: AppSpec<Transaction> = {
   }),
 };
 
+/*
 const peercoin: AppSpec<Transaction> = {
   name: "Peercoin",
   currency: getCryptoCurrencyById("peercoin"),
@@ -295,6 +297,7 @@ const peercoin: AppSpec<Transaction> = {
   test: genericTest,
   mutations: bitcoinLikeMutations(),
 };
+*/
 
 const pivx: AppSpec<Transaction> = {
   name: "PivX",
@@ -331,8 +334,8 @@ const stakenet: AppSpec<Transaction> = {
   test: genericTest,
   mutations: bitcoinLikeMutations(),
 };
-/*
 
+/*
 const stratis: AppSpec<Transaction> = {
   name: "Stratis",
   currency: getCryptoCurrencyById("stratis"),
@@ -344,6 +347,7 @@ const stratis: AppSpec<Transaction> = {
   test: genericTest,
   mutations: bitcoinLikeMutations(),
 };
+*/
 
 const vertcoin: AppSpec<Transaction> = {
   name: "Vertcoin",
@@ -369,6 +373,7 @@ const viacoin: AppSpec<Transaction> = {
   mutations: bitcoinLikeMutations(),
 };
 
+/*
 const dash: AppSpec<Transaction> = {
   name: "Dash",
   currency: getCryptoCurrencyById("dash"),
@@ -386,6 +391,7 @@ const dash: AppSpec<Transaction> = {
     ),
   }),
 };
+*/
 
 const dogecoin: AppSpec<Transaction> = {
   name: "DogeCoin",
@@ -404,7 +410,6 @@ const dogecoin: AppSpec<Transaction> = {
     ),
   }),
 };
-*/
 
 const zcash: AppSpec<Transaction> = {
   name: "ZCash",
@@ -495,6 +500,7 @@ const litecoin: AppSpec<Transaction> = {
     ),
   }),
 };
+*/
 
 const stealthcoin: AppSpec<Transaction> = {
   name: "Stealth",
@@ -512,9 +518,17 @@ const stealthcoin: AppSpec<Transaction> = {
     ),
   }),
 };
-*/
 
 export default {
   digibyte,
   zcash,
+  bitcoinCash,
+  bitcoinGold,
+  dogecoin,
+  qtum,
+  pivx,
+  stakenet,
+  stealthcoin,
+  vertcoin,
+  viacoin,
 };
