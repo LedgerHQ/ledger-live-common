@@ -1,6 +1,6 @@
 // @flow
 import invariant from "invariant";
-import getAccountNetworkInfo from "./js-getAccountNetworkInfo";
+import { getAccountNetworkInfo } from "./api";
 
 const prepareTransaction = async (a, t) => {
   const networkInfo = t.networkInfo || (await getAccountNetworkInfo(a));

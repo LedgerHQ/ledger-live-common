@@ -1,6 +1,5 @@
 //@flow
 import { BigNumber } from "bignumber.js";
-import { BigNumber } from "bignumber.js";
 import StellarSdk from "stellar-sdk";
 import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";

@@ -4,7 +4,7 @@ import { BigNumber } from "bignumber.js";
 import { AmountRequired, FeeNotLoaded } from "@ledgerhq/errors";
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
-import { getSequence } from "../api";
+import { getSequence } from "./api";
 import { addressExists } from "./logic";
 
 // TODO: Replace libcore transactionBuilder by SDK
