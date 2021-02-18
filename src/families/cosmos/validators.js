@@ -184,17 +184,17 @@ const getStargateRewardsState = makeLRUCache(
   async (currency: CryptoCurrency) => {
     // Fake numbers until Gaia fixes its endpoints
     return {
-      targetBondedRatio: 0.0,
+      targetBondedRatio: 0.01,
       communityPoolCommission: 0.0,
       assumedTimePerBlock: 7,
-      inflationRateChange: 0.0,
-      inflationMaxRate: 0.0,
-      inflationMinRate: 0.0,
+      inflationRateChange: 0.01,
+      inflationMaxRate: 0.01,
+      inflationMinRate: 0.01,
       actualBondedRatio: 0.01,
       averageTimePerBlock: 7,
       totalSupply: 0,
       averageDailyFees: 0,
-      currentValueInflation: 0.0,
+      currentValueInflation: 0.01,
     };
     /*
     // All obtained values are strings ; so sometimes we will need to parse them as numbers
