@@ -9,14 +9,14 @@ import { open, close } from "../../hw";
 
 import type { Transaction } from "./types";
 import { buildTransaction } from "./js-buildTransaction";
-import { getSequence } from "./api";
+import { fetchSequence } from "./api";
 
 const buildOptimisticOperation = async (
   account: Account,
   transaction: Transaction
 ): Operation => {
   
-  const transactionSequenceNumber = await getSequence(account);
+  const transactionSequenceNumber = await fetchSequence(account);
 
   // FIXME: DEBUG, TO BE REMOVED
   console.log("XXXXXX - signOperation - transaction.fees = " + transaction.fees);

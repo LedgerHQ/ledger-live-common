@@ -1,10 +1,11 @@
 //@flow
 
 export {
-  getAccount,
-  getOperations,
+  fetchAccount,
+  fetchOperations,
   fetchBaseFee,
-  getSequence,
-  getAccountNetworkInfo,
-  broadcastTransaction
+  fetchSequence,
+  fetchSigners,
+  fetchAccountNetworkInfo,
+  broadcastTransaction,
 } from "./horizon";

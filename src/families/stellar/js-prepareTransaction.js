@@ -1,9 +1,9 @@
 // @flow
 import invariant from "invariant";
-import { getAccountNetworkInfo } from "./api";
+import { fetchAccountNetworkInfo } from "./api";
 
 const prepareTransaction = async (a, t) => {
-  const networkInfo = t.networkInfo || (await getAccountNetworkInfo(a));
+  const networkInfo = t.networkInfo || (await fetchAccountNetworkInfo(a));
   invariant(networkInfo.family === "stellar", "stellar networkInfo expected");
 
   const fees = t.fees || networkInfo.fees;

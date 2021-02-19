@@ -34,7 +34,7 @@ export const fetchBaseFee = async (): Promise<number> => {
  * @async
  * @param {*} addr
  */
-export const getAccount = async (addr: string) => {
+export const fetchAccount = async (addr: string) => {
   let account: RawAccount = {};
   let balance = {};
   try {
@@ -75,7 +75,7 @@ export const getAccount = async (addr: string) => {
  *
  * @return {Operation[]}
  */
-export const getOperations = async (
+export const fetchOperations = async (
   accountId: string,
   addr: string,
   startAt: number = 0
@@ -89,7 +89,6 @@ const fetchTransactionsList = async (
   addr: string,
   startAt: number
 ): Promise<RawTransaction[]> => {
-  const server = getSDKInstance();
   let transactions = {};
   let mergedTransactions = [];
 
@@ -123,7 +122,6 @@ const fetchOperationList = async (
   addr: string,
   transactions: RawTransaction[]
 ): Promise<Operation[]> => {
-  const server = getSDKInstance();
   let formattedMergedOp = [];
 
   for (let i = 0; i < transactions.length; i++) {
@@ -162,7 +160,7 @@ const getFeeStats = async (a: Account) => {
   return { modeAcceptedFee: BigNumber(0.1) };
 }
 
-export const getAccountNetworkInfo = async (account: Account): Promise<NetworkInfo> => {
+export const fetchAccountNetworkInfo = async (account: Account): Promise<NetworkInfo> => {
   const baseReserve = await getBaseReserve(account);
   const baseFees = await getFeeStats(account);
   const fees = baseFees.modeAcceptedFee;
@@ -174,12 +172,12 @@ export const getAccountNetworkInfo = async (account: Account): Promise<NetworkIn
   };
 }
 
-export const getSequence = async (a: Account) => {
+export const fetchSequence = async (a: Account) => {
   // TODO: implement using SDK
   return 1;
 }
 
-export const getSigners = async (a: Account) => {
+export const fetchSigners = async (a: Account) => {
   // TODO: implement using SDK
   return 0;
 }

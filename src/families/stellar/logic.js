@@ -4,7 +4,7 @@ import type { CacheRes } from "../../cache";
 import { makeLRUCache } from "../../cache";
 import type { Account, Operation, OperationType } from "../../types";
 
-import { getSigners, fetchBaseFee } from "./api";
+import { fetchSigners, fetchBaseFee } from "./api";
 import type {
   RawAccount,
   RawOperation,
@@ -170,7 +170,7 @@ export const isMemoValid = (memoType: string, memoValue: string): boolean => {
 };
 
 export const isAccountMultiSign = async (account) => {
-  const signers = await getSigners(account);
+  const signers = await fetchSigners(account);
 
   return signers.length > 1;
 };

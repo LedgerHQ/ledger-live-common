@@ -4,7 +4,7 @@ import { BigNumber } from "bignumber.js";
 import { AmountRequired, FeeNotLoaded } from "@ledgerhq/errors";
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
-import { getSequence } from "./api";
+import { fetchSequence } from "./api";
 import { addressExists } from "./logic";
 
 // TODO: Replace libcore transactionBuilder by SDK
@@ -45,7 +45,7 @@ export const buildTransaction = async (
     await transactionBuilder.addCreateAccount(recipient, amount);
   }
 
-  const sequence = await getSequence(account);
+  const sequence = await fetchSequence(account);
   await transactionBuilder.setSequence(sequence);
 
   if (memoType && memoValue) {
