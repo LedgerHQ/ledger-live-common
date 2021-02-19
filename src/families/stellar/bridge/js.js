@@ -3,14 +3,13 @@ import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 import type { AccountBridge, CurrencyBridge } from "../../../types";
 import type { Transaction } from "../types";
 
+import { scanAccounts, sync } from "../js-synchronization";
 import { getTransactionStatus } from "../js-getTransactionStatus";
 import { estimateMaxSpendable } from "../js-estimateMaxSpendable";
 import { createTransaction } from "../js-createTransaction";
 import { prepareTransaction } from "../js-prepareTransaction";
 
 // TODO: Replace & remove these imports
-import { scanAccounts } from "../../../libcore/scanAccounts";
-import { sync } from "../../../libcore/syncAccount";
 import signOperation from "../../../libcore/signOperation";
 import broadcast from "../../../libcore/broadcast";
 

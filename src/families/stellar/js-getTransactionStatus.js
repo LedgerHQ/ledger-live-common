@@ -15,7 +15,11 @@ import {
 } from "../../errors";
 import { formatCurrencyUnit } from "../../currencies";
 import type { Account } from "../../types";
-import { isAddressValid, checkRecipientExist, isAccountMultiSign } from "./logic";
+import {
+  isAddressValid,
+  checkRecipientExist,
+  isAccountMultiSign,
+} from "./logic";
 
 const getTransactionStatus = async (a: Account, t) => {
   const errors = {};

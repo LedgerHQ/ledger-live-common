@@ -15,9 +15,16 @@ import type { addressExists, getSequence } from "../api";
  */
 export const buildTransaction = async (
   a: Account,
-  t: Transaction,
-) => /* TODO: return type? */  {
-  const { recipient, useAllAmount, networkInfo, fees, memoType, memoValue } = transaction;
+  t: Transaction
+) => /* TODO: return type? */ {
+  const {
+    recipient,
+    useAllAmount,
+    networkInfo,
+    fees,
+    memoType,
+    memoValue,
+  } = transaction;
   if (!fees) {
     throw new FeeNotLoaded();
   }
@@ -47,19 +54,19 @@ export const buildTransaction = async (
       case "MEMO_TEXT":
         await transactionBuilder.setTextMemo(memoValue);
         break;
-  
+
       case "MEMO_ID":
         await transactionBuilder.setNumberMemo(BigNumber(memoValue));
         break;
-  
+
       case "MEMO_HASH":
         await transactionBuilder.setHashMemo(memoValue);
         break;
-  
+
       case "MEMO_RETURN":
         await transactionBuilder.setReturnMemo(memoValue);
         break;
-  
+
       default:
         break;
     }
@@ -68,6 +75,6 @@ export const buildTransaction = async (
   const built = await transactionBuilder.build();
 
   return built;
-}
+};
 
 export default stellarBuildTransaction;

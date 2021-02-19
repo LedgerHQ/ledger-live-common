@@ -2,10 +2,18 @@
 import { BigNumber } from "bignumber.js";
 import type { CacheRes } from "../../cache";
 import { makeLRUCache } from "../../cache";
-import type { Account } from "../../types";
+import type { Account, Operation, OperationType } from "../../types";
 
-import type { getSigners } from "../api";
+import { getSigners, fetchBaseFee } from "./api";
+import type {
+  RawAccount,
+  RawOperation,
+  RawTransaction,
+} from "./api/horizon.types";
+import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
+import { encodeOperationId } from "../../operation";
 
+const currency = getCryptoCurrencyById("stellar");
 
 // TODO: Move to cache
 export const checkRecipientExist: CacheRes<
@@ -105,5 +113,125 @@ export const addressExists = async (address: string): boolean => {
     });
   }
   */
- return true;
-}
+  return true;
+};
+
+const getMinimumBalance = (account: RawAccount): BigNumber => {
+  const baseReserve = 0.5;
+  const numberOfEntries = account.subentry_count;
+
+  const minimumBalance = (2 + numberOfEntries) * baseReserve;
+
+  return parseCurrencyUnit(currency.units[0], minimumBalance.toString());
+};
+
+export const getAccountSpendableBalance = async (
+  balance: BigNumber,
+  account: RawAccount
+): Promise<BigNumber> => {
+  const minimumBalance = getMinimumBalance(account);
+  const baseFee = await fetchBaseFee();
+  return BigNumber.max(balance.minus(minimumBalance).minus(baseFee), 0);
+};
+
+export const getOperationType = (
+  operation: RawOperation,
+  addr: string
+): OperationType => {
+  switch (operation.type) {
+    case "create_account":
+      return operation.funder === addr ? "OUT" : "IN";
+    case "payment":
+      if (operation.from === addr && operation.to !== addr) {
+        return "OUT";
+      }
+      return "IN";
+    case "path_payment_strict_send":
+      return "OUT";
+
+    case "path_payment_strict_receive":
+      return "IN";
+
+    default:
+      if (operation.source_account === addr) {
+        return "OUT";
+      }
+      return "IN";
+  }
+};
+
+const getRecipients = (operation): string[] => {
+  switch (operation.type) {
+    case "create_account":
+      return [operation.account];
+    case "payment":
+      return [operation.to];
+
+    default:
+      return [];
+  }
+};
+
+export const formatOperation = (
+  rawOperation: RawOperation,
+  transaction: RawTransaction,
+  accountId: string,
+  addr: string
+): Operation => {
+  const type = getOperationType(rawOperation, addr);
+  const value = getValue(rawOperation, transaction, type);
+  const recipients = getRecipients(rawOperation);
+
+  return {
+    id: encodeOperationId(accountId, rawOperation.transaction_hash, type),
+    accountId,
+    fee: parseCurrencyUnit(currency.units[0], transaction.fee_charged),
+    value,
+    type: type,
+    hash: rawOperation.transaction_hash,
+    blockHeight: transaction.ledger_attr,
+    date: new Date(rawOperation.created_at),
+    senders: [rawOperation.source_account],
+    recipients,
+    transactionSequenceNumber: transaction.source_account_sequence,
+    hasFailed: !rawOperation.transaction_successful,
+    blockHash: "",
+    extra: {},
+  };
+};
+
+const getValue = (
+  operation: RawOperation,
+  transaction: RawTransaction,
+  type: OperationType
+): BigNumber => {
+  let value = BigNumber(0);
+
+  if (!operation.transaction_successful) {
+    return type === "IN" ? value : BigNumber(transaction.fee_charged || 0);
+  }
+
+  switch (operation.type) {
+    case "create_account":
+      value = parseCurrencyUnit(currency.units[0], operation.starting_balance);
+      if (type === "OUT") {
+        value = value.plus(transaction.fee_charged);
+      }
+      return value;
+
+    case "payment":
+    case "path_payment_strict_send":
+    case "path_payment_strict_receive":
+      value =
+        operation.asset_type === "native"
+          ? parseCurrencyUnit(currency.units[0], operation.amount)
+          : BigNumber(0);
+      if (type === "OUT") {
+        value = value.plus(transaction.fee_charged);
+      }
+      return value;
+
+    default:
+      return type !== "IN" ? BigNumber(transaction.fee_charged) : value;
+  }
+};
