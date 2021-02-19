@@ -308,6 +308,7 @@ export const accountDataToAccount = ({
     xpub,
     name,
     starred: false,
+    used: false,
     currency,
     index,
     freshAddress,
