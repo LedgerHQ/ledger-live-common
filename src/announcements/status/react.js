@@ -160,10 +160,12 @@ export const useNewLedgerStatus = ({
     const diff = allIds.filter((id) => !currentIds.current.includes(id));
     if (diff.length > 0) {
       currentIds.current = allIds;
-      setNewLedgerStatus((state) => [
-        ...diff.map((id) => incidents.find(({ uuid }) => uuid === id)),
-        ...state,
-      ]);
+      setNewLedgerStatus((state) =>
+        [
+          ...diff.map((id) => incidents.find(({ uuid }) => uuid === id)),
+          ...state,
+        ].filter(Boolean)
+      );
     }
   }, [incidents, currentIds]);
 
