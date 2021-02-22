@@ -60,3 +60,13 @@ export type RawStatusSummary = {
 export type StatusIncident = Announcement & {
   status?: string,
 };
+
+export type AnnoucementsUserSettings = {
+  language: string,
+  currencies: string[],
+  getDate: () => Date,
+};
+
+export type AnnouncementsApi = {
+  fetchAnnouncements: () => Promise<RawAnnouncement[]>,
+};
