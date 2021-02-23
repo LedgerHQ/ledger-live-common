@@ -18,7 +18,7 @@ const data: RawAnnouncement[] = [
       },
     },
     contextual: [],
-    published_at: "2019-10-31T00:00:00.000Z",
+    published_at: "2019-09-31T00:00:00.000Z",
     expired_at: "2021-03-06T00:00:00.000Z",
     utm_campaign: "promo_feb2021",
     currencies: ["cosmos"],
