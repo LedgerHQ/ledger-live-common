@@ -69,4 +69,5 @@ export type AnnoucementsUserSettings = {
 
 export type AnnouncementsApi = {
   fetchAnnouncements: () => Promise<RawAnnouncement[]>,
+  fetchStatusSummary: () => Promise<RawStatusSummary>,
 };

@@ -10,7 +10,7 @@ import React, {
   useCallback,
 } from "react";
 import type { StatusIncident, RawStatusSummary } from "../types";
-import { fetchStatusSummary } from "./logic";
+import networkApi from "../api";
 
 type Props = {
   children: React$Node,
@@ -110,7 +110,7 @@ export const LedgerStatusProvider = ({ children }: Props) => {
   const updateData = useCallback(async () => {
     dispatch({ type: "updateDataPending" });
     try {
-      const rawStatusReport = await fetchStatusSummary();
+      const rawStatusReport = await networkApi.fetchStatusSummary();
       const statusIncidents = formatRawStatus(rawStatusReport);
       dispatch({ type: "updateDataSuccess", incidents: statusIncidents });
     } catch (e) {

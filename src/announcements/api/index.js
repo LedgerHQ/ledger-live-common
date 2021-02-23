@@ -9,6 +9,10 @@ const api: AnnouncementsApi = {
     getEnv("MOCK")
       ? mockApi.fetchAnnouncements()
       : prodApi.fetchAnnouncements(),
+  fetchStatusSummary: () =>
+    getEnv("MOCK")
+      ? mockApi.fetchStatusSummary()
+      : prodApi.fetchStatusSummary(),
 };
 
 export default api;
