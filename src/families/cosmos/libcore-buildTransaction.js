@@ -59,13 +59,17 @@ async function fetch_sequence(address: string, currency: CryptoCurrency) {
 /// Return true if this address can be used to estimate gas.
 /// Stargate API will refuse to estimate gas for a sender that does not
 /// exist in the state, so we check the account endpoint for a non-error response
-async function can_estimate_gas(address: string, currency: CryptoCurrency) {
+async function canEstimateGas(account: Account, amount: BigNumber) {
+
+  // LL-4667 - Stargate estimate gas request will fail with 500 if amount is above spendable
+  const hasEnoughBalance = amount.lte(account.spendableBalance);
+
   const namespace = "cosmos";
   const version = "v1beta1";
-  if (isStargate(currency)) {
+  if (isStargate(account.currency)) {
     const url = `${getBaseApiUrl(
-      currency
-    )}/${namespace}/auth/${version}/accounts/${address}`;
+      account.currency
+    )}/${namespace}/auth/${version}/accounts/${account.freshAddress}`;
     const request = {
       method: "GET",
       url,
@@ -77,7 +81,7 @@ async function can_estimate_gas(address: string, currency: CryptoCurrency) {
 
     return await retriable
       .then((_response) => {
-        return true;
+        return hasEnoughBalance;
       })
       .catch((_err) => {
         return false;
@@ -112,9 +116,9 @@ export async function cosmosBuildTransaction({
   const transactionBuilder = await cosmosLikeAccount.buildTransaction();
   if (isCancelled()) return;
 
-  const accountCanEstimateGas = await can_estimate_gas(
-    account.freshAddress,
-    account.currency
+  const accountCanEstimateGas = await canEstimateGas(
+    account,
+    transaction.amount
   );
   if (isCancelled()) return;
 
@@ -142,6 +146,7 @@ export async function cosmosBuildTransaction({
       messages,
       String(getEnv("COSMOS_GAS_AMPLIFIER"))
     );
+
     estimatedGas = await libcoreBigIntToBigNumber(
       // NOTE: With new cosmos code, this call might fail if the account hasn't been synchronized
       // and missed a new transaction. This is because now the account sequence needs to be exact,
