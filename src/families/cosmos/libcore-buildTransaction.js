@@ -60,7 +60,6 @@ async function fetch_sequence(address: string, currency: CryptoCurrency) {
 /// Stargate API will refuse to estimate gas for a sender that does not
 /// exist in the state, so we check the account endpoint for a non-error response
 async function canEstimateGas(account: Account, amount: BigNumber) {
-
   // LL-4667 - Stargate estimate gas request will fail with 500 if amount is above spendable
   const hasEnoughBalance = amount.lte(account.spendableBalance);
 
