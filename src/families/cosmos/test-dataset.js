@@ -550,8 +550,7 @@ const cosmos_testnet = {
 };
 
 // Reactivate once stargate is on mainnet, or if we can use setEnv correctly
-// const currencies = { cosmos };
-const currencies = { cosmos_testnet };
+const currencies = { cosmos_testnet, cosmos };
 
 const dataset: DatasetTest<Transaction> = {
   implementations: ["libcore"],
