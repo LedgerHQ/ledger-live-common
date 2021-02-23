@@ -634,8 +634,8 @@ export const getRegistry = async (): Promise<{
   registry.setChainProperties(
     registry.createType("ChainProperties", {
       ss58Format: Number(spec.properties.ss58Format),
-      tokenDecimals: Number(spec.properties.tokenDecimals),
-      tokenSymbol: spec.properties.tokenSymbol,
+      tokenDecimals: Number(spec.properties.tokenDecimals[0]),
+      tokenSymbol: spec.properties.tokenSymbol[0],
     })
   );
 
