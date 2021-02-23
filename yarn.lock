@@ -1388,14 +1388,14 @@
     hash.js "^1.1.7"
     randombytes "^2.1.0"
 
-"@polkadot/metadata@3.10.1":
-  version "3.10.1"
-  resolved "https://registry.yarnpkg.com/@polkadot/metadata/-/metadata-3.10.1.tgz#1731fb85007543e1aef9ed921734a5edc3226655"
-  integrity sha512-lAqxC4VvuE+DVcio6XiZig+VK1Y5RGUjYBF0paC7cCz57UoPIaQt0Vy+QGdg5EoY3W63q3iPHA3PBNBArAb4AQ==
+"@polkadot/metadata@3.10.2":
+  version "3.10.2"
+  resolved "https://registry.yarnpkg.com/@polkadot/metadata/-/metadata-3.10.2.tgz#c4fcb3478f3c7318ec13e3b35257d61e269da8b6"
+  integrity sha512-0BeXFmCTuGB0bJlyfwCZmw+FDPibsEYVUH7I1iJXGnKSDxyrkcLzWnwRbGy8CIseAeDqNwy00bncAkFWLlbIUg==
   dependencies:
     "@babel/runtime" "^7.12.18"
-    "@polkadot/types" "3.10.1"
-    "@polkadot/types-known" "3.10.1"
+    "@polkadot/types" "3.10.2"
+    "@polkadot/types-known" "3.10.2"
     "@polkadot/util" "^5.7.1"
     "@polkadot/util-crypto" "^5.7.1"
     bn.js "^4.11.9"
@@ -1407,24 +1407,24 @@
   dependencies:
     "@babel/runtime" "^7.12.13"
 
-"@polkadot/types-known@3.10.1":
-  version "3.10.1"
-  resolved "https://registry.yarnpkg.com/@polkadot/types-known/-/types-known-3.10.1.tgz#2b2d4cf26dab74d4595c1f769e338bb3eddb6c1e"
-  integrity sha512-Yhr+ZjbTGWN/W/N5iHTy7DKXFbMNeX3AyvJMwYK1I95ixP/e1njdhQVpyVZ38N1gfxsfzYsE7eUuXwLu2JLZfg==
+"@polkadot/types-known@3.10.2":
+  version "3.10.2"
+  resolved "https://registry.yarnpkg.com/@polkadot/types-known/-/types-known-3.10.2.tgz#0374105eb52c95861a8c47df9bf5db6764ac239e"
+  integrity sha512-8vJVvTJA2ODIh/wtJjOg8cmlevGtnnq0A2xZpniWLJ/lcsnwLnw9hOfeKLBgLCLEZksg74HI+Y8zPG4+rpLVAA==
   dependencies:
     "@babel/runtime" "^7.12.18"
     "@polkadot/networks" "^5.7.1"
-    "@polkadot/types" "3.10.1"
+    "@polkadot/types" "3.10.2"
     "@polkadot/util" "^5.7.1"
     bn.js "^4.11.9"
 
-"@polkadot/types@3.10.1":
-  version "3.10.1"
-  resolved "https://registry.yarnpkg.com/@polkadot/types/-/types-3.10.1.tgz#8a823d5e297e2e10ca2134242b9573edda179c37"
-  integrity sha512-7sClA5en3Gypr2UjcKtOFMS3ZtOXuWrr8hHkX0Y+q/CVsDQg944sNenQVBYXR4UX5kql4NxmgSHj7c1LIB6yrg==
+"@polkadot/types@3.10.2":
+  version "3.10.2"
+  resolved "https://registry.yarnpkg.com/@polkadot/types/-/types-3.10.2.tgz#ea6773be52674f6c50055102e533aba174c59490"
+  integrity sha512-wAaqRrEVgLx3EMPeOW7ACQ9ccVBawX6KODyD06PeSIfUAuxcYXnS2aVyGzhzdOjCcsoDySSOrbFPTPKUnoCWVA==
   dependencies:
     "@babel/runtime" "^7.12.18"
-    "@polkadot/metadata" "3.10.1"
+    "@polkadot/metadata" "3.10.2"
     "@polkadot/util" "^5.7.1"
     "@polkadot/util-crypto" "^5.7.1"
     "@polkadot/x-rxjs" "^5.7.1"
