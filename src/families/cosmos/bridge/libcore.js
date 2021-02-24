@@ -115,7 +115,7 @@ const redelegationStatusError = (a, t) => {
   return isDelegable(a, t.cosmosSourceValidator, t.validators[0].amount);
 };
 
-const getSendTransactionStatus = async (a, t) => {
+const getSendTransactionStatus = async (a, t, isPreValidation = false) => {
   const errors = {};
   const warnings = {};
 
@@ -144,7 +144,7 @@ const getSendTransactionStatus = async (a, t) => {
 
   let estimatedFees = t.fees || BigNumber(0);
 
-  if (!t.fees || !t.fees.gt(0)) {
+  if (!isPreValidation && (!t.fees || !t.fees.gt(0))) {
     errors.fees = new FeeNotLoaded();
   }
 
@@ -176,7 +176,7 @@ const getSendTransactionStatus = async (a, t) => {
   });
 };
 
-const getDelegateTransactionStatus = async (a, t) => {
+const getDelegateTransactionStatus = async (a, t, isPreValidation = false) => {
   const errors = {};
   const warnings = {};
 
@@ -205,7 +205,7 @@ const getDelegateTransactionStatus = async (a, t) => {
 
   let estimatedFees = t.fees || BigNumber(0);
 
-  if (!t.fees) {
+  if (!isPreValidation && !t.fees) {
     errors.fees = new FeeNotLoaded();
   }
 
@@ -234,7 +234,7 @@ const getDelegateTransactionStatus = async (a, t) => {
   });
 };
 
-const getTransactionStatus = async (a, t) => {
+const getTransactionStatus = async (a, t, isPreValidation = false) => {
   if (t.mode === "send") {
     // We isolate the send transaction that it's a little bit different from the rest
     return await getSendTransactionStatus(a, t);
@@ -289,7 +289,7 @@ const getTransactionStatus = async (a, t) => {
 
   let estimatedFees = t.fees || BigNumber(0);
 
-  if (!t.fees) {
+  if (!isPreValidation && !t.fees) {
     errors.fees = new FeeNotLoaded();
   }
 
