@@ -1,10 +1,11 @@
 // @flow
 import { BigNumber } from "bignumber.js";
+import StellarSdk from "stellar-sdk";
 import type { CacheRes } from "../../cache";
 import { makeLRUCache } from "../../cache";
 import type { Account, Operation, OperationType } from "../../types";
 
-import { fetchSigners, fetchBaseFee } from "./api";
+import { fetchSigners, fetchBaseFee, loadAccount } from "./api";
 import type {
   RawAccount,
   RawOperation,
@@ -169,7 +170,7 @@ export const isMemoValid = (memoType: string, memoValue: string): boolean => {
   return true;
 };
 
-export const isAccountMultiSign = async (account) => {
+export const isAccountMultiSign = async (account: Account) => {
   const signers = await fetchSigners(account);
 
   return signers.length > 1;
@@ -183,29 +184,7 @@ export const isAccountMultiSign = async (account) => {
 export const isAddressValid = (address: string): boolean => {
   if (!address) return false;
   try {
-    // TODO: implement from SDK if available, or from libcore code below
-    /*
-      bool StellarLikeAddress::isValid(const std::string &address, const api::Currency& currency) {
-          const auto &networkParams = currency.stellarLikeNetworkParameters.value();
-          std::vector<uint8_t> bytes;
-          try {
-              BaseConverter::decode(address, BaseConverter::BASE32_RFC4648_NO_PADDING, bytes);
-          } catch (...) {
-              return false;
-          }
-          if (bytes.size() != (networkParams.Version.size() + PUBKEY_SIZE + CHECKSUM_SIZE) ||
-              !std::equal(bytes.begin(), bytes.begin() + networkParams.Version.size(),
-                          networkParams.Version.begin())) {
-              return false;
-          }
-          BytesReader reader(bytes);
-          auto payload = reader.read(networkParams.Version.size() + PUBKEY_SIZE);
-          auto checksum = reader.readNextLeUint16();
-          auto expectedChecksum = CRC::calculate(payload, CRC::XMODEM);
-          return checksum == expectedChecksum;
-      }
-  */
-    return true;
+    return StellarSdk.StrKey.isValidEd25519PublicKey(address);
   } catch (err) {
     return false;
   }
@@ -217,21 +196,15 @@ export const isAddressValid = (address: string): boolean => {
  *
  * @param {*} address
  */
-export const addressExists = async (address: string): boolean => {
-  if (!address) return false;
-  // TODO: implement from SDK if available, or from libcore code below
-  /*
-  Future<bool> StellarLikeWallet::exists(const std::string &address) {
-    auto explorer = _params.blockchainExplorer;
-    StellarLikeAddress addr(address, getCurrency(), Option<std::string>::NONE);
-    return explorer->getAccount(address).map<bool>(getContext(), [] (const auto& result) {
-        return true;
-    }).recover(getContext(), [] (const Exception& ex) {
-        if (ex.getErrorCode() == api::ErrorCode::ACCOUNT_NOT_FOUND)
-            return false;
-        throw ex;
-    });
+export const addressExists = async (address: string): Promise<boolean> => {
+  try {
+    await loadAccount(address);
+  } catch (error) {
+    if (error.name === "NotFoundError") {
+      return false;
+    }
+    throw error;
   }
-  */
+
   return true;
 };

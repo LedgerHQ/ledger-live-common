@@ -8,4 +8,8 @@ export {
   fetchSigners,
   fetchAccountNetworkInfo,
   broadcastTransaction,
+  buildPaymentOperation,
+  buildCreateAccountOperation,
+  buildTransactionBuilder,
+  loadAccount,
 } from "./horizon";

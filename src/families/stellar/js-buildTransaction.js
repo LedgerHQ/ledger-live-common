@@ -1,13 +1,17 @@
 // @flow
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
+import StellarSdk from "stellar-sdk";
 import { AmountRequired, FeeNotLoaded } from "@ledgerhq/errors";
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
-import { fetchSequence } from "./api";
+import {
+  buildPaymentOperation,
+  buildCreateAccountOperation,
+  buildTransactionBuilder,
+  loadAccount,
+} from "./api";
 import { addressExists } from "./logic";
-
-// TODO: Replace libcore transactionBuilder by SDK
 
 /**
  * @param {Account} a
@@ -38,43 +42,49 @@ export const buildTransaction = async (
 
   if (!amount) throw new AmountRequired();
 
+  // console.log("--- account.freshAddress: ", account.freshAddress);
+
+  const source = await loadAccount(account.freshAddress);
+  const transactionBuilder = buildTransactionBuilder(source, fees);
+
+  let operation = null;
+
   const recipientExists = await addressExists(transaction.recipient); // FIXME: use cache with checkRecipientExist instead?
   if (recipientExists) {
-    await transactionBuilder.addNativePayment(recipient, amount);
+    operation = buildPaymentOperation(recipient, amount);
   } else {
-    await transactionBuilder.addCreateAccount(recipient, amount);
+    operation = buildCreateAccountOperation(recipient, amount);
   }
 
-  const sequence = await fetchSequence(account);
-  await transactionBuilder.setSequence(sequence);
+  transactionBuilder.addOperation(operation);
+
+  let memo = null;
 
   if (memoType && memoValue) {
     switch (memoType) {
       case "MEMO_TEXT":
-        await transactionBuilder.setTextMemo(memoValue);
+        memo = StellarSdk.Memo.text(memoValue);
         break;
 
       case "MEMO_ID":
-        await transactionBuilder.setNumberMemo(BigNumber(memoValue));
+        memo = StellarSdk.Memo.id(memoValue);
         break;
 
       case "MEMO_HASH":
-        await transactionBuilder.setHashMemo(memoValue);
+        memo = StellarSdk.Memo.hash(memoValue);
         break;
 
       case "MEMO_RETURN":
-        await transactionBuilder.setReturnMemo(memoValue);
-        break;
-
-      default:
+        memo = StellarSdk.Memo.return(memoValue);
         break;
     }
   }
 
-  const built = await transactionBuilder.build();
+  if (memo) {
+    transactionBuilder.addMemo(memo);
+  }
 
-  console.log("XXXXX - buildTransaction returns:");
-  console.log(built);
+  const built = transactionBuilder.setTimeout(0).build();
 
   return built;
 };

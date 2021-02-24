@@ -1,6 +1,10 @@
 // @flow
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
-import type { AccountBridge, CurrencyBridge } from "../../../types";
+import type {
+  AccountBridge,
+  CryptoCurrency,
+  CurrencyBridge,
+} from "../../../types";
 import type { Transaction } from "../types";
 
 import { scanAccounts, sync } from "../js-synchronization";
@@ -19,7 +23,8 @@ const receive = makeAccountBridgeReceive();
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
-export const getPreloadStrategy = () => ({
+// eslint-disable-next-line no-unused-vars
+export const getPreloadStrategy = (currency: CryptoCurrency) => ({
   // TODO: implement + move somewhere else?
 });
 

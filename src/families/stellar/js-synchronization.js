@@ -11,7 +11,9 @@ const getAccountShape: GetAccountShape = async (info) => {
     ? (oldOperations[0].blockHeight || 0) + 1
     : 0;
 
-  const { blockHeight, balance, spendableBalance } = await fetchAccount(address);
+  const { blockHeight, balance, spendableBalance } = await fetchAccount(
+    address
+  );
 
   const newOperations = await fetchOperations(id, address, startAt);
   const operations = mergeOps(oldOperations, newOperations);

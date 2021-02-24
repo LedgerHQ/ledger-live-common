@@ -3,15 +3,8 @@ import { BigNumber } from "bignumber.js";
 import StellarSdk from "stellar-sdk";
 import { getEnv } from "../../../env";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
-import type {
-  Account,
-  NetworkInfo,
-  Operation
-} from "../../../types";
-import type {
-  RawAccount,
-  RawTransaction
-} from "./horizon.types";
+import type { Account, NetworkInfo, Operation } from "../../../types";
+import type { RawAccount, RawTransaction } from "./horizon.types";
 import { getAccountSpendableBalance, formatOperation } from "../logic";
 
 const LIMIT = 200;
@@ -156,20 +149,22 @@ const fetchOperationList = async (
   return formattedMergedOp;
 };
 
-const getBaseReserve = async (a: Account) => {
-  // TODO: implement using SDK
-  return 1;
-};
+export const fetchAccountNetworkInfo = async (
+  account: Account
+): Promise<NetworkInfo> => {
+  const extendedAccount = await server
+    .accounts()
+    .accountId(account.freshAddress)
+    .call();
 
-const getFeeStats = async (a: Account) => {
-  // TODO: implement using SDK
-  return { modeAcceptedFee: BigNumber(0.1) };
-};
+  const ledger = await server
+    .ledgers()
+    .ledger(extendedAccount.last_modified_ledger)
+    .call();
 
-export const fetchAccountNetworkInfo = async (account: Account): Promise<NetworkInfo> => {
-  const baseReserve = await getBaseReserve(account);
-  const baseFees = await getFeeStats(account);
-  const fees = baseFees.modeAcceptedFee;
+  const baseReserve = BigNumber(ledger.base_reserve_in_stroops.toString());
+
+  const fees = BigNumber(ledger.base_fee_in_stroops.toString());
 
   return {
     family: "stellar",
@@ -179,16 +174,65 @@ export const fetchAccountNetworkInfo = async (account: Account): Promise<Network
 };
 
 export const fetchSequence = async (a: Account) => {
-  // TODO: implement using SDK
-  return 1;
+  const extendedAccount = await server.loadAccount(a.freshAddress);
+  return BigNumber(extendedAccount.sequence);
 };
 
 export const fetchSigners = async (a: Account) => {
-  // TODO: implement using SDK
-  return 0;
+  const extendedAccount = await server
+    .accounts()
+    .accountId(a.freshAddress)
+    .call();
+  return extendedAccount.signers;
 };
 
-export const broadcastTransaction = async (signedTransaction) => {
-  // TODO: actually broadcast and return hash
-  return "dummy hash";
+export const broadcastTransaction = async (
+  signedTransaction
+): Promise<string> => {
+  const res = await server.submitTransaction(signedTransaction, {
+    skipMemoRequiredCheck: true,
+  });
+  return res.hash;
+};
+
+export const buildPaymentOperation = (
+  destination: string,
+  amount: BigNumber
+) => {
+  const formattedAmount = amount
+    .dividedBy(BigNumber(10).pow(currency.units[0].magnitude))
+    .toString();
+
+  return StellarSdk.Operation.payment({
+    destination: destination,
+    amount: formattedAmount,
+    asset: StellarSdk.Asset.native(),
+  });
+};
+
+export const buildCreateAccountOperation = (
+  destination: string,
+  amount: BigNumber
+) => {
+  const formattedAmount = amount
+    .dividedBy(BigNumber(10).pow(currency.units[0].magnitude))
+    .toString();
+
+  return StellarSdk.Operation.createAccount({
+    destination: destination,
+    startingBalance: formattedAmount,
+  });
+};
+
+export const buildTransactionBuilder = (source: string, fee: BigNumber) => {
+  const formattedFee = fee.toString();
+
+  return new StellarSdk.TransactionBuilder(source, {
+    fee: formattedFee,
+    networkPassphrase: StellarSdk.Networks.PUBLIC,
+  });
+};
+
+export const loadAccount = (addr: string) => {
+  return server.loadAccount(addr);
 };

@@ -1,5 +1,5 @@
 // @flow
-
+import { BigNumber } from "bignumber.js";
 import { Observable } from "rxjs";
 import Stellar from "@ledgerhq/hw-app-str";
 import { FeeNotLoaded } from "@ledgerhq/errors";
@@ -13,30 +13,26 @@ import { fetchSequence } from "./api";
 
 const buildOptimisticOperation = async (
   account: Account,
-  transaction: Transaction
-): Operation => {
-  
+  transaction: Transaction,
+  fees: BigNumber
+): Promise<Operation> => {
   const transactionSequenceNumber = await fetchSequence(account);
 
-  // FIXME: DEBUG, TO BE REMOVED
-  console.log("XXXXXX - signOperation - transaction.fees = " + transaction.fees);
-
   const operation: $Exact<Operation> = {
-    id: `${id}--OUT`,
+    id: `${account.id}--OUT`,
     hash: "",
     type: "OUT",
     value:
       transaction.useAllAmount && transaction.networkInfo
-        ? balance.minus(transaction.networkInfo.baseReserve).minus(fee)
-        : transaction.amount.plus(fee),
-    fee: transaction.fees,
+        ? account.balance.minus(transaction.networkInfo.baseReserve).minus(fees)
+        : transaction.amount.plus(fees),
+    fee: fees,
     blockHash: null,
     blockHeight: null,
     senders: [account.freshAddress],
     recipients: [transaction.recipient],
-    accountId: id,
+    accountId: account.id,
     date: new Date(),
-    // FIXME: Javascript number may be not precise enough
     transactionSequenceNumber: transactionSequenceNumber.plus(1).toNumber(),
     extra: {},
   };
@@ -58,7 +54,6 @@ const signOperation = ({
 }): Observable<SignOperationEvent> =>
   Observable.create((o) => {
     async function main() {
-
       const transport = await open(deviceId);
       try {
         o.next({ type: "device-signature-requested" });
@@ -68,8 +63,6 @@ const signOperation = ({
           throw new FeeNotLoaded();
         }
 
-        // FIXME: DEBUG, TO BE REMOVED
-        console.log("XXXXXX - signOperation - transaction.amount = " + transaction.amount);
         // FIXME: Is this needed? (cf. log above)
         /*
         // Ensure amount is filled when useAllAmount
@@ -79,36 +72,36 @@ const signOperation = ({
         };
         */
 
-        const unsigned = await buildTransaction(
-          account,
-          transaction
-        );
+        const unsigned = await buildTransaction(account, transaction);
 
-        // TODO: Use Stellar SDK to build unsigned payload
-        const unsignedPayload = unsigned;
+        const unsignedPayload = unsigned.signatureBase();
 
         // Sign by device
         const hwApp = new Stellar(transport);
+
         const { signature } = await hwApp.signTransaction(
           account.freshAddressPath,
-          Buffer.from(unsignedPayload, "hex")
+          unsignedPayload
         );
 
-        // TODO: Use Stellar SDK to build signed payload
-        const signedPayload = signature;
+        unsigned.addSignature(
+          account.freshAddress,
+          signature.toString("base64")
+        );
 
         o.next({ type: "device-signature-granted" });
 
-        const operation = buildOptimisticOperation(
+        const operation = await buildOptimisticOperation(
           account,
-          transaction
+          transaction,
+          transaction.fees ?? BigNumber(0)
         );
 
         o.next({
           type: "signed",
           signedOperation: {
             operation,
-            signature: signed,
+            signature: unsigned,
             expirationDate: null,
           },
         });

@@ -20,6 +20,7 @@ import {
   isAddressValid,
   checkRecipientExist,
   isAccountMultiSign,
+  isMemoValid,
 } from "./logic";
 
 const getTransactionStatus = async (a: Account, t) => {
