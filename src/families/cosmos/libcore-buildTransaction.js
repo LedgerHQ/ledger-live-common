@@ -5,6 +5,7 @@ import { FeeNotLoaded } from "@ledgerhq/errors";
 import type { Transaction, CoreCosmosLikeTransaction } from "./types";
 import type { Account, CryptoCurrency } from "../../types";
 import type { Core, CoreAccount, CoreCurrency } from "../../libcore/types";
+import getTransactionStatus from "./libcore-getTransactionStatus";
 
 import {
   bigNumberToLibcoreAmount,
@@ -75,14 +76,18 @@ async function canEstimateGas(account: Account, transaction: Transaction) {
       maxRetry: getEnv("GET_CALLS_RETRY"),
     });
 
+    // FIXME: 1 - Stargate also refuses to estimate gas for a variety of other reasons,
+    // eg. insufficient amount (LL-4667), redelegating to same validator, maybe others...
+    // So getTransactionStatus called here as "pre-validation"
+    // FIXME: 2 - For redelegation getTransactionStatus doesn't check that
+    // the old and new validator exist, which also causes this to fail
+    const status = await getTransactionStatus(account, transaction, true);
+
     return await retriable
       .then((_response) => {
-        // FIXME: Stargate also refuses to estimate gas for a variety of other reasons,
-        // eg. insufficient amount (LL-4667), redelegating to same validator, maybe others...
-        // So getTransactionStatus called here as "pre-validation"
-        return getTransactionStatus(account, transaction, true);
+        return !!status.errors && Object.entries(status.errors).length === 0;
       })
-      .catch((_err) => {
+      .catch((err) => {
         return false;
       });
   } else {
