@@ -71,3 +71,17 @@ export type AnnouncementsApi = {
   fetchAnnouncements: () => Promise<RawAnnouncement[]>,
   fetchStatusSummary: () => Promise<RawStatusSummary>,
 };
+
+export type State = {
+  seenIds: string[],
+  allIds: string[],
+  cache: Cache,
+  isLoading: boolean,
+  lastUpdateTime: ?number,
+  error: ?Error,
+};
+
+type Cache = {
+  [id: string]: Announcement,
+};
+

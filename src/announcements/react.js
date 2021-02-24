@@ -1,156 +1,46 @@
 // @flow
-import uniq from "lodash/uniq";
-import intersection from "lodash/intersection";
 import React, {
   createContext,
   useContext,
   useEffect,
   useMemo,
-  useReducer,
   useRef,
   useState,
   useCallback,
 } from "react";
-import type { Announcement, AnnoucementsUserSettings } from "./types";
+import type { Announcement, AnnoucementsUserSettings, State } from "./types";
 import {
   groupAnnouncements,
   localizeAnnouncements,
   filterAnnouncements,
 } from "./logic";
 import fetchApi from "./api";
+import { useMachine } from "@xstate/react";
+import { announcementMachine } from "./machine";
 
 type Props = {
   children: React$Node,
   onLoad: () => Promise<{
     announcements: Announcement[],
     seenIds: string[],
+    lastUpdateTime: number,
   }>,
   onSave: ({
     announcements: Announcement[],
     seenIds: string[],
+    lastUpdateTime: number,
   }) => Promise<void>,
   context: AnnoucementsUserSettings,
 };
 
-type Cache = {
-  [id: string]: Announcement,
-};
-
-type State = {
-  seenIds: string[],
-  allIds: string[],
-  cache: Cache,
-  isLoading: boolean,
-  error: ?Error,
-  initialized: boolean,
-};
-
 type API = {
   updateCache: () => Promise<void>,
-  setAsSeen: (seenIds: string[]) => void,
+  setAsSeen: (seenId: string) => void,
 };
 
 export type AnnouncementContextType = State & API;
 
-type SetAsSeenAction = { type: "setAsSeen", seenIds: string[] };
-
-type UpdateCacheSuccessAction = {
-  type: "updateCacheSuccess",
-  announcements: Announcement[],
-};
-
-type UpdateCacheErrorAction = {
-  type: "updateCacheError",
-  error: Error,
-};
-
-type UpdateCachePendingAction = {
-  type: "updateCachePending",
-};
-
-type LoadCacheAction = {
-  type: "loadCache",
-  announcements: Announcement[],
-  seenIds: string[],
-};
-
-type Action =
-  | SetAsSeenAction
-  | UpdateCacheSuccessAction
-  | UpdateCacheErrorAction
-  | UpdateCachePendingAction
-  | LoadCacheAction;
-
 const AnnoucementsContext = createContext<AnnouncementContextType>({});
-
-export const initialState: State = {
-  cache: {},
-  seenIds: [],
-  allIds: [],
-  error: null,
-  isLoading: false,
-  initialized: false,
-};
-
-export const reducer = (state: State, action: Action) => {
-  switch (action.type) {
-    case "setAsSeen":
-      return {
-        ...state,
-        seenIds: uniq([...state.seenIds, ...action.seenIds]),
-      };
-
-    case "loadCache":
-    case "updateCacheSuccess": {
-      const cache = {};
-      action.announcements.forEach((announcement) => {
-        cache[announcement.uuid] = announcement;
-      });
-      const allIds = Object.keys(cache);
-      const seenIds =
-        action.type === "updateCacheSuccess"
-          ? intersection(allIds, state.seenIds)
-          : action.seenIds;
-      return {
-        ...state,
-        cache,
-        seenIds,
-        allIds,
-        isLoading: false,
-        error: null,
-        initialized: true,
-      };
-    }
-
-    case "updateCacheError": {
-      return {
-        ...state,
-        error: action.error,
-        isLoading: false,
-      };
-    }
-
-    case "updateCachePending": {
-      return {
-        ...state,
-        isLoading: true,
-      };
-    }
-
-    default:
-      return state;
-  }
-};
-
-// SELECTORS
-// const getAllIds = (state) => state.allIds;
-// const getSeenIds = (state) => state.seenIds;
-
-// const getUnreadAnnouncementLength = createSelector(
-//   getAllIds,
-//   getSeenIds,
-//   (allIds, seenIds) => allIds.length - seenIds.length
-// );
 
 export const AnnoucementProvider = ({
   children,
@@ -158,54 +48,63 @@ export const AnnoucementProvider = ({
   onLoad, // LOAD ANNOUNCEMENTS FROM DB
   onSave, // SAVE ANNOUNCEMENTS TO DB
 }: Props) => {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const initialised = useRef(false);
+  const updateData = useCallback(async () => {
+    const rawAnnouncements = await fetchApi.fetchAnnouncements();
+    const localizedAnnouncements = localizeAnnouncements(
+      rawAnnouncements,
+      context
+    );
+    const announcements = filterAnnouncements(localizedAnnouncements, context);
 
-  const { cache, seenIds, allIds } = state;
+    return {
+      announcements,
+      updateTime: Date.now(),
+    };
+  }, [context]);
+
+  const loadData = useCallback(async () => {
+    const { announcements, lastUpdateTime, seenIds } = await onLoad();
+
+    return {
+      announcements,
+      lastUpdateTime,
+      seenIds,
+    };
+  }, [onLoad]);
+
+  const saveData = useCallback(
+    (context) => {
+      const { cache, lastUpdateTime, seenIds, allIds } = context;
+      const announcements = allIds.map((id: string) => cache[id]);
+      onSave({ announcements, seenIds, lastUpdateTime });
+    },
+    [onSave]
+  );
+
+  const [state, send] = useMachine(announcementMachine, {
+    actions: {
+      saveData,
+    },
+    services: {
+      loadData,
+      updateData,
+    },
+  });
 
   const api = useMemo(
     () => ({
       updateCache: async () => {
-        dispatch({ type: "updateCachePending" });
-        try {
-          const rawAnnouncements = await fetchApi.fetchAnnouncements();
-          const localizedAnnouncements = localizeAnnouncements(
-            rawAnnouncements,
-            context
-          );
-          const announcements = filterAnnouncements(
-            localizedAnnouncements,
-            context
-          );
-          dispatch({ type: "updateCacheSuccess", announcements });
-        } catch (e) {
-          dispatch({ type: "updateCacheError", error: e });
-        }
+        send({ type: "UPDATE_DATA" });
       },
-      setAsSeen: (seenIds: string[]) => {
-        dispatch({ type: "setAsSeen", seenIds });
+      setAsSeen: (seenId: string) => {
+        send({ type: "SET_AS_SEEN", seenId });
       },
     }),
-    [dispatch, context]
+    [send]
   );
 
-  useEffect(() => {
-    if (initialised.current) {
-      const announcements = allIds.map((id: string) => cache[id]);
-      onSave({ announcements, seenIds });
-    }
-  }, [cache, seenIds, onSave, allIds]);
-
-  // onDidMount
-  useEffect(() => {
-    onLoad().then(({ announcements, seenIds }) => {
-      dispatch({ type: "loadCache", announcements, seenIds });
-      initialised.current = true;
-    });
-  }, []); /* eslint-disable-line */
-
   const value = {
-    ...state,
+    ...state.context,
     ...api,
   };
 
