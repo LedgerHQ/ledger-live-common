@@ -87,7 +87,7 @@ async function canEstimateGas(account: Account, transaction: Transaction) {
       .then((_response) => {
         return !!status.errors && Object.entries(status.errors).length === 0;
       })
-      .catch((err) => {
+      .catch(() => {
         return false;
       });
   } else {
@@ -120,10 +120,7 @@ export async function cosmosBuildTransaction({
   const transactionBuilder = await cosmosLikeAccount.buildTransaction();
   if (isCancelled()) return;
 
-  const accountCanEstimateGas = await canEstimateGas(
-    account,
-    transaction
-  );
+  const accountCanEstimateGas = await canEstimateGas(account, transaction);
   if (isCancelled()) return;
 
   let messages = await cosmosCreateMessage(

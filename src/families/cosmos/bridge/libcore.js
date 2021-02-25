@@ -20,10 +20,7 @@ import {
   asSafeCosmosPreloadData,
 } from "../preloadedData";
 import { getValidators, hydrateValidators } from "../validators";
-import {
-  calculateFees,
-  getMaxEstimatedBalance,
-} from "../logic";
+import { calculateFees, getMaxEstimatedBalance } from "../logic";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 
 const receive = makeAccountBridgeReceive();
