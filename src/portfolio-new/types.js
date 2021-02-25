@@ -1,6 +1,11 @@
 // @flow
 // TODO Portfolio: move to src/types/portfolio.js
-import type { AccountLike, CryptoCurrency, TokenCurrency } from "../types";
+import type {
+  AccountLike,
+  AccountLikeArray,
+  CryptoCurrency,
+  TokenCurrency,
+} from "../types";
 
 export type BalanceHistoryData = { date: Date, value: number };
 
@@ -44,5 +49,14 @@ export type Portfolio = {
   histories: BalanceHistoryWithCountervalue[],
   countervalueReceiveSum: number,
   countervalueSendSum: number,
+  countervalueChange: ValueChange, // calculates the ROI. value in the countervalue unit.
+};
+
+export type CurrencyPortfolio = {
+  history: BalanceHistoryWithCountervalue,
+  countervalueAvailable: boolean,
+  histories: BalanceHistoryWithCountervalue[],
+  accounts: AccountLikeArray,
+  cryptoChange: ValueChange, // how much the account changes. value is in the account currency
   countervalueChange: ValueChange, // calculates the ROI. value in the countervalue unit.
 };

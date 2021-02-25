@@ -8,6 +8,7 @@ import {
   startOfHour,
 } from "../portfolio/range";
 import type { PortfolioRangeConfig, PortfolioRange } from "./types";
+
 export function getPortfolioRangeConfig(
   r: PortfolioRange
 ): PortfolioRangeConfig {

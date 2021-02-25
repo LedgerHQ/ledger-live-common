@@ -21,7 +21,6 @@ import type {
   AccountLikeArray,
   AccountLike,
   Account,
-  CurrencyPortfolio,
   AssetsDistribution,
   Currency,
 } from "../types";
@@ -36,20 +35,25 @@ import type {
   BalanceHistoryWithCountervalue,
   AccountPortfolio,
   Portfolio,
+  CurrencyPortfolio,
 } from "./types";
 import { getPortfolioRangeConfig, getDates } from "./range";
 
 function getPortfolioCount(
-  account: AccountLike,
+  accounts: AccountLike[],
   range: PortfolioRange
 ): number {
   const conf = getPortfolioRangeConfig(range);
   if (typeof conf.count === "number") return conf.count;
 
-  if (account.operations.length === 0) return 0;
+  const sortedAllOp = accounts
+    .flatMap((a) => a.operations)
+    .sort((a, b) => b.date - a.date);
+
+  if (!sortedAllOp.length) return 0;
 
   const now = new Date();
-  const start = conf.startOf(account.operations[0].date);
+  const start = conf.startOf(sortedAllOp[0].date);
   return Math.floor((now - start) / conf.increment) + 1;
 }
 
@@ -59,7 +63,7 @@ export function getBalanceHistory(
   account: AccountLike,
   range: PortfolioRange
 ): BalanceHistory {
-  const count = getPortfolioCount(account, range);
+  const count = getPortfolioCount([account], range);
   const dates = getDates(range, count);
 
   return dates.map((date) => {
@@ -187,21 +191,25 @@ export function getPortfolio(
     }
   );
 
-  // TODO Portfolio: How to calc count with all accounts?
-  // const count = getPortfolioCount(account, range);
-  // const dates = getDates(range, count);
-  // const balanceHistory = getDates(range).map((date) => ({ date, value: 0 }));
-  const balanceHistory = [];
+  const histories = availables.map((a) => a.history);
 
-  const countervalueChangeValue = availables.reduce<number>(
+  const count = getPortfolioCount(accounts, range);
+  const balanceHistory = getDates(range, count).map((date, i) => ({
+    date,
+    value: histories
+      .map((h) => h[i].countervalue)
+      .reduce((sum, val) => sum + (val ?? 0), 0),
+  }));
+
+  const countervalueChangeValue = availables.reduce(
     (sum, a) => sum + a.changes,
     0
   );
-  const countervalueReceiveSum = availables.reduce<number>(
+  const countervalueReceiveSum = availables.reduce(
     (sum, a) => sum + a.countervalueReceiveSum,
     0
   );
-  const countervalueSendSum = availables.reduce<number>(
+  const countervalueSendSum = availables.reduce(
     (sum, a) => sum + a.countervalueSendSum,
     0
   );
@@ -223,7 +231,7 @@ export function getPortfolio(
     ],
     accounts,
     range,
-    histories: availables.map((a) => a.history),
+    histories,
     countervalueReceiveSum,
     countervalueSendSum,
     countervalueChange: {
@@ -236,8 +244,25 @@ export function getPortfolio(
 export function getCurrencyPortfolio(
   accounts: AccountLikeArray,
   range: PortfolioRange,
-  countervaluesState: CounterValuesState
-): CurrencyPortfolio {}
+  cvState: CounterValuesState,
+  cvCurrency: Currency
+): CurrencyPortfolio {
+  const portfolios = accounts.map((a) =>
+    getBalanceHistoryWithCountervalue(a, range, cvState, cvCurrency)
+  );
+  const histories = portfolios.map((p) => p.history);
+
+  return {
+    history,
+    countervalueAvailable:
+      portfolios[portfolios.length - 1].countervalueAvailable,
+    accounts,
+    range,
+    histories,
+    cryptoChange,
+    countervalueChange,
+  };
+}
 
 export function getAssetsDistribution(
   topAccounts: Account[],
