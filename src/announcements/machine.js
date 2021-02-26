@@ -2,7 +2,6 @@
 
 import { assign, Machine } from "xstate";
 import intersection from "lodash/intersection";
-import uniq from "lodash/uniq";
 import type { State } from "./types";
 
 const initialState: State = {
@@ -92,6 +91,7 @@ export const announcementMachine = Machine(
     },
     on: {
       SET_AS_SEEN: {
+        cond: (context, event) => !context.seenIds.includes(event.seenId),
         actions: ["setAsSeen", "saveData"],
       },
     },
@@ -99,7 +99,7 @@ export const announcementMachine = Machine(
   {
     actions: {
       setAsSeen: assign((context, event) => ({
-        seenIds: uniq([...context.seenIds, event.seenId]),
+        seenIds: [...context.seenIds, event.seenId],
       })),
     },
   }
