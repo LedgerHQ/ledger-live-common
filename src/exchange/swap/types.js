@@ -29,6 +29,7 @@ export type ExchangeRaw = {
 export type ExchangeRate = {
   rate: BigNumber, // NB Raw rate, for display
   magnitudeAwareRate: BigNumber, // NB rate between satoshi units
+  payoutNetworkFees?: BigNumber, // Only for float
   rateId?: string,
   provider: string,
   tradeMethod: "fixed" | "float",
