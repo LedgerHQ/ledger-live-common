@@ -60,3 +60,19 @@ export type CurrencyPortfolio = {
   cryptoChange: ValueChange, // how much the account changes. value is in the account currency
   countervalueChange: ValueChange, // calculates the ROI. value in the countervalue unit.
 };
+
+export type AssetsDistribution = {
+  // false if no distribution can be done (sum is zero)
+  isAvailable: boolean,
+  // a sorted list of assets with data
+  list: {
+    currency: CryptoCurrency | TokenCurrency,
+    distribution: number, // % of the total (normalized in 0-1)
+    amount: number,
+    countervalue: number, // countervalue of the amount that was calculated based of the rate provided
+  }[],
+  // number of accounts to show first (before the see all)
+  showFirst: number,
+  // sum of all countervalues
+  sum: number,
+};

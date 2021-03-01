@@ -15,8 +15,7 @@ export function getPortfolioRangeConfig(
   return ranges[r];
 }
 
-// TODO Portfolio: we need to rework this to allow "all" time range
-// this would require to introduce Account#olderOperationDate
+// TODO Protfolio: this would require to introduce Account#olderOperationDate
 const ranges: { [k: PortfolioRange]: PortfolioRangeConfig } = {
   all: {
     increment: weekIncrement,

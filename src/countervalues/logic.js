@@ -328,7 +328,7 @@ export function calculate(
 
 export function calculateMany(
   state: CounterValuesState,
-  dataPoints: Array<{ value: number, date: ?Date }>,
+  dataPoints: Array<{ value: number, date: Date }>,
   initialQuery: {
     from: Currency,
     to: Currency,

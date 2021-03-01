@@ -17,16 +17,18 @@
  */
 
 import { BigNumber } from "bignumber.js";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import type {
   AccountLikeArray,
   AccountLike,
   Account,
-  AssetsDistribution,
   Currency,
+  CryptoCurrency,
+  TokenCurrency,
 } from "../types";
 import { getOperationAmountNumberWithInternals } from "../operation";
 import type { CounterValuesState } from "../countervalues/types";
-import { calculateMany } from "../countervalues/logic";
+import { calculate, calculateMany } from "../countervalues/logic";
 import { flattenAccounts, getAccountCurrency } from "../account";
 import { getEnv } from "../env";
 import type {
@@ -36,25 +38,25 @@ import type {
   AccountPortfolio,
   Portfolio,
   CurrencyPortfolio,
+  AssetsDistribution,
 } from "./types";
 import { getPortfolioRangeConfig, getDates } from "./range";
+import { defaultAssetsDistribution } from "../portfolio";
+import type { AssetsDistributionOpts } from "../portfolio";
 
-function getPortfolioCount(
-  accounts: AccountLike[],
+export function getPortfolioCount(
+  accounts: AccountLikeArray,
   range: PortfolioRange
 ): number {
   const conf = getPortfolioRangeConfig(range);
   if (typeof conf.count === "number") return conf.count;
-
-  const sortedAllOp = accounts
-    .flatMap((a) => a.operations)
-    .sort((a, b) => b.date - a.date);
-
-  if (!sortedAllOp.length) return 0;
+  if (!accounts.length) return 0;
 
   const now = new Date();
-  const start = conf.startOf(sortedAllOp[0].date);
-  return Math.floor((now - start) / conf.increment) + 1;
+  const start = Math.min(...accounts.map((a) => a.creationDate.getTime()));
+  const count = Math.floor((now - start) / conf.increment) + 1;
+  const defaultYearCount = getPortfolioRangeConfig("year").count ?? 0; // just for type casting
+  return count < defaultYearCount ? defaultYearCount : count;
 }
 
 // take back the getBalanceHistory "js"
@@ -63,22 +65,30 @@ export function getBalanceHistory(
   account: AccountLike,
   range: PortfolioRange
 ): BalanceHistory {
-  const count = getPortfolioCount([account], range);
+  const count = getPortfolioCount(([account]: AccountLike[]), range);
   const dates = getDates(range, count);
 
-  return dates.map((date) => {
-    const balance = account.operations
-      .filter((op) => op.date < date)
-      .reduce(
-        (prev, op) => prev.minus(getOperationAmountNumberWithInternals(op)),
-        BigNumber(0)
+  const history = [];
+  let { balance } = account;
+  const operationsLength = account.operations.length;
+  let i = 0; // index of operation
+  history.unshift({ date: dates[dates.length - 1], value: balance.toNumber() });
+  for (let d = dates.length - 2; d >= 0; d--) {
+    const date = dates[d];
+    // accumulate operations after time t
+    while (i < operationsLength && account.operations[i].date > date) {
+      balance = balance.minus(
+        getOperationAmountNumberWithInternals(account.operations[i])
       );
-
-    return {
-      date,
-      value: BigNumber.max(balance, 0).toNumber(),
-    };
-  });
+      i++;
+    }
+    if (i === operationsLength) {
+      // When there is no more operation, we consider we reached ZERO to avoid invalid assumption that balance was already available.
+      balance = BigNumber(0);
+    }
+    history.unshift({ date, value: BigNumber.max(balance, 0).toNumber() });
+  }
+  return history;
 }
 
 export function getBalanceHistoryWithCountervalue(
@@ -89,11 +99,6 @@ export function getBalanceHistoryWithCountervalue(
 ): AccountPortfolio {
   const balanceHistory = getBalanceHistory(account, range);
   const currency = getAccountCurrency(account);
-
-  // TODO Portfolio: accountCVstableCache?
-
-  // TODO Portfolio: fix dataPoints arg type
-  // $FlowFixMe
   const counterValues = calculateMany(countervaluesState, balanceHistory, {
     from: currency,
     to: countervalueCurrency,
@@ -123,11 +128,13 @@ export function getBalanceHistoryWithCountervalue(
     };
   }
 
+  const countervalueAvailable = Boolean(
+    history[history.length - 1].countervalue
+  );
+
   return {
     history,
-    // TODO Portfolio: countervalueAvailable
-    // countervalueAvailable: !!cvRef,
-    countervalueAvailable: false,
+    countervalueAvailable,
     ...calcChanges(history),
   };
 }
@@ -192,7 +199,6 @@ export function getPortfolio(
   );
 
   const histories = availables.map((a) => a.history);
-
   const count = getPortfolioCount(accounts, range);
   const balanceHistory = getDates(range, count).map((date, i) => ({
     date,
@@ -251,6 +257,29 @@ export function getCurrencyPortfolio(
     getBalanceHistoryWithCountervalue(a, range, cvState, cvCurrency)
   );
   const histories = portfolios.map((p) => p.history);
+  const count = getPortfolioCount(accounts, range);
+  const history = getDates(range, count).map((date, i) => {
+    const h = histories.map((h) => h[i]);
+    return {
+      date,
+      value: h.reduce((sum, h) => sum + h.value, 0),
+      countervalue: h.reduce((sum, h) => sum + (h.countervalue || 0), 0),
+    };
+  });
+
+  const from = history[0];
+  const to = history[history.length - 1];
+  const cryptoChange = {
+    value: to.value - from.value,
+    percentage: null,
+  };
+  const countervalueChange = {
+    value: (to.countervalue || 0) - (from.countervalue || 0),
+    percentage: meaningfulPercentage(
+      (to.countervalue || 0) - (from.countervalue || 0),
+      from.countervalue
+    ),
+  };
 
   return {
     history,
@@ -266,6 +295,86 @@ export function getCurrencyPortfolio(
 
 export function getAssetsDistribution(
   topAccounts: Account[],
-  countervaluesState: CounterValuesState,
+  cvState: CounterValuesState,
+  cvCurrency: Currency,
   opts?: AssetsDistributionOpts
-): AssetsDistribution {}
+): AssetsDistribution {
+  const { minShowFirst, maxShowFirst, showFirstThreshold } = {
+    ...defaultAssetsDistribution,
+    ...opts,
+  };
+  const idBalances: { [key: string]: number } = {};
+  const idCurrencies: { [key: string]: CryptoCurrency | TokenCurrency } = {};
+  const accounts = flattenAccounts(topAccounts);
+  for (let i = 0; i < accounts.length; i++) {
+    const account = accounts[i];
+    const cur = getAccountCurrency(account);
+    const id = cur.id;
+    if (account.balance.isGreaterThan(0)) {
+      idCurrencies[id] = cur;
+      idBalances[id] = (idBalances[id] ?? 0) + account.balance.toNumber();
+    }
+  }
+
+  const { sum, idCountervalues } = Object.entries(idBalances).reduce(
+    (prev, [id, value]) => {
+      const cv = calculate(cvState, {
+        value: Number(value),
+        from: getCryptoCurrencyById(id),
+        to: cvCurrency,
+      });
+      return cv
+        ? {
+            sum: prev.sum + cv,
+            idCountervalues: { ...prev.idCountervalues, [id]: cv },
+          }
+        : prev;
+    },
+    { sum: 0, idCountervalues: {} }
+  );
+
+  const idCurrenciesKeys = Object.keys(idCurrencies);
+
+  if (idCurrenciesKeys.length === 0) {
+    return assetsDistributionNotAvailable;
+  }
+
+  const isAvailable = sum !== 0;
+
+  const list = idCurrenciesKeys
+    .map((id) => {
+      const currency = idCurrencies[id];
+      const amount = idBalances[id];
+      const countervalue = idCountervalues[id] ?? 0;
+      return {
+        currency,
+        countervalue,
+        amount,
+        distribution: isAvailable ? countervalue / sum : 0,
+      };
+    })
+    .sort((a, b) => {
+      const diff = b.countervalue - a.countervalue;
+      return diff === 0 ? a.currency.name.localeCompare(b.currency.name) : diff;
+    });
+
+  let i;
+  let acc = 0;
+  for (i = 0; i < maxShowFirst && i < list.length; i++) {
+    if (acc > showFirstThreshold) {
+      break;
+    }
+    acc += list[i].distribution;
+  }
+  const showFirst = Math.max(minShowFirst, i);
+
+  const data = { isAvailable, list, showFirst, sum };
+  return data;
+}
+
+const assetsDistributionNotAvailable: AssetsDistribution = {
+  isAvailable: false,
+  list: [],
+  showFirst: 0,
+  sum: 0,
+};
