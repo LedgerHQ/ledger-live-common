@@ -50,6 +50,7 @@ const getExchangeRates: GetExchangeRates = async (
       minAmountFrom,
       maxAmountFrom,
       tradeMethod,
+      payoutNetworkFees,
     }) => {
       let error;
       let magnitudeAwareRate;
@@ -94,7 +95,10 @@ const getExchangeRates: GetExchangeRates = async (
         tradeMethod,
         ...(tradeMethod === "fixed"
           ? { rate, rateId }
-          : { rate: BigNumber(amountTo).div(amountFrom) }),
+          : {
+              rate: BigNumber(amountTo).div(amountFrom),
+              payoutNetworkFees: BigNumber(payoutNetworkFees),
+            }),
         error,
       };
     }
