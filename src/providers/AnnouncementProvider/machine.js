@@ -16,14 +16,14 @@ const initialState: State = {
 export const announcementMachine = Machine(
   {
     id: "announcement",
-    initial: "loading",
+    initial: "initializing",
     context: initialState,
     states: {
-      loading: {
+      initializing: {
         invoke: {
           src: "loadData",
           onDone: {
-            target: "idle",
+            target: "updating",
             actions: assign((_, { data }) => {
               const { announcements, seenIds, lastUpdateTime } = data;
 
@@ -45,6 +45,11 @@ export const announcementMachine = Machine(
         },
       },
       idle: {
+        after: {
+          AUTO_UPDATE_DELAY: {
+            target: "updating",
+          },
+        },
         on: {
           UPDATE_DATA: {
             target: "updating",
@@ -54,7 +59,7 @@ export const announcementMachine = Machine(
       },
       updating: {
         invoke: {
-          src: "updateData",
+          src: "fetchData",
           onDone: {
             target: "idle",
             actions: [

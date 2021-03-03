@@ -1,6 +1,6 @@
 // @flow
 import timemachine from "timemachine";
-import { groupAnnouncements } from "../../announcements/logic";
+import { groupAnnouncements } from "../../providers/AnnouncementProvider/helpers";
 
 timemachine.config({
   dateString: "February 22, 2021 13:12:59",
@@ -68,7 +68,8 @@ const cache = {
 let announcements;
 describe("groupAnnouncements", () => {
   beforeAll(() => {
-    announcements = groupAnnouncements(cache);
+    const allIds = Object.keys(cache);
+    announcements = groupAnnouncements(allIds.map(uuid => cache[uuid]));
   });
 
   it("should group the announcements by date and priority", () => {

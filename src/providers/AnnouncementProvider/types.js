@@ -33,35 +33,7 @@ export type Announcement = AnnouncementBase & {
   content: AnnouncementContent,
 };
 
-export type RawStatusSummary = {
-  incidents: ?({
-    created_at: string,
-    id: string,
-    impact: string,
-    incident_updates: ?({
-      body: string,
-      created_at?: string,
-      display_at?: string,
-      id?: string,
-      incident_id?: string,
-      status?: string,
-      updated_at?: string,
-    }[]),
-    monitoring_at: ?string,
-    name: string,
-    page_id: ?string,
-    resolved_at: ?string,
-    shortlink: ?string,
-    status: string,
-    updated_at: ?string,
-  }[]),
-};
-
-export type StatusIncident = Announcement & {
-  status?: string,
-};
-
-export type AnnoucementsUserSettings = {
+export type AnnouncementsUserSettings = {
   language: string,
   currencies: string[],
   getDate: () => Date,
@@ -69,19 +41,13 @@ export type AnnoucementsUserSettings = {
 
 export type AnnouncementsApi = {
   fetchAnnouncements: () => Promise<RawAnnouncement[]>,
-  fetchStatusSummary: () => Promise<RawStatusSummary>,
 };
 
 export type State = {
   seenIds: string[],
   allIds: string[],
-  cache: Cache,
+  cache: { [id: string]: Announcement },
   isLoading: boolean,
   lastUpdateTime: ?number,
   error: ?Error,
 };
-
-type Cache = {
-  [id: string]: Announcement,
-};
-
