@@ -174,12 +174,6 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
       base: "EXPLORER",
       version: "v2",
     },
-    /*
-    experimental: {
-      base: "EXPLORER",
-      version: "v3",
-    },
-    */
   },
   stratis: {
     id: "strat",
