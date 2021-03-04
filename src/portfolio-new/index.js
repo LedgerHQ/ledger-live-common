@@ -52,7 +52,7 @@ export function getPortfolioCount(
   if (typeof conf.count === "number") return conf.count;
   if (!accounts.length) return 0;
 
-  const now = new Date();
+  const now = Date.now();
   const start = Math.min(...accounts.map((a) => a.creationDate.getTime()));
   const count = Math.floor((now - start) / conf.increment) + 1;
   const defaultYearCount = getPortfolioRangeConfig("year").count ?? 0; // just for type casting
@@ -94,14 +94,14 @@ export function getBalanceHistory(
 export function getBalanceHistoryWithCountervalue(
   account: AccountLike,
   range: PortfolioRange,
-  countervaluesState: CounterValuesState,
-  countervalueCurrency: Currency
+  cvState: CounterValuesState,
+  cvCurrency: Currency
 ): AccountPortfolio {
   const balanceHistory = getBalanceHistory(account, range);
   const currency = getAccountCurrency(account);
-  const counterValues = calculateMany(countervaluesState, balanceHistory, {
+  const counterValues = calculateMany(cvState, balanceHistory, {
     from: currency,
-    to: countervalueCurrency,
+    to: cvCurrency,
   });
   const history = balanceHistory.map((h, i) => ({
     ...h,

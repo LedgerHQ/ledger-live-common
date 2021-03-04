@@ -1,15 +1,29 @@
 // @flow
-import { getPortfolioCount } from "../portfolio-new";
-import { getPortfolioRangeConfig } from "../portfolio-new/range";
+import {
+  getFiatCurrencyByTicker,
+  getCryptoCurrencyById,
+} from "@ledgerhq/cryptoassets";
+import { initialState, loadCountervalues } from "../countervalues/logic";
+import {
+  getPortfolioCount,
+  getBalanceHistory,
+  getBalanceHistoryWithCountervalue,
+} from "../portfolio-new";
+import { getPortfolioRangeConfig, getDates } from "../portfolio-new/range";
 import type { AccountLike } from "../types";
 import { genAccount } from "../mock/account";
+import { getAccountCurrency } from "../account";
+import { referenceSnapshotDate } from "../countervalues/mock";
+
+jest
+  .spyOn(Date, "now")
+  .mockImplementation(() => new Date(referenceSnapshotDate).getTime());
 
 describe("Portfolio", () => {
   describe("getPortfolioCount", () => {
     const accounts: AccountLike[] = Array.from({ length: 100 }).map((_, j) =>
       genAccount("portfolio_" + j)
     );
-
     describe("default count", () => {
       ["year", "month", "week", "day"].forEach((range) => {
         it(`shoud return default count (${range})`, () => {
@@ -22,18 +36,16 @@ describe("Portfolio", () => {
 
     describe("all time", () => {
       const range = "all";
-      // TODO Portfolio: How to test it dynamically? (now: new Date())
-      // it("should return calculated count", () => {
-      //   const _accounts: AccountLike[] = [
-      //     {
-      //       ...genAccount("portfolio_1"),
-      //       creationDate: new Date("2008-10-31"),
-      //     },
-      //     ...accounts.slice(1, accounts.length - 1),
-      //   ];
-      //   const res = getPortfolioCount(_accounts, range);
-      //   expect(res).toBe();
-      // });
+      it("should return calculated count", () => {
+        const accounts: AccountLike[] = [
+          {
+            ...genAccount("bitcoin_1"),
+            creationDate: new Date("2008-10-31"), // Bitcoin paper issued
+          },
+        ];
+        const res = getPortfolioCount(accounts, range);
+        expect(res).toBe(601);
+      });
 
       it("should return at least a year", () => {
         const res = getPortfolioCount(accounts, range);
@@ -43,9 +55,81 @@ describe("Portfolio", () => {
     });
   });
 
-  describe("getBalanceHistory", () => {});
+  describe("getBalanceHistory", () => {
+    const account = genAccount("account_1");
 
-  describe("getBalanceHistoryWithCountervalue", () => {});
+    it("should return history of 52 items with all time range", () => {
+      const history = getBalanceHistory(account, "all");
+      expect(history).toBeInstanceOf(Array);
+      expect(history.length).toBe(52);
+      expect(history).toMatchSnapshot();
+    });
+
+    it("should return history of 52 items with year range", () => {
+      const history = getBalanceHistory(account, "year");
+      expect(history).toBeInstanceOf(Array);
+      expect(history.length).toBe(52);
+      expect(history).toMatchSnapshot();
+    });
+
+    it("should return history of 30 items with month range", () => {
+      const history = getBalanceHistory(account, "month");
+      expect(history).toBeInstanceOf(Array);
+      expect(history.length).toBe(30);
+      expect(history).toMatchSnapshot();
+    });
+
+    it("should return history of 168(7 * 24) items with week range", () => {
+      const history = getBalanceHistory(account, "week");
+      expect(history).toBeInstanceOf(Array);
+      expect(history.length).toBe(7 * 24);
+      expect(history).toMatchSnapshot();
+    });
+
+    it("should return history of 168 items with day range", () => {
+      const history = getBalanceHistory(account, "day");
+      expect(history).toBeInstanceOf(Array);
+      expect(history.length).toBe(24);
+      expect(history).toMatchSnapshot();
+    });
+
+    it("should have dates matche getDates", () => {
+      const history = getBalanceHistory(account, "year");
+      const dates = getDates("year", 52);
+      expect(history.map((p) => p.date)).toMatchObject(dates);
+    });
+  });
+
+  describe("getBalanceHistoryWithCountervalue", () => {
+    it("should return same value as history", async () => {
+      const account = genAccount("bitcoin_1", {
+        currency: getCryptoCurrencyById("bitcoin"),
+      });
+      const range = "day";
+      const history = getBalanceHistory(account, range);
+      const from = getAccountCurrency(account);
+      const to = getFiatCurrencyByTicker("USD");
+      const cvState = await loadCountervalues(initialState, {
+        trackingPairs: [{ from, to }],
+        autofillGaps: true,
+      });
+      const cv = getBalanceHistoryWithCountervalue(
+        account,
+        range,
+        cvState,
+        getFiatCurrencyByTicker("USD")
+      );
+      expect(cv.countervalueAvailable).toBe(true);
+      // TODO Portfolio: wat?
+      // expect(
+      //   cv.history.map((p) => ({ date: p.date, value: p.countervalue }))
+      // ).toMatchObject(history);
+      expect(
+        cv.history.map((p) => ({ date: p.date, value: p.value }))
+      ).toMatchObject(history);
+      expect(cv).toMatchSnapshot();
+    });
+  });
 
   describe("getPortfolio", () => {});
 
