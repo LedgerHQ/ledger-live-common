@@ -8,6 +8,7 @@ import {
   getPortfolioCount,
   getBalanceHistory,
   getBalanceHistoryWithCountervalue,
+  getPortfolio,
 } from "../portfolio-new";
 import { getPortfolioRangeConfig, getDates } from "../portfolio-new/range";
 import type { AccountLike } from "../types";
@@ -102,9 +103,7 @@ describe("Portfolio", () => {
 
   describe("getBalanceHistoryWithCountervalue", () => {
     it("should return same value as history", async () => {
-      const account = genAccount("bitcoin_1", {
-        currency: getCryptoCurrencyById("bitcoin"),
-      });
+      const account = genAccountBitcoin();
       const range = "day";
       const history = getBalanceHistory(account, range);
       const { state, to } = await loadCV(account);
@@ -121,12 +120,28 @@ describe("Portfolio", () => {
     });
   });
 
-  describe("getPortfolio", () => {});
+  describe("getPortfolio", () => {
+    it("should work with one account and is identically to that account history", async () => {
+      const account = genAccountBitcoin();
+      const range = "week";
+      const history = getBalanceHistory(account, range);
+      const { state, to } = await loadCV(account);
+      const portfolio = getPortfolio([account], range, state, to);
+      expect(portfolio.availableAccounts).toMatchObject([account]);
+      expect(portfolio.balanceAvailable).toBe(true);
+      expect(portfolio.balanceHistory).toMatchObject(history);
+      expect(portfolio.balanceHistory).toMatchSnapshot();
+    });
+  });
 
   describe("getCurrencyPortfolio", () => {});
 
   describe("getAssetsDistribution", () => {});
 });
+
+function genAccountBitcoin(id: string = "bitcoin_1") {
+  return genAccount(id, { currency: getCryptoCurrencyById("bitcoin") });
+}
 
 async function loadCV(account: AccountLike) {
   const from = getAccountCurrency(account);
