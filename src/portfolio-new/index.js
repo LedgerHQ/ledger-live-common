@@ -39,6 +39,7 @@ import type {
   Portfolio,
   CurrencyPortfolio,
   AssetsDistribution,
+  ValueChange,
 } from "./types";
 import { getPortfolioRangeConfig, getDates } from "./range";
 import { defaultAssetsDistribution } from "../portfolio";
@@ -152,6 +153,14 @@ function meaningfulPercentage(
   }
 }
 
+type Available = {
+  account: AccountLike,
+  history: BalanceHistoryWithCountervalue,
+  change: ValueChange,
+  countervalueReceiveSum: number,
+  countervalueSendSum: number,
+};
+
 /**
  * calculate the total balance history for all accounts in a reference fiat unit
  * and using a CalculateCounterValue function (see countervalue helper)
@@ -165,7 +174,10 @@ export function getPortfolio(
   cvCurrency: Currency
 ): Portfolio {
   const accounts = flattenAccounts(topAccounts);
-  const { availables, unavailableAccounts } = accounts.reduce(
+  const { availables, unavailableAccounts } = accounts.reduce<{
+    availables: Available[],
+    unavailableAccounts: AccountLike[],
+  }>(
     (prev, account) => {
       const p = getBalanceHistoryWithCountervalue(
         account,
@@ -176,7 +188,7 @@ export function getPortfolio(
       return p.countervalueAvailable
         ? {
             ...prev,
-            available: [
+            availables: [
               ...prev.availables,
               {
                 account,
@@ -202,13 +214,11 @@ export function getPortfolio(
   const count = getPortfolioCount(accounts, range);
   const balanceHistory = getDates(range, count).map((date, i) => ({
     date,
-    value: histories
-      .map((h) => h[i].countervalue)
-      .reduce((sum, val) => sum + (val ?? 0), 0),
+    value: histories.reduce((sum, h) => sum + (h[i].countervalue ?? 0), 0),
   }));
 
   const countervalueChangeValue = availables.reduce(
-    (sum, a) => sum + a.changes,
+    (sum, a) => sum + a.change.value,
     0
   );
   const countervalueReceiveSum = availables.reduce(
@@ -258,14 +268,14 @@ export function getCurrencyPortfolio(
   );
   const histories = portfolios.map((p) => p.history);
   const count = getPortfolioCount(accounts, range);
-  const history = getDates(range, count).map((date, i) => {
-    const h = histories.map((h) => h[i]);
-    return {
-      date,
-      value: h.reduce((sum, h) => sum + h.value, 0),
-      countervalue: h.reduce((sum, h) => sum + (h.countervalue || 0), 0),
-    };
-  });
+  const history = getDates(range, count).map((date, i) => ({
+    date,
+    value: histories.reduce((sum, h) => sum + h[i].value, 0),
+    countervalue: histories.reduce(
+      (sum, h) => sum + (h[i].countervalue ?? 0),
+      0
+    ),
+  }));
 
   const from = history[0];
   const to = history[history.length - 1];

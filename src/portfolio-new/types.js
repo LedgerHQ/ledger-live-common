@@ -28,8 +28,8 @@ export type PortfolioRange = "all" | "year" | "month" | "week" | "day";
 export type AccountPortfolio = {
   history: BalanceHistoryWithCountervalue,
   countervalueAvailable: boolean,
-  countervalueReceiveSum: 0,
-  countervalueSendSum: 0,
+  countervalueReceiveSum: number,
+  countervalueSendSum: number,
   cryptoChange: ValueChange, // how much the account changes. value is in the account currency
   countervalueChange: ValueChange, // calculates the ROI. value in the countervalue unit.
 };

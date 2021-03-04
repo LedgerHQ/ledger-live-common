@@ -107,20 +107,10 @@ describe("Portfolio", () => {
       });
       const range = "day";
       const history = getBalanceHistory(account, range);
-      const from = getAccountCurrency(account);
-      const to = getFiatCurrencyByTicker("USD");
-      const cvState = await loadCountervalues(initialState, {
-        trackingPairs: [{ from, to }],
-        autofillGaps: true,
-      });
-      const cv = getBalanceHistoryWithCountervalue(
-        account,
-        range,
-        cvState,
-        getFiatCurrencyByTicker("USD")
-      );
+      const { state, to } = await loadCV(account);
+      const cv = getBalanceHistoryWithCountervalue(account, range, state, to);
       expect(cv.countervalueAvailable).toBe(true);
-      // TODO Portfolio: wat?
+      // TODO Portfolio: 🤔
       // expect(
       //   cv.history.map((p) => ({ date: p.date, value: p.countervalue }))
       // ).toMatchObject(history);
@@ -137,3 +127,13 @@ describe("Portfolio", () => {
 
   describe("getAssetsDistribution", () => {});
 });
+
+async function loadCV(account: AccountLike) {
+  const from = getAccountCurrency(account);
+  const to = getFiatCurrencyByTicker("USD");
+  const state = await loadCountervalues(initialState, {
+    trackingPairs: [{ from, to }],
+    autofillGaps: true,
+  });
+  return { state, from, to };
+}
