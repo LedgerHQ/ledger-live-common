@@ -70,7 +70,7 @@ const envDefinitions = {
   },
   API_RIPPLE_WS: {
     parser: stringParser,
-    def: "wss://xrpl.ws",
+    def: "wss://node.xrpledger.foundation",
     desc: "XRP Ledger full history open WebSocket endpoint",
   },
   API_POLKADOT_INDEXER: {
