@@ -70,7 +70,7 @@ const envDefinitions = {
   },
   API_RIPPLE_WS: {
     parser: stringParser,
-    def: "wss://xrpl.ws",
+    def: "wss://xrplcluster.com",
     desc: "XRP Ledger full history open WebSocket endpoint",
   },
   API_POLKADOT_INDEXER: {
@@ -343,6 +343,12 @@ const envDefinitions = {
     def: 100,
     parser: intParser,
     desc: "defines the initial default operation length page to use",
+  },
+  POLKADOT_ELECTION_STATUS_THRESHOLD: {
+    def: 25,
+    parser: intParser,
+    desc:
+      "in blocks - number of blocks before Polkadot election effectively opens to consider it as open and disable all staking features",
   },
   SATSTACK: {
     def: false,
