@@ -97,7 +97,9 @@ const getExchangeRates: GetExchangeRates = async (
           ? { rate, rateId }
           : {
               rate: BigNumber(amountTo).div(amountFrom),
-              payoutNetworkFees: BigNumber(payoutNetworkFees),
+              payoutNetworkFees: BigNumber(payoutNetworkFees).times(
+                BigNumber(10).pow(unitTo.magnitude)
+              ),
             }),
         error,
       };
