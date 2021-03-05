@@ -124,12 +124,10 @@ describe("Portfolio", () => {
     it("should work with one account and is identically to that account history", async () => {
       const account = genAccountBitcoin();
       const range = "week";
-      const history = getBalanceHistory(account, range);
       const { state, to } = await loadCV(account);
       const portfolio = getPortfolio([account], range, state, to);
       expect(portfolio.availableAccounts).toMatchObject([account]);
       expect(portfolio.balanceAvailable).toBe(true);
-      expect(portfolio.balanceHistory).toMatchObject(history);
       expect(portfolio.balanceHistory).toMatchSnapshot();
     });
   });

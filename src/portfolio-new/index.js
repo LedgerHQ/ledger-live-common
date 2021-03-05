@@ -103,6 +103,7 @@ export function getBalanceHistoryWithCountervalue(
   const counterValues = calculateMany(cvState, balanceHistory, {
     from: currency,
     to: cvCurrency,
+    disableRounding: true,
   });
   const history = balanceHistory.map((h, i) => ({
     ...h,
@@ -214,20 +215,21 @@ export function getPortfolio(
   const count = getPortfolioCount(accounts, range);
   const balanceHistory = getDates(range, count).map((date, i) => ({
     date,
-    value: histories.reduce((sum, h) => sum + (h[i].countervalue ?? 0), 0),
+    value: histories.reduce((sum, h) => sum + (h[i]?.countervalue ?? 0), 0),
   }));
 
-  const countervalueChangeValue = availables.reduce(
-    (sum, a) => sum + a.change.value,
-    0
-  );
-  const countervalueReceiveSum = availables.reduce(
-    (sum, a) => sum + a.countervalueReceiveSum,
-    0
-  );
-  const countervalueSendSum = availables.reduce(
-    (sum, a) => sum + a.countervalueSendSum,
-    0
+  const [
+    countervalueChangeValue,
+    countervalueReceiveSum,
+    countervalueSendSum,
+  ] = availables.reduce(
+    (prev, a) => [
+      prev[0] + a.change.value,
+      // TODO Portfolio: it'll always be 0, no? 🤔
+      prev[1] + a.countervalueReceiveSum,
+      prev[2] + a.countervalueSendSum,
+    ],
+    [0, 0, 0]
   );
 
   // in case there were no receive, we just track the market change
