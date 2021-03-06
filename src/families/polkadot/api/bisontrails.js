@@ -50,6 +50,11 @@ const getWithdrawUnbondedAmount = (extrinsic) => {
   );
 };
 
+const getController = (_extrinsic) => {
+  // TODO: ask BisonTrails to provide the info
+  return "";
+};
+
 /**
  * add Extra info for operation details
  *
@@ -90,6 +95,13 @@ const getExtra = (type: OperationType, extrinsic: *): Object => {
       extra = {
         ...extra,
         withdrawUnbondedAmount: getWithdrawUnbondedAmount(extrinsic),
+      };
+      break;
+
+    case "SET_CONTROLLER":
+      extra = {
+        ...extra,
+        controller: getController(extrinsic),
       };
       break;
 
