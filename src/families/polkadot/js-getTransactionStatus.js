@@ -83,19 +83,21 @@ const getSendTransactionStatus = async (
     minimumBalance.gt(0) &&
     totalSpent.plus(minimumBalance).gt(a.spendableBalance)
   ) {
-    errors.amount = a.spendableBalance.minus(totalSpent).lt(minimumBalance)
-      ? new PolkadotDoMaxSendInstead()
-      : new NotEnoughSpendableBalance(null, {
-          minimumAmount: formatCurrencyUnit(
-            a.currency.units[0],
-            minimumBalance,
-            {
-              disableRounding: true,
-              useGrouping: false,
-              showCode: true,
-            }
-          ),
-        });
+    const leftover = a.spendableBalance.minus(totalSpent);
+    errors.amount =
+      leftover.lt(minimumBalance) && leftover.gt(0)
+        ? new PolkadotDoMaxSendInstead()
+        : new NotEnoughSpendableBalance(null, {
+            minimumAmount: formatCurrencyUnit(
+              a.currency.units[0],
+              minimumBalance,
+              {
+                disableRounding: true,
+                useGrouping: false,
+                showCode: true,
+              }
+            ),
+          });
   } else if (totalSpent.gt(a.spendableBalance)) {
     errors.amount = new NotEnoughBalance();
   }
