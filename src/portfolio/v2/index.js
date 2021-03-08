@@ -1,21 +1,5 @@
 // @flow
 
-/**
- * GOALS
- * - be non breaking changes for portfolio/index.js
- * - fix bugs like countervalues portfolio refresh issue
- * - be ready for "all time" range support
- * - more performant
- *
- * MILESTONES
- * - poc: implement the new methods
- *   - test: update the existing tests with new impl
- * - cli: port the cli
- * - react: implement a react.js
- * - perf: improve the impl to be performant
- * - finish: connect to LLD / LLM
- */
-
 import { BigNumber } from "bignumber.js";
 import type {
   AccountLikeArray,
