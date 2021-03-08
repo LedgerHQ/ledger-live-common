@@ -24,12 +24,12 @@ import type {
   Currency,
   CryptoCurrency,
   TokenCurrency,
-} from "../types";
-import { getOperationAmountNumberWithInternals } from "../operation";
-import type { CounterValuesState } from "../countervalues/types";
-import { calculate, calculateMany } from "../countervalues/logic";
-import { flattenAccounts, getAccountCurrency } from "../account";
-import { getEnv } from "../env";
+} from "../../types";
+import { getOperationAmountNumberWithInternals } from "../../operation";
+import type { CounterValuesState } from "../../countervalues/types";
+import { calculate, calculateMany } from "../../countervalues/logic";
+import { flattenAccounts, getAccountCurrency } from "../../account";
+import { getEnv } from "../../env";
 import type {
   BalanceHistory,
   PortfolioRange,
@@ -41,8 +41,8 @@ import type {
   ValueChange,
 } from "./types";
 import { getPortfolioRangeConfig, getDates } from "./range";
-import { defaultAssetsDistribution } from "../portfolio";
-import type { AssetsDistributionOpts } from "../portfolio";
+import { defaultAssetsDistribution } from "../";
+import type { AssetsDistributionOpts } from "../";
 
 export function getPortfolioCount(
   accounts: AccountLikeArray,
@@ -330,7 +330,7 @@ export function getAssetsDistribution(
   const { sum, idCountervalues } = Object.entries(idBalances).reduce(
     (prev, [id, value]) => {
       const cv = calculate(cvState, {
-        value,
+        value: Number(value), // just for casting mixed type.
         from: idCurrencies[id],
         to: cvCurrency,
       });

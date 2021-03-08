@@ -9,8 +9,8 @@ import {
   getBalanceHistory,
   getBalanceHistoryWithCountervalue,
   getPortfolio,
-} from "../portfolio-new";
-import { getPortfolioRangeConfig, getDates } from "../portfolio-new/range";
+} from "../portfolio/v2";
+import { getPortfolioRangeConfig, getDates } from "../portfolio/v2/range";
 import type { AccountLike } from "../types";
 import { genAccount } from "../mock/account";
 import { getAccountCurrency } from "../account";

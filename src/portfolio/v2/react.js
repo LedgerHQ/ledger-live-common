@@ -5,15 +5,15 @@ import type {
   Currency,
   CryptoCurrency,
   TokenCurrency,
-} from "../types";
-import { getAccountCurrency, flattenAccounts } from "../account";
-import { useCountervaluesState } from "../countervalues/react";
+} from "../../types";
+import { getAccountCurrency, flattenAccounts } from "../../account";
+import { useCountervaluesState } from "../../countervalues/react";
 import {
   getBalanceHistoryWithCountervalue,
   getPortfolio,
   getCurrencyPortfolio,
   getAssetsDistribution,
-} from "./index";
+} from "./";
 import type { PortfolioRange } from "./types";
 
 export function useBalanceHistoryWithCountervalue({

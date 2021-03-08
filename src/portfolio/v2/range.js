@@ -6,7 +6,7 @@ import {
   startOfWeek,
   startOfDay,
   startOfHour,
-} from "../portfolio/range";
+} from "../range";
 import type { PortfolioRangeConfig, PortfolioRange } from "./types";
 
 export function getPortfolioRangeConfig(

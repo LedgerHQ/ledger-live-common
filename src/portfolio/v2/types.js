@@ -5,7 +5,7 @@ import type {
   AccountLikeArray,
   CryptoCurrency,
   TokenCurrency,
-} from "../types";
+} from "../../types";
 
 export type BalanceHistoryData = { date: Date, value: number };
 
