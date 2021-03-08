@@ -17,7 +17,6 @@
  */
 
 import { BigNumber } from "bignumber.js";
-import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import type {
   AccountLikeArray,
   AccountLike,
@@ -272,9 +271,9 @@ export function getCurrencyPortfolio(
   const count = getPortfolioCount(accounts, range);
   const history = getDates(range, count).map((date, i) => ({
     date,
-    value: histories.reduce((sum, h) => sum + h[i].value, 0),
+    value: histories.reduce((sum, h) => sum + h[i]?.value, 0),
     countervalue: histories.reduce(
-      (sum, h) => sum + (h[i].countervalue ?? 0),
+      (sum, h) => sum + (h[i]?.countervalue ?? 0),
       0
     ),
   }));
@@ -331,8 +330,8 @@ export function getAssetsDistribution(
   const { sum, idCountervalues } = Object.entries(idBalances).reduce(
     (prev, [id, value]) => {
       const cv = calculate(cvState, {
-        value: Number(value),
-        from: getCryptoCurrencyById(id),
+        value,
+        from: idCurrencies[id],
         to: cvCurrency,
       });
       return cv

@@ -1,6 +1,7 @@
 // @flow
 import type {
   Account,
+  AccountLike,
   Currency,
   CryptoCurrency,
   TokenCurrency,
@@ -8,11 +9,25 @@ import type {
 import { getAccountCurrency, flattenAccounts } from "../account";
 import { useCountervaluesState } from "../countervalues/react";
 import {
+  getBalanceHistoryWithCountervalue,
   getPortfolio,
   getCurrencyPortfolio,
   getAssetsDistribution,
 } from "./index";
 import type { PortfolioRange } from "./types";
+
+export function useBalanceHistoryWithCountervalue({
+  account,
+  range,
+  to,
+}: {
+  account: AccountLike,
+  range: PortfolioRange,
+  to: Currency,
+}) {
+  const state = useCountervaluesState();
+  return getBalanceHistoryWithCountervalue(account, range, state, to);
+}
 
 export function usePortfolio({
   accounts,
