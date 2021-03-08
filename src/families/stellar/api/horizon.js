@@ -42,11 +42,7 @@ export const fetchAccount = async (addr: string) => {
       return balance.asset_type === "native";
     });
   } catch (e) {
-    if (e.name === "NotFoundError") {
-      balance.balance = "0";
-    } else {
-      throw e;
-    }
+    balance.balance = "0";
   }
 
   const formattedBalance = parseCurrencyUnit(
@@ -106,10 +102,6 @@ const fetchTransactionsList = async (
       mergedTransactions = mergedTransactions.concat(transactions.records);
     }
   } catch (e) {
-    if (e.name !== "NotFoundError") {
-      throw e;
-    }
-
     return [];
   }
 
@@ -152,25 +144,37 @@ const fetchOperationList = async (
 export const fetchAccountNetworkInfo = async (
   account: Account
 ): Promise<NetworkInfo> => {
-  const extendedAccount = await server
-    .accounts()
-    .accountId(account.freshAddress)
-    .call();
+  try {
+    const extendedAccount = await server
+      .accounts()
+      .accountId(account.freshAddress)
+      .call();
 
-  const ledger = await server
-    .ledgers()
-    .ledger(extendedAccount.last_modified_ledger)
-    .call();
+    const numberOfEntries = extendedAccount.subentry_count;
 
-  const baseReserve = BigNumber(ledger.base_reserve_in_stroops.toString());
+    const ledger = await server
+      .ledgers()
+      .ledger(extendedAccount.last_modified_ledger)
+      .call();
 
-  const fees = BigNumber(ledger.base_fee_in_stroops.toString());
+    const baseReserve = BigNumber(
+      (ledger.base_reserve_in_stroops * (2 + numberOfEntries)).toString()
+    );
 
-  return {
-    family: "stellar",
-    fees,
-    baseReserve,
-  };
+    const fees = BigNumber(ledger.base_fee_in_stroops.toString());
+
+    return {
+      family: "stellar",
+      fees,
+      baseReserve,
+    };
+  } catch (error) {
+    return {
+      family: "stellar",
+      fees: BigNumber(0),
+      baseReserve: BigNumber(0),
+    };
+  }
 };
 
 export const fetchSequence = async (a: Account) => {
@@ -179,11 +183,15 @@ export const fetchSequence = async (a: Account) => {
 };
 
 export const fetchSigners = async (a: Account) => {
-  const extendedAccount = await server
-    .accounts()
-    .accountId(a.freshAddress)
-    .call();
-  return extendedAccount.signers;
+  try {
+    const extendedAccount = await server
+      .accounts()
+      .accountId(a.freshAddress)
+      .call();
+    return extendedAccount.signers;
+  } catch (error) {
+    return [];
+  }
 };
 
 export const broadcastTransaction = async (

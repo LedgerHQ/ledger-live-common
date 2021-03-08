@@ -8,6 +8,7 @@ import {
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughSpendableBalance,
   NotEnoughBalanceBecauseDestinationNotCreated,
+  RecipientRequired,
 } from "@ledgerhq/errors";
 import {
   StellarWrongMemoFormat,
@@ -32,7 +33,9 @@ const getTransactionStatus = async (a: Account, t) => {
     throw new AccountAwaitingSendPendingOperations();
   }
 
-  if (a.freshAddress === t.recipient) {
+  if (!t.recipient) {
+    errors.recipient = new RecipientRequired("");
+  } else if (a.freshAddress === t.recipient) {
     errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
   } else if (!isAddressValid(t.recipient)) {
     errors.recipient = new InvalidAddress("");
@@ -91,6 +94,7 @@ const getTransactionStatus = async (a: Account, t) => {
 
   // if amount < 1.0 you can't send to an empty address
   if (
+    !errors.recipient &&
     t.recipient &&
     !errors.amount &&
     !(await checkRecipientExist({ account: a, recipient: t.recipient })) &&

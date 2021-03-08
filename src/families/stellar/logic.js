@@ -83,7 +83,10 @@ export const formatOperation = (
   const recipients = getRecipients(rawOperation);
 
   return {
-    id: encodeOperationId(accountId, rawOperation.transaction_hash, type),
+    id:
+      encodeOperationId(accountId, rawOperation.transaction_hash, type) +
+      "-" +
+      rawOperation.id,
     accountId,
     fee: parseCurrencyUnit(currency.units[0], transaction.fee_charged),
     value,

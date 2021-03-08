@@ -53,3 +53,5 @@ export type TransactionRaw = {|
   memoType: ?string,
   memoValue: ?string,
 |};
+
+export const reflect = (_declare: *) => {};
