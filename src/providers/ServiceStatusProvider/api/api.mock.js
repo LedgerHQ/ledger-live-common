@@ -1,6 +1,10 @@
 // @flow
 
-import type { ServiceStatusApi, ServiceStatusSummary } from "../types";
+import type {
+  ServiceStatusApi,
+  ServiceStatusSummary,
+  Incident,
+} from "../types";
 
 const statuses = {
   page: {
@@ -556,6 +560,36 @@ const statuses = {
   scheduled_maintenances: [],
   status: { indicator: "none", description: "All Systems Operational" },
 };
+
+const mockedIncidents: Incident[] = [
+  {
+    created_at: "2021-02-22T17:58:18.792+02:00",
+    id: "incident-a",
+    impact: "critical",
+    incident_updates: [
+      {
+        body: "An incident occured",
+        created_at: "2021-02-22T17:58:18.792+02:00",
+        display_at: "2021-02-22T17:58:18.792+02:00",
+        id: "incident-a-body",
+        incident_id: "incident-a",
+        status: "ongoing",
+        updated_at: "2021-02-22T17:58:18.792+02:00",
+      },
+    ],
+    monitoring_at: "2021-02-22T17:58:18.792+02:00",
+    name: "Bitcoin network down",
+    page_id: null,
+    resolved_at: null,
+    shortlink: "https://status.ledger.com/",
+    status: "ongoing",
+    updated_at: "2021-02-22T17:58:18.792+02:00",
+  },
+];
+
+export function toggleMockIncident() {
+  statuses.incidents = statuses.incidents.length > 0 ? [] : mockedIncidents;
+}
 
 async function fetchStatusSummary(): Promise<ServiceStatusSummary> {
   return Promise.resolve(statuses);
