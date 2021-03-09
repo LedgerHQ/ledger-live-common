@@ -1,8 +1,9 @@
 // @flow
-
+import Prando from "prando";
+import { getEnv } from "../../../env";
 import type { AnnouncementsApi, RawAnnouncement } from "../types";
 
-const announcements: RawAnnouncement[] = [
+const announcementsPool: RawAnnouncement[] = [
   {
     uuid: "announcement-id-a",
     level: "info",
@@ -75,6 +76,22 @@ const announcements: RawAnnouncement[] = [
     currencies: ["bitcoin"],
   },
 ];
+
+const announcements: RawAnnouncement[] = [].concat(announcementsPool);
+const rng = new Prando(getEnv("MOCK"));
+
+export const addMockAnnouncement = () => {
+  const newAnnouncement = {
+    ...rng.nextArrayItem(announcementsPool),
+    uuid: rng.nextString(32),
+    level: rng.nextArrayItem(["info", "warning"]),
+    icon: rng.nextArrayItem(["info", "warning"]),
+    currencies: undefined,
+    contextual: undefined,
+  };
+
+  announcements.push(newAnnouncement);
+};
 
 async function fetchAnnouncements(): Promise<RawAnnouncement[]> {
   return Promise.resolve(announcements);
