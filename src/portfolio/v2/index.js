@@ -2,7 +2,6 @@
 
 import { BigNumber } from "bignumber.js";
 import type {
-  AccountLikeArray,
   AccountLike,
   Account,
   Currency,
@@ -29,7 +28,7 @@ import { defaultAssetsDistribution } from "../";
 import type { AssetsDistributionOpts } from "../";
 
 export function getPortfolioCount(
-  accounts: AccountLikeArray,
+  accounts: AccountLike[],
   range: PortfolioRange
 ): number {
   const conf = getPortfolioRangeConfig(range);
@@ -47,9 +46,9 @@ export function getPortfolioCount(
 // TODO Portfolio: Account#balanceHistory would be DROPPED and replaced in future by another impl. (perf milestone)
 export function getBalanceHistory(
   account: AccountLike,
-  range: PortfolioRange
+  range: PortfolioRange,
+  count: number
 ): BalanceHistory {
-  const count = getPortfolioCount(([account]: AccountLike[]), range);
   const dates = getDates(range, count);
 
   const history = [];
@@ -78,10 +77,11 @@ export function getBalanceHistory(
 export function getBalanceHistoryWithCountervalue(
   account: AccountLike,
   range: PortfolioRange,
+  count: number,
   cvState: CounterValuesState,
   cvCurrency: Currency
 ): AccountPortfolio {
-  const balanceHistory = getBalanceHistory(account, range);
+  const balanceHistory = getBalanceHistory(account, range, count);
   const currency = getAccountCurrency(account);
   const counterValues = calculateMany(cvState, balanceHistory, {
     from: currency,
@@ -158,6 +158,7 @@ export function getPortfolio(
   cvCurrency: Currency
 ): Portfolio {
   const accounts = flattenAccounts(topAccounts);
+  const count = getPortfolioCount(accounts, range);
   const { availables, unavailableAccounts } = accounts.reduce<{
     availables: Available[],
     unavailableAccounts: AccountLike[],
@@ -166,6 +167,7 @@ export function getPortfolio(
       const p = getBalanceHistoryWithCountervalue(
         account,
         range,
+        count,
         cvState,
         cvCurrency
       );
@@ -193,9 +195,7 @@ export function getPortfolio(
       unavailableAccounts: [],
     }
   );
-
   const histories = availables.map((a) => a.history);
-  const count = getPortfolioCount(accounts, range);
   const balanceHistory = getDates(range, count).map((date, i) => ({
     date,
     value: histories.reduce((sum, h) => sum + (h[i]?.countervalue ?? 0), 0),
@@ -243,16 +243,16 @@ export function getPortfolio(
 }
 
 export function getCurrencyPortfolio(
-  accounts: AccountLikeArray,
+  accounts: AccountLike[],
   range: PortfolioRange,
   cvState: CounterValuesState,
   cvCurrency: Currency
 ): CurrencyPortfolio {
+  const count = getPortfolioCount(accounts, range);
   const portfolios = accounts.map((a) =>
-    getBalanceHistoryWithCountervalue(a, range, cvState, cvCurrency)
+    getBalanceHistoryWithCountervalue(a, range, count, cvState, cvCurrency)
   );
   const histories = portfolios.map((p) => p.history);
-  const count = getPortfolioCount(accounts, range);
   const history = getDates(range, count).map((date, i) => ({
     date,
     value: histories.reduce((sum, h) => sum + h[i]?.value, 0),
