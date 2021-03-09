@@ -1,6 +1,6 @@
 // @flow
 
-import type { ServiceStatusApi, RawStatusSummary } from "../types";
+import type { ServiceStatusApi, ServiceStatusSummary } from "../types";
 
 const statuses = {
   page: {
@@ -557,7 +557,7 @@ const statuses = {
   status: { indicator: "none", description: "All Systems Operational" },
 };
 
-async function fetchStatusSummary(): Promise<RawStatusSummary> {
+async function fetchStatusSummary(): Promise<ServiceStatusSummary> {
   return Promise.resolve(statuses);
 }
 

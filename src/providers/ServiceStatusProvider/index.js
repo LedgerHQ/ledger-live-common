@@ -19,15 +19,16 @@ export type StatusContextType = State & API;
 
 const ServiceStatusContext = createContext<StatusContextType>({});
 
-export const useServiceStatus = (): StatusContextType =>
-  useContext(ServiceStatusContext);
+export function useServiceStatus(): StatusContextType {
+  return useContext(ServiceStatusContext);
+}
 
 export const ServiceStatusProvider = ({ children, autoUpdateDelay }: Props) => {
   const fetchData = useCallback(async () => {
-    const rawStatusSummary = await networkApi.fetchStatusSummary();
+    const serviceStatusSummary = await networkApi.fetchStatusSummary();
 
     return {
-      incidents: rawStatusSummary.incidents,
+      incidents: serviceStatusSummary.incidents,
       updateTime: Date.now(),
     };
   }, []);

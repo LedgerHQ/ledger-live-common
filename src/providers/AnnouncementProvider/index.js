@@ -1,10 +1,11 @@
 // @flow
 
 import React, { createContext, useMemo, useCallback, useContext } from "react";
+import differenceBy from "lodash/differenceBy";
+import { useMachine } from "@xstate/react";
 import type { Announcement, AnnouncementsUserSettings, State } from "./types";
 import { localizeAnnouncements, filterAnnouncements } from "./logic";
 import fetchApi from "./api";
-import { useMachine } from "@xstate/react";
 import { announcementMachine } from "./machine";
 
 type Props = {
@@ -21,6 +22,7 @@ type Props = {
   }) => Promise<void>,
   context: AnnouncementsUserSettings,
   autoUpdateDelay: number,
+  onNewAnnouncement: (Announcement) => void,
 };
 
 type API = {
@@ -32,8 +34,9 @@ export type AnnouncementContextType = State & API;
 
 const AnnouncementsContext = createContext<AnnouncementContextType>({});
 
-export const useAnnouncements = (): AnnouncementContextType =>
-  useContext(AnnouncementsContext);
+export function useAnnouncements(): AnnouncementContextType {
+  return useContext(AnnouncementsContext);
+}
 
 export const AnnouncementProvider = ({
   children,
@@ -41,20 +44,37 @@ export const AnnouncementProvider = ({
   handleLoad,
   handleSave,
   autoUpdateDelay,
+  onNewAnnouncement,
 }: Props) => {
-  const fetchData = useCallback(async () => {
-    const rawAnnouncements = await fetchApi.fetchAnnouncements();
-    const localizedAnnouncements = localizeAnnouncements(
-      rawAnnouncements,
-      context
-    );
-    const announcements = filterAnnouncements(localizedAnnouncements, context);
+  const fetchData = useCallback(
+    async ({ allIds, cache }) => {
+      const rawAnnouncements = await fetchApi.fetchAnnouncements();
+      const localizedAnnouncements = localizeAnnouncements(
+        rawAnnouncements,
+        context
+      );
+      const announcements = filterAnnouncements(
+        localizedAnnouncements,
+        context
+      );
 
-    return {
-      announcements,
-      updateTime: Date.now(),
-    };
-  }, [context]);
+      const oldAnnouncements = allIds.map((uuid: string) => cache[uuid]);
+      const newAnnouncements = differenceBy(
+        announcements,
+        oldAnnouncements,
+        (announcement) => announcement.uuid
+      );
+      newAnnouncements.forEach((announcement) => {
+        onNewAnnouncement(announcement);
+      });
+
+      return {
+        announcements,
+        updateTime: Date.now(),
+      };
+    },
+    [context, onNewAnnouncement]
+  );
 
   const loadData = useCallback(async () => {
     const { announcements, lastUpdateTime, seenIds } = await handleLoad();

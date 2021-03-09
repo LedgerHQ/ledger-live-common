@@ -31,10 +31,10 @@ export type State = {
   error: ?Error,
 };
 
-export type RawStatusSummary = {
+export type ServiceStatusSummary = {
   incidents: ?(Incident[]),
 };
 
 export type ServiceStatusApi = {
-  fetchStatusSummary: () => Promise<RawStatusSummary>,
+  fetchStatusSummary: () => Promise<ServiceStatusSummary>,
 };

@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useContext } from "react";
 import type { ToastData } from "./types";
 
 type Props = {
@@ -18,7 +18,11 @@ type ToastContextState = {
 
 type ToastContextType = ToastContextApi & ToastContextState;
 
-export const ToastContext = React.createContext<ToastContextType>({});
+const ToastContext = React.createContext<ToastContextType>({});
+
+export function useToasts(): ToastContextType {
+  return useContext(ToastContext);
+}
 
 export function ToastProvider({ children }: Props) {
   const [toasts, setToasts] = useState([]);

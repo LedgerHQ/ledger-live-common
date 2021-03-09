@@ -69,7 +69,7 @@ let announcements;
 describe("groupAnnouncements", () => {
   beforeAll(() => {
     const allIds = Object.keys(cache);
-    announcements = groupAnnouncements(allIds.map(uuid => cache[uuid]));
+    announcements = groupAnnouncements(allIds.map((uuid) => cache[uuid]));
   });
 
   it("should group the announcements by date and priority", () => {

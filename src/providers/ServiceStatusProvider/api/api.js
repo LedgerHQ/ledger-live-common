@@ -2,12 +2,12 @@
 
 import { getEnv } from "../../../env";
 import network from "../../../network";
-import type { RawStatusSummary, ServiceStatusApi } from "../types";
+import type { ServiceStatusSummary, ServiceStatusApi } from "../types";
 
 const baseStatusUrl = () => getEnv("STATUS_API_URL");
 const statusVersion = () => getEnv("STATUS_API_VERSION");
 
-async function fetchStatusSummary(): Promise<RawStatusSummary> {
+async function fetchStatusSummary(): Promise<ServiceStatusSummary> {
   const url = `${baseStatusUrl()}/v${statusVersion()}/summary.json`;
 
   const { data } = await network({
