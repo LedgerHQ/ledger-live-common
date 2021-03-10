@@ -302,9 +302,7 @@ export type Spec = {
 // We do this at runtime but ideally in the future, it will be at build time (generated code).
 
 export const reflect = (declare: (string, Spec) => void) => {
-  const { AccountMethods, OperationMethods, WalletMethods } = reflectSpecifics(
-    declare
-  ).reduce(
+  const { AccountMethods, OperationMethods } = reflectSpecifics(declare).reduce(
     (all, extra) => ({
       AccountMethods: {
         ...all.AccountMethods,
@@ -313,10 +311,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       OperationMethods: {
         ...all.OperationMethods,
         ...(extra && extra.OperationMethods),
-      },
-      WalletMethods: {
-        ...all.WalletMethods,
-        ...(extra && extra.WalletMethods && extra.WalletMethods),
       },
     }),
     {}
@@ -362,7 +356,6 @@ export const reflect = (declare: (string, Spec) => void) => {
 
   declare("Wallet", {
     methods: {
-      ...WalletMethods,
       getAccountCreationInfo: {
         returns: "AccountCreationInfo",
       },
