@@ -82,13 +82,13 @@ export const formatOperation = (
   const value = getValue(rawOperation, transaction, type);
   const recipients = getRecipients(rawOperation);
 
-  return {
+  const operation = {
     id:
       encodeOperationId(accountId, rawOperation.transaction_hash, type) +
       "-" +
       rawOperation.id,
     accountId,
-    fee: parseCurrencyUnit(currency.units[0], transaction.fee_charged),
+    fee: BigNumber(transaction.fee_charged),
     value,
     type: type,
     hash: rawOperation.transaction_hash,
@@ -99,8 +99,10 @@ export const formatOperation = (
     transactionSequenceNumber: transaction.source_account_sequence,
     hasFailed: !rawOperation.transaction_successful,
     blockHash: "",
-    extra: {},
+    extra: transaction.memo ? { memo: transaction.memo } : {},
   };
+
+  return operation;
 };
 
 const getValue = (
