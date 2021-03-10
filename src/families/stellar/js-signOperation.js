@@ -97,11 +97,13 @@ const signOperation = ({
           transaction.fees ?? BigNumber(0)
         );
 
+        const transactionString = unsigned.toXDR();
+
         o.next({
           type: "signed",
           signedOperation: {
             operation,
-            signature: unsigned,
+            signature: transactionString,
             expirationDate: null,
           },
         });

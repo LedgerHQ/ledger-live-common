@@ -195,9 +195,14 @@ export const fetchSigners = async (a: Account) => {
 };
 
 export const broadcastTransaction = async (
-  signedTransaction
+  signedTransaction: string
 ): Promise<string> => {
-  const res = await server.submitTransaction(signedTransaction, {
+  const transaction = new StellarSdk.Transaction(
+    signedTransaction,
+    StellarSdk.Networks.PUBLIC
+  );
+
+  const res = await server.submitTransaction(transaction, {
     skipMemoRequiredCheck: true,
   });
   return res.hash;
