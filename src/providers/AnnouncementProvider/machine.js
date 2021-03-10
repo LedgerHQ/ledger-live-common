@@ -97,7 +97,7 @@ export const announcementMachine = Machine(
     on: {
       SET_AS_SEEN: {
         cond: (context, event) => !context.seenIds.includes(event.seenId),
-        actions: ["setAsSeen", "saveData"],
+        actions: ["setAsSeen", "saveData", "emitNewAnnouncement"],
       },
     },
   },

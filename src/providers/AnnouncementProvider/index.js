@@ -22,7 +22,8 @@ type Props = {
   }) => Promise<void>,
   context: AnnouncementsUserSettings,
   autoUpdateDelay: number,
-  onNewAnnouncement: (Announcement) => void,
+  onNewAnnouncement?: (Announcement) => void,
+  onAnnouncementRead?: (Announcement) => void,
 };
 
 type API = {
@@ -45,6 +46,7 @@ export const AnnouncementProvider = ({
   handleSave,
   autoUpdateDelay,
   onNewAnnouncement,
+  onAnnouncementRead,
 }: Props) => {
   const fetchData = useCallback(
     async ({ allIds, cache }) => {
@@ -64,9 +66,12 @@ export const AnnouncementProvider = ({
         oldAnnouncements,
         (announcement) => announcement.uuid
       );
-      newAnnouncements.forEach((announcement) => {
-        onNewAnnouncement(announcement);
-      });
+
+      if (onNewAnnouncement) {
+        newAnnouncements.forEach((announcement) => {
+          onNewAnnouncement(announcement);
+        });
+      }
 
       return {
         announcements,
@@ -74,6 +79,15 @@ export const AnnouncementProvider = ({
       };
     },
     [context, onNewAnnouncement]
+  );
+
+  const emitNewAnnouncement = useCallback(
+    ({ cache }, { seenId }) => {
+      if (onAnnouncementRead) {
+        onAnnouncementRead(cache[seenId]);
+      }
+    },
+    [onAnnouncementRead]
   );
 
   const loadData = useCallback(async () => {
@@ -98,6 +112,7 @@ export const AnnouncementProvider = ({
   const [state, send] = useMachine(announcementMachine, {
     actions: {
       saveData,
+      emitNewAnnouncement,
     },
     services: {
       loadData,
