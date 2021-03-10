@@ -72,7 +72,12 @@ const reducer = (state: any, e: SwapRequestEvent | { type: "init-swap" }) => {
         isLoading: false,
       };
     case "init-swap-requested":
-      return { ...state, initSwapRequested: true, isLoading: false };
+      return {
+        ...state,
+        initSwapRequested: true,
+        isLoading: false,
+        amountExpectedTo: e.amountExpectedTo,
+      };
     case "init-swap-result":
       return {
         ...state,
