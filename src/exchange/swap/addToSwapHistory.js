@@ -44,7 +44,7 @@ export default ({
     receiverAccountId: mainToAccount.id,
     tokenId,
     fromAmount: transaction.amount,
-    toAmount: transaction.amount.times(exchangeRate.magnitudeAwareRate),
+    toAmount: exchangeRate.toAmount,
   };
 
   return isFromToken && subAccounts

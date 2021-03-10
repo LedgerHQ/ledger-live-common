@@ -30,6 +30,7 @@ export type ExchangeRate = {
   rate: BigNumber, // NB Raw rate, for display
   magnitudeAwareRate: BigNumber, // NB rate between satoshi units
   payoutNetworkFees?: BigNumber, // Only for float
+  toAmount: BigNumber, // There's a delta somewhere between from times rate and the api.
   rateId?: string,
   provider: string,
   tradeMethod: "fixed" | "float",
@@ -41,6 +42,8 @@ export type TradeMethod = "fixed" | "float";
 export type ExchangeRateRaw = {
   rate: string,
   magnitudeAwareRate: string,
+  payoutNetworkFees?: string,
+  toAmount: string,
   rateId?: string,
   provider: string,
   tradeMethod: TradeMethod,
