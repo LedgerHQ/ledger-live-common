@@ -57,6 +57,8 @@ export const toExchangeRateRaw = (
   const {
     rate,
     magnitudeAwareRate,
+    payoutNetworkFees,
+    toAmount,
     rateId,
     provider,
     providerURL,
@@ -67,6 +69,8 @@ export const toExchangeRateRaw = (
   return {
     rate: rate.toString(),
     magnitudeAwareRate: magnitudeAwareRate.toString(),
+    payoutNetworkFees: payoutNetworkFees ? payoutNetworkFees.toString() : "",
+    toAmount: toAmount.toString(),
     rateId,
     provider,
     providerURL,
@@ -81,6 +85,8 @@ export const fromExchangeRateRaw = (
   const {
     rate,
     magnitudeAwareRate,
+    payoutNetworkFees,
+    toAmount,
     rateId,
     provider,
     providerURL,
@@ -91,6 +97,10 @@ export const fromExchangeRateRaw = (
   return {
     rate: new BigNumber(rate),
     magnitudeAwareRate: new BigNumber(magnitudeAwareRate),
+    payoutNetworkFees: payoutNetworkFees
+      ? new BigNumber(payoutNetworkFees)
+      : undefined,
+    toAmount: new BigNumber(toAmount),
     rateId,
     provider,
     providerURL,
