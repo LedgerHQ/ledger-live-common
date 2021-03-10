@@ -67,6 +67,7 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
         const { amount } = transaction;
         const refundCurrency = getAccountCurrency(fromAccount);
         const unitFrom = getAccountUnit(exchange.fromAccount);
+        const unitTo = getAccountUnit(exchange.toAccount);
         const payoutCurrency = getAccountCurrency(toAccount);
         const refundAccount = getMainAccount(fromAccount, fromParentAccount);
         const payoutAccount = getMainAccount(toAccount, toParentAccount);
@@ -238,7 +239,17 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
         } = getCurrencyExchangeConfig(refundCurrency);
 
         if (unsubscribed) return;
-        o.next({ type: "init-swap-requested" });
+
+        // NB Floating rates may change the original amountTo so we can pass an override
+        // to properly render the amount on the device confirmation steps.
+        let amountExpectedTo;
+        if (swapResult?.amountExpectedTo) {
+          amountExpectedTo = BigNumber(swapResult.amountExpectedTo)
+            .times(BigNumber(10).pow(unitTo.magnitude))
+            .toString();
+        }
+
+        o.next({ type: "init-swap-requested", amountExpectedTo });
 
         try {
           await swap.checkRefundAddress(
