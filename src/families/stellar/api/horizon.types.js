@@ -6,6 +6,7 @@ export type RawAccount = {
 };
 
 export type RawOperation = {
+  id: string,
   type: string,
   starting_balance: string,
   asset_type: string,

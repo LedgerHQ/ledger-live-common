@@ -17,6 +17,7 @@ import {
 } from "../../errors";
 import { formatCurrencyUnit } from "../../currencies";
 import type { Account } from "../../types";
+import type { Transaction } from "./types";
 import {
   isAddressValid,
   checkRecipientExist,
@@ -24,7 +25,7 @@ import {
   isMemoValid,
 } from "./logic";
 
-const getTransactionStatus = async (a: Account, t) => {
+const getTransactionStatus = async (a: Account, t: Transaction) => {
   const errors = {};
   const warnings = {};
   const useAllAmount = !!t.useAllAmount;

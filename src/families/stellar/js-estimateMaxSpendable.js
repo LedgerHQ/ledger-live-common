@@ -5,11 +5,17 @@ import prepareTransaction from "./js-prepareTransaction";
 import getTransactionStatus from "./js-getTransactionStatus";
 
 import { notCreatedStellarMockAddress } from "./test-dataset";
+import type { Account, AccountLike } from "../../types";
+import type { Transaction } from "./types";
 
 const estimateMaxSpendable = async ({
   account,
   parentAccount,
   transaction,
+}: {
+  account: AccountLike,
+  parentAccount: ?Account,
+  transaction: ?Transaction,
 }) => {
   const mainAccount = getMainAccount(account, parentAccount);
   const t = await prepareTransaction(mainAccount, {
