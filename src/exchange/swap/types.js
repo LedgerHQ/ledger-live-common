@@ -96,7 +96,7 @@ export type UpdateAccountSwapStatus = (Account) => Promise<?Account>;
 export type GetMultipleStatus = (SwapStatusRequest[]) => Promise<SwapStatus[]>;
 
 export type SwapRequestEvent =
-  | { type: "init-swap-requested" }
+  | { type: "init-swap-requested", amountExpectedTo?: string }
   | { type: "init-swap-error", error: Error }
   | { type: "init-swap-result", initSwapResult: InitSwapResult };
 
