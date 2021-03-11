@@ -213,3 +213,23 @@ export const addressExists = async (address: string): Promise<boolean> => {
 
   return true;
 };
+
+export const rawOperationToOperation = (
+  operations: RawOperation[],
+  transaction: RawTransaction,
+  addr: string,
+  accountId: string
+): Operation[] => {
+  return operations
+    .filter((operation) => {
+      return (
+        operation.from === addr ||
+        operation.to === addr ||
+        operation.funder === addr ||
+        operation.account === addr
+      );
+    })
+    .map((operation) => {
+      return formatOperation(operation, transaction, accountId, addr);
+    });
+};

@@ -5,7 +5,7 @@ import { getEnv } from "../../../env";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
 import type { Account, NetworkInfo, Operation } from "../../../types";
 import type { RawAccount, RawTransaction } from "./horizon.types";
-import { getAccountSpendableBalance, formatOperation } from "../logic";
+import { getAccountSpendableBalance, rawOperationToOperation } from "../logic";
 
 const LIMIT = 200;
 const FALLBACK_BASE_FEE = 100;
@@ -119,21 +119,28 @@ const fetchOperationList = async (
     let operations = await server
       .operations()
       .forTransaction(transactions[i].id)
+      .limit(LIMIT)
       .call();
 
     formattedMergedOp = formattedMergedOp.concat(
-      operations.records.map((operation) => {
-        return formatOperation(operation, transactions[i], accountId, addr);
-      })
+      rawOperationToOperation(
+        operations.records,
+        transactions[i],
+        accountId,
+        addr
+      )
     );
 
     while (operations.records.length > 0) {
       operations = await operations.next();
 
       formattedMergedOp = formattedMergedOp.concat(
-        operations.records.map((operation) => {
-          return formatOperation(operation, transactions[i], accountId, addr);
-        })
+        rawOperationToOperation(
+          operations.records,
+          transactions[i],
+          accountId,
+          addr
+        )
       );
     }
   }
