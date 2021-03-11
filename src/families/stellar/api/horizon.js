@@ -126,8 +126,8 @@ const fetchOperationList = async (
       rawOperationToOperation(
         operations.records,
         transactions[i],
-        accountId,
-        addr
+        addr,
+        accountId
       )
     );
 
@@ -138,8 +138,8 @@ const fetchOperationList = async (
         rawOperationToOperation(
           operations.records,
           transactions[i],
-          accountId,
-          addr
+          addr,
+          accountId
         )
       );
     }

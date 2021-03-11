@@ -226,7 +226,8 @@ export const rawOperationToOperation = (
         operation.from === addr ||
         operation.to === addr ||
         operation.funder === addr ||
-        operation.account === addr
+        operation.account === addr ||
+        operation.source_account === addr
       );
     })
     .map((operation) => {
