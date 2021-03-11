@@ -24,9 +24,7 @@ const receive = makeAccountBridgeReceive();
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
 // eslint-disable-next-line no-unused-vars
-export const getPreloadStrategy = (currency: CryptoCurrency) => ({
-  // TODO: implement + move somewhere else?
-});
+export const getPreloadStrategy = (currency: CryptoCurrency) => ({});
 
 const currencyBridge: CurrencyBridge = {
   getPreloadStrategy,

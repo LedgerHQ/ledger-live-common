@@ -42,8 +42,6 @@ export const buildTransaction = async (
 
   if (!amount) throw new AmountRequired();
 
-  // console.log("--- account.freshAddress: ", account.freshAddress);
-
   const source = await loadAccount(account.freshAddress);
   const transactionBuilder = buildTransactionBuilder(source, fees);
 

@@ -2,7 +2,11 @@
 import { BigNumber } from "bignumber.js";
 import StellarSdk from "stellar-sdk";
 import { getEnv } from "../../../env";
-import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
+import {
+  formatCurrencyUnit,
+  getCryptoCurrencyById,
+  parseCurrencyUnit,
+} from "../../../currencies";
 import type { Account, NetworkInfo, Operation } from "../../../types";
 import type { RawAccount, RawTransaction } from "./horizon.types";
 import { getAccountSpendableBalance, rawOperationToOperation } from "../logic";
@@ -219,9 +223,11 @@ export const buildPaymentOperation = (
   destination: string,
   amount: BigNumber
 ) => {
-  const formattedAmount = amount
-    .dividedBy(BigNumber(10).pow(currency.units[0].magnitude))
-    .toString();
+  const formattedAmount = formatCurrencyUnit(currency.units[0], amount, {
+    disableRounding: true,
+    useGrouping: false,
+    showCode: false,
+  });
 
   return StellarSdk.Operation.payment({
     destination: destination,
@@ -234,9 +240,11 @@ export const buildCreateAccountOperation = (
   destination: string,
   amount: BigNumber
 ) => {
-  const formattedAmount = amount
-    .dividedBy(BigNumber(10).pow(currency.units[0].magnitude))
-    .toString();
+  const formattedAmount = formatCurrencyUnit(currency.units[0], amount, {
+    disableRounding: true,
+    useGrouping: false,
+    showCode: false,
+  });
 
   return StellarSdk.Operation.createAccount({
     destination: destination,

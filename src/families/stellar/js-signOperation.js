@@ -13,10 +13,10 @@ import { fetchSequence } from "./api";
 
 const buildOptimisticOperation = async (
   account: Account,
-  transaction: Transaction,
-  fees: BigNumber
+  transaction: Transaction
 ): Promise<Operation> => {
   const transactionSequenceNumber = await fetchSequence(account);
+  const fees = transaction.fees ?? BigNumber(0);
 
   const operation: $Exact<Operation> = {
     id: `${account.id}--OUT`,
@@ -33,6 +33,7 @@ const buildOptimisticOperation = async (
     recipients: [transaction.recipient],
     accountId: account.id,
     date: new Date(),
+    // FIXME: Javascript number may be not precise enough
     transactionSequenceNumber: transactionSequenceNumber.plus(1).toNumber(),
     extra: {},
   };
@@ -91,19 +92,13 @@ const signOperation = ({
 
         o.next({ type: "device-signature-granted" });
 
-        const operation = await buildOptimisticOperation(
-          account,
-          transaction,
-          transaction.fees ?? BigNumber(0)
-        );
-
-        const transactionString = unsigned.toXDR();
+        const operation = await buildOptimisticOperation(account, transaction);
 
         o.next({
           type: "signed",
           signedOperation: {
             operation,
-            signature: transactionString,
+            signature: unsigned.toXDR(),
             expirationDate: null,
           },
         });
