@@ -25,6 +25,6 @@ export type RawTransaction = {
   id: string,
   fee_charged: string,
   ledger_attr: number,
-  source_account_sequence: number,
+  source_account_sequence: string,
   memo: ?string,
 };

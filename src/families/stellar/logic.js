@@ -96,9 +96,9 @@ export const formatOperation = (
     date: new Date(rawOperation.created_at),
     senders: [rawOperation.source_account],
     recipients,
-    transactionSequenceNumber: transaction.source_account_sequence,
+    transactionSequenceNumber: Number(transaction.source_account_sequence),
     hasFailed: !rawOperation.transaction_successful,
-    blockHash: "",
+    blockHash: null,
     extra: transaction.memo ? { memo: transaction.memo } : {},
   };
 
