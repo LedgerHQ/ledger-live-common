@@ -21,6 +21,7 @@ type State = {|
   initSwapResult: ?InitSwapResult,
   initSwapRequested: boolean,
   initSwapError: ?Error,
+  error?: Error,
   isLoading: boolean,
   freezeReduxDevice: boolean,
 |};
@@ -120,12 +121,13 @@ export const createAction = (
       }
     );
 
-    const { device, opened } = appState;
+    const { device, opened, error } = appState;
     const { exchange, exchangeRate, transaction } = initSwapRequest;
+    const hasError = error || state.error;
 
     useEffect(() => {
       if (!opened || !device) {
-        setState(initialState);
+        setState({ ...initialState, isLoading: !hasError });
         return;
       }
 
@@ -155,7 +157,7 @@ export const createAction = (
       return () => {
         sub.unsubscribe();
       };
-    }, [exchange, exchangeRate, transaction, device, opened]);
+    }, [exchange, exchangeRate, transaction, device, opened, hasError]);
 
     return {
       ...appState,
