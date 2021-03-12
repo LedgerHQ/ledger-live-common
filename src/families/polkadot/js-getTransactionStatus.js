@@ -22,15 +22,18 @@ import {
   PolkadotLowBondedBalance,
   PolkadotNoUnlockedBalance,
   PolkadotNoNominations,
-  PolkadotBondAllFundsWarning,
+  PolkadotAllFundsWarning,
   PolkadotBondMinimumAmount,
   PolkadotMaxUnbonding,
   PolkadotValidatorsRequired,
+  PolkadotReapingAccountWarning,
+  PolkadotDoMaxSendInstead,
 } from "./errors";
 import { verifyValidatorAddresses } from "./api";
 import {
   EXISTENTIAL_DEPOSIT,
   MINIMUM_BOND_AMOUNT,
+  WARNING_FEW_DOT_LEFTOVER,
   isValidAddress,
   isFirstBond,
   isController,
@@ -73,17 +76,29 @@ const getSendTransactionStatus = async (
 
   const minimumBalance = getMinimumBalance(a);
 
-  if (
+  if (t.useAllAmount && a.polkadotResources?.lockedBalance.gt(0)) {
+    warnings.amount = new PolkadotAllFundsWarning();
+  } else if (t.useAllAmount && a.polkadotResources?.lockedBalance.eq(0)) {
+    warnings.amount = new PolkadotReapingAccountWarning();
+  } else if (
     minimumBalance.gt(0) &&
     totalSpent.plus(minimumBalance).gt(a.spendableBalance)
   ) {
-    errors.amount = new NotEnoughSpendableBalance(null, {
-      minimumAmount: formatCurrencyUnit(a.currency.units[0], minimumBalance, {
-        disableRounding: true,
-        useGrouping: false,
-        showCode: true,
-      }),
-    });
+    const leftover = a.spendableBalance.minus(totalSpent);
+    errors.amount =
+      leftover.lt(minimumBalance) && leftover.gt(0)
+        ? new PolkadotDoMaxSendInstead()
+        : new NotEnoughSpendableBalance(null, {
+            minimumAmount: formatCurrencyUnit(
+              a.currency.units[0],
+              minimumBalance,
+              {
+                disableRounding: true,
+                useGrouping: false,
+                showCode: true,
+              }
+            ),
+          });
   } else if (totalSpent.gt(a.spendableBalance)) {
     errors.amount = new NotEnoughBalance();
   }
@@ -172,7 +187,7 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
       }
 
       if (t.useAllAmount) {
-        warnings.amount = new PolkadotBondAllFundsWarning();
+        warnings.amount = new PolkadotAllFundsWarning();
       }
 
       break;
@@ -280,6 +295,13 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
     if (amount.lte(0)) {
       errors.amount = new AmountRequired();
     }
+  }
+
+  if (
+    t.mode === "bond" &&
+    a.spendableBalance.minus(totalSpent).lt(WARNING_FEW_DOT_LEFTOVER)
+  ) {
+    warnings.amount = new PolkadotBondAllFundsWarning();
   }
 
   if (totalSpent.gt(a.spendableBalance)) {

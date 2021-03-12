@@ -70814,7 +70814,7 @@ Array [
 exports[`stellar currency bridge scanAccounts stellar seed 1 1`] = `
 Array [
   Object {
-    "balance": "341063462",
+    "balance": "341063463",
     "currencyId": "stellar",
     "derivationMode": "sep5",
     "freshAddress": "GAT4LBXYJGJJJRSNK74NPFLO55CDDXSYVMQODSEAAH3M6EY4S7LPH5GV",
@@ -70828,10 +70828,10 @@ Array [
     "id": "libcore:1:stellar:27c586f8499294c64d57f8d7956eef4431de58ab20e1c88001f6cf131c97d6f3:sep5",
     "index": 0,
     "name": "Stellar 1",
-    "operationsCount": 55,
+    "operationsCount": 56,
     "pendingOperations": Array [],
     "seedIdentifier": "3544cee0d67187d277cd9c7e26a2bf70425b1bee8e92003f45d150c5513d531a",
-    "spendableBalance": "341063462",
+    "spendableBalance": "341063463",
     "starred": false,
     "swapHistory": Array [],
     "syncHash": undefined,
@@ -71502,6 +71502,26 @@ Array [
       "transactionSequenceNumber": 116917835954913310,
       "type": "OUT",
       "value": "100",
+    },
+    Object {
+      "accountId": "libcore:1:stellar:27c586f8499294c64d57f8d7956eef4431de58ab20e1c88001f6cf131c97d6f3:sep5",
+      "blockHash": null,
+      "blockHeight": 34308375,
+      "extra": Object {
+        "memo": "$RUM will beat $ADA.",
+      },
+      "fee": "10000",
+      "hash": "7531d748aa70ebdd98c7c3a1b6d9b9b2086f87cae59ce38c9ed98af01ce6bcb7",
+      "id": "libcore:1:stellar:27c586f8499294c64d57f8d7956eef4431de58ab20e1c88001f6cf131c97d6f3:sep5-7531d748aa70ebdd98c7c3a1b6d9b9b2086f87cae59ce38c9ed98af01ce6bcb7-IN",
+      "recipients": Array [
+        "GAT4LBXYJGJJJRSNK74NPFLO55CDDXSYVMQODSEAAH3M6EY4S7LPH5GV",
+      ],
+      "senders": Array [
+        "GDXDJWBHJWFDRBZB4OAECN7D5IXZUWD2TP62GJK2CEORL5WUIVZZSC22",
+      ],
+      "transactionSequenceNumber": 147156544612496000,
+      "type": "IN",
+      "value": "1",
     },
     Object {
       "accountId": "libcore:1:stellar:27c586f8499294c64d57f8d7956eef4431de58ab20e1c88001f6cf131c97d6f3:sep5",
