@@ -66,7 +66,6 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
     errors.amount = new NotEnoughSpendableBalance(null, {
       minimumAmount: formatCurrencyUnit(a.currency.units[0], baseReserve, {
         disableRounding: true,
-        useGrouping: false,
         showCode: true,
       }),
     });

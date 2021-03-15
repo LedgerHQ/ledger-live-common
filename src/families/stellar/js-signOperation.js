@@ -64,15 +64,6 @@ const signOperation = ({
           throw new FeeNotLoaded();
         }
 
-        // FIXME: Is this needed? (cf. log above)
-        /*
-        // Ensure amount is filled when useAllAmount
-        const transactionToSign = {
-          ...transaction,
-          amount: calculateAmount({ a: account, t: transaction }),
-        };
-        */
-
         const unsigned = await buildTransaction(account, transaction);
 
         const unsignedPayload = unsigned.signatureBase();

@@ -2,28 +2,33 @@
 import { BigNumber } from "bignumber.js";
 import StellarSdk from "stellar-sdk";
 import { getEnv } from "../../../env";
-import {
-  formatCurrencyUnit,
-  getCryptoCurrencyById,
-  parseCurrencyUnit,
-} from "../../../currencies";
+import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
 import type { Account, NetworkInfo, Operation } from "../../../types";
 import type { RawAccount, RawTransaction } from "./horizon.types";
 import { getAccountSpendableBalance, rawOperationToOperation } from "../logic";
 
-const LIMIT = 200;
+const LIMIT = getEnv("API_STELLAR_HORIZON_FETCH_LIMIT");
 const FALLBACK_BASE_FEE = 100;
 
 const currency = getCryptoCurrencyById("stellar");
 
-const baseAPIUrl = getEnv("API_STELLAR_HORIZON");
-const server = new StellarSdk.Server(baseAPIUrl);
+const getServer = () => {
+  const server = new StellarSdk.Server(getEnv("API_STELLAR_HORIZON"));
+
+  return server;
+};
+
+const getFormattedAmount = (amount: BigNumber) => {
+  return amount
+    .div(BigNumber(10).pow(currency.units[0].magnitude))
+    .toString(10);
+};
 
 export const fetchBaseFee = async (): Promise<number> => {
   let baseFee;
 
   try {
-    baseFee = await server.fetchBaseFee();
+    baseFee = await getServer().fetchBaseFee();
   } catch (e) {
     baseFee = FALLBACK_BASE_FEE;
   }
@@ -41,7 +46,7 @@ export const fetchAccount = async (addr: string) => {
   let account: RawAccount = {};
   let balance = {};
   try {
-    account = await server.accounts().accountId(addr).call();
+    account = await getServer().accounts().accountId(addr).call();
     balance = account.balances.find((balance) => {
       return balance.asset_type === "native";
     });
@@ -92,7 +97,7 @@ const fetchTransactionsList = async (
   let mergedTransactions = [];
 
   try {
-    transactions = await server
+    transactions = await getServer()
       .transactions()
       .forAccount(addr)
       .cursor(startAt)
@@ -120,7 +125,7 @@ const fetchOperationList = async (
   let formattedMergedOp = [];
 
   for (let i = 0; i < transactions.length; i++) {
-    let operations = await server
+    let operations = await getServer()
       .operations()
       .forTransaction(transactions[i].id)
       .limit(LIMIT)
@@ -156,14 +161,14 @@ export const fetchAccountNetworkInfo = async (
   account: Account
 ): Promise<NetworkInfo> => {
   try {
-    const extendedAccount = await server
+    const extendedAccount = await getServer()
       .accounts()
       .accountId(account.freshAddress)
       .call();
 
     const numberOfEntries = extendedAccount.subentry_count;
 
-    const ledger = await server
+    const ledger = await getServer()
       .ledgers()
       .ledger(extendedAccount.last_modified_ledger)
       .call();
@@ -189,13 +194,13 @@ export const fetchAccountNetworkInfo = async (
 };
 
 export const fetchSequence = async (a: Account) => {
-  const extendedAccount = await server.loadAccount(a.freshAddress);
+  const extendedAccount = await getServer().loadAccount(a.freshAddress);
   return BigNumber(extendedAccount.sequence);
 };
 
 export const fetchSigners = async (a: Account) => {
   try {
-    const extendedAccount = await server
+    const extendedAccount = await getServer()
       .accounts()
       .accountId(a.freshAddress)
       .call();
@@ -213,7 +218,7 @@ export const broadcastTransaction = async (
     StellarSdk.Networks.PUBLIC
   );
 
-  const res = await server.submitTransaction(transaction, {
+  const res = await getServer().submitTransaction(transaction, {
     skipMemoRequiredCheck: true,
   });
   return res.hash;
@@ -223,11 +228,7 @@ export const buildPaymentOperation = (
   destination: string,
   amount: BigNumber
 ) => {
-  const formattedAmount = formatCurrencyUnit(currency.units[0], amount, {
-    disableRounding: true,
-    useGrouping: false,
-    showCode: false,
-  });
+  const formattedAmount = getFormattedAmount(amount);
 
   return StellarSdk.Operation.payment({
     destination: destination,
@@ -240,11 +241,7 @@ export const buildCreateAccountOperation = (
   destination: string,
   amount: BigNumber
 ) => {
-  const formattedAmount = formatCurrencyUnit(currency.units[0], amount, {
-    disableRounding: true,
-    useGrouping: false,
-    showCode: false,
-  });
+  const formattedAmount = getFormattedAmount(amount);
 
   return StellarSdk.Operation.createAccount({
     destination: destination,
@@ -262,5 +259,5 @@ export const buildTransactionBuilder = (source: string, fee: BigNumber) => {
 };
 
 export const loadAccount = (addr: string) => {
-  return server.loadAccount(addr);
+  return getServer().loadAccount(addr);
 };
