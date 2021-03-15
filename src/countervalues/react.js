@@ -270,7 +270,7 @@ export function useCalculate(query: {
 }
 
 export function useCalculateMany(
-  dataPoints: Array<{ value: number, date: Date }>,
+  dataPoints: Array<{ value: number, date: ?Date }>,
   query: {
     from: Currency,
     to: Currency,

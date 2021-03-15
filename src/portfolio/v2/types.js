@@ -7,7 +7,7 @@ import type {
   TokenCurrency,
 } from "../../types";
 
-export type BalanceHistoryData = { date: Date, value: number };
+export type BalanceHistoryData = { date: ?Date, value: number };
 
 export type BalanceHistory = BalanceHistoryData[];
 
