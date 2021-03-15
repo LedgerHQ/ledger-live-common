@@ -38,10 +38,21 @@ const compoundWhitelist = [
   "ethereum/erc20/compound_dai",
   "ethereum/erc20/compound_usd_coin",
   "ethereum/erc20/compound_usdt",
+  "ethereum_ropsten/erc20/compound_dai",
+  "ethereum_ropsten/erc20/compound_usd_coin",
+  "ethereum_ropsten/erc20/compound_usdt",
 ];
 
-export function listSupportedCompoundTokens(): TokenCurrency[] {
-  return compoundWhitelist.map(getTokenById);
+export function listSupportedCompoundTokens(
+  currency: CryptoCurrency
+): TokenCurrency[] {
+  return compoundWhitelist
+    .map(getTokenById)
+    .filter((c) => c.parentCurrency === currency);
+}
+
+function supportsCompound(c) {
+  c.id === "ethereum" || c.id === "ethereum_ropsten";
 }
 
 export function isCompoundTokenSupported(token: TokenCurrency): boolean {
@@ -336,11 +347,11 @@ export function findCurrentRate(tokenOrCtoken: TokenCurrency): ?CurrentRate {
 export async function preload(
   currency: CryptoCurrency
 ): Promise<?CompoundPreloaded> {
-  if (currency.id !== "ethereum") {
+  if (!supportsCompound(currency)) {
     return Promise.resolve();
   }
-  const ctokens = listSupportedCompoundTokens();
-  const currentRates = await fetchCurrentRates(ctokens);
+  const ctokens = listSupportedCompoundTokens(currency);
+  const currentRates = await fetchCurrentRates(ctokens, networkFor(currency));
   compoundPreloadedValue = currentRates;
   const preloaded = currentRates ? currentRates.map(toCurrentRateRaw) : null;
   log("compound", "preloaded data", { preloaded });
@@ -348,7 +359,7 @@ export async function preload(
 }
 
 export function hydrate(value: ?CompoundPreloaded, currency: CryptoCurrency) {
-  if (currency.id !== "ethereum") return;
+  if (!supportsCompound(currency)) return;
   compoundPreloadedValue = value ? value.map(fromCurrentRateRaw) : null;
 }
 
@@ -356,7 +367,7 @@ export function prepareTokenAccounts(
   currency: CryptoCurrency,
   subAccounts: TokenAccount[]
 ): TokenAccount[] {
-  if (currency.id !== "ethereum") return subAccounts;
+  if (!supportsCompound(currency)) return subAccounts;
   if (!compoundPreloadedValue) return subAccounts; // noop if compoundPreloadedValue failed to load
 
   const compoundByTokenId = inferSubAccountsCompound(currency, subAccounts);
@@ -400,7 +411,7 @@ export async function digestTokenAccounts(
   subAccounts: TokenAccount[],
   address: string
 ): Promise<TokenAccount[]> {
-  if (currency.id !== "ethereum") return subAccounts;
+  if (!supportsCompound(currency)) return subAccounts;
   if (!compoundPreloadedValue) return subAccounts; // noop if compoundPreloadedValue failed to load
 
   const compoundByTokenId = inferSubAccountsCompound(currency, subAccounts);
@@ -517,9 +528,10 @@ const fetch = (path, query = {}) =>
     }),
   });
 
-async function fetchCurrentRates(tokens): Promise<?(CurrentRate[])> {
+async function fetchCurrentRates(tokens, network): Promise<?(CurrentRate[])> {
   if (tokens.length === 0) return [];
   const r = await fetch("/ctoken", {
+    network,
     block_timestamp: 0,
     addresses: tokens.map((c) => c.contractAddress).join(","),
   }).catch((e) => {
@@ -573,6 +585,11 @@ type HistoRate = {
   rate: BigNumber,
 };
 
+function networkFor(currency) {
+  if (currency.id === "ethereum_ropsten") return "ropsten";
+  return "mainnet";
+}
+
 async function fetchHistoricalRates(
   token,
   dates: Date[]
@@ -581,6 +598,7 @@ async function fetchHistoricalRates(
     const { data } = await fetch("/ctoken", {
       block_timestamp: Math.round(date.getTime() / 1000),
       addresses: [token.contractAddress],
+      network: networkFor(token.parentCurrency),
     });
     const cToken = data.cToken.find(
       (ct) =>
@@ -610,7 +628,7 @@ function inferSubAccountsCompound(currency, subAccounts) {
       ctokenAccount: ?TokenAccount,
     },
   } = {};
-  listSupportedCompoundTokens().forEach((ctoken) => {
+  listSupportedCompoundTokens(currency).forEach((ctoken) => {
     const { compoundFor } = ctoken;
     if (compoundFor) {
       const tokenAccount = subAccounts.find((a) => a.token.id === compoundFor);
