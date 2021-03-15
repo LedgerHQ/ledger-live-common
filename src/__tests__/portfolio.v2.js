@@ -60,42 +60,42 @@ describe("Portfolio", () => {
     const account = genAccount("account_1");
 
     it("should return history of 52 items with all time range", () => {
-      const history = getBalanceHistory(account, "all");
+      const history = getBalanceHistory(account, "all", 52);
       expect(history).toBeInstanceOf(Array);
       expect(history.length).toBe(52);
       expect(history).toMatchSnapshot();
     });
 
     it("should return history of 52 items with year range", () => {
-      const history = getBalanceHistory(account, "year");
+      const history = getBalanceHistory(account, "year", 52);
       expect(history).toBeInstanceOf(Array);
       expect(history.length).toBe(52);
       expect(history).toMatchSnapshot();
     });
 
     it("should return history of 30 items with month range", () => {
-      const history = getBalanceHistory(account, "month");
+      const history = getBalanceHistory(account, "month", 30);
       expect(history).toBeInstanceOf(Array);
       expect(history.length).toBe(30);
       expect(history).toMatchSnapshot();
     });
 
     it("should return history of 168(7 * 24) items with week range", () => {
-      const history = getBalanceHistory(account, "week");
+      const history = getBalanceHistory(account, "week", 52);
       expect(history).toBeInstanceOf(Array);
-      expect(history.length).toBe(7 * 24);
+      expect(history.length).toBe(52);
       expect(history).toMatchSnapshot();
     });
 
     it("should return history of 168 items with day range", () => {
-      const history = getBalanceHistory(account, "day");
+      const history = getBalanceHistory(account, "day", 24);
       expect(history).toBeInstanceOf(Array);
       expect(history.length).toBe(24);
       expect(history).toMatchSnapshot();
     });
 
     it("should have dates matche getDates", () => {
-      const history = getBalanceHistory(account, "year");
+      const history = getBalanceHistory(account, "year", 52);
       const dates = getDates("year", 52);
       expect(history.map((p) => p.date)).toMatchObject(dates);
     });
@@ -105,9 +105,15 @@ describe("Portfolio", () => {
     it("should return same value as history", async () => {
       const account = genAccountBitcoin();
       const range = "day";
-      const history = getBalanceHistory(account, range);
+      const history = getBalanceHistory(account, range, 24);
       const { state, to } = await loadCV(account);
-      const cv = getBalanceHistoryWithCountervalue(account, range, state, to);
+      const cv = getBalanceHistoryWithCountervalue(
+        account,
+        range,
+        24,
+        state,
+        to
+      );
       expect(cv.countervalueAvailable).toBe(true);
       // TODO Portfolio: 🤔
       // expect(
