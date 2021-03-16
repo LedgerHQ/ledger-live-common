@@ -4,6 +4,7 @@ import { from, of, concat, empty } from "rxjs";
 import { ignoreElements, concatMap } from "rxjs/operators";
 import { withDevice } from "@ledgerhq/live-common/lib/hw/deviceAccess";
 import getAddress from "@ledgerhq/live-common/lib/hw/getAddress";
+import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 import { scan, scanCommonOpts } from "../scan";
 import type { ScanCommonOpts } from "../scan";
 import { asQR } from "../qr";
@@ -15,26 +16,22 @@ export default {
     {
       name: "qr",
       type: Boolean,
-      desc: "also display a QR Code"
-    }
+      desc: "also display a QR Code",
+    },
   ],
   job: (opts: ScanCommonOpts & { qr: boolean }) =>
     scan(opts).pipe(
-      concatMap(account =>
+      concatMap((account) =>
         concat(
           of(account.freshAddress),
           opts.qr ? asQR(account.freshAddress) : empty(),
-          withDevice(opts.device || "")(t =>
-            from(
-              getAddress(t, {
-                currency: account.currency,
-                derivationMode: account.derivationMode,
-                path: account.freshAddressPath,
-                verify: true
-              })
-            )
-          ).pipe(ignoreElements())
+          getAccountBridge(account)
+            .receive(account, {
+              deviceId: opts.device || "",
+              verify: true,
+            })
+            .pipe(ignoreElements())
         )
       )
-    )
+    ),
 };

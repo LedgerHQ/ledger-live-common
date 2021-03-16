@@ -8,7 +8,7 @@ import type {
   Transaction,
   TransactionStatus,
   Account,
-  AccountLike
+  AccountLike,
 } from "../types";
 import { getAccountBridge } from ".";
 import { getMainAccount } from "../account";
@@ -21,18 +21,19 @@ export type State = {
   status: TransactionStatus,
   statusOnTransaction: ?Transaction,
   errorAccount: ?Error,
-  errorStatus: ?Error
+  errorStatus: ?Error,
 };
 
 export type Result = {
   transaction: ?Transaction,
-  setTransaction: Transaction => void,
+  setTransaction: (Transaction) => void,
+  updateTransaction: (updater: (Transaction) => Transaction) => void,
   account: ?AccountLike,
   parentAccount: ?Account,
   setAccount: (AccountLike, ?Account) => void,
   status: TransactionStatus,
   bridgeError: ?Error,
-  bridgePending: boolean
+  bridgePending: boolean,
 };
 
 const initial: State = {
@@ -44,11 +45,11 @@ const initial: State = {
     warnings: {},
     estimatedFees: BigNumber(0),
     amount: BigNumber(0),
-    totalSpent: BigNumber(0)
+    totalSpent: BigNumber(0),
   },
   statusOnTransaction: null,
   errorAccount: null,
-  errorStatus: null
+  errorStatus: null,
 };
 
 const makeInit = (optionalInit: ?() => $Shape<State>) => (): State => {
@@ -75,6 +76,17 @@ const reducer = (s: State, a): State => {
         const bridge = getAccountBridge(account, parentAccount);
         const subAccountId = account.type !== "Account" && account.id;
         let t = bridge.createTransaction(mainAccount);
+
+        if (
+          s.transaction &&
+          s.transaction.mode &&
+          s.transaction.mode !== t.mode
+        ) {
+          t = bridge.updateTransaction(t, {
+            mode: s.transaction.mode,
+          });
+        }
+
         if (subAccountId) {
           t = { ...t, subAccountId };
         }
@@ -82,14 +94,14 @@ const reducer = (s: State, a): State => {
           ...initial,
           account,
           parentAccount,
-          transaction: t
+          transaction: t,
         };
       } catch (e) {
         return {
           ...initial,
           account,
           parentAccount,
-          errorAccount: e
+          errorAccount: e,
         };
       }
     }
@@ -97,6 +109,13 @@ const reducer = (s: State, a): State => {
     case "setTransaction":
       if (s.transaction === a.transaction) return s;
       return { ...s, transaction: a.transaction };
+
+    case "updateTransaction": {
+      if (!s.transaction) return s;
+      const transaction = a.updater(s.transaction);
+      if (s.transaction === transaction) return s;
+      return { ...s, transaction };
+    }
 
     case "onStatus":
       // if (a.transaction === s.transaction && !s.errorStatus) {
@@ -107,14 +126,14 @@ const reducer = (s: State, a): State => {
         errorStatus: null,
         transaction: a.transaction,
         status: a.status,
-        statusOnTransaction: a.transaction
+        statusOnTransaction: a.transaction,
       };
 
     case "onStatusError":
       if (a.error === s.errorStatus) return s;
       return {
         ...s,
-        errorStatus: a.error
+        errorStatus: a.error,
       };
 
     default:
@@ -124,7 +143,7 @@ const reducer = (s: State, a): State => {
 
 const INITIAL_ERROR_RETRY_DELAY = 1000;
 const ERROR_RETRY_DELAY_MULTIPLIER = 1.5;
-const DEBOUNCED_STATUS = 300;
+const DEBOUNCE_STATUS_DELAY = 300;
 
 const useBridgeTransaction = (optionalInit?: ?() => $Shape<State>): Result => {
   const [
@@ -135,9 +154,9 @@ const useBridgeTransaction = (optionalInit?: ?() => $Shape<State>): Result => {
       status,
       statusOnTransaction,
       errorAccount,
-      errorStatus
+      errorStatus,
     },
-    dispatch
+    dispatch,
     // $FlowFixMe for ledger-live-mobile older react/flow version
   ] = useReducer(reducer, undefined, makeInit(optionalInit));
 
@@ -148,23 +167,44 @@ const useBridgeTransaction = (optionalInit?: ?() => $Shape<State>): Result => {
   );
 
   const setTransaction = useCallback(
-    transaction => dispatch({ type: "setTransaction", transaction }),
+    (transaction) => dispatch({ type: "setTransaction", transaction }),
+    [dispatch]
+  );
+
+  const updateTransaction = useCallback(
+    (updater) => dispatch({ type: "updateTransaction", updater }),
     [dispatch]
   );
 
   const mainAccount = account ? getMainAccount(account, parentAccount) : null;
 
   const errorDelay = useRef(INITIAL_ERROR_RETRY_DELAY);
+  const statusIsPending = useRef(false); // Stores if status already being processed
+
+  const bridgePending = transaction !== statusOnTransaction;
 
   // when transaction changes, prepare the transaction
   useEffect(() => {
     let ignore = false;
     let errorTimeout;
+
+    // If bridge is not pending, transaction change is due to
+    // the last onStatus dispatch (prepareTransaction changed original transaction) and must be ignored
+    if (!bridgePending) return;
+
     if (mainAccount && transaction) {
-      Promise.resolve()
+      // We don't debounce first status refresh, but any subsequent to avoid multiple calls
+      // First call is immediate
+      const debounce = statusIsPending.current
+        ? delay(DEBOUNCE_STATUS_DELAY)
+        : null;
+
+      statusIsPending.current = true; // consider pending until status is resolved (error or success)
+
+      Promise.resolve(debounce)
         .then(() => getAccountBridge(mainAccount, null))
-        .then(async bridge => {
-          const start = Date.now();
+        .then(async (bridge) => {
+          if (ignore) return;
           const preparedTransaction = await bridge.prepareTransaction(
             mainAccount,
             transaction
@@ -175,29 +215,29 @@ const useBridgeTransaction = (optionalInit?: ?() => $Shape<State>): Result => {
             preparedTransaction
           );
           if (ignore) return;
-          const delta = Date.now() - start;
-          if (delta < DEBOUNCED_STATUS) {
-            await delay(DEBOUNCED_STATUS - delta);
-          }
 
           return {
             preparedTransaction,
-            status
+            status,
           };
         })
         .then(
-          result => {
+          (result) => {
             if (ignore || !result) return;
             const { preparedTransaction, status } = result;
             errorDelay.current = INITIAL_ERROR_RETRY_DELAY; // reset delay
+            statusIsPending.current = false; // status is now synced with transaction
+
             dispatch({
               type: "onStatus",
               status,
-              transaction: preparedTransaction
+              transaction: preparedTransaction,
             });
           },
-          e => {
+          (e) => {
             if (ignore) return;
+            statusIsPending.current = false;
+
             dispatch({ type: "onStatusError", error: e });
             log(
               "useBridgeTransaction",
@@ -212,7 +252,7 @@ const useBridgeTransaction = (optionalInit?: ?() => $Shape<State>): Result => {
               const transactionCopy: Transaction = { ...transaction };
               dispatch({
                 type: "setTransaction",
-                transaction: transactionCopy
+                transaction: transactionCopy,
               });
               // $FlowFixMe (mobile)
             }, errorDelay.current);
@@ -226,17 +266,18 @@ const useBridgeTransaction = (optionalInit?: ?() => $Shape<State>): Result => {
         errorTimeout = null;
       }
     };
-  }, [transaction, mainAccount, dispatch]);
+  }, [transaction, mainAccount, bridgePending, dispatch]);
 
   return {
     transaction,
     setTransaction,
+    updateTransaction,
     status,
     account,
     parentAccount,
     setAccount,
     bridgeError: errorAccount || errorStatus,
-    bridgePending: transaction !== statusOnTransaction
+    bridgePending,
   };
 };
 

@@ -1,34 +1,53 @@
 // @flow
+import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
-import type { DatasetTest } from "../../__tests__/test-helpers/bridge";
+import type { DatasetTest } from "../../types";
 import { fromTransactionRaw } from "./transaction";
 import type { Transaction } from "./types";
+import { activationFees } from "./constants";
 import {
   AmountRequired,
   NotEnoughBalance,
   RecipientRequired,
   InvalidAddress,
-  InvalidAddressBecauseDestinationIsAlsoSource
+  InvalidAddressBecauseDestinationIsAlsoSource,
 } from "@ledgerhq/errors";
 import {
-  NoFrozenForBandwidth,
-  NoFrozenForEnergy,
-  NoReward,
-  InvalidFreezeAmount,
-  InvalidVoteCount,
-  NotEnoughTronPower,
-  SendTrc20ToNewAccountForbidden,
-  VoteRequired,
-  UnexpectedFees
+  TronNoFrozenForBandwidth,
+  TronNoFrozenForEnergy,
+  TronNoReward,
+  TronInvalidFreezeAmount,
+  TronInvalidVoteCount,
+  TronNotEnoughTronPower,
+  TronSendTrc20ToNewAccountForbidden,
+  TronVoteRequired,
+  TronUnexpectedFees,
 } from "../../errors";
+
+const unactivatedAddress = "TXFeV31qgUQYMLog3axKJeEBbXpQFtHsXD";
+const activatedAddress1 = "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9";
+
+const expectedTokenAccount = (a) => {
+  invariant(a && a.type === "TokenAccount", "expected token account");
+  return a;
+};
+
+const getTokenAccountId = (account, id) =>
+  expectedTokenAccount(
+    (account.subAccounts || []).find(
+      (a) => expectedTokenAccount(a).token.id === id
+    )
+  ).id;
 
 const dataset: DatasetTest<Transaction> = {
   implementations: ["tronjs"],
   currencies: {
     tron: {
       FIXME_ignoreAccountFields: [
-        "tronResources.energy",
-        "tronResources.unwithdrawnReward"
+        "tronResources.cacheTransactionInfoById", // this is a cache, don't save it
+        "tronResources.unwithdrawnReward", // it changes every vote cycles
+        "tronResources.bandwidth", // it changes if a tx is made
+        "tronResources.energy", // it keep changing?
       ],
       scanAccounts: [
         {
@@ -52,8 +71,8 @@ const dataset: DatasetTest<Transaction> = {
             <= 4104f0bc4270d8d593486409062058abeabb87a0f2907b57d0f92a9173164e39b1a12a61ffce4c002f395cab8a790ccd00d41e056a32d285a01b218334d294abbf1f2254526552347a64464537384e614b67555555654869564758534763434434634e796a9000
             => e002000015058000002c800000c3800000070000000000000000
             <= 4104ac3f861b2006b1d950677b0ac77cc660a497d9e3afcb6caeb2bf4a67943535d56c0915fbd7476e93d50317fd13084ff3eb820a60cc448627e2e1be51c6145dc8225458466556333171675551594d4c6f673361784b4a654542625870514674487358449000
-          `
-        }
+          `,
+        },
       ],
       accounts: [
         {
@@ -62,21 +81,63 @@ const dataset: DatasetTest<Transaction> = {
               name: "sendSuccess",
               transaction: fromTransactionRaw({
                 family: "tron",
-                recipient: "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
+                recipient: activatedAddress1,
                 amount: "1000000",
                 networkInfo: null,
                 mode: "send",
                 duration: undefined,
                 resource: undefined,
-                votes: []
+                votes: [],
               }),
               expectedStatus: {
                 amount: BigNumber("1000000"),
                 errors: {},
                 warnings: {},
                 totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
+            },
+            {
+              name: "useAllAmountSuccess",
+              transaction: fromTransactionRaw({
+                family: "tron",
+                recipient: activatedAddress1,
+                amount: "0",
+                useAllAmount: true,
+                networkInfo: null,
+                mode: "send",
+                duration: undefined,
+                resource: undefined,
+                votes: [],
+              }),
+              expectedStatus: {
+                amount: BigNumber("10006000"),
+                errors: {},
+                warnings: {},
+                totalSpent: BigNumber("10006000"),
+                estimatedFees: BigNumber("0"),
+              },
+            },
+            {
+              name: "useAllAmountToUnactivatedAddressSuccess",
+              transaction: fromTransactionRaw({
+                family: "tron",
+                recipient: unactivatedAddress,
+                amount: "0",
+                useAllAmount: true,
+                networkInfo: null,
+                mode: "send",
+                duration: undefined,
+                resource: undefined,
+                votes: [],
+              }),
+              expectedStatus: {
+                amount: BigNumber("9906000"),
+                errors: {},
+                warnings: {},
+                totalSpent: BigNumber("10006000"),
+                estimatedFees: BigNumber("100000"),
+              },
             },
             {
               name: "freezeBandwidthSuccess",
@@ -88,15 +149,15 @@ const dataset: DatasetTest<Transaction> = {
                 mode: "freeze",
                 duration: undefined,
                 resource: "BANDWIDTH",
-                votes: []
+                votes: [],
               }),
               expectedStatus: {
                 amount: BigNumber("1000000"),
                 errors: {},
                 warnings: {},
                 totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
             },
             {
               name: "freezeEnergySuccess",
@@ -108,21 +169,21 @@ const dataset: DatasetTest<Transaction> = {
                 mode: "freeze",
                 duration: undefined,
                 resource: "ENERGY",
-                votes: []
+                votes: [],
               }),
               expectedStatus: {
                 amount: BigNumber("1000000"),
                 errors: {},
                 warnings: {},
                 totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
             },
             {
               name: "voteSuccess",
               transaction: fromTransactionRaw({
                 family: "tron",
-                recipient: "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
+                recipient: activatedAddress1,
                 amount: "0",
                 networkInfo: null,
                 mode: "vote",
@@ -131,21 +192,21 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [
                   {
                     address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH",
-                    voteCount: 1
+                    voteCount: 1,
                   },
                   {
                     address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U",
-                    voteCount: 1
-                  }
-                ]
+                    voteCount: 1,
+                  },
+                ],
               }),
               expectedStatus: {
                 amount: BigNumber("0"),
                 errors: {},
                 warnings: {},
                 totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
             },
             {
               name: "recipientRequired",
@@ -157,15 +218,15 @@ const dataset: DatasetTest<Transaction> = {
                 mode: "send",
                 duration: undefined,
                 resource: undefined,
-                votes: []
+                votes: [],
               }),
               expectedStatus: {
                 amount: BigNumber("1000000"),
                 errors: { recipient: new RecipientRequired() },
                 warnings: {},
                 totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
             },
             {
               name: "invalidRecipientIsTheSame",
@@ -177,17 +238,17 @@ const dataset: DatasetTest<Transaction> = {
                 mode: "send",
                 duration: undefined,
                 resource: undefined,
-                votes: []
+                votes: [],
               }),
               expectedStatus: {
                 amount: BigNumber("1000000"),
                 errors: {
-                  recipient: new InvalidAddressBecauseDestinationIsAlsoSource()
+                  recipient: new InvalidAddressBecauseDestinationIsAlsoSource(),
                 },
                 warnings: {},
                 totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
             },
             {
               name: "invalidRecipientUnknown",
@@ -199,61 +260,156 @@ const dataset: DatasetTest<Transaction> = {
                 mode: "send",
                 duration: undefined,
                 resource: undefined,
-                votes: []
+                votes: [],
               }),
               expectedStatus: {
                 amount: BigNumber("1000000"),
                 errors: { recipient: new InvalidAddress() },
                 warnings: {},
                 totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
             },
             {
               name: "amountRequired",
               transaction: fromTransactionRaw({
                 family: "tron",
-                recipient: "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
+                recipient: activatedAddress1,
                 amount: "0",
                 networkInfo: null,
                 mode: "send",
                 duration: undefined,
                 resource: undefined,
-                votes: []
+                votes: [],
               }),
               expectedStatus: {
                 amount: BigNumber("0"),
                 errors: { amount: new AmountRequired() },
                 warnings: {},
                 totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
             },
             {
               name: "notEnoughBalance",
               transaction: fromTransactionRaw({
                 family: "tron",
-                recipient: "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
+                recipient: activatedAddress1,
                 amount: "1000000000",
                 networkInfo: null,
                 mode: "send",
                 duration: undefined,
                 resource: undefined,
-                votes: []
+                votes: [],
               }),
               expectedStatus: {
                 amount: BigNumber("1000000000"),
                 errors: { amount: new NotEnoughBalance() },
                 warnings: {},
                 totalSpent: BigNumber("1000000000"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
+            },
+            {
+              name: "notEnoughBalance to unactivated",
+              transaction: (t, account) => ({
+                ...t,
+                recipient: unactivatedAddress,
+                amount: account.spendableBalance.minus(1),
+              }),
+              expectedStatus: () => ({
+                errors: { amount: new NotEnoughBalance() },
+              }),
+            },
+            {
+              name: "enoughBalance near the max",
+              transaction: (t, account) => ({
+                ...t,
+                recipient: unactivatedAddress,
+                amount: account.spendableBalance.minus(activationFees).minus(1),
+              }),
+              expectedStatus: () => ({
+                errors: {},
+              }),
+            },
+            {
+              name: "enoughBalance at exactly the max",
+              transaction: (t, account) => ({
+                ...t,
+                recipient: unactivatedAddress,
+                amount: account.spendableBalance.minus(activationFees),
+              }),
+              expectedStatus: () => ({
+                errors: {},
+              }),
             },
             {
               name: "estimatedFeesWarning", // send 1TRX to new account = +0.1TRX of fees
               transaction: fromTransactionRaw({
                 family: "tron",
-                recipient: "TXFeV31qgUQYMLog3axKJeEBbXpQFtHsXD",
+                recipient: unactivatedAddress,
+                amount: "1000000",
+                networkInfo: null,
+                mode: "send",
+                duration: undefined,
+                resource: undefined,
+                votes: [],
+              }),
+              expectedStatus: {
+                amount: BigNumber("1000000"),
+                errors: {},
+                warnings: { fee: new TronUnexpectedFees("Estimated fees") },
+                totalSpent: BigNumber("1100000"),
+                estimatedFees: BigNumber("100000"),
+              },
+            },
+            {
+              name: "tronSendTrc20ToContractAddressSuccess",
+              transaction: (t, account) => ({
+                ...t,
+                recipient: "TYmGYpY3LuHHge9jmTtq2aQmSpUpqKcZtJ", // corresponds to a valid deposit contract address
+                subAccountId: getTokenAccountId(
+                  account,
+                  "tron/trc20/TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7"
+                ),
+                amount: BigNumber("1000000"),
+              }),
+              expectedStatus: {
+                amount: BigNumber("1000000"),
+                errors: {},
+                warnings: {},
+                totalSpent: BigNumber("1000000"),
+                estimatedFees: BigNumber("0"),
+              },
+            },
+            {
+              name: "tronSendTrc20ToNewAccountForbidden",
+              transaction: (t, account) => ({
+                ...t,
+                recipient: unactivatedAddress,
+                subAccountId: getTokenAccountId(
+                  account,
+                  "tron/trc20/TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7"
+                ),
+                amount: BigNumber("1000000"),
+              }),
+              expectedStatus: {
+                amount: BigNumber("1000000"),
+                errors: { recipient: new TronSendTrc20ToNewAccountForbidden() },
+                warnings: {},
+                totalSpent: BigNumber("1000000"),
+                estimatedFees: BigNumber("0"),
+              },
+            },
+            // FIXME account have moved...
+            /*
+            {
+              name: "tronSendTrc20NotEnoughEnergyWarning",
+              transaction: fromTransactionRaw({
+                family: "tron",
+                recipient: activatedAddress1,
+                subAccountId:
+                  "tronjs:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:+TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
                 amount: "1000000",
                 networkInfo: null,
                 mode: "send",
@@ -264,35 +420,33 @@ const dataset: DatasetTest<Transaction> = {
               expectedStatus: {
                 amount: BigNumber("1000000"),
                 errors: {},
-                warnings: { fee: new UnexpectedFees("Estimated fees") },
-                totalSpent: BigNumber("1100000"),
-                estimatedFees: BigNumber("100000")
-              }
-            },
-            {
-              name: "sendTrc20ToNewAccountForbidden",
-              transaction: fromTransactionRaw({
-                family: "tron",
-                recipient: "TXFeV31qgUQYMLog3axKJeEBbXpQFtHsXD",
-                subAccountId:
-                  "tronjs:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:+TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7",
-                amount: "1000000",
-                networkInfo: null,
-                mode: "send",
-                duration: undefined,
-                resource: undefined,
-                votes: []
-              }),
-              expectedStatus: {
-                amount: BigNumber("1000000"),
-                errors: { recipient: new SendTrc20ToNewAccountForbidden() },
-                warnings: {},
+                warnings: { amount: new TronNotEnoughEnergy() },
                 totalSpent: BigNumber("1000000"),
                 estimatedFees: BigNumber("0")
               }
             },
+            */
             {
-              name: "invalidFreezeAmount",
+              name: "tronSendTrc20Success",
+              transaction: (t, account) => ({
+                ...t,
+                recipient: activatedAddress1,
+                subAccountId: getTokenAccountId(
+                  account,
+                  "tron/trc20/TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7"
+                ),
+                amount: BigNumber("1000000"),
+              }),
+              expectedStatus: {
+                amount: BigNumber("1000000"),
+                errors: {},
+                warnings: {},
+                totalSpent: BigNumber("1000000"),
+                estimatedFees: BigNumber("0"),
+              },
+            },
+            {
+              name: "tronInvalidFreezeAmount",
               transaction: fromTransactionRaw({
                 family: "tron",
                 recipient: "",
@@ -301,18 +455,18 @@ const dataset: DatasetTest<Transaction> = {
                 mode: "freeze",
                 duration: undefined,
                 resource: "BANDWIDTH",
-                votes: []
+                votes: [],
               }),
               expectedStatus: {
                 amount: BigNumber("100000"),
-                errors: { amount: new InvalidFreezeAmount() },
+                errors: { amount: new TronInvalidFreezeAmount() },
                 warnings: {},
                 totalSpent: BigNumber("100000"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
             },
             {
-              name: "noFrozenForEnergy",
+              name: "tronNoFrozenForEnergy",
               transaction: fromTransactionRaw({
                 family: "tron",
                 recipient: "",
@@ -321,18 +475,18 @@ const dataset: DatasetTest<Transaction> = {
                 mode: "unfreeze",
                 duration: undefined,
                 resource: "ENERGY",
-                votes: []
+                votes: [],
               }),
               expectedStatus: {
                 amount: BigNumber("0"),
-                errors: { resource: new NoFrozenForEnergy() },
+                errors: { resource: new TronNoFrozenForEnergy() },
                 warnings: {},
                 totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
             },
             {
-              name: "voteRequired",
+              name: "tronVoteRequired",
               transaction: fromTransactionRaw({
                 family: "tron",
                 recipient: "",
@@ -341,41 +495,41 @@ const dataset: DatasetTest<Transaction> = {
                 mode: "vote",
                 duration: undefined,
                 resource: undefined,
-                votes: []
+                votes: [],
               }),
               expectedStatus: {
                 amount: BigNumber("0"),
-                errors: { vote: new VoteRequired() },
+                errors: { vote: new TronVoteRequired() },
                 warnings: {},
                 totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
             },
             {
               name: "invalidVoteAddress",
               transaction: fromTransactionRaw({
                 family: "tron",
-                recipient: "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
+                recipient: activatedAddress1,
                 amount: "0",
                 networkInfo: null,
                 mode: "vote",
                 duration: undefined,
                 resource: undefined,
-                votes: [{ address: "abcde", voteCount: 1 }]
+                votes: [{ address: "abcde", voteCount: 1 }],
               }),
               expectedStatus: {
                 amount: BigNumber("0"),
                 errors: { vote: new InvalidAddress() },
                 warnings: {},
                 totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
             },
             {
-              name: "invalidVoteCount",
+              name: "tronInvalidVoteCount",
               transaction: fromTransactionRaw({
                 family: "tron",
-                recipient: "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
+                recipient: activatedAddress1,
                 amount: "0",
                 networkInfo: null,
                 mode: "vote",
@@ -384,23 +538,23 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [
                   {
                     address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH",
-                    voteCount: 0
-                  }
-                ]
+                    voteCount: 0,
+                  },
+                ],
               }),
               expectedStatus: {
                 amount: BigNumber("0"),
-                errors: { vote: new InvalidVoteCount() },
+                errors: { vote: new TronInvalidVoteCount() },
                 warnings: {},
                 totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
             },
             {
-              name: "notEnoughTronPower",
+              name: "tronNotEnoughTronPower",
               transaction: fromTransactionRaw({
                 family: "tron",
-                recipient: "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
+                recipient: "",
                 amount: "0",
                 networkInfo: null,
                 mode: "vote",
@@ -409,24 +563,24 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [
                   {
                     address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH",
-                    voteCount: 5
+                    voteCount: 5,
                   },
                   {
                     address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U",
-                    voteCount: 4
-                  }
-                ]
+                    voteCount: 5,
+                  },
+                ],
               }),
               expectedStatus: {
                 amount: BigNumber("0"),
-                errors: { vote: new NotEnoughTronPower() },
+                errors: { vote: new TronNotEnoughTronPower() },
                 warnings: {},
                 totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
             },
             {
-              name: "noReward",
+              name: "tronNoReward",
               transaction: fromTransactionRaw({
                 family: "tron",
                 recipient: "",
@@ -435,16 +589,16 @@ const dataset: DatasetTest<Transaction> = {
                 mode: "claimReward",
                 duration: undefined,
                 resource: undefined,
-                votes: []
+                votes: [],
               }),
               expectedStatus: {
                 amount: BigNumber("0"),
-                errors: { reward: new NoReward() },
+                errors: { reward: new TronNoReward() },
                 warnings: {},
                 totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0")
-              }
-            }
+                estimatedFees: BigNumber("0"),
+              },
+            },
           ],
           raw: {
             id: "js:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:",
@@ -464,12 +618,12 @@ const dataset: DatasetTest<Transaction> = {
             freshAddresses: [
               {
                 address: "THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi",
-                derivationPath: "44'/195'/0'/0/0"
-              }
+                derivationPath: "44'/195'/0'/0/0",
+              },
             ],
             lastSyncDate: "",
-            blockHeight: 0
-          }
+            blockHeight: 0,
+          },
         },
         {
           transactions: [
@@ -483,18 +637,18 @@ const dataset: DatasetTest<Transaction> = {
                 mode: "claimReward",
                 duration: undefined,
                 resource: undefined,
-                votes: []
+                votes: [],
               }),
               expectedStatus: {
                 amount: BigNumber("0"),
                 errors: {},
                 warnings: {},
                 totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0")
-              }
+                estimatedFees: BigNumber("0"),
+              },
             },
             {
-              name: "noFrozenForBandwidth",
+              name: "tronNoFrozenForBandwidth",
               transaction: fromTransactionRaw({
                 family: "tron",
                 recipient: "",
@@ -503,16 +657,37 @@ const dataset: DatasetTest<Transaction> = {
                 mode: "unfreeze",
                 duration: undefined,
                 resource: "BANDWIDTH",
-                votes: []
+                votes: [],
               }),
               expectedStatus: {
                 amount: BigNumber("0"),
-                errors: { resource: new NoFrozenForBandwidth() },
+                errors: { resource: new TronNoFrozenForBandwidth() },
                 warnings: {},
                 totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0")
-              }
-            }
+                estimatedFees: BigNumber("0"),
+              },
+            },
+            {
+              name: "useAllAmountNotEnoughBalance",
+              transaction: fromTransactionRaw({
+                family: "tron",
+                recipient: "THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi",
+                amount: "0",
+                useAllAmount: true,
+                networkInfo: null,
+                mode: "send",
+                duration: undefined,
+                resource: undefined,
+                votes: [],
+              }),
+              expectedStatus: {
+                amount: BigNumber("0"),
+                errors: { amount: new NotEnoughBalance() },
+                warnings: {},
+                totalSpent: BigNumber("0"),
+                estimatedFees: BigNumber("0"),
+              },
+            },
           ],
           FIXME_tests: [
             /** 
@@ -529,15 +704,15 @@ const dataset: DatasetTest<Transaction> = {
 
               To re-enable when the support will be done.
             */
-            "balance is sum of ops"
+            "balance is sum of ops",
           ],
           raw: {
             id: "js:2:tron:TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9:",
-            seedIdentifier: "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
+            seedIdentifier: activatedAddress1,
             name: "Tron 1",
             derivationMode: "",
             index: 0,
-            freshAddress: "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
+            freshAddress: activatedAddress1,
             freshAddressPath: "44'/195'/0'/0/0",
             pendingOperations: [],
             currencyId: "tron",
@@ -548,17 +723,17 @@ const dataset: DatasetTest<Transaction> = {
             operations: [],
             freshAddresses: [
               {
-                address: "TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9",
-                derivationPath: "44'/195'/0'/0/0"
-              }
+                address: activatedAddress1,
+                derivationPath: "44'/195'/0'/0/0",
+              },
             ],
             lastSyncDate: "",
-            blockHeight: 0
-          }
-        }
-      ]
-    }
-  }
+            blockHeight: 0,
+          },
+        },
+      ],
+    },
+  },
 };
 
 export default dataset;

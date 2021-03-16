@@ -1,7 +1,6 @@
 // @flow
 import { Observable } from "rxjs";
-import { implementCountervalues } from "@ledgerhq/live-common/lib/countervalues";
-import { setSupportedCurrencies } from "@ledgerhq/live-common/lib/data/cryptocurrencies";
+import { setSupportedCurrencies } from "@ledgerhq/live-common/lib/currencies";
 import { map } from "rxjs/operators";
 import { listen } from "@ledgerhq/logs";
 import TransportWebHID from "@ledgerhq/hw-transport-webhid";
@@ -9,13 +8,6 @@ import TransportWebUSB from "@ledgerhq/hw-transport-webusb";
 import TransportWebBLE from "@ledgerhq/hw-transport-web-ble";
 import { registerTransportModule } from "@ledgerhq/live-common/lib/hw";
 import { setEnv, getEnv } from "@ledgerhq/live-common/lib/env";
-
-import "@ledgerhq/live-common/lib/load/tokens/ethereum/erc20";
-import "@ledgerhq/live-common/lib/load/tokens/tron/trc10";
-import "@ledgerhq/live-common/lib/load/tokens/tron/trc20";
-
-import { pairsSelector } from "./reducers/markets";
-import { setExchangePairsAction } from "./actions/markets";
 
 listen(({ id: _id, date: _date, type, message, ...rest }) => {
   Object.keys(rest).length === 0
@@ -44,7 +36,6 @@ setSupportedCurrencies([
   "stratis",
   "dogecoin",
   "digibyte",
-  "hcash",
   "komodo",
   "pivx",
   "zencash",
@@ -53,12 +44,11 @@ setSupportedCurrencies([
   "viacoin",
   "stakenet",
   "stealthcoin",
-  "poswallet",
-  "clubcoin",
   "decred",
   "bitcoin_testnet",
   "ethereum_ropsten",
-  "tron"
+  "tron",
+  "stellar",
 ]);
 
 const webusbDevices = {};
@@ -77,10 +67,10 @@ registerTransportModule({
     return null;
   },
 
-  disconnect: id =>
+  disconnect: (id) =>
     id.startsWith("webhid")
       ? Promise.resolve() // nothing to do
-      : null
+      : null,
 });
 
 registerTransportModule({
@@ -97,22 +87,22 @@ registerTransportModule({
     return null;
   },
 
-  disconnect: id =>
+  disconnect: (id) =>
     id.startsWith("webusb")
       ? Promise.resolve() // nothing to do
       : null,
 
   discovery: Observable.create(TransportWebUSB.listen).pipe(
-    map(usbDevice => {
+    map((usbDevice) => {
       const id = "webusb|" + usbDevice.vendorId + "_" + usbDevice.productId;
       webusbDevices[id] = usbDevice;
       return {
         type: "add",
         id,
-        name: usbDevice.productName
+        name: usbDevice.productName,
       };
     })
-  )
+  ),
 });
 
 const webbleDevices = {};
@@ -131,46 +121,20 @@ registerTransportModule({
     return null;
   },
 
-  disconnect: id =>
+  disconnect: (id) =>
     id.startsWith("webble")
       ? Promise.resolve() // nothing to do
       : null,
 
   discovery: Observable.create(TransportWebUSB.listen).pipe(
-    map(bleDevice => {
+    map((bleDevice) => {
       const id = "webble|" + bleDevice.id;
       webbleDevices[id] = bleDevice;
       return {
         type: "add",
         id,
-        name: bleDevice.name
+        name: bleDevice.name,
       };
     })
-  )
-});
-
-// provide a basic mecanism to stop polling when you leave the tab
-// & immediately poll when you come back.
-const addExtraPollingHooks = (schedulePoll, cancelPoll) => {
-  function onWindowBlur() {
-    cancelPoll();
-  }
-  function onWindowFocus() {
-    schedulePoll(1000);
-  }
-  window.addEventListener("blur", onWindowBlur);
-  window.addEventListener("focus", onWindowFocus);
-  return () => {
-    window.removeEventListener("blur", onWindowBlur);
-    window.removeEventListener("focus", onWindowFocus);
-  };
-};
-
-implementCountervalues({
-  log: (...args) => console.log(...args), // eslint-disable-line no-console
-  getAPIBaseURL: () => window.LEDGER_CV_API,
-  storeSelector: state => state.countervalues,
-  pairsSelector,
-  setExchangePairsAction,
-  addExtraPollingHooks
+  ),
 });

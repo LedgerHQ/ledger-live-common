@@ -13,6 +13,14 @@ It is designed for the end user frontend interface and is agnostic of the way it
 
 ```js
 export interface AccountBridge<T: Transaction> {
+  receive(
+    account: Account,
+    { verify?: boolean, deviceId: string, subAccountId?: string }
+  ): Observable<{
+    address: string,
+    path: string,
+  }>;
+
   sync(Account, SyncConfig): Observable<(Account) => Account>;
 
   createTransaction(Account): T;
@@ -23,15 +31,21 @@ export interface AccountBridge<T: Transaction> {
 
   getTransactionStatus(Account, T): Promise<TransactionStatus>;
 
+  estimateMaxSpendable({
+    account: AccountLike,
+    parentAccount?: ?Account,
+    transaction?: ?T,
+  }): Promise<BigNumber>;
+
   signOperation({
     account: Account,
     transaction: T,
-    deviceId: DeviceId
+    deviceId: DeviceId,
   }): Observable<SignOperationEvent>;
 
   broadcast({
     account: Account,
-    signedOperation: SignedOperation
+    signedOperation: SignedOperation,
   }): Promise<Operation>;
 }
 ```
@@ -45,6 +59,22 @@ import { getAccountBridge } from "@ledgerhq/live-common/lib/bridge";
 
 const bridge = getAccountBridge(account, parentAccount);
 ```
+
+## Receive on an account
+
+```js
+receive(
+  account: Account,
+  { verify?: boolean, deviceId: string, subAccountId?: string }
+): Observable<{
+  address: string,
+  path: string,
+}>;
+```
+
+The first thing that AccountBridge allows to do is to receive on it.
+
+the `receive` method allows to derivate address of an account with a Nano device but also display it on the device if verify is passed in.
 
 ## Synchronize an account with `sync`
 
@@ -98,7 +128,7 @@ type TransactionCommon = {|
   amount: BigNumber,
   recipient: string,
   useAllAmount?: boolean,
-  subAccountId?: ?string
+  subAccountId?: ?string,
 |};
 ```
 
@@ -110,7 +140,7 @@ type TezosTransaction = {|
   ...TransactionCommon,
   family: "bitcoin",
   feePerByte: ?BigNumber,
-  networkInfo: ?BitcoinNetworkInfo
+  networkInfo: ?BitcoinNetworkInfo,
 |};
 
 // tezos/types.js
@@ -122,7 +152,7 @@ type TezosTransaction = {|
   networkInfo: ?TezosNetworkInfo,
   fees: ?BigNumber,
   gasLimit: ?BigNumber,
-  storageLimit: ?BigNumber
+  storageLimit: ?BigNumber,
 |};
 ```
 
@@ -202,7 +232,7 @@ type TransactionStatus = {|
   // total amount that the sender will spend (in account currency)
   totalSpent: BigNumber,
   // should the recipient be non editable
-  recipientIsReadOnly?: boolean
+  recipientIsReadOnly?: boolean,
 |};
 ```
 
@@ -262,7 +292,7 @@ type SignedOperation = {|
   // sometimes a coin needs the raw object (it must be serializable)
   signatureRaw?: Object,
   // date calculated as expiring
-  expirationDate: ?Date
+  expirationDate: ?Date,
 |};
 ```
 
@@ -279,6 +309,28 @@ broadcast({
 
 It returns an **optimistic** `Operation` that this transaction is likely to create in the future.
 
+### `estimateMaxSpendable`
+
+```js
+estimateMaxSpendable({
+  account: AccountLike,
+  parentAccount?: ?Account,
+  transaction?: ?Transaction
+}): Promise<BigNumber>;
+```
+
+is a heuristic that provides the **estimated** max amount that can be set on a send.
+
+This is often the balance minus the fees, but there are exceptions that depend between coins (reserve, burn, frozen part of the balance,...).
+
+By "estimated", it means this is not necessarily correct and there might be a delta that is +- the actual reality (meaning trying to send with this amount can either exceed the spendable or leave some dust). It should not be used to do an actual SEND MAX (there is `useAllAmount` for this) but it can be used for an informative UI or also for "dry run" approaches (try a transaction with that, and refine).
+
+The strategy of implementations should be to prefer pessimistic estimation rather than a potentially impossible transaction, in other words, an implementation should consider the worst-case scenario (like sending all UTXOs to a legacy address has higher fees resulting in a lower max spendable)
+
+the parameters `account` and `parentAccount` are the regular account parameter for normal account and token accounts.
+
+The parameter `transaction` allows refining the estimation to better precision. If provided, an implementation needs to be accurate and try to have an actual SEND MAX value. If the information on `transaction` is partial, it can still help the calculation but it's not guaranteed.
+
 ## Serialized usage
 
 TO BE DOCUMENTED. usage in Ledger Live Desktop in context of serialization.
@@ -294,14 +346,14 @@ type TransactionCommonRaw = {|
   amount: string,
   recipient: string,
   useAllAmount?: boolean,
-  subAccountId?: ?string
+  subAccountId?: ?string,
 |};
 
 type SignedOperationRaw = {|
   operation: OperationRaw,
   signature: string,
   signatureRaw?: Object,
-  expirationDate: ?string
+  expirationDate: ?string,
 |};
 
 type TransactionStatusRaw = {|
@@ -311,7 +363,7 @@ type TransactionStatusRaw = {|
   amount: string,
   totalSpent: string,
   useAllAmount?: boolean,
-  recipientIsReadOnly?: boolean
+  recipientIsReadOnly?: boolean,
 |};
 ```
 

@@ -1,6 +1,6 @@
 // @flow
-import ethereum from "../families/ethereum/customAddressValidation.js";
+import bitcoin from "../families/bitcoin/customAddressValidation.js";
 
 export default {
-  ethereum,
+  bitcoin,
 };

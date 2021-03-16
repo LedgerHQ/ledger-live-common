@@ -8,12 +8,22 @@ import { libcoreBigIntToBigNumber } from "../../libcore/buildBigNumber";
 
 type Input = {
   coreAccount: CoreAccount,
-  account: Account
+  account: Account,
 };
 
 type Output = Promise<NetworkInfo>;
 
 const speeds = ["high", "standard", "low"];
+
+export function avoidDups(nums: Array<BigNumber>): Array<BigNumber> {
+  nums = nums.slice(0);
+  for (let i = nums.length - 2; i >= 0; i--) {
+    if (nums[i + 1].gte(nums[i])) {
+      nums[i] = nums[i + 1].plus(1);
+    }
+  }
+  return nums;
+}
 
 async function bitcoin({ coreAccount }: Input): Output {
   const bitcoinLikeAccount = await coreAccount.asBitcoinLikeAccount();
@@ -23,21 +33,21 @@ async function bitcoin({ coreAccount }: Input): Output {
     bigInts,
     libcoreBigIntToBigNumber
   );
-  const normalized = bigNumbers.map(bn =>
-    bn.div(1000).integerValue(BigNumber.ROUND_CEIL)
+  const normalized = avoidDups(
+    bigNumbers.map((bn) => bn.div(1000).integerValue(BigNumber.ROUND_CEIL))
   );
   const feeItems = {
     items: normalized.map((feePerByte, i) => ({
       key: String(i),
       speed: speeds[i],
-      feePerByte
+      feePerByte,
     })),
     defaultFeePerByte:
-      normalized[Math.floor(normalized.length / 2)] || BigNumber(0)
+      normalized[Math.floor(normalized.length / 2)] || BigNumber(0),
   };
   return {
     family: "bitcoin",
-    feeItems
+    feeItems,
   };
 }
 

@@ -11,15 +11,26 @@ libcore-buildOperation.js \
 libcore-buildSubAccounts.js \
 libcore-getFeesForTransaction.js \
 libcore-postSyncPatch.js \
+libcore-postBuildAccount.js \
 libcore-getAccountNetworkInfo.js \
+libcore-mergeOperations.js \
 transaction.js \
 bridge/js.js \
 bridge/libcore.js \
 bridge/mock.js \
 cli-transaction.js \
+specs.js \
+speculos-deviceActions.js \
+deviceTransactionConfig.js \
 test-dataset.js \
 test-specifics.js \
+mock.js \
+account.js \
+exchange.js \
+presync.js \
 "
+
+withoutNetworkInfo=("algorand polkadot")
 
 cd ../src
 
@@ -72,6 +83,25 @@ done
 
 # types
 
+genDeviceTransactionConfig () {
+  for family in $families; do
+    if [ -f $family/deviceTransactionConfig.js ]; then
+      if grep -q "export type ExtraDeviceTransactionField" "$family/deviceTransactionConfig.js"; then
+        echo 'import type { ExtraDeviceTransactionField as ExtraDeviceTransactionField_'$family' } from "../families/'$family'/deviceTransactionConfig";'
+      fi
+    fi
+  done
+
+  echo 'export type ExtraDeviceTransactionField ='
+  for family in $families; do
+    if [ -f $family/deviceTransactionConfig.js ]; then
+      if grep -q "export type ExtraDeviceTransactionField" "$family/deviceTransactionConfig.js"; then
+        echo '| ExtraDeviceTransactionField_'$family
+      fi
+    fi
+  done
+}
+
 genTypesFile () {
   echo '// @flow'
   for family in $families; do
@@ -82,8 +112,10 @@ genTypesFile () {
     echo 'import type { CoreCurrencySpecifics as CoreCurrencySpecifics_'$family' } from "../families/'$family'/types";'
     echo 'import type { Transaction as '$family'Transaction } from "../families/'$family'/types";'
     echo 'import type { TransactionRaw as '$family'TransactionRaw } from "../families/'$family'/types";'
-    echo 'import type { NetworkInfo as '$family'NetworkInfo } from "../families/'$family'/types";'
-    echo 'import type { NetworkInfoRaw as '$family'NetworkInfoRaw } from "../families/'$family'/types";'
+    if [[ ! " ${withoutNetworkInfo[@]} " =~ " ${family} " ]]; then
+      echo 'import type { NetworkInfo as '$family'NetworkInfo } from "../families/'$family'/types";'
+      echo 'import type { NetworkInfoRaw as '$family'NetworkInfoRaw } from "../families/'$family'/types";'
+    fi
   done
   echo
   echo 'export type SpecificStatics = {}'
@@ -112,11 +144,15 @@ genTypesFile () {
   done
   echo 'export type NetworkInfo ='
   for family in $families; do
-    echo '  | '$family'NetworkInfo'
+    if [[ ! " ${withoutNetworkInfo[@]} " =~ " ${family} " ]]; then
+      echo '  | '$family'NetworkInfo'
+    fi
   done
   echo 'export type NetworkInfoRaw ='
   for family in $families; do
+    if [[ ! " ${withoutNetworkInfo[@]} " =~ " ${family} " ]]; then
     echo '  | '$family'NetworkInfoRaw'
+    fi
   done
   echo 'export const reflectSpecifics = (declare: *) => ['
   for family in $families; do
@@ -126,3 +162,5 @@ genTypesFile () {
 }
 
 genTypesFile > ../generated/types.js
+
+genDeviceTransactionConfig >> ../generated/deviceTransactionConfig.js

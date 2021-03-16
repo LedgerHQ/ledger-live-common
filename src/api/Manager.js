@@ -13,7 +13,7 @@ import {
   UserRefusedFirmwareUpdate,
   NetworkDown,
   FirmwareNotRecognized,
-  TransportStatusError
+  TransportStatusError,
 } from "@ledgerhq/errors";
 import type Transport from "@ledgerhq/hw-transport";
 import { throwError, Observable } from "rxjs";
@@ -24,7 +24,7 @@ import {
   createMockSocket,
   bulkSocketMock,
   secureChannelMock,
-  resultMock
+  resultMock,
 } from "./socket.mock";
 import semver from "semver";
 import type { DeviceInfo, McuVersion, SocketEvent } from "../types/manager";
@@ -37,7 +37,7 @@ import type {
   ApplicationVersion,
   Application,
   Category,
-  Id
+  Id,
 } from "../types/manager";
 import { makeLRUCache } from "../cache";
 import { getUserHashes } from "../user";
@@ -56,20 +56,26 @@ const remapSocketError = (context?: string) =>
     switch (status) {
       case "6a80":
       case "6a81":
+      case "6a8e":
+      case "6a8f":
         return throwError(new ManagerAppAlreadyInstalledError());
       case "6982":
+      case "5303":
         return throwError(new ManagerDeviceLockedError());
       case "6a84":
+      case "5103":
         if (context === "firmware" || context === "mcu") {
           return throwError(new ManagerFirmwareNotEnoughSpaceError());
         }
         return throwError(new ManagerNotEnoughSpaceError());
       case "6a85":
+      case "5102":
         if (context === "firmware" || context === "mcu") {
           return throwError(new UserRefusedFirmwareUpdate());
         }
         return throwError(new ManagerNotEnoughSpaceError());
       case "6985":
+      case "5501":
         if (context === "firmware" || context === "mcu") {
           return throwError(new UserRefusedFirmwareUpdate());
         }
@@ -82,20 +88,20 @@ const remapSocketError = (context?: string) =>
 const applicationsByDevice: (params: {
   provider: number,
   current_se_firmware_final_version: Id,
-  device_version: Id
+  device_version: Id,
 }) => Promise<Array<ApplicationVersion>> = makeLRUCache(
-  async params => {
+  async (params) => {
     const r = await network({
       method: "POST",
       url: URL.format({
         pathname: `${getEnv("MANAGER_API_BASE")}/get_apps`,
-        query: { livecommonversion }
+        query: { livecommonversion },
       }),
-      data: params
+      data: params,
     });
     return r.data.application_versions;
   },
-  p =>
+  (p) =>
     `${p.provider}_${p.current_se_firmware_final_version}_${p.device_version}`
 );
 
@@ -105,8 +111,8 @@ const listApps: () => Promise<Array<Application>> = makeLRUCache(
       method: "GET",
       url: URL.format({
         pathname: `${getEnv("MANAGER_API_BASE")}/applications`,
-        query: { livecommonversion }
-      })
+        query: { livecommonversion },
+      }),
     });
     if (!data || !Array.isArray(data)) {
       throw new NetworkDown("");
@@ -121,8 +127,8 @@ const listCategories = async (): Promise<Array<Category>> => {
     method: "GET",
     url: URL.format({
       pathname: `${getEnv("MANAGER_API_BASE")}/categories`,
-      query: { livecommonversion }
-    })
+      query: { livecommonversion },
+    }),
   });
   return r.data;
 };
@@ -133,8 +139,8 @@ const getMcus: () => Promise<*> = makeLRUCache(
       method: "GET",
       url: URL.format({
         pathname: `${getEnv("MANAGER_API_BASE")}/mcu_versions`,
-        query: { livecommonversion }
-      })
+        query: { livecommonversion },
+      }),
     });
     return data;
   },
@@ -143,12 +149,14 @@ const getMcus: () => Promise<*> = makeLRUCache(
 
 const compatibleMCUForDeviceInfo = (
   mcus: McuVersion[],
-  deviceInfo: DeviceInfo
+  deviceInfo: DeviceInfo,
+  provider: number
 ): McuVersion[] =>
   mcus.filter(
-    m =>
-      deviceInfo.majMin === m.from_bootloader_version ||
-      deviceInfo.version === m.from_bootloader_version
+    (m) =>
+      (deviceInfo.majMin === m.from_bootloader_version ||
+        deviceInfo.version === m.from_bootloader_version) &&
+      m.providers.includes(provider)
   );
 
 const findBestMCU = (compatibleMCU: McuVersion[]) => {
@@ -166,98 +174,98 @@ const findBestMCU = (compatibleMCU: McuVersion[]) => {
 const getLatestFirmware: ({
   current_se_firmware_final_version: Id,
   device_version: Id,
-  provider: number
+  provider: number,
 }) => Promise<?OsuFirmware> = makeLRUCache(
   async ({ current_se_firmware_final_version, device_version, provider }) => {
     const salt = getUserHashes().firmwareSalt;
     const {
-      data
+      data,
     }: {
       data: {
         result: string,
-        se_firmware_osu_version: OsuFirmware
-      }
+        se_firmware_osu_version: OsuFirmware,
+      },
     } = await network({
       method: "POST",
       url: URL.format({
         pathname: `${getEnv("MANAGER_API_BASE")}/get_latest_firmware`,
-        query: { livecommonversion, salt }
+        query: { livecommonversion, salt },
       }),
       data: {
         current_se_firmware_final_version,
         device_version,
-        provider
-      }
+        provider,
+      },
     });
     if (data.result === "null") {
       return null;
     }
     return data.se_firmware_osu_version;
   },
-  a =>
+  (a) =>
     `${a.current_se_firmware_final_version}_${a.device_version}_${a.provider}`
 );
 
 const getCurrentOSU: (input: {
   version: string,
   deviceId: string | number,
-  provider: number
+  provider: number,
 }) => Promise<OsuFirmware> = makeLRUCache(
-  async input => {
+  async (input) => {
     const { data } = await network({
       method: "POST",
       url: URL.format({
         pathname: `${getEnv("MANAGER_API_BASE")}/get_osu_version`,
-        query: { livecommonversion }
+        query: { livecommonversion },
       }),
       data: {
         device_version: input.deviceId,
         version_name: `${input.version}-osu`,
-        provider: input.provider
-      }
+        provider: input.provider,
+      },
     });
     return data;
   },
-  a => `${a.version}_${a.deviceId}_${a.provider}`
+  (a) => `${a.version}_${a.deviceId}_${a.provider}`
 );
 
 const getCurrentFirmware: (input: {
   version: string,
   deviceId: string | number,
-  provider: number
+  provider: number,
 }) => Promise<FinalFirmware> = makeLRUCache(
-  async input => {
+  async (input) => {
     const { data }: { data: FinalFirmware } = await network({
       method: "POST",
       url: URL.format({
         pathname: `${getEnv("MANAGER_API_BASE")}/get_firmware_version`,
-        query: { livecommonversion }
+        query: { livecommonversion },
       }),
       data: {
         device_version: input.deviceId,
         version_name: input.version,
-        provider: input.provider
-      }
+        provider: input.provider,
+      },
     });
     return data;
   },
-  a => `${a.version}_${a.deviceId}_${a.provider}`
+  (a) => `${a.version}_${a.deviceId}_${a.provider}`
 );
 
 const getFinalFirmwareById: (
   id: number
 ) => Promise<FinalFirmware> = makeLRUCache(
-  async id => {
+  async (id) => {
     const { data }: { data: FinalFirmware } = await network({
       method: "GET",
       url: URL.format({
         pathname: `${getEnv("MANAGER_API_BASE")}/firmware_final_versions/${id}`,
-        query: { livecommonversion }
-      })
+        query: { livecommonversion },
+      }),
     });
     return data;
   },
-  id => String(id)
+  (id) => String(id)
 );
 
 const getDeviceVersion: (
@@ -269,13 +277,13 @@ const getDeviceVersion: (
       method: "POST",
       url: URL.format({
         pathname: `${getEnv("MANAGER_API_BASE")}/get_device_version`,
-        query: { livecommonversion }
+        query: { livecommonversion },
       }),
       data: {
         provider,
-        target_id: targetId
-      }
-    }).catch(error => {
+        target_id: targetId,
+      },
+    }).catch((error) => {
       const status =
         // FIXME LLD is doing error remapping already. we probably need to move the remapping in live-common
         error && (error.status || (error.response && error.response.status));
@@ -305,9 +313,9 @@ const install = (
   return createDeviceSocket(transport, {
     url: URL.format({
       pathname: `${getEnv("BASE_SOCKET_URL")}/install`,
-      query: { ...params, livecommonversion }
+      query: { ...params, livecommonversion },
     }),
-    unresponsiveExpectedDuringBulk
+    unresponsiveExpectedDuringBulk,
   }).pipe(remapSocketError(context));
 };
 
@@ -322,10 +330,10 @@ const genuineCheck = (
   return createDeviceSocket(transport, {
     url: URL.format({
       pathname: `${getEnv("BASE_SOCKET_URL")}/genuine`,
-      query: { targetId, perso, livecommonversion }
-    })
+      query: { targetId, perso, livecommonversion },
+    }),
   }).pipe(
-    map(e => {
+    map((e) => {
       if (e.type === "result") {
         return { type: "result", payload: String(e.payload || "") };
       }
@@ -354,15 +362,15 @@ const listInstalledApps = (
   return createDeviceSocket(transport, {
     url: URL.format({
       pathname: `${getEnv("BASE_SOCKET_URL")}/apps/list`,
-      query: { targetId, perso, livecommonversion }
-    })
+      query: { targetId, perso, livecommonversion },
+    }),
   }).pipe(
     remapSocketError("listInstalledApps"),
-    map(o => {
+    map((o) => {
       if (o.type === "result") {
         return {
           type: "result",
-          payload: [...o.payload].map(a => {
+          payload: [...o.payload].map((a) => {
             invariant(
               typeof a === "object" && a,
               "payload array item are objects"
@@ -371,7 +379,7 @@ const listInstalledApps = (
             invariant(typeof hash === "string", "hash is defined");
             invariant(typeof name === "string", "name is defined");
             return { hash, name };
-          })
+          }),
         };
       }
       return o;
@@ -391,9 +399,9 @@ const installMcu = (
   return createDeviceSocket(transport, {
     url: URL.format({
       pathname: `${getEnv("BASE_SOCKET_URL")}/mcu`,
-      query: { targetId, version, livecommonversion }
+      query: { targetId, version, livecommonversion },
     }),
-    ignoreWebsocketErrorDuringBulk: true
+    ignoreWebsocketErrorDuringBulk: true,
   }).pipe(remapSocketError(context));
 };
 
@@ -412,7 +420,7 @@ const API = {
   getDeviceVersion,
   install,
   genuineCheck,
-  installMcu
+  installMcu,
 };
 
 export default API;

@@ -5,7 +5,7 @@ import { Observable } from "rxjs";
 import { map, concatMap } from "rxjs/operators";
 
 export const fromNodeStream = (stream: *): Observable<Buffer> =>
-  new Observable(o => {
+  Observable.create((o) => {
     const endHandler = () => o.complete();
     const errorHandler = (e: Error) => o.error(e);
     const dataHandler = (data: Buffer) => o.next(data);
@@ -26,27 +26,30 @@ export const fromFile = (file: string) =>
 
 export const apdusFromFile = (file: string) =>
   fromFile(file).pipe(
-    map(b => b.toString()),
-    concatMap(str =>
+    map((b) => b.toString()),
+    concatMap((str) =>
       str
         .replace(/ /g, "")
         .split("\n")
         // we supports => <= recorded files but will just clear out the <= and =>
-        .filter(line => !line.startsWith("<=")) // we remove the responses
-        .map(line => (line.startsWith("=>") ? line.slice(2) : line)) // we just keep the sending
+        .filter((line) => !line.startsWith("<=")) // we remove the responses
+        .map((line) => (line.startsWith("=>") ? line.slice(2) : line)) // we just keep the sending
         .filter(Boolean)
     ),
-    map(line => Buffer.from(line, "hex"))
+    map((line) => Buffer.from(line, "hex"))
   );
 
-export const jsonFromFile = (file: string): Observable<any> =>
-  Observable.create(o => {
+export const jsonFromFile = (
+  file: string,
+  rawValue: boolean = false
+): Observable<any> =>
+  Observable.create((o) => {
     let acc = "";
     let count = 0;
     return fromFile(file).subscribe({
-      error: e => o.error(e),
+      error: (e) => o.error(e),
       complete: () => o.complete(),
-      next: chunk => {
+      next: (chunk) => {
         let lastIndex = 0;
         const str = chunk.toString();
         for (let i = 0; i < str.length; i++) {
@@ -63,7 +66,7 @@ export const jsonFromFile = (file: string): Observable<any> =>
                 acc += str.slice(lastIndex, i + 1);
                 lastIndex = i + 1;
                 try {
-                  o.next(JSON.parse(acc));
+                  o.next(rawValue ? acc : JSON.parse(acc));
                 } catch (e) {
                   o.error(e);
                 }
@@ -75,6 +78,6 @@ export const jsonFromFile = (file: string): Observable<any> =>
           }
         }
         acc += str.slice(lastIndex);
-      }
+      },
     });
   });

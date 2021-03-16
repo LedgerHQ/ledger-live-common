@@ -10,7 +10,7 @@ import {
   getMarketcapTickers,
   useMarketcapTickers,
   currenciesByMarketcap,
-  useCurrenciesByMarketcap
+  useCurrenciesByMarketcap,
 } from "./sortByMarketcap";
 
 import {
@@ -18,25 +18,14 @@ import {
   findFiatCurrencyByTicker,
   getFiatCurrencyByTicker,
   hasFiatCurrencyTicker,
-  isFiatSupported,
-  listSupportedFiats,
-  setSupportedFiats
-} from "../data/fiat";
-
-import {
   listCryptoCurrencies,
   getCryptoCurrencyById,
   hasCryptoCurrencyId,
   findCryptoCurrency,
   findCryptoCurrencyById,
   findCryptoCurrencyByScheme,
+  findCryptoCurrencyByKeyword,
   findCryptoCurrencyByTicker,
-  isCurrencySupported,
-  setSupportedCurrencies,
-  listSupportedCurrencies
-} from "../data/cryptocurrencies";
-
-import {
   listTokens,
   listTokensForCryptoCurrency,
   listTokenTypesForCryptoCurrency,
@@ -44,8 +33,12 @@ import {
   findTokenById,
   findTokenByAddress,
   hasTokenId,
-  getTokenById
-} from "../data/tokens";
+  getTokenById,
+  findCompoundToken,
+  getAbandonSeedAddress,
+} from "@ledgerhq/cryptoassets";
+
+export * from "./support";
 
 import { parseCurrencyUnit } from "./parseCurrencyUnit";
 
@@ -53,7 +46,7 @@ import { chopCurrencyUnitDecimals } from "./chopCurrencyUnitDecimals";
 
 import {
   formatCurrencyUnit,
-  formatCurrencyUnitFragment
+  formatCurrencyUnitFragment,
 } from "./formatCurrencyUnit";
 
 import { formatShort } from "./formatShort";
@@ -74,19 +67,14 @@ export {
   currenciesByMarketcap,
   useCurrenciesByMarketcap,
   listFiatCurrencies,
-  isFiatSupported,
-  listSupportedFiats,
-  setSupportedFiats,
   listCryptoCurrencies,
-  setSupportedCurrencies,
-  listSupportedCurrencies,
-  isCurrencySupported,
   getFiatCurrencyByTicker,
   findCurrencyByTicker,
   findCryptoCurrency,
   findCryptoCurrencyById,
   findCryptoCurrencyByTicker,
   findCryptoCurrencyByScheme,
+  findCryptoCurrencyByKeyword,
   findFiatCurrencyByTicker,
   hasFiatCurrencyTicker,
   listTokens,
@@ -97,6 +85,7 @@ export {
   findTokenById,
   hasTokenId,
   getTokenById,
+  getAbandonSeedAddress,
   parseCurrencyUnit,
   chopCurrencyUnitDecimals,
   formatCurrencyUnit,
@@ -108,5 +97,6 @@ export {
   decodeURIScheme,
   valueFromUnit,
   sanitizeValueString,
-  getCurrencyColor
+  getCurrencyColor,
+  findCompoundToken,
 };

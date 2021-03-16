@@ -10,7 +10,7 @@ import { getSeparators } from "./localeUtility";
 export type SupportedOptions = {
   minimumFractionDigits: number,
   maximumFractionDigits: number,
-  useGrouping: boolean
+  useGrouping: boolean,
 };
 
 // FIXME later, might want to expose this format!
@@ -22,7 +22,7 @@ const getFormatForLocale = (locale: string) => {
     groupSize: 3,
     secondaryGroupSize: 0,
     fractionGroupSeparator: "\xA0", // non-breaking space
-    fractionGroupSize: 0
+    fractionGroupSize: 0,
   };
   if (typeof decimal === "string") opts.decimalSeparator = decimal;
   if (typeof thousands === "string") opts.groupSeparator = thousands;
@@ -48,12 +48,15 @@ export const toLocaleString = (
     format.groupSeparator = "";
   }
   const BN = BigNumber.clone({
-    FORMAT: format
+    FORMAT: format,
   });
   const bn = BN(n);
-  const maxDecimals = bn.toFormat(maximumFractionDigits);
+  const maxDecimals = bn.toFormat(maximumFractionDigits, BigNumber.ROUND_FLOOR);
   if (maximumFractionDigits !== minimumFractionDigits) {
-    const minDecimals = bn.toFormat(minimumFractionDigits);
+    const minDecimals = bn.toFormat(
+      minimumFractionDigits,
+      BigNumber.ROUND_FLOOR
+    );
     let i = maxDecimals.length;
     // cleanup useless '0's from the right until the minimumFractionDigits
     while (i > minDecimals.length) {

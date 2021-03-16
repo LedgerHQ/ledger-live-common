@@ -5,44 +5,62 @@ import {
   RecipientRequired,
   InvalidAddress,
   FeeTooHigh,
-  GasLessThanEstimate
+  GasLessThanEstimate,
 } from "@ledgerhq/errors";
 import type { Transaction } from "../types";
 import type { AccountBridge, CurrencyBridge } from "../../../types";
-import { getEstimatedFees } from "../../../api/Fees"; // FIXME drop. not stable.
+import { getMainAccount } from "../../../account";
+import { getCryptoCurrencyById } from "../../../currencies";
 import {
   scanAccounts,
   signOperation,
   broadcast,
   sync,
-  isInvalidRecipient
+  isInvalidRecipient,
 } from "../../../bridge/mockHelpers";
 import { getGasLimit } from "../transaction";
+import { makeAccountBridgeReceive } from "../../../bridge/mockHelpers";
+import { inferDynamicRange } from "../../../range";
+
+const receive = makeAccountBridgeReceive();
 
 const defaultGetFees = (a, t: *) =>
   (t.gasPrice || BigNumber(0)).times(getGasLimit(t));
 
-const createTransaction = (account): Transaction => ({
+const createTransaction = (): Transaction => ({
   family: "ethereum",
+  mode: "send",
   amount: BigNumber(0),
   recipient: "",
   gasPrice: BigNumber(10000000000),
   userGasLimit: BigNumber(21000),
   estimatedGasLimit: null,
-  feeCustomUnit: account.currency.units[1],
+  feeCustomUnit: getCryptoCurrencyById("ethereum").units[1],
   networkInfo: null,
   useAllAmount: false,
-  subAccountId: null
+  subAccountId: null,
 });
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
+
+const estimateMaxSpendable = ({ account, parentAccount, transaction }) => {
+  const mainAccount = getMainAccount(account, parentAccount);
+  const estimatedFees = parentAccount
+    ? BigNumber(0)
+    : transaction
+    ? defaultGetFees(mainAccount, transaction)
+    : BigNumber(1000000000000);
+  return Promise.resolve(
+    BigNumber.max(0, account.balance.minus(estimatedFees))
+  );
+};
 
 const getTransactionStatus = (a, t) => {
   const errors = {};
   const warnings = {};
   const tokenAccount = !t.subAccountId
     ? null
-    : a.subAccounts && a.subAccounts.find(ta => ta.id === t.subAccountId);
+    : a.subAccounts && a.subAccounts.find((ta) => ta.id === t.subAccountId);
   const account = tokenAccount || a;
 
   const useAllAmount = !!t.useAllAmount;
@@ -90,7 +108,7 @@ const getTransactionStatus = (a, t) => {
     warnings,
     estimatedFees,
     amount,
-    totalSpent
+    totalSpent,
   });
 };
 
@@ -101,17 +119,16 @@ const prepareTransaction = async (a, t) => {
       ...res,
       estimatedGasLimit: t.subAccountId
         ? BigNumber("100000")
-        : BigNumber("21000")
+        : BigNumber("21000"),
     };
   }
   if (!res.networkInfo) {
-    const { gas_price } = await getEstimatedFees(a.currency);
     res = {
       ...res,
       networkInfo: {
         family: "ethereum",
-        gasPrice: BigNumber(gas_price)
-      }
+        gasPrice: inferDynamicRange(BigNumber(300000)),
+      },
     };
   }
   return res;
@@ -121,16 +138,18 @@ const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   updateTransaction,
   getTransactionStatus,
+  estimateMaxSpendable,
   prepareTransaction,
   sync,
+  receive,
   signOperation,
-  broadcast
+  broadcast,
 };
 
 const currencyBridge: CurrencyBridge = {
   preload: () => Promise.resolve(),
   hydrate: () => {},
-  scanAccounts
+  scanAccounts,
 };
 
 export default { currencyBridge, accountBridge };

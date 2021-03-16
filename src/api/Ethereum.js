@@ -1,79 +1,125 @@
 // @flow
+import URL from "url";
+import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import { LedgerAPINotAvailable } from "@ledgerhq/errors";
+import JSONBigNumber from "../JSONBigNumber";
 import type { CryptoCurrency } from "../types";
+import type { EthereumGasLimitRequest } from "../families/ethereum/types";
 import network from "../network";
-import { blockchainBaseURL, getCurrencyExplorer } from "./Ledger";
+import { blockchainBaseURL } from "./Ledger";
+import { FeeEstimationFailed } from "../errors";
+import { makeLRUCache } from "../cache";
 
-export type Block = { height: number }; // TODO more fields actually
+export type Block = { height: BigNumber }; // TODO more fields actually
 
 export type Tx = {
   hash: string,
-  received_at: string,
+  status?: BigNumber, // 0: fail, 1: success
+  received_at?: string,
   nonce: string,
-  value: number,
-  gas: number,
-  gas_price: number,
-  cumulative_gas_used: number,
-  gas_used: number,
+  value: BigNumber,
+  gas: BigNumber,
+  gas_price: BigNumber,
   from: string,
   to: string,
-  input: string,
-  index: number,
+  cumulative_gas_used?: BigNumber,
+  gas_used?: BigNumber,
+  transfer_events?: {
+    list: Array<{
+      contract: string,
+      from: string,
+      to: string,
+      count: BigNumber,
+      decimal?: number,
+      symbol?: string,
+    }>,
+    truncated: boolean,
+  },
+  actions?: Array<{
+    from: string,
+    to: string,
+    value: BigNumber,
+    gas?: BigNumber,
+    gas_used?: BigNumber,
+  }>,
   block?: {
     hash: string,
-    height: number,
-    time: string
+    height: BigNumber,
+    time: string,
   },
-  confirmations: number,
-  status: number
 };
+
+export type ERC20BalancesInput = Array<{
+  address: string,
+  contract: string,
+}>;
+
+export type ERC20BalanceOutput = Array<{
+  address: string,
+  contract: string,
+  balance: BigNumber,
+}>;
 
 export type API = {
   getTransactions: (
     address: string,
-    blockHash: ?string
+    block_hash: ?string,
+    batch_size?: number
   ) => Promise<{
     truncated: boolean,
-    txs: Tx[]
+    txs: Tx[],
   }>,
   getCurrentBlock: () => Promise<Block>,
   getAccountNonce: (address: string) => Promise<number>,
   broadcastTransaction: (signedTransaction: string) => Promise<string>,
+  getERC20Balances: (input: ERC20BalancesInput) => Promise<ERC20BalanceOutput>,
   getAccountBalance: (address: string) => Promise<BigNumber>,
-  estimateGasLimitForERC20: (address: string) => Promise<number>
+  roughlyEstimateGasLimit: (address: string) => Promise<BigNumber>,
+  getERC20ApprovalsPerContract: (
+    owner: string,
+    contract: string
+  ) => Promise<Array<{ sender: string, value: string }>>,
+  getDryRunGasLimit: (
+    address: string,
+    request: EthereumGasLimitRequest
+  ) => Promise<BigNumber>,
+  getGasTrackerBarometer: () => Promise<{
+    low: BigNumber,
+    medium: BigNumber,
+    high: BigNumber,
+  }>,
 };
 
 export const apiForCurrency = (currency: CryptoCurrency): API => {
   const baseURL = blockchainBaseURL(currency);
   if (!baseURL) {
     throw new LedgerAPINotAvailable(`LedgerAPINotAvailable ${currency.id}`, {
-      currencyName: currency.name
+      currencyName: currency.name,
     });
   }
   return {
-    async getTransactions(address, blockHash) {
+    async getTransactions(address, block_hash, batch_size = 2000) {
       let { data } = await network({
         method: "GET",
-        url: `${baseURL}/addresses/${address}/transactions`,
-        params:
-          getCurrencyExplorer(currency).version === "v2"
-            ? {
-                blockHash,
-                noToken: 1
-              }
-            : {
-                batch_size: 2000,
-                no_token: true,
-                block_hash: blockHash,
-                partial: true
-              }
+        url: URL.format({
+          pathname: `${baseURL}/addresses/${address}/transactions`,
+          query: {
+            batch_size,
+            noinput: true,
+            no_token: true,
+            block_hash,
+          },
+        }),
+        transformResponse: JSONBigNumber.parse,
       });
       // v3 have a bug that still includes the tx of the paginated block_hash, we're cleaning it up
-      if (blockHash && getCurrencyExplorer(currency).version === "v3") {
+      if (block_hash) {
         data = {
           ...data,
-          txs: data.txs.filter(tx => !tx.block || tx.block.hash !== blockHash)
+          txs: data.txs.filter(
+            (tx) => !tx.block || tx.block.hash !== block_hash
+          ),
         };
       }
       return data;
@@ -82,7 +128,8 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
     async getCurrentBlock() {
       const { data } = await network({
         method: "GET",
-        url: `${baseURL}/blocks/current`
+        url: `${baseURL}/blocks/current`,
+        transformResponse: JSONBigNumber.parse,
       });
       return data;
     },
@@ -90,26 +137,16 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
     async getAccountNonce(address) {
       const { data } = await network({
         method: "GET",
-        url: `${baseURL}/addresses/${address}/nonce`
+        url: `${baseURL}/addresses/${address}/nonce`,
       });
       return data[0].nonce;
-    },
-
-    async estimateGasLimitForERC20(address) {
-      if (getCurrencyExplorer(currency).version === "v2") return 21000;
-
-      const { data } = await network({
-        method: "GET",
-        url: `${baseURL}/addresses/${address}/estimate-gas-limit`
-      });
-      return data.estimated_gas_limit;
     },
 
     async broadcastTransaction(tx) {
       const { data } = await network({
         method: "POST",
         url: `${baseURL}/transactions/send`,
-        data: { tx }
+        data: { tx },
       });
       return data.result;
     },
@@ -117,10 +154,97 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
     async getAccountBalance(address) {
       const { data } = await network({
         method: "GET",
-        url: `${baseURL}/addresses/${address}/balance`
+        url: `${baseURL}/addresses/${address}/balance`,
+        transformResponse: JSONBigNumber.parse,
       });
-      // FIXME precision lost here. nothing we can do easily
       return BigNumber(data[0].balance);
-    }
+    },
+
+    async getERC20Balances(input) {
+      const { data } = await network({
+        method: "POST",
+        url: `${baseURL}/erc20/balances`,
+        transformResponse: JSONBigNumber.parse,
+        data: input,
+      });
+      return data;
+    },
+
+    async getERC20ApprovalsPerContract(owner, contract) {
+      try {
+        const { data } = await network({
+          method: "GET",
+          url: URL.format({
+            pathname: `${baseURL}/erc20/approvals`,
+            query: {
+              owner,
+              contract,
+            },
+          }),
+        });
+        return data
+          .map((m: mixed) => {
+            if (!m || typeof m !== "object") return;
+            const { sender, value } = m;
+            if (typeof sender !== "string" || typeof value !== "string") return;
+            return { sender, value };
+          })
+          .filter(Boolean);
+      } catch (e) {
+        if (e.status === 404) {
+          return [];
+        }
+        throw e;
+      }
+    },
+
+    async roughlyEstimateGasLimit(address) {
+      const { data } = await network({
+        method: "GET",
+        url: `${baseURL}/addresses/${address}/estimate-gas-limit`,
+        transformResponse: JSONBigNumber.parse,
+      });
+      return BigNumber(data.estimated_gas_limit);
+    },
+
+    async getDryRunGasLimit(address, request) {
+      const post: Object = {
+        ...request,
+      };
+      // .to not needed by backend as it's part of URL:
+      delete post.to;
+      // backend use gas_price casing:
+      post.gas_price = request.gasPrice;
+      delete post.gasPrice;
+
+      const { data } = await network({
+        method: "POST",
+        url: `${baseURL}/addresses/${address}/estimate-gas-limit`,
+        data: post,
+        transformResponse: JSONBigNumber.parse,
+      });
+      if (data.error_message) {
+        throw new FeeEstimationFailed(data.error_message);
+      }
+      const value = BigNumber(data.estimated_gas_limit);
+      invariant(!value.isNaN(), "invalid server data");
+      return value;
+    },
+
+    getGasTrackerBarometer: makeLRUCache(
+      async () => {
+        const { data } = await network({
+          method: "GET",
+          url: `${baseURL}/gastracker/barometer`,
+        });
+        return {
+          low: BigNumber(data.low),
+          medium: BigNumber(data.medium),
+          high: BigNumber(data.high),
+        };
+      },
+      () => "",
+      { maxAge: 30 * 1000 }
+    ),
   };
 };

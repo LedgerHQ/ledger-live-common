@@ -8,8 +8,14 @@ import type {
   Transaction,
   Account,
   AccountLike,
-  AccountLikeArray
+  AccountLikeArray,
 } from "../../types";
+import { modes } from "./modules";
+
+function hexAsBuffer(hex) {
+  if (!hex) return;
+  return Buffer.from(hex.startsWith("0x") ? hex.slice(2) : hex, "hex");
+}
 
 const options = [
   {
@@ -17,29 +23,49 @@ const options = [
     alias: "t",
     type: String,
     desc: "use an token account children of the account",
-    multiple: true
+    multiple: true,
   },
   {
     name: "gasPrice",
     type: String,
     desc:
-      "how much gasPrice. default is 2gwei. (example format: 2gwei, 0.000001eth, in wei if no unit precised)"
+      "how much gasPrice. default is 2gwei. (example format: 2gwei, 0.000001eth, in wei if no unit precised)",
+  },
+  {
+    name: "mode",
+    alias: "m",
+    type: String,
+    desc:
+      "action to do (possible modes: " + Object.keys(modes).join(" | ") + ")",
   },
   {
     name: "gasLimit",
     type: String,
-    desc: "how much gasLimit. default is estimated with the recipient"
-  }
+    desc: "how much gasLimit. default is estimated with the recipient",
+  },
+  {
+    name: "nonce",
+    type: String,
+    desc: "set a nonce for this transaction",
+  },
+  {
+    name: "data",
+    type: String,
+    desc: "set the transaction data to use for signing the ETH transaction",
+  },
 ];
 
 function inferAccounts(account: Account, opts: Object): AccountLikeArray {
   invariant(account.currency.family === "ethereum", "ethereum family");
-  if (!opts.token) return [account];
-  return opts.token.map(token => {
+  if (!opts.token) {
+    const accounts: Account[] = [account];
+    return accounts;
+  }
+  return opts.token.map((token) => {
     const subAccounts = account.subAccounts || [];
     if (token) {
       const tkn = token.toLowerCase();
-      const subAccount = subAccounts.find(t => {
+      const subAccount = subAccounts.find((t) => {
         const currency = getAccountCurrency(t);
         return tkn === currency.ticker.toLowerCase() || tkn === currency.id;
       });
@@ -48,7 +74,7 @@ function inferAccounts(account: Account, opts: Object): AccountLikeArray {
           "token account '" +
             token +
             "' not found. Available: " +
-            subAccounts.map(t => getAccountCurrency(t).ticker).join(", ")
+            subAccounts.map((t) => getAccountCurrency(t).ticker).join(", ")
         );
       }
       return subAccount;
@@ -57,11 +83,15 @@ function inferAccounts(account: Account, opts: Object): AccountLikeArray {
 }
 
 function inferTransactions(
-  transactions: Array<{ account: AccountLike, transaction: Transaction }>,
+  transactions: Array<{
+    account: AccountLike,
+    transaction: Transaction,
+    mainAccount: Account,
+  }>,
   opts: Object,
   { inferAmount }: *
 ): Transaction[] {
-  return flatMap(transactions, ({ transaction, account }) => {
+  return flatMap(transactions, ({ transaction, account, mainAccount }) => {
     invariant(transaction.family === "ethereum", "ethereum family");
     let subAccountId;
     if (account.type === "TokenAccount") {
@@ -71,9 +101,12 @@ function inferTransactions(
       ...transaction,
       family: "ethereum",
       subAccountId,
-      gasPrice: inferAmount(account, opts.gasPrice || "2gwei"),
+      gasPrice: opts.gasPrice ? inferAmount(mainAccount, opts.gasPrice) : null,
       userGasLimit: opts.gasLimit ? new BigNumber(opts.gasLimit) : null,
-      estimatedGasLimit: null
+      estimatedGasLimit: null,
+      mode: opts.mode || "send",
+      nonce: opts.nonce ? parseInt(opts.nonce) : undefined,
+      data: opts.data ? hexAsBuffer(opts.data) : undefined,
     };
   });
 }
@@ -81,5 +114,5 @@ function inferTransactions(
 export default {
   options,
   inferAccounts,
-  inferTransactions
+  inferTransactions,
 };

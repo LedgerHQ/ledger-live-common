@@ -14,10 +14,11 @@ export interface CurrencyBridge {
     currency: CryptoCurrency,
     deviceId: string,
     syncConfig: SyncConfig,
-    scheme?: ?DerivationMode
+    scheme?: ?DerivationMode,
   }): Observable<ScanAccountEvent>;
-  preload(): Promise<Object>;
-  hydrate(data: mixed): void;
+  preload(currency: CryptoCurrency): Promise<Object>;
+  hydrate(data: mixed, currency: CryptoCurrency): void;
+  getPreloadStrategy?: (currency: CryptoCurrency) => PreloadStrategy;
 }
 ```
 
@@ -56,24 +57,24 @@ It emits an observable of `ScanAccountEvent`, which at the moment is only one ev
 ```js
 export type ScanAccountEvent = {
   type: "discovered",
-  account: Account
+  account: Account,
 };
 ```
 
 The observable can be unsubscribed at any time.
 
-## `preload` and `hydrate`
+## `preload`, `hydrate`, `getPreloadStrategy`
 
 _Preload some currency data (e.g. tokens, delegators,...) required for live-common feature to correctly work._
 
 ```js
-preload(): Promise<Object>;
+preload(currency: CryptoCurrency): Promise<Object>;
 ```
 
 returns a promise of a serializable object (aka can be `JSON.stringify`ed). It can fail if data was not able to load.
 
 ```js
-hydrate(data: mixed): void;
+hydrate(data: mixed, currency: CryptoCurrency): void;
 ```
 
 takes in parameter the same data that is returned by `preload()` (serialized form) and allows to reinject that preloaded data (typically coming from a cached) in a way that a `preload()` would be a noop that instantly resolved if the data was not "invalidated". The data coming in parameter however must be treated as unsafe (that's why it's `mixed` typed). Implementations must validate all fields and be backward compatible.
@@ -84,6 +85,21 @@ In live-common lifecycle, Preload/Hydrate must have been resolved before doing s
 
 **This allows to implement cache system and typically make Ledger Live resilient to network being down.** The fact it's guaranteed that preload() was done as soon as accounts were loaded makes it possible to have data cached and hydrated without network.
 
+**`getPreloadStrategy` allows to override the way the preloaded data should be handled and kept in memory.** It is not mandatory to be defined.
+It is an object that contains:
+
+- preloadMaxAge (default will be 5 minutes). 0 would disable any cache.
+
+## Behavior expectations
+
+With ledger-live-common >=18.0.0 you can expect that:
+
+- if a cache exists on the user's side, it will first be used to hydrate() at boot. with the data that was preload()-ed in the past.
+- preload() will always get called independently of the cache/hydrate() status. It's up to bridge implementation to "do nothing" if there is nothing to preload.
+- hydrate() is always getting called after a preload()
+- that preload() will always be called before synchronisations and scanAccounts call.
+- if preload() or hydrate() can throw an exception and this is understood as a critical situation that makes any further action (sync, scan account) to fail (with the error returned to user). For instance, network is down.
+
 ## Serialized usage
 
 TO BE DOCUMENTED. usage in Ledger Live Desktop in context of serialization.
@@ -91,6 +107,6 @@ TO BE DOCUMENTED. usage in Ledger Live Desktop in context of serialization.
 ```js
 type ScanAccountEventRaw = {
   type: "discovered",
-  account: AccountRaw
+  account: AccountRaw,
 };
 ```

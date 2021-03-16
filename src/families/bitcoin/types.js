@@ -3,26 +3,70 @@
 import type { BigNumber } from "bignumber.js";
 import type {
   TransactionCommon,
-  TransactionCommonRaw
+  TransactionCommonRaw,
 } from "../../types/transaction";
 import type {
   CoreBigInt,
   CoreAmount,
   CoreDerivationPath,
-  Spec
+  Spec,
 } from "../../libcore/types";
+
+export type BitcoinInput = {
+  address: ?string,
+  value: ?BigNumber,
+  previousTxHash: ?string,
+  previousOutputIndex: number,
+};
+
+export type BitcoinInputRaw = [?string, ?string, ?string, number];
+
+export type BitcoinOutput = {
+  hash: string,
+  outputIndex: number,
+  blockHeight: ?number,
+  address: ?string,
+  path: ?string,
+  value: BigNumber,
+  rbf: boolean,
+};
+
+export type BitcoinOutputRaw = [
+  string,
+  number,
+  ?number,
+  ?string,
+  ?string,
+  string,
+  number // rbf 0/1 for compression
+];
+
+export type BitcoinResources = {
+  utxos: BitcoinOutput[],
+};
+
+export type BitcoinResourcesRaw = {
+  utxos: BitcoinOutputRaw[],
+};
 
 declare class CoreBitcoinLikeInput {
   getPreviousTransaction(): Promise<string>;
+  getPreviousTxHash(): Promise<?string>;
   getPreviousOutputIndex(): Promise<number>;
+  getValue(): Promise<?CoreAmount>;
   getSequence(): Promise<number>;
   getDerivationPath(): Promise<CoreDerivationPath[]>;
   getAddress(): Promise<?string>;
 }
 
 declare class CoreBitcoinLikeOutput {
+  getTransactionHash(): Promise<string>;
+  getOutputIndex(): Promise<number>;
+  getValue(): Promise<CoreAmount>;
+  getBlockHeight(): Promise<?number>;
   getDerivationPath(): Promise<?CoreDerivationPath>;
   getAddress(): Promise<?string>;
+  isReplaceable(): Promise<boolean>;
 }
 
 declare class CoreBitcoinLikeTransaction {
@@ -41,12 +85,15 @@ declare class CoreBitcoinLikeOperation {
 declare class CoreBitcoinLikeTransactionBuilder {
   wipeToAddress(address: string): Promise<void>;
   sendToAddress(amount: CoreAmount, recipient: string): Promise<void>;
+  excludeUtxo(transactionHash: string, outputIndex: number): Promise<void>;
   pickInputs(number, number): Promise<void>;
   setFeesPerByte(feesPerByte: CoreAmount): Promise<void>;
   build(): Promise<CoreBitcoinLikeTransaction>;
 }
 
 declare class CoreBitcoinLikeAccount {
+  getUTXO(from: number, to: number): Promise<CoreBitcoinLikeOutput[]>;
+  getUTXOCount(): Promise<number>;
   buildTransaction(
     isPartial: boolean
   ): Promise<CoreBitcoinLikeTransactionBuilder>;
@@ -66,7 +113,7 @@ export type CoreStatics = {
   BitcoinLikeOperation: Class<CoreBitcoinLikeOperation>,
   BitcoinLikeOutput: Class<CoreBitcoinLikeOutput>,
   BitcoinLikeTransaction: Class<CoreBitcoinLikeTransaction>,
-  BitcoinLikeTransactionBuilder: Class<CoreBitcoinLikeTransactionBuilder>
+  BitcoinLikeTransactionBuilder: Class<CoreBitcoinLikeTransactionBuilder>,
 };
 
 export type {
@@ -76,142 +123,174 @@ export type {
   CoreBitcoinLikeOperation,
   CoreBitcoinLikeOutput,
   CoreBitcoinLikeTransaction,
-  CoreBitcoinLikeTransactionBuilder
+  CoreBitcoinLikeTransactionBuilder,
 };
 
 export type CoreAccountSpecifics = {
-  asBitcoinLikeAccount(): Promise<CoreBitcoinLikeAccount>
+  asBitcoinLikeAccount(): Promise<CoreBitcoinLikeAccount>,
 };
 
 export type CoreOperationSpecifics = {
-  asBitcoinLikeOperation(): Promise<CoreBitcoinLikeOperation>
+  asBitcoinLikeOperation(): Promise<CoreBitcoinLikeOperation>,
 };
 
 export type CoreCurrencySpecifics = {
-  getBitcoinLikeNetworkParameters(): Promise<CoreBitcoinLikeNetworkParameters>
+  getBitcoinLikeNetworkParameters(): Promise<CoreBitcoinLikeNetworkParameters>,
 };
 
 export type FeeItem = {
   key: string,
   speed: string,
-  feePerByte: BigNumber
+  feePerByte: BigNumber,
 };
 
 export type FeeItems = {
   items: FeeItem[],
-  defaultFeePerByte: BigNumber
+  defaultFeePerByte: BigNumber,
 };
 
 export type FeeItemRaw = {
   key: string,
   speed: string,
-  feePerByte: string
+  feePerByte: string,
 };
 
 export type FeeItemsRaw = {
   items: FeeItemRaw[],
-  defaultFeePerByte: string
+  defaultFeePerByte: string,
 };
 
 export type NetworkInfo = {|
   family: "bitcoin",
-  feeItems: FeeItems
+  feeItems: FeeItems,
 |};
 
 export type NetworkInfoRaw = {|
   family: "bitcoin",
-  feeItems: FeeItemsRaw
+  feeItems: FeeItemsRaw,
 |};
+
+export const bitcoinPickingStrategy = {
+  DEEP_OUTPUTS_FIRST: 0,
+  OPTIMIZE_SIZE: 1,
+  MERGE_OUTPUTS: 2,
+};
+
+export type BitcoinPickingStrategy = $Values<typeof bitcoinPickingStrategy>;
+
+// FIXME the UtxoStrategy level should be flattened back in Transaction
+export type UtxoStrategy = {
+  strategy: BitcoinPickingStrategy,
+  pickUnconfirmedRBF: boolean,
+  excludeUTXOs: Array<{
+    hash: string,
+    outputIndex: number,
+  }>,
+};
 
 export type Transaction = {|
   ...TransactionCommon,
   family: "bitcoin",
+  utxoStrategy: UtxoStrategy,
+  rbf: boolean,
   feePerByte: ?BigNumber,
-  networkInfo: ?NetworkInfo
+  networkInfo: ?NetworkInfo,
 |};
 
 export type TransactionRaw = {|
   ...TransactionCommonRaw,
   family: "bitcoin",
+  utxoStrategy: UtxoStrategy,
+  rbf: boolean,
   feePerByte: ?string,
-  networkInfo: ?NetworkInfoRaw
+  networkInfo: ?NetworkInfoRaw,
 |};
 
 export const reflect = (declare: (string, Spec) => void) => {
   declare("BitcoinLikeInput", {
     methods: {
       getPreviousTransaction: {
-        returns: "hex"
+        returns: "hex",
       },
+      getPreviousTxHash: {},
+      getValue: { returns: "Amount" },
       getPreviousOutputIndex: {},
       getSequence: {},
       getDerivationPath: { returns: ["DerivationPath"] },
-      getAddress: {}
-    }
+      getAddress: {},
+    },
   });
 
   declare("BitcoinLikeOutput", {
     methods: {
+      getTransactionHash: {},
+      getOutputIndex: {},
+      getValue: { returns: "Amount" },
+      getBlockHeight: {},
       getDerivationPath: {
-        returns: "DerivationPath"
+        returns: "DerivationPath",
       },
-      getAddress: {}
-    }
+      getAddress: {},
+      isReplaceable: {},
+    },
   });
 
   declare("BitcoinLikeTransaction", {
     methods: {
       getHash: {},
       getFees: {
-        returns: "Amount"
+        returns: "Amount",
       },
       getInputs: {
-        returns: ["BitcoinLikeInput"]
+        returns: ["BitcoinLikeInput"],
       },
       getOutputs: {
-        returns: ["BitcoinLikeOutput"]
+        returns: ["BitcoinLikeOutput"],
       },
       serializeOutputs: {
-        returns: "hex"
+        returns: "hex",
       },
-      getTimestamp: {}
-    }
+      getTimestamp: {},
+    },
   });
 
   declare("BitcoinLikeOperation", {
     methods: {
       getTransaction: {
-        returns: "BitcoinLikeTransaction"
-      }
-    }
+        returns: "BitcoinLikeTransaction",
+      },
+    },
   });
 
   declare("BitcoinLikeTransactionBuilder", {
     methods: {
       wipeToAddress: {},
       sendToAddress: {
-        params: ["Amount"]
+        params: ["Amount"],
       },
+      excludeUtxo: {},
       pickInputs: {},
       setFeesPerByte: {
-        params: ["Amount"]
+        params: ["Amount"],
       },
-      build: { returns: "BitcoinLikeTransaction" }
-    }
+      build: { returns: "BitcoinLikeTransaction" },
+    },
   });
 
   declare("BitcoinLikeAccount", {
     methods: {
+      getUTXO: { returns: ["BitcoinLikeOutput"] },
+      getUTXOCount: {},
       buildTransaction: {
-        returns: "BitcoinLikeTransactionBuilder"
+        returns: "BitcoinLikeTransactionBuilder",
       },
       broadcastRawTransaction: {
-        params: ["hex"]
+        params: ["hex"],
       },
       getFees: {
-        returns: ["BigInt"]
-      }
-    }
+        returns: ["BigInt"],
+      },
+    },
   });
 
   declare("BitcoinLikeNetworkParameters", {
@@ -219,24 +298,24 @@ export const reflect = (declare: (string, Spec) => void) => {
     methods: {
       getSigHash: {
         returns: "hex",
-        njsField: "SigHash"
+        njsField: "SigHash",
       },
       getUsesTimestampedTransaction: {
-        njsField: "UsesTimestampedTransaction"
-      }
-    }
+        njsField: "UsesTimestampedTransaction",
+      },
+    },
   });
 
   return {
     OperationMethods: {
       asBitcoinLikeOperation: {
-        returns: "BitcoinLikeOperation"
-      }
+        returns: "BitcoinLikeOperation",
+      },
     },
     AccountMethods: {
       asBitcoinLikeAccount: {
-        returns: "BitcoinLikeAccount"
-      }
-    }
+        returns: "BitcoinLikeAccount",
+      },
+    },
   };
 };

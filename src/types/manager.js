@@ -1,5 +1,6 @@
 // @flow
 import type { CryptoCurrency } from "./currencies";
+import type { DeviceModelId } from "@ledgerhq/devices";
 
 // FIXME we need to clearly differentiate what is API types and what is our inner own type
 
@@ -12,19 +13,25 @@ export type LedgerScriptParams = {
   deleteKey?: string,
   targetId?: string | number,
   hash: string,
-  perso: string
+  perso: string,
 };
 
-export type DeviceInfo = {
+export type DeviceInfo = {|
   mcuVersion: string, // the raw mcu version
   version: string, // the version part, without the -osu
   majMin: string, // the x.y part of the x.y.z-v version
   targetId: string | number, // a technical id
   isBootloader: boolean,
   isOSU: boolean,
-  providerId: number,
+  providerName: ?string,
   managerAllowed: boolean,
-  pinValidated: boolean
+  pinValidated: boolean,
+|};
+
+export type DeviceModelInfo = {
+  modelId: DeviceModelId,
+  deviceInfo: DeviceInfo,
+  apps: Array<{ name: string, version: string }>,
 };
 
 export type DeviceVersion = {
@@ -40,7 +47,7 @@ export type DeviceVersion = {
   osu_versions: Array<Id>,
   application_versions: Array<Id>,
   date_creation: string,
-  date_last_modified: string
+  date_last_modified: string,
 };
 
 export type McuVersion = {
@@ -53,14 +60,14 @@ export type McuVersion = {
   device_versions: Array<Id>,
   se_firmware_final_versions: Array<Id>,
   date_creation: string,
-  date_last_modified: string
+  date_last_modified: string,
 };
 
 export type FirmwareInfo = {
   targetId: Id,
   seVersion: string,
   flags: string,
-  mcuVersion: string
+  mcuVersion: string,
 };
 
 type BaseFirmware = {
@@ -76,12 +83,12 @@ type BaseFirmware = {
   date_creation: string,
   date_last_modified: string,
   device_versions: Array<Id>,
-  providers: Array<Id>
+  providers: Array<Id>,
 };
 
 export type OsuFirmware = BaseFirmware & {
   next_se_firmware_final_version: Id,
-  previous_se_firmware_final_version: Array<Id>
+  previous_se_firmware_final_version: Array<Id>,
 };
 
 export type FinalFirmware = BaseFirmware & {
@@ -90,13 +97,13 @@ export type FinalFirmware = BaseFirmware & {
   osu_versions: Array<OsuFirmware>,
   mcu_versions: Array<Id>,
   application_versions: Array<Id>,
-  bytes?: number
+  bytes?: number,
 };
 
 export type FirmwareUpdateContext = {
   osu: OsuFirmware,
   final: FinalFirmware,
-  shouldFlashMCU: boolean
+  shouldFlashMCU: boolean,
 };
 
 export type ApplicationVersion = {
@@ -123,7 +130,7 @@ export type ApplicationVersion = {
   bytes: ?number,
   warning: ?string,
   // DEPRECATED because not serializable
-  currency?: CryptoCurrency
+  currency?: CryptoCurrency,
 };
 
 export type Application = {
@@ -141,7 +148,7 @@ export type Application = {
   supportURL: ?string,
   contactURL: ?string,
   sourceURL: ?string,
-  compatibleWalletsJSON: ?string
+  compatibleWalletsJSON: ?string,
 };
 
 // App is higher level on top of Application and ApplicationVersion
@@ -171,7 +178,7 @@ export type App = {
   warning: ?string,
   // -1 if coin not in marketcap, otherwise index in the tickers list of https://countervalues.api.live.ledger.com/tickers
   indexOfMarketCap: number,
-  isDevTools: boolean
+  isDevTools: boolean,
 };
 
 export type Category = {
@@ -181,7 +188,7 @@ export type Category = {
   providers: Array<Id>,
   applications: Array<Id>,
   date_creation: string,
-  date_last_modified: string
+  date_last_modified: string,
 };
 
 export type SocketEvent =
@@ -196,7 +203,7 @@ export type SocketEvent =
       nonce: number,
       apdu: Buffer,
       data: Buffer,
-      status: number
+      status: number,
     }
   | { type: "opened" }
   | { type: "closed" };

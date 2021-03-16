@@ -4,12 +4,9 @@ import { listen } from "@ledgerhq/logs";
 import "./setup";
 import { setEnvUnsafe } from "../../env";
 import implementLibcore from "../../libcore/platforms/nodejs";
-import "../../load/tokens/ethereum/erc20";
-
-jest.setTimeout(180000);
 
 let setupCalled = null;
-export const setup = testId => {
+export const setup = (testId) => {
   if (setupCalled) {
     throw new Error(
       "setup(" + testId + "): was already called with " + setupCalled
@@ -18,7 +15,7 @@ export const setup = testId => {
   setupCalled = testId;
   implementLibcore({
     lib: () => require("@ledgerhq/ledger-core"), // eslint-disable-line global-require
-    dbPath: "./libcoredb/" + testId
+    dbPath: "./libcoredb/" + testId,
   });
 };
 
@@ -28,7 +25,7 @@ const { VERBOSE, VERBOSE_FILE } = process.env;
 
 const logger = winston.createLogger({
   level: "debug",
-  transports: []
+  transports: [],
 });
 
 const { format } = winston;
@@ -41,7 +38,7 @@ if (VERBOSE_FILE) {
     new winston.transports.File({
       format: winstonFormat,
       filename: VERBOSE_FILE,
-      level: "debug"
+      level: "debug",
     })
   );
 }
@@ -49,7 +46,7 @@ if (VERBOSE_FILE) {
 logger.add(
   new winston.transports.Console({
     format: winstonFormat,
-    silent: !VERBOSE
+    silent: !VERBOSE,
   })
 );
 
@@ -58,6 +55,6 @@ listen(({ id, date, type, message, ...rest }) => {
   logger.log("debug", {
     message: type + (message ? ": " + message : ""),
     // $FlowFixMe
-    ...rest
+    ...rest,
   });
 });

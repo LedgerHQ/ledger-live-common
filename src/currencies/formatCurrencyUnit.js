@@ -1,7 +1,7 @@
 // @flow
 import { BigNumber } from "bignumber.js";
 import type { Unit } from "../types";
-import { getFragPositions } from "./localeUtility";
+import { prefixFormat, suffixFormat } from "./localeUtility";
 import { toLocaleString } from "./BigNumberToLocaleString";
 
 const nonBreakableSpace = " ";
@@ -25,7 +25,8 @@ const defaultFormatOptions = {
   // NB even if you set 3, USD 4.50 will be display as USD 4.50 , not 4.5000 (extra zeros are not displayed)
   subMagnitude: 0,
   // discrete mode will hide amounts
-  discreet: false
+  discreet: false,
+  joinFragmentsSeparator: "",
 };
 
 type FormatFragment =
@@ -37,7 +38,7 @@ type FormatFragment =
 export function formatCurrencyUnitFragment(
   unit: Unit,
   value: BigNumber,
-  options?: $Shape<typeof defaultFormatOptions>
+  _options?: $Shape<typeof defaultFormatOptions>
 ): FormatFragment[] {
   if (!BigNumber.isBigNumber(value)) {
     console.warn("formatCurrencyUnit called with value=", value);
@@ -51,6 +52,13 @@ export function formatCurrencyUnitFragment(
     console.warn("formatCurrencyUnit called with infinite value=", value);
     return [];
   }
+  const options = {};
+  for (let k in _options) {
+    // sanitize the undefined value
+    if (_options[k] !== undefined) {
+      options[k] = _options[k];
+    }
+  }
   const {
     showCode,
     alwaysShowSign,
@@ -59,13 +67,14 @@ export function formatCurrencyUnitFragment(
     disableRounding,
     useGrouping,
     subMagnitude,
-    discreet
-  } = {
-    ...defaultFormatOptions,
+    discreet,
+  } =
     // $FlowFixMe
-    ...unit,
-    ...options
-  };
+    {
+      ...defaultFormatOptions,
+      ...unit,
+      ...options,
+    };
   const { magnitude, code } = unit;
   const floatValue = value.div(BigNumber(10).pow(magnitude));
   const floatValueAbs = floatValue.abs();
@@ -98,15 +107,15 @@ export function formatCurrencyUnitFragment(
       : toLocaleString(floatValueAbs, locale, {
           maximumFractionDigits,
           minimumFractionDigits,
-          useGrouping
+          useGrouping,
         }),
-    separator: nonBreakableSpace
+    separator: nonBreakableSpace,
   };
 
-  const frags = [];
+  const frags: FormatFragment[] = [];
   let nonSepIndex = -1;
   let sepConsumed = true;
-  getFragPositions(locale).forEach(kind => {
+  (unit.prefixCode ? prefixFormat : suffixFormat).forEach((kind) => {
     const v = fragValueByKind[kind];
     if (!v) return;
     const isSep = kind === "separator";
@@ -126,7 +135,10 @@ export function formatCurrencyUnit(
   value: BigNumber,
   options?: $Shape<typeof defaultFormatOptions>
 ): string {
+  const joinFragmentsSeparator =
+    (options && options.joinFragmentsSeparator) ||
+    defaultFormatOptions.joinFragmentsSeparator;
   return formatCurrencyUnitFragment(unit, value, options)
-    .map(f => f.value)
-    .join("");
+    .map((f) => f.value)
+    .join(joinFragmentsSeparator);
 }

@@ -1,4 +1,5 @@
 // @flow
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { BigNumber } from "bignumber.js";
 import {
   NotEnoughSpendableBalance,
@@ -6,18 +7,22 @@ import {
   InvalidAddressBecauseDestinationIsAlsoSource,
   InvalidAddress,
   RecipientRequired,
-  FeeTooHigh
+  FeeTooHigh,
 } from "@ledgerhq/errors";
 import type { Transaction } from "../types";
 import type { Account, AccountBridge, CurrencyBridge } from "../../../types";
-import { getCryptoCurrencyById } from "../../../data/cryptocurrencies";
+import { getMainAccount } from "../../../account";
 import {
   scanAccounts,
   signOperation,
   broadcast,
   sync,
-  isInvalidRecipient
+  isInvalidRecipient,
 } from "../../../bridge/mockHelpers";
+import { formatCurrencyUnit } from "../../../currencies";
+import { makeAccountBridgeReceive } from "../../../bridge/mockHelpers";
+
+const receive = makeAccountBridgeReceive();
 
 const notCreatedAddresses = [];
 
@@ -32,13 +37,23 @@ const createTransaction = (): Transaction => ({
   amount: BigNumber(0),
   recipient: "",
   fee: BigNumber(10),
-  feeCustomUnit: getCryptoCurrencyById("ethereum").units[1],
+  feeCustomUnit: getCryptoCurrencyById("ripple").units[1],
   tag: undefined,
   networkInfo: null,
-  useAllAmount: false
+  useAllAmount: false,
 });
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
+
+const estimateMaxSpendable = ({ account, parentAccount, transaction }) => {
+  const mainAccount = getMainAccount(account, parentAccount);
+  const estimatedFees = transaction
+    ? defaultGetFees(mainAccount, transaction)
+    : BigNumber(10);
+  return Promise.resolve(
+    BigNumber.max(0, account.balance.minus(estimatedFees))
+  );
+};
 
 const getTransactionStatus = (a, t) => {
   const minimalBaseAmount = 10 ** a.currency.units[0].magnitude * 20;
@@ -62,12 +77,32 @@ const getTransactionStatus = (a, t) => {
   }
 
   if (totalSpent.gt(a.balance)) {
-    errors.amount = new NotEnoughSpendableBalance();
+    errors.amount = new NotEnoughSpendableBalance(null, {
+      minimumAmount: formatCurrencyUnit(
+        a.currency.units[0],
+        BigNumber(minimalBaseAmount),
+        {
+          disableRounding: true,
+          useGrouping: false,
+          showCode: true,
+        }
+      ),
+    });
   } else if (
     minimalBaseAmount &&
     a.balance.minus(totalSpent).lt(minimalBaseAmount)
   ) {
-    errors.amount = new NotEnoughSpendableBalance();
+    errors.amount = new NotEnoughSpendableBalance(null, {
+      minimumAmount: formatCurrencyUnit(
+        a.currency.units[0],
+        BigNumber(minimalBaseAmount),
+        {
+          disableRounding: true,
+          useGrouping: false,
+          showCode: true,
+        }
+      ),
+    });
   } else if (
     minimalBaseAmount &&
     (t.recipient.includes("new") ||
@@ -76,7 +111,7 @@ const getTransactionStatus = (a, t) => {
   ) {
     // mimic XRP base minimal for new addresses
     errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated(null, {
-      minimalAmount: `XRP Minimum reserve`
+      minimalAmount: `XRP Minimum reserve`,
     });
   }
 
@@ -93,7 +128,7 @@ const getTransactionStatus = (a, t) => {
     warnings,
     estimatedFees,
     amount,
-    totalSpent
+    totalSpent,
   });
 };
 
@@ -105,8 +140,8 @@ const prepareTransaction = async (a, t) => {
       networkInfo: {
         family: "ripple",
         serverFee: BigNumber(10),
-        baseReserve: BigNumber(20)
-      }
+        baseReserve: BigNumber(20),
+      },
     };
   }
   return t;
@@ -116,16 +151,18 @@ const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   updateTransaction,
   getTransactionStatus,
+  estimateMaxSpendable,
   prepareTransaction,
   sync,
+  receive,
   signOperation,
-  broadcast
+  broadcast,
 };
 
 const currencyBridge: CurrencyBridge = {
   preload: () => Promise.resolve(),
   hydrate: () => {},
-  scanAccounts
+  scanAccounts,
 };
 
 export default { currencyBridge, accountBridge };

@@ -11,24 +11,27 @@ import {
   AmountRequired,
   RecommendUndelegation,
   RecommendSubAccountsToEmpty,
-  NotEnoughBalanceToDelegate
+  NotEnoughBalanceToDelegate,
 } from "@ledgerhq/errors";
 import type { Transaction } from "../types";
 import type { AccountBridge, CurrencyBridge } from "../../../types";
-import { isAccountBalanceSignificant } from "../../../account";
+import { isAccountBalanceSignificant, getMainAccount } from "../../../account";
 import {
   scanAccounts,
   signOperation,
   broadcast,
   sync,
-  isInvalidRecipient
+  isInvalidRecipient,
 } from "../../../bridge/mockHelpers";
 import {
   // fetchAllBakers,
   // hydrateBakers,
   // asBaker,
-  isAccountDelegating
+  isAccountDelegating,
 } from "../bakers";
+import { makeAccountBridgeReceive } from "../../../bridge/mockHelpers";
+
+const receive = makeAccountBridgeReceive();
 
 const estimateGasLimitAndStorage = () => {
   const storage = BigNumber(257);
@@ -40,6 +43,16 @@ const estimateGasLimitAndStorage = () => {
 const defaultGetFees = (a, t: *) =>
   (t.fees || BigNumber(0)).times(t.gasLimit || BigNumber(0));
 
+const estimateMaxSpendable = ({ account, parentAccount, transaction }) => {
+  const mainAccount = getMainAccount(account, parentAccount);
+  const estimatedFees = transaction
+    ? defaultGetFees(mainAccount, transaction)
+    : BigNumber(10);
+  return Promise.resolve(
+    BigNumber.max(0, account.balance.minus(estimatedFees))
+  );
+};
+
 const createTransaction = (): Transaction => ({
   family: "tezos",
   mode: "send",
@@ -49,7 +62,7 @@ const createTransaction = (): Transaction => ({
   storageLimit: null,
   recipient: "",
   networkInfo: null,
-  useAllAmount: false
+  useAllAmount: false,
 });
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
@@ -59,7 +72,7 @@ const getTransactionStatus = (a, t) => {
   const warnings = {};
   const subAcc = !t.subAccountId
     ? null
-    : a.subAccounts && a.subAccounts.find(ta => ta.id === t.subAccountId);
+    : a.subAccounts && a.subAccounts.find((ta) => ta.id === t.subAccountId);
 
   const account = subAcc || a;
 
@@ -153,7 +166,7 @@ const getTransactionStatus = (a, t) => {
     warnings,
     estimatedFees,
     amount,
-    totalSpent
+    totalSpent,
   });
 };
 
@@ -192,16 +205,18 @@ const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   updateTransaction,
   getTransactionStatus,
+  estimateMaxSpendable,
   prepareTransaction,
   sync,
+  receive,
   signOperation,
-  broadcast
+  broadcast,
 };
 
 const currencyBridge: CurrencyBridge = {
   preload: () => Promise.resolve(),
   hydrate: () => {},
-  scanAccounts
+  scanAccounts,
 };
 
 export default { currencyBridge, accountBridge };

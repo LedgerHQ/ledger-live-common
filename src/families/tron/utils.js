@@ -2,7 +2,13 @@
 import bs58check from "bs58check";
 import { BigNumber } from "bignumber.js";
 import get from "lodash/get";
-import type { Transaction, TronOperationMode, TrongridTxInfo } from "./types";
+import { log } from "@ledgerhq/logs";
+import type {
+  Transaction,
+  TronOperationMode,
+  TrongridTxInfo,
+  TrongridExtraTxInfo,
+} from "./types";
 import type { Account, Operation, OperationType } from "../../types";
 
 export const decode58Check = (base58: string) =>
@@ -31,34 +37,37 @@ const parentTx = [
   "UnfreezeBalanceContract",
   "VoteWitnessContract",
   "WithdrawBalanceContract",
-  "ExchangeTransactionContract"
+  "ExchangeTransactionContract",
 ];
 
 export const isParentTx = (tx: TrongridTxInfo): boolean =>
   parentTx.includes(tx.type);
 
 // This is an estimation, there is no endpoint to calculate the real size of a block before broadcasting it.
-export const getEstimatedBlockSize = (a: Account, t: Transaction): number => {
+export const getEstimatedBlockSize = (
+  a: Account,
+  t: Transaction
+): BigNumber => {
   switch (t.mode) {
     case "send": {
       const subAccount =
         t.subAccountId && a.subAccounts
-          ? a.subAccounts.find(sa => sa.id === t.subAccountId)
+          ? a.subAccounts.find((sa) => sa.id === t.subAccountId)
           : null;
       if (subAccount && subAccount.type === "TokenAccount") {
-        if (subAccount.token.tokenType === "trc10") return 285;
-        if (subAccount.token.tokenType === "trc20") return 350;
+        if (subAccount.token.tokenType === "trc10") return BigNumber(285);
+        if (subAccount.token.tokenType === "trc20") return BigNumber(350);
       }
-      return 270;
+      return BigNumber(270);
     }
     case "freeze":
     case "unfreeze":
     case "claimReward":
-      return 260;
+      return BigNumber(260);
     case "vote":
-      return 290 + t.votes.length * 19;
+      return BigNumber(290 + t.votes.length * 19);
     default:
-      return 0;
+      return BigNumber(0);
   }
 };
 
@@ -105,100 +114,154 @@ const getOperationType = (
   }
 };
 
-export const formatTrongridTxResponse = (
-  tx: Object,
-  isInTrc20: boolean = false
-): TrongridTxInfo => {
+export const formatTrongridTrc20TxResponse = (tx: Object): ?TrongridTxInfo => {
   try {
-    if (isInTrc20) {
-      const {
-        from,
-        to,
-        block_timestamp,
-        detail,
-        value,
-        transaction_id,
-        token_info
-      } = tx;
-      const type = "TriggerSmartContract";
-      const txID = transaction_id;
-      const date = new Date(block_timestamp);
-      const tokenId = get(token_info, "address", undefined);
-      const formattedValue = value ? BigNumber(value) : BigNumber(0);
-      const fee = detail && detail.fee ? BigNumber(detail.fee) : undefined;
-
-      return {
-        txID,
-        date,
-        type,
-        tokenId,
-        from,
-        to,
-        value: formattedValue,
-        fee
-      };
-    } else {
-      const { txID, block_timestamp, detail } = tx;
-
-      const date = new Date(block_timestamp);
-
-      const type = get(tx, "raw_data.contract[0].type", "");
-
-      const {
-        amount,
-        asset_name,
-        owner_address,
-        to_address,
-        resource_type,
-        contract_address,
-        quant
-      } = get(tx, "raw_data.contract[0].parameter.value", {});
-
-      const tokenId =
-        type === "TransferAssetContract"
-          ? asset_name
-          : type === "TriggerSmartContract" && contract_address
-          ? encode58Check(contract_address)
-          : undefined;
-
-      const from = encode58Check(owner_address);
-
-      const to = to_address ? encode58Check(to_address) : undefined;
-
-      const resource = resource_type;
-
-      const getValue = (): BigNumber => {
-        switch (type) {
-          case "WithdrawBalanceContract":
-            return BigNumber(detail.withdraw_amount);
-          case "ExchangeTransactionContract":
-            return BigNumber(quant);
-          default:
-            return amount ? BigNumber(amount) : BigNumber(0);
-        }
-      };
-
-      const value = getValue();
-
-      const fee = detail && detail.fee ? BigNumber(detail.fee) : undefined;
-
-      return {
-        txID,
-        date,
-        type,
-        tokenId,
-        from,
-        to,
-        value,
-        fee,
-        resource
-      };
-    }
-  } catch (e) {
-    // Should not happen unless Trongrid change response models.
-    throw new Error(
-      "unexpected error occured when formatting tron transaction"
+    const {
+      from,
+      to,
+      block_timestamp,
+      detail,
+      value,
+      transaction_id,
+      token_info,
+    } = tx;
+    const type = "TriggerSmartContract";
+    const txID = transaction_id;
+    const date = new Date(block_timestamp);
+    const tokenId = get(token_info, "address", undefined);
+    const formattedValue = value ? BigNumber(value) : BigNumber(0);
+    const fee = get(
+      detail,
+      "ret[0].fee",
+      detail && detail.fee ? detail.fee : undefined
     );
+    const blockHeight = detail ? detail.blockNumber : undefined;
+
+    return {
+      txID,
+      date,
+      type,
+      tokenId,
+      from,
+      to,
+      blockHeight,
+      value: formattedValue,
+      fee: BigNumber(fee || 0),
+      hasFailed: false, // trc20 txs are succeeded if returned by trongrid,
+    };
+  } catch (e) {
+    log("tron-error", "could not parse transaction", tx);
+    return undefined;
+  }
+};
+
+export const formatTrongridTxResponse = (tx: Object): ?TrongridTxInfo => {
+  try {
+    const {
+      txID,
+      block_timestamp,
+      detail,
+      blockNumber,
+      unfreeze_amount,
+      withdraw_amount,
+    } = tx;
+
+    const date = new Date(block_timestamp);
+
+    const type = get(tx, "raw_data.contract[0].type", "");
+
+    const {
+      amount,
+      asset_name,
+      owner_address,
+      to_address,
+      contract_address,
+      quant,
+      frozen_balance,
+      votes,
+    } = get(tx, "raw_data.contract[0].parameter.value", {});
+
+    const hasFailed = get(tx, "ret[0].contractRet", "SUCCESS") !== "SUCCESS";
+
+    const tokenId =
+      type === "TransferAssetContract"
+        ? asset_name
+        : type === "TriggerSmartContract" && contract_address
+        ? encode58Check(contract_address)
+        : undefined;
+
+    const from = encode58Check(owner_address);
+
+    const to = to_address ? encode58Check(to_address) : undefined;
+
+    const getValue = (): BigNumber => {
+      switch (type) {
+        case "WithdrawBalanceContract":
+          return BigNumber(withdraw_amount || detail.withdraw_amount || 0);
+        case "ExchangeTransactionContract":
+          return BigNumber(quant || 0);
+        default:
+          return amount ? BigNumber(amount) : BigNumber(0);
+      }
+    };
+
+    const value = getValue();
+
+    const fee = get(
+      tx,
+      "ret[0].fee",
+      detail && detail.fee ? detail.fee : undefined
+    );
+
+    const blockHeight = blockNumber || detail?.blockNumber;
+
+    const txInfo: TrongridTxInfo = {
+      txID,
+      date,
+      type,
+      tokenId,
+      from,
+      to,
+      value: !isNaN(value) ? value : BigNumber(0),
+      fee: BigNumber(fee || 0),
+      blockHeight,
+      hasFailed,
+    };
+
+    const getExtra = (): ?TrongridExtraTxInfo => {
+      switch (type) {
+        case "FreezeBalanceContract":
+          return {
+            frozenAmount: BigNumber(frozen_balance),
+          };
+        case "UnfreezeBalanceContract":
+          return {
+            unfreezeAmount: BigNumber(
+              unfreeze_amount || detail.unfreeze_amount
+            ),
+          };
+        case "VoteWitnessContract":
+          return {
+            votes: votes.map((v) => ({
+              address: encode58Check(v.vote_address),
+              voteCount: v.vote_count,
+            })),
+          };
+        default:
+          return undefined;
+      }
+    };
+
+    const extra = getExtra();
+
+    if (extra) {
+      txInfo.extra = extra;
+    }
+
+    return txInfo;
+  } catch (e) {
+    log("tron-error", "could not parse transaction", tx);
+    return undefined;
   }
 };
 
@@ -214,7 +277,10 @@ export const txInfoToOperation = (
     to,
     type,
     value = BigNumber(0),
-    fee = BigNumber(0)
+    fee = BigNumber(0),
+    blockHeight,
+    extra = {},
+    hasFailed,
   } = tx;
   const hash = txID;
 
@@ -230,13 +296,14 @@ export const txInfoToOperation = (
           ? value.plus(fee)
           : value, // fee is not charged in TRC tokens
       fee: fee,
-      blockHeight: 0,
+      blockHeight,
       blockHash: null,
       accountId: id,
       senders: [from],
       recipients: to ? [to] : [],
       date,
-      extra: {}
+      extra,
+      hasFailed,
     };
   }
 

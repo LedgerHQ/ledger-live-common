@@ -4,7 +4,7 @@ exports[`encode/decode 1`] = `
 Object {
   "accounts": Array [
     Object {
-      "balance": "15710290533550751349",
+      "balance": "12121280662072834414",
       "currencyId": "ethereum",
       "derivationMode": "",
       "freshAddress": "0x8C5FE6AF52E79EC4361B7A12B53356EF5D37C765",
@@ -28,7 +28,7 @@ Object {
       "currencyId": "dogecoin",
       "derivationMode": "",
       "freshAddress": "1CWNKLfcukxxXRNRK1DpYwPA6Hb1h",
-      "id": "mock:1:dogecoin:export_2:",
+      "id": "mock:0:dogecoin:export_2:",
       "index": 1,
       "name": "s9dZEiOrwfEPOXbKgNKq88aQZ",
       "seedIdentifier": "mock",
@@ -39,6 +39,10 @@ Object {
     "exporterVersion": "0.0.0",
   },
   "settings": Object {
+    "blacklistedTokenIds": Array [
+      "tokenid1",
+      "tokenid2",
+    ],
     "counterValue": "USD",
     "currenciesSettings": Object {
       "bitcoin": Object {

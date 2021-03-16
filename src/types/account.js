@@ -4,34 +4,61 @@ import type { BigNumber } from "bignumber.js";
 import type { CryptoCurrency, TokenCurrency, Unit } from "./currencies";
 import type { OperationRaw, Operation } from "./operation";
 import type { DerivationMode } from "../derivation";
+import type {
+  BitcoinResources,
+  BitcoinResourcesRaw,
+} from "../families/bitcoin/types";
 import type { TronResources, TronResourcesRaw } from "../families/tron/types";
+import type {
+  CosmosResources,
+  CosmosResourcesRaw,
+} from "../families/cosmos/types";
+import type {
+  AlgorandResources,
+  AlgorandResourcesRaw,
+} from "../families/algorand/types";
+import type {
+  PolkadotResources,
+  PolkadotResourcesRaw,
+} from "../families/polkadot/types";
 import type {
   BalanceHistory,
   BalanceHistoryRaw,
-  PortfolioRange
+  PortfolioRange,
 } from "./portfolio";
+import type { SwapOperation, SwapOperationRaw } from "../exchange/swap/types";
 
 export type BalanceHistoryMap = {
-  [_: PortfolioRange]: BalanceHistory
+  [_: PortfolioRange]: BalanceHistory,
 };
 
 export type BalanceHistoryRawMap = {
-  [_: PortfolioRange]: BalanceHistoryRaw
+  [_: PortfolioRange]: BalanceHistoryRaw,
 };
 
 // A token belongs to an Account and share the parent account address
 export type TokenAccount = {
   type: "TokenAccount",
   id: string,
-  // id of the parent account this token accuont belongs to
+  // id of the parent account this token account belongs to
   parentId: string,
   token: TokenCurrency,
   balance: BigNumber,
+  spendableBalance: BigNumber,
+  // in case of compound, this is the associated balance for the associated ctoken
+  compoundBalance?: BigNumber,
+  creationDate: Date,
   operationsCount: number,
   operations: Operation[],
   pendingOperations: Operation[],
   starred: boolean,
-  balanceHistory?: BalanceHistoryMap
+  balanceHistory?: BalanceHistoryMap,
+  // Swap operations linked to this account
+  swapHistory: SwapOperation[],
+  approvals?: Array<{
+    sender: string,
+    value: string,
+  }>,
 };
 
 // A child account belongs to an Account but has its own address
@@ -40,20 +67,23 @@ export type ChildAccount = {
   id: string,
   name: string,
   starred: boolean,
-  // id of the parent account this token accuont belongs to
+  // id of the parent account this token account belongs to
   parentId: string,
   currency: CryptoCurrency,
   address: string,
   balance: BigNumber,
+  creationDate: Date,
   operationsCount: number,
   operations: Operation[],
   pendingOperations: Operation[],
-  balanceHistory?: BalanceHistoryMap
+  balanceHistory?: BalanceHistoryMap,
+  // Swap operations linked to this account
+  swapHistory: SwapOperation[],
 };
 
 export type Address = {|
   address: string,
-  derivationPath: string
+  derivationPath: string,
 |};
 
 export type Account = {
@@ -76,7 +106,7 @@ export type Account = {
   // the special value of '' means it's bip44 with purpose 44.
   derivationMode: DerivationMode,
 
-  // the iterated number to derivate the account in a given derivationMode config
+  // the iterated number to derive the account in a given derivationMode config
   // in context of bip44, it would be the account field of bip44 ( m/purpose'/cointype'/account' )
   index: number,
 
@@ -99,11 +129,18 @@ export type Account = {
   // starred
   starred: boolean,
 
+  // says if the account essentially "exists". an account has been used in the past, but for some reason the blockchain finds it empty (no ops, no balance,..)
+  used: boolean,
+
   // account balance in satoshi
   balance: BigNumber,
 
   // part of the balance that can effectively be spent
   spendableBalance: BigNumber,
+
+  // date the account started "existing", essentially the date of the older tx received/done of this account
+  // It is equal to Date.now() for EMPTY accounts because empty account don't really "exists"
+  creationDate: Date,
 
   // the last block height currently synchronized
   blockHeight: number,
@@ -157,7 +194,17 @@ export type Account = {
   balanceHistory?: BalanceHistoryMap,
 
   // On some blockchain, an account can have resources (gained, delegated, ...)
-  tronResources?: TronResources
+  bitcoinResources?: BitcoinResources,
+  tronResources?: TronResources,
+  cosmosResources?: CosmosResources,
+  algorandResources?: AlgorandResources,
+  polkadotResources?: PolkadotResources,
+
+  // Swap operations linked to this account
+  swapHistory: SwapOperation[],
+
+  // Hash used to discard tx history on sync
+  syncHash?: string,
 };
 
 export type SubAccount = TokenAccount | ChildAccount;
@@ -174,11 +221,19 @@ export type TokenAccountRaw = {
   starred?: boolean,
   parentId: string,
   tokenId: string,
+  creationDate?: string,
   operationsCount?: number,
   operations: OperationRaw[],
   pendingOperations: OperationRaw[],
   balance: string,
-  balanceHistory?: BalanceHistoryRawMap
+  spendableBalance?: string,
+  compoundBalance?: string,
+  balanceHistory?: BalanceHistoryRawMap,
+  swapHistory?: SwapOperationRaw[],
+  approvals?: Array<{
+    sender: string,
+    value: string,
+  }>,
 };
 
 export type ChildAccountRaw = {
@@ -189,11 +244,13 @@ export type ChildAccountRaw = {
   parentId: string,
   currencyId: string,
   address: string,
+  creationDate?: string,
   operationsCount?: number,
   operations: OperationRaw[],
   pendingOperations: OperationRaw[],
   balance: string,
-  balanceHistory?: BalanceHistoryRawMap
+  balanceHistory?: BalanceHistoryRawMap,
+  swapHistory?: SwapOperationRaw[],
 };
 
 export type AccountRaw = {
@@ -207,9 +264,11 @@ export type AccountRaw = {
   freshAddresses: Address[],
   name: string,
   starred?: boolean,
+  used?: boolean,
   balance: string,
   spendableBalance?: string,
   blockHeight: number,
+  creationDate?: string,
   operationsCount?: number, // this is optional for backward compat
   // ------------------------------------- Specific raw fields
   currencyId: string,
@@ -220,7 +279,13 @@ export type AccountRaw = {
   endpointConfig?: ?string,
   subAccounts?: SubAccountRaw[],
   balanceHistory?: BalanceHistoryRawMap,
-  tronResources?: TronResourcesRaw
+  bitcoinResources?: BitcoinResourcesRaw,
+  tronResources?: TronResourcesRaw,
+  cosmosResources?: CosmosResourcesRaw,
+  algorandResources?: AlgorandResourcesRaw,
+  polkadotResources?: PolkadotResourcesRaw,
+  swapHistory?: SwapOperationRaw[],
+  syncHash?: string,
 };
 
 export type SubAccountRaw = TokenAccountRaw | ChildAccountRaw;

@@ -2,24 +2,27 @@
 // TODO makeMockBridge need to be exploded into families (bridge/mock) with utility code shared.
 
 import Prando from "prando";
-import { Observable } from "rxjs";
+import { Observable, of } from "rxjs";
 import { BigNumber } from "bignumber.js";
 import { SyncError } from "@ledgerhq/errors";
 import { genAccount, genOperation } from "../mock/account";
 import { getOperationAmountNumber } from "../operation";
 import { validateNameEdition } from "../account";
 import { delay } from "../promise";
-import type { Operation } from "../types";
+import type { Operation, Account } from "../types";
 import type { CurrencyBridge, AccountBridge } from "../types/bridge";
+import { getEnv } from "../env";
 
-const MOCK_DATA_SEED = process.env.MOCK_DATA_SEED || Math.random();
+import perFamilyMock from "../generated/mock";
+
+const MOCK_DATA_SEED = getEnv("MOCK") || "MOCK";
 
 const broadcasted: { [_: string]: Operation[] } = {};
 
 const syncTimeouts = {};
 
-export const sync: $PropertyType<AccountBridge<*>, "sync"> = initialAccount =>
-  Observable.create(o => {
+export const sync: $PropertyType<AccountBridge<*>, "sync"> = (initialAccount) =>
+  Observable.create((o) => {
     const accountId = initialAccount.id;
 
     const sync = () => {
@@ -29,20 +32,29 @@ export const sync: $PropertyType<AccountBridge<*>, "sync"> = initialAccount =>
       }
       const ops = broadcasted[accountId] || [];
       broadcasted[accountId] = [];
-      o.next(acc => {
+      o.next((acc) => {
         const balance = ops.reduce(
           (sum, op) => sum.plus(getOperationAmountNumber(op)),
           acc.balance
         );
-        return {
+
+        const nextAcc = {
           ...acc,
           blockHeight: acc.blockHeight + 1,
           lastSyncDate: new Date(),
           operations: ops.concat(acc.operations.slice(0)),
           pendingOperations: [],
           balance,
-          spendableBalance: balance
+          spendableBalance: balance,
         };
+
+        const perFamilyOperation = perFamilyMock[acc.currency.id];
+        const postSyncAccount =
+          perFamilyOperation && perFamilyOperation.postSyncAccount;
+
+        if (postSyncAccount) return postSyncAccount(nextAcc);
+
+        return nextAcc;
       });
       o.complete();
     };
@@ -56,14 +68,14 @@ export const sync: $PropertyType<AccountBridge<*>, "sync"> = initialAccount =>
   });
 
 export const broadcast: $PropertyType<AccountBridge<*>, "broadcast"> = ({
-  signedOperation
+  signedOperation,
 }) => Promise.resolve(signedOperation.operation);
 
 export const signOperation: $PropertyType<
   AccountBridge<any>,
   "signOperation"
 > = ({ account, transaction }) =>
-  Observable.create(o => {
+  Observable.create((o) => {
     let cancelled = false;
 
     async function main() {
@@ -82,7 +94,7 @@ export const signOperation: $PropertyType<
 
       o.next({ type: "device-signature-granted" });
 
-      const rng = new Prando();
+      const rng = new Prando("");
       const op = genOperation(account, account, account.operations, rng);
       op.type = "OUT";
       op.value = transaction.amount;
@@ -101,14 +113,14 @@ export const signOperation: $PropertyType<
         signedOperation: {
           operation: { ...op },
           expirationDate: null,
-          signature: ""
-        }
+          signature: "",
+        },
       });
     }
 
     main().then(
       () => o.complete(),
-      e => o.error(e)
+      (e) => o.error(e)
     );
 
     return () => {
@@ -119,13 +131,13 @@ export const signOperation: $PropertyType<
 export const isInvalidRecipient = (recipient: string) =>
   recipient.includes("invalid") || recipient.length <= 3;
 
-const subtractOneYear = date =>
+const subtractOneYear = (date) =>
   new Date(new Date(date).setFullYear(new Date(date).getFullYear() - 1));
 
 export const scanAccounts: $PropertyType<CurrencyBridge, "scanAccounts"> = ({
-  currency
+  currency,
 }) =>
-  Observable.create(o => {
+  Observable.create((o) => {
     let unsubscribed = false;
     async function job() {
       // TODO offer a way to mock a failure
@@ -135,21 +147,28 @@ export const scanAccounts: $PropertyType<CurrencyBridge, "scanAccounts"> = ({
         await delay(500);
         const account = genAccount(`${MOCK_DATA_SEED}_${currency.id}_${i}`, {
           operationsSize: isLast ? 0 : 100,
-          currency
+          currency,
         });
         account.unit = currency.units[0];
         account.index = i;
         account.operations = isLast
           ? []
-          : account.operations.map(operation => ({
+          : account.operations.map((operation) => ({
               ...operation,
-              date: subtractOneYear(operation.date)
+              date: subtractOneYear(operation.date),
             }));
+        account.used = isLast ? false : account.used;
         account.name = "";
         account.name = validateNameEdition(account);
         if (isLast) {
           account.spendableBalance = account.balance = BigNumber(0);
         }
+
+        const perFamilyOperation = perFamilyMock[currency.id];
+        const postScanAccount =
+          perFamilyOperation && perFamilyOperation.postScanAccount;
+
+        if (postScanAccount) postScanAccount(account, { isEmpty: isLast });
 
         if (!unsubscribed) o.next({ type: "discovered", account });
       }
@@ -161,4 +180,16 @@ export const scanAccounts: $PropertyType<CurrencyBridge, "scanAccounts"> = ({
     return () => {
       unsubscribed = true;
     };
+  });
+
+export const makeAccountBridgeReceive: () => (
+  account: Account,
+  { verify?: boolean, deviceId: string, subAccountId?: string }
+) => Observable<{
+  address: string,
+  path: string,
+}> = () => (account) =>
+  of({
+    address: account.freshAddress,
+    path: account.freshAddressPath,
   });

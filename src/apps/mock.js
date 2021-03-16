@@ -2,13 +2,13 @@
 import { of, throwError } from "rxjs";
 import {
   ManagerAppDepInstallRequired,
-  ManagerAppDepUninstallRequired
+  ManagerAppDepUninstallRequired,
 } from "@ledgerhq/errors";
 import { getDependencies, getDependents } from "./polyfill";
 import { findCryptoCurrency } from "../currencies";
 import type { ListAppsResult, AppOp, Exec, InstalledItem } from "./types";
 import type { App, DeviceInfo, FinalFirmware } from "../types/manager";
-import { tickersByMarketCap } from "../countervalues/mock";
+import { getBTCValues } from "../countervalues/mock";
 
 export const deviceInfo155 = {
   version: "1.5.5",
@@ -17,9 +17,9 @@ export const deviceInfo155 = {
   managerAllowed: false,
   mcuVersion: "1.7",
   pinValidated: false,
-  providerId: 1,
+  providerName: null,
   majMin: "1.5",
-  targetId: 823132164
+  targetId: 823132164,
 };
 
 const firmware155: FinalFirmware = {
@@ -43,14 +43,14 @@ const firmware155: FinalFirmware = {
   mcu_versions: [6],
   application_versions: [],
   providers: [1, 4, 7, 9, 11, 12, 13],
-  bytes: 20 * 4 * 1024
+  bytes: 20 * 4 * 1024,
 };
 
 export const parseInstalled = (installedDesc: string): InstalledItem[] =>
   installedDesc
     .split(",")
     .filter(Boolean)
-    .map(a => {
+    .map((a) => {
       const trimmed = a.trim();
       const m = /(.*)\(outdated\)/.exec(trimmed);
       if (m) {
@@ -61,7 +61,7 @@ export const parseInstalled = (installedDesc: string): InstalledItem[] =>
           hash: "hash_" + name,
           blocks: 1,
           version: "0.0.0",
-          availableVersion: "1.0.0"
+          availableVersion: "1.5.0",
         };
       }
 
@@ -73,8 +73,8 @@ export const parseInstalled = (installedDesc: string): InstalledItem[] =>
         updated: true,
         hash: "hash_" + _name,
         blocks: Number(b ? b[2] : 1),
-        version: "1.0.0",
-        availableVersion: "1.0.0"
+        version: "1.5.0",
+        availableVersion: "1.6.0",
       };
     });
 
@@ -83,13 +83,15 @@ export function mockListAppsResult(
   installedDesc: string,
   deviceInfo: DeviceInfo
 ): ListAppsResult {
+  const tickersByMarketCap = Object.keys(getBTCValues());
+
   const apps = appDesc
     .split(",")
-    .map(a => a.trim())
+    .map((a) => a.trim())
     .filter(Boolean)
     .map((name, i) => {
       const dependencies = getDependencies(name);
-      const currency = findCryptoCurrency(c => c.managerAppName === name);
+      const currency = findCryptoCurrency((c) => c.managerAppName === name);
       const indexOfMarketCap = currency
         ? tickersByMarketCap.indexOf(currency.ticker)
         : -1;
@@ -100,7 +102,7 @@ export function mockListAppsResult(
         name,
         version: "0.0.0",
         description: null,
-        icon: "",
+        icon: "bitcoin", // we use bitcoin icon for all for convenience
         perso: "",
         authorName: "",
         supportURL: "",
@@ -118,11 +120,11 @@ export function mockListAppsResult(
         compatibleWallets: [],
         currencyId: currency ? currency.id : null,
         indexOfMarketCap,
-        isDevTools: false
+        isDevTools: false,
       };
     });
   const appByName = {};
-  apps.forEach(app => {
+  apps.forEach((app) => {
     appByName[app.name] = app;
   });
 
@@ -130,12 +132,12 @@ export function mockListAppsResult(
 
   return {
     appByName,
-    appsListNames: apps.map(a => a.name),
+    appsListNames: apps.map((a) => a.name),
     deviceInfo,
     deviceModelId: "nanoS",
     firmware: firmware155,
     installed,
-    installedAvailable: true
+    installedAvailable: true,
   };
 }
 
@@ -149,15 +151,17 @@ export const mockExecWithInstalledContext = (
     }
 
     if (
-      getDependents(app.name).some(dep => installed.some(i => i.name === dep))
+      getDependents(app.name).some((dep) =>
+        installed.some((i) => i.name === dep)
+      )
     ) {
       return throwError(new ManagerAppDepUninstallRequired(""));
     }
 
     if (appOp.type === "install") {
       const deps = getDependencies(app.name);
-      deps.forEach(dep => {
-        const depInstalled = installed.find(i => i.name === dep);
+      deps.forEach((dep) => {
+        const depInstalled = installed.find((i) => i.name === dep);
         if (!depInstalled || !depInstalled.updated) {
           return throwError(new ManagerAppDepInstallRequired(""));
         }
@@ -166,20 +170,20 @@ export const mockExecWithInstalledContext = (
 
     switch (appOp.type) {
       case "install":
-        if (!installed.some(i => i.name === appOp.name)) {
+        if (!installed.some((i) => i.name === appOp.name)) {
           installed = installed.concat({
             name: appOp.name,
             updated: true,
             blocks: 0,
             hash: "",
             version: "1.0.0",
-            availableVersion: "1.0.0"
+            availableVersion: "1.0.0",
           });
         }
         break;
 
       case "uninstall":
-        installed = installed.filter(a => a.name !== appOp.name);
+        installed = installed.filter((a) => a.name !== appOp.name);
         break;
     }
 

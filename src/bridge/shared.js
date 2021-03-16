@@ -4,30 +4,32 @@ import type { CryptoCurrency } from "../types";
 import { isValidRecipient } from "../libcore/isValidRecipient";
 import { makeLRUCache } from "../cache";
 
+// TODO drop this file. move back to families
+
 export const validateRecipient: (
   CryptoCurrency,
   ?string
 ) => Promise<{
   recipientError: ?Error,
-  recipientWarning: ?Error
+  recipientWarning: ?Error,
 }> = makeLRUCache(
   async (currency, recipient) => {
     if (!recipient) {
       return {
         recipientError: new RecipientRequired(""),
-        recipientWarning: null
+        recipientWarning: null,
       };
     }
     try {
       const recipientWarning = await isValidRecipient({ currency, recipient });
       return {
         recipientError: null,
-        recipientWarning
+        recipientWarning,
       };
     } catch (recipientError) {
       return {
         recipientError,
-        recipientWarning: null
+        recipientWarning: null,
       };
     }
   },

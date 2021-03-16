@@ -1,21 +1,21 @@
 // @flow
+import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
-import type { DatasetTest } from "../../__tests__/test-helpers/bridge";
+import type { DatasetTest } from "../../types";
 import {
   FeeTooHigh,
   GasLessThanEstimate,
-  NotEnoughBalance
+  NotEnoughBalance,
 } from "@ledgerhq/errors";
 import { fromTransactionRaw } from "./transaction";
 import type { Transaction } from "./types";
 import ethereumScanAccounts1 from "./datasets/ethereum.scanAccounts.1";
 import ethereum_classic from "./datasets/ethereum_classic";
+import { syncAccount } from "../../__tests__/test-helpers/bridge";
 
-export const ethereum2 = {
-  id:
-    "libcore:1:ethereum:xpub6BemYiVNp19a1XgWqLcpWd1pBDZTgzPEcVvhR15cpXPVQjuEnrU7fa3TUatX2NbRWNkqx51jmyukisqGokHq5dyK5uYcbwQBF7nJyAdpYZy:",
-  seedIdentifier:
-    "xpub6BemYiVNp19a1XgWqLcpWd1pBDZTgzPEcVvhR15cpXPVQjuEnrU7fa3TUatX2NbRWNkqx51jmyukisqGokHq5dyK5uYcbwQBF7nJyAdpYZy",
+export const ethereum1 = {
+  id: "js:1:ethereum:0x0E3F0bb9516F01f2C34c25E0957518b8aC9414c5:",
+  seedIdentifier: "0x0E3F0bb9516F01f2C34c25E0957518b8aC9414c5",
   name: "Ethereum legacy xpub6Bem...JyAdpYZy",
   derivationMode: "",
   index: 0,
@@ -29,30 +29,35 @@ export const ethereum2 = {
   balance: "",
   blockHeight: 0,
   lastSyncDate: "",
-  xpub:
-    "xpub6BemYiVNp19a1XgWqLcpWd1pBDZTgzPEcVvhR15cpXPVQjuEnrU7fa3TUatX2NbRWNkqx51jmyukisqGokHq5dyK5uYcbwQBF7nJyAdpYZy"
+  xpub: "",
+};
+
+const expectedTokenAccount = (a) => {
+  invariant(a && a.type === "TokenAccount", "expected token account");
+  return a;
 };
 
 const dataset: DatasetTest<Transaction> = {
-  implementations: ["libcore", "mock", "ethereumjs"],
+  implementations: ["mock", "js"],
   currencies: {
     ethereum: {
       scanAccounts: [ethereumScanAccounts1],
       accounts: [
         {
-          implementations: ["libcore"],
+          implementations: ["js"],
           transactions: [
             {
               name: "success1",
               transaction: fromTransactionRaw({
                 family: "ethereum",
+                mode: "send",
                 recipient: "0x17733CAb76d9A2112576443F21735789733B1ca3",
                 amount: "10000000000000",
                 gasPrice: "100000000",
                 userGasLimit: "21000",
                 estimatedGasLimit: null,
                 feeCustomUnit: null,
-                networkInfo: null
+                networkInfo: null,
               }),
               expectedStatus: {
                 amount: BigNumber("10000000000000"),
@@ -60,113 +65,115 @@ const dataset: DatasetTest<Transaction> = {
                 totalSpent: BigNumber("12100000000000"),
                 errors: {},
                 warnings: {
-                  feeTooHigh: new FeeTooHigh()
-                }
-              }
+                  feeTooHigh: new FeeTooHigh(),
+                },
+              },
             },
             {
               name: "Send token must succeed",
-              transaction: fromTransactionRaw({
-                family: "ethereum",
+              transaction: (t, account) => ({
+                ...t,
                 recipient: "0x17733CAb76d9A2112576443F21735789733B1ca3",
-                subAccountId:
-                  "libcore:1:ethereum:xpub6BemYiVNp19a1XgWqLcpWd1pBDZTgzPEcVvhR15cpXPVQjuEnrU7fa3TUatX2NbRWNkqx51jmyukisqGokHq5dyK5uYcbwQBF7nJyAdpYZy:+0x9ab165D795019b6d8B3e971DdA91071421305e5a",
-                amount: "800000000000000",
-                userGasLimit: null,
-                gasPrice: "0",
-                estimatedGasLimit: null,
-                feeCustomUnit: null,
-                networkInfo: null
+                amount: BigNumber("800000000000000"),
+                subAccountId: expectedTokenAccount(
+                  (account.subAccounts || []).find(
+                    (a) =>
+                      expectedTokenAccount(a).token.id ===
+                      "ethereum/erc20/aurora"
+                  )
+                ).id,
               }),
               expectedStatus: {
                 amount: BigNumber("800000000000000"),
-                estimatedFees: BigNumber("0"),
                 totalSpent: BigNumber("800000000000000"),
                 errors: {},
-                warnings: {}
-              }
+                warnings: {},
+              },
             },
             {
               name: "Not enough gasLimit for token operation must warn",
-              transaction: fromTransactionRaw({
-                family: "ethereum",
+              transaction: (t, account) => ({
+                ...t,
                 recipient: "0x17733CAb76d9A2112576443F21735789733B1ca3",
-                subAccountId:
-                  "libcore:1:ethereum:xpub6BemYiVNp19a1XgWqLcpWd1pBDZTgzPEcVvhR15cpXPVQjuEnrU7fa3TUatX2NbRWNkqx51jmyukisqGokHq5dyK5uYcbwQBF7nJyAdpYZy:+0x9ab165D795019b6d8B3e971DdA91071421305e5a",
-                amount: "800000000000000",
-                userGasLimit: "21000",
-                gasPrice: "100",
-                estimatedGasLimit: null,
-                feeCustomUnit: null,
-                networkInfo: null
+                amount: BigNumber("800000000000000"),
+                userGasLimit: BigNumber("21000"),
+                gasPrice: BigNumber("100"),
+                subAccountId: expectedTokenAccount(
+                  (account.subAccounts || []).find(
+                    (a) =>
+                      expectedTokenAccount(a).token.id ===
+                      "ethereum/erc20/aurora"
+                  )
+                ).id,
               }),
               expectedStatus: {
                 amount: BigNumber("800000000000000"),
                 estimatedFees: BigNumber("2100000"),
                 totalSpent: BigNumber("800000000000000"),
-                errors: {},
-                warnings: {
-                  gasLimit: new GasLessThanEstimate()
-                }
-              }
+                errors: {
+                  gasLimit: new GasLessThanEstimate(),
+                },
+                warnings: {},
+              },
             },
             {
               name: "Not enough token balance show an error",
-              transaction: fromTransactionRaw({
-                family: "ethereum",
+              transaction: (t, account) => ({
+                ...t,
                 recipient: "0x17733CAb76d9A2112576443F21735789733B1ca3",
-                subAccountId:
-                  "libcore:1:ethereum:xpub6BemYiVNp19a1XgWqLcpWd1pBDZTgzPEcVvhR15cpXPVQjuEnrU7fa3TUatX2NbRWNkqx51jmyukisqGokHq5dyK5uYcbwQBF7nJyAdpYZy:+0x9ab165D795019b6d8B3e971DdA91071421305e5a",
-                amount: "15000000000000000000",
-                userGasLimit: "300000",
-                gasPrice: "10",
-                estimatedGasLimit: null,
-                feeCustomUnit: null,
-                networkInfo: null
+                amount: BigNumber("15000000000000000000"),
+                userGasLimit: BigNumber("300000"),
+                gasPrice: BigNumber("10"),
+                subAccountId: expectedTokenAccount(
+                  (account.subAccounts || []).find(
+                    (a) =>
+                      expectedTokenAccount(a).token.id ===
+                      "ethereum/erc20/aurora"
+                  )
+                ).id,
               }),
               expectedStatus: {
                 errors: {
-                  amount: new NotEnoughBalance()
+                  amount: new NotEnoughBalance(),
                 },
-                warnings: {}
+                warnings: {},
+              },
+            },
+          ],
+          test: async (expect, account, bridge) => {
+            if (account.subAccounts) {
+              const blacklistedTokenIds = [
+                "ethereum/erc20/weth",
+                "ethereum/erc20/amber_token",
+              ];
+
+              const rawTokenIds = account.subAccounts
+                .map((sa) => (sa.type === "TokenAccount" ? sa.token.id : ""))
+                .filter(Boolean);
+
+              const syncedAccount = await syncAccount(bridge, account, {
+                paginationConfig: {},
+                blacklistedTokenIds,
+              });
+
+              const filteredTokenIds =
+                syncedAccount.subAccounts &&
+                syncedAccount.subAccounts
+                  .map((sa) => (sa.type === "TokenAccount" ? sa.token.id : ""))
+                  .filter(Boolean);
+
+              for (const tokenId of blacklistedTokenIds) {
+                expect(rawTokenIds).toContain(tokenId);
+                expect(filteredTokenIds).not.toContain(tokenId);
               }
             }
-          ],
-          raw: {
-            id:
-              "libcore:1:ethereum:xpub6BemYiVNp19a1XgWqLcpWd1pBDZTgzPEcVvhR15cpXPVQjuEnrU7fa3TUatX2NbRWNkqx51jmyukisqGokHq5dyK5uYcbwQBF7nJyAdpYZy:",
-            seedIdentifier:
-              "xpub6BemYiVNp19a1XgWqLcpWd1pBDZTgzPEcVvhR15cpXPVQjuEnrU7fa3TUatX2NbRWNkqx51jmyukisqGokHq5dyK5uYcbwQBF7nJyAdpYZy",
-            name: "Ethereum legacy xpub6Bem...JyAdpYZy",
-            derivationMode: "",
-            index: 0,
-            freshAddress: "0x0E3F0bb9516F01f2C34c25E0957518b8aC9414c5",
-            freshAddressPath: "44'/60'/0'/0/0",
-            pendingOperations: [],
-            currencyId: "ethereum",
-            unitMagnitude: 18,
-            balance: "2092658623260253",
-            xpub:
-              "xpub6BemYiVNp19a1XgWqLcpWd1pBDZTgzPEcVvhR15cpXPVQjuEnrU7fa3TUatX2NbRWNkqx51jmyukisqGokHq5dyK5uYcbwQBF7nJyAdpYZy",
-            subAccounts: [],
-            operations: [],
-            freshAddresses: [
-              {
-                address: "0x0E3F0bb9516F01f2C34c25E0957518b8aC9414c5",
-                derivationPath: "44'/60'/0'/0/0"
-              }
-            ],
-            lastSyncDate: "",
-            blockHeight: 0
-          }
+          },
+          raw: ethereum1,
         },
-        {
-          raw: ethereum2
-        }
-      ]
+      ],
     },
-    ethereum_classic
-  }
+    ethereum_classic,
+  },
 };
 
 export default dataset;

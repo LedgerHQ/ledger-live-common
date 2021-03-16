@@ -2,15 +2,26 @@
 
 import { Observable, concat, from, of, throwError } from "rxjs";
 import { concatMap, catchError, delay } from "rxjs/operators";
-import { TransportStatusError } from "@ledgerhq/errors";
+import {
+  TransportStatusError,
+  DeviceOnDashboardExpected,
+} from "@ledgerhq/errors";
 import type { DeviceInfo } from "../types/manager";
 import type { ListAppsEvent } from "../apps";
 import { listApps } from "../apps/hw";
 import { withDevice } from "./deviceAccess";
 import getDeviceInfo from "./getDeviceInfo";
+import getAppAndVersion from "./getAppAndVersion";
+import appSupportsQuitApp from "../appSupportsQuitApp";
+import { isDashboardName } from "./isDashboardName";
+import type { AppAndVersion } from "./connectApp";
+import quitApp from "./quitApp";
 
 export type Input = {
-  devicePath: string
+  devicePath: string,
+  managerRequest: ?{
+    autoQuitAppDisabled?: boolean,
+  },
 };
 
 export type ConnectManagerEvent =
@@ -21,16 +32,30 @@ export type ConnectManagerEvent =
   | { type: "listingApps", deviceInfo: DeviceInfo }
   | ListAppsEvent;
 
-const cmd = ({ devicePath }: Input): Observable<ConnectManagerEvent> =>
-  withDevice(devicePath)(transport =>
-    Observable.create(o => {
+const attemptToQuitApp = (
+  transport,
+  appAndVersion?: AppAndVersion
+): Observable<ConnectManagerEvent> =>
+  appAndVersion && appSupportsQuitApp(appAndVersion)
+    ? from(quitApp(transport)).pipe(
+        concatMap(() => of({ type: "unresponsiveDevice" })),
+        catchError((e) => throwError(e))
+      )
+    : of({ type: "appDetected" });
+
+const cmd = ({
+  devicePath,
+  managerRequest,
+}: Input): Observable<ConnectManagerEvent> =>
+  withDevice(devicePath)((transport) =>
+    Observable.create((o) => {
       const timeoutSub = of({ type: "unresponsiveDevice" })
         .pipe(delay(1000))
-        .subscribe(e => o.next(e));
+        .subscribe((e) => o.next(e));
 
       const sub = from(getDeviceInfo(transport))
         .pipe(
-          concatMap(deviceInfo => {
+          concatMap((deviceInfo) => {
             timeoutSub.unsubscribe();
 
             if (deviceInfo.isBootloader) {
@@ -48,11 +73,19 @@ const cmd = ({ devicePath }: Input): Observable<ConnectManagerEvent> =>
           }),
           catchError((e: Error) => {
             if (
-              e &&
-              e instanceof TransportStatusError &&
-              (e.statusCode === 0x6e00 || e.statusCode === 0x6d00)
+              e instanceof DeviceOnDashboardExpected ||
+              (e &&
+                e instanceof TransportStatusError &&
+                [0x6e00, 0x6d00, 0x6e01, 0x6d01, 0x6d02].includes(e.statusCode))
             ) {
-              return of({ type: "appDetected" });
+              return from(getAppAndVersion(transport)).pipe(
+                concatMap((appAndVersion) => {
+                  return !managerRequest?.autoQuitAppDisabled &&
+                    !isDashboardName(appAndVersion.name)
+                    ? attemptToQuitApp(transport, appAndVersion)
+                    : of({ type: "appDetected" });
+                })
+              );
             }
             return throwError(e);
           })

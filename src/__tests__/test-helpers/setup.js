@@ -1,17 +1,6 @@
-/* eslint-disable no-console */
-import { implementCountervalues } from "../../countervalues";
-import { setSupportedCurrencies } from "../../data/cryptocurrencies";
+import { setSupportedCurrencies } from "../../currencies";
 
-import "../../load/tokens/ethereum/erc20";
-import "../../load/tokens/tron/trc10";
-import "../../load/tokens/tron/trc20";
-
-implementCountervalues({
-  getAPIBaseURL: () => window.LEDGER_CV_API,
-  storeSelector: state => state.countervalues,
-  pairsSelector: () => [],
-  setExchangePairsAction: () => {}
-});
+jest.setTimeout(180000);
 
 setSupportedCurrencies([
   "bitcoin",
@@ -28,7 +17,6 @@ setSupportedCurrencies([
   "stratis",
   "dogecoin",
   "digibyte",
-  "hcash",
   "komodo",
   "pivx",
   "zencash",
@@ -37,10 +25,13 @@ setSupportedCurrencies([
   "viacoin",
   "stakenet",
   "stealthcoin",
-  "poswallet",
-  "clubcoin",
   "decred",
+  "tron",
+  "stellar",
+  "cosmos",
+  "algorand",
+  "polkadot",
   "bitcoin_testnet",
   "ethereum_ropsten",
-  "tron"
+  "cosmos_testnet",
 ]);

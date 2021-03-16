@@ -7,14 +7,25 @@ export function shouldRetainPendingOperation(
   op: Operation
 ): boolean {
   const delay = new Date() - op.date;
+
+  const last = account.operations[0];
+  if (
+    last &&
+    last.transactionSequenceNumber &&
+    op.transactionSequenceNumber &&
+    op.transactionSequenceNumber <= last.transactionSequenceNumber
+  ) {
+    return false;
+  }
+
   return delay < getEnv("OPERATION_OPTIMISTIC_RETENTION");
 }
 
 const appendPendingOp = (ops: Operation[], op: Operation) => {
   const filtered: Operation[] = ops.filter(
-    o => o.transactionSequenceNumber === op.transactionSequenceNumber
+    (o) => o.transactionSequenceNumber !== op.transactionSequenceNumber
   );
-  filtered.push(op);
+  filtered.unshift(op);
   return filtered;
 };
 
@@ -24,7 +35,7 @@ export const addPendingOperation = (account: Account, operation: Operation) => {
   const { subAccounts } = account;
 
   function addInSubAccount(subaccounts, op) {
-    const acc = subaccounts.find(sub => sub.id === op.accountId);
+    const acc = subaccounts.find((sub) => sub.id === op.accountId);
     if (acc) {
       // $FlowFixMe
       const copy: SubAccount = { ...acc };
@@ -35,7 +46,7 @@ export const addPendingOperation = (account: Account, operation: Operation) => {
 
   if (subOperations && subAccounts) {
     const taCopy: SubAccount[] = subAccounts.slice(0);
-    subOperations.forEach(op => {
+    subOperations.forEach((op) => {
       addInSubAccount(taCopy, op);
     });
     accountCopy.subAccounts = taCopy;

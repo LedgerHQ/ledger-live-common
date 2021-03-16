@@ -6,7 +6,7 @@ import mapValues from "lodash/mapValues";
 type EnvDef<V> = {
   desc: string,
   def: V,
-  parser: mixed => ?V
+  parser: (mixed) => ?V,
 };
 
 type ExtractEnvValue = <V>(EnvDef<V>) => V;
@@ -32,277 +32,426 @@ const stringParser = (v: mixed): ?string =>
   typeof v === "string" ? v : undefined;
 
 const envDefinitions = {
+  ANALYTICS_CONSOLE: {
+    def: false,
+    parser: boolParser,
+    desc: "Show tracking overlays on the app UI",
+  },
+  API_ALGORAND_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
+    def: "https://algorand.coin.ledger.com",
+    parser: stringParser,
+    desc: "Node API endpoint for algorand",
+  },
+  API_ALGORAND_BLOCKCHAIN_EXPLORER_API_KEY: {
+    def: "",
+    parser: stringParser,
+    desc: "Node API key for algorand",
+  },
+  API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
+    def: "https://cosmoshub4.coin.ledger.com/",
+    parser: stringParser,
+    desc: "Node endpoint for cosmos",
+  },
+  API_COSMOS_NODE: {
+    def: "STARGATE_NODE",
+    parser: stringParser,
+    desc: "Node API to use for cosmos (COSMOS_NODE or STARGATE_NODE are known)",
+  },
+  API_COSMOS_TESTNET_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
+    def: "https://cosmoshub4.coin.staging.aws.ledger.com",
+    parser: stringParser,
+    desc: "Node endpoint for cosmos",
+  },
+  API_COSMOS_TESTNET_NODE: {
+    def: "STARGATE_NODE",
+    parser: stringParser,
+    desc:
+      "Node API to use for cosmos_testnet (COSMOS_NODE or STARGATE_NODE are known)",
+  },
+  API_RIPPLE_WS: {
+    parser: stringParser,
+    def: "wss://xrplcluster.com",
+    desc: "XRP Ledger full history open WebSocket endpoint",
+  },
+  API_POLKADOT_INDEXER: {
+    parser: stringParser,
+    def: "https://polkadot.coin.ledger.com",
+    desc: "Explorer API for polkadot",
+  },
+  API_POLKADOT_SIDECAR: {
+    parser: stringParser,
+    def: "https://polkadot-sidecar.coin.ledger.com",
+    desc: "Polkadot Sidecar API url",
+  },
+  API_STELLAR_HORIZON: {
+    parser: stringParser,
+    def: "https://stellar.coin.ledger.com",
+    desc: "Stellar Horizon API url",
+  },
+  API_STELLAR_HORIZON_FETCH_LIMIT: {
+    parser: intParser,
+    def: 200,
+    desc: "Limit of operation that Horizon will fetch per page",
+  },
   API_TEZOS_BAKER: {
     parser: stringParser,
     def: "https://tezos-bakers.api.live.ledger.com",
-    desc: "bakers API for tezos"
+    desc: "bakers API for tezos",
   },
   API_TEZOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
     def: "https://xtz-explorer.api.live.ledger.com/explorer",
     parser: stringParser,
-    desc: "Ledger explorer API for tezos"
+    desc: "Ledger explorer API for tezos",
   },
   API_TEZOS_NODE: {
     def: "https://xtz-node.api.live.ledger.com",
     parser: stringParser,
-    desc: "node API for tezos (for broadcast only)"
+    desc: "node API for tezos (for broadcast only)",
   },
   API_TRONGRID_PROXY: {
     parser: stringParser,
-    //def: "https://api.trongrid.io",
-    def: "https://tron.coin-proxy.dev.aws.ledger.fr",
-    desc: "proxy url for trongrid API"
+    def: "https://tron.coin.ledger.com",
+    desc: "proxy url for trongrid API",
   },
   BASE_SOCKET_URL: {
     def: "wss://scriptrunner.api.live.ledger.com/update",
     parser: stringParser,
-    desc: "Ledger script runner API"
+    desc: "Ledger script runner API",
   },
-  BRIDGE_FORCE_IMPLEMENTATION: {
+  BOT_TIMEOUT_SCAN_ACCOUNTS: {
+    def: 30 * 60 * 1000,
+    parser: intParser,
+    desc: "bot's default timeout for scanAccounts",
+  },
+  COINAPPS: {
     def: "",
     parser: stringParser,
     desc:
-      "force implementation for ALL currency bridges (affects scanning accounts)"
+      "(dev feature) defines the folder for speculos mode that contains Nano apps binaries (.elf) in a specific structure: <device>/<firmware>/<appName>/app_<appVersion>.elf",
+  },
+  COMPOUND_API: {
+    def: "https://api.compound.finance",
+    parser: stringParser,
+    desc: "location of the compound API",
+  },
+  COSMOS_GAS_AMPLIFIER: {
+    def: 4,
+    parser: intParser,
+    desc: "estimate gas multiplier",
+  },
+  COSMOS_GAS_PRICE: {
+    def: 0.025,
+    parser: floatParser,
+    desc:
+      "gasLimit * gasPrice to determine the fees price. A too low GAS_PRICE will get rejected before the transaction is broadcast",
+  },
+  DEBUG_UTXO_DISPLAY: {
+    def: 4,
+    parser: intParser,
+    desc: "define maximum number of utxos to display in CLI",
   },
   DEBUG_HTTP_RESPONSE: {
     def: false,
     parser: boolParser,
-    desc: "includes HTTP response body in logs"
+    desc: "includes HTTP response body in logs",
   },
   DEVICE_CANCEL_APDU_FLUSH_MECHANISM: {
     def: true,
     parser: boolParser,
     desc:
-      "enable a mechanism that send a 0x00 apdu to force device to awake from its 'Processing' UI state"
+      "enable a mechanism that send a 0x00 apdu to force device to awake from its 'Processing' UI state",
   },
   DEVICE_PROXY_URL: {
     def: "",
     parser: stringParser,
-    desc: "enable a proxy to use instead of a physical device"
+    desc: "enable a proxy to use instead of a physical device",
   },
   DISABLE_TRANSACTION_BROADCAST: {
     def: false,
     parser: boolParser,
-    desc: "disable broadcast of transactions"
+    desc: "disable broadcast of transactions",
   },
   DISABLE_SYNC_TOKEN: {
-    def: false,
+    def: true,
     parser: boolParser,
-    desc: "Hack to disable a problematic mechanism of our API"
+    desc: "disable a problematic mechanism of our API",
+  },
+  ETHEREUM_GAS_LIMIT_AMPLIFIER: {
+    def: 1.2,
+    parser: floatParser,
+    desc:
+      "Ethereum gasLimit multiplier for contracts to prevent out of gas issue",
   },
   EXPERIMENTAL_BLE: {
     def: false,
     parser: boolParser,
-    desc: "enable experimental support of Bluetooth"
+    desc: "enable experimental support of Bluetooth",
   },
   EXPERIMENTAL_CURRENCIES: {
     def: "",
     parser: stringParser,
-    desc: "enable experimental support of currencies (comma separated)"
+    desc: "enable experimental support of currencies (comma separated)",
   },
-  EXPERIMENTAL_DEVICE_FLOW: {
-    def: false,
-    parser: boolParser,
-    desc:
-      "enable a new flow implementation (at the moment we're having early support of 'openApp')"
+  EXPERIMENTAL_CURRENCIES_JS_BRIDGE: {
+    def: "",
+    parser: stringParser,
+    desc: "enable JS integration of currencies (comma separated)",
   },
   EXPERIMENTAL_EXPLORERS: {
     def: false,
     parser: boolParser,
-    desc: "enable experimental explorer APIs"
+    desc: "enable experimental explorer APIs",
   },
   EXPERIMENTAL_FALLBACK_APDU_LISTAPPS: {
     def: false,
     parser: boolParser,
-    desc: "if HSM list apps fails, fallback on APDU version (>=1.6.0)"
+    desc: "if HSM list apps fails, fallback on APDU version (>=1.6.0)",
   },
   EXPERIMENTAL_LANGUAGES: {
     def: false,
     parser: boolParser,
-    desc: "enable experimental languages"
+    desc: "enable experimental languages",
   },
   EXPERIMENTAL_LIBCORE: {
     def: false,
     parser: boolParser,
     desc:
-      "enable experimental libcore implementation of a currency (affects scan accounts)"
+      "enable experimental libcore implementation of a currency (affects scan accounts)",
   },
   EXPERIMENTAL_MANAGER: {
     def: false,
     parser: boolParser,
-    desc: "enable an experimental version of Manager"
-  },
-  EXPERIMENTAL_PORTFOLIO_RANGE: {
-    def: false,
-    parser: boolParser,
-    desc:
-      "enable an experimental version of available graph ranges and granularity"
+    desc: "enable an experimental version of Manager",
   },
   EXPERIMENTAL_ROI_CALCULATION: {
     def: false,
     parser: boolParser,
     desc:
-      "enable an experimental version of the portfolio percentage calculation"
+      "enable an experimental version of the portfolio percentage calculation",
   },
   EXPERIMENTAL_SEND_MAX: {
     def: false,
     parser: boolParser,
-    desc: "force enabling SEND MAX even if not yet stable"
+    desc: "force enabling SEND MAX even if not yet stable",
   },
   EXPERIMENTAL_USB: {
     def: false,
     parser: boolParser,
-    desc: "enable an experimental implementation of USB support"
+    desc: "enable an experimental implementation of USB support",
   },
   EXPLORER: {
     def: "https://explorers.api.live.ledger.com",
     parser: stringParser,
-    desc: "Ledger main explorer API (multi currencies)"
+    desc: "Ledger generic explorer API",
+  },
+  EXPLORER_BETA: {
+    def: "https://explorers.api.live.ledger.com",
+    parser: stringParser,
+    desc: "Ledger generic explorer beta API",
+  },
+  EXPLORER_SATSTACK: {
+    def: "http://localhost:20000",
+    parser: stringParser,
+    desc: "Ledger satstack Bitcoin explorer API",
+  },
+  DISABLE_APP_VERSION_REQUIREMENTS: {
+    def: false,
+    parser: boolParser,
+    desc:
+      "force an old application version to be accepted regardless of its version",
   },
   FORCE_PROVIDER: {
     def: 1,
     parser: intParser,
-    desc: "use a different provider for app store (for developers only)"
+    desc: "use a different provider for app store (for developers only)",
   },
   GET_CALLS_RETRY: {
     def: 2,
     parser: intParser,
-    desc: "how many times to retry a GET http call"
+    desc: "how many times to retry a GET http call",
   },
   GET_CALLS_TIMEOUT: {
     def: 60 * 1000,
     parser: intParser,
-    desc: "how much time to timeout a GET http call"
+    desc: "how much time to timeout a GET http call",
   },
   HIDE_EMPTY_TOKEN_ACCOUNTS: {
     def: false,
     parser: boolParser,
-    desc: "hide the sub accounts when they are empty"
+    desc: "hide the sub accounts when they are empty",
   },
   KEYCHAIN_OBSERVABLE_RANGE: {
     def: 0,
     parser: intParser,
-    desc: "overrides the gap limit specified by BIP44 (default to 20)"
+    desc: "overrides the gap limit specified by BIP44 (default to 20)",
   },
   LEDGER_COUNTERVALUES_API: {
-    def: "https://countervalues.api.live.ledger.com",
+    def: "https://countervalues.live.ledger.com",
     parser: stringParser,
-    desc: "Ledger countervalues API"
+    desc: "Ledger countervalues API",
   },
   LEDGER_REST_API_BASE: {
     def: "https://explorers.api.live.ledger.com",
     parser: stringParser,
-    desc: "DEPRECATED"
+    desc: "DEPRECATED",
   },
   LEGACY_KT_SUPPORT_TO_YOUR_OWN_RISK: {
     def: false,
     parser: boolParser,
-    desc: "enable sending to KT accounts. Not tested."
+    desc: "enable sending to KT accounts. Not tested.",
   },
   LIBCORE_BALANCE_HISTORY_NOGO: {
-    def: "ripple,ethereum,tezos", // LLC-475
+    def: "ripple,ethereum,tezos,stellar", // LLC-475
     parser: stringParser,
     desc:
-      "comma-separated list of currencies which does not properly support balance history libcore implementation"
+      "comma-separated list of currencies which does not properly support balance history libcore implementation",
   },
   LIBCORE_PASSWORD: {
     def: "",
     parser: stringParser,
-    desc: "libcore encryption password"
+    desc: "libcore encryption password",
   },
   MANAGER_API_BASE: {
     def: "https://manager.api.live.ledger.com/api",
     parser: stringParser,
-    desc: "Ledger Manager API"
+    desc: "Ledger Manager API",
   },
   MANAGER_DEV_MODE: {
     def: false,
     parser: boolParser,
-    desc: "enable visibility of utility apps in Manager"
+    desc: "enable visibility of utility apps in Manager",
   },
   MANAGER_INSTALL_DELAY: {
     def: 1000,
     parser: intParser,
     desc:
-      "defines the time to wait before installing apps to prevent known glitch (<=1.5.5) when chaining installs"
+      "defines the time to wait before installing apps to prevent known glitch (<=1.5.5) when chaining installs",
   },
   MAX_ACCOUNT_NAME_SIZE: {
     def: 50,
     parser: intParser,
-    desc: "maximum size of account names"
+    desc: "maximum size of account names",
   },
   MOCK: {
-    def: false,
-    parser: boolParser,
-    desc: "switch the app into a MOCK mode for test purpose"
+    def: "",
+    parser: stringParser,
+    desc:
+      "switch the app into a MOCK mode for test purpose, the value will be used as a seed for the rng. Avoid falsy values.",
   },
   OPERATION_ADDRESSES_LIMIT: {
     def: 100,
     parser: intParser,
-    desc: "limit the number of addresses in from/to of operations"
+    desc: "limit the number of addresses in from/to of operations",
   },
   OPERATION_OPTIMISTIC_RETENTION: {
     def: 30 * 60 * 1000,
     parser: intParser,
     desc:
-      "timeout to keep an optimistic operation that was broadcasted but not yet visible from libcore or the API"
+      "timeout to keep an optimistic operation that was broadcasted but not yet visible from libcore or the API",
   },
   OPERATION_PAGE_SIZE_INITIAL: {
     def: 100,
     parser: intParser,
-    desc: "defines the initial default operation length page to use"
+    desc: "defines the initial default operation length page to use",
+  },
+  POLKADOT_ELECTION_STATUS_THRESHOLD: {
+    def: 25,
+    parser: intParser,
+    desc:
+      "in blocks - number of blocks before Polkadot election effectively opens to consider it as open and disable all staking features",
+  },
+  SATSTACK: {
+    def: false,
+    parser: boolParser,
+    desc: "Switch to satstack mode",
   },
   SCAN_FOR_INVALID_PATHS: {
     def: false,
     parser: boolParser,
-    desc: "enable searching accounts in exotic derivation paths"
+    desc: "enable searching accounts in exotic derivation paths",
+  },
+  SEED: {
+    def: "",
+    parser: stringParser,
+    desc: "(dev feature) seed to be used by speculos (device simulator)",
   },
   SHOW_LEGACY_NEW_ACCOUNT: {
     def: false,
     parser: boolParser,
-    desc: "allow the creation of legacy accounts"
+    desc: "allow the creation of legacy accounts",
   },
   SKIP_ONBOARDING: {
     def: false,
     parser: boolParser,
-    desc: "dev flag to skip onboarding flow"
+    desc: "dev flag to skip onboarding flow",
+  },
+  SWAP_API_BASE: {
+    def: "https://swap.ledger.com",
+    parser: stringParser,
+    desc: "Swap API base",
   },
   SYNC_ALL_INTERVAL: {
     def: 2 * 60 * 1000,
     parser: intParser,
-    desc: "delay between successive sync"
+    desc: "delay between successive sync",
   },
   SYNC_BOOT_DELAY: {
     def: 2 * 1000,
     parser: intParser,
-    desc: "delay before the sync starts"
+    desc: "delay before the sync starts",
   },
   SYNC_PENDING_INTERVAL: {
     def: 10 * 1000,
     parser: intParser,
-    desc: "delay between sync when an operation is still pending"
+    desc: "delay between sync when an operation is still pending",
   },
   SYNC_OUTDATED_CONSIDERED_DELAY: {
     def: 2 * 60 * 1000,
     parser: intParser,
-    desc: "delay until Live consider a sync outdated"
+    desc: "delay until Live consider a sync outdated",
   },
   SYNC_MAX_CONCURRENT: {
     def: 4,
     parser: intParser,
-    desc: "maximum limit to synchronize accounts concurrently to limit overload"
+    desc:
+      "maximum limit to synchronize accounts concurrently to limit overload",
   },
   USER_ID: {
     def: "",
     parser: stringParser,
     desc:
-      "unique identifier of app instance. used to derivate dissociated ids for difference purposes (e.g. the firmware update incremental deployment)."
+      "unique identifier of app instance. used to derivate dissociated ids for difference purposes (e.g. the firmware update incremental deployment).",
+  },
+  WALLETCONNECT: {
+    def: false,
+    parser: boolParser,
+    desc: "is walletconnect enabled",
   },
   WITH_DEVICE_POLLING_DELAY: {
     def: 500,
     parser: floatParser,
-    desc: "delay when polling device"
-  }
+    desc: "delay when polling device",
+  },
+  ANNOUNCEMENTS_API_URL: {
+    def: "https://cdn.live.ledger.com/announcements",
+    parser: stringParser,
+    desc: "url used to fetch new announcements",
+  },
+  ANNOUNCEMENTS_API_VERSION: {
+    def: 1,
+    parser: intParser,
+    desc: "version used for the announcements api",
+  },
+  STATUS_API_URL: {
+    def: "https://ledger.statuspage.io/api",
+    parser: stringParser,
+    desc: "url used to fetch ledger status",
+  },
+  STATUS_API_VERSION: {
+    def: 2,
+    parser: intParser,
+    desc: "version used for ledger status api",
+  },
 };
 
 const getDefinition = (name: string): ?EnvDef<any> => envDefinitions[name];
@@ -311,7 +460,7 @@ const getDefinition = (name: string): ?EnvDef<any> => envDefinitions[name];
 
 const defaults: $ObjMap<EnvDefs, ExtractEnvValue> = mapValues(
   envDefinitions,
-  o => o.def
+  (o) => o.def
 );
 
 // private local state
@@ -336,7 +485,7 @@ export const getEnvDesc = <Name: EnvName>(name: Name): string =>
 type ChangeValue<T> = {
   name: EnvName,
   value: EnvValue<T>,
-  oldValue: EnvValue<T>
+  oldValue: EnvValue<T>,
 };
 
 export const changes: Subject<ChangeValue<any>> = new Subject();

@@ -3,8 +3,34 @@ import { BigNumber } from "bignumber.js";
 import type { Transaction, TransactionRaw } from "./types";
 import {
   fromTransactionCommonRaw,
-  toTransactionCommonRaw
+  toTransactionCommonRaw,
 } from "../../transaction/common";
+import type { Account } from "../../types";
+import { getAccountUnit } from "../../account";
+import { formatCurrencyUnit } from "../../currencies";
+
+export const formatTransaction = (
+  { amount, recipient, fee, tag, useAllAmount }: Transaction,
+  account: Account
+): string =>
+  `
+SEND ${
+    useAllAmount
+      ? "MAX"
+      : formatCurrencyUnit(getAccountUnit(account), amount, {
+          showCode: true,
+          disableRounding: true,
+        })
+  }
+TO ${recipient}
+with fee=${
+    !fee
+      ? "?"
+      : formatCurrencyUnit(getAccountUnit(account), fee, {
+          showCode: true,
+          disableRounding: true,
+        })
+  }${tag ? "\n  tag=" + tag : ""}`;
 
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
@@ -18,8 +44,8 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     networkInfo: networkInfo && {
       family: networkInfo.family,
       serverFee: BigNumber(networkInfo.serverFee),
-      baseReserve: BigNumber(networkInfo.baseReserve)
-    }
+      baseReserve: BigNumber(networkInfo.baseReserve),
+    },
   };
 };
 
@@ -35,9 +61,9 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
     networkInfo: networkInfo && {
       family: networkInfo.family,
       serverFee: networkInfo.serverFee.toString(),
-      baseReserve: networkInfo.baseReserve.toString()
-    }
+      baseReserve: networkInfo.baseReserve.toString(),
+    },
   };
 };
 
-export default { fromTransactionRaw, toTransactionRaw };
+export default { formatTransaction, fromTransactionRaw, toTransactionRaw };

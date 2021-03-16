@@ -11,7 +11,7 @@ import {
   NotSupportedLegacyAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   RecommendSubAccountsToEmpty,
-  RecommendUndelegation
+  RecommendUndelegation,
 } from "@ledgerhq/errors";
 import { validateRecipient } from "../../../bridge/shared";
 import type { Account, AccountBridge, CurrencyBridge } from "../../../types";
@@ -23,17 +23,15 @@ import { getFeesForTransaction } from "../../../libcore/getFeesForTransaction";
 import broadcast from "../libcore-broadcast";
 import signOperation from "../libcore-signOperation";
 import { makeLRUCache } from "../../../cache";
-import { isAccountBalanceSignificant } from "../../../account";
+import { isAccountBalanceSignificant, getMainAccount } from "../../../account";
 import { withLibcore } from "../../../libcore/access";
 import { libcoreBigIntToBigNumber } from "../../../libcore/buildBigNumber";
 import { getCoreAccount } from "../../../libcore/getCoreAccount";
-import {
-  fetchAllBakers,
-  hydrateBakers,
-  asBaker,
-  isAccountDelegating
-} from "../bakers";
+import { fetchAllBakers, hydrateBakers, isAccountDelegating } from "../bakers";
 import { getEnv } from "../../../env";
+import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
+
+const receive = makeAccountBridgeReceive();
 
 type EstimateGasLimitAndStorage = (
   Account,
@@ -41,7 +39,7 @@ type EstimateGasLimitAndStorage = (
 ) => Promise<{ gasLimit: BigNumber, storage: BigNumber }>;
 export const estimateGasLimitAndStorage: EstimateGasLimitAndStorage = makeLRUCache(
   (account, addr) =>
-    withLibcore(async core => {
+    withLibcore(async (core) => {
       const { coreAccount } = await getCoreAccount(core, account);
       const tezosLikeAccount = await coreAccount.asTezosLikeAccount();
       const gasLimit = await libcoreBigIntToBigNumber(
@@ -64,7 +62,7 @@ const calculateFees = makeLRUCache(
   async (a, t) => {
     return getFeesForTransaction({
       account: a,
-      transaction: t
+      transaction: t,
     });
   },
   (a, t) =>
@@ -72,7 +70,7 @@ const calculateFees = makeLRUCache(
       t.gasLimit ? t.gasLimit.toString() : ""
     }_${t.fees ? t.fees.toString() : ""}_${
       t.storageLimit ? t.storageLimit.toString() : ""
-    }_${String(t.useAllAmount)}`
+    }_${String(t.useAllAmount)}_${String(t.subAccountId)}`
 );
 
 const createTransaction = () => ({
@@ -84,7 +82,7 @@ const createTransaction = () => ({
   storageLimit: null,
   recipient: "",
   networkInfo: null,
-  useAllAmount: false
+  useAllAmount: false,
 });
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
@@ -94,7 +92,7 @@ const getTransactionStatus = async (a, t) => {
   const warnings = {};
   const subAcc = !t.subAccountId
     ? null
-    : a.subAccounts && a.subAccounts.find(ta => ta.id === t.subAccountId);
+    : a.subAccounts && a.subAccounts.find((ta) => ta.id === t.subAccountId);
 
   invariant(
     t.mode === "send" || !subAcc,
@@ -137,11 +135,11 @@ const getTransactionStatus = async (a, t) => {
     errors.fees = new FeeNotLoaded();
   } else if (!errors.recipient) {
     await calculateFees(a, t).then(
-      res => {
+      (res) => {
         estimatedFees = res.estimatedFees;
         amount = res.value;
       },
-      error => {
+      (error) => {
         if (error.name === "NotEnoughBalance") {
           errors.amount = error;
         } else {
@@ -201,7 +199,7 @@ const getTransactionStatus = async (a, t) => {
     warnings,
     estimatedFees,
     amount,
-    totalSpent
+    totalSpent,
   });
 };
 
@@ -241,6 +239,24 @@ const prepareTransaction = async (a, t) => {
   return t;
 };
 
+const estimateMaxSpendable = async ({
+  account,
+  parentAccount,
+  transaction,
+}) => {
+  const mainAccount = getMainAccount(account, parentAccount);
+  const t = await prepareTransaction(mainAccount, {
+    ...createTransaction(),
+    subAccountId: account.type === "Account" ? null : account.id,
+    ...transaction,
+    // this seed is empty (worse case scenario is to send to new). addr from: 1. eyebrow 2. odor 3. rice 4. attack 5. loyal 6. tray 7. letter 8. harbor 9. resemble 10. sphere 11. system 12. forward 13. onion 14. buffalo 15. crumble
+    recipient: transaction?.recipient || "tz1VJitLYB31fEC82efFkLRU4AQUH9QgH3q6",
+    useAllAmount: true,
+  });
+  const s = await getTransactionStatus(mainAccount, t);
+  return s.amount;
+};
+
 const preload = async () => {
   const bakers = await fetchAllBakers();
   return { bakers };
@@ -250,13 +266,13 @@ const hydrate = (data: mixed) => {
   if (!data || typeof data !== "object") return;
   const { bakers } = data;
   if (!bakers || typeof bakers !== "object" || !Array.isArray(bakers)) return;
-  hydrateBakers(bakers.map(asBaker).filter(Boolean));
+  hydrateBakers(bakers);
 };
 
 const currencyBridge: CurrencyBridge = {
   preload,
   hydrate,
-  scanAccounts
+  scanAccounts,
 };
 
 const accountBridge: AccountBridge<Transaction> = {
@@ -264,9 +280,11 @@ const accountBridge: AccountBridge<Transaction> = {
   updateTransaction,
   prepareTransaction,
   getTransactionStatus,
+  estimateMaxSpendable,
   sync,
+  receive,
   signOperation,
-  broadcast
+  broadcast,
 };
 
 export default { currencyBridge, accountBridge };

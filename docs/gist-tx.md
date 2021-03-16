@@ -21,11 +21,11 @@ const { first, map, reduce, tap } = require("rxjs/operators");
 const {
   getCryptoCurrencyById,
   formatCurrencyUnit,
-  parseCurrencyUnit
+  parseCurrencyUnit,
 } = require("@ledgerhq/live-common/lib/currencies");
 const {
   getCurrencyBridge,
-  getAccountBridge
+  getAccountBridge,
 } = require("@ledgerhq/live-common/lib/bridge");
 
 // our small example is a script that takes 3 params.
@@ -49,8 +49,8 @@ const TransportNodeHid = require("@ledgerhq/hw-transport-node-hid-noevents")
 const implementLibcore = require("@ledgerhq/live-common/lib/libcore/platforms/nodejs")
   .default;
 const {
-  setSupportedCurrencies
-} = require("@ledgerhq/live-common/lib/data/cryptocurrencies");
+  setSupportedCurrencies,
+} = require("@ledgerhq/live-common/lib/currencies");
 
 // configure which coins to enable
 setSupportedCurrencies([currencyId]);
@@ -58,14 +58,14 @@ setSupportedCurrencies([currencyId]);
 // provide a libcore implementation
 implementLibcore({
   lib: () => require("@ledgerhq/ledger-core"),
-  dbPath: "./dbdata"
+  dbPath: "./dbdata",
 });
 
 // configure which transport are available
 registerTransportModule({
   id: "hid",
-  open: devicePath => TransportNodeHid.open(devicePath),
-  disconnect: () => Promise.resolve()
+  open: (devicePath) => TransportNodeHid.open(devicePath),
+  disconnect: () => Promise.resolve(),
 });
 
 /////////////////////////
@@ -75,7 +75,10 @@ async function main() {
   const currencyBridge = getCurrencyBridge(currency);
 
   // some currency requires some data to be loaded (today it's not highly used but will be more and more)
-  await currencyBridge.preload();
+  const data = await currencyBridge.preload(currency);
+  if (data) {
+    currencyBridge.hydrate(currency, data);
+  }
 
   // in our case, we don't need to paginate
   const syncConfig = { paginationConfig: {} };
@@ -85,8 +88,8 @@ async function main() {
     .scanAccounts({ currency, deviceId, syncConfig })
     .pipe(
       // there can be many accounts, for sake of example we take first non empty
-      first(e => e.type === "discovered" && e.account.balance.gt(0)),
-      map(e => e.account)
+      first((e) => e.type === "discovered" && e.account.balance.gt(0)),
+      map((e) => e.account)
     )
     .toPromise();
 
@@ -124,10 +127,10 @@ async function main() {
   const signedOperation = await accountBridge
     .signOperation({ account, transaction: t, deviceId })
     .pipe(
-      tap(e => console.log(e)), // log events
+      tap((e) => console.log(e)), // log events
       // there are many events. we just take the final signed
-      first(e => e.type === "signed"),
-      map(e => e.signedOperation)
+      first((e) => e.type === "signed"),
+      map((e) => e.signedOperation)
     )
     .toPromise();
 

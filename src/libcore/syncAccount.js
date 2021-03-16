@@ -8,7 +8,7 @@ import type {
   SyncConfig,
   Account,
   CryptoCurrency,
-  DerivationMode
+  DerivationMode,
 } from "../types";
 import { withLibcore } from "./access";
 import { buildAccount } from "./buildAccount";
@@ -16,6 +16,7 @@ import { getCoreAccount } from "./getCoreAccount";
 import { remapLibcoreErrors } from "./errors";
 import { shouldRetainPendingOperation } from "../account";
 import postSyncPatchPerFamily from "../generated/libcore-postSyncPatch";
+import perFamilyPresync from "../generated/presync";
 
 let coreSyncCounter = 0;
 export const newSyncLogId = () => ++coreSyncCounter;
@@ -30,7 +31,7 @@ export async function syncCoreAccount({
   seedIdentifier,
   existingAccount,
   logId,
-  syncConfig
+  syncConfig,
 }: {
   core: *,
   coreWallet: *,
@@ -41,8 +42,12 @@ export async function syncCoreAccount({
   seedIdentifier: string,
   existingAccount?: ?Account,
   logId: number,
-  syncConfig: SyncConfig
+  syncConfig: SyncConfig,
 }): Promise<Account> {
+  const presync = perFamilyPresync[currency.family];
+  if (presync) {
+    await presync(currency);
+  }
   try {
     if (!syncConfig.withoutSynchronize) {
       log("libcore", `sync(${logId}) syncCoreAccount`);
@@ -59,6 +64,7 @@ export async function syncCoreAccount({
     }
 
     const account = await buildAccount({
+      core,
       coreWallet,
       coreAccount,
       currency,
@@ -67,7 +73,7 @@ export async function syncCoreAccount({
       seedIdentifier,
       existingAccount,
       logId,
-      syncConfig
+      syncConfig,
     });
 
     return account;
@@ -91,7 +97,7 @@ export function sync(
     postSyncPatchPerFamily[currency.family] || defaultPostSyncPatch;
   return defer(() =>
     from(
-      withLibcore(core => {
+      withLibcore((core) => {
         log("libcore", `sync(${logId}) started. ${existingAccount.id}`);
         return getCoreAccount(core, existingAccount).then(
           ({ coreWallet, coreAccount, walletName }) =>
@@ -106,15 +112,16 @@ export function sync(
               seedIdentifier,
               existingAccount,
               logId,
-              syncConfig
+              syncConfig,
             })
         );
       })
     )
   ).pipe(
-    map(syncedAccount => initialAccount =>
+    map((syncedAccount) => (initialAccount) =>
       postSyncPatch(initialAccount, {
         ...initialAccount,
+        // FIXME, the "patching" logic should be somewhere else, especially that it's also in jsHelpers
         id: syncedAccount.id,
         freshAddress: syncedAccount.freshAddress,
         freshAddressPath: syncedAccount.freshAddressPath,
@@ -123,11 +130,16 @@ export function sync(
         spendableBalance: syncedAccount.spendableBalance,
         blockHeight: syncedAccount.blockHeight,
         lastSyncDate: new Date(),
+        creationDate: syncedAccount.creationDate,
         operations: syncedAccount.operations,
+        operationsCount: syncedAccount.operations.length,
         subAccounts: syncedAccount.subAccounts,
-        pendingOperations: initialAccount.pendingOperations.filter(op =>
+        pendingOperations: initialAccount.pendingOperations.filter((op) =>
           shouldRetainPendingOperation(syncedAccount, op)
-        )
+        ),
+        cosmosResources: syncedAccount.cosmosResources,
+        algorandResources: syncedAccount.algorandResources,
+        bitcoinResources: syncedAccount.bitcoinResources,
       })
     )
   );

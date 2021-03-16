@@ -4,7 +4,7 @@ import {
   NotEnoughBalance,
   RecipientRequired,
   InvalidAddress,
-  FeeTooHigh
+  FeeTooHigh,
 } from "@ledgerhq/errors";
 import type { Transaction } from "../types";
 import type { AccountBridge, CurrencyBridge } from "../../../types";
@@ -14,8 +14,12 @@ import {
   signOperation,
   broadcast,
   sync,
-  isInvalidRecipient
+  isInvalidRecipient,
 } from "../../../bridge/mockHelpers";
+import { getMainAccount } from "../../../account";
+import { makeAccountBridgeReceive } from "../../../bridge/mockHelpers";
+
+const receive = makeAccountBridgeReceive();
 
 const defaultGetFees = (a, t: *) => (t.feePerByte || BigNumber(0)).times(250);
 
@@ -25,10 +29,26 @@ const createTransaction = (): Transaction => ({
   recipient: "",
   feePerByte: BigNumber(10),
   networkInfo: null,
-  useAllAmount: false
+  useAllAmount: false,
+  rbf: false,
+  utxoStrategy: {
+    strategy: 0,
+    pickUnconfirmedRBF: false,
+    excludeUTXOs: [],
+  },
 });
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
+
+const estimateMaxSpendable = ({ account, parentAccount, transaction }) => {
+  const mainAccount = getMainAccount(account, parentAccount);
+  const estimatedFees = transaction
+    ? defaultGetFees(mainAccount, transaction)
+    : BigNumber(5000);
+  return Promise.resolve(
+    BigNumber.max(0, account.balance.minus(estimatedFees))
+  );
+};
 
 const getTransactionStatus = (account, t) => {
   const errors = {};
@@ -66,7 +86,7 @@ const getTransactionStatus = (account, t) => {
     warnings,
     estimatedFees,
     amount,
-    totalSpent
+    totalSpent,
   });
 };
 
@@ -78,27 +98,29 @@ const prepareTransaction = async (a, t) => {
       ...t,
       networkInfo: {
         family: "bitcoin",
-        feeItems
-      }
+        feeItems,
+      },
     };
   }
   return t;
 };
 
 const accountBridge: AccountBridge<Transaction> = {
+  estimateMaxSpendable,
   createTransaction,
   updateTransaction,
   getTransactionStatus,
   prepareTransaction,
   sync,
+  receive,
   signOperation,
-  broadcast
+  broadcast,
 };
 
 const currencyBridge: CurrencyBridge = {
   scanAccounts,
   preload: () => Promise.resolve(),
-  hydrate: () => {}
+  hydrate: () => {},
 };
 
 export default { currencyBridge, accountBridge };

@@ -1,8 +1,8 @@
 // @flow
-import ethereum from "../families/ethereum/libcore-buildSubAccounts.js";
+import algorand from "../families/algorand/libcore-buildSubAccounts.js";
 import tezos from "../families/tezos/libcore-buildSubAccounts.js";
 
 export default {
-  ethereum,
+  algorand,
   tezos,
 };

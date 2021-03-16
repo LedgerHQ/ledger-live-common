@@ -3,7 +3,7 @@ import type { Currency } from "../types";
 // $FlowFixMe to be figured out
 import { useState, useEffect } from "react";
 import { makeLRUCache } from "../cache";
-import { getCountervalues } from "../countervalues";
+import api from "../countervalues/api";
 
 export const sortByMarketcap = <C: Currency>(
   currencies: C[],
@@ -11,8 +11,10 @@ export const sortByMarketcap = <C: Currency>(
 ): C[] => {
   const list = currencies.slice(0);
   const prependList = [];
-  tickers.forEach(ticker => {
-    const item = list.find(c => !c.disableCountervalue && c.ticker === ticker);
+  tickers.forEach((ticker) => {
+    const item = list.find(
+      (c) => !c.disableCountervalue && c.ticker === ticker
+    );
     if (item) {
       list.splice(list.indexOf(item), 1);
       prependList.push(item);
@@ -23,12 +25,10 @@ export const sortByMarketcap = <C: Currency>(
 
 let marketcapTickersCache;
 export const getMarketcapTickers: () => Promise<string[]> = makeLRUCache(() =>
-  getCountervalues()
-    .fetchTickersByMarketcap()
-    .then(tickers => {
-      marketcapTickersCache = tickers;
-      return tickers;
-    })
+  api.fetchMarketcapTickers().then((tickers) => {
+    marketcapTickersCache = tickers;
+    return tickers;
+  })
 );
 
 // React style version of getMarketcapTickers
@@ -44,7 +44,7 @@ export const currenciesByMarketcap = <C: Currency>(
   currencies: C[]
 ): Promise<C[]> =>
   getMarketcapTickers().then(
-    tickers => sortByMarketcap(currencies, tickers),
+    (tickers) => sortByMarketcap(currencies, tickers),
     () => currencies
   );
 

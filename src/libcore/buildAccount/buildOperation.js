@@ -1,23 +1,30 @@
 // @flow
 
 import { log } from "@ledgerhq/logs";
-import type { Operation, CryptoCurrency, SubAccount } from "../../types";
+import type {
+  Operation,
+  CryptoCurrency,
+  SubAccount,
+  AccountLike,
+} from "../../types";
 import { libcoreAmountToBigNumber } from "../buildBigNumber";
 import { inferSubOperations } from "../../account";
-import type { CoreOperation } from "../types";
+import type { Core, CoreOperation } from "../types";
 import perFamily from "../../generated/libcore-buildOperation";
 import { getEnv } from "../../env";
 
 export const OperationTypeMap = {
   "0": "OUT",
-  "1": "IN"
+  "1": "IN",
 };
 
 export async function buildOperation(arg: {
+  core: Core,
   coreOperation: CoreOperation,
   accountId: string,
   currency: CryptoCurrency,
-  contextualSubAccounts?: ?(SubAccount[])
+  contextualSubAccounts?: ?(SubAccount[]),
+  existingAccount: ?AccountLike,
 }) {
   const { coreOperation, accountId, currency, contextualSubAccounts } = arg;
   const buildOp = perFamily[currency.family];
@@ -42,8 +49,10 @@ export async function buildOperation(arg: {
   const blockHeight = await coreOperation.getBlockHeight();
 
   const [recipients, senders] = await Promise.all([
-    coreOperation.getRecipients(),
-    coreOperation.getSenders()
+    type === "IN" && currency.family === "bitcoin"
+      ? coreOperation.getSelfRecipients()
+      : coreOperation.getRecipients(),
+    coreOperation.getSenders(),
   ]);
 
   const date = new Date(await coreOperation.getDate());
@@ -58,12 +67,15 @@ export async function buildOperation(arg: {
     blockHash: null,
     accountId,
     date,
-    extra: {}
+    extra: {},
   };
 
   const rest = await buildOp(arg, partialOp);
   if (!rest) return null;
-  const id = `${accountId}-${rest.hash}-${rest.type || type}`;
+
+  const id = `${accountId}-${rest.hash}-${rest.type || type}${
+    rest.extra && rest.extra.id ? "-" + rest.extra.id : ""
+  }`;
 
   const op: $Exact<Operation> = {
     id,
@@ -71,7 +83,7 @@ export async function buildOperation(arg: {
       ? inferSubOperations(rest.hash, contextualSubAccounts)
       : undefined,
     ...partialOp,
-    ...rest
+    ...rest,
   };
 
   const OPERATION_ADDRESSES_LIMIT = getEnv("OPERATION_ADDRESSES_LIMIT");
@@ -87,7 +99,7 @@ export async function buildOperation(arg: {
   if (op.senders.length > OPERATION_ADDRESSES_LIMIT) {
     log(
       "warning",
-      `operation.senders too big (${op.recipients.length} > ${OPERATION_ADDRESSES_LIMIT}) – ${id}`
+      `operation.senders too big (${op.senders.length} > ${OPERATION_ADDRESSES_LIMIT}) – ${id}`
     );
     op.senders.splice(OPERATION_ADDRESSES_LIMIT);
   }

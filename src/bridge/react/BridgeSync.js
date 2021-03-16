@@ -10,7 +10,7 @@ import React, {
   useCallback,
   useState,
   useRef,
-  useMemo
+  useMemo,
 } from "react";
 import { getVotesCount, isUpToDateAccount } from "../../account";
 import type { SubAccount, Account, CryptoCurrency } from "../../types";
@@ -32,13 +32,15 @@ export type Props = {
   ) => void,
   // handles an error / log / do action with it
   // if the function returns falsy, the sync will ignore error, otherwise it's treated as error with the error you return (likely the same)
-  recoverError: Error => ?Error,
+  recoverError: (Error) => ?Error,
   // track sync lifecycle for analytics
   trackAnalytics: (string, ?Object) => void,
   // load all data needed for a currency (it's calling currencyBridge prepare mechanism)
-  prepareCurrency: (currency: CryptoCurrency) => Promise<void>,
+  prepareCurrency: (currency: CryptoCurrency) => Promise<*>,
   // provide an implementation of hydrate (it preload from a local storage impl the data cached from a previous prepare)
-  hydrateCurrency: (currency: CryptoCurrency) => Promise<void>
+  hydrateCurrency: (currency: CryptoCurrency) => Promise<*>,
+  // an array of token ids to blacklist from the account sync
+  blacklistedTokenIds?: string[],
 };
 
 export const BridgeSync = ({
@@ -48,11 +50,12 @@ export const BridgeSync = ({
   recoverError,
   trackAnalytics,
   prepareCurrency,
-  hydrateCurrency
+  hydrateCurrency,
+  blacklistedTokenIds,
 }: Props) => {
   useHydrate({
     accounts,
-    hydrateCurrency
+    hydrateCurrency,
   });
 
   const [syncQueue, syncState] = useSyncQueue({
@@ -60,21 +63,22 @@ export const BridgeSync = ({
     prepareCurrency,
     recoverError,
     trackAnalytics,
-    updateAccountWithUpdater
+    updateAccountWithUpdater,
+    blacklistedTokenIds,
   });
 
   const sync = useSync({
     syncQueue,
-    accounts
+    accounts,
   });
 
   useSyncBackground({
-    sync
+    sync,
   });
 
   useSyncContinouslyPendingOperations({
     sync,
-    accounts
+    accounts,
   });
 
   return (
@@ -114,14 +118,15 @@ function useSyncQueue({
   prepareCurrency,
   recoverError,
   trackAnalytics,
-  updateAccountWithUpdater
+  updateAccountWithUpdater,
+  blacklistedTokenIds,
 }) {
   const [bridgeSyncState, setBridgeSyncState]: [BridgeSyncState, *] = useState(
     {}
   );
 
   const setAccountSyncState = useCallback((accountId: string, s: SyncState) => {
-    setBridgeSyncState(state => ({ ...state, [accountId]: s }));
+    setBridgeSyncState((state) => ({ ...state, [accountId]: s }));
   }, []);
 
   const synchronize = useCallback(
@@ -131,7 +136,7 @@ function useSyncQueue({
         next();
         return;
       }
-      const account = accounts.find(a => a.id === accountId);
+      const account = accounts.find((a) => a.id === accountId);
       if (!account) {
         next();
         return;
@@ -151,9 +156,9 @@ function useSyncQueue({
         if (!trackedRecently) {
           lastTimeAnalyticsTrackPerAccountId[accountId] = startSyncTime;
         }
-        const trackEnd = event => {
+        const trackEnd = (event) => {
           if (trackedRecently) return;
-          const account = accounts.find(a => a.id === accountId);
+          const account = accounts.find((a) => a.id === accountId);
           if (!account) return;
           const subAccounts: SubAccount[] = account.subAccounts || [];
           trackAnalytics(event, {
@@ -161,13 +166,16 @@ function useSyncQueue({
             currencyName: account.currency.name,
             derivationMode: account.derivationMode,
             freshAddressPath: account.freshAddressPath,
-            operationsLength: account.operations.length,
+            operationsLength: account.operationsCount,
+            accountsCountForCurrency: accounts.filter(
+              (a) => a.currency === account.currency
+            ).length,
             tokensLength: subAccounts.length,
-            votesCount: getVotesCount(account)
+            votesCount: getVotesCount(account),
           });
 
           if (event === "SyncSuccess") {
-            subAccounts.forEach(a => {
+            subAccounts.forEach((a) => {
               const tokenId =
                 a.type === "TokenAccount"
                   ? getAccountCurrency(a).id
@@ -175,32 +183,32 @@ function useSyncQueue({
               trackAnalytics("SyncSuccessToken", {
                 tokenId,
                 tokenTicker: getAccountCurrency(a).ticker,
-                operationsLength: a.operations.length,
+                operationsLength: a.operationsCount,
                 parentCurrencyName: account.currency.name,
                 parentDerivationMode: account.derivationMode,
-                votesCount: getVotesCount(a, account)
+                votesCount: getVotesCount(a, account),
               });
             });
           }
         };
 
         const syncConfig = {
-          // TODO paginationConfig will come from redux
-          paginationConfig: {}
+          paginationConfig: {},
+          blacklistedTokenIds,
         };
 
         concat(
           from(prepareCurrency(account.currency)).pipe(ignoreElements()),
           bridge.sync(account, syncConfig)
         ).subscribe({
-          next: accountUpdater => {
+          next: (accountUpdater) => {
             updateAccountWithUpdater(accountId, accountUpdater);
           },
           complete: () => {
             trackEnd("SyncSuccess");
             setAccountSyncState(accountId, {
               pending: false,
-              error: null
+              error: null,
             });
             next();
           },
@@ -211,7 +219,7 @@ function useSyncQueue({
               // This error is normal because the thread was recently killed. we silent it for the user.
               setAccountSyncState(accountId, {
                 pending: false,
-                error: null
+                error: null,
               });
               next();
               return;
@@ -223,7 +231,7 @@ function useSyncQueue({
 
             setAccountSyncState(accountId, { pending: false, error });
             next();
-          }
+          },
         });
       } catch (error) {
         setAccountSyncState(accountId, { pending: false, error });
@@ -237,7 +245,8 @@ function useSyncQueue({
       recoverError,
       setAccountSyncState,
       trackAnalytics,
-      updateAccountWithUpdater
+      updateAccountWithUpdater,
+      blacklistedTokenIds,
     ]
   );
 
@@ -266,13 +275,13 @@ function useSync({ syncQueue, accounts }) {
       if (priority < skipUnderPriority.current) return;
       // by convention we remove concurrent tasks with same priority
       // FIXME this is somehow a hack. ideally we should just dedup the account ids in the pending queue...
-      syncQueue.remove(o => priority === o.priority);
+      syncQueue.remove((o) => priority === o.priority);
       log("bridge", "schedule " + ids.join(", "));
       syncQueue.push(ids, -priority);
     };
 
     // don't always sync in the same order to avoid potential "account never reached"
-    const shuffledAccountIds = () => shuffle(accounts.map(a => a.id));
+    const shuffledAccountIds = () => shuffle(accounts.map((a) => a.id));
 
     const handlers = {
       BACKGROUND_TICK: () => {
@@ -297,23 +306,23 @@ function useSync({ syncQueue, accounts }) {
 
       SYNC_ONE_ACCOUNT: ({
         accountId,
-        priority
+        priority,
       }: {
         accountId: string,
-        priority: number
+        priority: number,
       }) => {
         schedule([accountId], priority);
       },
 
       SYNC_SOME_ACCOUNTS: ({
         accountIds,
-        priority
+        priority,
       }: {
         accountIds: string[],
-        priority: number
+        priority: number,
       }) => {
         schedule(accountIds, priority);
-      }
+      },
     };
 
     return (action: SyncAction) => {
@@ -325,7 +334,7 @@ function useSync({ syncQueue, accounts }) {
       } else {
         log("warn", "BridgeSyncContext unsupported action", {
           action,
-          type: "syncQueue"
+          type: "syncQueue",
         });
       }
     };
@@ -336,7 +345,7 @@ function useSync({ syncQueue, accounts }) {
     ref.current = sync;
   }, [sync]);
 
-  const syncFn = useCallback(action => ref.current(action), [ref]);
+  const syncFn = useCallback((action) => ref.current(action), [ref]);
 
   return syncFn;
 }
@@ -359,7 +368,8 @@ function useSyncBackground({ sync }) {
 
 function useSyncContinouslyPendingOperations({ sync, accounts }) {
   const ids = useMemo(
-    () => accounts.filter(a => a.pendingOperations.length > 0).map(a => a.id),
+    () =>
+      accounts.filter((a) => a.pendingOperations.length > 0).map((a) => a.id),
     [accounts]
   );
 
@@ -374,7 +384,7 @@ function useSyncContinouslyPendingOperations({ sync, accounts }) {
       sync({
         type: "SYNC_SOME_ACCOUNTS",
         accountIds: refIds.current,
-        priority: 20
+        priority: 20,
       });
       timeout = setTimeout(update, getEnv("SYNC_PENDING_INTERVAL"));
     };

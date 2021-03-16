@@ -9,26 +9,29 @@ import { getAddressFormatDerivationMode } from "../../derivation";
 import type { Resolver } from "../../hw/getAddress/types";
 
 const oldP2SH = {
-  digibyte: 5
+  digibyte: 5,
 };
 
 const resolver: Resolver = async (
   transport,
-  { currency, path, verify, derivationMode, skipAppFailSafeCheck }
+  { currency, path, verify, derivationMode, forceFormat, skipAppFailSafeCheck }
 ) => {
   const btc = new Btc(transport);
-  const format = getAddressFormatDerivationMode(derivationMode);
+  let format = forceFormat || getAddressFormatDerivationMode(derivationMode);
   invariant(
-    format === "legacy" || format === "p2sh" || format === "bech32",
+    format === "legacy" ||
+      format === "p2sh" ||
+      format === "bech32" ||
+      format === "cashaddr",
     "unsupported format %s",
     format
   );
 
-  const { bitcoinAddress, publicKey, chainCode } = await btc.getWalletPublicKey(
+  let { bitcoinAddress, publicKey, chainCode } = await btc.getWalletPublicKey(
     path,
     {
       verify,
-      format
+      format,
     }
   );
 

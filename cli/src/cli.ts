@@ -15,18 +15,18 @@ import perFamily from "@ledgerhq/live-common/lib/generated/cli-transaction";
 const commands = {
   ...Object.values(perFamily)
     // @ts-ignore
-    .map(m => typeof m === "object" && m && m.commands)
+    .map((m) => typeof m === "object" && m && m.commands)
     .reduce((acc, c) => ({ ...acc, ...c }), {}),
-  ...commandsMain
+  ...commandsMain,
 };
 
 const mainOptions = commandLineArgs(
   [
     { name: "command", defaultOption: true },
-    { name: "help", alias: "h", type: Boolean }
+    { name: "help", alias: "h", type: Boolean },
   ],
   {
-    stopAtFirstUnknown: true
+    stopAtFirstUnknown: true,
   }
 );
 
@@ -85,12 +85,12 @@ if (!cmd) {
   process.exit(1);
 }
 const argv = mainOptions._unknown || [];
-const options = commandLineArgs(cmd.args, { argv });
+const options = commandLineArgs(cmd.args, { argv, stopAtFirstUnknown: true });
 from(cmd.job(options)).subscribe({
-  next: log => {
+  next: (log) => {
     if (log !== undefined) console.log(log);
   },
-  error: error => {
+  error: (error) => {
     const e = error instanceof Error ? error : deserializeError(error);
     if (process.env.VERBOSE || process.env.VERBOSE_FILE) console.error(e);
     else console.error(String(e.message || e));
@@ -98,5 +98,18 @@ from(cmd.job(options)).subscribe({
   },
   complete: () => {
     closeAllDevices();
+  },
+});
+
+let sigIntSent;
+process.on("SIGINT", () => {
+  if (!sigIntSent) {
+    sigIntSent = Date.now();
+    closeAllDevices();
+  } else {
+    if (Date.now() - sigIntSent > 3000) {
+      console.error("was not able to terminate gracefully. exiting");
+      process.exit(1);
+    }
   }
 });

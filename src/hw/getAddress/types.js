@@ -7,7 +7,17 @@ export type Result = {
   address: string,
   path: string,
   publicKey: string,
-  chainCode?: string
+  chainCode?: string,
+};
+
+export type GetAddressOptions = {
+  currency: CryptoCurrency,
+  path: string,
+  derivationMode: DerivationMode,
+  verify?: boolean,
+  skipAppFailSafeCheck?: boolean,
+  askChainCode?: boolean,
+  forceFormat?: string,
 };
 
 export type Resolver = (
@@ -18,6 +28,7 @@ export type Resolver = (
     derivationMode: DerivationMode,
     verify?: boolean,
     skipAppFailSafeCheck?: boolean,
-    askChainCode?: boolean
+    askChainCode?: boolean,
+    forceFormat?: string,
   }
 ) => Promise<Result>;

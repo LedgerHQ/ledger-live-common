@@ -7,18 +7,17 @@ export type Result = {
   rsv: {
     r: string,
     s: string,
-    v: number
+    v: number,
   },
-  signature: string
+  signature: string,
 };
 
-export type Resolver = (
-  Transport<*>,
-  {
-    currency: CryptoCurrency,
-    path: string,
-    verify?: boolean,
-    derivationMode: DerivationMode,
-    message: string
-  }
-) => Promise<Result>;
+export type MessageData = {
+  currency: CryptoCurrency,
+  path: string,
+  verify?: boolean,
+  derivationMode: DerivationMode,
+  message: string,
+};
+
+export type Resolver = (Transport<*>, MessageData) => Promise<Result>;

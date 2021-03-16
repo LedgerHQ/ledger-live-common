@@ -3,6 +3,8 @@ import { BigNumber } from "bignumber.js";
 import type {
   Account,
   AccountRaw,
+  AccountLike,
+  AccountRawLike,
   BalanceHistory,
   BalanceHistoryRaw,
   BalanceHistoryMap,
@@ -14,14 +16,39 @@ import type {
   Operation,
   OperationRaw,
   SubAccount,
-  SubAccountRaw
+  SubAccountRaw,
 } from "../types";
 import type { TronResources, TronResourcesRaw } from "../families/tron/types";
 import {
+  toBitcoinResourcesRaw,
+  fromBitcoinResourcesRaw,
+} from "../families/bitcoin/serialization";
+import {
+  toCosmosResourcesRaw,
+  fromCosmosResourcesRaw,
+} from "../families/cosmos/serialization";
+import {
+  toAlgorandResourcesRaw,
+  fromAlgorandResourcesRaw,
+} from "../families/algorand/serialization";
+import {
+  toPolkadotResourcesRaw,
+  fromPolkadotResourcesRaw,
+} from "../families/polkadot/serialization";
+import {
   getCryptoCurrencyById,
   getTokenById,
-  findTokenById
+  findTokenById,
 } from "../currencies";
+import { inferFamilyFromAccountId } from "./accountId";
+import accountByFamily from "../generated/account";
+import { isAccountEmpty } from "./helpers";
+import type { SwapOperation, SwapOperationRaw } from "../exchange/swap/types";
+
+export { toCosmosResourcesRaw, fromCosmosResourcesRaw };
+export { toAlgorandResourcesRaw, fromAlgorandResourcesRaw };
+export { toBitcoinResourcesRaw, fromBitcoinResourcesRaw };
+export { toPolkadotResourcesRaw, fromPolkadotResourcesRaw };
 
 export function toBalanceHistoryRaw(b: BalanceHistory): BalanceHistoryRaw {
   return b.map(({ date, value }) => [date.toISOString(), value.toString()]);
@@ -30,7 +57,7 @@ export function toBalanceHistoryRaw(b: BalanceHistory): BalanceHistoryRaw {
 export function fromBalanceHistoryRaw(b: BalanceHistoryRaw): BalanceHistory {
   return b.map(([date, value]) => ({
     date: new Date(date),
-    value: new BigNumber(value)
+    value: new BigNumber(value),
   }));
 }
 
@@ -38,7 +65,7 @@ export function toBalanceHistoryRawMap(
   bhm: BalanceHistoryMap
 ): BalanceHistoryRawMap {
   const map = {};
-  Object.keys(bhm).forEach(range => {
+  Object.keys(bhm).forEach((range) => {
     map[range] = toBalanceHistoryRaw(bhm[range]);
   });
   return map;
@@ -48,27 +75,47 @@ export function fromBalanceHistoryRawMap(
   bhm: BalanceHistoryRawMap
 ): BalanceHistoryMap {
   const map = {};
-  Object.keys(bhm).forEach(range => {
+  Object.keys(bhm).forEach((range) => {
     map[range] = fromBalanceHistoryRaw(bhm[range]);
   });
   return map;
 }
 
 export const toOperationRaw = (
-  { date, value, fee, subOperations, internalOperations, ...op }: Operation,
+  {
+    date,
+    value,
+    fee,
+    subOperations,
+    internalOperations,
+    extra,
+    ...op
+  }: Operation,
   preserveSubOperation?: boolean
 ): OperationRaw => {
+  let e = extra;
+  if (e) {
+    const family = inferFamilyFromAccountId(op.accountId);
+    if (family) {
+      const abf = accountByFamily[family];
+      if (abf && abf.toOperationExtraRaw) {
+        e = abf.toOperationExtraRaw(e);
+      }
+    }
+  }
+
   const copy: OperationRaw = {
     ...op,
+    extra: e,
     date: date.toISOString(),
     value: value.toString(),
-    fee: fee.toString()
+    fee: fee.toString(),
   };
   if (subOperations && preserveSubOperation) {
-    copy.subOperations = subOperations.map(o => toOperationRaw(o));
+    copy.subOperations = subOperations.map((o) => toOperationRaw(o));
   }
   if (internalOperations) {
-    copy.internalOperations = internalOperations.map(o => toOperationRaw(o));
+    copy.internalOperations = internalOperations.map((o) => toOperationRaw(o));
   }
   return copy;
 };
@@ -109,25 +156,36 @@ export const fromOperationRaw = (
   accountId: string,
   subAccounts?: ?(SubAccount[])
 ): Operation => {
+  let e = extra;
+  if (e) {
+    const family = inferFamilyFromAccountId(accountId);
+    if (family) {
+      const abf = accountByFamily[family];
+      if (abf && abf.fromOperationExtraRaw) {
+        e = abf.fromOperationExtraRaw(e);
+      }
+    }
+  }
+
   const res: Operation = {
     ...op,
     accountId,
     date: new Date(date),
     value: BigNumber(value),
     fee: BigNumber(fee),
-    extra: extra || {}
+    extra: e || {},
   };
 
   if (subAccounts) {
     res.subOperations = inferSubOperations(op.hash, subAccounts);
   } else if (subOperations) {
-    res.subOperations = subOperations.map(o =>
+    res.subOperations = subOperations.map((o) =>
       fromOperationRaw(o, o.accountId)
     );
   }
 
   if (internalOperations) {
-    res.internalOperations = internalOperations.map(o =>
+    res.internalOperations = internalOperations.map((o) =>
       fromOperationRaw(o, o.accountId)
     );
   }
@@ -142,46 +200,64 @@ export const toTronResourcesRaw = ({
   tronPower,
   energy,
   bandwidth,
-  unwithdrawnReward
+  unwithdrawnReward,
+  lastWithdrawnRewardDate,
+  lastVotedDate,
+  cacheTransactionInfoById: cacheTx,
 }: TronResources): TronResourcesRaw => {
   const frozenBandwidth = frozen.bandwidth;
   const frozenEnergy = frozen.energy;
   const delegatedFrozenBandwidth = delegatedFrozen.bandwidth;
   const delegatedFrozenEnergy = delegatedFrozen.energy;
+  const cacheTransactionInfoById = {};
+  for (let k in cacheTx) {
+    const { fee, blockNumber, withdraw_amount, unfreeze_amount } = cacheTx[k];
+    cacheTransactionInfoById[k] = [
+      fee,
+      blockNumber,
+      withdraw_amount,
+      unfreeze_amount,
+    ];
+  }
+
   return {
     frozen: {
       bandwidth: frozenBandwidth
         ? {
             amount: frozenBandwidth.amount.toString(),
-            expiredAt: frozenBandwidth.expiredAt.toISOString()
+            expiredAt: frozenBandwidth.expiredAt.toISOString(),
           }
         : undefined,
       energy: frozenEnergy
         ? {
             amount: frozenEnergy.amount.toString(),
-            expiredAt: frozenEnergy.expiredAt.toISOString()
+            expiredAt: frozenEnergy.expiredAt.toISOString(),
           }
-        : undefined
+        : undefined,
     },
     delegatedFrozen: {
       bandwidth: delegatedFrozenBandwidth
-        ? {
-            amount: delegatedFrozenBandwidth.amount.toString(),
-            expiredAt: delegatedFrozenBandwidth.expiredAt.toISOString()
-          }
+        ? { amount: delegatedFrozenBandwidth.amount.toString() }
         : undefined,
       energy: delegatedFrozenEnergy
-        ? {
-            amount: delegatedFrozenEnergy.amount.toString(),
-            expiredAt: delegatedFrozenEnergy.expiredAt.toISOString()
-          }
-        : undefined
+        ? { amount: delegatedFrozenEnergy.amount.toString() }
+        : undefined,
     },
     votes,
     tronPower,
-    energy,
-    bandwidth,
-    unwithdrawnReward
+    energy: energy.toString(),
+    bandwidth: {
+      freeUsed: bandwidth.freeUsed.toString(),
+      freeLimit: bandwidth.freeLimit.toString(),
+      gainedUsed: bandwidth.gainedUsed.toString(),
+      gainedLimit: bandwidth.gainedLimit.toString(),
+    },
+    unwithdrawnReward: unwithdrawnReward.toString(),
+    lastWithdrawnRewardDate: lastWithdrawnRewardDate
+      ? lastWithdrawnRewardDate.toISOString()
+      : undefined,
+    lastVotedDate: lastVotedDate ? lastVotedDate.toISOString() : undefined,
+    cacheTransactionInfoById,
   };
 };
 
@@ -192,48 +268,92 @@ export const fromTronResourcesRaw = ({
   tronPower,
   energy,
   bandwidth,
-  unwithdrawnReward
+  unwithdrawnReward,
+  lastWithdrawnRewardDate,
+  lastVotedDate,
+  cacheTransactionInfoById: cacheTransactionInfoByIdRaw,
 }: TronResourcesRaw): TronResources => {
   const frozenBandwidth = frozen.bandwidth;
   const frozenEnergy = frozen.energy;
   const delegatedFrozenBandwidth = delegatedFrozen.bandwidth;
   const delegatedFrozenEnergy = delegatedFrozen.energy;
+  const cacheTransactionInfoById = {};
+  if (cacheTransactionInfoByIdRaw) {
+    for (let k in cacheTransactionInfoByIdRaw) {
+      const [
+        fee,
+        blockNumber,
+        withdraw_amount,
+        unfreeze_amount,
+      ] = cacheTransactionInfoByIdRaw[k];
+      cacheTransactionInfoById[k] = {
+        fee,
+        blockNumber,
+        withdraw_amount,
+        unfreeze_amount,
+      };
+    }
+  }
   return {
     frozen: {
       bandwidth: frozenBandwidth
         ? {
             amount: BigNumber(frozenBandwidth.amount),
-            expiredAt: new Date(frozenBandwidth.expiredAt)
+            expiredAt: new Date(frozenBandwidth.expiredAt),
           }
         : undefined,
       energy: frozenEnergy
         ? {
             amount: BigNumber(frozenEnergy.amount),
-            expiredAt: new Date(frozenEnergy.expiredAt)
+            expiredAt: new Date(frozenEnergy.expiredAt),
           }
-        : undefined
+        : undefined,
     },
     delegatedFrozen: {
       bandwidth: delegatedFrozenBandwidth
-        ? {
-            amount: BigNumber(delegatedFrozenBandwidth.amount),
-            expiredAt: new Date(delegatedFrozenBandwidth.expiredAt)
-          }
+        ? { amount: BigNumber(delegatedFrozenBandwidth.amount) }
         : undefined,
       energy: delegatedFrozenEnergy
-        ? {
-            amount: BigNumber(delegatedFrozenEnergy.amount),
-            expiredAt: new Date(delegatedFrozenEnergy.expiredAt)
-          }
-        : undefined
+        ? { amount: BigNumber(delegatedFrozenEnergy.amount) }
+        : undefined,
     },
     votes,
     tronPower,
-    energy,
-    bandwidth,
-    unwithdrawnReward
+    energy: BigNumber(energy),
+    bandwidth: {
+      freeUsed: BigNumber(bandwidth.freeUsed),
+      freeLimit: BigNumber(bandwidth.freeLimit),
+      gainedUsed: BigNumber(bandwidth.gainedUsed),
+      gainedLimit: BigNumber(bandwidth.gainedLimit),
+    },
+    unwithdrawnReward: BigNumber(unwithdrawnReward),
+    lastWithdrawnRewardDate: lastWithdrawnRewardDate
+      ? new Date(lastWithdrawnRewardDate)
+      : undefined,
+    lastVotedDate: lastVotedDate ? new Date(lastVotedDate) : undefined,
+    cacheTransactionInfoById,
   };
 };
+
+export function fromSwapOperationRaw(raw: SwapOperationRaw): SwapOperation {
+  const { fromAmount, toAmount } = raw;
+
+  return {
+    ...raw,
+    fromAmount: BigNumber(fromAmount),
+    toAmount: BigNumber(toAmount),
+  };
+}
+
+export function toSwapOperationRaw(so: SwapOperation): SwapOperationRaw {
+  const { fromAmount, toAmount } = so;
+
+  return {
+    ...so,
+    fromAmount: fromAmount.toString(),
+    toAmount: toAmount.toString(),
+  };
+}
 
 export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
   const {
@@ -243,11 +363,16 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
     starred,
     operations,
     pendingOperations,
+    creationDate,
     balance,
-    balanceHistory
+    spendableBalance,
+    compoundBalance,
+    balanceHistory,
+    swapHistory,
+    approvals,
   } = raw;
   const token = getTokenById(tokenId);
-  const convertOperation = op => fromOperationRaw(op, id);
+  const convertOperation = (op) => fromOperationRaw(op, id);
   return {
     type: "TokenAccount",
     id,
@@ -255,11 +380,20 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
     token,
     starred: starred || false,
     balance: BigNumber(balance),
-    balanceHistory: fromBalanceHistoryRawMap(balanceHistory || {}),
+    spendableBalance: spendableBalance
+      ? BigNumber(spendableBalance)
+      : BigNumber(balance),
+    compoundBalance: compoundBalance ? BigNumber(compoundBalance) : undefined,
+    balanceHistory: balanceHistory
+      ? fromBalanceHistoryRawMap(balanceHistory)
+      : undefined,
+    creationDate: new Date(creationDate || Date.now()),
     operationsCount:
       raw.operationsCount || (operations && operations.length) || 0,
     operations: (operations || []).map(convertOperation),
-    pendingOperations: (pendingOperations || []).map(convertOperation)
+    pendingOperations: (pendingOperations || []).map(convertOperation),
+    swapHistory: (swapHistory || []).map(fromSwapOperationRaw),
+    approvals,
   };
 }
 
@@ -273,7 +407,11 @@ export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
     operationsCount,
     pendingOperations,
     balance,
-    balanceHistory
+    spendableBalance,
+    compoundBalance,
+    balanceHistory,
+    swapHistory,
+    approvals,
   } = ta;
   return {
     type: "TokenAccountRaw",
@@ -282,10 +420,17 @@ export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
     starred,
     tokenId: token.id,
     balance: balance.toString(),
-    balanceHistory: toBalanceHistoryRawMap(balanceHistory || {}),
+    spendableBalance: spendableBalance.toString(),
+    compoundBalance: compoundBalance ? compoundBalance.toString() : undefined,
+    balanceHistory: balanceHistory
+      ? toBalanceHistoryRawMap(balanceHistory)
+      : undefined,
+    creationDate: ta.creationDate.toISOString(),
     operationsCount,
-    operations: operations.map(o => toOperationRaw(o)),
-    pendingOperations: pendingOperations.map(o => toOperationRaw(o))
+    operations: operations.map((o) => toOperationRaw(o)),
+    pendingOperations: pendingOperations.map((o) => toOperationRaw(o)),
+    swapHistory: (swapHistory || []).map(toSwapOperationRaw),
+    approvals,
   };
 }
 
@@ -296,15 +441,17 @@ export function fromChildAccountRaw(raw: ChildAccountRaw): ChildAccount {
     parentId,
     currencyId,
     starred,
+    creationDate,
     operations,
     operationsCount,
     pendingOperations,
     balance,
     address,
-    balanceHistory
+    balanceHistory,
+    swapHistory,
   } = raw;
   const currency = getCryptoCurrencyById(currencyId);
-  const convertOperation = op => fromOperationRaw(op, id);
+  const convertOperation = (op) => fromOperationRaw(op, id);
   return {
     type: "ChildAccount",
     id,
@@ -314,10 +461,14 @@ export function fromChildAccountRaw(raw: ChildAccountRaw): ChildAccount {
     currency,
     address,
     balance: BigNumber(balance),
-    balanceHistory: fromBalanceHistoryRawMap(balanceHistory || {}),
+    balanceHistory: balanceHistory
+      ? fromBalanceHistoryRawMap(balanceHistory)
+      : undefined,
+    creationDate: new Date(creationDate || Date.now()),
     operationsCount: operationsCount || (operations && operations.length) || 0,
     operations: (operations || []).map(convertOperation),
-    pendingOperations: (pendingOperations || []).map(convertOperation)
+    pendingOperations: (pendingOperations || []).map(convertOperation),
+    swapHistory: (swapHistory || []).map(fromSwapOperationRaw),
   };
 }
 
@@ -333,7 +484,9 @@ export function toChildAccountRaw(ca: ChildAccount): ChildAccountRaw {
     pendingOperations,
     balance,
     balanceHistory,
-    address
+    address,
+    creationDate,
+    swapHistory,
   } = ca;
   return {
     type: "ChildAccountRaw",
@@ -345,9 +498,13 @@ export function toChildAccountRaw(ca: ChildAccount): ChildAccountRaw {
     operationsCount,
     currencyId: currency.id,
     balance: balance.toString(),
-    balanceHistory: toBalanceHistoryRawMap(balanceHistory || {}),
-    operations: operations.map(o => toOperationRaw(o)),
-    pendingOperations: pendingOperations.map(o => toOperationRaw(o))
+    balanceHistory: balanceHistory
+      ? toBalanceHistoryRawMap(balanceHistory)
+      : undefined,
+    creationDate: creationDate.toISOString(),
+    operations: operations.map((o) => toOperationRaw(o)),
+    pendingOperations: pendingOperations.map((o) => toOperationRaw(o)),
+    swapHistory: (swapHistory || []).map(toSwapOperationRaw),
   };
 }
 
@@ -373,6 +530,26 @@ export function toSubAccountRaw(subAccount: SubAccount): SubAccountRaw {
   }
 }
 
+export function fromAccountLikeRaw(
+  rawAccountLike: AccountRawLike
+): AccountLike {
+  if ("type" in rawAccountLike) {
+    //$FlowFixMe
+    return fromSubAccountRaw(rawAccountLike);
+  }
+  //$FlowFixMe
+  return fromAccountRaw(rawAccountLike);
+}
+
+export function toAccountLikeRaw(accountLike: AccountLike): AccountRawLike {
+  switch (accountLike.type) {
+    case "Account":
+      return toAccountRaw(accountLike);
+    default:
+      return toSubAccountRaw(accountLike);
+  }
+}
+
 export function fromAccountRaw(rawAccount: AccountRaw): Account {
   const {
     id,
@@ -381,6 +558,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     index,
     xpub,
     starred,
+    used,
     freshAddress,
     freshAddressPath,
     freshAddresses,
@@ -393,17 +571,24 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     operationsCount,
     pendingOperations,
     lastSyncDate,
+    creationDate,
     balance,
     balanceHistory,
     spendableBalance,
     subAccounts: subAccountsRaw,
-    tronResources
+    tronResources,
+    cosmosResources,
+    bitcoinResources,
+    swapHistory,
+    algorandResources,
+    syncHash,
+    polkadotResources,
   } = rawAccount;
 
   const subAccounts =
     subAccountsRaw &&
     subAccountsRaw
-      .map(ta => {
+      .map((ta) => {
         if (ta.type === "TokenAccountRaw") {
           if (findTokenById(ta.tokenId)) {
             return fromTokenAccountRaw(ta);
@@ -417,15 +602,16 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
   const currency = getCryptoCurrencyById(currencyId);
 
   const unit =
-    currency.units.find(u => u.magnitude === unitMagnitude) ||
+    currency.units.find((u) => u.magnitude === unitMagnitude) ||
     currency.units[0];
 
-  const convertOperation = op => fromOperationRaw(op, id, subAccounts);
+  const convertOperation = (op) => fromOperationRaw(op, id, subAccounts);
 
   const res: $Exact<Account> = {
     type: "Account",
     id,
     starred: starred || false,
+    used: false, // filled again below
     seedIdentifier,
     derivationMode,
     index,
@@ -433,20 +619,32 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     freshAddressPath,
     freshAddresses: freshAddresses || [
       // in case user come from an old data that didn't support freshAddresses
-      { derivationPath: freshAddressPath, address: freshAddress }
+      { derivationPath: freshAddressPath, address: freshAddress },
     ],
     name,
     blockHeight,
+    creationDate: new Date(creationDate || Date.now()),
     balance: BigNumber(balance),
-    balanceHistory: fromBalanceHistoryRawMap(balanceHistory || {}),
+    balanceHistory: balanceHistory
+      ? fromBalanceHistoryRawMap(balanceHistory)
+      : undefined,
     spendableBalance: BigNumber(spendableBalance || balance),
     operations: (operations || []).map(convertOperation),
     operationsCount: operationsCount || (operations && operations.length) || 0,
     pendingOperations: (pendingOperations || []).map(convertOperation),
     unit,
     currency,
-    lastSyncDate: new Date(lastSyncDate || 0)
+    lastSyncDate: new Date(lastSyncDate || 0),
+    swapHistory: [],
+    syncHash,
   };
+
+  if (typeof used === "undefined") {
+    // old account data that didn't had the field yet
+    res.used = !isAccountEmpty(res);
+  } else {
+    res.used = used;
+  }
 
   if (xpub) {
     res.xpub = xpub;
@@ -464,6 +662,25 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     res.tronResources = fromTronResourcesRaw(tronResources);
   }
 
+  if (cosmosResources) {
+    res.cosmosResources = fromCosmosResourcesRaw(cosmosResources);
+  }
+
+  if (bitcoinResources) {
+    res.bitcoinResources = fromBitcoinResourcesRaw(bitcoinResources);
+  }
+  if (swapHistory) {
+    res.swapHistory = swapHistory.map(fromSwapOperationRaw);
+  }
+
+  if (algorandResources) {
+    res.algorandResources = fromAlgorandResourcesRaw(algorandResources);
+  }
+
+  if (polkadotResources) {
+    res.polkadotResources = fromPolkadotResourcesRaw(polkadotResources);
+  }
+
   return res;
 }
 
@@ -473,6 +690,7 @@ export function toAccountRaw({
   xpub,
   name,
   starred,
+  used,
   derivationMode,
   index,
   freshAddress,
@@ -480,6 +698,7 @@ export function toAccountRaw({
   freshAddresses,
   blockHeight,
   currency,
+  creationDate,
   operationsCount,
   operations,
   pendingOperations,
@@ -490,27 +709,36 @@ export function toAccountRaw({
   spendableBalance,
   subAccounts,
   endpointConfig,
-  tronResources
+  tronResources,
+  cosmosResources,
+  bitcoinResources,
+  swapHistory,
+  algorandResources,
+  syncHash,
+  polkadotResources,
 }: Account): AccountRaw {
   const res: $Exact<AccountRaw> = {
     id,
     seedIdentifier,
     name,
     starred,
+    used,
     derivationMode,
     index,
     freshAddress,
     freshAddressPath,
     freshAddresses,
     blockHeight,
+    syncHash,
+    creationDate: creationDate.toISOString(),
     operationsCount,
-    operations: (operations || []).map(o => toOperationRaw(o)),
-    pendingOperations: (pendingOperations || []).map(o => toOperationRaw(o)),
+    operations: (operations || []).map((o) => toOperationRaw(o)),
+    pendingOperations: (pendingOperations || []).map((o) => toOperationRaw(o)),
     currencyId: currency.id,
     unitMagnitude: unit.magnitude,
     lastSyncDate: lastSyncDate.toISOString(),
     balance: balance.toString(),
-    spendableBalance: spendableBalance.toString()
+    spendableBalance: spendableBalance.toString(),
   };
   if (balanceHistory) {
     res.balanceHistory = toBalanceHistoryRawMap(balanceHistory);
@@ -526,6 +754,21 @@ export function toAccountRaw({
   }
   if (tronResources) {
     res.tronResources = toTronResourcesRaw(tronResources);
+  }
+  if (cosmosResources) {
+    res.cosmosResources = toCosmosResourcesRaw(cosmosResources);
+  }
+  if (bitcoinResources) {
+    res.bitcoinResources = toBitcoinResourcesRaw(bitcoinResources);
+  }
+  if (swapHistory) {
+    res.swapHistory = swapHistory.map(toSwapOperationRaw);
+  }
+  if (algorandResources) {
+    res.algorandResources = toAlgorandResourcesRaw(algorandResources);
+  }
+  if (polkadotResources) {
+    res.polkadotResources = toPolkadotResourcesRaw(polkadotResources);
   }
   return res;
 }

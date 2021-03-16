@@ -9,6 +9,9 @@ import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
 import { parseCurrencyUnit, getCryptoCurrencyById } from "../../../currencies";
 import network from "../../../network";
 import { makeSync, makeScanAccounts } from "../../../bridge/jsHelpers";
+import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
+
+const receive = makeAccountBridgeReceive();
 
 const neoAsset =
   "c56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
@@ -40,7 +43,7 @@ const txToOps = ({ id, address }) => (tx: Object): Operation[] => {
       senders: [from],
       recipients: [to],
       date,
-      extra: {}
+      extra: {},
     });
   }
   if (receiving) {
@@ -56,7 +59,7 @@ const txToOps = ({ id, address }) => (tx: Object): Operation[] => {
       senders: [from],
       recipients: [to],
       date,
-      extra: {}
+      extra: {},
     });
   }
 
@@ -69,7 +72,7 @@ async function fetch(path) {
   const url = root + path;
   const { data } = await network({
     method: "GET",
-    url
+    url,
   });
   log("http", url);
   return data;
@@ -103,26 +106,26 @@ async function fetchTxs(
   return txs;
 }
 
-const getAccountShape = async info => {
+const getAccountShape = async (info) => {
   const blockHeight = await fetchBlockHeight();
 
   const balances = await fetchBalances(info.address);
   if (balances.length === 0) {
     return { balance: BigNumber(0) };
   }
-  const balanceMatch = balances.find(b => b.asset_hash === neoAsset);
+  const balanceMatch = balances.find((b) => b.asset_hash === neoAsset);
   const balance = balanceMatch
     ? parseCurrencyUnit(neoUnit, String(balanceMatch.amount))
     : BigNumber(0);
 
-  const txs = await fetchTxs(info.address, txs => txs.length < 1000);
+  const txs = await fetchTxs(info.address, (txs) => txs.length < 1000);
 
   const operations = flatMap(txs, txToOps(info));
 
   return {
     balance,
     operations,
-    blockHeight
+    blockHeight,
   };
 };
 
@@ -133,23 +136,26 @@ const sync = makeSync(getAccountShape);
 const currencyBridge: CurrencyBridge = {
   preload: () => Promise.resolve(),
   hydrate: () => {},
-  scanAccounts
+  scanAccounts,
 };
 
-const createTransaction = a => {
+const createTransaction = (a) => {
   throw new CurrencyNotSupported("neo currency not supported", {
-    currencyName: a.currency.name
+    currencyName: a.currency.name,
   });
 };
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
-const getTransactionStatus = a =>
+const getTransactionStatus = (a) =>
   Promise.reject(
     new CurrencyNotSupported("neo currency not supported", {
-      currencyName: a.currency.name
+      currencyName: a.currency.name,
     })
   );
+
+const estimateMaxSpendable = () =>
+  Promise.reject(new Error("estimateMaxSpendable not implemented"));
 
 const prepareTransaction = async (a, t: Transaction): Promise<Transaction> =>
   Promise.resolve(t);
@@ -159,13 +165,15 @@ const accountBridge: AccountBridge<Transaction> = {
   updateTransaction,
   prepareTransaction,
   getTransactionStatus,
+  estimateMaxSpendable,
   sync,
+  receive,
   signOperation: () => {
     throw new Error("signOperation not implemented");
   },
   broadcast: () => {
     throw new Error("broadcast not implemented");
-  }
+  },
 };
 
 export default { currencyBridge, accountBridge };

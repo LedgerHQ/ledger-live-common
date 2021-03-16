@@ -1,18 +1,26 @@
 // @flow
 import { BigNumber } from "bignumber.js";
 import type { CryptoCurrency } from "../types";
+import type { FeeItems } from "../families/bitcoin/types";
 import { getEstimatedFees } from "./Fees";
 
 export const speeds = {
   "1": "high",
   "3": "standard",
-  "6": "low"
+  "6": "low",
 };
 
 export const defaultBlockCount = 3;
 
-export const getFeeItems = async (currency: CryptoCurrency): Promise<*> => {
-  let items = [];
+export const getFeeItems = async (
+  currency: CryptoCurrency
+): Promise<FeeItems> => {
+  let all: Array<{
+    key: string,
+    speed: string,
+    blockCount: number,
+    feePerByte: BigNumber,
+  }> = [];
   const fees = await getEstimatedFees(currency);
   let defaultFeePerByte = BigNumber(0);
   for (const key of Object.keys(fees)) {
@@ -24,14 +32,20 @@ export const getFeeItems = async (currency: CryptoCurrency): Promise<*> => {
       !feePerByte.isNaN() &&
       blockCount in speeds
     ) {
-      items.push({
+      all.push({
         key,
         speed: speeds[blockCount],
         blockCount,
-        feePerByte
+        feePerByte,
       });
     }
   }
-  items = items.sort((a, b) => a.blockCount - b.blockCount);
+  const items = all
+    .sort((a, b) => a.blockCount - b.blockCount)
+    .map(({ key, speed, feePerByte }) => ({
+      key,
+      speed,
+      feePerByte,
+    }));
   return { items, defaultFeePerByte };
 };

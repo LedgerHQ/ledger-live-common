@@ -10,10 +10,31 @@ export type OperationType =
   | "REVEAL"
   | "DELEGATE"
   | "UNDELEGATE"
+  | "REDELEGATE"
+  | "REWARD"
+  | "FEES"
+
+  // TRON
   | "FREEZE"
   | "UNFREEZE"
   | "VOTE"
-  | "REWARD";
+
+  // POLKADOT
+  | "REWARD_PAYOUT"
+  | "BOND"
+  | "UNBOND"
+  | "WITHDRAW_UNBONDED"
+  | "SLASH"
+  | "NOMINATE"
+  | "CHILL"
+
+  // COMPOUND TYPE OPERATIONS
+  | "SUPPLY"
+  | "REDEEM"
+  | "APPROVE"
+  | "OPT_IN"
+  | "OPT_OUT"
+  | "CLOSE_ACCOUNT";
 
 export type Operation = {
   // unique identifier (usually hash)
@@ -69,7 +90,7 @@ export type Operation = {
 
   // in context of accounts that have internal transactions that belong to a parent transaction
   // we have internal operations. Those are not included in the top level operations but can be presented to UI at that same level
-  internalOperations?: Operation[]
+  internalOperations?: Operation[],
 };
 
 export type OperationRaw = {
@@ -92,5 +113,5 @@ export type OperationRaw = {
 
   // in context of accounts that have internal transactions that belong to a parent transaction
   // we have internal operations. Those are not included in the top level operations but can be presented to UI at that same level
-  internalOperations?: OperationRaw[]
+  internalOperations?: OperationRaw[],
 };

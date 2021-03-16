@@ -11,12 +11,18 @@ import { delay } from "../promise";
 import { testBridge } from "./test-helpers/bridge";
 import dataset from "../generated/test-dataset";
 import specifics from "../generated/test-specifics";
-import type { DatasetTest } from "./test-helpers/bridge";
+import type { DatasetTest } from "../types";
+import { disconnectAll } from "../api";
+
+// Disconnect all api clients that could be open.
+afterAll(async () => {
+  await disconnectAll();
+});
 
 setup("libcore");
 
 test("libcore version", async () => {
-  const v = await withLibcore(core => core.LedgerCore.getStringVersion());
+  const v = await withLibcore((core) => core.LedgerCore.getStringVersion());
   expect(typeof v).toBe("string");
   // eslint-disable-next-line no-console
   console.log("libcore version " + v);
@@ -32,7 +38,7 @@ const shouldExcludeFamilies =
 // to test the common shared properties of bridges.
 // const all =
 families
-  .map(family => {
+  .map((family) => {
     if (process.env.FAMILY && process.env.FAMILY !== family) return;
     if (shouldExcludeFamilies && maybeFamilyToOnlyRun !== family) return;
     const data: DatasetTest<any> = dataset[family];
@@ -54,7 +60,7 @@ Object.values(specifics).forEach((specific: Function) => {
 
 describe("libcore access", () => {
   test("withLibcore", async () => {
-    const res = await withLibcore(async core => {
+    const res = await withLibcore(async (core) => {
       expect(core).toBeDefined();
       await delay(100);
       return 42;
