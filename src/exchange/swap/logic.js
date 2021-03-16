@@ -130,7 +130,6 @@ export const reducer = (
       return {
         ...state,
         toCurrency: payload.toCurrency,
-        useAllAmount: false,
         toAccount: undefined,
         toParentAccount: undefined,
         ...reset,
@@ -143,6 +142,7 @@ export const reducer = (
     case "onSetExchangeRate":
       return {
         ...state,
+        error: undefined,
         exchangeRate: payload.exchangeRate,
         ratesExpiration: payload.withExpiration
           ? new Date(new Date().getTime() + ratesExpirationThreshold)
