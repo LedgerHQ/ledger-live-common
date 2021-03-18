@@ -164,7 +164,7 @@ export const isMemoValid = (memoType: string, memoValue: string): boolean => {
 
     case "MEMO_HASH":
     case "MEMO_RETURN":
-      if (!memoValue.length || memoValue.length !== 32) {
+      if (!memoValue.length || memoValue.length !== 64) {
         return false;
       }
       break;
