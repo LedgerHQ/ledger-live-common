@@ -183,9 +183,9 @@ export const getNonce = (a: Account): number => {
  * @param {*} t
  */
 const calculateMaxBond = (a: Account, t: Transaction): BigNumber => {
-  const amount = a.spendableBalance.minus(t.fees
-    ? BigNumber(BOND_MAX_SAFETY_RATIO).times(t.fees)
-    : 0);
+  const amount = a.spendableBalance.minus(
+    t.fees ? BigNumber(BOND_MAX_SAFETY_RATIO).times(t.fees) : 0
+  );
   return amount.lt(0) ? BigNumber(0) : amount;
 };
 
