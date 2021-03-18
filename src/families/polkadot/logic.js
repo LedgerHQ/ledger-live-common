@@ -14,6 +14,8 @@ export const MAX_AMOUNT_INPUT = 0xffffffffffffffff;
 export const POLKADOT_SS58_PREFIX = 0;
 export const WARNING_FEW_DOT_LEFTOVER = BigNumber(1000000000);
 
+const BOND_MAX_SAFETY_RATIO = 4; // Fees for the current tx + safety buffer for 3 future transactions
+
 /**
  * Returns true if address is valid, false if it's invalid (can't parse or wrong checksum)
  *
@@ -181,7 +183,9 @@ export const getNonce = (a: Account): number => {
  * @param {*} t
  */
 const calculateMaxBond = (a: Account, t: Transaction): BigNumber => {
-  const amount = a.spendableBalance.minus(4 * t.fees || 0); // 4 = fees for this tx + safety buffer for 3 future transactions
+  const amount = a.spendableBalance.minus(t.fees
+    ? BigNumber(BOND_MAX_SAFETY_RATIO).times(t.fees)
+    : 0);
   return amount.lt(0) ? BigNumber(0) : amount;
 };
 
