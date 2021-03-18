@@ -174,6 +174,18 @@ export const getNonce = (a: Account): number => {
 };
 
 /**
+ * Calculate max bond which is the actual spendable minus a safety buffer of 3 times the fees,
+ * so the user still has funds to pay the fees for next transactions
+ *
+ * @param {*} a
+ * @param {*} t
+ */
+const calculateMaxBond = (a: Account, t: Transaction): BigNumber => {
+  const amount = a.spendableBalance.minus(4 * t.fees || 0); // 4 = fees for this tx + safety buffer for 3 future transactions
+  return amount.lt(0) ? BigNumber(0) : amount;
+};
+
+/**
  * Calculates max unbond amount which is the remaining active locked balance (not unlocking)
  *
  * @param {*} account
@@ -199,6 +211,7 @@ const calculateMaxRebond = (a: Account): BigNumber => {
  * Calculate the real spendable
  *
  * @param {*} a
+ * @param {*} t
  */
 const calculateMaxSend = (a: Account, t: Transaction): BigNumber => {
   const amount = a.spendableBalance.minus(t.fees || 0);
@@ -222,6 +235,10 @@ export const calculateAmount = ({
     switch (t.mode) {
       case "send":
         amount = calculateMaxSend(a, t);
+        break;
+
+      case "bond":
+        amount = calculateMaxBond(a, t);
         break;
 
       case "unbond":
