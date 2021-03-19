@@ -75,14 +75,16 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
           BigNumber(10).pow(unitFrom.magnitude)
         );
 
-        // Request a lock on the specified rate for 20 minutes,
-        // user is expected to send funds after this.
+        // Request a swap, this locks the rates for fixed trade method only.
         // NB Added the try/catch because of the API stability issues.
         let res;
         try {
           res = await network({
             method: "POST",
             url: `${getSwapAPIBaseURL()}/swap`,
+            headers: {
+              EquipmentId: getEnv("USER_ID"),
+            },
             data: {
               provider,
               amountFrom: apiAmount,
