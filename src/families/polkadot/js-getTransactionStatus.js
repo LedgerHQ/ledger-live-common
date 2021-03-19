@@ -177,10 +177,6 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
         });
       }
 
-      if (t.useAllAmount) {
-        warnings.amount = new PolkadotAllFundsWarning();
-      }
-
       break;
 
     case "unbond":
