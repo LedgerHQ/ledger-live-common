@@ -68,17 +68,11 @@ export type InitSwapResult = {
 };
 
 type ValidSwapStatus =
-  | "confirming"
-  | "finished"
-  | "exchanging"
-  | "hold"
-  | "sending"
-  | "waiting"
-  | "overdue"
-  | "refunded"
-  | "new"
+  | "pending"
+  | "onhold"
   | "expired"
-  | "failed";
+  | "finished"
+  | "refunded";
 
 export type SwapStatusRequest = {
   provider: string,

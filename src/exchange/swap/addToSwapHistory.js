@@ -36,7 +36,7 @@ export default ({
       : operation.id;
 
   const swapOperation: SwapOperation = {
-    status: "new",
+    status: "pending",
     provider: exchangeRate.provider,
     operationId,
     swapId,
