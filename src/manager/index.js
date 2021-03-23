@@ -22,7 +22,7 @@ const ICONS_FALLBACK = {
   bitcoin_testnet: "bitcoin",
 };
 
-const oldAppsInstallDisabled = ["IOTA", "Crypto.com Chain"]; // @TODO confirm these are the correct apps we want install disabled for
+const oldAppsInstallDisabled = ["Crypto.com Chain"];
 const canHandleInstall = (app: ApplicationVersion) =>
   !oldAppsInstallDisabled.includes(app.name) &&
   !listCryptoCurrencies(true, true).some(
