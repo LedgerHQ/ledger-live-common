@@ -54,6 +54,7 @@ export function getDates(r: PortfolioRange, count: number): Date[] {
   if (count === 1) return [now];
 
   const last = new Date(conf.startOf(now) - 1);
+  // TODO 5ms on this. just do a for loop and push (no reverse)
   const datesExceptNow = Array.from(
     { length: count - 1 },
     (_, i) => new Date(last - conf.increment * i)
