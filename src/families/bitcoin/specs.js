@@ -491,6 +491,7 @@ const komodo: AppSpec<Transaction> = {
     ),
   }),
 };
+*/
 
 const litecoin: AppSpec<Transaction> = {
   name: "Litecoin",
@@ -509,7 +510,6 @@ const litecoin: AppSpec<Transaction> = {
     ),
   }),
 };
-*/
 
 const stealthcoin: AppSpec<Transaction> = {
   name: "Stealth",
@@ -531,6 +531,7 @@ const stealthcoin: AppSpec<Transaction> = {
 export default {
   digibyte,
   zcash,
+  litecoin,
   bitcoinCash,
   bitcoinGold,
   dogecoin,
