@@ -8,7 +8,6 @@ import {
   InvalidAddressBecauseDestinationIsAlsoSource,
   AmountRequired,
   NotEnoughBalanceBecauseDestinationNotCreated,
-  NotEnoughSpendableBalance,
 } from "@ledgerhq/errors";
 
 import {
@@ -16,6 +15,8 @@ import {
   PolkadotNotValidator,
   PolkadotBondMinimumAmount,
   PolkadotValidatorsRequired,
+  PolkadotAllFundsWarning,
+  PolkadotDoMaxSendInstead,
 } from "./errors";
 
 import type { DatasetTest } from "../../types";
@@ -143,7 +144,7 @@ const dataset: DatasetTest<Transaction> = {
               transaction: fromTransactionRaw({
                 family: "polkadot",
                 recipient: ACCOUNT_CONTROLLER,
-                amount: "100000000000000000",
+                amount: "1000000000000000",
                 mode: "send",
                 era: null,
                 validators: [],
@@ -198,7 +199,7 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "[send] use all amount",
+              name: "[send] use all amount - should warn all funds",
               transaction: (t) => ({
                 ...t,
                 useAllAmount: true,
@@ -207,7 +208,7 @@ const dataset: DatasetTest<Transaction> = {
               }),
               expectedStatus: (account) => ({
                 errors: {},
-                warnings: {},
+                warnings: { amount: new PolkadotAllFundsWarning() },
                 totalSpent: account.spendableBalance,
               }),
             },
@@ -252,26 +253,7 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "bond extra - success",
-              transaction: fromTransactionRaw({
-                family: "polkadot",
-                recipient: ACCOUNT_SAME_STASHCONTROLLER,
-                amount: "2000000",
-                mode: "bond",
-                era: null,
-                validators: null,
-                fees: null,
-                rewardDestination: null,
-                numSlashingSpans: 0,
-              }),
-              expectedStatus: {
-                errors: {},
-                warnings: {},
-                amount: BigNumber("2000000"),
-              },
-            },
-            {
-              name: "bond extra - not enought spendable",
+              name: "bond extra - not enough spendable",
               transaction: fromTransactionRaw({
                 family: "polkadot",
                 recipient: ACCOUNT_SAME_STASHCONTROLLER,
@@ -308,19 +290,6 @@ const dataset: DatasetTest<Transaction> = {
                 errors: {},
                 warnings: {},
               },
-            },
-            {
-              name: "[bond] use all amount",
-              transaction: (t) => ({
-                ...t,
-                useAllAmount: true,
-                mode: "bond",
-              }),
-              expectedStatus: (account) => ({
-                errors: {},
-                warnings: {},
-                totalSpent: account.spendableBalance,
-              }),
             },
             {
               name: "[unbond] no amount",
@@ -533,6 +502,65 @@ const dataset: DatasetTest<Transaction> = {
           },
           transactions: [
             {
+              name: "[send] Not enough balance",
+              transaction: fromTransactionRaw({
+                family: "polkadot",
+                recipient: ACCOUNT_SAME_STASHCONTROLLER,
+                amount: "12000000000",
+                mode: "send",
+                era: null,
+                validators: [],
+                fees: null,
+                rewardDestination: null,
+                numSlashingSpans: 0,
+              }),
+              expectedStatus: {
+                errors: {
+                  amount: new NotEnoughBalance(),
+                },
+                warnings: {},
+              },
+            },
+            {
+              name: "[send] Do Max Send Instead error",
+              transaction: fromTransactionRaw({
+                family: "polkadot",
+                recipient: ACCOUNT_SAME_STASHCONTROLLER,
+                amount: "5000000000",
+                mode: "send",
+                era: null,
+                validators: [],
+                fees: null,
+                rewardDestination: null,
+                numSlashingSpans: 0,
+              }),
+              expectedStatus: {
+                errors: {
+                  amount: new PolkadotDoMaxSendInstead(),
+                },
+                warnings: {},
+              },
+            },
+            {
+              name: "[send] use all amount no warn",
+              transaction: fromTransactionRaw({
+                family: "polkadot",
+                recipient: ACCOUNT_SAME_STASHCONTROLLER,
+                amount: "0",
+                useAllAmount: true,
+                mode: "send",
+                era: null,
+                validators: [],
+                fees: null,
+                rewardDestination: null,
+                numSlashingSpans: 0,
+              }),
+              expectedStatus: {
+                errors: {},
+                warnings: {},
+              },
+            },
+            {
               name: "[bond] no recipient",
               transaction: fromTransactionRaw({
                 family: "polkadot",
@@ -629,26 +657,6 @@ const dataset: DatasetTest<Transaction> = {
               }),
               expectedStatus: {
                 errors: {},
-                warnings: {},
-              },
-            },
-            {
-              name: "Not enough spendable balance",
-              transaction: fromTransactionRaw({
-                family: "polkadot",
-                recipient: ACCOUNT_SAME_STASHCONTROLLER,
-                amount: "100000000000000000",
-                mode: "send",
-                era: null,
-                validators: [],
-                fees: null,
-                rewardDestination: null,
-                numSlashingSpans: 0,
-              }),
-              expectedStatus: {
-                errors: {
-                  amount: new NotEnoughSpendableBalance(),
-                },
                 warnings: {},
               },
             },
