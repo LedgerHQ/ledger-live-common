@@ -4,8 +4,6 @@ const camelcase = require("camelcase");
 const path = require("path");
 const svgr = require("@svgr/core").default;
 
-const iconsSourceRootDir = path.join(__dirname, "../src/data/svg");
-
 const rootDir = path.join(__dirname, "../src/data/icons");
 const reactDir = `${rootDir}/react`;
 const reactNativeDir = `${rootDir}/reactNative`;
@@ -74,7 +72,7 @@ const convert = (svg, options, componentName, outputFile) => {
     .catch((e) => console.error(e));
 };
 
-glob(`${iconsSourceRootDir}/*.svg`, (err, icons) => {
+glob(`${rootDir}/svg/*.svg`, (err, icons) => {
   fs.writeFileSync(`${reactDir}/index.js`, "", "utf-8");
   fs.writeFileSync(`${reactNativeDir}/index.js`, "", "utf-8");
 
