@@ -10,7 +10,6 @@ import {
   NotEnoughBalance,
   FeeTooHigh,
   NotEnoughBalanceInParentAccount,
-  AmountRequired,
 } from "@ledgerhq/errors";
 import {
   inferTokenAccount,
