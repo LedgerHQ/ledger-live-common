@@ -66,7 +66,8 @@ export type Request = {
 };
 
 export const createAction = (
-  connectAppExec: (ConnectAppInput) => Observable<ConnectAppEvent>
+  connectAppExec: (ConnectAppInput) => Observable<ConnectAppEvent>,
+  signMessage: (ConnectAppInput) => Observable<T>
 ) => {
   const useHook = (reduxDevice: ?Device, request: Request): State => {
     const appState: AppState = createAppAction(connectAppExec).useHook(
@@ -90,8 +91,9 @@ export const createAction = (
         return;
       }
       try {
-        result = await withDevice(device.deviceId)((t) =>
-          from(dispatch(t, request.message))
+        result = await (
+          signMessage ||
+          withDevice(device.deviceId)((t) => from(dispatch(t, request.message)))
         ).toPromise();
       } catch (e) {
         if (e.name === "UserRefusedAddress") {
