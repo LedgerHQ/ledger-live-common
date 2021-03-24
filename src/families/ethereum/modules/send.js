@@ -59,9 +59,7 @@ const send: ModeModule = {
       }
 
       if (!t.data) {
-        if (!result.errors.amount && result.amount.eq(0)) {
-          result.errors.amount = new AmountRequired();
-        } else if (
+        if (
           !result.totalSpent.gt(0) ||
           result.totalSpent.gt(account.spendableBalance)
         ) {
