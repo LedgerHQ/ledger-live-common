@@ -9,6 +9,7 @@ import invariant from "invariant";
 import { Observable } from "rxjs";
 import { toBalanceHistoryRaw } from "@ledgerhq/live-common/lib/account";
 import type { PortfolioRange } from "@ledgerhq/live-common/lib/types";
+import { getPortfolioCount } from "@ledgerhq/live-common/lib/portfolio/v2";
 import {
   getRanges,
   getDates,
@@ -169,7 +170,9 @@ export default {
         const countervalues = getCountervalues(opts);
         const format = histoFormatters[opts.format || "default"];
         const range = asPortfolioRange(opts.period || "month");
-        const dates = opts.latest ? [new Date()] : getDates(range);
+        // TODO Portfolio: how to run all time without account option?
+        const count = getPortfolioCount([], range);
+        const dates = opts.latest ? [new Date()] : getDates(range, count);
 
         const cvs = await loadCountervalues(initialState, {
           trackingPairs: resolveTrackingPairs(
