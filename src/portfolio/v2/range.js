@@ -61,3 +61,7 @@ export function getDates(r: PortfolioRange, count: number): Date[] {
 
   return [...datesExceptNow, now];
 }
+
+export function getRanges(): PortfolioRange[] {
+  return Object.keys(ranges);
+}

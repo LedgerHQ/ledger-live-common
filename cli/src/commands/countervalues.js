@@ -9,7 +9,10 @@ import invariant from "invariant";
 import { Observable } from "rxjs";
 import { toBalanceHistoryRaw } from "@ledgerhq/live-common/lib/account";
 import type { PortfolioRange } from "@ledgerhq/live-common/lib/types";
-import { getRanges, getDates } from "@ledgerhq/live-common/lib/portfolio";
+import {
+  getRanges,
+  getDates,
+} from "@ledgerhq/live-common/lib/portfolio/v2/range";
 import type { Currency } from "@ledgerhq/live-common/lib/types";
 import {
   formatCurrencyUnit,

@@ -37,7 +37,7 @@
     "@ledgerhq/hw-transport-node-hid": "5.46.0",
     "@ledgerhq/hw-transport-node-speculos": "^5.46.0",
     "@ledgerhq/ledger-core": "6.11.3",
-    "@ledgerhq/live-common": "^18.8.1",
+    "@ledgerhq/live-common": "^19.0.0",
     "@ledgerhq/logs": "5.46.0",
     "@walletconnect/client": "^1.4.0",
     "asciichart": "^1.5.25",
