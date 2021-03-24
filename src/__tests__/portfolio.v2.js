@@ -10,6 +10,8 @@ import {
   getBalanceHistory,
   getBalanceHistoryWithCountervalue,
   getPortfolio,
+  getCurrencyPortfolio,
+  getAssetsDistribution,
 } from "../portfolio/v2";
 import { getPortfolioRangeConfig, getDates } from "../portfolio/v2/range";
 import type { PortfolioRange } from "../portfolio/v2/types";
@@ -94,7 +96,7 @@ describe("Portfolio", () => {
     const account = genAccountBitcoin();
     const [range, count] = rangeCount[0];
 
-    it("should return false as coutnervalueAvailable when latest countervalue does NOT exists", async () => {
+    test("coutnervalueAvailable should be false when the latest countervalue does NOT exists", async () => {
       const { to } = await loadCV(account);
       const state = { ...initialState, data: {} };
       const cv = getBalanceHistoryWithCountervalue(
@@ -144,15 +146,37 @@ describe("Portfolio", () => {
       const portfolio = getPortfolio([account], range, state, to);
       expect(portfolio.availableAccounts).toMatchObject([account]);
       expect(portfolio.balanceAvailable).toBe(true);
-      expect(portfolio.balanceHistory).toMatchSnapshot();
     });
 
-    it("should have proper countervalues", () => {});
+    it.todo("should have proper countervalues");
+
+    it("snapshot", async () => {
+      const account = genAccountBitcoin();
+      const range = "week";
+      const { state, to } = await loadCV(account);
+      const portfolio = getPortfolio([account], range, state, to);
+      expect(portfolio).toMatchSnapshot();
+    });
   });
 
-  describe("getCurrencyPortfolio", () => {});
+  describe("getCurrencyPortfolio", () => {
+    it("snapshot", async () => {
+      const account = genAccountBitcoin();
+      const range = "week";
+      const { state, to } = await loadCV(account);
+      const portfolio = getCurrencyPortfolio([account], range, state, to);
+      expect(portfolio).toMatchSnapshot();
+    });
+  });
 
-  describe("getAssetsDistribution", () => {});
+  describe("getAssetsDistribution", () => {
+    it("snapshot", async () => {
+      const account = genAccountBitcoin();
+      const { state, to } = await loadCV(account);
+      const assets = getAssetsDistribution([account], state, to);
+      expect(assets).toMatchSnapshot();
+    });
+  });
 });
 
 function genAccountBitcoin(id: string = "bitcoin_1") {
