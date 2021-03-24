@@ -171,6 +171,10 @@ const ProviderCommon = ({
 
     if (state.status !== STATUS.DISCONNECTED) {
       dispatch({
+        currentCallRequestId: null,
+      });
+
+      dispatch({
         session: null,
         dappInfo: null,
         error: null,
