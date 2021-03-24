@@ -4,10 +4,7 @@ const camelcase = require("camelcase");
 const path = require("path");
 const svgr = require("@svgr/core").default;
 
-const iconsSourceRootDir = path.join(
-  __dirname,
-  "../node_modules/cryptocurrency-icons/svg/black"
-);
+const iconsSourceRootDir = path.join(__dirname, "../src/data/svg");
 
 const rootDir = path.join(__dirname, "../src/data/icons");
 const reactDir = `${rootDir}/react`;
@@ -51,8 +48,10 @@ function reactTemplate(
 
     ${interfaces}
     function ${componentName}(${
-    opts.native ? `{ size, color }` : `{size, color = "currentColor"}`
-  }: Props) {
+    opts.native
+      ? `{ size, color }: Props`
+      : `{size, color = "currentColor"}: Props`
+  }) {
       return ${jsx};
     }
     
@@ -65,9 +64,10 @@ const convert = (svg, options, componentName, outputFile) => {
     .then((result) => {
       // @TODO remove this flow comment once TS is the norm here
       // can't do it is babel ast for now sorry about it
-      const component = `
-      //@flow
-      ${result.replace("xlinkHref=", "href=")}`;
+      const component = `//@flow
+      ${result
+        .replace("xlinkHref=", "href=")
+        .replace(/fill=("(?!none)\S*")/g, "fill={color}")}`;
 
       fs.writeFileSync(outputFile, component, "utf-8");
     })
@@ -90,12 +90,10 @@ glob(`${iconsSourceRootDir}/*.svg`, (err, icons) => {
 
     const svg = fs.readFileSync(i, "utf-8");
     const options = {
-      icon: true,
       expandProps: false,
       componentName: name,
       svgProps: {
-        viewBox: "0 0 32 32",
-        fill: "{color}",
+        viewBox: "0 0 24 24",
         height: "{size}",
         width: "{size}",
       },
