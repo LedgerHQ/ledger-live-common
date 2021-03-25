@@ -10,6 +10,7 @@ import {
   NotEnoughBalance,
   FeeTooHigh,
   NotEnoughBalanceInParentAccount,
+  AmountRequired,
 } from "@ledgerhq/errors";
 import {
   inferTokenAccount,
@@ -59,6 +60,12 @@ const send: ModeModule = {
 
       if (!t.data) {
         if (
+          !t.allowZeroAmount &&
+          !result.errors.amount &&
+          result.amount.eq(0)
+        ) {
+          result.errors.amount = new AmountRequired();
+        } else if (
           !result.totalSpent.gt(0) ||
           result.totalSpent.gt(account.spendableBalance)
         ) {
