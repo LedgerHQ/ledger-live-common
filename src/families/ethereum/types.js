@@ -56,7 +56,7 @@ export type Transaction = {|
   estimatedGasLimit: ?BigNumber,
   feeCustomUnit: ?Unit,
   networkInfo: ?NetworkInfo,
-  allowZeroAmount: ?Boolean,
+  allowZeroAmount?: Boolean,
 |};
 
 export type TransactionRaw = {|

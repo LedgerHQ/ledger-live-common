@@ -65,9 +65,13 @@ export type Request = {
   message: MessageData,
 };
 
+export type SignMessageResult = {
+  result: string,
+};
+
 export const createAction = (
   connectAppExec: (ConnectAppInput) => Observable<ConnectAppEvent>,
-  signMessage: (ConnectAppInput) => Observable<T>
+  signMessage: (request: Request) => Observable<SignMessageResult>
 ) => {
   const useHook = (reduxDevice: ?Device, request: Request): State => {
     const appState: AppState = createAppAction(connectAppExec).useHook(
@@ -92,7 +96,7 @@ export const createAction = (
       }
       try {
         result = await (
-          signMessage ||
+          signMessage(request) ||
           withDevice(device.deviceId)((t) => from(dispatch(t, request.message)))
         ).toPromise();
       } catch (e) {
@@ -109,7 +113,7 @@ export const createAction = (
         ...initialState,
         signMessageResult: result?.signature,
       });
-    }, [request.message, device]);
+    }, [device, request]);
 
     useEffect(() => {
       if (!device || !opened || inWrongDeviceForAccount || error) {
