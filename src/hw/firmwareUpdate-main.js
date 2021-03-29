@@ -27,6 +27,7 @@ const main = (
   { final, shouldFlashMCU }: FirmwareUpdateContext
 ): Observable<Res> => {
   log("hw", "firmwareUpdate-main started");
+  const hasFinalFirmware = Boolean(final && final.firmware);
   const withDeviceInfo = withDevicePolling(deviceId)(
     (transport) => from(getDeviceInfo(transport)),
     () => true // accept all errors. we're waiting forever condition that make getDeviceInfo work
@@ -78,7 +79,9 @@ const main = (
 
   const finalStep = withDeviceInfo.pipe(
     concatMap((deviceInfo) =>
-      !deviceInfo.isOSU
+      !hasFinalFirmware
+        ? empty()
+        : !deviceInfo.isOSU
         ? throwError(new DeviceInOSUExpected())
         : withDeviceInstall(installFinalFirmware)
     )
