@@ -2,18 +2,36 @@
 
 import "./test-helpers/staticTime";
 
+import { setEnv } from "../env";
 import { genAccount } from "../mock/account";
 import { getCryptoCurrencyById } from "../currencies";
 import { accountsOpToCSV } from "../csvExport";
 
-test("export CSV", () => {
+import { initialState, loadCountervalues } from "../countervalues/logic";
+import { getFiatCurrencyByTicker } from "../currencies";
+
+setEnv("MOCK", "1");
+
+test("export CSV", async () => {
+  const fiatCurrency = getFiatCurrencyByTicker("USD");
+  const currencies = ["bitcoin", "ethereum", "ripple"].map(
+    getCryptoCurrencyById
+  );
+
+  const state = await loadCountervalues(initialState, {
+    trackingPairs: currencies.map((currency) => ({
+      from: currency,
+      to: fiatCurrency,
+      startDate: new Date("2018-01-01T00:00:00.000Z"),
+    })),
+    autofillGaps: false,
+  });
+
   expect(
     accountsOpToCSV(
-      [
-        getCryptoCurrencyById("bitcoin"),
-        getCryptoCurrencyById("ethereum"),
-        getCryptoCurrencyById("ripple"),
-      ].map((currency) => genAccount(`${currency.id}_export`))
+      currencies.map((currency) => genAccount(`${currency.id}_export`)),
+      fiatCurrency,
+      state
     )
   ).toMatchSnapshot();
 });
