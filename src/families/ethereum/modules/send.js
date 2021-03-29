@@ -99,11 +99,17 @@ const send: ModeModule = {
     }
   },
 
-  fillDeviceTransactionConfig({ status: { amount } }, fields) {
+  fillDeviceTransactionConfig({ transaction, status: { amount } }, fields) {
     if (!amount.isZero()) {
       fields.push({
         type: "amount",
         label: "Amount",
+      });
+    }
+    if (transaction.data?.length) {
+      fields.push({
+        type: "data",
+        label: "Data",
       });
     }
   },
