@@ -16,5 +16,5 @@ export function getCryptoCurrencyIcon(currency: CryptoCurrency): ?Icon {
 }
 
 export function getTokenCurrencyIcon(token: TokenCurrency): ?Icon {
-  return icons[getIconId(token)];
+  return token.disableCountervalue ? null : icons[getIconId(token)];
 }
