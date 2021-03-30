@@ -4,7 +4,11 @@ import {
   getFiatCurrencyByTicker,
   getCryptoCurrencyById,
 } from "@ledgerhq/cryptoassets";
-import { initialState, loadCountervalues } from "../countervalues/logic";
+import {
+  initialState,
+  loadCountervalues,
+  inferTrackingPairForAccounts,
+} from "../countervalues/logic";
 import {
   getPortfolioCount,
   getBalanceHistory,
@@ -18,7 +22,6 @@ import type { PortfolioRange } from "../portfolio/v2/types";
 import type { AccountLike } from "../types";
 import { setEnv } from "../env";
 import { genAccount } from "../mock/account";
-import { getAccountCurrency } from "../account";
 
 setEnv("MOCK", "1");
 
@@ -183,12 +186,16 @@ function genAccountBitcoin(id: string = "bitcoin_1") {
   return genAccount(id, { currency: getCryptoCurrencyById("bitcoin") });
 }
 
-async function loadCV(account: AccountLike) {
-  const from = getAccountCurrency(account);
-  const to = getFiatCurrencyByTicker("USD");
+async function loadCV(
+  accounts: AccountLike | AccountLike[],
+  cvTicker: string = "USD"
+) {
+  const to = getFiatCurrencyByTicker(cvTicker);
+  const _accounts = Array.isArray(accounts) ? accounts : [accounts];
   const state = await loadCountervalues(initialState, {
-    trackingPairs: [{ from, to }],
+    // $FlowFixMe
+    trackingPairs: inferTrackingPairForAccounts(_accounts, to),
     autofillGaps: true,
   });
-  return { state, from, to };
+  return { state, to };
 }
