@@ -13,7 +13,6 @@ export type CommonDeviceTransactionField =
   | { type: "amount", label: string, tooltipI18nKey?: string }
   | { type: "address", label: string, address: string, tooltipI18nKey?: string }
   | { type: "fees", label: string, tooltipI18nKey?: string }
-  | { type: "data", label: string, tooltipI18nKey?: string }
   | { type: "text", label: string, value: string, tooltipI18nKey?: string };
 
 export type DeviceTransactionField =

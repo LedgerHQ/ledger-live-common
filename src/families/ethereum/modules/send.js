@@ -108,8 +108,9 @@ const send: ModeModule = {
     }
     if (transaction.data?.length) {
       fields.push({
-        type: "data",
+        type: "text",
         label: "Data",
+        value: `Yes (${transaction.data.length} bytes)`,
       });
     }
   },
