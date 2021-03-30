@@ -14,7 +14,7 @@ import { withDevicePolling, withDevice } from "./deviceAccess";
 import getDeviceInfo from "./getDeviceInfo";
 import flash from "./flash";
 import installFinalFirmware from "./installFinalFirmware";
-import { hasFinalFirmware } from "./hasFinalFirmare";
+import { hasFinalFirmware } from "./hasFinalFirmware";
 
 const wait2s = of({ type: "wait" }).pipe(delay(2000));
 
