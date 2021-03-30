@@ -15,7 +15,7 @@ import type { AppRequest, AppState } from "../actions/app";
 import type { Device } from "../actions/types";
 import type { ConnectAppEvent, Input as ConnectAppInput } from "../connectApp";
 import { withDevice } from "../deviceAccess";
-import type { MessageData } from "./types";
+import type { MessageData, Result } from "./types";
 
 const dispatch: Resolver = (transport, opts) => {
   const { currency, verify } = opts;
@@ -65,8 +65,22 @@ export type Request = {
   message: MessageData,
 };
 
+export const signMessageExec = (request: Request, device: ?Device) => {
+  if (!device) {
+    throw "Device is needed";
+  }
+  const result: Observable<Result> = withDevice(device.deviceId)((t) =>
+    from(dispatch(t, request.message))
+  );
+  return result;
+};
+
 export const createAction = (
-  connectAppExec: (ConnectAppInput) => Observable<ConnectAppEvent>
+  connectAppExec: (ConnectAppInput) => Observable<ConnectAppEvent>,
+  signMessage: (
+    request: Request,
+    device: ?Device
+  ) => Observable<Result> = signMessageExec
 ) => {
   const useHook = (reduxDevice: ?Device, request: Request): State => {
     const appState: AppState = createAppAction(connectAppExec).useHook(
@@ -90,9 +104,7 @@ export const createAction = (
         return;
       }
       try {
-        result = await withDevice(device.deviceId)((t) =>
-          from(dispatch(t, request.message))
-        ).toPromise();
+        result = await signMessage(request, device).toPromise();
       } catch (e) {
         if (e.name === "UserRefusedAddress") {
           e.name = "UserRefusedOnDevice";
@@ -107,7 +119,7 @@ export const createAction = (
         ...initialState,
         signMessageResult: result?.signature,
       });
-    }, [request.message, device]);
+    }, [device, request]);
 
     useEffect(() => {
       if (!device || !opened || inWrongDeviceForAccount || error) {

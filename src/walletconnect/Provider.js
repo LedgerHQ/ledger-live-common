@@ -175,6 +175,7 @@ const ProviderCommon = ({
         dappInfo: null,
         error: null,
         connector: null,
+        currentCallRequestId: null,
         status: STATUS.DISCONNECTED,
       });
 
