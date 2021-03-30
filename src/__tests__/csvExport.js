@@ -22,16 +22,14 @@ test("export CSV", async () => {
     trackingPairs: currencies.map((currency) => ({
       from: currency,
       to: fiatCurrency,
-      startDate: new Date("2018-01-01T00:00:00.000Z"),
+      startDate: new Date(Date.now() - 200 * 24 * 60 * 60 * 1000),
     })),
     autofillGaps: false,
   });
 
-  expect(
-    accountsOpToCSV(
-      currencies.map((currency) => genAccount(`${currency.id}_export`)),
-      fiatCurrency,
-      state
-    )
-  ).toMatchSnapshot();
+  const accounts = currencies.map((currency) =>
+    genAccount(`${currency.id}_export`, { currency })
+  );
+
+  expect(accountsOpToCSV(accounts, fiatCurrency, state)).toMatchSnapshot();
 });
