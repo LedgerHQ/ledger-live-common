@@ -153,6 +153,7 @@ const erc20approve: ModeModule = {
       return {
         ...transaction,
         mode: "erc20.approve",
+        useAllAmount: transaction.amount.eq(0) ? true : false,
       };
     }
   },
