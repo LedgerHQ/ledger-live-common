@@ -187,9 +187,13 @@ function getEthereumjsTxCommon(currency) {
 }
 
 export function inferTokenAccount(a: Account, t: Transaction) {
-  const tokenAccount = !t.subAccountId
-    ? null
-    : a.subAccounts && a.subAccounts.find((ta) => ta.id === t.subAccountId);
+  const tokenAccount =
+    a.subAccounts &&
+    a.subAccounts.find(
+      (ta) =>
+        ta.id === t.subAccountId ||
+        (ta.type === "TokenAccount" && ta.token.contractAddress === t.recipient)
+    );
   if (tokenAccount && tokenAccount.type === "TokenAccount") {
     return tokenAccount;
   }
