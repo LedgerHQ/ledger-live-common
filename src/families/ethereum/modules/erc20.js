@@ -4,6 +4,9 @@
 import abi from "ethereumjs-abi";
 import invariant from "invariant";
 import eip55 from "eip55";
+import map from "lodash/map";
+import range from "lodash/range";
+import isMatch from "lodash/isMatch";
 import { BigNumber } from "bignumber.js";
 import type { ModeModule } from "../types";
 import { AmountRequired } from "@ledgerhq/errors";
@@ -127,6 +130,31 @@ const erc20approve: ModeModule = {
       ...operation.extra,
       approving: true, // workaround to track the status ENABLING
     };
+  },
+
+  async remapTransaction(transaction) {
+    console.log("1")
+    if (!transaction.data?.length) {
+      return;
+    }
+
+    // async because checking the type of a transaction could require
+    // to do api calls
+    // here we just do as the device do, which is checking
+    // the first 4 bytes against a hardcoded value representing
+    // erc20 approve contract call
+
+    // $FlowFixMe (flow does not now that you can access a buffer like that)
+    const dataMethod = map(range(4), (i) => transaction.data[i]);
+
+    console.log("remap", dataMethod);
+
+    if (isMatch(dataMethod, [9, 94, 167, 179])) {
+      return {
+        ...transaction,
+        mode: "erc20.approve",
+      };
+    }
   },
 };
 

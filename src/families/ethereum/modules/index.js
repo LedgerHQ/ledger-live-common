@@ -64,6 +64,8 @@ export type ModeModule = {
    * NB: the Operation is already filled with the generic part, a mode might typically change the type, add subOperations,...
    */
   fillOptimisticOperation: (Account, Transaction, Operation) => void,
+
+  remapTransaction?: (Transaction) => Promise<?Transaction>,
 };
 
 export const modes: { [_: TransactionMode]: ModeModule } = {};
@@ -130,6 +132,27 @@ export const digestTokenAccounts = (
       (p, fn) => p.then((s) => fn(currency, s, address)),
       Promise.resolve(subAccounts)
     );
+
+export async function remapTransaction(t: Transaction): Promise<Transaction> {
+  let maybeT: Transaction;
+  console.log("ixi");
+  for (let k in modules) {
+    const m = modules[k];
+    console.log(m);
+    for (let k2 in m.modes) {
+      const mode = m.modes[k2];
+      console.log(mode);
+      if (mode.remapTransaction) {
+        console.log("yeah");
+        maybeT = await mode.remapTransaction(t);
+        if (maybeT) {
+          return maybeT;
+        }
+      }
+    }
+  }
+  return t;
+}
 
 type BufferLike = Buffer | string | number;
 
