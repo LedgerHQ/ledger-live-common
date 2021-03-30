@@ -114,7 +114,7 @@ const send: ModeModule = {
       fields.push({
         type: "text",
         label: "Data",
-        value: `Yes (${transaction.data.length} bytes)`,
+        value: `Present`,
       });
     }
   },
