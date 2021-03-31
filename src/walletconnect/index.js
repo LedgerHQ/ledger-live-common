@@ -96,8 +96,6 @@ export const parseCallRequest: Parser = async (account, payload) => {
     case "eth_sendTransaction":
       wcTransactionData = (payload.params[0]: WCPayloadTransaction);
 
-      console.log(wcTransactionData);
-
       bridge = getAccountBridge(account);
       transaction = bridge.createTransaction(account);
 
@@ -134,6 +132,10 @@ export const parseCallRequest: Parser = async (account, payload) => {
           nonce: wcTransactionData.nonce,
         });
       }
+
+      transaction = bridge.updateTransaction(transaction, {
+        allowZeroAmount: true,
+      });
 
       transaction = await bridge.prepareTransaction(account, transaction);
 
