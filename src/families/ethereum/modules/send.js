@@ -4,6 +4,9 @@
 import abi from "ethereumjs-abi";
 import invariant from "invariant";
 import eip55 from "eip55";
+import map from "lodash/map";
+import range from "lodash/range";
+import isMatch from "lodash/isMatch";
 import { BigNumber } from "bignumber.js";
 import type { ModeModule } from "../types";
 import {
@@ -17,6 +20,7 @@ import {
   getGasLimit,
   validateRecipient,
 } from "../transaction";
+import { findTokenByAddress } from "../../../currencies";
 
 export type Modes = "send";
 
@@ -111,11 +115,25 @@ const send: ModeModule = {
       });
     }
     if (transaction.data?.length) {
-      fields.push({
-        type: "text",
-        label: "Data",
-        value: `Present`,
-      });
+      // $FlowFixMe (flow does not now that you can access a buffer like that)
+      const dataMethod = map(range(4), (i) => transaction.data[i]);
+
+      if (
+        isMatch(dataMethod, [9, 94, 167, 179]) &&
+        findTokenByAddress(transaction.recipient)
+      ) {
+        fields.push({
+          type: "text",
+          label: "Type",
+          value: `Approve`,
+        });
+      } else {
+        fields.push({
+          type: "text",
+          label: "Data",
+          value: `Present`,
+        });
+      }
     }
   },
 

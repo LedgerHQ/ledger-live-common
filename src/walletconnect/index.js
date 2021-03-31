@@ -11,7 +11,6 @@ import type {
   TypedMessageData,
   TypedMessage,
 } from "../families/ethereum/types";
-import { remapTransaction } from "../families/ethereum/modules";
 import { domainHash, messageHash } from "../families/ethereum/hw-signMessage";
 import type { MessageData } from "../hw/signMessage/types";
 
@@ -96,6 +95,9 @@ export const parseCallRequest: Parser = async (account, payload) => {
     case "eth_signTransaction":
     case "eth_sendTransaction":
       wcTransactionData = (payload.params[0]: WCPayloadTransaction);
+
+      console.log(wcTransactionData);
+
       bridge = getAccountBridge(account);
       transaction = bridge.createTransaction(account);
 
@@ -132,8 +134,6 @@ export const parseCallRequest: Parser = async (account, payload) => {
           nonce: wcTransactionData.nonce,
         });
       }
-      console.log("YOOO");
-      transaction = await remapTransaction(transaction);
 
       transaction = await bridge.prepareTransaction(account, transaction);
 
