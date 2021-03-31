@@ -6,6 +6,8 @@ import { NetworkDown, LedgerAPI5xx, LedgerAPI4xx } from "@ledgerhq/errors";
 import { retry } from "./promise";
 import { getEnv } from "./env";
 
+import { InvalidServerResponse } from "./errors";
+
 const makeError = (msg, status, url, method) => {
   const obj = {
     status,
@@ -52,8 +54,8 @@ const extractErrorMessage = (raw: string): ?string => {
   return null;
 };
 
-const userFriendlyError = <A>(p: Promise<A>, meta): Promise<A> =>
-  p.catch((error) => {
+function userFriendlyError<A>(p: Promise<A>, meta): Promise<A> {
+  return p.catch((error) => {
     const { url, method, startTime } = meta;
     let errorToThrow;
     if (error.response) {
@@ -88,10 +90,24 @@ const userFriendlyError = <A>(p: Promise<A>, meta): Promise<A> =>
     }
     throw error;
   });
+}
+
+const wrapTransformResponse = (transformer) => (data) => {
+  try {
+    return transformer(data);
+  } catch (err) {
+    throw new InvalidServerResponse(err.message);
+  }
+};
 
 const implementation = (arg: Object): Promise<*> => {
   invariant(typeof arg === "object", "network takes an object as parameter");
   let promise;
+
+  if (arg.transformResponse) {
+    arg.transformResponse = wrapTransformResponse(arg.transformResponse);
+  }
+
   if (arg.method === "GET") {
     if (!("timeout" in arg)) {
       arg.timeout = getEnv("GET_CALLS_TIMEOUT");

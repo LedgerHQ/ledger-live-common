@@ -1,6 +1,12 @@
 // @flow
 import { createCustomErrorClass } from "@ledgerhq/errors";
 
+// API errors
+
+export const InvalidServerResponse = createCustomErrorClass(
+  "InvalidServerResponse"
+);
+
 // TODO we need to migrate in all errors that are in @ledgerhq/errors
 // but only make sense to live-common to not pollute ledgerjs
 
