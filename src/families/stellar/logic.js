@@ -82,6 +82,12 @@ export const formatOperation = (
   const value = getValue(rawOperation, transaction, type);
   const recipients = getRecipients(rawOperation);
 
+  const memo = transaction.memo
+    ? transaction.memo_type === "hash" || transaction.memo_type === "return"
+      ? Buffer.from(transaction.memo, "base64").toString("hex")
+      : transaction.memo
+    : null;
+
   const operation = {
     id: encodeOperationId(accountId, rawOperation.transaction_hash, type),
     accountId,
@@ -96,7 +102,7 @@ export const formatOperation = (
     transactionSequenceNumber: Number(transaction.source_account_sequence),
     hasFailed: !rawOperation.transaction_successful,
     blockHash: null,
-    extra: transaction.memo ? { memo: transaction.memo } : {},
+    extra: memo ? { memo } : {},
   };
 
   return operation;
