@@ -137,11 +137,7 @@ export const parseCallRequest: Parser = async (account, payload) => {
         allowZeroAmount: true,
       });
 
-      console.log("wc", transaction.allowZeroAmount);
-
       transaction = await bridge.prepareTransaction(account, transaction);
-
-      console.log("wc2", transaction.allowZeroAmount);
 
       return {
         type: "transaction",

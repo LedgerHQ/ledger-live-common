@@ -149,8 +149,6 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
     t.estimatedGasLimit = estimatedGasLimit;
   }
 
-  console.log("prepare", t);
-
   return t;
 };
 
