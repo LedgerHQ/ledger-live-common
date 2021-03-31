@@ -117,16 +117,21 @@ const send: ModeModule = {
     if (transaction.data?.length) {
       // $FlowFixMe (flow does not now that you can access a buffer like that)
       const dataMethod = map(range(4), (i) => transaction.data[i]);
+      const token = findTokenByAddress(transaction.recipient);
 
-      if (
-        isMatch(dataMethod, [9, 94, 167, 179]) &&
-        findTokenByAddress(transaction.recipient)
-      ) {
+      if (isMatch(dataMethod, [9, 94, 167, 179]) && token) {
         fields.push({
           type: "text",
           label: "Type",
           value: `Approve`,
         });
+        fields.push({
+          type: "text",
+          label: "Amount (1/2)",
+          value: token.ticker,
+        });
+        // to do : push Amount(2/2) : nombre big endian de 32 bytes transaction.data[36:36+32]
+        // si nombre max (2^32 - 1) device affiche Unlimited
       } else {
         fields.push({
           type: "text",
