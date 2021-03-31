@@ -47,12 +47,6 @@ const dispatch: Resolver = (transport, opts) => {
     });
 };
 
-const initialState = {
-  signMessageRequested: null,
-  signMessageError: null,
-  signMessageResult: null,
-};
-
 export type State = {
   ...AppState,
   signMessageRequested: ?MessageData,
@@ -65,22 +59,27 @@ export type Request = {
   message: MessageData,
 };
 
-export const signMessageExec = (request: Request, device: ?Device) => {
-  if (!device) {
-    throw "Device is needed";
-  }
-  const result: Observable<Result> = withDevice(device.deviceId)((t) =>
+export type Input = {
+  request: Request,
+  deviceId: string,
+};
+
+export const signMessageExec = ({ request, deviceId }: Input) => {
+  const result: Observable<Result> = withDevice(deviceId)((t) =>
     from(dispatch(t, request.message))
   );
   return result;
 };
 
+const initialState = {
+  signMessageRequested: null,
+  signMessageError: null,
+  signMessageResult: null,
+};
+
 export const createAction = (
   connectAppExec: (ConnectAppInput) => Observable<ConnectAppEvent>,
-  signMessage: (
-    request: Request,
-    device: ?Device
-  ) => Observable<Result> = signMessageExec
+  signMessage: (Input) => Observable<Result> = signMessageExec
 ) => {
   const useHook = (reduxDevice: ?Device, request: Request): State => {
     const appState: AppState = createAppAction(connectAppExec).useHook(
@@ -92,7 +91,10 @@ export const createAction = (
 
     const { device, opened, inWrongDeviceForAccount, error } = appState;
 
-    const [state, setState] = useState(initialState);
+    const [state, setState] = useState({
+      ...initialState,
+      signMessageRequested: request.message,
+    });
 
     const sign = useCallback(async () => {
       let result;
@@ -104,13 +106,16 @@ export const createAction = (
         return;
       }
       try {
-        result = await signMessage(request, device).toPromise();
+        result = await signMessage({
+          request,
+          deviceId: device.deviceId,
+        }).toPromise();
       } catch (e) {
         if (e.name === "UserRefusedAddress") {
           e.name = "UserRefusedOnDevice";
           e.message = "UserRefusedOnDevice";
         }
-        setState({
+        return setState({
           ...initialState,
           signMessageError: e,
         });
@@ -123,14 +128,12 @@ export const createAction = (
 
     useEffect(() => {
       if (!device || !opened || inWrongDeviceForAccount || error) {
-        setState(initialState);
+        setState({
+          ...initialState,
+          signMessageRequested: request.message,
+        });
         return;
       }
-
-      setState({
-        ...initialState,
-        signMessageRequested: request.message,
-      });
 
       sign();
     }, [device, opened, inWrongDeviceForAccount, error, request.message, sign]);

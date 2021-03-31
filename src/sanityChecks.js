@@ -32,7 +32,7 @@ export function checkLibs(
 ${pkg} NPM package dup detected! You must \`yarn list ${pkg}\` and dedup with yarn or yarn-deduplicate.
 
 `);
-      throw new Error("duplicated " + pkg + " library");
+      /// throw new Error("duplicated " + pkg + " library");
     }
   }
 }
