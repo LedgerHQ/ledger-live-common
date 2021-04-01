@@ -170,6 +170,9 @@ const ProviderCommon = ({
     }
 
     if (state.status !== STATUS.DISCONNECTED) {
+      const disconnectedAccount =
+        state.status === STATUS.CONNECTED ? account : null;
+
       dispatch({
         session: null,
         dappInfo: null,
@@ -179,7 +182,7 @@ const ProviderCommon = ({
         status: STATUS.DISCONNECTED,
       });
 
-      onRemoteDisconnected();
+      onRemoteDisconnected(disconnectedAccount);
     }
   };
 

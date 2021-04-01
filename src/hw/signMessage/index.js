@@ -134,7 +134,6 @@ export const createAction = (
 
       if (state.signMessageRequested && !signedFired.current) {
         signedFired.current = true;
-        console.log("sign again");
         sign();
       }
     }, [
