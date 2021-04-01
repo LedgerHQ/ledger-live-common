@@ -8,7 +8,7 @@ import { log } from "@ledgerhq/logs";
 import { Observable } from "rxjs";
 import type { Resolver } from "./types";
 import perFamily from "../../generated/hw-signMessage";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { from } from "rxjs";
 import { createAction as createAppAction } from "../actions/app";
 import type { AppRequest, AppState } from "../actions/app";
@@ -95,6 +95,7 @@ export const createAction = (
       ...initialState,
       signMessageRequested: request.message,
     });
+    const signedFired = useRef();
 
     const sign = useCallback(async () => {
       let result;
@@ -128,15 +129,22 @@ export const createAction = (
 
     useEffect(() => {
       if (!device || !opened || inWrongDeviceForAccount || error) {
-        setState({
-          ...initialState,
-          signMessageRequested: request.message,
-        });
         return;
       }
 
-      sign();
-    }, [device, opened, inWrongDeviceForAccount, error, request.message, sign]);
+      if (state.signMessageRequested && !signedFired.current) {
+        signedFired.current = true;
+        console.log("sign again");
+        sign();
+      }
+    }, [
+      device,
+      opened,
+      inWrongDeviceForAccount,
+      error,
+      sign,
+      state.signMessageRequested,
+    ]);
 
     return {
       ...appState,
