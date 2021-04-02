@@ -208,10 +208,7 @@ export const addressExists = async (address: string): Promise<boolean> => {
   try {
     await loadAccount(address);
   } catch (error) {
-    if (error.name === "NotFoundError") {
-      return false;
-    }
-    throw error;
+    return false;
   }
 
   return true;

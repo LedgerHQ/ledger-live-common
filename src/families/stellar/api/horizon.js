@@ -249,7 +249,10 @@ export const buildCreateAccountOperation = (
   });
 };
 
-export const buildTransactionBuilder = (source: string, fee: BigNumber) => {
+export const buildTransactionBuilder = (
+  source: StellarSdk.Account,
+  fee: BigNumber
+) => {
   const formattedFee = fee.toString();
 
   return new StellarSdk.TransactionBuilder(source, {
