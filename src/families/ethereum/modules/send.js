@@ -4,10 +4,7 @@
 import abi from "ethereumjs-abi";
 import invariant from "invariant";
 import eip55 from "eip55";
-import map from "lodash/map";
 import uniq from "lodash/uniq";
-import range from "lodash/range";
-import isMatch from "lodash/isMatch";
 import { BigNumber } from "bignumber.js";
 import type { ModeModule } from "../types";
 import {
