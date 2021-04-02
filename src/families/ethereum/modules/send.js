@@ -136,7 +136,7 @@ const send: ModeModule = {
         // $FlowFixMe (transaction data is not null, you flow)
         const amountHex = transaction.data.slice(36, 36 + 32).toString("hex");
 
-        if (uniq(amountHex.split()) === ["f"]) {
+        if (uniq(amountHex.split("")) === ["f"]) {
           fields.push({
             type: "text",
             label: "Amount (2/2)",
