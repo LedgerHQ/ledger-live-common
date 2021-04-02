@@ -5,6 +5,7 @@ import abi from "ethereumjs-abi";
 import invariant from "invariant";
 import eip55 from "eip55";
 import map from "lodash/map";
+import uniq from "lodash/uniq";
 import range from "lodash/range";
 import isMatch from "lodash/isMatch";
 import { BigNumber } from "bignumber.js";
@@ -21,6 +22,7 @@ import {
   validateRecipient,
 } from "../transaction";
 import { findTokenByAddress } from "../../../currencies";
+import { getAccountCurrency, getAccountUnit } from "../../../account";
 
 export type Modes = "send";
 
@@ -107,7 +109,10 @@ const send: ModeModule = {
     }
   },
 
-  fillDeviceTransactionConfig({ transaction, status: { amount } }, fields) {
+  fillDeviceTransactionConfig(
+    { transaction, account, status: { amount } },
+    fields
+  ) {
     if (!amount.isZero()) {
       fields.push({
         type: "amount",
@@ -115,11 +120,11 @@ const send: ModeModule = {
       });
     }
     if (transaction.data?.length) {
-      // $FlowFixMe (flow does not now that you can access a buffer like that)
-      const dataMethod = map(range(4), (i) => transaction.data[i]);
       const token = findTokenByAddress(transaction.recipient);
+      // $FlowFixMe (transaction data is not null, you flow)
+      const method = transaction.data.slice(0, 4).toString("hex");
 
-      if (isMatch(dataMethod, [9, 94, 167, 179]) && token) {
+      if (method === "095ea7b3" && token) {
         fields.push({
           type: "text",
           label: "Type",
@@ -130,8 +135,26 @@ const send: ModeModule = {
           label: "Amount (1/2)",
           value: token.ticker,
         });
-        // to do : push Amount(2/2) : nombre big endian de 32 bytes transaction.data[36:36+32]
-        // si nombre max (2^32 - 1) device affiche Unlimited
+
+        // $FlowFixMe (transaction data is not null, you flow)
+        const amountHex = transaction.data.slice(36, 36 + 32).toString("hex");
+
+        if (uniq(amountHex.split()) === ["f"]) {
+          fields.push({
+            type: "text",
+            label: "Amount (2/2)",
+            value: "Unlimited " + getAccountCurrency(account).ticker,
+          });
+        } else {
+          const amount = BigNumber(`0x${amountHex}`).dividedBy(
+            BigNumber(10).pow(getAccountUnit(account).magnitude)
+          );
+          fields.push({
+            type: "text",
+            label: "Amount (2/2)",
+            value: amount.toString(),
+          });
+        }
       } else {
         fields.push({
           type: "text",
