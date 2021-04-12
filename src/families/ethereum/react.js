@@ -11,7 +11,7 @@ export function useFeesStrategy(t: Transaction): FeeStrategy[] {
 
   const strategies = [
     {
-      label: "low",
+      label: "slow",
       amount: networkInfo.gasPrice.min,
       displayedAmount: networkInfo.gasPrice.min.multipliedBy(gasLimit),
     },
@@ -21,7 +21,7 @@ export function useFeesStrategy(t: Transaction): FeeStrategy[] {
       displayedAmount: networkInfo.gasPrice.initial.multipliedBy(gasLimit),
     },
     {
-      label: "high",
+      label: "fast",
       amount: networkInfo.gasPrice.max,
       displayedAmount: networkInfo.gasPrice.max.multipliedBy(gasLimit),
     },
