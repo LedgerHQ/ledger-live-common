@@ -117,6 +117,9 @@ const send: ModeModule = {
       });
     }
     if (transaction.data?.length) {
+      /*
+      TODO: LL-4219
+
       const token = findTokenByAddress(transaction.recipient);
       // $FlowFixMe (transaction data is not null, you flow)
       const method = transaction.data.slice(0, 4).toString("hex");
@@ -159,6 +162,12 @@ const send: ModeModule = {
           value: `Present`,
         });
       }
+      */
+      fields.push({
+        type: "text",
+        label: "Data",
+        value: `Present`,
+      });
     }
   },
 
