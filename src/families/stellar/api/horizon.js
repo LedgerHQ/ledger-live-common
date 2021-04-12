@@ -250,7 +250,7 @@ export const buildCreateAccountOperation = (
 };
 
 export const buildTransactionBuilder = (
-  source: StellarSdk.Account,
+  source: typeof StellarSdk.Account,
   fee: BigNumber
 ) => {
   const formattedFee = fee.toString();

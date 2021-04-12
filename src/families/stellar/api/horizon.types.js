@@ -27,5 +27,5 @@ export type RawTransaction = {
   ledger_attr: number,
   source_account_sequence: string,
   memo: ?string,
-  memo_type: ?String,
+  memo_type: ?string,
 };
