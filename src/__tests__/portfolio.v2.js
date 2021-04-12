@@ -22,6 +22,7 @@ import type { PortfolioRange } from "../portfolio/v2/types";
 import type { AccountLike } from "../types";
 import { setEnv } from "../env";
 import { genAccount } from "../mock/account";
+import consoleWarnExpectToEqual from "../consoleWarnExpectToEqual";
 
 setEnv("MOCK", "1");
 
@@ -97,7 +98,7 @@ describe("Portfolio", () => {
 
   describe("getBalanceHistoryWithCountervalue", () => {
     const account = genAccountBitcoin();
-    const [range, count] = rangeCount[0];
+    const [range, count] = rangeCount[1];
 
     test("coutnervalueAvailable should be false when the latest countervalue does NOT exists", async () => {
       const { to } = await loadCV(account);
@@ -142,20 +143,38 @@ describe("Portfolio", () => {
   });
 
   describe("getPortfolio", () => {
-    it("should have history identical to that account history", async () => {
-      const account = genAccountBitcoin();
-      const range = "week";
+    const account = genAccountBitcoin();
+    const account2 = genAccountBitcoin("bitcoin_2");
+    const [range, count] = rangeCount[3];
+
+    it("should return account as avilableAccounts when balanceAvailable is ture", async () => {
       const { state, to } = await loadCV(account);
       const portfolio = getPortfolio([account], range, state, to);
       expect(portfolio.availableAccounts).toMatchObject([account]);
       expect(portfolio.balanceAvailable).toBe(true);
     });
 
-    it.todo("should have proper countervalues");
+    it("should have history identical to that account history", async () => {
+      const { state, to } = await loadCV(account);
+      const portfolio = getPortfolio([account, account2], range, state, to);
+      const { history: history } = getBalanceHistoryWithCountervalue(
+        account,
+        range,
+        count,
+        state,
+        to
+      );
+      const { history: history2 } = getBalanceHistoryWithCountervalue(
+        account2,
+        range,
+        count,
+        state,
+        to
+      );
+      expect(portfolio.histories).toMatchObject([history, history2]);
+    });
 
     it("snapshot", async () => {
-      const account = genAccountBitcoin();
-      const range = "week";
       const { state, to } = await loadCV(account);
       const portfolio = getPortfolio([account], range, state, to);
       expect(portfolio).toMatchSnapshot();
