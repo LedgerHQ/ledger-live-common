@@ -12,6 +12,7 @@ import {
   NotEnoughBalanceInParentAccount,
   AmountRequired,
 } from "@ledgerhq/errors";
+import { NoFeeStrategySelected } from "../../../errors";
 import {
   inferTokenAccount,
   getGasLimit,
@@ -71,6 +72,10 @@ const send: ModeModule = {
         ) {
           result.errors.amount = new NotEnoughBalance();
         }
+      }
+
+      if (t.feesStrategy === null) {
+        result.errors.feesStrategy = new NoFeeStrategySelected();
       }
     }
   },

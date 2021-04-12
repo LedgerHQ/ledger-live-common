@@ -189,4 +189,8 @@ export const CompoundLowerAllowanceOfActiveAccountError = createCustomErrorClass
   "CompoundLowerAllowanceOfActiveAccountError"
 );
 
+export const NoFeeStrategySelected = createCustomErrorClass(
+  "NoFeeStrategySelected"
+);
+
 export * from "./families/polkadot/errors";

@@ -10,7 +10,10 @@ import {
   FeeTooHigh,
   NotEnoughBalance,
 } from "@ledgerhq/errors";
-import { LowerThanMinimumRelayFee } from "../../../errors";
+import {
+  LowerThanMinimumRelayFee,
+  NoFeeStrategySelected,
+} from "../../../errors";
 import { validateRecipient } from "../../../bridge/shared";
 import type { AccountBridge, CurrencyBridge } from "../../../types/bridge";
 import type { Account } from "../../../types/account";
@@ -180,6 +183,10 @@ const getTransactionStatus = async (a, t) => {
     warnings.feePerByte = new LowerThanMinimumRelayFee();
   } else if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
     warnings.feeTooHigh = new FeeTooHigh();
+  }
+
+  if (t.feesStrategy === null) {
+    errors.feesStrategy = new NoFeeStrategySelected();
   }
 
   return Promise.resolve({
