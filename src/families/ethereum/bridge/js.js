@@ -57,6 +57,7 @@ const createTransaction = () => ({
   networkInfo: null,
   feeCustomUnit: getCryptoCurrencyById("ethereum").units[1],
   useAllAmount: false,
+  feesStrategy: "medium",
 });
 
 const updateTransaction = (t, patch) => {

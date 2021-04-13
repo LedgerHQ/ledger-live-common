@@ -101,7 +101,6 @@ function inferTransactions(
       ...transaction,
       family: "ethereum",
       subAccountId,
-      feesStrategy: "medium", // In CLI it doesn't impact anything
       gasPrice: opts.gasPrice ? inferAmount(mainAccount, opts.gasPrice) : null,
       userGasLimit: opts.gasLimit ? new BigNumber(opts.gasLimit) : null,
       estimatedGasLimit: null,
