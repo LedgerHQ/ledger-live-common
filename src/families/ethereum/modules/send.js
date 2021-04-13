@@ -74,7 +74,7 @@ const send: ModeModule = {
         }
       }
 
-      if (t.feesStrategy === null) {
+      if (!result.errors.amount && !t.feesStrategy) {
         result.errors.feesStrategy = new NoFeeStrategySelected();
       }
     }

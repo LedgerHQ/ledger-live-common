@@ -50,6 +50,7 @@ function inferTransactions(
       ...transaction,
       feePerByte,
       rbf: opts.rbf || false,
+      feesStrategy: "medium",
       utxoStrategy: {
         strategy: bitcoinPickingStrategy[opts["bitcoin-pick-strategy"]] || 0,
         pickUnconfirmedRBF: opts.pickUnconfirmedRBF || false,

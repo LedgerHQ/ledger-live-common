@@ -185,7 +185,7 @@ const getTransactionStatus = async (a, t) => {
     warnings.feeTooHigh = new FeeTooHigh();
   }
 
-  if (t.feesStrategy === null) {
+  if (!errors.amount && !t.feesStrategy) {
     errors.feesStrategy = new NoFeeStrategySelected();
   }
 
