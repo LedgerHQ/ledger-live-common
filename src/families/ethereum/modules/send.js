@@ -4,7 +4,6 @@
 import abi from "ethereumjs-abi";
 import invariant from "invariant";
 import eip55 from "eip55";
-import uniq from "lodash/uniq";
 import { BigNumber } from "bignumber.js";
 import type { ModeModule } from "../types";
 import {
@@ -18,8 +17,6 @@ import {
   getGasLimit,
   validateRecipient,
 } from "../transaction";
-import { findTokenByAddress } from "../../../currencies";
-import { getAccountCurrency, getAccountUnit } from "../../../account";
 
 export type Modes = "send";
 
@@ -119,6 +116,10 @@ const send: ModeModule = {
     if (transaction.data?.length) {
       /*
       TODO: LL-4219
+
+      import uniq from "lodash/uniq";
+      import { findTokenByAddress } from "../../../currencies";
+      import { getAccountCurrency, getAccountUnit } from "../../../account";
 
       const token = findTokenByAddress(transaction.recipient);
       // $FlowFixMe (transaction data is not null, you flow)
