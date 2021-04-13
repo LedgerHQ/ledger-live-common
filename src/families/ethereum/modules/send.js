@@ -103,10 +103,7 @@ const send: ModeModule = {
     }
   },
 
-  fillDeviceTransactionConfig(
-    { transaction, account, status: { amount } },
-    fields
-  ) {
+  fillDeviceTransactionConfig({ transaction, status: { amount } }, fields) {
     if (!amount.isZero()) {
       fields.push({
         type: "amount",
