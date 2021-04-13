@@ -17,8 +17,12 @@ import {
   getCurrencyPortfolio,
   getAssetsDistribution,
 } from "../portfolio/v2";
-import { getPortfolioRangeConfig, getDates } from "../portfolio/v2/range";
 import type { PortfolioRange } from "../portfolio/v2/types";
+import {
+  getPortfolioRangeConfig,
+  getDates,
+  getRanges,
+} from "../portfolio/v2/range";
 import type { AccountLike } from "../types";
 import { setEnv } from "../env";
 import { genAccount } from "../mock/account";
@@ -285,6 +289,16 @@ describe("Portfolio", () => {
       const { state, to } = await loadCV(account);
       const assets = getAssetsDistribution([account], state, to);
       expect(assets).toMatchSnapshot();
+  });
+
+  describe("range module", () => {
+    test("getRanges", () => {
+      const ranges = ["all", "year", "month", "week", "day"];
+      const res = getRanges();
+      res.forEach((r) => {
+        const match = ranges.includes(r);
+        expect(match).toBe(true);
+      });
     });
   });
 });
