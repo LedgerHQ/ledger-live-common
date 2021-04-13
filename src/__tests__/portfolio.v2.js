@@ -289,6 +289,7 @@ describe("Portfolio", () => {
       const { state, to } = await loadCV(account);
       const assets = getAssetsDistribution([account], state, to);
       expect(assets).toMatchSnapshot();
+    });
   });
 
   describe("range module", () => {
