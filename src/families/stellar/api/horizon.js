@@ -12,11 +12,7 @@ const FALLBACK_BASE_FEE = 100;
 
 const currency = getCryptoCurrencyById("stellar");
 
-const getServer = () => {
-  const server = new StellarSdk.Server(getEnv("API_STELLAR_HORIZON"));
-
-  return server;
-};
+const server = new StellarSdk.Server(getEnv("API_STELLAR_HORIZON"));
 
 const getFormattedAmount = (amount: BigNumber) => {
   return amount
@@ -28,7 +24,7 @@ export const fetchBaseFee = async (): Promise<number> => {
   let baseFee;
 
   try {
-    baseFee = await getServer().fetchBaseFee();
+    baseFee = await server.fetchBaseFee();
   } catch (e) {
     baseFee = FALLBACK_BASE_FEE;
   }
@@ -46,7 +42,7 @@ export const fetchAccount = async (addr: string) => {
   let account: RawAccount = {};
   let balance = {};
   try {
-    account = await getServer().accounts().accountId(addr).call();
+    account = await server.accounts().accountId(addr).call();
     balance = account.balances.find((balance) => {
       return balance.asset_type === "native";
     });
@@ -97,7 +93,7 @@ const fetchTransactionsList = async (
   let mergedTransactions = [];
 
   try {
-    transactions = await getServer()
+    transactions = await server
       .transactions()
       .forAccount(addr)
       .cursor(startAt)
@@ -125,7 +121,7 @@ const fetchOperationList = async (
   let formattedMergedOp = [];
 
   for (let i = 0; i < transactions.length; i++) {
-    let operations = await getServer()
+    let operations = await server
       .operations()
       .forTransaction(transactions[i].id)
       .limit(LIMIT)
@@ -161,14 +157,14 @@ export const fetchAccountNetworkInfo = async (
   account: Account
 ): Promise<NetworkInfo> => {
   try {
-    const extendedAccount = await getServer()
+    const extendedAccount = await server
       .accounts()
       .accountId(account.freshAddress)
       .call();
 
     const numberOfEntries = extendedAccount.subentry_count;
 
-    const ledger = await getServer()
+    const ledger = await server
       .ledgers()
       .ledger(extendedAccount.last_modified_ledger)
       .call();
@@ -194,13 +190,13 @@ export const fetchAccountNetworkInfo = async (
 };
 
 export const fetchSequence = async (a: Account) => {
-  const extendedAccount = await getServer().loadAccount(a.freshAddress);
+  const extendedAccount = await server.loadAccount(a.freshAddress);
   return BigNumber(extendedAccount.sequence);
 };
 
 export const fetchSigners = async (a: Account) => {
   try {
-    const extendedAccount = await getServer()
+    const extendedAccount = await server
       .accounts()
       .accountId(a.freshAddress)
       .call();
@@ -218,7 +214,7 @@ export const broadcastTransaction = async (
     StellarSdk.Networks.PUBLIC
   );
 
-  const res = await getServer().submitTransaction(transaction, {
+  const res = await server.submitTransaction(transaction, {
     skipMemoRequiredCheck: true,
   });
   return res.hash;
@@ -262,5 +258,5 @@ export const buildTransactionBuilder = (
 };
 
 export const loadAccount = (addr: string) => {
-  return getServer().loadAccount(addr);
+  return server.loadAccount(addr);
 };
