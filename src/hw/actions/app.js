@@ -52,10 +52,16 @@ type State = {|
   unresponsive: boolean,
   allowOpeningRequestedWording: ?string,
   allowOpeningGranted: boolean,
+  allowManagerRequestedWording: ?string,
+  allowManagerGranted: boolean,
   device: ?Device,
   error: ?Error,
   derivation: ?{ address: string },
   displayUpgradeWarning: boolean,
+  forInstallation?: boolean,
+  installingApp?: boolean,
+  progress?: number,
+  listingApps?: boolean,
 |};
 
 export type AppState = {|
@@ -101,12 +107,17 @@ const getInitialState = (device?: ?Device): State => ({
   requiresAppInstallation: null,
   allowOpeningRequestedWording: null,
   allowOpeningGranted: false,
+  allowManagerRequestedWording: null,
+  allowManagerGranted: false,
   device: null,
   opened: false,
   appAndVersion: null,
   error: null,
   derivation: null,
   displayUpgradeWarning: false,
+  installingApp: false,
+  forInstallation: false,
+  listingApps: false,
 });
 
 const reducer = (state: State, e: Event): State => {
@@ -126,12 +137,40 @@ const reducer = (state: State, e: Event): State => {
         device: e.device,
       };
 
+    case "installing-app":
+      return {
+        isLoading: false,
+        requestQuitApp: false,
+        requiresAppInstallation: null,
+        allowOpeningRequestedWording: null,
+        allowOpeningGranted: true,
+        allowManagerRequestedWording: null,
+        allowManagerGranted: true,
+        device: state.device,
+        opened: false,
+        appAndVersion: null,
+        error: null,
+        derivation: null,
+        displayUpgradeWarning: false,
+        unresponsive: false,
+        installingApp: true,
+        progress: e.progress || 0,
+        requestOpenApp: e.appName,
+        listingApps: false,
+      };
+    case "listing-apps":
+      return {
+        ...state,
+        listingApps: true,
+      };
+
     case "error":
       return {
         ...getInitialState(e.device),
         device: e.device || null,
         error: e.error,
         isLoading: false,
+        listingApps: false,
       };
 
     case "ask-open-app":
@@ -141,6 +180,8 @@ const reducer = (state: State, e: Event): State => {
         requiresAppInstallation: null,
         allowOpeningRequestedWording: null,
         allowOpeningGranted: false,
+        allowManagerRequestedWording: null,
+        allowManagerGranted: false,
         device: state.device,
         opened: false,
         appAndVersion: null,
@@ -158,6 +199,8 @@ const reducer = (state: State, e: Event): State => {
         requiresAppInstallation: null,
         allowOpeningRequestedWording: null,
         allowOpeningGranted: false,
+        allowManagerRequestedWording: null,
+        allowManagerGranted: false,
         device: state.device,
         opened: false,
         appAndVersion: null,
@@ -174,7 +217,6 @@ const reducer = (state: State, e: Event): State => {
         requestQuitApp: false,
         requestOpenApp: null,
         requiresAppInstallation: null,
-        allowOpeningGranted: false,
         device: state.device,
         opened: false,
         appAndVersion: null,
@@ -182,7 +224,11 @@ const reducer = (state: State, e: Event): State => {
         derivation: null,
         displayUpgradeWarning: false,
         unresponsive: false,
-        allowOpeningRequestedWording: e.wording,
+        allowOpeningGranted: false,
+        allowOpeningRequestedWording: !e.forManager ? e.wording : null,
+        allowManagerGranted: false,
+        allowManagerRequestedWording: e.forManager ? e.wording : null,
+        forInstallation: !!e.forInstallation,
       };
 
     case "device-permission-granted":
@@ -198,15 +244,16 @@ const reducer = (state: State, e: Event): State => {
         derivation: null,
         displayUpgradeWarning: false,
         unresponsive: false,
-        allowOpeningRequestedWording: null,
         allowOpeningGranted: true,
+        allowOpeningRequestedWording: null,
+        allowManagerGranted: true,
+        allowManagerRequestedWording: null,
       };
 
     case "app-not-installed":
       return {
         requestQuitApp: false,
         requestOpenApp: null,
-        allowOpeningGranted: false,
         device: state.device,
         opened: false,
         appAndVersion: null,
@@ -215,7 +262,10 @@ const reducer = (state: State, e: Event): State => {
         displayUpgradeWarning: false,
         isLoading: false,
         unresponsive: false,
+        allowOpeningGranted: false,
         allowOpeningRequestedWording: null,
+        allowManagerGranted: false,
+        allowManagerRequestedWording: null,
         requiresAppInstallation: { appName: e.appName },
       };
 
@@ -224,8 +274,10 @@ const reducer = (state: State, e: Event): State => {
         requestQuitApp: false,
         requestOpenApp: null,
         requiresAppInstallation: null,
-        allowOpeningRequestedWording: null,
         allowOpeningGranted: false,
+        allowOpeningRequestedWording: null,
+        allowManagerGranted: false,
+        allowManagerRequestedWording: null,
         device: state.device,
         error: null,
         isLoading: false,

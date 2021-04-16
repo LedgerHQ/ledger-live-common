@@ -7,6 +7,7 @@ import {
   reduce,
   ignoreElements,
   throttleTime,
+  filter,
 } from "rxjs/operators";
 import type { Exec, State, AppOp, RunnerEvent } from "./types";
 import { reducer, getActionPlan, getNextAppOp } from "./logic";
@@ -31,6 +32,7 @@ export const runAppOp = (
     // we need to allow a 1s delay for the action to be achieved without glitch (bug in old firmware when you do things too closely)
     defer(() => delay(getEnv("MANAGER_INSTALL_DELAY"))).pipe(ignoreElements()),
     defer(() => exec(appOp, deviceInfo.targetId, app)).pipe(
+      filter((e) => "progress" in Object(e)), // Ignore the exposed allow manager events from inline install
       throttleTime(100),
       materialize(),
       map((n) => {

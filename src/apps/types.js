@@ -2,13 +2,18 @@
 import type { DeviceModel, DeviceModelId } from "@ledgerhq/devices";
 import type { Observable, Subject } from "rxjs";
 import type { CryptoCurrency } from "../types/currencies";
-import type { App, DeviceInfo, FinalFirmware } from "../types/manager";
+import type {
+  App,
+  DeviceInfo,
+  FinalFirmware,
+  SocketEvent,
+} from "../types/manager";
 
 export type Exec = (
   appOp: AppOp,
   targetId: string | number,
   app: App
-) => Observable<{ progress: number }>;
+) => Observable<{ progress: number } | SocketEvent>;
 
 export type InstalledItem = {
   name: string,
@@ -20,7 +25,12 @@ export type InstalledItem = {
 };
 
 export type ListAppsEvent =
-  | { type: "device-permission-requested", wording: string }
+  | {
+      type: "device-permission-requested",
+      forManager?: boolean,
+      forInstallation?: boolean,
+      wording: string,
+    }
   | { type: "device-permission-granted" }
   | { type: "result", result: ListAppsResult };
 

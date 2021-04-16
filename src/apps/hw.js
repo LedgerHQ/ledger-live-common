@@ -3,22 +3,26 @@
 import Transport from "@ledgerhq/hw-transport";
 import { getDeviceModel } from "@ledgerhq/devices";
 import { UnexpectedBootloader } from "@ledgerhq/errors";
-import { Observable, throwError } from "rxjs";
+import { of, concat, Observable, throwError } from "rxjs";
+import { tap, map } from "rxjs/operators";
 import type { Exec, AppOp, ListAppsEvent, ListAppsResult } from "./types";
-import type { App, DeviceInfo } from "../types/manager";
+import type { App, DeviceInfo, ApplicationVersion } from "../types/manager";
 import { getProviderId } from "../manager";
 import installApp from "../hw/installApp";
 import uninstallApp from "../hw/uninstallApp";
 import { log } from "@ledgerhq/logs";
+import getDeviceInfo from "../hw/getDeviceInfo";
+import type { ConnectAppEvent } from "../hw/connectApp";
 import {
   listCryptoCurrencies,
   currenciesByMarketcap,
   findCryptoCurrencyById,
 } from "../currencies";
 import ManagerAPI from "../api/Manager";
+import { OutdatedApp } from "../errors";
 import { getEnv } from "../env";
 import hwListApps from "../hw/listApps";
-import { polyfillApp, polyfillApplication } from "./polyfill";
+import { polyfillApp, polyfillApplication, getDependencies } from "./polyfill";
 
 export const execWithTransport = (transport: Transport<*>): Exec => (
   appOp: AppOp,
@@ -30,6 +34,147 @@ export const execWithTransport = (transport: Transport<*>): Exec => (
 };
 
 const appsThatKeepChangingHashes = ["Fido U2F"];
+
+const inlineInstall = (
+  transport: Transport<*>,
+  applicationByDevice: Array<ApplicationVersion>,
+  targetId: string | number,
+  appName: string,
+  o
+): Observable<*> => {
+  const targetAppVersion = applicationByDevice.find(
+    ({ name }) => name === appName
+  );
+  if (targetAppVersion) {
+    // $FlowFixMe
+    return installApp(transport, targetId, targetAppVersion).pipe(
+      map((e) => {
+        if (e.progress) {
+          return {
+            type: "installing-app",
+            appName,
+            progress: e.progress,
+            targetAppVersion,
+            e,
+          };
+        }
+        return e;
+      }),
+      tap((e) => {
+        o.next(e);
+      })
+    );
+  } else {
+    return of({
+      type: "error",
+      error: new Error(`Couldn't find a match for app ${appName}`),
+    });
+  }
+};
+export const standaloneAppOp = (
+  transport: Transport<*>,
+  appOp: AppOp
+): Observable<ConnectAppEvent> =>
+  Observable.create((o) => {
+    let sub;
+
+    async function main() {
+      o.next({ type: "listing-apps" }); // Triggers the _checking dependencies_ UI
+      const deviceInfo = await getDeviceInfo(transport);
+      const provider = getProviderId(deviceInfo);
+      const { targetId, version } = deviceInfo;
+      const deviceVersion = await ManagerAPI.getDeviceVersion(
+        targetId,
+        provider
+      );
+      const firmwareData = await ManagerAPI.getCurrentFirmware({
+        deviceId: deviceVersion.id,
+        version,
+        provider,
+      });
+      const applicationByDevice: Array<ApplicationVersion> = await ManagerAPI.applicationsByDevice(
+        {
+          provider,
+          current_se_firmware_final_version: firmwareData.id,
+          device_version: deviceVersion.id,
+        }
+      );
+
+      const targetApp = applicationByDevice.find(
+        ({ name }) => name === appOp.name
+      );
+      if (!targetApp) return; // This should never happen but
+
+      const queue = [];
+      // Does the target app have dependencies
+      const dependencies = getDependencies(appOp.name);
+
+      // Only listApps if so
+      if (dependencies.length) {
+        const listAppsP = new Promise((resolve, reject) => {
+          sub = listApps(transport, deviceInfo).subscribe({
+            next: (e) => {
+              if (e.type === "result") {
+                resolve(e.result);
+              } else if (
+                e.type === "device-permission-granted" ||
+                e.type === "device-permission-requested"
+              ) {
+                o.next(e);
+              }
+            },
+            error: reject,
+          });
+        });
+
+        // Basic coverage of dependencies where we only try to install if it's
+        // not present, outdated apps will prompt user to go to the manager.
+        const listAppsResult = await listAppsP;
+        if (listAppsResult && listAppsResult?.installed) {
+          for (let i = 0; i < dependencies.length; i++) {
+            const match = listAppsResult.installed.find(
+              (app) => app.name === dependencies[i]
+            );
+
+            if (!match) {
+              queue.push(
+                // TODO implement inline uninstall (?)
+                inlineInstall(
+                  transport,
+                  applicationByDevice,
+                  targetId,
+                  dependencies[i],
+                  o
+                )
+              );
+            } else if (match.version !== targetApp.version) {
+              o.error(new OutdatedApp(null, { appName: match.name }));
+              return;
+            }
+          }
+        }
+      }
+
+      queue.push(
+        inlineInstall(transport, applicationByDevice, targetId, appOp.name, o)
+      );
+
+      await concat(...queue).toPromise();
+    }
+
+    main().then(
+      () => {
+        o.complete();
+      },
+      (e) => {
+        o.error(e);
+      }
+    );
+
+    return () => {
+      if (sub) sub.unsubscribe();
+    };
+  });
 
 export const listApps = (
   transport: Transport<*>,

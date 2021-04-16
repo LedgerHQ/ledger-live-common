@@ -86,6 +86,7 @@ export const createDeviceSocket = (
                 o.next({
                   type: "device-permission-requested",
                   wording: "Ledger Manager",
+                  forManager: true,
                 });
               }, ALLOW_MANAGER_DELAY);
             }
