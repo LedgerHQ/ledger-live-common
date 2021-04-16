@@ -257,6 +257,6 @@ export const buildTransactionBuilder = (
   });
 };
 
-export const loadAccount = (addr: string) => {
-  return server.loadAccount(addr);
+export const loadAccount = async (addr: string) => {
+  return await server.loadAccount(addr);
 };
