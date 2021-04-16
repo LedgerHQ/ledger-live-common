@@ -46,12 +46,12 @@ export type BalanceHistoryCache = {
   [_: GranularityId]: BalanceHistoryDataCache,
 };
 // the way BalanceHistoryDataCache works is:
-// - a "cursor" date which is the "latestDate" representing the latest datapoint date.
+// - a "cursor" date which is the "latestDate" representing the latest datapoint date. it's null if it never was loaded or if it's empty.
 // - an array of balances. balances are stored in JSNumber even tho internally calculated with bignumbers because we want very good perf. it shouldn't impact imprecision (which happens when we accumulate values, not when presenting to user)
 // there are as much value in that array as there are historical datapoint for a given account.
 // each time an account will sync, it potentially update it by adding a datapoint and possibility updating the cursor in that case.
 export type BalanceHistoryDataCache = {
-  latestDate: Date,
+  latestDate: ?Date,
   balances: number[],
 };
 

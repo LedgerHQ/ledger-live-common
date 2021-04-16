@@ -1,18 +1,18 @@
 // @flow
-
-import { BigNumber } from "bignumber.js";
 import type {
-  BalanceHistoryCache,
   AccountLike,
   Account,
   Currency,
   CryptoCurrency,
   TokenCurrency,
 } from "../../types";
-import { getOperationAmountNumberWithInternals } from "../../operation";
 import type { CounterValuesState } from "../../countervalues/types";
 import { calculate, calculateMany } from "../../countervalues/logic";
-import { flattenAccounts, getAccountCurrency } from "../../account";
+import {
+  flattenAccounts,
+  getAccountCurrency,
+  getAccountHistoryBalances,
+} from "../../account";
 import { getEnv } from "../../env";
 import type {
   BalanceHistory,
@@ -40,11 +40,9 @@ export function getPortfolioCount(
   const startDate = new Date(
     Math.min(...accounts.map((a) => a.creationDate.getTime()))
   );
-
   return getPortfolioCountByDate(startDate, range);
 }
 
-// TODO: unclear what this is doing to me. why do we need it? let's see if there is something to optim
 export function getPortfolioCountByDate(
   start: Date,
   range: PortfolioRange
@@ -56,48 +54,25 @@ export function getPortfolioCountByDate(
   return count < defaultYearCount ? defaultYearCount : count;
 }
 
-export function generateBalanceHistoryFromOperations(
-  account: AccountLike
-): BalanceHistoryCache {
-  // TODO
-  return {};
-}
-// ^NB: we could (or not!) make libcore backend impl have their own implementation using the underlying libcore api.
-// TBD => is it worth it in context of moving away from libcore.
-
-// take back the getBalanceHistory "js"
-// TODO Portfolio: Account#balanceHistory would be DROPPED and replaced in future by another impl. (perf milestone)
 export function getBalanceHistory(
   account: AccountLike,
   range: PortfolioRange,
   count: number
 ): BalanceHistory {
-  // TODO: now with the account.balanceHistoryCache, it's a matter of slicing.
-  // TODO - remove from this the "now" case
-  // TODO - probably signature is just (BalanceHistoryCache, range, count) so it can be memoized for this balance history cache and it minimize dep!
-  // NB impl that follows would be moved to the generateBalanceHistoryFromOperations
-
-  const dates = getDates(range, count);
-
+  const conf = getPortfolioRangeConfig(range);
+  const balances = getAccountHistoryBalances(account, conf.granularityId);
   const history = [];
-  let { balance } = account;
-  const operationsLength = account.operations.length;
-  let i = 0; // index of operation
-  history.unshift({ date: dates[dates.length - 1], value: balance.toNumber() });
-  for (let d = dates.length - 2; d >= 0; d--) {
-    const date = dates[d];
-    // accumulate operations after time t
-    while (i < operationsLength && account.operations[i].date > date) {
-      balance = balance.minus(
-        getOperationAmountNumberWithInternals(account.operations[i])
-      );
-      i++;
-    }
-    if (i === operationsLength) {
-      // When there is no more operation, we consider we reached ZERO to avoid invalid assumption that balance was already available.
-      balance = BigNumber(0);
-    }
-    history.unshift({ date, value: BigNumber.max(balance, 0).toNumber() });
+  const now = new Date();
+  history.unshift({
+    date: now,
+    value: account.balance.toNumber(),
+  });
+  let t = new Date(conf.startOf(now) - 1).getTime(); // end of yesterday
+  for (let i = 0; i < count - 1; i++) {
+    history.unshift({
+      date: new Date(t - conf.increment * i),
+      value: balances[balances.length - 1 - i] ?? 0,
+    });
   }
   return history;
 }
@@ -109,15 +84,6 @@ export function getBalanceHistoryWithCountervalue(
   cvState: CounterValuesState,
   cvCurrency: Currency
 ): AccountPortfolio {
-  // TODO: two options: either follow the rabiit hole of optim. or keep as is.
-  // rabbit hole:
-  // challenge here is that if we drop the "now" in getBalanceHistory,
-  //   where is it getting back to calculate the "price changes"?
-  //   if we want this done properly, it actually means to rework lot of parts. maybe splitting out the "change" calculation. which isn't a bad idea.
-  // keep as is:
-  // the only slight difference is we need to .concat(nowDatapoint) on the balance history array
-  // => my take: let's go option 'keep as is' and evaluate perf
-
   const balanceHistory = getBalanceHistory(account, range, count);
   const currency = getAccountCurrency(account);
   const counterValues = calculateMany(cvState, balanceHistory, {

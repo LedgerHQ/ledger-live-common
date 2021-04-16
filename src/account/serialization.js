@@ -44,6 +44,10 @@ import { inferFamilyFromAccountId } from "./accountId";
 import accountByFamily from "../generated/account";
 import { isAccountEmpty } from "./helpers";
 import type { SwapOperation, SwapOperationRaw } from "../exchange/swap/types";
+import {
+  emptyHistoryCache,
+  generateHistoryFromOperations,
+} from "./balanceHistoryCache";
 
 export { toCosmosResourcesRaw, fromCosmosResourcesRaw };
 export { toAlgorandResourcesRaw, fromAlgorandResourcesRaw };
@@ -373,7 +377,7 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
   } = raw;
   const token = getTokenById(tokenId);
   const convertOperation = (op) => fromOperationRaw(op, id);
-  return {
+  const res = {
     type: "TokenAccount",
     id,
     parentId,
@@ -394,7 +398,10 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
     pendingOperations: (pendingOperations || []).map(convertOperation),
     swapHistory: (swapHistory || []).map(fromSwapOperationRaw),
     approvals,
+    balanceHistoryCache: emptyHistoryCache,
   };
+  res.balanceHistoryCache = generateHistoryFromOperations(res);
+  return res;
 }
 
 export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
@@ -452,7 +459,7 @@ export function fromChildAccountRaw(raw: ChildAccountRaw): ChildAccount {
   } = raw;
   const currency = getCryptoCurrencyById(currencyId);
   const convertOperation = (op) => fromOperationRaw(op, id);
-  return {
+  const res: $Exact<ChildAccount> = {
     type: "ChildAccount",
     id,
     name,
@@ -469,7 +476,11 @@ export function fromChildAccountRaw(raw: ChildAccountRaw): ChildAccount {
     operations: (operations || []).map(convertOperation),
     pendingOperations: (pendingOperations || []).map(convertOperation),
     swapHistory: (swapHistory || []).map(fromSwapOperationRaw),
+    balanceHistoryCache: emptyHistoryCache,
   };
+  res.balanceHistoryCache = generateHistoryFromOperations(res);
+
+  return res;
 }
 
 export function toChildAccountRaw(ca: ChildAccount): ChildAccountRaw {
@@ -637,7 +648,9 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     lastSyncDate: new Date(lastSyncDate || 0),
     swapHistory: [],
     syncHash,
+    balanceHistoryCache: emptyHistoryCache,
   };
+  res.balanceHistoryCache = generateHistoryFromOperations(res);
 
   if (typeof used === "undefined") {
     // old account data that didn't had the field yet

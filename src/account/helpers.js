@@ -11,6 +11,7 @@ import type {
 } from "../types";
 import { getEnv } from "../env";
 import { encodeTokenAccountId } from "./accountId";
+import { emptyHistoryCache } from "./balanceHistoryCache";
 import { isAccountDelegating } from "../families/tezos/bakers";
 
 // by convention, a main account is the top level account
@@ -229,6 +230,7 @@ export const makeEmptyTokenAccount = (
   pendingOperations: [],
   starred: false,
   swapHistory: [],
+  balanceHistoryCache: emptyHistoryCache,
 });
 
 /**
@@ -264,6 +266,7 @@ export const accountWithMandatoryTokens = (
       pendingOperations: [],
       starred: false,
       swapHistory: [],
+      balanceHistoryCache: emptyHistoryCache,
     }));
 
   if (addition.length === 0) return account;
