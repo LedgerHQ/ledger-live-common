@@ -5,7 +5,10 @@ import { getEnv } from "../../../env";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
 import type { Account, NetworkInfo, Operation } from "../../../types";
 import type { RawAccount, RawTransaction } from "./horizon.types";
-import { getAccountSpendableBalance, rawOperationToOperation } from "../logic";
+import {
+  getAccountSpendableBalance,
+  rawOperationsToOperations,
+} from "../logic";
 
 const LIMIT = getEnv("API_STELLAR_HORIZON_FETCH_LIMIT");
 const FALLBACK_BASE_FEE = 100;
@@ -80,77 +83,31 @@ export const fetchOperations = async (
   addr: string,
   startAt: number = 0
 ): Promise<Operation[]> => {
-  const transactions = await fetchTransactionsList(accountId, addr, startAt);
-  return await fetchOperationList(accountId, addr, transactions);
-};
+  let operations = [];
+  let rawOperations = await server
+    .operations()
+    .forAccount(addr)
+    .includeFailed(true)
+    .limit(LIMIT)
+    .cursor(startAt)
+    .call();
 
-const fetchTransactionsList = async (
-  accountId: string,
-  addr: string,
-  startAt: number
-): Promise<RawTransaction[]> => {
-  let transactions = {};
-  let mergedTransactions = [];
-
-  try {
-    transactions = await server
-      .transactions()
-      .forAccount(addr)
-      .cursor(startAt)
-      .limit(LIMIT)
-      .call();
-
-    mergedTransactions = transactions.records;
-
-    while (transactions.records.length > 0) {
-      transactions = await transactions.next();
-      mergedTransactions = mergedTransactions.concat(transactions.records);
-    }
-  } catch (e) {
+  if (!rawOperations || !rawOperations.records.length) {
     return [];
   }
 
-  return mergedTransactions;
-};
+  operations = operations.concat(
+    await rawOperationsToOperations(rawOperations.records, addr, accountId)
+  );
 
-const fetchOperationList = async (
-  accountId: string,
-  addr: string,
-  transactions: RawTransaction[]
-): Promise<Operation[]> => {
-  let formattedMergedOp = [];
-
-  for (let i = 0; i < transactions.length; i++) {
-    let operations = await server
-      .operations()
-      .forTransaction(transactions[i].id)
-      .limit(LIMIT)
-      .call();
-
-    formattedMergedOp = formattedMergedOp.concat(
-      rawOperationToOperation(
-        operations.records,
-        transactions[i],
-        addr,
-        accountId
-      )
+  while (rawOperations.records.length > 0) {
+    rawOperations = await rawOperations.next();
+    operations = operations.concat(
+      await rawOperationsToOperations(rawOperations.records, addr, accountId)
     );
-
-    while (operations.records.length > 0) {
-      operations = await operations.next();
-
-      formattedMergedOp = formattedMergedOp.concat(
-        rawOperationToOperation(
-          operations.records,
-          transactions[i],
-          addr,
-          accountId
-        )
-      );
-    }
   }
 
-  return formattedMergedOp;
+  return operations;
 };
 
 export const fetchAccountNetworkInfo = async (

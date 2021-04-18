@@ -72,12 +72,12 @@ const getRecipients = (operation): string[] => {
   }
 };
 
-export const formatOperation = (
+export const formatOperation = async (
   rawOperation: RawOperation,
-  transaction: RawTransaction,
   accountId: string,
   addr: string
 ): Operation => {
+  const transaction = await rawOperation.transaction();
   const type = getOperationType(rawOperation, addr);
   const value = getValue(rawOperation, transaction, type);
   const recipients = getRecipients(rawOperation);
@@ -214,23 +214,22 @@ export const addressExists = async (address: string): Promise<boolean> => {
   return true;
 };
 
-export const rawOperationToOperation = (
+export const rawOperationsToOperations = async (
   operations: RawOperation[],
-  transaction: RawTransaction,
   addr: string,
   accountId: string
 ): Operation[] => {
-  return operations
-    .filter((operation) => {
-      return (
-        operation.from === addr ||
-        operation.to === addr ||
-        operation.funder === addr ||
-        operation.account === addr ||
-        operation.source_account === addr
-      );
-    })
-    .map((operation) => {
-      return formatOperation(operation, transaction, accountId, addr);
-    });
+  return Promise.all(
+    operations
+      .filter((operation) => {
+        return (
+          operation.from === addr ||
+          operation.to === addr ||
+          operation.funder === addr ||
+          operation.account === addr ||
+          operation.source_account === addr
+        );
+      })
+      .map((operation) => formatOperation(operation, accountId, addr))
+  );
 };
