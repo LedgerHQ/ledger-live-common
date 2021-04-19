@@ -88,6 +88,7 @@ export const fetchOperations = async (
     .forAccount(addr)
     .includeFailed(true)
     .limit(LIMIT)
+    .join("transactions")
     .cursor(startAt)
     .call();
 
