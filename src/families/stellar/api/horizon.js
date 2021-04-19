@@ -4,7 +4,7 @@ import StellarSdk from "stellar-sdk";
 import { getEnv } from "../../../env";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
 import type { Account, NetworkInfo, Operation } from "../../../types";
-import type { RawAccount, RawTransaction } from "./horizon.types";
+import type { RawAccount } from "./horizon.types";
 import {
   getAccountSpendableBalance,
   rawOperationsToOperations,
