@@ -1,10 +1,9 @@
 //@flow
 import { BigNumber } from "bignumber.js";
-import StellarSdk from "stellar-sdk";
+import StellarSdk, { AccountRecord } from "stellar-sdk";
 import { getEnv } from "../../../env";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
 import type { Account, NetworkInfo, Operation } from "../../../types";
-import type { RawAccount } from "./horizon.types";
 import {
   getAccountSpendableBalance,
   rawOperationsToOperations,
@@ -42,7 +41,7 @@ export const fetchBaseFee = async (): Promise<number> => {
  * @param {*} addr
  */
 export const fetchAccount = async (addr: string) => {
-  let account: RawAccount = {};
+  let account: typeof AccountRecord = {};
   let balance = {};
   try {
     account = await server.accounts().accountId(addr).call();
