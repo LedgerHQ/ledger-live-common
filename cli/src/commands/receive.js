@@ -18,17 +18,27 @@ export default {
       type: Boolean,
       desc: "also display a QR Code",
     },
+    {
+      name: "freshAddressIndex",
+      type: String,
+      desc: "Change fresh address index",
+    },
   ],
-  job: (opts: ScanCommonOpts & { qr: boolean }) =>
+  job: (opts: ScanCommonOpts & { qr: boolean, freshAddressIndex: String }) =>
     scan(opts).pipe(
       concatMap((account) =>
         concat(
-          of(account.freshAddress),
+          of(
+            opts.freshAddressIndex
+              ? account.freshAddresses[Number(opts.freshAddressIndex)].address
+              : account.freshAddress
+          ),
           opts.qr ? asQR(account.freshAddress) : empty(),
           getAccountBridge(account)
             .receive(account, {
               deviceId: opts.device || "",
               verify: true,
+              freshAddressIndex: opts.freshAddressIndex || null,
             })
             .pipe(ignoreElements())
         )

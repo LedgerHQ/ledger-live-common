@@ -381,23 +381,36 @@ export function makeAccountBridgeReceive({
   injectGetAddressParams?: (Account) => *,
 } = {}): (
   account: Account,
-  { verify?: boolean, deviceId: string, subAccountId?: string }
+  {
+    verify?: boolean,
+    deviceId: string,
+    subAccountId?: string,
+    freshAddressIndex: ?string,
+  }
 ) => Observable<{
   address: string,
   path: string,
 }> {
-  return (account, { verify, deviceId }) => {
+  const getFreshAddressByIndex = (account, index) => {
+    return account.freshAddresses[Number(index)];
+  };
+  return (account, { verify, deviceId, freshAddressIndex }) => {
     const arg = {
       verify,
       currency: account.currency,
       derivationMode: account.derivationMode,
-      path: account.freshAddressPath,
+      path: freshAddressIndex
+        ? getFreshAddressByIndex(account, freshAddressIndex).derivationPath
+        : account.freshAddressPath,
       ...(injectGetAddressParams && injectGetAddressParams(account)),
     };
     return withDevice(deviceId)((transport) =>
       from(
         getAddress(transport, arg).then((r) => {
-          if (r.address !== account.freshAddress) {
+          const accountAddress = freshAddressIndex
+            ? getFreshAddressByIndex(account, freshAddressIndex).address
+            : account.freshAddress;
+          if (r.address !== accountAddress) {
             throw new WrongDeviceForAccount(
               `WrongDeviceForAccount ${account.name}`,
               {
