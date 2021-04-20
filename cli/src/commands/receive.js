@@ -25,12 +25,12 @@ export default {
       desc: "Change fresh address index",
     },
   ],
-  job: (opts: ScanCommonOpts & { qr: boolean, freshAddressIndex: number }) =>
+  job: (opts: ScanCommonOpts & { qr: boolean, freshAddressIndex: ?number }) =>
     scan(opts).pipe(
       concatMap((account) =>
         concat(
           of(
-            opts.freshAddressIndex
+            opts.freshAddressIndex !==  && opts.freshAddressIndex !== null
               ? account.freshAddresses[opts.freshAddressIndex]?.address
               : account.freshAddress
           ).pipe(

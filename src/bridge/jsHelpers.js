@@ -386,19 +386,19 @@ export function makeAccountBridgeReceive({
     verify?: boolean,
     deviceId: string,
     subAccountId?: string,
-    freshAddressIndex?: number,
+    freshAddressIndex: ?number,
   }
 ) => Observable<{
   address: string,
   path: string,
 }> {
   return (account, { verify, deviceId, freshAddressIndex }) => {
-    if (freshAddressIndex && !account.freshAddresses[freshAddressIndex]) {
-      throw new FreshAddressIndexInvalid();
-    }
     let freshAddress;
-    if (freshAddressIndex) {
+    if (freshAddressIndex !== undefined && freshAddressIndex !== null) {
       freshAddress = account.freshAddresses[freshAddressIndex];
+      if (freshAddress === undefined) {
+        throw new FreshAddressIndexInvalid();
+      }
     }
 
     const arg = {
