@@ -79,7 +79,12 @@ export interface AccountBridge<T: Transaction> {
 
   receive(
     account: Account,
-    { verify?: boolean, deviceId: string, subAccountId?: string }
+    {
+      verify?: boolean,
+      deviceId: string,
+      subAccountId?: string,
+      freshAddressIndex?: string,
+    }
   ): Observable<{
     address: string,
     path: string,

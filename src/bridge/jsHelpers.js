@@ -385,7 +385,7 @@ export function makeAccountBridgeReceive({
     verify?: boolean,
     deviceId: string,
     subAccountId?: string,
-    freshAddressIndex: ?string,
+    freshAddressIndex?: string,
   }
 ) => Observable<{
   address: string,
