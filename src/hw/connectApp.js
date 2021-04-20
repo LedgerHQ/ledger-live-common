@@ -16,7 +16,7 @@ import type { DerivationMode } from "../types";
 import { getCryptoCurrencyById } from "../currencies";
 import appSupportsQuitApp from "../appSupportsQuitApp";
 import { withDevice } from "./deviceAccess";
-import { standaloneAppOp } from "../apps/hw";
+import { streamAppInstall } from "../apps/hw";
 import { isDashboardName } from "./isDashboardName";
 import getAppAndVersion from "./getAppAndVersion";
 import getAddress from "./getAddress";
@@ -55,7 +55,7 @@ export type ConnectAppEvent =
     }
   | { type: "device-permission-granted" }
   | { type: "app-not-installed", appName: string }
-  | { type: "installing-app", appName: string, progress: number }
+  | { type: "stream-install", progress: number }
   | { type: "listing-apps" }
   | { type: "ask-quit-app" }
   | { type: "ask-open-app", appName: string }
@@ -77,10 +77,7 @@ const openAppFromDashboard = (
             case 0x6807:
               return getEnv("EXPERIMENTAL_INLINE_INSTALL")
                 ? concat(
-                    standaloneAppOp(transport, {
-                      type: "install",
-                      name: appName,
-                    }),
+                    streamAppInstall(transport, appName),
                     from(openAppFromDashboard(transport, appName))
                   )
                 : of({ type: "app-not-installed", appName });

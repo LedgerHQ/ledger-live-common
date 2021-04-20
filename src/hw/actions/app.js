@@ -137,7 +137,7 @@ const reducer = (state: State, e: Event): State => {
         device: e.device,
       };
 
-    case "installing-app":
+    case "stream-install":
       return {
         isLoading: false,
         requestQuitApp: false,
@@ -155,7 +155,7 @@ const reducer = (state: State, e: Event): State => {
         unresponsive: false,
         installingApp: true,
         progress: e.progress || 0,
-        requestOpenApp: e.appName,
+        requestOpenApp: null,
         listingApps: false,
       };
     case "listing-apps":

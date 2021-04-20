@@ -9,14 +9,11 @@ import {
   throttleTime,
   filter,
   scan,
+  mergeMap,
+  distinctUntilChanged,
 } from "rxjs/operators";
 import type { Exec, State, AppOp, RunnerEvent } from "./types";
-import {
-  updateAllProgress,
-  reducer,
-  getActionPlan,
-  getNextAppOp,
-} from "./logic";
+import { reducer, getActionPlan, getNextAppOp } from "./logic";
 import { delay } from "../promise";
 import { getEnv } from "../env";
 
@@ -57,17 +54,32 @@ export const runAppOp = (
   );
 };
 
-export const runAllWithEvents = (
+export const runAllWithProgress = (
   state: State,
-  exec: Exec
-): Observable<{ progress: number }> =>
-  concat(
+  exec: Exec,
+  precision: number = 100
+): Observable<number> => {
+  const total = state.uninstallQueue.length + state.installQueue.length;
+  function globalProgress(s, localProgress) {
+    let p =
+      1 -
+      (s.uninstallQueue.length + s.installQueue.length - localProgress) / total;
+    p = Math.round(p * precision) / precision;
+    return p;
+  }
+  return concat(
     ...getActionPlan(state).map((appOp) => runAppOp(state, appOp, exec))
   ).pipe(
     map((event) => ({ type: "onRunnerEvent", event })),
     scan(reducer, state),
-    map((state) => ({ progress: updateAllProgress(state) }))
+    mergeMap((s) => {
+      const { currentProgressSubject } = s;
+      if (!currentProgressSubject) return of(globalProgress(s, 0));
+      return currentProgressSubject.pipe(map((v) => globalProgress(s, v)));
+    }),
+    distinctUntilChanged()
   );
+};
 
 // use for CLI, no change of the state over time
 export const runAll = (state: State, exec: Exec): Observable<State> =>
