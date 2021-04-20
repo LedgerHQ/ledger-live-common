@@ -58,7 +58,6 @@ type State = {|
   error: ?Error,
   derivation: ?{ address: string },
   displayUpgradeWarning: boolean,
-  forInstallation?: boolean,
   installingApp?: boolean,
   progress?: number,
   listingApps?: boolean,
@@ -116,7 +115,6 @@ const getInitialState = (device?: ?Device): State => ({
   derivation: null,
   displayUpgradeWarning: false,
   installingApp: false,
-  forInstallation: false,
   listingApps: false,
 });
 
@@ -225,10 +223,9 @@ const reducer = (state: State, e: Event): State => {
         displayUpgradeWarning: false,
         unresponsive: false,
         allowOpeningGranted: false,
-        allowOpeningRequestedWording: !e.forManager ? e.wording : null,
+        allowOpeningRequestedWording: null,
         allowManagerGranted: false,
-        allowManagerRequestedWording: e.forManager ? e.wording : null,
-        forInstallation: !!e.forInstallation,
+        allowManagerRequestedWording: e.wording,
       };
 
     case "device-permission-granted":

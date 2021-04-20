@@ -195,12 +195,7 @@ export type SocketEvent =
   | { type: "bulk-progress", progress: number, index: number, total: number }
   | { type: "result", payload: any }
   | { type: "warning", message: string }
-  | {
-      type: "device-permission-requested",
-      forInstallation?: boolean,
-      forManager?: boolean,
-      wording: string,
-    }
+  | { type: "device-permission-requested", wording: string }
   | { type: "device-permission-granted" }
   | { type: "exchange-before", nonce: number, apdu: Buffer }
   | {

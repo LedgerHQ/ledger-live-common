@@ -39,8 +39,6 @@ export type StreamAppInstallEvent =
   | {
       type: "device-permission-requested",
       wording: string,
-      forInstallation?: boolean,
-      forManager?: boolean,
     }
   | { type: "listing-apps" }
   | { type: "device-permission-granted" }

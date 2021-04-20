@@ -50,8 +50,6 @@ export type ConnectAppEvent =
   | {
       type: "device-permission-requested",
       wording: string,
-      forInstallation?: boolean,
-      forManager?: boolean,
     }
   | { type: "device-permission-granted" }
   | { type: "app-not-installed", appName: string }
@@ -67,7 +65,7 @@ const openAppFromDashboard = (
   appName
 ): Observable<ConnectAppEvent> =>
   concat(
-    of({ type: "device-permission-requested", wording: appName }),
+    of({ type: "ask-open-app", appName }),
     defer(() => from(openApp(transport, appName))).pipe(
       concatMap(() => of({ type: "device-permission-granted" })),
       catchError((e) => {
