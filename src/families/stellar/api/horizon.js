@@ -82,15 +82,19 @@ export const fetchOperations = async (
   addr: string,
   startAt: number = 0
 ): Promise<Operation[]> => {
+  if (!addr || !addr.length) {
+    return [];
+  }
+
   let operations = [];
   let rawOperations = [];
   try {
     rawOperations = await server
       .operations()
       .forAccount(addr)
+      .join("transactions")
       .includeFailed(true)
       .limit(LIMIT)
-      .join("transactions")
       .cursor(startAt)
       .call();
   } catch (e) {
@@ -223,5 +227,9 @@ export const buildTransactionBuilder = (
 };
 
 export const loadAccount = async (addr: string) => {
+  if (!addr || !addr.length) {
+    return {};
+  }
+
   return await server.loadAccount(addr);
 };
