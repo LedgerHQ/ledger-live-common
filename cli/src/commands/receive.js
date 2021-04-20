@@ -30,7 +30,8 @@ export default {
       concatMap((account) =>
         concat(
           of(
-            opts.freshAddressIndex !==  && opts.freshAddressIndex !== null
+            opts.freshAddressIndex !== undefined &&
+              opts.freshAddressIndex !== null
               ? account.freshAddresses[opts.freshAddressIndex]?.address
               : account.freshAddress
           ).pipe(
