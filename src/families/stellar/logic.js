@@ -4,6 +4,7 @@ import StellarSdk, {
   TransactionRecord,
   OperationRecord,
   AccountRecord,
+  NotFoundError,
 } from "stellar-sdk";
 
 import type { CacheRes } from "../../cache";
@@ -209,7 +210,10 @@ export const addressExists = async (address: string): Promise<boolean> => {
   try {
     await loadAccount(address);
   } catch (error) {
-    return false;
+    if (error instanceof NotFoundError) {
+      return false;
+    }
+    throw error;
   }
 
   return true;

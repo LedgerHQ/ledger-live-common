@@ -1,6 +1,6 @@
 //@flow
 import { BigNumber } from "bignumber.js";
-import StellarSdk, { AccountRecord } from "stellar-sdk";
+import StellarSdk, { AccountRecord, NotFoundError } from "stellar-sdk";
 import { getEnv } from "../../../env";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
 import type { Account, NetworkInfo, Operation } from "../../../types";
@@ -83,14 +83,22 @@ export const fetchOperations = async (
   startAt: number = 0
 ): Promise<Operation[]> => {
   let operations = [];
-  let rawOperations = await server
-    .operations()
-    .forAccount(addr)
-    .includeFailed(true)
-    .limit(LIMIT)
-    .join("transactions")
-    .cursor(startAt)
-    .call();
+  let rawOperations = [];
+  try {
+    rawOperations = await server
+      .operations()
+      .forAccount(addr)
+      .includeFailed(true)
+      .limit(LIMIT)
+      .join("transactions")
+      .cursor(startAt)
+      .call();
+  } catch (e) {
+    if (e instanceof NotFoundError) {
+      return [];
+    }
+    throw e;
+  }
 
   if (!rawOperations || !rawOperations.records.length) {
     return [];
