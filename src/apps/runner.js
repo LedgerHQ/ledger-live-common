@@ -8,9 +8,15 @@ import {
   ignoreElements,
   throttleTime,
   filter,
+  scan,
 } from "rxjs/operators";
 import type { Exec, State, AppOp, RunnerEvent } from "./types";
-import { reducer, getActionPlan, getNextAppOp } from "./logic";
+import {
+  updateAllProgress,
+  reducer,
+  getActionPlan,
+  getNextAppOp,
+} from "./logic";
 import { delay } from "../promise";
 import { getEnv } from "../env";
 
@@ -50,6 +56,18 @@ export const runAppOp = (
     )
   );
 };
+
+export const runAllWithEvents = (
+  state: State,
+  exec: Exec
+): Observable<{ progress: number }> =>
+  concat(
+    ...getActionPlan(state).map((appOp) => runAppOp(state, appOp, exec))
+  ).pipe(
+    map((event) => ({ type: "onRunnerEvent", event })),
+    scan(reducer, state),
+    map((state) => ({ progress: updateAllProgress(state) }))
+  );
 
 // use for CLI, no change of the state over time
 export const runAll = (state: State, exec: Exec): Observable<State> =>
