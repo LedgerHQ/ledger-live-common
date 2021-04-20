@@ -14,7 +14,7 @@ import { LowerThanMinimumRelayFee } from "../../../errors";
 import { validateRecipient } from "../../../bridge/shared";
 import type { AccountBridge, CurrencyBridge } from "../../../types/bridge";
 import type { Account } from "../../../types/account";
-import type { Transaction } from "../types";
+import type { Transaction, NetworkInfo } from "../types";
 import { sync } from "../../../libcore/syncAccount";
 import { scanAccounts } from "../../../libcore/scanAccounts";
 import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
