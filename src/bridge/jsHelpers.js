@@ -26,6 +26,7 @@ import {
   shouldShowNewAccount,
   clearAccount,
 } from "../account";
+import { FreshAddressIndexInvalid } from "../errors";
 import type {
   Operation,
   Account,
@@ -385,30 +386,35 @@ export function makeAccountBridgeReceive({
     verify?: boolean,
     deviceId: string,
     subAccountId?: string,
-    freshAddressIndex?: string,
+    freshAddressIndex?: number,
   }
 ) => Observable<{
   address: string,
   path: string,
 }> {
-  const getFreshAddressByIndex = (account, index) => {
-    return account.freshAddresses[Number(index)];
-  };
   return (account, { verify, deviceId, freshAddressIndex }) => {
+    if (freshAddressIndex && !account.freshAddresses[freshAddressIndex]) {
+      throw new FreshAddressIndexInvalid();
+    }
+    let freshAddress;
+    if (freshAddressIndex) {
+      freshAddress = account.freshAddresses[freshAddressIndex];
+    }
+
     const arg = {
       verify,
       currency: account.currency,
       derivationMode: account.derivationMode,
-      path: freshAddressIndex
-        ? getFreshAddressByIndex(account, freshAddressIndex).derivationPath
+      path: freshAddress
+        ? freshAddress.derivationPath
         : account.freshAddressPath,
       ...(injectGetAddressParams && injectGetAddressParams(account)),
     };
     return withDevice(deviceId)((transport) =>
       from(
         getAddress(transport, arg).then((r) => {
-          const accountAddress = freshAddressIndex
-            ? getFreshAddressByIndex(account, freshAddressIndex).address
+          const accountAddress = freshAddress
+            ? freshAddress.address
             : account.freshAddress;
           if (r.address !== accountAddress) {
             throw new WrongDeviceForAccount(
