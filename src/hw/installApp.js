@@ -22,7 +22,7 @@ export default function installApp(
   }).pipe(
     filter((e) => e.type === "bulk-progress"), // only bulk progress interests the UI
     throttleTime(100), // throttle to only emit 10 event/s max, to not spam the UI
-    map((e) => ({ progress: e.progress })),
+    map((e) => ({ progress: e.progress })), // extract a stream of progress percentage
     catchError((e: Error) => {
       if (!e || !e.message) return throwError(e);
       const status = e.message.slice(e.message.length - 4);
