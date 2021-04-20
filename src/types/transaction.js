@@ -54,7 +54,7 @@ export type TransactionCommon = {|
   recipient: string,
   useAllAmount?: boolean,
   subAccountId?: ?string,
-  feesStrategy?: "slow" | "medium" | "fast" | "advanced" | "custom",
+  feesStrategy: "slow" | "medium" | "fast" | null,
 |};
 
 export type TransactionCommonRaw = {|
@@ -62,7 +62,7 @@ export type TransactionCommonRaw = {|
   recipient: string,
   useAllAmount?: boolean,
   subAccountId?: ?string,
-  feesStrategy?: "slow" | "medium" | "fast" | "advanced" | "custom",
+  feesStrategy: "slow" | "medium" | "fast" | null,
 |};
 
 // User can have 3 differents choice for their fee
