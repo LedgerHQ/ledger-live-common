@@ -36,11 +36,14 @@ export function getPortfolioCount(
   if (typeof conf.count === "number") return conf.count;
   if (!accounts.length) return 0;
 
-  // TODO we shouldn't have to deconstruct/construct date. we can just do a for loop and comparing < on date.
-  const startDate = new Date(
-    Math.min(...accounts.map((a) => a.creationDate.getTime()))
-  );
-  return getPortfolioCountByDate(startDate, range);
+  let oldestDate = accounts[0].creationDate;
+  for (let i = 1; i < accounts.length; i++) {
+    const d = accounts[i].creationDate;
+    if (d < oldestDate) {
+      oldestDate = d;
+    }
+  }
+  return getPortfolioCountByDate(oldestDate, range);
 }
 
 export function getPortfolioCountByDate(
