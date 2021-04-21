@@ -1060,6 +1060,10 @@
                         "type": "string",
                         "description": "???"
                     },
+                    "pluginName": {
+                        "type": "string",
+                        "description": "The name of the Nano plugin to use if a plugin is neccessary to verify a transaction (optionnal)"
+                    },
                     "info": {
                         "oneOf": [
                             {
