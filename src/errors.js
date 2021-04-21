@@ -189,4 +189,10 @@ export const CompoundLowerAllowanceOfActiveAccountError = createCustomErrorClass
   "CompoundLowerAllowanceOfActiveAccountError"
 );
 
+export const OutdatedApp = createCustomErrorClass("OutdatedApp");
+
+export const FreshAddressIndexInvalid = createCustomErrorClass(
+  "FreshAddressIndexInvalid"
+);
+
 export * from "./families/polkadot/errors";
