@@ -49,8 +49,6 @@ const ranges: { [k: PortfolioRange]: PortfolioRangeConfig } = {
 };
 
 export function getDates(r: PortfolioRange, count: number): Date[] {
-  // TODO date to no longer have now.
-
   const now = new Date(Date.now());
   if (count === 1) return [now];
 

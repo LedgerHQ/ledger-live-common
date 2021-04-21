@@ -1,6 +1,4 @@
 // @flow
-
-import { BigNumber } from "bignumber.js";
 import type {
   BalanceHistoryCache,
   BalanceHistoryDataCache,
@@ -67,7 +65,7 @@ function generateHistoryFromOperationsG(
       );
       i++;
     }
-    balances.unshift(BigNumber.max(balance, 0).toNumber());
+    balances.unshift(Math.max(balance.toNumber(), 0));
     date -= increment;
   }
   return { balances, latestDate };
@@ -83,6 +81,9 @@ export function generateHistoryFromOperations(
   };
 }
 
+/**
+ * get the current balance history of the account. if possible from the cache.
+ */
 export function getAccountHistoryBalances(
   account: AccountLike,
   g: GranularityId
@@ -96,6 +97,9 @@ export function getAccountHistoryBalances(
   return generateHistoryFromOperationsG(account, g).balances;
 }
 
+/**
+ * utility used at the end of an account synchronisation to recalculate the balance history if necessary
+ */
 export function recalculateAccountBalanceHistories(
   res: Account,
   prev: Account
