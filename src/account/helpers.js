@@ -108,6 +108,7 @@ export function clearAccount<T: AccountLike>(account: T): T {
   if (account.type === "TokenAccount") {
     return {
       ...account,
+      balanceHistoryCache: emptyHistoryCache,
       operations: [],
       pendingOperations: [],
     };
@@ -116,6 +117,7 @@ export function clearAccount<T: AccountLike>(account: T): T {
   if (account.type === "ChildAccount") {
     return {
       ...account,
+      balanceHistoryCache: emptyHistoryCache,
       operations: [],
       pendingOperations: [],
     };
