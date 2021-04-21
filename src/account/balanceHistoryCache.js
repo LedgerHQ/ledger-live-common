@@ -54,11 +54,11 @@ function generateHistoryFromOperationsG(
   g: GranularityId
 ): BalanceHistoryDataCache {
   const { increment, startOf } = conf[g];
-  const latestDate = startOf(new Date());
+  const latestDate = startOf(new Date()).getTime();
   const balances = [];
   let { balance } = account;
   const operationsLength = account.operations.length;
-  let date = latestDate.getTime();
+  let date = latestDate;
   for (let i = 0; i < operationsLength; ) {
     // accumulate operations after time t
     while (i < operationsLength && account.operations[i].date > date) {
@@ -89,7 +89,7 @@ export function getAccountHistoryBalances(
 ): number[] {
   const { balances, latestDate } = account.balanceHistoryCache[g];
   const { startOf } = conf[g];
-  if (latestDate && latestDate.getTime() === startOf(new Date()).getTime()) {
+  if (latestDate && latestDate === startOf(new Date()).getTime()) {
     return balances;
   }
   console.warn("account cache was not up to date. recalculating on the fly");

@@ -51,7 +51,7 @@ export type BalanceHistoryCache = {
 // there are as much value in that array as there are historical datapoint for a given account.
 // each time an account will sync, it potentially update it by adding a datapoint and possibility updating the cursor in that case.
 export type BalanceHistoryDataCache = {
-  latestDate: ?Date,
+  latestDate: ?number,
   balances: number[],
 };
 
