@@ -65,10 +65,6 @@ export const explorerConfig: { [id: CryptoCurrencyIds]: ?Config } = {
     id: "dash",
     stable: {
       base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
-      base: "EXPLORER",
       version: "v3",
     },
   },
