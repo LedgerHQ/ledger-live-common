@@ -264,6 +264,7 @@ export type TokenAccountRaw = {
   spendableBalance?: string,
   compoundBalance?: string,
   balanceHistory?: BalanceHistoryRawMap,
+  balanceHistoryCache?: BalanceHistoryCache,
   swapHistory?: SwapOperationRaw[],
   approvals?: Array<{
     sender: string,
@@ -285,6 +286,7 @@ export type ChildAccountRaw = {
   pendingOperations: OperationRaw[],
   balance: string,
   balanceHistory?: BalanceHistoryRawMap,
+  balanceHistoryCache?: BalanceHistoryCache,
   swapHistory?: SwapOperationRaw[],
 };
 
@@ -314,6 +316,7 @@ export type AccountRaw = {
   endpointConfig?: ?string,
   subAccounts?: SubAccountRaw[],
   balanceHistory?: BalanceHistoryRawMap,
+  balanceHistoryCache?: BalanceHistoryCache,
   bitcoinResources?: BitcoinResourcesRaw,
   tronResources?: TronResourcesRaw,
   cosmosResources?: CosmosResourcesRaw,

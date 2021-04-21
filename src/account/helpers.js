@@ -125,6 +125,7 @@ export function clearAccount<T: AccountLike>(account: T): T {
 
   const copy = {
     ...account,
+    balanceHistoryCache: emptyHistoryCache,
     tronResources: account.tronResources && {
       ...account.tronResources,
       cacheTransactionInfoById: {},

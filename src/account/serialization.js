@@ -372,6 +372,7 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
     spendableBalance,
     compoundBalance,
     balanceHistory,
+    balanceHistoryCache,
     swapHistory,
     approvals,
   } = raw;
@@ -398,7 +399,7 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
     pendingOperations: (pendingOperations || []).map(convertOperation),
     swapHistory: (swapHistory || []).map(fromSwapOperationRaw),
     approvals,
-    balanceHistoryCache: emptyHistoryCache,
+    balanceHistoryCache: balanceHistoryCache || emptyHistoryCache,
   };
   res.balanceHistoryCache = generateHistoryFromOperations(res);
   return res;
@@ -417,6 +418,7 @@ export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
     spendableBalance,
     compoundBalance,
     balanceHistory,
+    balanceHistoryCache,
     swapHistory,
     approvals,
   } = ta;
@@ -432,6 +434,7 @@ export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
     balanceHistory: balanceHistory
       ? toBalanceHistoryRawMap(balanceHistory)
       : undefined,
+    balanceHistoryCache,
     creationDate: ta.creationDate.toISOString(),
     operationsCount,
     operations: operations.map((o) => toOperationRaw(o)),
@@ -455,6 +458,7 @@ export function fromChildAccountRaw(raw: ChildAccountRaw): ChildAccount {
     balance,
     address,
     balanceHistory,
+    balanceHistoryCache,
     swapHistory,
   } = raw;
   const currency = getCryptoCurrencyById(currencyId);
@@ -476,7 +480,7 @@ export function fromChildAccountRaw(raw: ChildAccountRaw): ChildAccount {
     operations: (operations || []).map(convertOperation),
     pendingOperations: (pendingOperations || []).map(convertOperation),
     swapHistory: (swapHistory || []).map(fromSwapOperationRaw),
-    balanceHistoryCache: emptyHistoryCache,
+    balanceHistoryCache: balanceHistoryCache || emptyHistoryCache,
   };
   res.balanceHistoryCache = generateHistoryFromOperations(res);
 
@@ -495,6 +499,7 @@ export function toChildAccountRaw(ca: ChildAccount): ChildAccountRaw {
     pendingOperations,
     balance,
     balanceHistory,
+    balanceHistoryCache,
     address,
     creationDate,
     swapHistory,
@@ -512,6 +517,7 @@ export function toChildAccountRaw(ca: ChildAccount): ChildAccountRaw {
     balanceHistory: balanceHistory
       ? toBalanceHistoryRawMap(balanceHistory)
       : undefined,
+    balanceHistoryCache,
     creationDate: creationDate.toISOString(),
     operations: operations.map((o) => toOperationRaw(o)),
     pendingOperations: pendingOperations.map((o) => toOperationRaw(o)),
@@ -585,6 +591,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     creationDate,
     balance,
     balanceHistory,
+    balanceHistoryCache,
     spendableBalance,
     subAccounts: subAccountsRaw,
     tronResources,
@@ -648,7 +655,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     lastSyncDate: new Date(lastSyncDate || 0),
     swapHistory: [],
     syncHash,
-    balanceHistoryCache: emptyHistoryCache,
+    balanceHistoryCache: balanceHistoryCache || emptyHistoryCache,
   };
   res.balanceHistoryCache = generateHistoryFromOperations(res);
 
@@ -719,6 +726,7 @@ export function toAccountRaw({
   lastSyncDate,
   balance,
   balanceHistory,
+  balanceHistoryCache,
   spendableBalance,
   subAccounts,
   endpointConfig,
@@ -755,6 +763,9 @@ export function toAccountRaw({
   };
   if (balanceHistory) {
     res.balanceHistory = toBalanceHistoryRawMap(balanceHistory);
+  }
+  if (balanceHistoryCache) {
+    res.balanceHistoryCache = balanceHistoryCache;
   }
   if (endpointConfig) {
     res.endpointConfig = endpointConfig;
