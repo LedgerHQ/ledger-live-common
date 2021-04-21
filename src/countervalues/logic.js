@@ -328,12 +328,12 @@ export function calculate(
     to: initialQuery.to,
   });
   if (from === to) return initialQuery.value;
-  const query = { ...initialQuery, from, to };
+  const { date, value, disableRounding, reverse } = initialQuery;
+  const query = { date, from, to };
   const map = lenseRateMap(state, query);
   if (!map) return;
   let rate = lenseRate(map, query);
   if (!rate) return;
-  const { value, disableRounding, reverse } = query;
   const mult = reverse
     ? magFromTo(initialQuery.to, initialQuery.from)
     : magFromTo(initialQuery.from, initialQuery.to);
@@ -355,7 +355,7 @@ export function calculateMany(
     reverse?: boolean,
   }
 ): Array<?number> {
-  const { reverse } = initialQuery;
+  const { reverse, disableRounding } = initialQuery;
   const query = aliasPair(initialQuery);
   const map = lenseRateMap(state, query);
   if (!map) return Array(dataPoints.length).fill(); // undefined array
@@ -372,7 +372,7 @@ export function calculateMany(
       rate = 1 / rate;
     }
     const val = value * rate * mult;
-    return initialQuery.disableRounding ? val : Math.round(val);
+    return disableRounding ? val : Math.round(val);
   });
 }
 
