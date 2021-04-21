@@ -93,13 +93,22 @@ export const toOperationRaw = (
     subOperations,
     internalOperations,
     extra,
-    ...op
+    id,
+    hash,
+    type,
+    senders,
+    recipients,
+    blockHeight,
+    blockHash,
+    transactionSequenceNumber,
+    accountId,
+    hasFailed,
   }: Operation,
   preserveSubOperation?: boolean
 ): OperationRaw => {
   let e = extra;
   if (e) {
-    const family = inferFamilyFromAccountId(op.accountId);
+    const family = inferFamilyFromAccountId(accountId);
     if (family) {
       const abf = accountByFamily[family];
       if (abf && abf.toOperationExtraRaw) {
@@ -108,8 +117,17 @@ export const toOperationRaw = (
     }
   }
 
-  const copy: OperationRaw = {
-    ...op,
+  const copy: $Exact<OperationRaw> = {
+    id,
+    hash,
+    type,
+    senders,
+    recipients,
+    blockHeight,
+    blockHash,
+    transactionSequenceNumber,
+    accountId,
+    hasFailed,
     extra: e,
     date: date.toISOString(),
     value: value.toString(),
@@ -155,7 +173,15 @@ export const fromOperationRaw = (
     extra,
     subOperations,
     internalOperations,
-    ...op
+    id,
+    hash,
+    type,
+    senders,
+    recipients,
+    blockHeight,
+    blockHash,
+    transactionSequenceNumber,
+    hasFailed,
   }: OperationRaw,
   accountId: string,
   subAccounts?: ?(SubAccount[])
@@ -172,7 +198,15 @@ export const fromOperationRaw = (
   }
 
   const res: Operation = {
-    ...op,
+    id,
+    hash,
+    type,
+    senders,
+    recipients,
+    blockHeight,
+    blockHash,
+    transactionSequenceNumber,
+    hasFailed,
     accountId,
     date: new Date(date),
     value: BigNumber(value),
@@ -181,7 +215,7 @@ export const fromOperationRaw = (
   };
 
   if (subAccounts) {
-    res.subOperations = inferSubOperations(op.hash, subAccounts);
+    res.subOperations = inferSubOperations(hash, subAccounts);
   } else if (subOperations) {
     res.subOperations = subOperations.map((o) =>
       fromOperationRaw(o, o.accountId)

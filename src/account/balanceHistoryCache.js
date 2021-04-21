@@ -90,7 +90,8 @@ export function getAccountHistoryBalances(
 ): number[] {
   const { balances, latestDate } = account.balanceHistoryCache[g];
   const { startOf } = conf[g];
-  if (latestDate && latestDate === startOf(new Date()).getTime()) {
+  const now = startOf(new Date()).getTime();
+  if (latestDate && latestDate === now) {
     return balances;
   }
   console.warn("account cache was not up to date. recalculating on the fly");
