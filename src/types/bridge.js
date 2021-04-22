@@ -59,6 +59,7 @@ export interface CurrencyBridge {
     deviceId: DeviceId,
     scheme?: ?DerivationMode,
     syncConfig: SyncConfig,
+    preferredNewAccountScheme?: DerivationMode,
   }): Observable<ScanAccountEvent>;
 
   getPreloadStrategy?: (currency: CryptoCurrency) => PreloadStrategy;
@@ -78,7 +79,12 @@ export interface AccountBridge<T: Transaction> {
 
   receive(
     account: Account,
-    { verify?: boolean, deviceId: string, subAccountId?: string }
+    {
+      verify?: boolean,
+      deviceId: string,
+      subAccountId?: string,
+      freshAddressIndex?: number,
+    }
   ): Observable<{
     address: string,
     path: string,

@@ -13,11 +13,7 @@ import {
   getMandatoryEmptyAccountSkip,
   getDerivationModeStartsAt,
 } from "../derivation";
-import {
-  getWalletName,
-  shouldShowNewAccount,
-  isAccountEmpty,
-} from "../account";
+import { getWalletName, shouldShowNewAccount } from "../account";
 import type {
   Account,
   CryptoCurrency,
@@ -36,6 +32,7 @@ import {
   createAccountFromDevice,
 } from "./createAccountFromDevice";
 import { remapLibcoreErrors, isNonExistingAccountError } from "./errors";
+import { GetAppAndVersionUnsupportedFormat } from "../errors";
 import nativeSegwitAppsVersionsMap from "./nativeSegwitAppsVersionsMap";
 import type { Core, CoreWallet } from "./types";
 
@@ -112,10 +109,9 @@ async function scanNextAccount(props: {
 
   if (isUnsubscribed()) return;
 
-  const isEmpty = isAccountEmpty(account);
   const shouldSkip =
     accountIndex < getDerivationModeStartsAt(derivationMode) ||
-    (isEmpty && !showNewAccount) ||
+    (!account.used && !showNewAccount) ||
     !derivationModeSupportsIndex(derivationMode, accountIndex);
 
   log(
@@ -128,7 +124,7 @@ async function scanNextAccount(props: {
             account.xpub
           )}, fresh ${account.freshAddressPath} ${account.freshAddress})`
         : "no account"
-    }. ${isEmpty ? "ALL SCANNED" : ""}`
+    }. ${!account.used ? "ALL SCANNED" : ""}`
   );
 
   if (!shouldSkip) {
@@ -136,7 +132,7 @@ async function scanNextAccount(props: {
   }
 
   const emptyCount = props.emptyCount || 0;
-  const shouldIter = isEmpty
+  const shouldIter = !account.used
     ? emptyCount < getMandatoryEmptyAccountSkip(derivationMode)
     : isIterableDerivationMode(derivationMode);
 
@@ -144,7 +140,7 @@ async function scanNextAccount(props: {
     await scanNextAccount({
       ...props,
       accountIndex: accountIndex + 1,
-      emptyCount: isEmpty ? emptyCount + 1 : 0,
+      emptyCount: !account.used ? emptyCount + 1 : 0,
     });
   }
 }
@@ -182,14 +178,27 @@ export const scanAccounts = ({
 
             if (derivationMode === "native_segwit") {
               if (nativeSegwitAppsVersionsMap[currency.managerAppName]) {
-                const { version } = await getAppAndVersion(transport);
-                if (
-                  !semver.gte(
-                    version,
-                    nativeSegwitAppsVersionsMap[currency.managerAppName]
-                  )
-                ) {
-                  continue;
+                try {
+                  const { version } = await getAppAndVersion(transport);
+                  if (
+                    !semver.gte(
+                      version,
+                      nativeSegwitAppsVersionsMap[currency.managerAppName]
+                    )
+                  ) {
+                    continue;
+                  }
+                } catch (e) {
+                  // in case the apdu is not even supported, we assume to not do native_segwit
+
+                  if (
+                    (e instanceof TransportStatusError &&
+                      e.statusCode === 0x6d00) ||
+                    e instanceof GetAppAndVersionUnsupportedFormat
+                  ) {
+                    continue;
+                  }
+                  throw e;
                 }
               }
             }

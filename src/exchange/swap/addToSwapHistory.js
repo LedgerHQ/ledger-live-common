@@ -35,8 +35,13 @@ export default ({
       ? operation.subOperations[0].id
       : operation.id;
 
+  // Nb deduct the payoutnetworkfees if they are present
+  const toAmount = transaction.amount
+    .times(exchangeRate.magnitudeAwareRate)
+    .minus(exchangeRate.payoutNetworkFees || 0);
+
   const swapOperation: SwapOperation = {
-    status: "new",
+    status: "pending",
     provider: exchangeRate.provider,
     operationId,
     swapId,
@@ -44,7 +49,7 @@ export default ({
     receiverAccountId: mainToAccount.id,
     tokenId,
     fromAmount: transaction.amount,
-    toAmount: transaction.amount.times(exchangeRate.magnitudeAwareRate),
+    toAmount,
   };
 
   return isFromToken && subAccounts

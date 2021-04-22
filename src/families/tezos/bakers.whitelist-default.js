@@ -3,7 +3,6 @@
 // unfinished list...
 const whitelist = `\
 tz1WCd2jm4uSt4vntk4vSuUWoZQGhLcDuR9q
-tz1Z3KCf8CLGAYfvVWPEr562jDDyWkwNF7sT
 tz1Scdr2HsZiQjc7bHMeBbmDRXYVvdhjJbBh
 tz1VmiY38m3y95HqQLjMwqnMS7sdMfGomzKi
 tz1g8vkmcde6sWKaG2NN9WKzCkDM6Rziq194
@@ -18,8 +17,6 @@ tz1Ldzz6k1BHdhuKvAtMRX7h5kJSMHESMHLC
 tz1NortRftucvAkD1J58L32EhSVrQEWJCEnB
 tz1Kf25fX1VdmYGSEzwFy1wNmkbSEZ2V83sY
 tz1RCFbB9GpALpsZtu6J58sb74dm8qe6XBzv
-tz1eEnQhbwf6trb8Q8mPb2RaPkNk2rN7BKi8
-tz1RSWMYKGAykpizFteowByYMueCYv9TMn1L
 tz1Tnjaxk6tbAeC2TmMApPh8UsrEVQvhHvx5
 tz1LLNkQK4UQV6QcFShiXJ2vT2ELw449MzAA
 tz1dbfppLAAxXZNtf2SDps7rch3qfUznKSoK
@@ -41,7 +38,6 @@ tz1aRoaRhSpRYvFdyvgWLL6TGyRoGF51wDjM
 tz1WpeqFaBG9Jm73Dmgqamy8eF8NWLz9JCoY
 tz1MQJPGNMijnXnVoBENFz9rUhaPt3S7rWoz
 tz1dRKU4FQ9QRRQPdaH4zCR6gmCmXfcvcgtB
-tz1hTFcQk2KJRPzZyHkCwbj7E1zY1xBkiHsk
 tz1ZcTRk5uxD86EFEn1vvNffWWqJy7q5eVhc
 tz1aDiEJf9ztRrAJEXZfcG3CKimoKsGhwVAi`.split("\n");
 

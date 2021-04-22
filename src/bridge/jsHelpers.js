@@ -26,6 +26,7 @@ import {
   shouldShowNewAccount,
   clearAccount,
 } from "../account";
+import { FreshAddressIndexInvalid } from "../errors";
 import type {
   Operation,
   Account,
@@ -224,6 +225,7 @@ export const makeScanAccounts = (
         derivationMode,
         name: "",
         starred: false,
+        used: false,
         index,
         currency,
         operationsCount,
@@ -243,6 +245,10 @@ export const makeScanAccounts = (
         ...initialAccount,
         ...accountShape,
       };
+
+      if (!account.used) {
+        account.used = !isAccountEmpty(account);
+      }
 
       return account;
     }
@@ -337,9 +343,7 @@ export const makeScanAccounts = (
             );
             if (!account) return;
 
-            const isEmpty = isAccountEmpty(account);
-
-            account.name = isEmpty
+            account.name = !account.used
               ? getNewAccountPlaceholderName({
                   currency,
                   index,
@@ -347,11 +351,11 @@ export const makeScanAccounts = (
                 })
               : getAccountPlaceholderName({ currency, index, derivationMode });
 
-            if (!isEmpty || showNewAccount) {
+            if (account.used || showNewAccount) {
               o.next({ type: "discovered", account });
             }
 
-            if (isEmpty) {
+            if (!account.used) {
               if (emptyCount >= mandatoryEmptyAccountSkip) break;
               emptyCount++;
             }
@@ -378,23 +382,41 @@ export function makeAccountBridgeReceive({
   injectGetAddressParams?: (Account) => *,
 } = {}): (
   account: Account,
-  { verify?: boolean, deviceId: string, subAccountId?: string }
+  {
+    verify?: boolean,
+    deviceId: string,
+    subAccountId?: string,
+    freshAddressIndex?: number,
+  }
 ) => Observable<{
   address: string,
   path: string,
 }> {
-  return (account, { verify, deviceId }) => {
+  return (account, { verify, deviceId, freshAddressIndex }) => {
+    let freshAddress;
+    if (freshAddressIndex !== undefined && freshAddressIndex !== null) {
+      freshAddress = account.freshAddresses[freshAddressIndex];
+      if (freshAddress === undefined) {
+        throw new FreshAddressIndexInvalid();
+      }
+    }
+
     const arg = {
       verify,
       currency: account.currency,
       derivationMode: account.derivationMode,
-      path: account.freshAddressPath,
+      path: freshAddress
+        ? freshAddress.derivationPath
+        : account.freshAddressPath,
       ...(injectGetAddressParams && injectGetAddressParams(account)),
     };
     return withDevice(deviceId)((transport) =>
       from(
         getAddress(transport, arg).then((r) => {
-          if (r.address !== account.freshAddress) {
+          const accountAddress = freshAddress
+            ? freshAddress.address
+            : account.freshAddress;
+          if (r.address !== accountAddress) {
             throw new WrongDeviceForAccount(
               `WrongDeviceForAccount ${account.name}`,
               {
