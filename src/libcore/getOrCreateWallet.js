@@ -1,6 +1,4 @@
 // @flow
-
-import { log } from "@ledgerhq/logs";
 import { getLibcoreConfig, getDerivationScheme } from "../derivation";
 import type { CryptoCurrency, DerivationMode } from "../types";
 import { atomicQueue } from "../promise";
