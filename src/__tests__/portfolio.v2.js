@@ -206,7 +206,7 @@ describe("Portfolio", () => {
       const { history: history2 } = getBalanceHistoryWithCountervalue(
         account,
         "month",
-        10,
+        100,
         state,
         to
       );
