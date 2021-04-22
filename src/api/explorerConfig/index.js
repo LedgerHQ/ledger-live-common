@@ -47,10 +47,6 @@ const initialExplorerConfig: FullConfig = {
     id: "dash",
     stable: {
       base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
-      base: "EXPLORER",
       version: "v3",
     },
   },
