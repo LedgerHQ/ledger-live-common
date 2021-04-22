@@ -123,16 +123,29 @@ export const toOperationRaw = (
     type,
     senders,
     recipients,
-    blockHeight,
-    blockHash,
-    transactionSequenceNumber,
     accountId,
-    hasFailed,
     extra: e,
     date: date.toISOString(),
     value: value.toString(),
     fee: fee.toString(),
   };
+
+  if (blockHeight !== undefined) {
+    copy.blockHeight = blockHeight;
+  }
+
+  if (blockHash !== undefined) {
+    copy.blockHash = blockHash;
+  }
+
+  if (transactionSequenceNumber !== undefined) {
+    copy.transactionSequenceNumber = transactionSequenceNumber;
+  }
+
+  if (hasFailed !== undefined) {
+    copy.hasFailed = hasFailed;
+  }
+
   if (subOperations && preserveSubOperation) {
     copy.subOperations = subOperations.map((o) => toOperationRaw(o));
   }
@@ -203,16 +216,28 @@ export const fromOperationRaw = (
     type,
     senders,
     recipients,
-    blockHeight,
-    blockHash,
-    transactionSequenceNumber,
-    hasFailed,
     accountId,
     date: new Date(date),
     value: BigNumber(value),
     fee: BigNumber(fee),
     extra: e || {},
   };
+
+  if (blockHeight !== undefined) {
+    res.blockHeight = blockHeight;
+  }
+
+  if (blockHash !== undefined) {
+    res.blockHash = blockHash;
+  }
+
+  if (transactionSequenceNumber !== undefined) {
+    res.transactionSequenceNumber = transactionSequenceNumber;
+  }
+
+  if (hasFailed !== undefined) {
+    res.hasFailed = hasFailed;
+  }
 
   if (subAccounts) {
     res.subOperations = inferSubOperations(hash, subAccounts);
