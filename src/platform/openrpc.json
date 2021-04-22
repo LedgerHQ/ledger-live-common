@@ -12,15 +12,15 @@
     "methods": [
         {
             "name": "ledgerlive.request_account",
-            "summary": "Request access to an account on Ledger Live.",
-            "description": "Request access to an account on Ledger Live.",
+            "summary": "Request access to an account through Ledger Live UI.",
+            "description": "Request access to an account through Ledger Live UI.",
             "paramStructure": "by-name",
             "tags": [
                 {
                     "$ref": "#/components/tags/Accounts"
                 },
                 {
-                    "$ref": "#/components/tags/PermissionReadAccount"
+                    "$ref": "#/components/tags/PermissionRequestAccount"
                 },
                 {
                     "$ref": "#/components/tags/Version000000"
@@ -59,16 +59,16 @@
             ]
         },
         {
-            "name": "ledgerlive.request_accounts",
-            "summary": "Request access to multiple accounts matching a given selection filter",
-            "description": "Request access to multiple accounts matching a given selection filter",
+            "name": "ledgerlive.get_accounts",
+            "summary": "Get a list of all accounts held by Ledger Live.",
+            "description": "Get a list of all accounts held by Ledger Live.",
             "paramStructure": "by-name",
             "tags": [
                 {
                     "$ref": "#/components/tags/Accounts"
                 },
                 {
-                    "$ref": "#/components/tags/PermissionReadAccount"
+                    "$ref": "#/components/tags/PermissionReadAllAccounts"
                 },
                 {
                     "$ref": "#/components/tags/Version000000"
@@ -87,10 +87,14 @@
             ],
             "result": {
                 "name": "accounts",
-                "summary": "A list of accounts selected by the user",
-                "description": "A list of accounts selected by the user",
+                "required": true,
+                "description": "A list of accounts matching the filter",
+                "summary": "A list of accounts matching the filter",
                 "schema": {
-                    "$ref": "#/components/schemas/Accounts"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/components/schemas/Account"
+                    }
                 }
             },
             "errors": [
@@ -115,7 +119,7 @@
                     "$ref": "#/components/tags/Accounts"
                 },
                 {
-                    "$ref": "#/components/tags/PermissionReadAccount"
+                    "$ref": "#/components/tags/PermissionUseAccount"
                 },
                 {
                     "$ref": "#/components/tags/Version010000"
@@ -160,7 +164,7 @@
                     "$ref": "#/components/tags/Accounts"
                 },
                 {
-                    "$ref": "#/components/tags/PermissionReadAccount"
+                    "$ref": "#/components/tags/PermissionUseAccount"
                 },
                 {
                     "$ref": "#/components/tags/Version000000"
@@ -370,7 +374,7 @@
                     "$ref": "#/components/tags/PermissionTransaction"
                 },
                 {
-                    "$ref": "#/components/tags/Version010000"
+                    "$ref": "#/components/tags/Version000000"
                 }
             ]
         },
@@ -445,7 +449,7 @@
                     "$ref": "#/components/errors/DeviceApplicationIsNotInstalled"
                 },
                 {
-                    "$ref": "#/components/tags/Version000000"
+                    "$ref": "#/components/tags/Version010000"
                 }
             ]
         },
@@ -658,7 +662,7 @@
             "paramStructure": "by-name",
             "tags": [
                 {
-                    "$ref": "#/components/tags/Version010000"
+                    "$ref": "#/components/tags/Version000000"
                 }
             ],
             "params": [
@@ -727,9 +731,17 @@
                 "name": "Navigation Permission",
                 "description": "Allows third-party application to trigger navigation events on Ledger Live (to open pages, start flows)"
             },
-            "PermissionReadAccount": {
-                "name": "Read account permission",
-                "description": "Allows third-party application to query Ledger Live accounts for read purposes."
+            "PermissionUseAccount": {
+                "name": "Use account permission",
+                "description": "Allows third-party application to use Ledger Live accounts features"
+            },
+            "PermissionRequestAccount": {
+                "name": "Request account permission",
+                "description": "Allows third-party application to request Ledger Live accounts with UI."
+            },
+            "PermissionReadAllAccounts": {
+                "name": "Read all accounts permission",
+                "description": "Allows third-party application to get all Ledger Live accounts for read purposes."
             },
             "PermissionTransaction": {
                 "name": "Sign transaction permission",
@@ -823,12 +835,12 @@
                 "type": "object",
                 "description": "Selection filter for account filtering",
                 "properties": {
-                    "currencyId": {
-                        "$ref": "#/components/schemas/CryptoCurrencyIds"
-                    },
-                    "minimumBalance": {
-                        "$ref": "#/components/schemas/Amount",
-                        "description": "Minimum balance which must be owned by  the  account expressed in cryptocurrency smallest unit (e.g. satoshi)"
+                    "currencyIds": {
+                        "type": "array",
+                        "description": "A list of accepted cryptocurrency ids",
+                        "items": {
+                            "$ref": "#/components/schemas/CryptoCurrencyIds"   
+                        }
                     }
                 }
             },
@@ -858,6 +870,14 @@
                 "properties": {
                     "id": {
                         "$ref": "#/components/schemas/CryptoCurrencyIds"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the currency"
+                    },
+                    "ticker": {
+                        "type": "string",
+                        "description": "The identifier of the currency (e.g. BTC, ETH...)"
                     },
                     "coinType": {
                         "type": "integer",
@@ -1068,21 +1088,6 @@
                         "type": "string",
                         "description": "The coin family of the transaction (bitcoin, ethereum...)"
                     },
-                    "amount": {
-                        "$ref": "#/components/schemas/Amount"
-                    },
-                    "recipient": {
-                        "type": "string",
-                        "description": "The address of the recipient"
-                    },
-                    "useAllAmount": {
-                        "type": "boolean",
-                        "description": "???"
-                    },
-                    "subAccountId": {
-                        "type": "string",
-                        "description": "???"
-                    },
                     "info": {
                         "oneOf": [
                             {
@@ -1102,9 +1107,17 @@
                 "type": "object",
                 "description": "Ethereum transaction representation as in https://github.com/LedgerHQ/ledger-live-common/blob/master/src/families/ethereum/types.js",
                 "required": [
-                    "mode"
+                    "amount",
+                    "recipient"
                 ],
                 "properties": {
+                    "amount": {
+                        "$ref": "#/components/schemas/Amount"
+                    },
+                    "recipient": {
+                        "type": "string",
+                        "description": "The address of the recipient"
+                    },
                     "nonce": {
                         "type": "integer"
                     },
@@ -1116,65 +1129,25 @@
                         "description": "Gas price used to make the transaction",
                         "$ref": "#/components/schemas/Amount"
                     },
-                    "userGasLimit": {
+                    "gasLimit": {
                         "description": "Gas limit set by the user (null otherwise)",
                         "$ref": "#/components/schemas/BigInteger"
-                    },
-                    "estimatedGasLimit": {
-                        "description": "Estimation of the necessary gas limit to make the transaction pass",
-                        "$ref": "#/components/schemas/BigInteger"
-                    },
-                    "mode": {
-                        "type": "string",
-                        "enum": [
-                            "CompoundModes",
-                            "ERC20Modes",
-                            "SendModes"
-                        ],
-                        "description": "Defaults to 'SendModes'"
                     }
                 }
             },
             "BitcoinTransaction": {
                 "type": "object",
                 "required": [
-                    "utxoStrategy",
-                    "rbf"
+                   "amount",
+                   "recipient"
                 ],
                 "properties": {
-                    "utxoStrategy": {
-                        "type": "object",
-                        "properties": {
-                            "stategy": {
-                                "type": "string",
-                                "enum": [
-                                    "DEEP_OUTPUT_FIRST",
-                                    "OPTIMIZE_SIZE",
-                                    "MERGE_OUTPUTS"
-                                ],
-                                "description": "The picking strategy used to chose UTXO to create a transaction (use DEEP_OUTPUT_FIRST by default)"
-                            },
-                            "pickUnconfirmedRBF": {
-                                "type": "boolean",
-                                "description": "If true allows to pick unconfirmed UTXO"
-                            },
-                            "excludeUTXos": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "hash": {
-                                            "type": "string",
-                                            "description": "The hash of the previous transaction in which this UTXO was created"
-                                        },
-                                        "outputIndex": {
-                                            "type": "integer",
-                                            "description": "Index of the output in the previous transaction"
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    "amount": {
+                        "$ref": "#/components/schemas/Amount"
+                    },
+                    "recipient": {
+                        "type": "string",
+                        "description": "The address of the recipient"
                     },
                     "rbf": {
                         "type": "boolean",
@@ -1187,7 +1160,18 @@
             },
             "XrpTransaction": {
                 "type": "object",
+                "required": [
+                    "amount",
+                    "recipient"
+                ],
                 "properties": {
+                    "amount": {
+                        "$ref": "#/components/schemas/Amount"
+                    },
+                    "recipient": {
+                        "type": "string",
+                        "description": "The address of the recipient"
+                    },
                     "fee": {
                         "$ref": "#/components/schemas/Amount"
                     },
