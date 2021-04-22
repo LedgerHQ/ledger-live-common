@@ -32,7 +32,7 @@ export function applyConfigOverrides(
   config: Config,
   overrides: ConfigOverrides
 ): Config {
-  const res = {};
+  const res: Config = { id: config.id, stable: config.stable };
   if (config.experimental) {
     res.experimental = overrides.experimental
       ? applyEndpointConfigOverrides(
@@ -52,7 +52,7 @@ export function applyConfigOverrides(
   ) {
     return config; // nothing changed
   }
-  return config;
+  return res;
 }
 
 export function applyFullConfigOverrides(

@@ -5,6 +5,7 @@ import {
   asFullConfigOverrides,
 } from "./overrides";
 import { setEnv } from "../../env";
+import { getUserHashes } from "../../user";
 
 beforeEach(() => {
   setEnv("USER_ID", "");
@@ -67,8 +68,8 @@ describe("applyEndpointConfigOverrides", () => {
 
 describe("FullConfigOverrides", () => {
   let base = {
-    bitcoin: {
-      id: "btc",
+    dash: {
+      id: "dash",
       stable: {
         base: "EXPLORER",
         version: "v3",
@@ -101,7 +102,7 @@ describe("FullConfigOverrides", () => {
     },
   };
   let example = {
-    bitcoin: {
+    dash: {
       stable: {
         version: "v2",
         overrides_X_out_of_100: 80,
@@ -128,12 +129,13 @@ describe("FullConfigOverrides", () => {
   });
 
   it("apply the full example", () => {
-    setEnv("USER_ID", "abcde");
+    setEnv("USER_ID", "a");
+    expect(getUserHashes()).toMatchObject({ endpointOverrides100: 51 });
     let r = applyFullConfigOverrides(base, asFullConfigOverrides(example));
     expect(r).not.toEqual(base);
     expect(r).toEqual({
-      bitcoin: {
-        id: "btc",
+      dash: {
+        id: "dash",
         stable: {
           base: "EXPLORER",
           version: "v2",
