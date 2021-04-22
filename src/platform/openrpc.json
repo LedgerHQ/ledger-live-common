@@ -263,13 +263,20 @@
                     "schema": {
                         "$ref": "#/components/schemas/Transaction"
                     }
+                },
+                {
+                    "name": "forceApp",
+                    "required": false,
+                    "schema": {
+                        "$ref": "#/components/schemas/DeviceAppFilter"
+                    }
                 }
             ],
             "result": {
                 "name": "signedTransaction",
-                "description": "The signed transaction buffer",
+                "description": "The signed transaction object",
                 "schema": {
-                    "$ref": "#/components/schemas/ByteBuffer"
+                    "$ref": "#/components/schemas/SignedTransaction"
                 }
             },
             "tags": [
@@ -1031,6 +1038,22 @@
                     }
                 }
             },
+            "DeviceAppFilter": {
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the application to use"
+                    },
+                    "minimumVersion": {
+                        "type": "string",
+                        "description": "Minimum version of the application"
+                    }
+                }
+            },
             "Transaction": {
                 "type": "object",
                 "required": [
@@ -1059,10 +1082,6 @@
                     "subAccountId": {
                         "type": "string",
                         "description": "???"
-                    },
-                    "pluginName": {
-                        "type": "string",
-                        "description": "The name of the Nano plugin to use if a plugin is neccessary to verify a transaction (optionnal)"
                     },
                     "info": {
                         "oneOf": [
@@ -1174,6 +1193,18 @@
                     },
                     "tag": {
                         "type": "integer"
+                    }
+                }
+            },
+            "SignedTransaction": {
+                "type": "object",
+                "required": [
+                    "raw"
+                ],
+                "properties": {
+                    "raw": {
+                        "$ref": "#/components/schemas/ByteBuffer",
+                        "description": "The serialized signed transaction, ready to be broadcasted"
                     }
                 }
             }
