@@ -124,19 +124,13 @@ export const toOperationRaw = (
     senders,
     recipients,
     accountId,
+    blockHash,
+    blockHeight,
     extra: e,
     date: date.toISOString(),
     value: value.toString(),
     fee: fee.toString(),
   };
-
-  if (blockHeight !== undefined) {
-    copy.blockHeight = blockHeight;
-  }
-
-  if (blockHash !== undefined) {
-    copy.blockHash = blockHash;
-  }
 
   if (transactionSequenceNumber !== undefined) {
     copy.transactionSequenceNumber = transactionSequenceNumber;
@@ -217,19 +211,13 @@ export const fromOperationRaw = (
     senders,
     recipients,
     accountId,
+    blockHash,
+    blockHeight,
     date: new Date(date),
     value: BigNumber(value),
     fee: BigNumber(fee),
     extra: e || {},
   };
-
-  if (blockHeight !== undefined) {
-    res.blockHeight = blockHeight;
-  }
-
-  if (blockHash !== undefined) {
-    res.blockHash = blockHash;
-  }
 
   if (transactionSequenceNumber !== undefined) {
     res.transactionSequenceNumber = transactionSequenceNumber;
