@@ -31,6 +31,7 @@ StellarSdk.HorizonAxiosClient.interceptors.response.use((response) => {
 
   // FIXME: workaround for the Stellar SDK not using the correct URL: the "next" URL
   // included in server responses points to the node itself instead of our reverse proxy...
+  // (https://github.com/stellar/js-stellar-sdk/issues/637)
   const url = response?.data?._links?.next?.href;
   if (url) {
     const next = new URL(url);
