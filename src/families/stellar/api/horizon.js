@@ -1,6 +1,7 @@
 //@flow
 import { BigNumber } from "bignumber.js";
 import StellarSdk, { AccountRecord, NotFoundError } from "stellar-sdk";
+import { log } from "@ledgerhq/logs";
 import { getEnv } from "../../../env";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
 import type { Account, NetworkInfo, Operation } from "../../../types";
@@ -16,13 +17,27 @@ const currency = getCryptoCurrencyById("stellar");
 
 const server = new StellarSdk.Server(getEnv("API_STELLAR_HORIZON"));
 
-StellarSdk.HorizonAxiosClient.interceptors.response.use((x) => {
+StellarSdk.HorizonAxiosClient.interceptors.request.use((request) => {
+  log("network", `${request.method} ${request.url}`, { data: request.data });
+  return request;
+});
+
+StellarSdk.HorizonAxiosClient.interceptors.response.use((response) => {
+  log(
+    "network",
+    `${response.status} ${response.config.method} ${response.config.url}`,
+    getEnv("DEBUG_HTTP_RESPONSE") ? { data: response.data } : undefined
+  );
+
   // FIXME: workaround for the Stellar SDK not using the correct URL: the "next" URL
   // included in server responses points to the node itself instead of our reverse proxy...
-  const next = new URL(x.data._links.next.href);
-  next.host = new URL(getEnv("API_STELLAR_HORIZON")).host;
-  x.data._links.next.href = next.toString();
-  return x;
+  const url = response?.data?._links?.next?.href;
+  if (url) {
+    const next = new URL(url);
+    next.host = new URL(getEnv("API_STELLAR_HORIZON")).host;
+    response.data._links.next.href = next.toString();
+  }
+  return response;
 });
 
 const getFormattedAmount = (amount: BigNumber) => {
