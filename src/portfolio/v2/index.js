@@ -92,7 +92,6 @@ export function getBalanceHistoryWithCountervalue(
   const counterValues = calculateMany(cvState, balanceHistory, {
     from: currency,
     to: cvCurrency,
-    disableRounding: true, // FIXME why?
   });
   const history = balanceHistory.map(({ date, value }, i) => ({
     date,

@@ -383,7 +383,9 @@ function generateCache(
 ): PairRateMapCache {
   const map = new Map(rateMap);
 
-  const sorted = [...map.keys()].sort().filter((k) => k !== "latest");
+  const sorted = Array.from(map.keys())
+    .sort()
+    .filter((k) => k !== "latest");
   const oldest = sorted[0];
   const earliest = sorted[sorted.length - 1];
   const oldestDate = oldest ? parseFormattedDate(oldest) : null;

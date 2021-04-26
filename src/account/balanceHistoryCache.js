@@ -8,14 +8,7 @@ import type {
   GranularityId,
 } from "../types";
 import { getOperationAmountNumberWithInternals } from "../operation";
-import {
-  weekIncrement,
-  dayIncrement,
-  hourIncrement,
-  startOfWeek,
-  startOfDay,
-  startOfHour,
-} from "../portfolio/range";
+import { granularities } from "../portfolio/v2/range";
 
 export const emptyHistoryCache = {
   HOUR: {
@@ -32,29 +25,14 @@ export const emptyHistoryCache = {
   },
 };
 
-const conf = {
-  WEEK: {
-    increment: weekIncrement,
-    startOf: startOfWeek,
-  },
-  DAY: {
-    increment: dayIncrement,
-    startOf: startOfDay,
-  },
-  HOUR: {
-    increment: hourIncrement,
-    startOf: startOfHour,
-  },
-};
-
 function generateHistoryFromOperationsG(
   account: AccountLike,
   g: GranularityId,
-  // partial=true allows a faster impleemntation that only recompose the last part of the history
+  // partial=true allows a faster implementation that only recompose the last part of the history
   // to only use when we do not recalculate the history but we just want to access it
   partial: boolean = false
 ): BalanceHistoryDataCache {
-  const { increment, startOf } = conf[g];
+  const { increment, startOf } = granularities[g];
   const latestDate = startOf(new Date()).getTime();
   let balances = [];
   let { balance } = account;
@@ -100,7 +78,7 @@ export function getAccountHistoryBalances(
   g: GranularityId
 ): number[] {
   const { balances, latestDate } = account.balanceHistoryCache[g];
-  const { startOf } = conf[g];
+  const { startOf } = granularities[g];
   const now = startOf(new Date()).getTime();
   if (latestDate && latestDate === now) {
     return balances;
