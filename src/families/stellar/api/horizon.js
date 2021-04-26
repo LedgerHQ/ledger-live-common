@@ -16,6 +16,15 @@ const currency = getCryptoCurrencyById("stellar");
 
 const server = new StellarSdk.Server(getEnv("API_STELLAR_HORIZON"));
 
+StellarSdk.HorizonAxiosClient.interceptors.response.use((x) => {
+  // FIXME: workaround for the Stellar SDK not using the correct URL: the "next" URL
+  // included in server responses points to the node itself instead of our reverse proxy...
+  const next = new URL(x.data._links.next.href);
+  next.host = new URL(getEnv("API_STELLAR_HORIZON")).host;
+  x.data._links.next.href = next.toString();
+  return x;
+});
+
 const getFormattedAmount = (amount: BigNumber) => {
   return amount
     .div(BigNumber(10).pow(currency.units[0].magnitude))
