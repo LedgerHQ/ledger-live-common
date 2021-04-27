@@ -93,11 +93,14 @@ export function getBalanceHistoryWithCountervalue(
     from: currency,
     to: cvCurrency,
   });
-  const history = balanceHistory.map(({ date, value }, i) => ({
-    date,
-    value,
-    countervalue: counterValues[i],
-  }));
+  let countervalueAvailable = false;
+  const history = [];
+  for (let i = 0; i < balanceHistory.length; i++) {
+    const { date, value } = balanceHistory[i];
+    const countervalue = counterValues[i];
+    if (countervalue) countervalueAvailable = true;
+    history.push({ date, value, countervalue });
+  }
 
   function calcChanges(h: BalanceHistoryWithCountervalue) {
     const from = h[0];
@@ -118,10 +121,6 @@ export function getBalanceHistoryWithCountervalue(
       },
     };
   }
-
-  const countervalueAvailable = Boolean(
-    history[history.length - 1].countervalue
-  );
 
   return {
     history,
