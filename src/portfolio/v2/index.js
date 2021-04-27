@@ -52,7 +52,7 @@ export function getPortfolioCountByDate(
 ): number {
   const conf = getPortfolioRangeConfig(range);
   const now = Date.now();
-  const count = Math.floor((now - start) / conf.increment) + 2;
+  const count = Math.ceil((now - start) / conf.increment) + 2;
   const defaultYearCount = getPortfolioRangeConfig("year").count ?? 0; // just for type casting
   return count < defaultYearCount ? defaultYearCount : count;
 }
