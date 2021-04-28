@@ -325,7 +325,7 @@
                     "$ref": "#/components/tags/PermissionTransaction"
                 },
                 {
-                    "$ref": "#/components/tags/Version010000"
+                    "$ref": "#/components/tags/Version000000"
                 }
             ]
         },
