@@ -113,6 +113,7 @@ export default (arg: {
     });
 
     NJSThreadDispatcher.getMainExecutionContext = getMainExecutionContext;
+    NJSThreadDispatcher.getSerialExecutionContext = getSerialExecutionContext;
 
     function createHttpConnection(res, libcoreError) {
       if (!res) {

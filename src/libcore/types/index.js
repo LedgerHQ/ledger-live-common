@@ -203,6 +203,7 @@ declare class CoreSerialContext {}
 declare class CoreThreadDispatcher {
   static newInstance(): Promise<CoreThreadDispatcher>;
   getMainExecutionContext(): Promise<CoreSerialContext>;
+  getSerialExecutionContext(): Promise<CoreSerialContext>;
 }
 
 declare class CoreEventBus {
@@ -572,6 +573,10 @@ export const reflect = (declare: (string, Spec) => void) => {
     },
     methods: {
       getMainExecutionContext: {
+        nodejsNotAvailable: true,
+        returns: "SerialContext",
+      },
+      getSerialExecutionContext: {
         nodejsNotAvailable: true,
         returns: "SerialContext",
       },
