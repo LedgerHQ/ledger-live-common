@@ -203,7 +203,7 @@ declare class CoreSerialContext {}
 declare class CoreThreadDispatcher {
   static newInstance(): Promise<CoreThreadDispatcher>;
   getMainExecutionContext(): Promise<CoreSerialContext>;
-  getSerialExecutionContext(): Promise<CoreSerialContext>;
+  getSerialExecutionContext(string): Promise<CoreSerialContext>;
 }
 
 declare class CoreEventBus {

@@ -55,9 +55,7 @@ export async function syncCoreAccount({
       const eventBus = await coreAccount.synchronize();
 
       log("libcore", `sync(${logId}) DONE coreAccount.synchronize`);
-      const serialContext = await core
-        .getThreadDispatcher()
-        .getSerialExecutionContext("sync");
+      const serialContext = await core.getThreadDispatcher().getSerialExecutionContext("sync");
 
       await eventBus.subscribe(serialContext, eventReceiver);
       log("libcore", `sync(${logId}) DONE eventBus.subscribe`);
