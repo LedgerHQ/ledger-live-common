@@ -1,6 +1,6 @@
 //@flow
 import { BigNumber } from "bignumber.js";
-import StellarSdk, { AccountRecord, NotFoundError } from "stellar-sdk";
+import StellarSdk, { AccountRecord } from "stellar-sdk";
 import { log } from "@ledgerhq/logs";
 import { getEnv } from "../../../env";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
@@ -123,10 +123,7 @@ export const fetchOperations = async (
       .cursor(startAt)
       .call();
   } catch (e) {
-    if (e instanceof NotFoundError) {
-      return [];
-    }
-    throw e;
+    return [];
   }
 
   if (!rawOperations || !rawOperations.records.length) {
