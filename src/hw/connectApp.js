@@ -11,18 +11,20 @@ import {
   DisconnectedDeviceDuringOperation,
   DisconnectedDevice,
 } from "@ledgerhq/errors";
+import type Transport from "@ledgerhq/hw-transport";
 import type { DeviceModelId } from "@ledgerhq/devices";
 import type { DerivationMode } from "../types";
 import { getCryptoCurrencyById } from "../currencies";
 import appSupportsQuitApp from "../appSupportsQuitApp";
 import { withDevice } from "./deviceAccess";
+import { streamAppInstall } from "../apps/hw";
 import { isDashboardName } from "./isDashboardName";
 import getAppAndVersion from "./getAppAndVersion";
 import getAddress from "./getAddress";
 import openApp from "./openApp";
 import quitApp from "./quitApp";
 import { mustUpgrade } from "../apps";
-
+import { getEnv } from "../env";
 export type RequiresDerivation = {|
   currencyId: string,
   path: string,
@@ -46,20 +48,25 @@ export type AppAndVersion = {
 export type ConnectAppEvent =
   | { type: "unresponsiveDevice" }
   | { type: "disconnected" }
-  | { type: "device-permission-requested", wording: string }
+  | {
+      type: "device-permission-requested",
+      wording: string,
+    }
   | { type: "device-permission-granted" }
   | { type: "app-not-installed", appName: string }
+  | { type: "stream-install", progress: number }
+  | { type: "listing-apps" }
   | { type: "ask-quit-app" }
   | { type: "ask-open-app", appName: string }
   | { type: "opened", app?: AppAndVersion, derivation?: { address: string } }
   | { type: "display-upgrade-warning", displayUpgradeWarning: boolean };
 
-const openAppFromDashboard = (
-  transport,
-  appName
+export const openAppFromDashboard = (
+  transport: Transport<*>,
+  appName: string
 ): Observable<ConnectAppEvent> =>
   concat(
-    of({ type: "device-permission-requested", wording: appName }),
+    of({ type: "ask-open-app", appName }),
     defer(() => from(openApp(transport, appName))).pipe(
       concatMap(() => of({ type: "device-permission-granted" })),
       catchError((e) => {
@@ -67,7 +74,9 @@ const openAppFromDashboard = (
           switch (e.statusCode) {
             case 0x6984:
             case 0x6807:
-              return of({ type: "app-not-installed", appName });
+              return getEnv("EXPERIMENTAL_INLINE_INSTALL")
+                ? streamAppInstall(transport, appName)
+                : of({ type: "app-not-installed", appName });
             case 0x6985:
             case 0x5501:
               return throwError(new UserRefusedOnDevice());

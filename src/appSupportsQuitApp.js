@@ -55,6 +55,7 @@ export const minAppVersion = {
   Expanse: "1.4.0",
   FIC: "3.0.4",
   Factom: "1.2.3",
+  "Fantom FTM": "0.0.0",
   "Fido U2F": "1.2.7",
   Filecoin: "0.18.2",
   Flow: "0.9.1",
@@ -81,6 +82,7 @@ export const minAppVersion = {
   "Kin (SPL)": "0.0.0",
   Komodo: "1.5.0",
   Kusama: "3.23.0",
+  Kusama_sec: "0.0.0",
   LBRY: "1.5.0",
   Liquid: "1.4.8",
   "Liquid Hless": "1.4.8",
@@ -111,6 +113,7 @@ export const minAppVersion = {
   Pirl: "1.4.0",
   PivX: "1.5.0",
   Polkadot: "5.23.0",
+  Polkadot_sec: "0.0.0",
   QRL: "1.1.3",
   Qtum: "1.5.0",
   REOSC: "1.4.0",
@@ -127,6 +130,7 @@ export const minAppVersion = {
   Stealth: "1.5.0",
   Stellar: "3.2.2",
   Stratis: "1.5.0",
+  Symbol: "0.0.0",
   Terra: "1.1.0",
   "Tezos Baking": "2.2.9",
   "Tezos Wallet": "2.2.9",
@@ -152,5 +156,5 @@ export const minAppVersion = {
 };
 
 export default ({ name, version }: AppAndVersion) =>
-  name in minAppVersion &&
+  !(name in minAppVersion) ||
   semver.gte(semver.coerce(version), minAppVersion[name]);

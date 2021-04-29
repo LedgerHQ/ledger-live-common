@@ -17,7 +17,18 @@ const getValidatorStatus = async (
 ) => {
   const status = ["unbonded", "unbonding", "bonded"];
   const validatorInfo = await cosmosAccount.getValidatorInfo(address);
-  return status[await validatorInfo.getActiveStatus()];
+  const rawStatus = await validatorInfo.getActiveStatus();
+  // Pre stargate
+  if (["0", "1", "2"].includes(rawStatus)) {
+    return status[parseInt(rawStatus)];
+  }
+  // Stargate
+  const stargateStatusMap = {
+    BOND_STATUS_UNBONDED: "unbonded",
+    BOND_STATUS_UNBONDING: "unbonding",
+    BOND_STATUS_BONDED: "bonded",
+  };
+  return stargateStatusMap[rawStatus] || "unbonded";
 };
 
 const getFlattenDelegation = async (cosmosAccount) => {
@@ -144,6 +155,11 @@ const postBuildAccount = async ({
   account.spendableBalance = getMaxEstimatedBalance(account, BigNumber(0));
   if (account.spendableBalance.lt(0)) {
     account.spendableBalance = BigNumber(0);
+  }
+  if (!account.used) {
+    const cosmosAccount = await coreAccount.asCosmosLikeAccount();
+    const seq = await cosmosAccount.getSequence();
+    account.used = seq != "";
   }
   return account;
 };

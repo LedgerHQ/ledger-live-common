@@ -8,6 +8,7 @@ import flatMap from "lodash/flatMap";
 import { getEnv } from "../env";
 import allSpecs from "../generated/specs";
 import network from "../network";
+import { withLibcore } from "../libcore/access";
 import type { MutationReport, SpecReport } from "./types";
 import { promiseAllBatched } from "../promise";
 import {
@@ -37,6 +38,11 @@ const usd = getFiatCurrencyByTicker("USD");
 export async function bot({ currency, mutation }: Arg = {}) {
   const SEED = getEnv("SEED");
   invariant(SEED, "SEED required");
+
+  const libcoreVersion = await withLibcore((core) =>
+    core.LedgerCore.getStringVersion()
+  );
+  log("libcoreVersion", "libcore version " + libcoreVersion);
 
   const specs = [];
   const specsLogs = [];
@@ -86,7 +92,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
     }
   );
 
-  const allAccountsAfter = flatMap(results, (r) => r.accountsAfter);
+  const allAccountsAfter = flatMap(results, (r) => r.accountsAfter || []);
 
   let countervaluesError;
   const countervaluesState = await loadCountervalues(initialState, {
@@ -223,16 +229,6 @@ export async function bot({ currency, mutation }: Arg = {}) {
 
     let subtitle = "";
 
-    if (uncoveredMutations.length) {
-      subtitle += `> ⚠️ ${uncoveredMutations.length} mutations uncovered\n`;
-    }
-
-    if (withoutFunds.length) {
-      subtitle += `> ⚠️ ${
-        withoutFunds.length
-      } specs don't have enough funds! (${withoutFunds.join(", ")})\n`;
-    }
-
     if (countervaluesError) {
       subtitle += `> ${String(countervaluesError)}`;
     }
@@ -248,6 +244,10 @@ export async function bot({ currency, mutation }: Arg = {}) {
 
     body += subtitle;
 
+    if (uncoveredMutations.length) {
+      body += `> ⚠️ ${uncoveredMutations.length} mutations uncovered\n`;
+    }
+
     body += "\n\n";
 
     if (specFatals.length) {
@@ -262,6 +262,22 @@ export async function bot({ currency, mutation }: Arg = {}) {
       });
 
       body += "</details>\n\n";
+    }
+
+    const failureSpecNames = results
+      .filter((r) => (r.mutations || []).some((m) => m.error))
+      .map(({ spec }) => spec.name);
+
+    if (failureSpecNames && failureSpecNames.length) {
+      slackBody += `:nogo: _${failureSpecNames.join(", ")}_\n`;
+    }
+
+    const successSpecNames = results
+      .filter((r) => (r.mutations || []).every((m) => !m.error))
+      .map(({ spec }) => spec.name);
+
+    if (successSpecNames && successSpecNames.length) {
+      slackBody += `:go: _${successSpecNames.join(", ")}_\n`;
     }
 
     if (errorCases.length) {
@@ -324,6 +340,12 @@ export async function bot({ currency, mutation }: Arg = {}) {
 
     body += "### Portfolio" + (totalUSD ? " (" + totalUSD + ")" : "") + "\n\n";
 
+    if (withoutFunds.length) {
+      body += `> ⚠️ ${
+        withoutFunds.length
+      } specs don't have enough funds! (${withoutFunds.join(", ")})\n`;
+    }
+
     body += "<details>\n";
     body += `<summary>Details of the ${results.length} currencies</summary>\n\n`;
     body += "| Spec (accounts) | Operations | Balance | funds? |\n";
@@ -384,7 +406,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
       const firstAccount = (r.accountsAfter || r.accountsBefore || [])[0];
 
       body += `| ${r.spec.name} (${
-        (r.accountsBefore || []).filter((a) => !isAccountEmpty(a)).length
+        (r.accountsBefore || []).filter((a) => a.used).length
       }) `;
       body += `| ${afterOps || beforeOps}${
         afterOps > beforeOps ? ` (+${afterOps - beforeOps})` : ""

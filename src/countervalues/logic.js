@@ -2,8 +2,7 @@
 
 import { log } from "@ledgerhq/logs";
 import type { Currency, Account } from "../types";
-import { flattenAccounts } from "../account";
-import { getAccountCurrency } from "../account";
+import { flattenAccounts, getAccountCurrency } from "../account/helpers";
 import { promiseAllBatched } from "../promise";
 import type {
   CounterValuesState,
@@ -13,7 +12,6 @@ import type {
   RateMap,
   RateGranularity,
   PairRateMapCache,
-  RateMapStats,
 } from "./types";
 import {
   pairId,
@@ -40,14 +38,31 @@ export function exportCountervalues({
   data,
   status,
 }: CounterValuesState): CounterValuesStateRaw {
-  return { ...data, status };
+  const out = { status };
+  for (let path in data) {
+    const obj = {};
+    for (let [k, v] of data[path]) {
+      obj[k] = v;
+    }
+    out[path] = obj;
+  }
+  return out;
 }
 
 // restore a countervalues state from the raw version
 export function importCountervalues(
-  { status, ...data }: CounterValuesStateRaw,
+  { status, ...rest }: CounterValuesStateRaw,
   settings: CountervaluesSettings
 ): CounterValuesState {
+  const data = {};
+  for (let path in rest) {
+    const obj = rest[path];
+    let map = new Map();
+    for (let k in obj) {
+      map.set(k, obj[k]);
+    }
+    data[path] = map;
+  }
   return {
     data,
     status,
@@ -112,8 +127,8 @@ export async function loadCountervalues(
     const limit = datapointLimits[granularity];
     settings.trackingPairs.forEach(({ from, to, startDate }) => {
       const key = pairId({ from, to });
-      const value: ?RateMap = data[key];
-      const stats = value && rateMapStats(value);
+      const c: ?PairRateMapCache = cache[key];
+      const stats = c && c.stats;
       const s = status[key];
 
       // when there are too much http failures, slow down the rate to be actually re-fetched
@@ -153,8 +168,12 @@ export async function loadCountervalues(
       }
       if (!needOlderReload) {
         // we do not miss datapoints in the past so we can ask the only remaining part
-        if (stats && stats.earliestDate && stats.earliestDate > start) {
-          start = stats.earliestDate;
+        if (
+          stats &&
+          stats.earliestStableDate &&
+          stats.earliestStableDate > start
+        ) {
+          start = stats.earliestStableDate;
         }
       }
 
@@ -221,7 +240,7 @@ export async function loadCountervalues(
         latestToFetch.forEach((pair, i) => {
           const key = pairId(pair);
           const latest = rates[i];
-          if (data[key]?.latest === latest) return;
+          if (data[key]?.get("latest") === latest) return;
           out[key] = { latest: rates[i] };
           hasData = true;
         });
@@ -250,7 +269,12 @@ export async function loadCountervalues(
   updates.forEach((patch) => {
     Object.keys(patch).forEach((key) => {
       changesKeys[key] = 1;
-      data[key] = { ...data[key], ...patch[key] };
+      if (!data[key]) {
+        data[key] = new Map();
+      }
+      Object.entries(patch[key]).forEach(([k, v]) => {
+        if (typeof v === "number") data[key].set(k, v);
+      });
     });
   });
 
@@ -282,12 +306,10 @@ export function lenseRate(
   }
 ): ?number {
   const { date } = query;
-  if (!date) return map.latest;
+  if (!date) return map.get("latest");
   const { iso, hour, day } = formatCounterValueHashes(date);
-  if (stats.earliest && iso > stats.earliest) return map.latest;
-  if (hour in map) return map[hour];
-  if (day in map) return map[day];
-  return fallback;
+  if (stats.earliest && iso > stats.earliest) return map.get("latest");
+  return map.get(hour) || map.get(day) || fallback;
 }
 
 export function calculate(
@@ -306,12 +328,12 @@ export function calculate(
     to: initialQuery.to,
   });
   if (from === to) return initialQuery.value;
-  const query = { ...initialQuery, from, to };
+  const { date, value, disableRounding, reverse } = initialQuery;
+  const query = { date, from, to };
   const map = lenseRateMap(state, query);
   if (!map) return;
   let rate = lenseRate(map, query);
   if (!rate) return;
-  const { value, disableRounding, reverse } = query;
   const mult = reverse
     ? magFromTo(initialQuery.to, initialQuery.from)
     : magFromTo(initialQuery.from, initialQuery.to);
@@ -333,7 +355,7 @@ export function calculateMany(
     reverse?: boolean,
   }
 ): Array<?number> {
-  const { reverse } = initialQuery;
+  const { reverse, disableRounding } = initialQuery;
   const query = aliasPair(initialQuery);
   const map = lenseRateMap(state, query);
   if (!map) return Array(dataPoints.length).fill(); // undefined array
@@ -350,19 +372,8 @@ export function calculateMany(
       rate = 1 / rate;
     }
     const val = value * rate * mult;
-    return initialQuery.disableRounding ? val : Math.round(val);
+    return disableRounding ? val : Math.round(val);
   });
-}
-
-function rateMapStats(map: RateMap): RateMapStats {
-  const sorted = Object.keys(map)
-    .sort()
-    .filter((k) => k !== "latest");
-  const oldest = sorted[0];
-  const earliest = sorted[sorted.length - 1];
-  const oldestDate = oldest ? parseFormattedDate(oldest) : null;
-  const earliestDate = earliest ? parseFormattedDate(earliest) : null;
-  return { oldest, earliest, oldestDate, earliestDate };
 }
 
 function generateCache(
@@ -370,34 +381,62 @@ function generateCache(
   rateMap: RateMap,
   settings: CountervaluesSettings
 ): PairRateMapCache {
-  const map = { ...rateMap };
-  const stats = rateMapStats(map);
-  let fallback;
+  const map = new Map(rateMap);
 
-  const { oldest, oldestDate } = stats;
-  if (settings.autofillGaps) {
-    if (oldestDate && oldest) {
-      // shifting daily gaps (hourly don't need to be shifted as it automatically fallback on a day rate)
-      const now = Date.now();
-      const oldestTime = oldestDate.getTime();
-      let shiftingValue = map[oldest];
+  const sorted = Array.from(map.keys())
+    .sort()
+    .filter((k) => k !== "latest");
+  const oldest = sorted[0];
+  const earliest = sorted[sorted.length - 1];
+  const oldestDate = oldest ? parseFormattedDate(oldest) : null;
+  const earliestDate = earliest ? parseFormattedDate(earliest) : null;
+  let earliestStableDate = earliestDate;
+
+  let fallback;
+  let hasHole = false;
+
+  if (oldestDate && oldest) {
+    // we find the most recent stable day and we set it in earliestStableDate
+    // if autofillGaps is on, shifting daily gaps (hourly don't need to be shifted as it automatically fallback on a day rate)
+    const now = Date.now();
+    const oldestTime = oldestDate.getTime();
+    let shiftingValue = map.get(oldest) || 0;
+    if (settings.autofillGaps) {
       fallback = shiftingValue;
-      for (let t = oldestTime; t < now; t += incrementPerGranularity.daily) {
-        const k = formatCounterValueDay(new Date(t));
-        if (!(k in map)) {
-          map[k] = shiftingValue;
-        } else {
-          shiftingValue = map[k];
+    }
+    for (let t = oldestTime; t < now; t += incrementPerGranularity.daily) {
+      const d = new Date(t);
+      const k = formatCounterValueDay(d);
+      if (!map.has(k)) {
+        if (!hasHole) {
+          hasHole = true;
+          earliestStableDate = d;
+        }
+        if (settings.autofillGaps) {
+          map.set(k, shiftingValue);
+        }
+      } else {
+        if (settings.autofillGaps) {
+          shiftingValue = map.get(k) || 0;
         }
       }
-      if (!map.latest) {
-        map.latest = shiftingValue;
-      }
-    } else {
-      fallback = map.latest || 0;
+    }
+    if (!map.get("latest") && settings.autofillGaps) {
+      map.set("latest", shiftingValue);
+    }
+  } else {
+    if (settings.autofillGaps) {
+      fallback = map.get("latest") || 0;
     }
   }
 
+  const stats = {
+    oldest,
+    earliest,
+    oldestDate,
+    earliestDate,
+    earliestStableDate,
+  };
   return { map, stats, fallback };
 }
 

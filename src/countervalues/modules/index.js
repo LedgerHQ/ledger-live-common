@@ -2,7 +2,7 @@
 
 import { log } from "@ledgerhq/logs";
 import type { Currency } from "../../types";
-import type { RateGranularity, TrackingPair, RateMap } from "../types";
+import type { RateGranularity, TrackingPair } from "../types";
 import type { Module } from "./types";
 import api from "../api";
 import weth from "./weth";
@@ -10,10 +10,14 @@ import ethbtc from "./ethbtc";
 
 const modules: Module[] = [weth, ethbtc];
 
+export const installModule = (module: Module): void => {
+  modules.push(module);
+};
+
 export const fetchHistorical = (
   granularity: RateGranularity,
   pair: TrackingPair
-): Promise<RateMap> => {
+): Promise<Object> => {
   let fn = api.fetchHistorical;
   // a module can override the default api. first who handle wins.
   const m = modules.find(

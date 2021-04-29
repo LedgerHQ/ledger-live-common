@@ -60,17 +60,29 @@ export const mockGetExchangeRates = async (
 
   //Fake delay to show loading UI
   await new Promise((r) => setTimeout(r, 800));
+  const magnitudeAwareRate = BigNumber(1)
+    .div(BigNumber(10).pow(unitFrom.magnitude))
+    .times(BigNumber(10).pow(unitTo.magnitude));
 
   //Mock OK, not really magnitude aware
   return [
     {
       rate: BigNumber("1"),
-      magnitudeAwareRate: BigNumber(1)
-        .div(BigNumber(10).pow(unitFrom.magnitude))
-        .times(BigNumber(10).pow(unitTo.magnitude)),
+      toAmount: amount.times(magnitudeAwareRate),
+      magnitudeAwareRate,
       rateId: "mockedRateId",
       provider: "changelly",
       expirationDate: new Date(),
+      tradeMethod: "fixed",
+    },
+    {
+      rate: BigNumber("1"),
+      toAmount: amount.times(magnitudeAwareRate),
+      magnitudeAwareRate,
+      rateId: "mockedRateId",
+      provider: "changelly",
+      expirationDate: new Date(),
+      tradeMethod: "float",
     },
   ];
 };
@@ -105,6 +117,20 @@ export const mockGetProviders: GetProviders = async () => {
         "ethereum/erc20/0x_project",
         "ethereum/erc20/augur",
       ],
+      tradeMethod: "fixed",
+    },
+    {
+      provider: "changelly",
+      supportedCurrencies: [
+        "bitcoin",
+        "litecoin",
+        "ethereum",
+        "tron",
+        "ethereum/erc20/omg",
+        "ethereum/erc20/0x_project",
+        "ethereum/erc20/augur",
+      ],
+      tradeMethod: "float",
     },
   ];
 };

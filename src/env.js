@@ -48,13 +48,29 @@ const envDefinitions = {
     desc: "Node API key for algorand",
   },
   API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
-    def: "https://cosmos.coin.ledger.com/",
+    def: "https://cosmoshub4.coin.ledger.com/",
     parser: stringParser,
-    desc: "Node API for cosmos",
+    desc: "Node endpoint for cosmos",
+  },
+  API_COSMOS_NODE: {
+    def: "STARGATE_NODE",
+    parser: stringParser,
+    desc: "Node API to use for cosmos (COSMOS_NODE or STARGATE_NODE are known)",
+  },
+  API_COSMOS_TESTNET_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
+    def: "https://cosmoshub4.coin.staging.aws.ledger.com",
+    parser: stringParser,
+    desc: "Node endpoint for cosmos",
+  },
+  API_COSMOS_TESTNET_NODE: {
+    def: "STARGATE_NODE",
+    parser: stringParser,
+    desc:
+      "Node API to use for cosmos_testnet (COSMOS_NODE or STARGATE_NODE are known)",
   },
   API_RIPPLE_WS: {
     parser: stringParser,
-    def: "wss://xrpl.ws",
+    def: "wss://xrplcluster.com",
     desc: "XRP Ledger full history open WebSocket endpoint",
   },
   API_POLKADOT_INDEXER: {
@@ -66,6 +82,16 @@ const envDefinitions = {
     parser: stringParser,
     def: "https://polkadot-sidecar.coin.ledger.com",
     desc: "Polkadot Sidecar API url",
+  },
+  API_STELLAR_HORIZON: {
+    parser: stringParser,
+    def: "https://stellar.coin.ledger.com",
+    desc: "Stellar Horizon API url",
+  },
+  API_STELLAR_HORIZON_FETCH_LIMIT: {
+    parser: intParser,
+    def: 200,
+    desc: "Limit of operation that Horizon will fetch per page",
   },
   API_TEZOS_BAKER: {
     parser: stringParser,
@@ -203,6 +229,11 @@ const envDefinitions = {
     desc:
       "enable an experimental version of the portfolio percentage calculation",
   },
+  EXPERIMENTAL_INLINE_INSTALL: {
+    def: false,
+    parser: boolParser,
+    desc: "enable an experimental inline app installation flow",
+  },
   EXPERIMENTAL_SEND_MAX: {
     def: false,
     parser: boolParser,
@@ -328,6 +359,12 @@ const envDefinitions = {
     parser: intParser,
     desc: "defines the initial default operation length page to use",
   },
+  POLKADOT_ELECTION_STATUS_THRESHOLD: {
+    def: 25,
+    parser: intParser,
+    desc:
+      "in blocks - number of blocks before Polkadot election effectively opens to consider it as open and disable all staking features",
+  },
   SATSTACK: {
     def: false,
     parser: boolParser,
@@ -354,7 +391,7 @@ const envDefinitions = {
     desc: "dev flag to skip onboarding flow",
   },
   SWAP_API_BASE: {
-    def: "https://swap.ledger.com",
+    def: "https://swap.ledger.com/v2",
     parser: stringParser,
     desc: "Swap API base",
   },
@@ -399,6 +436,26 @@ const envDefinitions = {
     def: 500,
     parser: floatParser,
     desc: "delay when polling device",
+  },
+  ANNOUNCEMENTS_API_URL: {
+    def: "https://cdn.live.ledger.com/announcements",
+    parser: stringParser,
+    desc: "url used to fetch new announcements",
+  },
+  ANNOUNCEMENTS_API_VERSION: {
+    def: 1,
+    parser: intParser,
+    desc: "version used for the announcements api",
+  },
+  STATUS_API_URL: {
+    def: "https://ledger.statuspage.io/api",
+    parser: stringParser,
+    desc: "url used to fetch ledger status",
+  },
+  STATUS_API_VERSION: {
+    def: 2,
+    parser: intParser,
+    desc: "version used for ledger status api",
   },
 };
 

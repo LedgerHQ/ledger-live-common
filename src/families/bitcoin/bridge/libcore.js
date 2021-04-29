@@ -14,7 +14,7 @@ import { LowerThanMinimumRelayFee } from "../../../errors";
 import { validateRecipient } from "../../../bridge/shared";
 import type { AccountBridge, CurrencyBridge } from "../../../types/bridge";
 import type { Account } from "../../../types/account";
-import type { Transaction } from "../types";
+import type { Transaction, NetworkInfo } from "../types";
 import { sync } from "../../../libcore/syncAccount";
 import { scanAccounts } from "../../../libcore/scanAccounts";
 import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
@@ -27,6 +27,7 @@ import { getMinRelayFee } from "../fees";
 import { isChangeOutput, perCoinLogic } from "../transaction";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 import { requiresSatStackReady } from "../satstack";
+import * as explorerConfigAPI from "../../../api/explorerConfig";
 
 const receive = makeAccountBridgeReceive({
   injectGetAddressParams: (account) => {
@@ -69,9 +70,16 @@ const createTransaction = () => ({
   feePerByte: null,
   networkInfo: null,
   useAllAmount: false,
+  feesStrategy: "medium",
 });
 
-const updateTransaction = (t, patch) => ({ ...t, ...patch });
+const updateTransaction = (t, patch) => {
+  const updatedT = { ...t, ...patch };
+  if (updatedT.recipient.toLowerCase().indexOf("bc1") === 0) {
+    updatedT.recipient = updatedT.recipient.toLowerCase();
+  }
+  return updatedT;
+};
 
 const estimateMaxSpendable = async ({
   account,
@@ -187,6 +195,19 @@ const getTransactionStatus = async (a, t) => {
   });
 };
 
+const inferFeePerByte = (t: Transaction, networkInfo: NetworkInfo) => {
+  if (t.feesStrategy) {
+    const speed = networkInfo.feeItems.items.find(
+      (item) => t.feesStrategy === item.speed
+    );
+    if (!speed) {
+      return networkInfo.feeItems.defaultFeePerByte;
+    }
+    return speed.feePerByte;
+  }
+  return t.feePerByte || networkInfo.feeItems.defaultFeePerByte;
+};
+
 const prepareTransaction = async (
   a: Account,
   t: Transaction
@@ -199,7 +220,8 @@ const prepareTransaction = async (
     networkInfo = await getAccountNetworkInfo(a);
     invariant(networkInfo.family === "bitcoin", "bitcoin networkInfo expected");
   }
-  const feePerByte = t.feePerByte || networkInfo.feeItems.defaultFeePerByte;
+
+  const feePerByte = inferFeePerByte(t, networkInfo);
   if (
     t.networkInfo === networkInfo &&
     (feePerByte === t.feePerByte || feePerByte.eq(t.feePerByte || 0))
@@ -214,10 +236,21 @@ const prepareTransaction = async (
   };
 };
 
+const preload = async () => {
+  const explorerConfig = await explorerConfigAPI.preload();
+  return { explorerConfig };
+};
+
+const hydrate = (maybeConfig: mixed) => {
+  if (maybeConfig && maybeConfig.explorerConfig) {
+    explorerConfigAPI.hydrate(maybeConfig.explorerConfig);
+  }
+};
+
 const currencyBridge: CurrencyBridge = {
   scanAccounts,
-  preload: () => Promise.resolve(),
-  hydrate: () => {},
+  preload,
+  hydrate,
 };
 
 const accountBridge: AccountBridge<Transaction> = {

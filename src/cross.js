@@ -9,7 +9,7 @@ import {
   getDerivationScheme,
   asDerivationMode,
 } from "./derivation";
-import { decodeAccountId } from "./account";
+import { decodeAccountId, emptyHistoryCache } from "./account";
 import { getCryptoCurrencyById } from "./currencies";
 
 export type AccountData = {
@@ -35,7 +35,6 @@ export type Settings = {
   pairExchanges: {
     [_: string]: string,
   },
-  developerModeEnabled?: boolean,
   blacklistedTokenIds?: string[],
   hideEmptyTokenAccounts?: boolean,
 };
@@ -175,7 +174,6 @@ const asResultSettings = (unsafe: mixed): Settings => {
     counterValue,
     currenciesSettings,
     pairExchanges,
-    developerModeEnabled,
     blacklistedTokenIds,
     hideEmptyTokenAccounts,
   } = unsafe;
@@ -206,9 +204,6 @@ const asResultSettings = (unsafe: mixed): Settings => {
   };
   if (counterValue && typeof counterValue === "string") {
     res.counterValue = counterValue;
-  }
-  if (developerModeEnabled && typeof developerModeEnabled === "boolean") {
-    res.developerModeEnabled = developerModeEnabled;
   }
   if (hideEmptyTokenAccounts && typeof hideEmptyTokenAccounts === "boolean") {
     res.hideEmptyTokenAccounts = hideEmptyTokenAccounts;
@@ -308,6 +303,7 @@ export const accountDataToAccount = ({
     xpub,
     name,
     starred: false,
+    used: false,
     currency,
     index,
     freshAddress,
@@ -324,6 +320,7 @@ export const accountDataToAccount = ({
     unit: currency.units[0],
     lastSyncDate: new Date(0),
     creationDate: new Date(),
+    balanceHistoryCache: emptyHistoryCache,
   };
   return account;
 };

@@ -24,6 +24,7 @@ import {
   findCompoundToken,
   formatCurrencyUnit,
 } from "../../../currencies";
+import { emptyHistoryCache } from "../../../account";
 import network from "../../../network";
 import { promiseAllBatched } from "../../../promise";
 import { mergeOps } from "../../../bridge/jsHelpers";
@@ -229,6 +230,10 @@ const compoundWithdraw: ModeModule = {
       type: "text",
       label: "Amount",
       value,
+      tooltipI18nKey: transaction.useAllAmount
+        ? "lend.withdraw.steps.confirmation.tooltip.amountWithdrawn"
+        : undefined,
+      tooltipI18nArgs: { tokenName: ctoken.units[0].code },
     });
 
     fields.push(contractField(ctoken));
@@ -380,6 +385,7 @@ export function prepareTokenAccounts(
             pendingOperations: [],
             starred: false,
             swapHistory: [],
+            balanceHistoryCache: emptyHistoryCache, // calculated in the jsHelpers
           }
         : null
     )

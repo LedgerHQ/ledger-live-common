@@ -21,7 +21,7 @@ import type {
   CryptoCurrency,
 } from "../types";
 import { getOperationAmountNumberWithInternals } from "../operation";
-import { flattenAccounts, getAccountCurrency } from "../account";
+import { flattenAccounts, getAccountCurrency } from "../account/helpers";
 import { getEnv } from "../env";
 import { getPortfolioRangeConfig, getDates } from "./range";
 
@@ -370,13 +370,13 @@ export function getCurrencyPortfolio(
   return ret;
 }
 
-const defaultAssetsDistribution = {
+export const defaultAssetsDistribution = {
   minShowFirst: 1,
   maxShowFirst: 6,
   showFirstThreshold: 0.95,
 };
 
-type AssetsDistributionOpts = typeof defaultAssetsDistribution;
+export type AssetsDistributionOpts = typeof defaultAssetsDistribution;
 
 const assetsDistributionNotAvailable: AssetsDistribution = {
   isAvailable: false,
