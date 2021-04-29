@@ -53,11 +53,11 @@ export const announcementMachine = Machine(
         on: {
           UPDATE_DATA: {
             target: "updating",
-            actions: assign({ isLoading: true, error: null }),
           },
         },
       },
       updating: {
+        entry: assign({ isLoading: true, error: null }),
         invoke: {
           src: "fetchData",
           onDone: {

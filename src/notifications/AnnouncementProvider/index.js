@@ -1,6 +1,6 @@
 // @flow
 
-import React, { createContext, useMemo, useCallback, useContext } from "react";
+import React, { createContext, useMemo, useCallback, useContext, useEffect } from "react";
 import differenceBy from "lodash/differenceBy";
 import { useMachine } from "@xstate/react";
 import type { Announcement, AnnouncementsUserSettings, State } from "./types";
@@ -123,6 +123,10 @@ export const AnnouncementProvider = ({
     },
   });
 
+  useEffect(() => {
+    send({ type: "UPDATE_DATA" });
+  }, [context]);
+
   const api = useMemo(
     () => ({
       updateCache: async () => {
@@ -132,7 +136,7 @@ export const AnnouncementProvider = ({
         send({ type: "SET_AS_SEEN", seenId });
       },
     }),
-    [send]
+    [send],
   );
 
   const value = {
