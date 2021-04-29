@@ -43,12 +43,36 @@ describe("API sanity", () => {
     expect(
       calculate(state, { from: bitcoin, to: usd, value: 10000000 })
     ).toBeGreaterThan(1000);
+  });
+  test("resilience when no network with a cache", async () => {
+    const userSettings = {
+      trackingPairs: [
+        {
+          from: bitcoin,
+          to: usd,
+          startDate: new Date(now - 200 * 24 * 60 * 60 * 1000),
+        },
+      ],
+      autofillGaps: true, // this one is important for resilience
+    };
+    let state = await loadCountervalues(initialState, userSettings);
     shouldStopNetwork = true;
     state = await loadCountervalues(state, userSettings);
+    for (let i = 0; i < 7; i++) {
+      const value = calculate(state, {
+        date: new Date(now - i * 24 * 60 * 60 * 1000),
+        disableRounding: true,
+        from: bitcoin,
+        to: usd,
+        value: 1000000,
+      });
+      expect(value).toBeDefined();
+    }
     expect(
       calculate(state, { from: bitcoin, to: usd, value: 10000000 })
     ).toBeGreaterThan(1000);
   });
+
   test("recent days have different rates for BTC USD", async () => {
     const state = await loadCountervalues(initialState, {
       trackingPairs: [

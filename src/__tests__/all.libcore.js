@@ -1,19 +1,30 @@
 // @flow
 
-/*
-import { from } from "rxjs";
-import { mergeAll } from "rxjs/operators";
-import { flatMap } from "lodash";
-*/
 import { log } from "@ledgerhq/logs";
+import axios from "axios";
 import { setup } from "./test-helpers/libcore-setup";
 import { withLibcore, afterLibcoreGC } from "../libcore/access";
 import { delay } from "../promise";
 import { testBridge } from "./test-helpers/bridge";
 import dataset from "../generated/test-dataset";
 import specifics from "../generated/test-specifics";
-import type { DatasetTest } from "../types";
 import { disconnectAll } from "../api";
+import { reduce, filter, map } from "rxjs/operators";
+import type {
+  Account,
+  Transaction,
+  AccountBridge,
+  SyncConfig,
+  DatasetTest,
+} from "../types";
+import { fromAccountRaw } from "../account";
+import { getCryptoCurrencyById } from "../currencies";
+import { getAccountBridge, getCurrencyBridge } from "../bridge";
+import {
+  mockDeviceWithAPDUs,
+  releaseMockDevice,
+} from "./test-helpers/mockDevice";
+import { implicitMigration } from "../migrations/accounts";
 
 // Disconnect all api clients that could be open.
 afterAll(async () => {
@@ -21,6 +32,12 @@ afterAll(async () => {
 });
 
 setup("libcore");
+
+let shouldStopNetwork = false;
+axios.interceptors.request.use((r) => {
+  if (shouldStopNetwork) throw new Error("stopping http query");
+  return r;
+});
 
 test("libcore version", async () => {
   const v = await withLibcore((core) => core.LedgerCore.getStringVersion());
@@ -105,3 +122,79 @@ describe("libcore access", () => {
     expect(gcjob).toBe(1);
   });
 });
+
+const defaultSyncConfig = {
+  paginationConfig: {},
+  blacklistedTokenIds: [],
+};
+
+Object.keys(dataset).map((family) => {
+  if (family !== "bitcoin") return; // only do it for bitcoin family for now
+  const data: DatasetTest<any> = dataset[family];
+  describe("scanAccounts should fail quickly without network", () => {
+    beforeEach(() => {
+      shouldStopNetwork = true;
+    });
+    afterEach(() => {
+      shouldStopNetwork = false;
+    });
+    Object.keys(data.currencies).forEach((cid) => {
+      const currencyData = data.currencies[cid];
+      const currency = getCryptoCurrencyById(cid);
+      const bridge = getCurrencyBridge(currency);
+
+      const { scanAccounts, accounts } = currencyData;
+
+      if (scanAccounts) {
+        scanAccounts.forEach((scanAccount) => {
+          test("scanAccounts " + scanAccount.name + " " + cid, () => {
+            async function f() {
+              const deviceId = mockDeviceWithAPDUs(scanAccount.apdus);
+              try {
+                const accounts = await bridge
+                  .scanAccounts({
+                    currency,
+                    deviceId,
+                    syncConfig: defaultSyncConfig,
+                  })
+                  .pipe(
+                    filter((e) => e.type === "discovered"),
+                    map((e) => e.account),
+                    reduce((all, a) => all.concat(a), [])
+                  )
+                  .toPromise();
+
+                return implicitMigration(accounts);
+              } finally {
+                releaseMockDevice(deviceId);
+              }
+            }
+
+            return expect(f()).rejects.toBeDefined();
+          });
+        });
+      }
+
+      if (accounts) {
+        accounts.forEach((accountData) => {
+          const account = fromAccountRaw(accountData.raw);
+          test("syncAccount " + account.name, () => {
+            const bridge = getAccountBridge(account);
+            return expect(syncAccount(bridge, account)).rejects.toBeDefined();
+          });
+        });
+      }
+    });
+  });
+});
+
+function syncAccount<T: Transaction>(
+  bridge: AccountBridge<T>,
+  account: Account,
+  syncConfig: SyncConfig = defaultSyncConfig
+): Promise<Account> {
+  return bridge
+    .sync(account, syncConfig)
+    .pipe(reduce((a, f: (Account) => Account) => f(a), account))
+    .toPromise();
+}
