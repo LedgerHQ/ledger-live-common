@@ -1,6 +1,10 @@
 //@flow
 import { BigNumber } from "bignumber.js";
-import StellarSdk, { AccountRecord } from "stellar-sdk";
+import StellarSdk, {
+  AccountRecord,
+  NotFoundError,
+  NetworkError,
+} from "stellar-sdk";
 import { log } from "@ledgerhq/logs";
 import { getEnv } from "../../../env";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
@@ -9,6 +13,7 @@ import {
   getAccountSpendableBalance,
   rawOperationsToOperations,
 } from "../logic";
+import { NetworkDown } from "@ledgerhq/errors";
 
 const LIMIT = getEnv("API_STELLAR_HORIZON_FETCH_LIMIT");
 const FALLBACK_BASE_FEE = 100;
@@ -123,7 +128,23 @@ export const fetchOperations = async (
       .cursor(startAt)
       .call();
   } catch (e) {
-    return [];
+    // FIXME: terrible hacks, because Stellar SDK fails to cast network failures to typed errors in react-native...
+    // (https://github.com/stellar/js-stellar-sdk/issues/638)
+    if (
+      e instanceof NotFoundError ||
+      (e && e.toString().match(/Error: Request failed with status code 404/g))
+    ) {
+      return [];
+    }
+    if (
+      e instanceof NetworkError ||
+      (e && e.toString().match(/Error: getaddrinfo ENOTFOUND/g)) ||
+      (e && e.toString().match(/undefined is not an object/g))
+    ) {
+      throw new NetworkDown();
+    }
+
+    throw e;
   }
 
   if (!rawOperations || !rawOperations.records.length) {
@@ -181,8 +202,8 @@ export const fetchAccountNetworkInfo = async (
 };
 
 export const fetchSequence = async (a: Account) => {
-  const extendedAccount = await server.loadAccount(a.freshAddress);
-  return BigNumber(extendedAccount.sequence);
+  const extendedAccount = await loadAccount(a.freshAddress);
+  return extendedAccount ? BigNumber(extendedAccount.sequence) : BigNumber(0);
 };
 
 export const fetchSigners = async (a: Account) => {
@@ -250,8 +271,12 @@ export const buildTransactionBuilder = (
 
 export const loadAccount = async (addr: string) => {
   if (!addr || !addr.length) {
-    return {};
+    return null;
   }
 
-  return await server.loadAccount(addr);
+  try {
+    return await server.loadAccount(addr);
+  } catch (e) {
+    return null;
+  }
 };
