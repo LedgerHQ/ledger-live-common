@@ -13,7 +13,7 @@ import {
   getAccountSpendableBalance,
   rawOperationsToOperations,
 } from "../logic";
-import { NetworkDown } from "@ledgerhq/errors";
+import { NetworkDown, LedgerAPI4xx, LedgerAPI5xx } from "@ledgerhq/errors";
 
 const LIMIT = getEnv("API_STELLAR_HORIZON_FETCH_LIMIT");
 const FALLBACK_BASE_FEE = 100;
@@ -130,16 +130,20 @@ export const fetchOperations = async (
   } catch (e) {
     // FIXME: terrible hacks, because Stellar SDK fails to cast network failures to typed errors in react-native...
     // (https://github.com/stellar/js-stellar-sdk/issues/638)
-    if (
-      e instanceof NotFoundError ||
-      (e && e.toString().match(/Error: Request failed with status code 404/g))
-    ) {
+    const errorMsg = e ? e.toString() : "";
+    if (e instanceof NotFoundError || errorMsg.match(/status code 404/)) {
       return [];
+    }
+    if (errorMsg.match(/status code 4[0-9]{2}/)) {
+      return new LedgerAPI4xx();
+    }
+    if (errorMsg.match(/status code 5[0-9]{2}/)) {
+      return new LedgerAPI5xx();
     }
     if (
       e instanceof NetworkError ||
-      (e && e.toString().match(/Error: getaddrinfo ENOTFOUND/g)) ||
-      (e && e.toString().match(/undefined is not an object/g))
+      errorMsg.match(/ECONNRESET|ECONNREFUSED|ENOTFOUND|EPIPE|ETIMEDOUT/) ||
+      errorMsg.match(/undefined is not an object/)
     ) {
       throw new NetworkDown();
     }
