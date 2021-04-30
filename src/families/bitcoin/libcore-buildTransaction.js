@@ -102,7 +102,8 @@ async function bitcoinBuildTransaction({
 
   await transactionBuilder.pickInputs(
     utxoStrategy.strategy,
-    0 /* not used, out of int32 range issue. patched in signature time. */
+    0 /* not used, out of int32 range issue. patched in signature time. */,
+    0 /* this is the "maxUtxo" parameter, not used at the moment. we will fix it when we add "highest_first_limit_utxo" or "limit_utxo" strategy for ledger live. */
   );
   if (isCancelled()) return;
 
