@@ -396,7 +396,9 @@ export function prepareTokenAccounts(
   return subAccounts.concat(implicitCTokenAccounts);
 }
 
-const ctokenToGeneratedTokenOpMapping: { [_: OperationType]: ?OperationType } = {
+const ctokenToGeneratedTokenOpMapping: {
+  [_: OperationType]: ?OperationType,
+} = {
   IN: "SUPPLY",
   OUT: "REDEEM",
 };
@@ -486,7 +488,10 @@ export async function digestTokenAccounts(
             if (!type) return;
 
             const tokenOpType = ctokenToTokenOpMapping[ctokenOp.type];
-            const matchingTokenOp = a.operations.find(tokenOp => tokenOp.id === `${a.id}-${ctokenOp.hash}-${tokenOpType}`)
+            const matchingTokenOp = a.operations.find(
+              (tokenOp) =>
+                tokenOp.id === `${a.id}-${ctokenOp.hash}-${tokenOpType}`
+            );
             const value = matchingTokenOp.value;
 
             return {
