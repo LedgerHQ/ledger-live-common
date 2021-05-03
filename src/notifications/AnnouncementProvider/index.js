@@ -1,6 +1,12 @@
 // @flow
 
-import React, { createContext, useMemo, useCallback, useContext, useEffect } from "react";
+import React, {
+  createContext,
+  useMemo,
+  useCallback,
+  useContext,
+  useEffect,
+} from "react";
 import differenceBy from "lodash/differenceBy";
 import { useMachine } from "@xstate/react";
 import type { Announcement, AnnouncementsUserSettings, State } from "./types";
@@ -136,7 +142,7 @@ export const AnnouncementProvider = ({
         send({ type: "SET_AS_SEEN", seenId });
       },
     }),
-    [send],
+    [send]
   );
 
   const value = {
