@@ -478,7 +478,10 @@ export async function digestTokenAccounts(
         // cOUT => REDEEM
         const rates = await fetchHistoricalRates(
           ctoken,
-          ctokenAccount.operations.map((op) => op.blockHeight)
+          ctokenAccount.operations.reduce(
+            (prev, op) => (op.blockHeight ? [...prev, op.blockHeight] : prev),
+            []
+          )
         );
 
         const newOps = ctokenAccount.operations
@@ -488,10 +491,12 @@ export async function digestTokenAccounts(
             if (!type) return;
 
             const tokenOpType = ctokenToTokenOpMapping[ctokenOp.type];
+            if (!tokenOpType) return;
             const matchingTokenOp = a.operations.find(
               (tokenOp) =>
                 tokenOp.id === `${a.id}-${ctokenOp.hash}-${tokenOpType}`
             );
+            if (!matchingTokenOp) return;
             const value = matchingTokenOp.value;
 
             return {
