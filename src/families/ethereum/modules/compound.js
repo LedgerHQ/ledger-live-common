@@ -396,9 +396,14 @@ export function prepareTokenAccounts(
   return subAccounts.concat(implicitCTokenAccounts);
 }
 
-const cdaiToDaiOpMapping: { [_: OperationType]: ?OperationType } = {
+const ctokenToGeneratedTokenOpMapping: { [_: OperationType]: ?OperationType } = {
   IN: "SUPPLY",
   OUT: "REDEEM",
+};
+
+const ctokenToTokenOpMapping: { [_: OperationType]: ?OperationType } = {
+  IN: "OUT",
+  OUT: "IN",
 };
 
 export async function digestTokenAccounts(
@@ -471,23 +476,27 @@ export async function digestTokenAccounts(
         // cOUT => REDEEM
         const rates = await fetchHistoricalRates(
           ctoken,
-          ctokenAccount.operations.map((op) => op.date)
+          ctokenAccount.operations.map((op) => op.blockHeight)
         );
 
         const newOps = ctokenAccount.operations
-          .map((op, i) => {
+          .map((ctokenOp, i) => {
             const { rate } = rates[i];
-            const value = op.value.times(rate).integerValue();
-            const type = cdaiToDaiOpMapping[op.type];
+            const type = ctokenToGeneratedTokenOpMapping[ctokenOp.type];
             if (!type) return;
+
+            const tokenOpType = ctokenToTokenOpMapping[ctokenOp.type];
+            const matchingTokenOp = a.operations.find(tokenOp => tokenOp.id === `${a.id}-${ctokenOp.hash}-${tokenOpType}`)
+            const value = matchingTokenOp.value;
+
             return {
-              ...op,
-              id: `${a.id}-${op.hash}-${type}`,
+              ...ctokenOp,
+              id: `${a.id}-${ctokenOp.hash}-${type}`,
               type,
               value,
               accountId: a.id,
               extra: {
-                compoundValue: op.value.toString(10),
+                compoundValue: ctokenOp.value.toString(10),
                 rate: rate.toString(10),
               },
             };
@@ -581,11 +590,11 @@ type HistoRate = {
 
 async function fetchHistoricalRates(
   token,
-  dates: Date[]
+  blockNumbers: number[]
 ): Promise<HistoRate[]> {
-  const all = await promiseAllBatched(3, dates, async (date) => {
+  const all = await promiseAllBatched(3, blockNumbers, async (blockNumber) => {
     const { data } = await fetch("/ctoken", {
-      block_timestamp: Math.round(date.getTime() / 1000),
+      block_number: blockNumber,
       addresses: [token.contractAddress],
     });
     const cToken = data.cToken.find(
