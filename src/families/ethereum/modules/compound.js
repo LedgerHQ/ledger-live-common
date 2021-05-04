@@ -476,42 +476,39 @@ export async function digestTokenAccounts(
         // operations, C* to * conversions with the historical rates
         // cIN => SUPPLY
         // cOUT => REDEEM
-        const rates = await fetchHistoricalRates(
-          ctoken,
-          ctokenAccount.operations.reduce(
-            (prev, op) => (op.blockHeight ? [...prev, op.blockHeight] : prev),
-            []
-          )
-        );
+        const blockNumberSet = new Set();
+        ctokenAccount.operations.forEach(({ blockHeight }) => {
+          if (typeof blockHeight !== "number") return;
+          blockNumberSet.add(blockHeight);
+        });
+        const rates = await fetchHistoricalRates(ctoken, [...blockNumberSet]);
 
-        const newOps = ctokenAccount.operations
-          .map((ctokenOp, i) => {
-            const { rate } = rates[i];
-            const type = ctokenToGeneratedTokenOpMapping[ctokenOp.type];
-            if (!type) return;
+        const newOps = [];
+        ctokenAccount.operations.forEach((ctokenOp, i) => {
+          const { rate } = rates[i];
+          const type = ctokenToGeneratedTokenOpMapping[ctokenOp.type];
+          const tokenOpType = ctokenToTokenOpMapping[ctokenOp.type];
+          if (!type || !tokenOpType) return;
 
-            const tokenOpType = ctokenToTokenOpMapping[ctokenOp.type];
-            if (!tokenOpType) return;
-            const matchingTokenOp = a.operations.find(
-              (tokenOp) =>
-                tokenOp.id === `${a.id}-${ctokenOp.hash}-${tokenOpType}`
-            );
-            if (!matchingTokenOp) return;
-            const value = matchingTokenOp.value;
+          const matchingTokenOp = a.operations.find(
+            (tokenOp) =>
+              tokenOp.id === `${a.id}-${ctokenOp.hash}-${tokenOpType}`
+          );
+          if (!matchingTokenOp) return;
 
-            return {
-              ...ctokenOp,
-              id: `${a.id}-${ctokenOp.hash}-${type}`,
-              type,
-              value,
-              accountId: a.id,
-              extra: {
-                compoundValue: ctokenOp.value.toString(10),
-                rate: rate.toString(10),
-              },
-            };
-          })
-          .filter(Boolean);
+          const newOp = {
+            ...ctokenOp,
+            id: `${a.id}-${ctokenOp.hash}-${type}`,
+            type,
+            value: matchingTokenOp.value,
+            accountId: a.id,
+            extra: {
+              compoundValue: ctokenOp.value.toString(10),
+              rate: rate.toString(10),
+            },
+          };
+          newOps.push(newOp);
+        });
 
         // TODO: for perf, we can be a slightly more conservative and keep refs as much as possible to not have a ref changes above
 
