@@ -46,7 +46,7 @@ type State = {|
   isLoading: boolean,
   requestQuitApp: boolean,
   requestOpenApp: ?string,
-  requiresAppInstallation: ?{ appName: string },
+  requiresAppInstallation: ?{ appNames: string[] },
   opened: boolean,
   appAndVersion: ?AppAndVersion,
   unresponsive: boolean,
@@ -75,6 +75,7 @@ export type AppRequest = {
   currency?: ?CryptoCurrency,
   account?: ?Account,
   tokenCurrency?: ?TokenCurrency,
+  dependencies?: AppRequest[],
 };
 
 export type AppResult = {|
@@ -247,7 +248,7 @@ const reducer = (state: State, e: Event): State => {
         allowManagerRequestedWording: null,
       };
 
-    case "app-not-installed":
+    case "apps-not-installed":
       return {
         requestQuitApp: false,
         requestOpenApp: null,
@@ -263,7 +264,7 @@ const reducer = (state: State, e: Event): State => {
         allowOpeningRequestedWording: null,
         allowManagerGranted: false,
         allowManagerRequestedWording: null,
-        requiresAppInstallation: { appName: e.appName },
+        requiresAppInstallation: { appNames: e.appNames },
       };
 
     case "opened":
@@ -298,6 +299,7 @@ function inferCommandParams(appRequest: AppRequest) {
   let appName = appRequest.appName;
   const account = appRequest.account;
   let currency = appRequest.currency;
+  let dependencies = appRequest.dependencies;
   if (!currency && account) {
     currency = account.currency;
   }
@@ -307,8 +309,12 @@ function inferCommandParams(appRequest: AppRequest) {
 
   invariant(appName, "appName or currency or account is missing");
 
+  if (dependencies) {
+    dependencies = dependencies.map((d) => inferCommandParams(d).appName);
+  }
+
   if (!currency) {
-    return { appName };
+    return { appName, dependencies };
   }
 
   let extra;
@@ -331,6 +337,7 @@ function inferCommandParams(appRequest: AppRequest) {
 
   return {
     appName,
+    dependencies,
     requiresDerivation: {
       derivationMode,
       path: derivationPath,

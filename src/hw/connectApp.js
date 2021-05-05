@@ -37,6 +37,7 @@ export type Input = {
   devicePath: string,
   appName: string,
   requiresDerivation?: RequiresDerivation,
+  dependencies?: string[],
 };
 
 export type AppAndVersion = {
@@ -53,7 +54,7 @@ export type ConnectAppEvent =
       wording: string,
     }
   | { type: "device-permission-granted" }
-  | { type: "app-not-installed", appName: string }
+  | { type: "apps-not-installed", appNames: string[] }
   | { type: "stream-install", progress: number }
   | { type: "listing-apps" }
   | { type: "ask-quit-app" }
@@ -75,7 +76,12 @@ export const openAppFromDashboard = (
             case 0x6984:
             case 0x6807:
               return getEnv("EXPERIMENTAL_INLINE_INSTALL")
-                ? streamAppInstall(transport, appName)
+                ? streamAppInstall({
+                    transport,
+                    appNames: [appName],
+                    onSuccessObs: () =>
+                      from(openAppFromDashboard(transport, appName)),
+                  })
                 : of({ type: "app-not-installed", appName });
             case 0x6985:
             case 0x5501:
@@ -154,6 +160,7 @@ const cmd = ({
   devicePath,
   appName,
   requiresDerivation,
+  dependencies,
 }: Input): Observable<ConnectAppEvent> =>
   withDevice(devicePath)((transport) =>
     Observable.create((o) => {
@@ -161,12 +168,20 @@ const cmd = ({
         .pipe(delay(1000))
         .subscribe((e) => o.next(e));
 
-      const sub = defer(() => from(getAppAndVersion(transport)))
-        .pipe(
+      const innerSub = ({ appName, dependencies }: any) =>
+        defer(() => from(getAppAndVersion(transport))).pipe(
           concatMap((appAndVersion): Observable<ConnectAppEvent> => {
             timeoutSub.unsubscribe();
 
             if (isDashboardName(appAndVersion.name)) {
+              // check if we meet dependencies
+              if (dependencies?.length) {
+                return streamAppInstall({
+                  transport,
+                  appNames: [appName, ...dependencies],
+                  onSuccessObs: () => innerSub({ appName }), // NB without deps
+                });
+              }
               // we're in dashboard
               return openAppFromDashboard(transport, appName);
             }
@@ -179,7 +194,9 @@ const cmd = ({
               mustUpgrade(modelId, appAndVersion.name, appAndVersion.version)
             ) {
               return throwError(
-                new UpdateYourApp(null, { managerAppName: appAndVersion.name })
+                new UpdateYourApp(null, {
+                  managerAppName: appAndVersion.name,
+                })
               );
             }
 
@@ -190,7 +207,10 @@ const cmd = ({
                 appName,
               });
             } else {
-              const e: ConnectAppEvent = { type: "opened", app: appAndVersion };
+              const e: ConnectAppEvent = {
+                type: "opened",
+                app: appAndVersion,
+              };
               return of(e);
             }
           }),
@@ -219,8 +239,8 @@ const cmd = ({
             }
             return throwError(e);
           })
-        )
-        .subscribe(o);
+        );
+      const sub = innerSub({ appName, dependencies }).subscribe(o);
 
       return () => {
         timeoutSub.unsubscribe();
