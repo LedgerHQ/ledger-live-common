@@ -54,7 +54,7 @@ export type ConnectAppEvent =
       wording: string,
     }
   | { type: "device-permission-granted" }
-  | { type: "apps-not-installed", appNames: string[] }
+  | { type: "app-not-installed", appNames: string[], appName: string }
   | { type: "stream-install", progress: number }
   | { type: "listing-apps" }
   | { type: "ask-quit-app" }
@@ -82,7 +82,11 @@ export const openAppFromDashboard = (
                     onSuccessObs: () =>
                       from(openAppFromDashboard(transport, appName)),
                   })
-                : of({ type: "app-not-installed", appName });
+                : of({
+                    type: "app-not-installed",
+                    appName,
+                    appNames: [appName],
+                  });
             case 0x6985:
             case 0x5501:
               return throwError(new UserRefusedOnDevice());

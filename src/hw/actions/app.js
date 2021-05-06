@@ -46,7 +46,7 @@ type State = {|
   isLoading: boolean,
   requestQuitApp: boolean,
   requestOpenApp: ?string,
-  requiresAppInstallation: ?{ appNames: string[] },
+  requiresAppInstallation: ?{ appName: string, appNames: string[] },
   opened: boolean,
   appAndVersion: ?AppAndVersion,
   unresponsive: boolean,
@@ -248,7 +248,7 @@ const reducer = (state: State, e: Event): State => {
         allowManagerRequestedWording: null,
       };
 
-    case "apps-not-installed":
+    case "app-not-installed":
       return {
         requestQuitApp: false,
         requestOpenApp: null,
@@ -264,7 +264,10 @@ const reducer = (state: State, e: Event): State => {
         allowOpeningRequestedWording: null,
         allowManagerGranted: false,
         allowManagerRequestedWording: null,
-        requiresAppInstallation: { appNames: e.appNames },
+        requiresAppInstallation: {
+          appNames: e.appNames,
+          appName: e.appName,
+        },
       };
 
     case "opened":

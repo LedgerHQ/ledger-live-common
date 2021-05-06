@@ -48,7 +48,7 @@ export type StreamAppInstallEvent =
     }
   | { type: "listing-apps" }
   | { type: "device-permission-granted" }
-  | { type: "apps-not-installed", appNames: string[] }
+  | { type: "app-not-installed", appName: string, appNames: string[] }
   | { type: "stream-install", progress: number }; // global percentage
 
 export const streamAppInstall = ({
@@ -87,8 +87,9 @@ export const streamAppInstall = ({
             // we fallback to the error case listing the missing apps.
             const missingAppNames: string[] = state.installQueue;
             return of({
-              type: "apps-not-installed",
+              type: "app-not-installed",
               appNames: missingAppNames,
+              appName: missingAppNames[0], // TODO remove when LLD/LLM integrate appNames
             });
           }
 
