@@ -280,23 +280,13 @@ export const makeScanAccounts = (
           );
 
           let result = derivationsCache[path];
-          try {
-            if (!result) {
-              result = await getAddress(transport, {
-                currency,
-                path,
-                derivationMode,
-              });
-              derivationsCache[path] = result;
-            }
-          } catch (e) {
-            // feature detect any denying case that could happen
-            if (
-              e instanceof TransportStatusError ||
-              e instanceof UserRefusedAddress
-            ) {
-              log("scanAccounts", "ignore derivationMode=" + derivationMode);
-            }
+          if (!result) {
+            result = await getAddress(transport, {
+              currency,
+              path,
+              derivationMode,
+            });
+            derivationsCache[path] = result;
           }
           if (!result) continue;
 
