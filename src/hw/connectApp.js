@@ -190,7 +190,7 @@ const cmd = ({
               return openAppFromDashboard(transport, appName);
             }
 
-            if (appAndVersion.name !== appName) {
+            if (dependencies?.length || appAndVersion.name !== appName) {
               return attemptToQuitApp(transport, appAndVersion);
             }
 
