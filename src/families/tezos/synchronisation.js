@@ -88,9 +88,11 @@ const txToOp = ({ address, id: accountId }) => (
   tx: APIOperation
 ): ?Operation => {
   let type;
-  let value;
+  let maybeValue;
   let senders = [];
   let recipients = [];
+  const hasFailed = tx.status !== "applied";
+
   switch (tx.type) {
     case "transaction": {
       const from = tx.sender.address;
@@ -101,29 +103,27 @@ const txToOp = ({ address, id: accountId }) => (
       senders = [address];
       recipients = [address];
       if (from === address && to === address) {
-        value = BigNumber(0);
         type = "OUT";
       } else {
-        value = BigNumber(tx.amount);
+        if (!hasFailed) {
+          maybeValue = BigNumber(tx.amount);
+        }
         type = from === address ? "OUT" : "IN";
       }
       break;
     }
     case "delegation":
-      value = BigNumber(0);
       type = tx.newDelegate ? "DELEGATE" : "UNDELEGATE";
       senders = [address];
       // convention was to use recipient for the new delegation address or "" if undelegation
       recipients = [tx.newDelegate ? tx.newDelegate.address : ""];
       break;
     case "reveal":
-      value = BigNumber(0);
       type = "REVEAL";
       senders = [address];
       recipients = [address];
       break;
     case "origination":
-      value = BigNumber(0);
       type = "CREATE";
       senders = [address];
       recipients = [tx.originatedContract.address];
@@ -141,11 +141,9 @@ const txToOp = ({ address, id: accountId }) => (
     level: blockHeight,
     block: blockHash,
     timestamp,
-    status,
   } = tx;
 
-  const hasFailed = status !== "applied";
-
+  let value = maybeValue || BigNumber(0);
   if (type === "IN" && value.eq(0)) {
     return; // internal op are shown
   }
