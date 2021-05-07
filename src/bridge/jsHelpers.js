@@ -3,11 +3,7 @@ import isEqual from "lodash/isEqual";
 import { BigNumber } from "bignumber.js";
 import { Observable, from } from "rxjs";
 import { log } from "@ledgerhq/logs";
-import {
-  TransportStatusError,
-  UserRefusedAddress,
-  WrongDeviceForAccount,
-} from "@ledgerhq/errors";
+import { WrongDeviceForAccount } from "@ledgerhq/errors";
 import {
   getSeedIdentifierDerivation,
   getDerivationModesForCurrency,
