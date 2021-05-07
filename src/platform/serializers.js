@@ -68,7 +68,7 @@ export function deserializePlatformEthereumTransaction(
     amount: rawTransaction.amount.toString(),
     recipient: rawTransaction.recipient,
     nonce: rawTransaction.nonce,
-    data: rawTransaction.data ? rawTransaction.data.toString() : undefined,
+    data: rawTransaction.data ? Buffer.from(rawTransaction.data) : undefined,
     gasPrice: rawTransaction.gasPrice
       ? new BigNumber(rawTransaction.gasPrice)
       : undefined,
