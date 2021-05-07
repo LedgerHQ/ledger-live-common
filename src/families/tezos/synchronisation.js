@@ -28,7 +28,7 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
   let { currency, address, initialAccount } = infoInput;
 
   const initialStableOperations = initialAccount
-    ? initialAccount.operations // TODO stableOperations like eth
+    ? initialAccount.operations // TODO stableOperations like eth, we need to full reset if id changed from libcore
     : [];
 
   // fetch transactions, incrementally if possible
@@ -53,8 +53,6 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
     "unsupported account of type ",
     apiAccount.type
   );
-
-  console.log(apiAccount);
 
   // TODO paginate with lastId
 
@@ -86,43 +84,94 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
   return accountShape;
 };
 
-const txToOp = ({ address, id }) => (tx: APIOperation): ?Operation => {
-  if (tx.type !== "transaction") {
-    console.log(tx);
-    return;
+const txToOp = ({ address, id: accountId }) => (
+  tx: APIOperation
+): ?Operation => {
+  let type;
+  let value;
+  let senders = [];
+  let recipients = [];
+  switch (tx.type) {
+    case "transaction": {
+      const from = tx.sender.address;
+      const to = tx.target.address;
+      if (from !== address && to !== address) {
+        return; // not concerning the account
+      }
+      senders = [address];
+      recipients = [address];
+      if (from === address && to === address) {
+        value = BigNumber(0);
+        type = "OUT";
+      } else {
+        value = BigNumber(tx.amount);
+        type = from === address ? "OUT" : "IN";
+      }
+      break;
+    }
+    case "delegation":
+      value = BigNumber(0);
+      type = tx.newDelegate ? "DELEGATE" : "UNDELEGATE";
+      senders = [address];
+      // convention was to use recipient for the new delegation address or "" if undelegation
+      recipients = [tx.newDelegate ? tx.newDelegate.address : ""];
+      break;
+    case "reveal":
+      value = BigNumber(0);
+      type = "REVEAL";
+      senders = [address];
+      recipients = [address];
+      break;
+    case "origination":
+      value = BigNumber(0);
+      type = "CREATE";
+      senders = [address];
+      recipients = [tx.originatedContract.address];
+      break;
+    default:
+      console.warn("unsupported tx:", tx);
+      return;
   }
+
   const {
     hash,
-    amount,
-    gasUsed,
-    storageUsed,
-    sender,
-    target,
-    level,
-    block,
+    allocationFee,
+    bakerFee,
+    storageFee,
+    level: blockHeight,
+    block: blockHash,
     timestamp,
     status,
   } = tx;
-  console.log(tx);
-  const fee = BigNumber(gasUsed).plus(storageUsed);
-  const value = BigNumber(amount); // TODO + gas?
-  const blockHeight = level;
-  const blockHash = block;
-  const type = sender.address === address ? "OUT" : "IN";
+
+  const hasFailed = status !== "applied";
+
+  if (type === "IN" && value.eq(0)) {
+    return; // internal op are shown
+  }
+
+  const fee = BigNumber(allocationFee || 0)
+    .plus(storageFee || 0)
+    .plus(bakerFee || 0);
+
+  if (type !== "IN") {
+    value = value.plus(fee);
+  }
+
   return {
-    id: encodeOperationId(id, hash, type),
+    id: encodeOperationId(accountId, hash, type),
     hash,
     type,
     value,
     fee,
-    senders: [sender.address],
-    recipients: [target.address],
+    senders,
+    recipients,
     blockHeight,
     blockHash,
-    accountId: id,
+    accountId,
     date: new Date(timestamp),
     extra: {},
-    hasFailed: status === "applied",
+    hasFailed,
   };
 };
 

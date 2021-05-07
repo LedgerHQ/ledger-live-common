@@ -26,20 +26,47 @@ type APIAccount =
       firstActivityTime: string,
     };
 
-export type APIOperation = {
+type CommonOperationType = {
   type: "transaction",
   id: number,
   hash: string,
-  amount: number,
-  gasUsed: number,
-  storageUsed: number,
+  storageFee?: number,
+  allocationFee?: number,
+  bakerFee: number,
   timestamp: string,
-  sender: { address: string },
-  target: { address: string },
   level: number,
   block: string,
   status: "applied" | "failed" | "backtracked" | "skipped",
 };
+
+export type APIOperation =
+  | {
+      type: "transaction",
+      amount: number,
+      sender: { address: string },
+      target: { address: string },
+      ...CommonOperationType,
+    }
+  | {
+      type: "reveal",
+      ...CommonOperationType,
+    }
+  | {
+      type: "delegation",
+      ...CommonOperationType,
+      prevDelegate: ?{ address: string },
+      newDelegate: ?{ address: string },
+    }
+  | {
+      type: "origination",
+      ...CommonOperationType,
+      originatedContract: {
+        address: string,
+      },
+    }
+  | {
+      type: "", // this is to express fact we have others and we need to always filter out others
+    };
 
 const api = {
   async getBlockCount(): Promise<number> {
