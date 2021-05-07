@@ -74,9 +74,9 @@ export const streamAppInstall = ({
         }
         if (e.type === "result") {
           // stream install with the result of list apps
-          let state = initState(e.result);
-          appNames.forEach(
-            (name) => (state = reducer(state, { type: "install", name }))
+          const state = appNames.reduce(
+            (state, name) => reducer(state, { type: "install", name }),
+            initState(e.result)
           );
 
           if (
