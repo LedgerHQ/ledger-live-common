@@ -22,6 +22,10 @@ import type {
   PolkadotResourcesRaw,
 } from "../families/polkadot/types";
 import type {
+  TezosResources,
+  TezosResourcesRaw,
+} from "../families/tezos/types";
+import type {
   BalanceHistory,
   BalanceHistoryRaw,
   PortfolioRange,
@@ -234,6 +238,7 @@ export type Account = {
   cosmosResources?: CosmosResources,
   algorandResources?: AlgorandResources,
   polkadotResources?: PolkadotResources,
+  tezosResources?: TezosResources,
 
   // Swap operations linked to this account
   swapHistory: SwapOperation[],
@@ -322,6 +327,7 @@ export type AccountRaw = {
   cosmosResources?: CosmosResourcesRaw,
   algorandResources?: AlgorandResourcesRaw,
   polkadotResources?: PolkadotResourcesRaw,
+  tezosResources?: TezosResourcesRaw,
   swapHistory?: SwapOperationRaw[],
   syncHash?: string,
 };

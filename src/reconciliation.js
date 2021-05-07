@@ -26,6 +26,7 @@ import {
   fromBalanceHistoryRawMap,
   fromAlgorandResourcesRaw,
   fromPolkadotResourcesRaw,
+  fromTezosResourcesRaw,
 } from "./account";
 import consoleWarnExpectToEqual from "./consoleWarnExpectToEqual";
 
@@ -336,6 +337,14 @@ export function patchAccount(
     next.polkadotResources = fromPolkadotResourcesRaw(
       updatedRaw.polkadotResources
     );
+    changed = true;
+  }
+
+  if (
+    updatedRaw.tezosResources &&
+    account.tezosResources !== updatedRaw.tezosResources
+  ) {
+    next.tezosResources = fromTezosResourcesRaw(updatedRaw.tezosResources);
     changed = true;
   }
 
