@@ -74,7 +74,7 @@ describe("cosmos/react", () => {
           hooks.useCosmosMappedDelegations(account, "claimReward")
         );
 
-        expect(result.current.length).toBe(3);
+        expect(result.current.length).toBe(4);
       });
     });
   });
