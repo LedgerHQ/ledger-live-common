@@ -6,13 +6,11 @@ import {
   JSONRPCClient,
 } from "json-rpc-2.0";
 
-type LedgerLiveAPIHandlers = {
-
-};
+type LedgerLiveAPIHandlers = {};
 
 type SendFunc = (request: any) => void;
 
-export const useLedgerLiveApi = (
+export const useJSONRPCServer = (
   handlers: LedgerLiveAPIHandlers,
   send: SendFunc
 ) => {
