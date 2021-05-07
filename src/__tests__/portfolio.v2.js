@@ -62,7 +62,7 @@ describe("Portfolio", () => {
           },
         ];
         const res = getPortfolioCount(accounts, range);
-        expect(res).toBe(489);
+        expect(res).toBe(491);
       });
 
       it("should return at least a year", () => {
@@ -186,6 +186,31 @@ describe("Portfolio", () => {
         to
       );
       expect(portfolio.histories).toMatchObject([history, history2]);
+    });
+
+    it("should recompose partial cache", async () => {
+      const account = genAccountBitcoin("bitcoin_whatever");
+      const { state, to } = await loadCV(account);
+      const { history: history } = getBalanceHistoryWithCountervalue(
+        account,
+        "month",
+        100,
+        state,
+        to
+      );
+      const { latestDate, balances } = account.balanceHistoryCache.DAY;
+      account.balanceHistoryCache.DAY = {
+        latestDate: (latestDate || 0) - 24 * 1000 * 60 * 60,
+        balances: balances.slice(0, balances.length - 2),
+      };
+      const { history: history2 } = getBalanceHistoryWithCountervalue(
+        account,
+        "month",
+        100,
+        state,
+        to
+      );
+      expect(history).toMatchObject(history2);
     });
 
     it("should double the amounts with twice the same account", async () => {

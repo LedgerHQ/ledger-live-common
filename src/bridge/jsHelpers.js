@@ -3,11 +3,7 @@ import isEqual from "lodash/isEqual";
 import { BigNumber } from "bignumber.js";
 import { Observable, from } from "rxjs";
 import { log } from "@ledgerhq/logs";
-import {
-  TransportStatusError,
-  UserRefusedAddress,
-  WrongDeviceForAccount,
-} from "@ledgerhq/errors";
+import { WrongDeviceForAccount } from "@ledgerhq/errors";
 import {
   getSeedIdentifierDerivation,
   getDerivationModesForCurrency,
@@ -25,6 +21,9 @@ import {
   isAccountEmpty,
   shouldShowNewAccount,
   clearAccount,
+  emptyHistoryCache,
+  generateHistoryFromOperations,
+  recalculateAccountBalanceHistories,
 } from "../account";
 import { FreshAddressIndexInvalid } from "../errors";
 import type {
@@ -136,22 +135,25 @@ export const makeSync = (
           const a = needClear ? clearAccount(acc) : acc;
           // FIXME reconsider doing mergeOps here. work is redundant for impl like eth
           const operations = mergeOps(a.operations, shape.operations || []);
-          return postSync(a, {
-            ...a,
-            id: accountId,
-            spendableBalance: shape.balance || a.balance,
-            operationsCount: shape.operationsCount || operations.length,
-            lastSyncDate: new Date(),
-            creationDate:
-              operations.length > 0
-                ? operations[operations.length - 1].date
-                : new Date(),
-            ...shape,
-            operations,
-            pendingOperations: a.pendingOperations.filter((op) =>
-              shouldRetainPendingOperation(a, op)
-            ),
-          });
+          return recalculateAccountBalanceHistories(
+            postSync(a, {
+              ...a,
+              id: accountId,
+              spendableBalance: shape.balance || a.balance,
+              operationsCount: shape.operationsCount || operations.length,
+              lastSyncDate: new Date(),
+              creationDate:
+                operations.length > 0
+                  ? operations[operations.length - 1].date
+                  : new Date(),
+              ...shape,
+              operations,
+              pendingOperations: a.pendingOperations.filter((op) =>
+                shouldRetainPendingOperation(a, op)
+              ),
+            }),
+            acc
+          );
         });
         o.complete();
       } catch (e) {
@@ -239,12 +241,17 @@ export const makeScanAccounts = (
         balance,
         spendableBalance,
         blockHeight: 0,
+        balanceHistoryCache: emptyHistoryCache,
       };
 
       const account = {
         ...initialAccount,
         ...accountShape,
       };
+
+      if (account.balanceHistoryCache === emptyHistoryCache) {
+        account.balanceHistoryCache = generateHistoryFromOperations(account);
+      }
 
       if (!account.used) {
         account.used = !isAccountEmpty(account);
@@ -269,23 +276,13 @@ export const makeScanAccounts = (
           );
 
           let result = derivationsCache[path];
-          try {
-            if (!result) {
-              result = await getAddress(transport, {
-                currency,
-                path,
-                derivationMode,
-              });
-              derivationsCache[path] = result;
-            }
-          } catch (e) {
-            // feature detect any denying case that could happen
-            if (
-              e instanceof TransportStatusError ||
-              e instanceof UserRefusedAddress
-            ) {
-              log("scanAccounts", "ignore derivationMode=" + derivationMode);
-            }
+          if (!result) {
+            result = await getAddress(transport, {
+              currency,
+              path,
+              derivationMode,
+            });
+            derivationsCache[path] = result;
           }
           if (!result) continue;
 
