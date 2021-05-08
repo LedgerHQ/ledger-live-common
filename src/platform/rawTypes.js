@@ -11,19 +11,18 @@ export type RawPlatformAccount = {
   lastSyncDate: string,
 };
 
-export type RawPlatformTransactionCommon = {
-  family: string,
-  amount: string,
-  recipient: string,
-};
+export interface RawPlatformTransactionCommon {
+  amount: string;
+  recipient: string;
+}
 
-export type RawPlatformEthereumTransaction = {
-  family: "ethereum",
-  nonce?: number,
-  data?: string,
-  gasPrice: ?string,
-  gasLimit: ?string,
-};
+export interface RawPlatformEthereumTransaction
+  extends RawPlatformTransactionCommon {
+  family: "ethereum";
+  nonce: ?number;
+  data: ?string;
+  gasPrice: ?string;
+  gasLimit: ?string;
+}
 
-export type RawPlatformTransaction = RawPlatformTransactionCommon &
-  RawPlatformEthereumTransaction;
+export type RawPlatformTransaction = RawPlatformEthereumTransaction;

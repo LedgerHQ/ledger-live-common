@@ -1,6 +1,6 @@
 // @flow
 
-import { Account, Currency } from "../types";
+import type { Account, CryptoCurrency } from "../types";
 import type { PlatformAccount, PlatformCurrency } from "./types";
 
 export function accountToPlatformAccount(account: Account): PlatformAccount {
@@ -17,7 +17,7 @@ export function accountToPlatformAccount(account: Account): PlatformAccount {
 }
 
 export function currencyToPlatformCurrency(
-  currency: Currency
+  currency: CryptoCurrency
 ): PlatformCurrency {
   return {
     type: currency.type,

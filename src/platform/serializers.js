@@ -10,7 +10,8 @@ import type {
   PlatformTransaction,
   PlatformEthereumTransaction,
 } from "./types";
-import BigNumber from "bignumber.js";
+
+import { BigNumber } from "bignumber.js";
 
 export function serializePlatformAccount(
   account: PlatformAccount
@@ -65,7 +66,7 @@ export function deserializePlatformEthereumTransaction(
 ): PlatformEthereumTransaction {
   return {
     family: rawTransaction.family,
-    amount: rawTransaction.amount.toString(),
+    amount: new BigNumber(rawTransaction.amount),
     recipient: rawTransaction.recipient,
     nonce: rawTransaction.nonce,
     data: rawTransaction.data ? Buffer.from(rawTransaction.data) : undefined,

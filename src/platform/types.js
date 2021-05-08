@@ -29,19 +29,17 @@ export type PlatformCurrency = {
   units: PlatformUnit[],
 };
 
-export type PlatformTransactionCommon = {
-  family: string,
-  amount: BigNumber,
-  recipient: string,
-};
+export interface PlatformTransactionCommon {
+  amount: BigNumber;
+  recipient: string;
+}
 
-export type PlatformEthereumTransaction = {
-  family: "ethereum",
-  nonce?: number,
-  data?: Buffer,
-  gasPrice: ?BigNumber,
-  gasLimit: ?BigNumber,
-};
+export interface PlatformEthereumTransaction extends PlatformTransactionCommon {
+  family: "ethereum";
+  nonce: ?number;
+  data: ?Buffer;
+  gasPrice: ?BigNumber;
+  gasLimit: ?BigNumber;
+}
 
-export type PlatformTransaction = PlatformTransactionCommon &
-  PlatformEthereumTransaction;
+export type PlatformTransaction = PlatformEthereumTransaction;
