@@ -25,4 +25,12 @@ export interface RawPlatformEthereumTransaction
   gasLimit: ?string;
 }
 
-export type RawPlatformTransaction = RawPlatformEthereumTransaction;
+export interface RawPlatformBitcoinTransaction
+  extends RawPlatformTransactionCommon {
+  family: "bitcoin";
+  feePerByte: ?string;
+}
+
+export type RawPlatformTransaction =
+  | RawPlatformEthereumTransaction
+  | RawPlatformBitcoinTransaction;

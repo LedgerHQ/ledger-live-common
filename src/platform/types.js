@@ -42,4 +42,11 @@ export interface PlatformEthereumTransaction extends PlatformTransactionCommon {
   gasLimit: ?BigNumber;
 }
 
-export type PlatformTransaction = PlatformEthereumTransaction;
+export interface PlatformBitcoinTransaction extends PlatformTransactionCommon {
+  family: "bitcoin";
+  feePerByte: ?BigNumber;
+}
+
+export type PlatformTransaction =
+  | PlatformEthereumTransaction
+  | PlatformBitcoinTransaction;

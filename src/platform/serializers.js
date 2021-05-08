@@ -4,11 +4,13 @@ import type {
   RawPlatformAccount,
   RawPlatformTransaction,
   RawPlatformEthereumTransaction,
+  RawPlatformBitcoinTransaction,
 } from "./rawTypes";
 import type {
   PlatformAccount,
   PlatformTransaction,
   PlatformEthereumTransaction,
+  PlatformBitcoinTransaction,
 } from "./types";
 
 import { BigNumber } from "bignumber.js";
@@ -79,21 +81,54 @@ export function deserializePlatformEthereumTransaction(
   };
 }
 
+export function serializePlatformBitcoinTransaction(
+  transaction: PlatformBitcoinTransaction
+): RawPlatformBitcoinTransaction {
+  return {
+    family: transaction.family,
+    amount: transaction.amount.toString(),
+    recipient: transaction.recipient,
+    feePerByte: transaction.feePerByte
+      ? transaction.feePerByte.toString()
+      : undefined,
+  };
+}
+
+export function deserializePlatformBitcoinTransaction(
+  rawTransaction: RawPlatformBitcoinTransaction
+): PlatformBitcoinTransaction {
+  return {
+    family: rawTransaction.family,
+    amount: new BigNumber(rawTransaction.amount),
+    recipient: rawTransaction.recipient,
+    feePerByte: rawTransaction.feePerByte
+      ? new BigNumber(rawTransaction.feePerByte)
+      : undefined,
+  };
+}
+
 export function serializePlatformTransaction(
   transaction: PlatformTransaction
 ): RawPlatformTransaction {
-  if (transaction.family === "ethereum") {
-    return serializePlatformEthereumTransaction(transaction);
+  switch (transaction.family) {
+    case "ethereum":
+      return serializePlatformEthereumTransaction(transaction);
+    case "bitcoin":
+      return serializePlatformBitcoinTransaction(transaction);
+    default:
+      throw new Error(`Can't serialize ${transaction.family} transactions`);
   }
-  throw new Error(`Can't serialize ${transaction.family} transactions`);
 }
 
 export function deserializePlatformTransaction(
   rawTransaction: RawPlatformTransaction
 ): PlatformTransaction {
-  if (rawTransaction.family === "ethereum") {
-    return deserializePlatformEthereumTransaction(rawTransaction);
+  switch (rawTransaction.family) {
+    case "ethereum":
+      return deserializePlatformEthereumTransaction(rawTransaction);
+    case "bitcoin":
+      return deserializePlatformBitcoinTransaction(rawTransaction);
+    default:
+      throw new Error(`Can't deserialize transaction: family not supported`);
   }
-
-  throw new Error(`Can't deserialize ${rawTransaction.family} transactions`);
 }
