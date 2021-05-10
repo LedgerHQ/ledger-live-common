@@ -21,17 +21,40 @@ function formatAccountSpecifics(account: Account): string {
     formatCurrencyUnit(unit, account.spendableBalance, formatConfig) +
     " spendable. ";
 
-  if (cryptoOrgResources.additionalBalance.gt(0)) {
+  if (cryptoOrgResources.bondedBalance.gt(0)) {
     str +=
       formatCurrencyUnit(
         unit,
-        cryptoOrgResources.additionalBalance,
+        cryptoOrgResources.bondedBalance,
         formatConfig
-      ) + " additional. ";
+      ) + " bonded. ";
   }
 
-  if (cryptoOrgResources.nonce) {
-    str += "\nonce : " + cryptoOrgResources.nonce;
+  if (cryptoOrgResources.redelegatingBalance.gt(0)) {
+    str +=
+      formatCurrencyUnit(
+        unit,
+        cryptoOrgResources.redelegatingBalance,
+        formatConfig
+      ) + " redelegatingBalance. ";
+  }
+
+  if (cryptoOrgResources.unbondingBalance.gt(0)) {
+    str +=
+      formatCurrencyUnit(
+        unit,
+        cryptoOrgResources.unbondingBalance,
+        formatConfig
+      ) + " unbondingBalance. ";
+  }
+
+  if (cryptoOrgResources.commissions.gt(0)) {
+    str +=
+      formatCurrencyUnit(
+        unit,
+        cryptoOrgResources.commissions,
+        formatConfig
+      ) + " commissions. ";
   }
 
   return str;

@@ -9,14 +9,13 @@ import {
 import type { Transaction } from "../types";
 import type { AccountBridge, CurrencyBridge } from "../../../types";
 import {
-  scanAccounts,
   signOperation,
   broadcast,
-  sync,
   isInvalidRecipient,
 } from "../../../bridge/mockHelpers";
 import { getMainAccount } from "../../../account";
-import { makeAccountBridgeReceive } from "../../../bridge/mockHelpers";
+import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
+import { scanAccounts, sync } from "../js-synchronisation";
 
 const receive = makeAccountBridgeReceive();
 
@@ -97,4 +96,4 @@ const currencyBridge: CurrencyBridge = {
   hydrate: () => {},
 };
 
-export default { currencyBridge, accountBridge }
+export default { currencyBridge, accountBridge };

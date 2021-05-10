@@ -5,19 +5,33 @@ import type { CryptoOrgResourcesRaw, CryptoOrgResources } from "./types";
 export function toCryptoOrgResourcesRaw(
   r: CryptoOrgResources
 ): CryptoOrgResourcesRaw {
-  const { nonce, additionalBalance } = r;
+  const {
+    bondedBalance,
+    redelegatingBalance,
+    unbondingBalance,
+    commissions,
+  } = r;
   return {
-    nonce,
-    additionalBalance: additionalBalance.toString(),
+    bondedBalance: bondedBalance.toString(),
+    redelegatingBalance: redelegatingBalance.toString(),
+    unbondingBalance: unbondingBalance.toString(),
+    commissions: commissions.toString(),
   };
 }
 
 export function fromCryptoOrgResourcesRaw(
   r: CryptoOrgResourcesRaw
 ): CryptoOrgResources {
-  const { nonce, additionalBalance } = r;
+  const {
+    bondedBalance,
+    redelegatingBalance,
+    unbondingBalance,
+    commissions,
+  } = r;
   return {
-    nonce,
-    additionalBalance: BigNumber(additionalBalance),
+    bondedBalance: BigNumber(bondedBalance),
+    redelegatingBalance: BigNumber(redelegatingBalance),
+    unbondingBalance: BigNumber(unbondingBalance),
+    commissions: BigNumber(commissions),
   };
 }

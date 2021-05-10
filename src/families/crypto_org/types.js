@@ -16,13 +16,17 @@ export type CoreOperationSpecifics = {};
 export type CoreCurrencySpecifics = {};
 
 export type CryptoOrgResources = {|
-  nonce: number,
-  additionalBalance: BigNumber,
+  bondedBalance: BigNumber,
+  redelegatingBalance: BigNumber,
+  unbondingBalance: BigNumber,
+  commissions: BigNumber,
 |};
 
 export type CryptoOrgResourcesRaw = {|
-  nonce: number,
-  additionalBalance: string,
+  bondedBalance: string,
+  redelegatingBalance: string,
+  unbondingBalance: string,
+  commissions: string,
 |};
 
 export type Transaction = {|
@@ -42,17 +46,7 @@ export type TransactionRaw = {|
   // also the transaction fields as raw JSON data
 |};
 
-// NB this must be serializable (no Date, no BigNumber)
-export type CyptoOrgValidatorItem = {|
-  validatorAddress: string,
-  name: string,
-  votingPower: number, // value from 0.0 to 1.0 (normalized percentage)
-  commission: number, // value from 0.0 to 1.0 (normalized percentage)
-  estimatedYearlyRewardsRate: number, // value from 0.0 to 1.0 (normalized percentage)
-|};
-
 export type CryptoOrgPreloadData = {|
-  validators: CyptoOrgValidatorItem[],
 |};
 
 export type NetworkInfo = {};
