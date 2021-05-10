@@ -145,6 +145,16 @@ const envDefinitions = {
     desc:
       "gasLimit * gasPrice to determine the fees price. A too low GAS_PRICE will get rejected before the transaction is broadcast",
   },
+  CRYPTO_ORG_INDEXER: {
+    def: "https://crypto.org/explorer",
+    parser: stringParser,
+    desc: "location of the crypto.org indexer API",
+  },
+  CRYPTO_ORG_RPC_URL: {
+    def: "http://localhost:26657",
+    parser: stringParser,
+    desc: "location of the crypto.org chain node",
+  },
   DEBUG_UTXO_DISPLAY: {
     def: 4,
     parser: intParser,
