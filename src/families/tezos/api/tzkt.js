@@ -98,7 +98,8 @@ const api = {
   async getAccountOperations(
     address: string,
     query: {
-      lastId?: string,
+      lastId?: number,
+      sort?: number,
     }
   ): Promise<APIOperation[]> {
     const { data } = await network({

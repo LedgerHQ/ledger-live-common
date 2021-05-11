@@ -19,10 +19,14 @@ export type TezosOperationTag = $Values<typeof tezosOperationTag>;
 
 export type TezosResources = {|
   revealed: boolean,
+  publicKey: string,
+  counter: number,
 |};
 
 export type TezosResourcesRaw = {|
   revealed: boolean,
+  publicKey: string,
+  counter: number,
 |};
 
 // WILL BE DROPPED =>

@@ -1,12 +1,10 @@
 // @flow
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
-import union from "lodash/union";
-import throttle from "lodash/throttle";
-import flatMap from "lodash/flatMap";
 import { log } from "@ledgerhq/logs";
 import { mergeOps } from "../../bridge/jsHelpers";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
+import { encodeOperationId } from "../../operation";
 import {
   encodeTokenAccountId,
   decodeTokenAccountId,
@@ -14,24 +12,26 @@ import {
   inferSubOperations,
   emptyHistoryCache,
 } from "../../account";
-import {
-  findTokenByAddress,
-  listTokensForCryptoCurrency,
-} from "../../currencies";
-import { encodeOperationId } from "../../operation";
-import type { Operation, TokenAccount, Account } from "../../types";
+import type { Operation, Account } from "../../types";
 import api from "./api/tzkt";
 import type { APIOperation } from "./api/tzkt";
 
 export const getAccountShape: GetAccountShape = async (infoInput) => {
-  let { currency, address, initialAccount } = infoInput;
+  let { address, initialAccount } = infoInput;
 
   const initialStableOperations = initialAccount
-    ? initialAccount.operations // TODO stableOperations like eth, we need to full reset if id changed from libcore
+    ? initialAccount.operations
     : [];
 
   // fetch transactions, incrementally if possible
   const mostRecentStableOperation = initialStableOperations[0];
+
+  let lastId =
+    initialAccount &&
+    areAllOperationsLoaded(initialAccount) &&
+    mostRecentStableOperation
+      ? mostRecentStableOperation.extra.id || undefined
+      : undefined;
 
   const apiAccountPromise = api.getAccountByAddress(address);
   const blocksCountPromise = api.getBlockCount();
@@ -55,12 +55,14 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
 
   // TODO paginate with lastId
 
-  const apiOperations = await fetchAllTransactions(address);
+  const apiOperations = await fetchAllTransactions(address, lastId);
 
-  const { revealed } = apiAccount;
+  const { revealed, publicKey, counter } = apiAccount;
 
   const tezosResources = {
     revealed,
+    publicKey,
+    counter,
   };
 
   const balance = BigNumber(apiAccount.balance);
@@ -157,6 +159,7 @@ const txToOp = ({ address, id: accountId }) => (
   }
 
   let {
+    id,
     hash,
     allocationFee,
     bakerFee,
@@ -198,20 +201,22 @@ const txToOp = ({ address, id: accountId }) => (
     blockHash,
     accountId,
     date: new Date(timestamp),
-    extra: {},
+    extra: {
+      id,
+    },
     hasFailed,
   };
 };
 
 const fetchAllTransactions = async (
   address: string,
-  lastId?: string
+  lastId?: number
 ): Promise<APIOperation[]> => {
   let r;
-  let txs = [];
+  let txs: APIOperation[] = [];
   let maxIteration = 20; // safe limit
   do {
-    r = await api.getAccountOperations(address, { lastId });
+    r = await api.getAccountOperations(address, { lastId, sort: 0 });
     if (r.length === 0) return txs;
     txs = txs.concat(r);
     lastId = txs[txs.length - 1].id;
@@ -222,62 +227,3 @@ const fetchAllTransactions = async (
   } while (--maxIteration);
   return txs;
 };
-
-// TODO share it with ETH!
-// reconciliate the existing token accounts so that refs don't change if no changes is contained
-function reconciliateSubAccounts(tokenAccounts, initialAccount) {
-  let subAccounts;
-  if (initialAccount) {
-    const initialSubAccounts = initialAccount.subAccounts;
-    let anySubAccountHaveChanged = false;
-    const stats = [];
-    if (
-      initialSubAccounts &&
-      tokenAccounts.length !== initialSubAccounts.length
-    ) {
-      stats.push("length differ");
-      anySubAccountHaveChanged = true;
-    }
-    subAccounts = tokenAccounts.map((ta) => {
-      const existing = initialSubAccounts?.find((a) => a.id === ta.id);
-      if (existing) {
-        let shallowEqual = true;
-        if (existing !== ta) {
-          for (let k in existing) {
-            if (existing[k] !== ta[k]) {
-              shallowEqual = false;
-              stats.push(`field ${k} changed for ${ta.id}`);
-              break;
-            }
-          }
-        }
-        if (shallowEqual) {
-          return existing;
-        } else {
-          anySubAccountHaveChanged = true;
-        }
-      } else {
-        anySubAccountHaveChanged = true;
-        stats.push(`new token account ${ta.id}`);
-      }
-      return ta;
-    });
-    if (!anySubAccountHaveChanged && initialSubAccounts) {
-      log(
-        "ethereum",
-        "incremental sync: " +
-          String(initialSubAccounts.length) +
-          " sub accounts have not changed"
-      );
-      subAccounts = initialSubAccounts;
-    } else {
-      log(
-        "ethereum",
-        "incremental sync: sub accounts changed: " + stats.join(", ")
-      );
-    }
-  } else {
-    subAccounts = tokenAccounts.map((a) => a);
-  }
-  return subAccounts;
-}
