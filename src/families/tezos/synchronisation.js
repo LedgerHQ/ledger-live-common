@@ -4,7 +4,6 @@ import { BigNumber } from "bignumber.js";
 import union from "lodash/union";
 import throttle from "lodash/throttle";
 import flatMap from "lodash/flatMap";
-import eip55 from "eip55";
 import { log } from "@ledgerhq/logs";
 import { mergeOps } from "../../bridge/jsHelpers";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
@@ -91,24 +90,34 @@ const txToOp = ({ address, id: accountId }) => (
   let maybeValue;
   let senders = [];
   let recipients = [];
-  const hasFailed = tx.status !== "applied";
+  const hasFailed = tx.status ? tx.status !== "applied" : false;
 
   switch (tx.type) {
     case "transaction": {
-      const from = tx.sender.address;
-      const to = tx.target.address;
-      if (from !== address && to !== address) {
-        return; // not concerning the account
+      const initiator = tx.initiator?.address;
+      const from = tx.sender?.address;
+      const to = tx.target?.address;
+      if (from !== address && to !== address && initiator !== address) {
+        // failsafe for a case that shouldn't happen.
+        console.warn("found tx is unrelated to account! " + tx.hash);
+        return;
       }
-      senders = [address];
-      recipients = [address];
-      if (from === address && to === address) {
-        type = "OUT";
+      senders = [from || initiator || ""];
+      recipients = [to || ""];
+      if (
+        (from === address && to === address) || // self tx
+        (from !== address && to !== address) // initiator but not in from/to
+      ) {
+        // we just pay fees in that case
+        type = "FEES";
       } else {
+        type = to === address ? "IN" : "OUT";
         if (!hasFailed) {
-          maybeValue = BigNumber(tx.amount);
+          maybeValue = BigNumber(tx.amount || 0);
+          if (maybeValue.eq(0)) {
+            type = "FEES";
+          }
         }
-        type = from === address ? "OUT" : "IN";
       }
       break;
     }
@@ -123,11 +132,25 @@ const txToOp = ({ address, id: accountId }) => (
       senders = [address];
       recipients = [address];
       break;
+    case "migration":
+      type = tx.balanceChange < 0 ? "OUT" : "IN";
+      maybeValue = BigNumber(Math.abs(tx.balanceChange || 0));
+      senders = [address];
+      recipients = [address];
+      break;
     case "origination":
       type = "CREATE";
+      maybeValue = BigNumber(tx.contractBalance || 0);
       senders = [address];
       recipients = [tx.originatedContract.address];
       break;
+    case "activation":
+      type = "IN";
+      senders = [address];
+      recipients = [address];
+      maybeValue = BigNumber(tx.balance || 0);
+      break;
+    // TODO more type of tx
     default:
       console.warn("unsupported tx:", tx);
       return;
@@ -145,12 +168,14 @@ const txToOp = ({ address, id: accountId }) => (
 
   let value = maybeValue || BigNumber(0);
   if (type === "IN" && value.eq(0)) {
-    return; // internal op are shown
+    return; // not interesting op
   }
 
-  const fee = BigNumber(allocationFee || 0)
-    .plus(storageFee || 0)
-    .plus(bakerFee || 0);
+  let fee = BigNumber(bakerFee || 0);
+
+  if (!hasFailed) {
+    fee = fee.plus(allocationFee || 0).plus(storageFee || 0);
+  }
 
   if (type !== "IN") {
     value = value.plus(fee);

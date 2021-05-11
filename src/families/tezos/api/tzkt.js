@@ -32,19 +32,20 @@ type CommonOperationType = {
   hash: string,
   storageFee?: number,
   allocationFee?: number,
-  bakerFee: number,
+  bakerFee?: number,
   timestamp: string,
   level: number,
   block: string,
-  status: "applied" | "failed" | "backtracked" | "skipped",
+  status?: "applied" | "failed" | "backtracked" | "skipped",
 };
 
 export type APIOperation =
   | {
       type: "transaction",
       amount: number,
-      sender: { address: string },
-      target: { address: string },
+      initiator: ?{ address: string },
+      sender: ?{ address: string },
+      target: ?{ address: string },
       ...CommonOperationType,
     }
   | {
@@ -58,11 +59,22 @@ export type APIOperation =
       newDelegate: ?{ address: string },
     }
   | {
+      type: "activation",
+      ...CommonOperationType,
+      balance: number,
+    }
+  | {
       type: "origination",
       ...CommonOperationType,
+      contractBalance: number,
       originatedContract: {
         address: string,
       },
+    }
+  | {
+      type: "migration",
+      ...CommonOperationType,
+      balanceChange: number,
     }
   | {
       type: "", // this is to express fact we have others and we need to always filter out others
