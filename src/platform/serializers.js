@@ -1,16 +1,20 @@
 // @flow
 
+import { fromSignedOperationRaw, toSignedOperationRaw } from "../transaction";
+
 import type {
   RawPlatformAccount,
   RawPlatformTransaction,
   RawPlatformEthereumTransaction,
   RawPlatformBitcoinTransaction,
+  RawPlatformSignedTransaction,
 } from "./rawTypes";
 import type {
   PlatformAccount,
   PlatformTransaction,
   PlatformEthereumTransaction,
   PlatformBitcoinTransaction,
+  PlatformSignedTransaction,
 } from "./types";
 
 import { BigNumber } from "bignumber.js";
@@ -131,4 +135,17 @@ export function deserializePlatformTransaction(
     default:
       throw new Error(`Can't deserialize transaction: family not supported`);
   }
+}
+
+export function serializePlatformSignedTransaction(
+  signedTransaction: PlatformSignedTransaction
+): RawPlatformSignedTransaction {
+  return toSignedOperationRaw(signedTransaction, true);
+}
+
+export function deserializePlatformSignedTransaction(
+  rawSignedTransaction: RawPlatformSignedTransaction,
+  accountId: string
+): PlatformSignedTransaction {
+  return fromSignedOperationRaw(rawSignedTransaction, accountId);
 }

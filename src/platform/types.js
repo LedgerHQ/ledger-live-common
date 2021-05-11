@@ -2,6 +2,8 @@
 
 import type { BigNumber } from "bignumber.js";
 
+import type { SignedOperation } from "../types";
+
 export type PlatformAccount = {
   id: string,
   name: string,
@@ -50,3 +52,5 @@ export interface PlatformBitcoinTransaction extends PlatformTransactionCommon {
 export type PlatformTransaction =
   | PlatformEthereumTransaction
   | PlatformBitcoinTransaction;
+
+export type PlatformSignedTransaction = SignedOperation;

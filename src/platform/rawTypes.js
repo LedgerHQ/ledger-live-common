@@ -1,4 +1,5 @@
 // @flow
+import type { SignedOperationRaw } from "../types";
 
 export type RawPlatformAccount = {
   id: string,
@@ -34,3 +35,5 @@ export interface RawPlatformBitcoinTransaction
 export type RawPlatformTransaction =
   | RawPlatformEthereumTransaction
   | RawPlatformBitcoinTransaction;
+
+export type RawPlatformSignedTransaction = SignedOperationRaw;
