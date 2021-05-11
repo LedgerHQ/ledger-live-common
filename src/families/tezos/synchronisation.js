@@ -156,7 +156,7 @@ const txToOp = ({ address, id: accountId }) => (
       return;
   }
 
-  const {
+  let {
     hash,
     allocationFee,
     bakerFee,
@@ -165,6 +165,11 @@ const txToOp = ({ address, id: accountId }) => (
     block: blockHash,
     timestamp,
   } = tx;
+
+  if (!hash) {
+    // in migration case, there is no hash...
+    hash = "";
+  }
 
   let value = maybeValue || BigNumber(0);
   if (type === "IN" && value.eq(0)) {

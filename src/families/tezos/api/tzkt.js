@@ -29,7 +29,7 @@ type APIAccount =
 type CommonOperationType = {
   type: "transaction",
   id: number,
-  hash: string,
+  hash: ?string,
   storageFee?: number,
   allocationFee?: number,
   bakerFee?: number,
