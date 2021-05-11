@@ -547,7 +547,7 @@ export const createAction = (
       return () => {
         sub.unsubscribe();
       };
-    }, [params, deviceSubject, state.opened, resetIndex]);
+    }, [params, deviceSubject, state.opened, resetIndex, connectApp]);
 
     const onRetry = useCallback(() => {
       setResetIndex((i) => i + 1);
