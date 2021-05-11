@@ -24,7 +24,9 @@ export const getOrCreateAccount: F = atomicQueue(
     log("libcore", "getOrCreateAccount", { xpub, index });
     let coreAccount;
     try {
+      log("libcore", "getting libcore account");
       coreAccount = await coreWallet.getAccount(index);
+      log("libcore", "got libcore account");
     } catch (err) {
       if (!isNonExistingAccountError(err)) {
         throw err;
