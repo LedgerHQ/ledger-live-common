@@ -6,6 +6,7 @@ export const CryptoOrgAccountTransactionTypeEnum = {
 };
 
 export const CryptoOrgCurrency = "basecro";
+export const CryptoOrgTestnetCurrency = "basetcro";
 
 export interface CryptoOrgAccountTransaction {
   account: string;

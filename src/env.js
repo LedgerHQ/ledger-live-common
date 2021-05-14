@@ -145,13 +145,18 @@ const envDefinitions = {
     desc:
       "gasLimit * gasPrice to determine the fees price. A too low GAS_PRICE will get rejected before the transaction is broadcast",
   },
+  CRYPTO_ORG_USE_TESTNET: {
+    def: true,
+    parser: boolParser,
+    desc: "set to true if using testnet environment",
+  },
   CRYPTO_ORG_INDEXER: {
-    def: "http://localhost:8080",
+    def: "https://crypto.org/explorer/croeseid",
     parser: stringParser,
     desc: "location of the crypto.org indexer API",
   },
   CRYPTO_ORG_RPC_URL: {
-    def: "http://localhost:26657",
+    def: "https://testnet-croeseid.crypto.com:26657",
     parser: stringParser,
     desc: "location of the crypto.org chain node",
   },

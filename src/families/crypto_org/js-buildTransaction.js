@@ -3,8 +3,11 @@ import type { Transaction } from "./types";
 import type { Account } from "../../types";
 import { CroNetwork, CroSDK, Units, utils } from "@crypto-com/chain-jslib";
 import { getAccountParams } from "./api/sdk";
+import { getEnv } from "../../env";
 
-const sdk = CroSDK({ network: CroNetwork.Mainnet });
+let sdk = getEnv("CRYPTO_ORG_USE_TESTNET")
+  ? CroSDK({ network: CroNetwork.Testnet })
+  : CroSDK({ network: CroNetwork.Mainnet });
 
 const getTransactionAmount = (a: Account, t: Transaction) => {
   switch (t.mode) {
@@ -25,11 +28,13 @@ const getTransactionAmount = (a: Account, t: Transaction) => {
  * @param {Account} a
  * @param {Transaction} t
  */
-export const buildTransaction = async (a: Account, t: Transaction) => {
+export const buildTransaction = async (
+  a: Account,
+  t: Transaction,
+  publicKey: string
+) => {
   const address = a.freshAddresses[0].address;
-  const { accountNumber, sequence, publicKey } = await getAccountParams(
-    address
-  );
+  const { accountNumber, sequence } = await getAccountParams(address);
   const rawTx = new sdk.RawTransaction();
   rawTx.setFee(new sdk.Coin(t.fees.toString(), Units.BASE));
 
@@ -39,11 +44,10 @@ export const buildTransaction = async (a: Account, t: Transaction) => {
     amount: getTransactionAmount(a, t),
   });
 
-  // Todo get public key from address
   const signableTx = rawTx
     .appendMessage(msgSend)
     .addSigner({
-      publicKey: utils.Bytes.fromBase64String(publicKey),
+      publicKey: utils.Bytes.fromHexString(publicKey),
       accountNumber: new utils.Big(accountNumber),
       accountSequence: new utils.Big(sequence),
       signMode: 0,

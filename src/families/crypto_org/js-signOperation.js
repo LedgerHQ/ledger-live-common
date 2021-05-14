@@ -15,6 +15,9 @@ import CryptoOrgApp from "@ledgerhq/hw-app-cosmos";
 import { utils } from "@crypto-com/chain-jslib";
 
 import { buildTransaction } from "./js-buildTransaction";
+import { getEnv } from "../../env";
+
+const CRYPTO_ORG_USE_TESTNET = getEnv("CRYPTO_ORG_USE_TESTNET");
 
 const buildOptimisticOperation = (
   account: Account,
@@ -65,12 +68,25 @@ const signOperation = ({
           throw new FeeNotLoaded();
         }
 
-        const unsigned = await buildTransaction(account, transaction);
+        // Get the public key
+        const hwApp = new CryptoOrgApp(transport);
+        const address = account.freshAddresses[0];
+        const cointype = CRYPTO_ORG_USE_TESTNET ? "tcro" : "cro";
+        const { publicKey } = await hwApp.getAddress(
+          address.derivationPath,
+          cointype,
+          false
+        );
+
+        const unsigned = await buildTransaction(
+          account,
+          transaction,
+          publicKey
+        );
 
         // Sign by device
-        const hwApp = new CryptoOrgApp(transport);
         const { signature } = await hwApp.sign(
-          account.freshAddresses[0].derivationPath,
+          address.derivationPath,
           unsigned.toSignDocument(0).toUint8Array()
         );
 

@@ -6,6 +6,7 @@ import {
   CryptoOrgAmount,
   CryptoOrgAccountTransactionTypeEnum,
   CryptoOrgCurrency,
+  CryptoOrgTestnetCurrency
 } from "./sdk.types";
 import { BigNumber } from "bignumber.js";
 import network from "../../../network";
@@ -16,6 +17,7 @@ import { encodeOperationId } from "../../../operation";
 
 const CRYPTO_ORG_INDEXER = getEnv("CRYPTO_ORG_INDEXER");
 const CRYPTO_ORG_RPC_URL = getEnv("CRYPTO_ORG_RPC_URL");
+const CRYPTO_ORG_USE_TESTNET = getEnv("CRYPTO_ORG_USE_TESTNET");
 const PAGINATION_LIMIT = 20;
 
 let api = null;
@@ -25,7 +27,10 @@ let api = null;
  */
 async function getClient() {
   if (!api) {
-    const sdk = CroSDK({ network: CroNetwork.Mainnet });
+    const network = CRYPTO_ORG_USE_TESTNET
+      ? CroNetwork.Testnet
+      : CroNetwork.Mainnet;
+    const sdk = CroSDK({ network: network });
     api = await sdk.CroClient.connect(CRYPTO_ORG_RPC_URL);
   }
 
@@ -37,8 +42,11 @@ async function getClient() {
  */
 export const getCroAmount = (amounts: CryptoOrgAmount[]) => {
   let result = BigNumber(0);
+  const currency = CRYPTO_ORG_USE_TESTNET
+    ? CryptoOrgTestnetCurrency
+    : CryptoOrgCurrency;
   amounts.map(function (currentObject) {
-    if (currentObject.denom == CryptoOrgCurrency)
+    if (currentObject.denom == currency)
       result = result.plus(BigNumber(currentObject.amount));
   });
 
@@ -65,7 +73,7 @@ export const getAccount = async (addr: string) => {
   if (data) {
     balance = getCroAmount(data.result.balance);
     bondedBalance = getCroAmount(data.result.bondedBalance);
-    redelegatingBalance = getCroAmount(data.result.balance);
+    redelegatingBalance = getCroAmount(data.result.redelegatingBalance);
     unbondingBalance = getCroAmount(data.result.unbondingBalance);
     commissions = getCroAmount(data.result.commissions);
   }
@@ -84,12 +92,11 @@ export const getAccount = async (addr: string) => {
  */
 export const getAccountParams = async (addr: string) => {
   const client = await getClient();
-  const { pubkey, accountNumber, sequence } = await client.getAccount(addr);
+  const { accountNumber, sequence } = await client.getAccount(addr);
 
   return {
     accountNumber: accountNumber,
     sequence: sequence,
-    publicKey: pubkey.value,
   };
 };
 
@@ -120,22 +127,14 @@ function getOperationValue(
   const amounts = messageSendContent.amount;
   for (let k = 0; k < amounts.length; k++) {
     const amount: CryptoOrgAmount = amounts[k];
-    if (amount.denom == CryptoOrgCurrency) {
+    const currency = CRYPTO_ORG_USE_TESTNET
+      ? CryptoOrgTestnetCurrency
+      : CryptoOrgCurrency;
+    if (amount.denom == currency) {
       result = result.plus(amount.amount);
     }
   }
   return result;
-}
-
-/**
- * Extract extra from transaction if any
- */
-function getOperationExtra(
-  messageSendContent: CryptoOrgMsgSendContent
-): Object {
-  return {
-    additionalField: messageSendContent.uuid,
-  };
 }
 
 /**
@@ -159,7 +158,6 @@ function transactionToOperation(
     blockHash: transaction.blockHash,
     blockHeight: transaction.blockHeight,
     date: new Date(transaction.blockTime),
-    extra: getOperationExtra(transaction),
     senders: [messageSendContent.fromAddress],
     recipients: [messageSendContent.toAddress],
     transactionSequenceNumber: messageSendContent.uuid,
