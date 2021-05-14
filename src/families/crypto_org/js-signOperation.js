@@ -2,16 +2,19 @@
 import { BigNumber } from "bignumber.js";
 import { Observable } from "rxjs";
 import { FeeNotLoaded } from "@ledgerhq/errors";
-
+import {
+  CryptoOrgWrongSignatureHeader,
+  CryptoOrgSignatureSize,
+} from "./errors";
 import type { Transaction } from "./types";
 import type { Account, Operation, SignOperationEvent } from "../../types";
 
 import { open, close } from "../../hw";
 import { encodeOperationId } from "../../operation";
-import { Cosmos } from "@ledgerhq/hw-app-cosmos";
+import CryptoOrgApp from "@ledgerhq/hw-app-cosmos";
+import { utils } from "@crypto-com/chain-jslib";
 
 import { buildTransaction } from "./js-buildTransaction";
-import { getNonce } from "./logic";
 
 const buildOptimisticOperation = (
   account: Account,
@@ -33,19 +36,11 @@ const buildOptimisticOperation = (
     senders: [account.freshAddress],
     recipients: [transaction.recipient].filter(Boolean),
     accountId: account.id,
-    transactionSequenceNumber: getNonce(account),
     date: new Date(),
     extra: { additionalField: transaction.amount },
   };
 
   return operation;
-};
-
-/**
- * Adds signature to unsigned transaction. Will likely be a call to MyCoin SDK
- */
-const signTx = (unsigned: string, signature: any) => {
-  return `${unsigned}:${signature}`;
 };
 
 /**
@@ -73,13 +68,55 @@ const signOperation = ({
         const unsigned = await buildTransaction(account, transaction);
 
         // Sign by device
-        const cosmos = new Cosmos(transport);
-        const r = await cosmos.signTransaction(
-          account.freshAddressPath,
-          unsigned
+        const hwApp = new CryptoOrgApp(transport);
+        const { signature } = await hwApp.sign(
+          account.freshAddresses[0].derivationPath,
+          unsigned.toSignDocument(0).toUint8Array()
         );
 
-        const signed = signTx(unsigned, r.signature);
+        // Ledger has encoded the sig in ASN1 DER format, but we need a 64-byte buffer of <r,s>
+        // DER-encoded signature from Ledger:
+        // 0 0x30: a header byte indicating a compound structure
+        // 1 A 1-byte length descriptor for all what follows (ignore)
+        // 2 0x02: a header byte indicating an integer
+        // 3 A 1-byte length descriptor for the R value
+        // 4 The R coordinate, as a big-endian integer
+        //   0x02: a header byte indicating an integer
+        //   A 1-byte length descriptor for the S value
+        //   The S coordinate, as a big-endian integer
+        //  = 7 bytes of overhead
+        if (signature[0] !== 0x30) {
+          throw new CryptoOrgWrongSignatureHeader();
+        }
+
+        // decode DER string format
+        let rOffset = 4;
+        let rLen = signature[3];
+        const sLen = signature[4 + rLen + 1]; // skip over following 0x02 type prefix for s
+        let sOffset = signature.length - sLen;
+        // we can safely ignore the first byte in the 33 bytes cases
+        if (rLen === 33) {
+          rOffset++; // chop off 0x00 padding
+          rLen--;
+        }
+        if (sLen === 33) {
+          sOffset++;
+        } // as above
+        const sigR = signature.slice(rOffset, rOffset + rLen); // skip e.g. 3045022100 and pad
+        const sigS = signature.slice(sOffset);
+
+        const signatureFormatted = Buffer.concat([sigR, sigS]);
+        if (signatureFormatted.length !== 64) {
+          throw new CryptoOrgSignatureSize();
+        }
+
+        const signed = unsigned
+          .setSignature(
+            0,
+            utils.Bytes.fromUint8Array(new Uint8Array(signatureFormatted))
+          )
+          .toSigned()
+          .getHexEncoded();
 
         o.next({ type: "device-signature-granted" });
 

@@ -1,5 +1,5 @@
 // @flow
-import { CroSDK, CroNetwork } from "@crypto-com/chain-jslib";
+import { CroSDK, CroNetwork, utils } from "@crypto-com/chain-jslib";
 import {
   CryptoOrgAccountTransaction,
   CryptoOrgMsgSendContent,
@@ -14,8 +14,6 @@ import type { Operation, OperationType } from "../../../types";
 import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";
 
-type AsyncApiFunction = (any) => Promise<any>;
-
 const CRYPTO_ORG_INDEXER = getEnv("CRYPTO_ORG_INDEXER");
 const CRYPTO_ORG_RPC_URL = getEnv("CRYPTO_ORG_RPC_URL");
 const PAGINATION_LIMIT = 20;
@@ -23,20 +21,15 @@ const PAGINATION_LIMIT = 20;
 let api = null;
 
 /**
- * Connects to MyCoin Api
+ * Get CroClient
  */
-async function withApi(execute: AsyncApiFunction): Promise<any> {
+async function getClient() {
   if (!api) {
     const sdk = CroSDK({ network: CroNetwork.Mainnet });
-    api = sdk.CroClient.connect(CRYPTO_ORG_RPC_URL);
+    api = await sdk.CroClient.connect(CRYPTO_ORG_RPC_URL);
   }
 
-  try {
-    const res = await execute(api);
-    return res;
-  } catch {
-    // Handle Error or Retry
-  }
+  return api;
 }
 
 /**
@@ -56,11 +49,8 @@ export const getCroAmount = (amounts: CryptoOrgAmount[]) => {
  * Get account balances
  */
 export const getAccount = async (addr: string) => {
-  let height = 0;
-  await withApi(async (api) => {
-    const { header } = await api.getBlock();
-    height = header.height;
-  });
+  const client = await getClient();
+  const { header } = await client.getBlock();
 
   let balance = 0;
   let bondedBalance = 0;
@@ -78,12 +68,26 @@ export const getAccount = async (addr: string) => {
   unbondingBalance = getCroAmount(data.result.unbondingBalance);
   commissions = getCroAmount(data.result.commissions);
   return {
-    blockHeight: height,
+    blockHeight: header.height,
     balance: BigNumber(balance),
     bondedBalance: BigNumber(bondedBalance),
     redelegatingBalance: BigNumber(redelegatingBalance),
     unbondingBalance: BigNumber(unbondingBalance),
     commissions: BigNumber(commissions),
+  };
+};
+
+/**
+ * Get account information for sending transactions
+ */
+export const getAccountParams = async (addr: string) => {
+  const client = await getClient();
+  const { pubkey, accountNumber, sequence } = await client.getAccount(addr);
+
+  return {
+    accountNumber: accountNumber,
+    sequence: sequence,
+    publicKey: pubkey.value,
   };
 };
 
@@ -205,8 +209,10 @@ export const getOperations = async (
 /**
  * Broadcast blob to blockchain
  */
-export const submit = async (blob: string) =>
-  withApi(async (api) => {
-    const { transactionHash } = await api.broadcastTx(blob);
-    return { transactionHash };
-  });
+export const submit = async (blob: string) => {
+  const client = await getClient();
+  const broadcastResponse = await client.broadcastTx(
+    utils.Bytes.fromHexString(blob).toUint8Array()
+  );
+  return broadcastResponse;
+};

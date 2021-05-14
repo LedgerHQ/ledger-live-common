@@ -1,81 +1,25 @@
 // @flow
-import { BigNumber } from "bignumber.js";
-import {
-  NotEnoughBalance,
-  RecipientRequired,
-  InvalidAddress,
-  FeeTooHigh,
-} from "@ledgerhq/errors";
-import type { Transaction } from "../types";
 import type { AccountBridge, CurrencyBridge } from "../../../types";
-import {
-  signOperation,
-  broadcast,
-  isInvalidRecipient,
-} from "../../../bridge/mockHelpers";
-import { getMainAccount } from "../../../account";
+import type { Transaction } from "../types";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
-import { scanAccounts, sync } from "../js-synchronisation";
+
+import { sync, scanAccounts } from "../js-synchronisation";
+import {
+  createTransaction,
+  updateTransaction,
+  prepareTransaction,
+} from "../js-transaction";
+import getTransactionStatus from "../js-getTransactionStatus";
+import estimateMaxSpendable from "../js-estimateMaxSpendable";
+import signOperation from "../js-signOperation";
+import broadcast from "../js-broadcast";
 
 const receive = makeAccountBridgeReceive();
 
-const createTransaction = (): Transaction => ({
-  family: "crypto_org",
-  mode: "send",
-  amount: BigNumber(0),
-  recipient: "",
-  useAllAmount: false,
-  fees: null,
-});
-
-const updateTransaction = (t, patch) => ({ ...t, ...patch });
-
-const prepareTransaction = async (a, t) => t;
-
-const estimateMaxSpendable = ({ account, parentAccount, transaction }) => {
-  const mainAccount = getMainAccount(account, parentAccount);
-  const estimatedFees = transaction?.fees || BigNumber(5000);
-  return Promise.resolve(
-    BigNumber.max(0, mainAccount.balance.minus(estimatedFees))
-  );
-};
-
-const getTransactionStatus = (account, t) => {
-  const errors = {};
-  const warnings = {};
-  const useAllAmount = !!t.useAllAmount;
-
-  const estimatedFees = BigNumber(5000);
-
-  const totalSpent = useAllAmount
-    ? account.balance
-    : BigNumber(t.amount).plus(estimatedFees);
-
-  const amount = useAllAmount
-    ? account.balance.minus(estimatedFees)
-    : BigNumber(t.amount);
-
-  if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
-    warnings.amount = new FeeTooHigh();
-  }
-
-  if (totalSpent.gt(account.balance)) {
-    errors.amount = new NotEnoughBalance();
-  }
-
-  if (!t.recipient) {
-    errors.recipient = new RecipientRequired();
-  } else if (isInvalidRecipient(t.recipient)) {
-    errors.recipient = new InvalidAddress();
-  }
-
-  return Promise.resolve({
-    errors,
-    warnings,
-    estimatedFees,
-    amount,
-    totalSpent,
-  });
+const currencyBridge: CurrencyBridge = {
+  preload: async () => {},
+  hydrate: () => {},
+  scanAccounts,
 };
 
 const accountBridge: AccountBridge<Transaction> = {
@@ -88,12 +32,6 @@ const accountBridge: AccountBridge<Transaction> = {
   receive,
   signOperation,
   broadcast,
-};
-
-const currencyBridge: CurrencyBridge = {
-  scanAccounts,
-  preload: async () => {},
-  hydrate: () => {},
 };
 
 export default { currencyBridge, accountBridge };

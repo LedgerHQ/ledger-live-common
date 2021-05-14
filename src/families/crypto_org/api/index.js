@@ -1,1 +1,6 @@
-export { getAccount, getOperations, submit } from "./sdk";
+export {
+  getAccount,
+  getOperations,
+  submit,
+  getAccountParams,
+} from "./sdk";

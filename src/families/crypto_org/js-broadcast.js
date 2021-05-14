@@ -3,6 +3,11 @@ import type { Operation, SignedOperation } from "../../types";
 import { patchOperationWithHash } from "../../operation";
 
 import { submit } from "./api";
+import { CryptoOrgErrorBroadcasting } from "./errors";
+
+function isBroadcastTxFailure(result) {
+  return !!result.code;
+}
 
 /**
  * Broadcast the signed transaction
@@ -13,9 +18,13 @@ const broadcast = async ({
 }: {
   signedOperation: SignedOperation,
 }): Promise<Operation> => {
-  const { hash } = await submit(signature);
+  const broadcastResponse = await submit(signature);
 
-  return patchOperationWithHash(operation, hash);
+  if (isBroadcastTxFailure(broadcastResponse)) {
+    throw new CryptoOrgErrorBroadcasting();
+  }
+
+  return patchOperationWithHash(operation, broadcastResponse.transactionHash);
 };
 
 export default broadcast;

@@ -1,8 +1,24 @@
 // @flow
 import type { Transaction } from "./types";
 import type { Account } from "../../types";
-import { CroSDK } from "@crypto-com";
-import { getNonce } from "./logic";
+import { CroNetwork, CroSDK, Units, utils } from "@crypto-com/chain-jslib";
+import { getAccountParams } from "./api/sdk";
+
+const sdk = CroSDK({ network: CroNetwork.Mainnet });
+
+const getTransactionAmount = (a: Account, t: Transaction) => {
+  switch (t.mode) {
+    case "send":
+      if (t.useAllAmount) {
+        const amountMinusFee = t.amount.minus(t.fees);
+        return new sdk.Coin(amountMinusFee.toString(), Units.BASE);
+      } else {
+        return new sdk.Coin(t.amount.toString(), Units.BASE);
+      }
+    default:
+      throw new Error("Unknown mode in transaction");
+  }
+};
 
 /**
  *
@@ -10,25 +26,27 @@ import { getNonce } from "./logic";
  * @param {Transaction} t
  */
 export const buildTransaction = async (a: Account, t: Transaction) => {
-  const nonce = getNonce(a);
+  const address = a.freshAddresses[0].address;
+  const { accountNumber, sequence, publicKey } = await getAccountParams(
+    address
+  );
+  const rawTx = new sdk.RawTransaction();
+  rawTx.setFee(new sdk.Coin(t.fees.toString(), Units.BASE));
 
-  const rawTx = new CroSDK.RawTransaction();
-  const feeAmount = new CroSDK.Coin("6500", CroSDK.Units.BASE);
-  rawTx.setGasLimit("280000");
-  rawTx.setFee(feeAmount);
-  rawTx.setTimeOutHeight("341910");
-  const msgSend = new CroSDK.bank.MsgSend({
-    fromAddress: a.address,
+  const msgSend = new sdk.bank.MsgSend({
+    fromAddress: address,
     toAddress: t.recipient,
-    amount: new CroSDK.Coin(t.amount.toString(), CroSDK.Units.BASE),
+    amount: getTransactionAmount(a, t),
   });
 
+  // Todo get public key from address
   const signableTx = rawTx
     .appendMessage(msgSend)
     .addSigner({
-      publicKey: a.xpub,
-      accountNumber: nonce,
-      accountSequence: nonce,
+      publicKey: utils.Bytes.fromBase64String(publicKey),
+      accountNumber: new utils.Big(accountNumber),
+      accountSequence: new utils.Big(sequence),
+      signMode: 0,
     })
     .toSignable();
 

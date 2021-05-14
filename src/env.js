@@ -146,7 +146,7 @@ const envDefinitions = {
       "gasLimit * gasPrice to determine the fees price. A too low GAS_PRICE will get rejected before the transaction is broadcast",
   },
   CRYPTO_ORG_INDEXER: {
-    def: "https://crypto.org/explorer",
+    def: "http://localhost:8080",
     parser: stringParser,
     desc: "location of the crypto.org indexer API",
   },

@@ -5,12 +5,11 @@ import {
   RecipientRequired,
   InvalidAddress,
   FeeNotLoaded,
+  AmountRequired,
 } from "@ledgerhq/errors";
 import type { Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
-
-import { isValidAddress, specificCheck } from "./logic";
-import { MyCoinSpecificError } from "./errors";
+import { isValidAddress } from "./logic";
 
 const getTransactionStatus = async (
   a: Account,
@@ -39,13 +38,13 @@ const getTransactionStatus = async (
   }
 
   // If MyCoin needs any specific requirement on amount for instance
-  if (specificCheck(t.amount)) {
-    errors.amount = new MyCoinSpecificError();
+  if (!t.amount.gt(0)) {
+    errors.amount = new AmountRequired();
   }
 
   if (!t.recipient) {
     errors.recipient = new RecipientRequired();
-  } else if (isValidAddress(t.recipient)) {
+  } else if (!isValidAddress(t.recipient)) {
     errors.recipient = new InvalidAddress();
   }
 
