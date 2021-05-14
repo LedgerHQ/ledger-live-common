@@ -755,7 +755,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
   }
 
   if (cryptoOrgResources) {
-    res.polkadotResources = fromCryptoOrgResourcesRaw(polkadotResources);
+    res.cryptoOrgResources = fromCryptoOrgResourcesRaw(cryptoOrgResources);
   }
 
   return res;

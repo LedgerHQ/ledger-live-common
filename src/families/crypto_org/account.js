@@ -60,46 +60,6 @@ function formatAccountSpecifics(account: Account): string {
   return str;
 }
 
-function formatOperationSpecifics(op: Operation, unit: ?Unit): string {
-  const { validators } = op.extra;
-  return (validators || [])
-    .map(
-      (v) =>
-        `\n    to ${v.address} ${
-          unit
-            ? formatCurrencyUnit(unit, BigNumber(v.amount), {
-                showCode: true,
-                disableRounding: true,
-              }).padEnd(16)
-            : v.amount
-        }`
-    )
-    .join("");
-}
-
-export function fromOperationExtraRaw(extra: ?Object) {
-  if (extra && extra.additionalField) {
-    extra = {
-      ...extra,
-      additionalField: BigNumber(extra.additionalField),
-    };
-  }
-  return extra;
-}
-
-export function toOperationExtraRaw(extra: ?Object) {
-  if (extra && extra.additionalField) {
-    extra = {
-      ...extra,
-      additionalField: extra.additionalField.toString(),
-    };
-  }
-  return extra;
-}
-
 export default {
   formatAccountSpecifics,
-  formatOperationSpecifics,
-  fromOperationExtraRaw,
-  toOperationExtraRaw,
 };

@@ -62,11 +62,13 @@ export const getAccount = async (addr: string) => {
     url: `${CRYPTO_ORG_INDEXER}/api/v1/accounts/${addr}`,
   });
 
-  balance = getCroAmount(data.result.balance);
-  bondedBalance = getCroAmount(data.result.bondedBalance);
-  redelegatingBalance = getCroAmount(data.result.balance);
-  unbondingBalance = getCroAmount(data.result.unbondingBalance);
-  commissions = getCroAmount(data.result.commissions);
+  if (data) {
+    balance = getCroAmount(data.result.balance);
+    bondedBalance = getCroAmount(data.result.bondedBalance);
+    redelegatingBalance = getCroAmount(data.result.balance);
+    unbondingBalance = getCroAmount(data.result.unbondingBalance);
+    commissions = getCroAmount(data.result.commissions);
+  }
   return {
     blockHeight: header.height,
     balance: BigNumber(balance),
