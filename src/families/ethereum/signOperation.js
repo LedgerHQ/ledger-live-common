@@ -65,10 +65,12 @@ export const signOperation = ({
 
             if (cancelled) return;
 
+            /*
             const addrs =
               (fillTransactionDataResult &&
                 fillTransactionDataResult.erc20contracts) ||
               [];
+
             for (const addr of addrs) {
               const tokenInfo = byContractAddress(addr);
               // if the destination happens to be a contract address of a token, we need to provide to device meta info
@@ -82,6 +84,7 @@ export const signOperation = ({
             if (tokenInfo) {
               await eth.provideERC20TokenInformation(tokenInfo);
             }
+            */
 
             if (cancelled) return;
 
