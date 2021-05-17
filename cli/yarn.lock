@@ -1296,7 +1296,7 @@
   dependencies:
     commander "^2.20.0"
 
-"@ledgerhq/cryptoassets@^6.0.0-alpha.0", "@ledgerhq/cryptoassets@alpha":
+"@ledgerhq/cryptoassets@20.0.0-alpha.2", "@ledgerhq/cryptoassets@6.0.0-alpha.1", "@ledgerhq/cryptoassets@^6.0.0-alpha.0":
   version "6.0.0-alpha.0"
   resolved "https://registry.yarnpkg.com/@ledgerhq/cryptoassets/-/cryptoassets-6.0.0-alpha.0.tgz#055423beeeef41a8b72080db71bf06ac64ae665d"
   integrity sha512-cRhBsH1CZ9BGn8iMDCYLpcYj0d5L7EtUDce6VUDdPvEfQNrXIYbgb5ITlGtwBL9qovUVa3kPF5kKssWth56cRQ==
@@ -1349,10 +1349,10 @@
     "@ledgerhq/hw-transport" "^5.51.1"
     bip32-path "^0.4.2"
 
-"@ledgerhq/hw-app-eth@alpha":
-  version "6.0.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-eth/-/hw-app-eth-6.0.0-alpha.0.tgz#a0245cc93ecd8bc763a912d586308fc86b3d110a"
-  integrity sha512-mf0kXrH2yZqluv7vXYAHrIaenXl9V81WT7r/H9CmWPqZmp16A93/OfsEKS486GKk6Qw4gm/fDEQMjktjVV56Ww==
+"@ledgerhq/hw-app-eth@6.0.0-alpha.1":
+  version "6.0.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-eth/-/hw-app-eth-6.0.0-alpha.1.tgz#8146945070c78a16be22baadbddfffe67b219f4c"
+  integrity sha512-gcVQ7xkUIs3mJtUL/hUTKYPweFIG1RJz4HHI/0G6F+h4YrdOtk+jQAMH9wqrvTxN+wEiJwCxCkwpmh+FlbHl5A==
   dependencies:
     "@ledgerhq/cryptoassets" "^6.0.0-alpha.0"
     "@ledgerhq/errors" "^5.50.0"
@@ -1479,19 +1479,19 @@
     node-pre-gyp "^0.17.0"
     node-pre-gyp-github "^1.4.3"
 
-"@ledgerhq/live-common@alpha":
-  version "20.0.0-alpha.1"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/live-common/-/live-common-20.0.0-alpha.1.tgz#caccd3bc1c2407de9ba552f05d6e51a393851fad"
-  integrity sha512-MvTlPvctjG9PXk/K0Bye5sYcDql6ijCjyGR8nwlfAgTq3i5qyvP0grCX4dSX2JyWHtxh1/sEr/cN1me8TouzJw==
+"@ledgerhq/live-common@20.0.0-alpha.2":
+  version "20.0.0-alpha.2"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/live-common/-/live-common-20.0.0-alpha.2.tgz#0916b2e4977bc19d8a867927f5d75e02831e6e81"
+  integrity sha512-UM5NoYMYKhul16JfT6e1LbcEiiV6Krtyp5KSN2MOxcsHE1h8zypnCRUuwiAUEp8WcaUyh41dSPjPDfYs4WxQ1Q==
   dependencies:
     "@ledgerhq/compressjs" "1.3.2"
-    "@ledgerhq/cryptoassets" alpha
+    "@ledgerhq/cryptoassets" "6.0.0-alpha.1"
     "@ledgerhq/devices" "5.51.1"
     "@ledgerhq/errors" "5.50.0"
     "@ledgerhq/hw-app-algorand" "^5.51.1"
     "@ledgerhq/hw-app-btc" "^5.51.1"
     "@ledgerhq/hw-app-cosmos" "^5.51.1"
-    "@ledgerhq/hw-app-eth" alpha
+    "@ledgerhq/hw-app-eth" "6.0.0-alpha.1"
     "@ledgerhq/hw-app-polkadot" "^5.51.1"
     "@ledgerhq/hw-app-str" "^5.51.1"
     "@ledgerhq/hw-app-tezos" "^5.51.1"
