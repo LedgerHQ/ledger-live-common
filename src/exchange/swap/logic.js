@@ -8,8 +8,13 @@ import { flattenAccounts, getAccountCurrency } from "../../account";
 export type CurrencyStatus = $Keys<typeof validCurrencyStatus>;
 export type CurrenciesStatus = { [string]: CurrencyStatus };
 import uniq from "lodash/uniq";
+import invariant from "invariant";
+import { findCryptoCurrencyById, findTokenById } from "@ledgerhq/cryptoassets";
+import { isCurrencyExchangeSupported } from "../";
+import { isCurrencySupported } from "../../currencies";
 
 const validCurrencyStatus = { ok: 1, noApp: 1, noAccounts: 1, outdatedApp: 1 };
+// TODO deprecated when noWall
 export const getCurrenciesWithStatus = ({
   accounts,
   selectableCurrencies,
@@ -79,6 +84,70 @@ export const getValidToCurrencies = ({
     }
   }
   return uniq(out);
+};
+
+export const getSupportedCurrencies = ({
+  providers,
+  provider,
+  tradeMethod,
+  fromCurrency,
+}: {
+  providers: any,
+  provider: string,
+  tradeMethod?: string,
+  fromCurrency?: CryptoCurrency | TokenCurrency,
+}) => {
+  const providerData = providers.find((p) => p.provider === provider);
+  invariant(provider, `No provider matching ${provider} was found`);
+
+  const { pairs } = providerData;
+  const ids = uniq(
+    pairs.map(({ from, to, tradeMethods }) => {
+      const isTo = fromCurrency;
+      if (
+        (!tradeMethod || tradeMethods.include(tradeMethod)) &&
+        (!fromCurrency || fromCurrency.id === from)
+      ) {
+        return isTo ? to : from;
+      }
+    })
+  );
+
+  const tokenCurrencies = ids
+    .map(findTokenById)
+    .filter(Boolean)
+    .filter((t) => !t.delisted);
+
+  const cryptoCurrencies = ids
+    .map(findCryptoCurrencyById)
+    .filter(Boolean)
+    .filter(isCurrencySupported);
+
+  return [...cryptoCurrencies, ...tokenCurrencies].filter(
+    isCurrencyExchangeSupported
+  );
+};
+
+export const getEnabledTradingMethods = ({
+  providers,
+  provider,
+  fromCurrency,
+  toCurrency,
+}: {
+  providers: any,
+  provider: string,
+  fromCurrency: CryptoCurrency | TokenCurrency,
+  toCurrency: CryptoCurrency | TokenCurrency,
+}) => {
+  const providerData = providers.find((p) => p.provider === provider);
+  invariant(provider, `No provider matching ${provider} was found`);
+
+  const { pairs } = providerData;
+  const match = pairs.find(
+    (p) => p.from === fromCurrency.id && p.to === toCurrency.id
+  );
+
+  return match?.tradeMethod || [];
 };
 
 const allTradeMethods: TradeMethod[] = ["fixed", "float"]; // Flow i give up

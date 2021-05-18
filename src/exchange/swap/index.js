@@ -5,6 +5,8 @@ import getExchangeRates from "./getExchangeRates";
 import getStatus from "./getStatus";
 import getProviders from "./getProviders";
 import getCompleteSwapHistory from "./getCompleteSwapHistory";
+import getKYCStatus from "./getKYCStatus";
+import submitKYC from "./submitKYC";
 import initSwap from "./initSwap";
 import { getEnv } from "../../env";
 
@@ -16,7 +18,12 @@ export const operationStatusList = {
 
 const getSwapAPIBaseURL: () => string = () => getEnv("SWAP_API_BASE");
 const swapProviders: {
-  [string]: { nameAndPubkey: Buffer, signature: Buffer, curve: string },
+  [string]: {
+    nameAndPubkey: Buffer,
+    signature: Buffer,
+    curve: string,
+    needsKYC: boolean,
+  },
 } = {
   changelly: {
     nameAndPubkey: Buffer.from(
@@ -28,6 +35,14 @@ const swapProviders: {
       "hex"
     ),
     curve: "secpk256k1",
+    needsKYC: false,
+  },
+  wyre: {
+    // FIXME we dont have these.
+    nameAndPubkey: Buffer.from(""),
+    signature: Buffer.from(""),
+    curve: "secpk256k1",
+    needsKYC: false,
   },
 };
 
@@ -41,6 +56,65 @@ const getProviderNameAndSignature = (
   return res;
 };
 
+const USStates = {
+  AL: "Alabama",
+  AK: "Alaska",
+  AZ: "Arizona",
+  AR: "Arkansas",
+  CA: "California",
+  CO: "Colorado",
+  CT: "Connecticut",
+  DE: "Delaware",
+  DC: "District Of Columbia",
+  FL: "Florida",
+  GA: "Georgia",
+  HI: "Hawaii",
+  ID: "Idaho",
+  IL: "Illinois",
+  IN: "Indiana",
+  IA: "Iowa",
+  KS: "Kansas",
+  KY: "Kentucky",
+  LA: "Louisiana",
+  ME: "Maine",
+  MD: "Maryland",
+  MA: "Massachusetts",
+  MI: "Michigan",
+  MN: "Minnesota",
+  MS: "Mississippi",
+  MO: "Missouri",
+  MT: "Montana",
+  NE: "Nebraska",
+  NV: "Nevada",
+  NH: "New Hampshire",
+  NJ: "New Jersey",
+  NM: "New Mexico",
+  NY: "New York",
+  NC: "North Carolina",
+  ND: "North Dakota",
+  OH: "Ohio",
+  OK: "Oklahoma",
+  OR: "Oregon",
+  PA: "Pennsylvania",
+  RI: "Rhode Island",
+  SC: "South Carolina",
+  SD: "South Dakota",
+  TN: "Tennessee",
+  TX: "Texas",
+  UT: "Utah",
+  VT: "Vermont",
+  VA: "Virginia",
+  WA: "Washington",
+  WV: "West Virginia",
+  WI: "Wisconsin",
+  WY: "Wyoming",
+};
+
+const countries = {
+  US: "United States",
+  ES: "Spain", // FIXME remove before merging
+};
+
 export {
   getSwapAPIBaseURL,
   getProviderNameAndSignature,
@@ -49,4 +123,8 @@ export {
   getExchangeRates,
   getCompleteSwapHistory,
   initSwap,
+  getKYCStatus,
+  submitKYC,
+  USStates,
+  countries,
 };
