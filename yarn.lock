@@ -1556,10 +1556,17 @@
   dependencies:
     commander "^2.20.0"
 
-"@ledgerhq/cryptoassets@6.0.0-alpha.0", "@ledgerhq/cryptoassets@^6.0.0-alpha.0":
-  version "6.0.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/cryptoassets/-/cryptoassets-6.0.0-alpha.0.tgz#055423beeeef41a8b72080db71bf06ac64ae665d"
-  integrity sha512-cRhBsH1CZ9BGn8iMDCYLpcYj0d5L7EtUDce6VUDdPvEfQNrXIYbgb5ITlGtwBL9qovUVa3kPF5kKssWth56cRQ==
+"@ledgerhq/cryptoassets@6.0.0-alpha.6":
+  version "6.0.0-alpha.6"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/cryptoassets/-/cryptoassets-6.0.0-alpha.6.tgz#2f51cb43283caa91f1bd2b043325befb68475626"
+  integrity sha512-H6vChFOwcehg3GaJxe/CuWNM6AuJiyuxbklTIg9oRJiHFg+kyLqM1+u5wabSVYecYwkpZ/iC+kh98bAKL189AA==
+  dependencies:
+    invariant "2"
+
+"@ledgerhq/cryptoassets@^6.0.0-alpha.6":
+  version "6.0.0-typescript.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/cryptoassets/-/cryptoassets-6.0.0-typescript.0.tgz#c1d160a2c800fb5e29cbd03470de6247a6bbcaaf"
+  integrity sha512-9Uw6tVvaND8XLMoC+21ALFlqOos9hbUC3hbovXmNvq9lcYWJ957nDOohCtXYQg9pKA5UWDeb7bk8BexqtNW9mQ==
   dependencies:
     invariant "2"
 
@@ -1609,12 +1616,12 @@
     "@ledgerhq/hw-transport" "^5.51.1"
     bip32-path "^0.4.2"
 
-"@ledgerhq/hw-app-eth@6.0.0-alpha.5":
-  version "6.0.0-alpha.5"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-eth/-/hw-app-eth-6.0.0-alpha.5.tgz#02e5f52a55ceb170987e88346746475c8e02c548"
-  integrity sha512-UEL1sRvy1zqNYXKRAxWz0r3qVp3lZjdEl9zTYmgVcaSVlnBcuFf264TH/GGA6f1GiRFwzfZVwn63uxflm2UXDQ==
+"@ledgerhq/hw-app-eth@6.0.0-alpha.6":
+  version "6.0.0-alpha.6"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-eth/-/hw-app-eth-6.0.0-alpha.6.tgz#eb54bf6b04fadea9fb9ddaf0330ed917a07216fe"
+  integrity sha512-y6dxQ+SP831DGZ5OGcI0tWRnb+dNCOCe3Y6sUXgp7cxGBqeR3cuaVgVdLLU8eMQl2gEs+OhX+2RCtL9yve2WLg==
   dependencies:
-    "@ledgerhq/cryptoassets" "^6.0.0-alpha.0"
+    "@ledgerhq/cryptoassets" "^6.0.0-alpha.6"
     "@ledgerhq/errors" "^5.50.0"
     "@ledgerhq/hw-transport" "^5.51.1"
     "@ledgerhq/logs" "^5.50.0"
