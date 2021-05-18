@@ -91,7 +91,7 @@ export async function promiseAllBatched<A, B>(
   }
 
   // initially, we schedule <batch> items in parallel
-  await Promise.all(Array(Math.min(batch, items.length)).fill().map(step));
+  await Promise.all(Array(1).fill().map(step));
 
   return data;
 }
