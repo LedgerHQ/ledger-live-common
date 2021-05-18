@@ -458,7 +458,7 @@ const envDefinitions = {
     desc: "version used for ledger status api",
   },
   VERBOSE_LIBCORE: {
-    false: false,
+    def: false,
     parser: boolParser,
     desc: "log the libcore calls",
   },
