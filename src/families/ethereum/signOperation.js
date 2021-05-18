@@ -3,6 +3,7 @@
 import invariant from "invariant";
 import { Observable, from, of } from "rxjs";
 import { mergeMap } from "rxjs/operators";
+import { byContractAddress } from "@ledgerhq/hw-app-eth/erc20";
 import eip55 from "eip55";
 import { BigNumber } from "bignumber.js";
 import { log } from "@ledgerhq/logs";
@@ -51,7 +52,11 @@ export const signOperation = ({
               throw new FeeNotLoaded();
             }
 
-            const { tx } = buildEthereumTx(account, transaction, nonce);
+            const { tx, fillTransactionDataResult } = buildEthereumTx(
+              account,
+              transaction,
+              nonce
+            );
             const to = eip55.encode("0x" + tx.to.toString("hex"));
             const chainId = tx.getChainId();
             const value = BigNumber("0x" + (tx.value.toString("hex") || "0"));
@@ -59,6 +64,18 @@ export const signOperation = ({
             const eth = new Eth(transport);
 
             if (cancelled) return;
+
+            // FIXME regardless of ledgerjs changes, we seem to still need this for compound
+            const addrs =
+              (fillTransactionDataResult &&
+                fillTransactionDataResult.erc20contracts) ||
+              [];
+            for (const addr of addrs) {
+              const tokenInfo = byContractAddress(addr);
+              if (tokenInfo) {
+                await eth.provideERC20TokenInformation(tokenInfo);
+              }
+            }
 
             if (cancelled) return;
 

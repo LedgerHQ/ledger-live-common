@@ -76,7 +76,7 @@
     "@ledgerhq/hw-app-algorand": "^5.51.1",
     "@ledgerhq/hw-app-btc": "^5.51.1",
     "@ledgerhq/hw-app-cosmos": "^5.51.1",
-    "@ledgerhq/hw-app-eth": "6.0.0-alpha.3",
+    "@ledgerhq/hw-app-eth": "6.0.0-alpha.4",
     "@ledgerhq/hw-app-polkadot": "^5.51.1",
     "@ledgerhq/hw-app-str": "^5.51.1",
     "@ledgerhq/hw-app-tezos": "^5.51.1",
