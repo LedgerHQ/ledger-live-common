@@ -5,7 +5,7 @@
     "type": "git",
     "url": "https://github.com/LedgerHQ/ledger-live-common"
   },
-  "version": "19.9.0-beta.0",
+  "version": "19.9.1",
   "main": "lib/index.js",
   "license": "Apache-2.0",
   "scripts": {
@@ -108,6 +108,7 @@
     "expect": "^26.6.2",
     "invariant": "^2.2.2",
     "isomorphic-ws": "^4.0.1",
+    "json-rpc-2.0": "^0.2.16",
     "lodash": "^4.17.21",
     "lru-cache": "5.1.1",
     "numeral": "^2.0.6",
