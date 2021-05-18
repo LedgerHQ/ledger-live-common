@@ -3,12 +3,12 @@
 import invariant from "invariant";
 import { Observable, from, of } from "rxjs";
 import { mergeMap } from "rxjs/operators";
-import { byContractAddress } from "@ledgerhq/hw-app-eth/erc20";
 import eip55 from "eip55";
 import { BigNumber } from "bignumber.js";
 import { log } from "@ledgerhq/logs";
 import { FeeNotLoaded } from "@ledgerhq/errors";
 import Eth from "@ledgerhq/hw-app-eth";
+import { byContractAddress } from "@ledgerhq/hw-app-eth/erc20";
 import type { Transaction } from "./types";
 import type { Operation, Account, SignOperationEvent } from "../../types";
 import { getGasLimit, buildEthereumTx } from "./transaction";
@@ -65,7 +65,7 @@ export const signOperation = ({
 
             if (cancelled) return;
 
-            // FIXME regardless of ledgerjs changes, we seem to still need this for compound
+            // FIXME this part is still required for compound to correctly display info on the device
             const addrs =
               (fillTransactionDataResult &&
                 fillTransactionDataResult.erc20contracts) ||
@@ -75,6 +75,12 @@ export const signOperation = ({
               if (tokenInfo) {
                 await eth.provideERC20TokenInformation(tokenInfo);
               }
+            }
+
+            const tokenInfo = byContractAddress(to);
+            // if the destination happens to be a contract address of a token, we need to provide to device meta info
+            if (tokenInfo) {
+              await eth.provideERC20TokenInformation(tokenInfo);
             }
 
             if (cancelled) return;
