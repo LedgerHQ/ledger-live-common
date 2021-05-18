@@ -457,6 +457,11 @@ const envDefinitions = {
     parser: intParser,
     desc: "version used for ledger status api",
   },
+  VERBOSE_LIBCORE: {
+    false: false,
+    parser: boolParser,
+    desc: "log the libcore calls",
+  },
 };
 
 const getDefinition = (name: string): ?EnvDef<any> => envDefinitions[name];

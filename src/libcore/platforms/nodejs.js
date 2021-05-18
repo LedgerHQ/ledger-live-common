@@ -369,7 +369,7 @@ export default (arg: {
           } = statics[method];
           if (njsInstanciateClass) {
             m[method] = function met(...vargs) {
-              if (process.env.VERBOSE) {
+              if (getEnv("VERBOSE_LIBCORE")) {
                 log("libcore-call", id + "." + method, vargs);
               }
               const args = njsInstanciateClass.map((arg) => {
@@ -384,7 +384,7 @@ export default (arg: {
                 return arg;
               });
               const value = new m(...args);
-              if (process.env.VERBOSE) {
+              if (getEnv("VERBOSE_LIBCORE")) {
                 log("libcore-result", id + "." + method, { value });
               }
               return value;
@@ -392,7 +392,7 @@ export default (arg: {
           } else if (njsBuggyMethodIsNotStatic) {
             // There is a bug in the node bindings that don't expose the static functions
             m[method] = (...args) => {
-              if (process.env.VERBOSE) {
+              if (getEnv("VERBOSE_LIBCORE")) {
                 log("libcore-call", id + "." + method, args);
               }
               let value;
@@ -407,7 +407,7 @@ export default (arg: {
                     : args;
                 value = new m(...constructorArgs)[method](...args);
               }
-              if (process.env.VERBOSE) {
+              if (getEnv("VERBOSE_LIBCORE")) {
                 log("libcore-result", id + "." + method, { value });
               }
               if (returns) {
@@ -427,11 +427,11 @@ export default (arg: {
           if (nodejsNotAvailable) return;
           if (njsField) {
             m.prototype[method] = function met() {
-              if (process.env.VERBOSE) {
+              if (getEnv("VERBOSE_LIBCORE")) {
                 log("libcore-call", id + "#" + method);
               }
               const value = this[njsField];
-              if (process.env.VERBOSE) {
+              if (getEnv("VERBOSE_LIBCORE")) {
                 log("libcore-result", id + "#" + method, { value });
               }
               const Cls =
@@ -451,14 +451,14 @@ export default (arg: {
               return;
             }
             m.prototype[method] = async function met(...a) {
-              if (process.env.VERBOSE) {
+              if (getEnv("VERBOSE_LIBCORE")) {
                 log("libcore-call", id + "#" + method, a);
               }
               const args = params
                 ? a.map((value, i) => unwrapArg(params[i], value))
                 : a;
               const value = await f.apply(this, args);
-              if (process.env.VERBOSE) {
+              if (getEnv("VERBOSE_LIBCORE")) {
                 log("libcore-result", id + "#" + method, { value });
               }
               return wrapResult(returns, value);
