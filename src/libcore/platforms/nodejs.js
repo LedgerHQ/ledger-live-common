@@ -369,9 +369,7 @@ export default (arg: {
           } = statics[method];
           if (njsInstanciateClass) {
             m[method] = function met(...vargs) {
-              if (process.env.VERBOSE) {
-                log("libcore-call", id + "." + method, vargs);
-              }
+              log("libcore-call", id + "." + method, vargs);
               const args = njsInstanciateClass.map((arg) => {
                 if (typeof arg === "object") {
                   const o = {};
@@ -384,17 +382,13 @@ export default (arg: {
                 return arg;
               });
               const value = new m(...args);
-              if (process.env.VERBOSE) {
-                log("libcore-result", id + "." + method, { value });
-              }
+              log("libcore-result", id + "." + method, { value });
               return value;
             };
           } else if (njsBuggyMethodIsNotStatic) {
             // There is a bug in the node bindings that don't expose the static functions
             m[method] = (...args) => {
-              if (process.env.VERBOSE) {
-                log("libcore-call", id + "." + method, args);
-              }
+              log("libcore-call", id + "." + method, args);
               let value;
               if (params) {
                 // it's seems statics method until now doesn't need to be unwrap
@@ -407,9 +401,7 @@ export default (arg: {
                     : args;
                 value = new m(...constructorArgs)[method](...args);
               }
-              if (process.env.VERBOSE) {
-                log("libcore-result", id + "." + method, { value });
-              }
+              log("libcore-result", id + "." + method, { value });
               if (returns) {
                 return wrapResult(returns, value);
               }
@@ -427,13 +419,9 @@ export default (arg: {
           if (nodejsNotAvailable) return;
           if (njsField) {
             m.prototype[method] = function met() {
-              if (process.env.VERBOSE) {
-                log("libcore-call", id + "#" + method);
-              }
+              log("libcore-call", id + "#" + method);
               const value = this[njsField];
-              if (process.env.VERBOSE) {
-                log("libcore-result", id + "#" + method, { value });
-              }
+              log("libcore-result", id + "#" + method, { value });
               const Cls =
                 typeof returns === "string" && returns in mappings
                   ? mappings[returns]
@@ -451,16 +439,12 @@ export default (arg: {
               return;
             }
             m.prototype[method] = async function met(...a) {
-              if (process.env.VERBOSE) {
-                log("libcore-call", id + "#" + method, a);
-              }
+              log("libcore-call", id + "#" + method, a);
               const args = params
                 ? a.map((value, i) => unwrapArg(params[i], value))
                 : a;
               const value = await f.apply(this, args);
-              if (process.env.VERBOSE) {
-                log("libcore-result", id + "#" + method, { value });
-              }
+              log("libcore-result", id + "#" + method, { value });
               return wrapResult(returns, value);
             };
           }
