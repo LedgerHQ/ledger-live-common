@@ -85,6 +85,7 @@
     "@ledgerhq/hw-transport": "5.51.1",
     "@ledgerhq/hw-transport-mocker": "^5.51.1",
     "@ledgerhq/hw-transport-node-speculos": "^5.51.1",
+    "@ledgerhq/ledger-core": "7.0.0-beta.5",
     "@ledgerhq/logs": "5.50.0",
     "@polkadot/types": "3.11.1",
     "@walletconnect/client": "1.4.1",
