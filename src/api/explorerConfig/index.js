@@ -227,6 +227,13 @@ const initialExplorerConfig: FullConfig = {
     },
   },
   ethereum: {
+    id: "bnb",
+    stable: {
+      base: "EXPLORER",
+      version: "v3",
+    },
+  },
+  ethereum: {
     id: "eth",
     stable: {
       base: "EXPLORER",
