@@ -4,9 +4,10 @@ import type { Account } from "../../types";
 import { CroNetwork, CroSDK, Units, utils } from "@crypto-com/chain-jslib";
 import { getAccountParams } from "./api/sdk";
 import { getEnv } from "../../env";
+import { TestnetCroeseid3 } from "./logic";
 
 let sdk = getEnv("CRYPTO_ORG_USE_TESTNET")
-  ? CroSDK({ network: CroNetwork.Testnet })
+  ? CroSDK({ network: TestnetCroeseid3 })
   : CroSDK({ network: CroNetwork.Mainnet });
 
 const getTransactionAmount = (a: Account, t: Transaction) => {

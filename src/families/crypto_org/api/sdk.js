@@ -6,10 +6,11 @@ import {
   CryptoOrgAmount,
   CryptoOrgAccountTransactionTypeEnum,
   CryptoOrgCurrency,
-  CryptoOrgTestnetCurrency
+  CryptoOrgTestnetCurrency,
 } from "./sdk.types";
 import { BigNumber } from "bignumber.js";
 import network from "../../../network";
+import { TestnetCroeseid3 } from "../logic";
 
 import type { Operation, OperationType } from "../../../types";
 import { getEnv } from "../../../env";
@@ -32,7 +33,7 @@ let api = null;
 async function getClient() {
   if (!api) {
     const network = CRYPTO_ORG_USE_TESTNET
-      ? CroNetwork.Testnet
+      ? TestnetCroeseid3
       : CroNetwork.Mainnet;
     const sdk = CroSDK({ network: network });
     api = await sdk.CroClient.connect(CRYPTO_ORG_RPC_URL);

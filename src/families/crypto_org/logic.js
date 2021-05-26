@@ -1,10 +1,27 @@
 import { CroNetwork, utils } from "@crypto-com/chain-jslib";
-import { getEnv } from "../../env";
+import { getEnv } from "../../env"
 
 const CRYPTO_ORG_USE_TESTNET = getEnv("CRYPTO_ORG_USE_TESTNET");
 
 export const FIXED_GAS_PRICE = 0.025;
 export const FIXED_DEFAULT_GAS_LIMIT = 200000;
+
+export const TestnetCroeseid3 = {
+  defaultNodeUrl: "https://testnet-croeseid-3.crypto.org",
+  chainId: "testnet-croeseid-3",
+  addressPrefix: "tcro",
+  validatorAddressPrefix: "tcrocncl",
+  validatorPubKeyPrefix: "tcrocnclconspub",
+  coin: {
+    baseDenom: "basetcro",
+    croDenom: "tcro",
+  },
+  bip44Path: {
+    coinType: 1,
+    account: 0,
+  },
+  rpcUrl: "https://testnet-croeseid-3.crypto.org:26657",
+};
 
 /**
  * Returns true if address is a valid md5
