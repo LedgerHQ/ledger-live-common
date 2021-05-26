@@ -71,7 +71,6 @@ const Header = ({ logs, logsMeta, onFiles }: *) => {
         }, []),
     [logs]
   );
-  console.log({ logsMeta });
   const apdus = apdusLogs.map((l) => l.message).join("\n");
   const experimentalEnvs = useMemo(
     () =>
@@ -83,11 +82,7 @@ const Header = ({ logs, logsMeta, onFiles }: *) => {
               }
               return null;
             })
-            .filter((env) => {
-              if (!!env && !!env.value) {
-                return env;
-              }
-            })
+            .filter((env) => !!env && !!env.value)
         : [],
     [logsMeta]
   );
