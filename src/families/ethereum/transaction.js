@@ -160,40 +160,26 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
 
 // see https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
 function getEthereumjsTxCommon(currency) {
-  switch (currency.id) {
-    case "bnb":
-      return Common.forCustomChain("mainnet", {
-        name: "BNB",
-        chainId: 56,
-        networkId: 56,
-      }, "muirGlacier");
-    case "ethereum":
-      return new Common("mainnet", "petersburg");
-    case "ethereum_classic":
-      return Common.forCustomChain(
-        "mainnet",
-        {
-          name: "ETC",
-          chainId: 61,
-          networkId: 1,
-        },
-        "dao"
-      );
-    case "ethereum_classic_ropsten":
-      return Common.forCustomChain(
-        "ropsten",
-        {
-          name: "ETC",
-          chainId: 62,
-          networkId: 1,
-        },
-        "dao"
-      );
-    case "ethereum_ropsten":
-      return new Common("ropsten", "petersburg");
-    default:
-      return null;
+  const { ethereumLikeInfo } = currency;
+  invariant(
+    ethereumLikeInfo,
+    `currency ${currency.id} did not set ethereumLikeInfo`
+  );
+  if (ethereumLikeInfo.chainId === 1) {
+    return new Common(
+      ethereumLikeInfo.baseChain || "mainnet",
+      ethereumLikeInfo.hardfork || "petersburg"
+    );
   }
+  return Common.forCustomChain(
+    ethereumLikeInfo.baseChain || "mainnet",
+    {
+      name: currency.ticker,
+      chainId: ethereumLikeInfo.chainId,
+      networkId: ethereumLikeInfo.networkId || ethereumLikeInfo.chainId,
+    },
+    ethereumLikeInfo.hardfork || "petersburg"
+  );
 }
 
 export function inferTokenAccount(a: Account, t: Transaction) {
@@ -220,7 +206,6 @@ export function buildEthereumTx(
   );
 
   const common = getEthereumjsTxCommon(currency);
-  invariant(common, `common not found for currency ${currency.name}`);
 
   const gasLimit = getGasLimit(transaction);
 
