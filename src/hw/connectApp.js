@@ -1,7 +1,15 @@
 // @flow
 
 import { Observable, concat, from, of, throwError, defer } from "rxjs";
-import { concatMap, map, catchError, delay } from "rxjs/operators";
+import {
+  concatMap,
+  map,
+  catchError,
+  delay,
+  filter,
+  retryWhen,
+  tap,
+} from "rxjs/operators";
 import {
   TransportStatusError,
   FirmwareOrAppUpdateRequired,
@@ -143,7 +151,7 @@ const derivationLogic = (
       if (e instanceof TransportStatusError) {
         const { statusCode } = e;
         if (
-          statusCode === 0x6982 ||
+          // statusCode === 0x6982 ||
           statusCode === 0x6700 ||
           (0x6600 <= statusCode && statusCode <= 0x67ff)
         ) {
@@ -174,6 +182,7 @@ const cmd = ({
         .subscribe((e) => o.next(e));
 
       const innerSub = ({ appName, dependencies }: any) =>
+        // $FlowFixMe
         defer(() => from(getAppAndVersion(transport))).pipe(
           concatMap((appAndVersion): Observable<ConnectAppEvent> => {
             timeoutSub.unsubscribe();
@@ -222,6 +231,18 @@ const cmd = ({
               return of(e);
             }
           }),
+          retryWhen((errors: Observable<*>) =>
+            errors.pipe(
+              filter(
+                (e) =>
+                  !!e &&
+                  e instanceof TransportStatusError &&
+                  e.statusCode === 0x6982 // device is locked in a special case
+              ),
+              tap(() => o.next({ type: "unresponsiveDevice" })),
+              delay(5000)
+            )
+          ),
           catchError((e: Error) => {
             if (
               e instanceof DisconnectedDeviceDuringOperation ||
