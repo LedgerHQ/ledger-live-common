@@ -2,7 +2,7 @@
 import type { Operation, SignedOperation } from "../../types";
 import { patchOperationWithHash } from "../../operation";
 
-import { submit } from "./api";
+import { broadcastTransaction } from "./api";
 import { CryptoOrgErrorBroadcasting } from "./errors";
 
 function isBroadcastTxFailure(result) {
@@ -18,7 +18,7 @@ const broadcast = async ({
 }: {
   signedOperation: SignedOperation,
 }): Promise<Operation> => {
-  const broadcastResponse = await submit(signature);
+  const broadcastResponse = await broadcastTransaction(signature);
 
   if (isBroadcastTxFailure(broadcastResponse)) {
     throw new CryptoOrgErrorBroadcasting();

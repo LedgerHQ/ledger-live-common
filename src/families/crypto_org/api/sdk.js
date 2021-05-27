@@ -1,5 +1,5 @@
 // @flow
-import { CroSDK, CroNetwork, utils } from "@crypto-com/chain-jslib";
+import { utils } from "@crypto-com/chain-jslib";
 import {
   CryptoOrgAccountTransaction,
   CryptoOrgMsgSendContent,
@@ -10,7 +10,7 @@ import {
 } from "./sdk.types";
 import { BigNumber } from "bignumber.js";
 import network from "../../../network";
-import { TestnetCroeseid3 } from "../logic";
+import { CroSdk } from "../logic";
 
 import type { Operation, OperationType } from "../../../types";
 import { getEnv } from "../../../env";
@@ -32,11 +32,7 @@ let api = null;
  */
 async function getClient() {
   if (!api) {
-    const network = CRYPTO_ORG_USE_TESTNET
-      ? TestnetCroeseid3
-      : CroNetwork.Mainnet;
-    const sdk = CroSDK({ network: network });
-    api = await sdk.CroClient.connect(CRYPTO_ORG_RPC_URL);
+    api = await CroSdk.CroClient.connect(CRYPTO_ORG_RPC_URL);
   }
 
   return api;
@@ -70,10 +66,18 @@ export const getAccount = async (addr: string) => {
   let redelegatingBalance = 0;
   let unbondingBalance = 0;
   let commissions = 0;
-  const { data } = await network({
-    method: "GET",
-    url: `${CRYPTO_ORG_INDEXER}/api/v1/accounts/${addr}`,
-  });
+  let data;
+  try {
+    const response = await network({
+      method: "GET",
+      url: `${CRYPTO_ORG_INDEXER}/api/v1/accounts/${addr}`,
+    });
+    data = response.data;
+  } catch (error) {
+    if (error?.status !== 404) {
+      throw error;
+    }
+  }
 
   if (data) {
     balance = getCroAmount(data.result.balance);
@@ -143,9 +147,9 @@ function getOperationValue(
 }
 
 /**
- * Map the MyCoin history transaction to a Ledger Live Operation
+ * Map the send history transaction to a Ledger Live Operation
  */
-function transactionToOperation(
+function convertSendTransactionToOperation(
   accountId: string,
   addr: string,
   messageSendContent: CryptoOrgMsgSendContent,
@@ -194,16 +198,20 @@ export const getOperations = async (
   for (let i = 0; i < accountTransactions.length; i++) {
     const msgs = accountTransactions[i].messages;
     for (let j = 0; j < msgs.length; j++) {
-      if (msgs[j].type == CryptoOrgAccountTransactionTypeEnum.MsgSend) {
-        const msgSend: CryptoOrgMsgSendContent = msgs[j].content;
-        rawTransactions.push(
-          transactionToOperation(
-            accountId,
-            addr,
-            msgSend,
-            accountTransactions[i]
-          )
-        );
+      switch (msgs[j].type) {
+        case CryptoOrgAccountTransactionTypeEnum.MsgSend: {
+          const msgSend: CryptoOrgMsgSendContent = msgs[j].content;
+          rawTransactions.push(
+            convertSendTransactionToOperation(
+              accountId,
+              addr,
+              msgSend,
+              accountTransactions[i]
+            )
+          );
+          break;
+        }
+        default:
       }
     }
   }
@@ -214,7 +222,7 @@ export const getOperations = async (
 /**
  * Broadcast blob to blockchain
  */
-export const submit = async (blob: string) => {
+export const broadcastTransaction = async (blob: string) => {
   const client = await getClient();
   const broadcastResponse = await client.broadcastTx(
     utils.Bytes.fromHexString(blob).toUint8Array()

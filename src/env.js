@@ -146,7 +146,7 @@ const envDefinitions = {
       "gasLimit * gasPrice to determine the fees price. A too low GAS_PRICE will get rejected before the transaction is broadcast",
   },
   CRYPTO_ORG_USE_TESTNET: {
-    def: true,
+    def: false,
     parser: boolParser,
     desc: "set to true if using testnet environment",
   },
@@ -156,7 +156,7 @@ const envDefinitions = {
     desc: "location of the crypto.org indexer API",
   },
   CRYPTO_ORG_TESTNET_INDEXER: {
-    def: "https://crypto.org/service/explorer/croeseid",
+    def: "https://crypto.org/explorer/croeseid3",
     parser: stringParser,
     desc: "location of the crypto.org indexer testnet API",
   },

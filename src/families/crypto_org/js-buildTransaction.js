@@ -1,23 +1,18 @@
 // @flow
 import type { Transaction } from "./types";
 import type { Account } from "../../types";
-import { CroNetwork, CroSDK, Units, utils } from "@crypto-com/chain-jslib";
+import { Units, utils } from "@crypto-com/chain-jslib";
 import { getAccountParams } from "./api/sdk";
-import { getEnv } from "../../env";
-import { TestnetCroeseid3 } from "./logic";
-
-let sdk = getEnv("CRYPTO_ORG_USE_TESTNET")
-  ? CroSDK({ network: TestnetCroeseid3 })
-  : CroSDK({ network: CroNetwork.Mainnet });
+import { CroSdk } from "./logic";
 
 const getTransactionAmount = (a: Account, t: Transaction) => {
   switch (t.mode) {
     case "send":
       if (t.useAllAmount) {
         const amountMinusFee = t.amount.minus(t.fees);
-        return new sdk.Coin(amountMinusFee.toString(), Units.BASE);
+        return new CroSdk.Coin(amountMinusFee.toString(), Units.BASE);
       } else {
-        return new sdk.Coin(t.amount.toString(), Units.BASE);
+        return new CroSdk.Coin(t.amount.toString(), Units.BASE);
       }
     default:
       throw new Error("Unknown mode in transaction");
@@ -36,10 +31,10 @@ export const buildTransaction = async (
 ) => {
   const address = a.freshAddresses[0].address;
   const { accountNumber, sequence } = await getAccountParams(address);
-  const rawTx = new sdk.RawTransaction();
-  rawTx.setFee(new sdk.Coin(t.fees.toString(), Units.BASE));
+  const rawTx = new CroSdk.RawTransaction();
+  rawTx.setFee(new CroSdk.Coin(t.fees.toString(), Units.BASE));
 
-  const msgSend = new sdk.bank.MsgSend({
+  const msgSend = new CroSdk.bank.MsgSend({
     fromAddress: address,
     toAddress: t.recipient,
     amount: getTransactionAmount(a, t),

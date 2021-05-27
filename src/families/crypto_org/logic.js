@@ -1,5 +1,5 @@
-import { CroNetwork, utils } from "@crypto-com/chain-jslib";
-import { getEnv } from "../../env"
+import { CroNetwork, CroSDK, utils } from "@crypto-com/chain-jslib";
+import { getEnv } from "../../env";
 
 const CRYPTO_ORG_USE_TESTNET = getEnv("CRYPTO_ORG_USE_TESTNET");
 
@@ -23,6 +23,10 @@ export const TestnetCroeseid3 = {
   rpcUrl: "https://testnet-croeseid-3.crypto.org:26657",
 };
 
+export const CroSdk = getEnv("CRYPTO_ORG_USE_TESTNET")
+  ? CroSDK({ network: TestnetCroeseid3 })
+  : CroSDK({ network: CroNetwork.Mainnet });
+
 /**
  * Returns true if address is a valid md5
  *
@@ -32,7 +36,7 @@ export const isValidAddress = (address: string): boolean => {
   if (!address) return false;
 
   const network = CRYPTO_ORG_USE_TESTNET
-    ? CroNetwork.Testnet
+    ? TestnetCroeseid3
     : CroNetwork.Mainnet;
 
   const addressProps = {

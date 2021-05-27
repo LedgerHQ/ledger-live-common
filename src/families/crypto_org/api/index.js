@@ -1,6 +1,6 @@
 export {
   getAccount,
   getOperations,
-  submit,
+  broadcastTransaction,
   getAccountParams,
 } from "./sdk";

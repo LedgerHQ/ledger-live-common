@@ -1,6 +1,4 @@
 // @flow
-
-import type { Spec } from "../../libcore/types";
 import type { BigNumber } from "bignumber.js";
 import type {
   TransactionCommon,
@@ -54,11 +52,4 @@ export type NetworkInfo = {};
 export type NetworkInfoRaw = {};
 
 
-export const reflect = (declare: (string, Spec) => void) => {
-  return {
-    OperationMethods: {
-    },
-    AccountMethods: {
-    },
-  };
-}
+export const reflect = (_declare: *) => {};

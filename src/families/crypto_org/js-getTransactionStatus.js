@@ -37,7 +37,6 @@ const getTransactionStatus = async (
     errors.amount = new NotEnoughBalance();
   }
 
-  // If MyCoin needs any specific requirement on amount for instance
   if (!t.amount.gt(0)) {
     errors.amount = new AmountRequired();
   }
