@@ -104,8 +104,8 @@ export const getAccountParams = async (addr: string) => {
   const { accountNumber, sequence } = await client.getAccount(addr);
 
   return {
-    accountNumber: accountNumber,
-    sequence: sequence,
+    accountNumber: accountNumber ?? 0,
+    sequence: sequence ?? 0,
   };
 };
 
