@@ -166,7 +166,7 @@ function getEthereumjsTxCommon(currency) {
         name: "BNB",
         chainId: 56,
         networkId: 56,
-      });
+      }, "muirGlacier");
     case "ethereum":
       return new Common("mainnet", "petersburg");
     case "ethereum_classic":

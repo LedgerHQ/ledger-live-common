@@ -221,6 +221,7 @@ const legacyDerivations: $Shape<CryptoCurrencyConfig<DerivationMode[]>> = {
   bitcoin_cash: [],
   bitcoin: ["legacy_on_bch"],
   vertcoin: ["vertcoin_128", "vertcoin_128_segwit"],
+  bnb: ["ethM", "ethMM"], // we scan on same historical place as ETH's: FIXME make this no longer explicit, as soon as it's a eth family we should do this!
   ethereum: ["ethM", "ethMM"],
   ethereum_classic: ["ethM", "etcM", "ethMM"],
   tezos: ["galleonL", "tezboxL", "tezosbip44h", "tezbox"],
