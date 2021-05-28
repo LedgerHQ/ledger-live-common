@@ -13,11 +13,7 @@ import {
   rawOperationsToOperations,
 } from "../logic";
 import { NetworkDown, LedgerAPI4xx, LedgerAPI5xx } from "@ledgerhq/errors";
-import {
-  errorInterceptor,
-  requestInterceptor,
-  responseInterceptor,
-} from "../../../network";
+import { requestInterceptor, responseInterceptor } from "../../../network";
 
 const LIMIT = getEnv("API_STELLAR_HORIZON_FETCH_LIMIT");
 const FALLBACK_BASE_FEE = 100;
@@ -41,7 +37,7 @@ StellarSdk.HorizonAxiosClient.interceptors.response.use((response) => {
     response.data._links.next.href = next.toString();
   }
   return response;
-}, errorInterceptor);
+});
 
 const getFormattedAmount = (amount: BigNumber) => {
   return amount
