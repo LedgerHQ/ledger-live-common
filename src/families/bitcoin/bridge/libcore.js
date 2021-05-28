@@ -262,7 +262,7 @@ const accountBridge: AccountBridge<Transaction> = {
   sync,
   signOperation,
   broadcast: async ({ account, signedOperation }) => {
-    await calculateFees.reset();
+    calculateFees.reset();
     return broadcast({
       account,
       signedOperation,
