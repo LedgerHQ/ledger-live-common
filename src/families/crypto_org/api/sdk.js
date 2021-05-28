@@ -16,13 +16,13 @@ import type { Operation, OperationType } from "../../../types";
 import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";
 
-const CRYPTO_ORG_INDEXER = getEnv("CRYPTO_ORG_USE_TESTNET")
+const CRYPTO_ORG_USE_TESTNET = getEnv("CRYPTO_ORG_USE_TESTNET");
+const CRYPTO_ORG_INDEXER = CRYPTO_ORG_USE_TESTNET
   ? getEnv("CRYPTO_ORG_TESTNET_INDEXER")
   : getEnv("CRYPTO_ORG_INDEXER");
-const CRYPTO_ORG_RPC_URL = getEnv("CRYPTO_ORG_USE_TESTNET")
+const CRYPTO_ORG_RPC_URL = CRYPTO_ORG_USE_TESTNET
   ? getEnv("CRYPTO_ORG_TESTNET_RPC_URL")
   : getEnv("CRYPTO_ORG_RPC_URL");
-const CRYPTO_ORG_USE_TESTNET = getEnv("CRYPTO_ORG_USE_TESTNET");
 const PAGINATION_LIMIT = 200;
 
 let api = null;
