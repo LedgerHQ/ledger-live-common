@@ -14,7 +14,8 @@ import type {
   SignOperationEvent,
 } from "../../types";
 import { TransactionRefusedOnDevice } from "../../errors";
-import { getMainAccount } from "../../account";
+import { getMainAccount, formatAccount } from "../../account";
+import { formatTransaction } from "../../transaction";
 import { getAccountBridge } from "../../bridge";
 import type { ConnectAppEvent, Input as ConnectAppInput } from "../connectApp";
 import type { Action, Device } from "./types";
@@ -88,6 +89,10 @@ const reducer = (state: State, e: Event): State => {
       return { ...initialState, transactionSignError };
     }
     case "signed":
+      log(
+        "transaction-summary",
+        `✔️ has been signed! ${JSON.stringify(e.signedOperation)}`
+      );
       return { ...state, signedOperation: e.signedOperation };
     case "device-signature-requested":
       return { ...state, deviceSignatureRequested: true };
@@ -128,6 +133,18 @@ export const createAction = (
       }
 
       const bridge = getAccountBridge(mainAccount);
+
+      log(
+        "transaction-summary",
+        `→ FROM ${formatAccount(mainAccount, "basic")}`
+      );
+      log(
+        "transaction-summary",
+        `✔️ transaction ${formatTransaction(transaction, mainAccount)}`
+      );
+
+      // log("transaction-summary", `STATUS ${formatTransactionStatus(transaction, status, mainAccount)}`);
+      // status, how to get it ?
 
       const sub = bridge
         .signOperation({
