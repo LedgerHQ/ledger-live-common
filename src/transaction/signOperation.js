@@ -1,5 +1,5 @@
 // @flow
-
+import { log } from "@ledgerhq/logs";
 import type {
   SignOperationEventRaw,
   SignOperationEvent,
@@ -45,11 +45,17 @@ export const fromSignOperationEventRaw = (
   e: SignOperationEventRaw,
   accountId: string
 ): SignOperationEvent => {
+  let signedOperation;
   switch (e.type) {
     case "signed":
+      signedOperation = fromSignedOperationRaw(e.signedOperation, accountId);
+      log(
+        "transaction-summary",
+        `✔️ has been signed! ${JSON.stringify(e.signedOperation)}`
+      );
       return {
         type: "signed",
-        signedOperation: fromSignedOperationRaw(e.signedOperation, accountId),
+        signedOperation,
       };
     default:
       return e;
@@ -59,11 +65,17 @@ export const fromSignOperationEventRaw = (
 export const toSignOperationEventRaw = (
   e: SignOperationEvent
 ): SignOperationEventRaw => {
+  let signedOperation;
   switch (e.type) {
     case "signed":
+      signedOperation = e.signedOperation;
+      log(
+        "transaction-summary",
+        `✔️ has been signed! ${JSON.stringify(e.signedOperation)}`
+      );
       return {
         type: "signed",
-        signedOperation: toSignedOperationRaw(e.signedOperation, true),
+        signedOperation: toSignedOperationRaw(signedOperation, true),
       };
     default:
       return e;
