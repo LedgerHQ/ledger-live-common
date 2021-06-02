@@ -10,17 +10,15 @@
   "types": "lib/index.d.ts",
   "license": "Apache-2.0",
   "scripts": {
-    "flow-typed": "flow-typed install -s",
     "build": "./scripts/build.sh",
     "build-ts": "./scripts/build-ts.sh",
-    "watch": "node scripts/buildReactIcons.js && BABEL_ENV=cjs babel -wsd lib src & flow-copy-source -wv src lib",
+    "watch": "echo \"script not implemented yet: node scripts/buildReactIcons.js && build\" ",
     "updateAppSupportsQuitApp": "node scripts/updateAppSupportsQuitApp.js",
     "prettier": "prettier --write 'src/**/*.?s' 'cli/src/**/*.?s'",
     "lint": "eslint src",
-    "flow": "flow src",
     "jest": "rimraf libcoredb && mkdir libcoredb && cross-env TZ=America/New_York jest",
     "test": "yarn jest",
-    "ci-lint": "yarn lint && yarn flow",
+    "ci-lint": "yarn lint",
     "ci-test-common": "cross-env EXPERIMENTAL_EXPLORERS=1 yarn test --ci --updateSnapshot && git diff --exit-code src",
     "ci-setup-cli": "yalc publish && cd cli && yalc add @ledgerhq/live-common && yarn && yarn build && yarn link",
     "ci-test-cli": "cd cli && yarn test",
@@ -33,36 +31,6 @@
     "react.js",
     "reactNative.js"
   ],
-  "jest": {
-    "testEnvironment": "node",
-    "coverageDirectory": "./coverage/",
-    "coverageReporters": [
-      "json",
-      "lcov",
-      "clover"
-    ],
-    "collectCoverage": true,
-    "coveragePathIgnorePatterns": [
-      "src/__tests__"
-    ],
-    "modulePathIgnorePatterns": [
-      "<rootDir>/benchmark/.*",
-      "<rootDir>/cli/.yalc/.*"
-    ],
-    "testPathIgnorePatterns": [
-      "benchmark/",
-      "tools/",
-      "mobile-test-app/",
-      "lib/",
-      ".yalc",
-      "cli/",
-      "test-helpers/"
-    ],
-    "moduleDirectories": [
-      "node_modules",
-      "cli/node_modules"
-    ]
-  },
   "peerDependencies": {
     "react": "16",
     "react-dom": "16",
@@ -130,36 +98,21 @@
     "xstate": "^4.19.2"
   },
   "devDependencies": {
-    "@babel/cli": "^7.13.16",
-    "@babel/core": "^7.13.16",
-    "@babel/plugin-proposal-class-properties": "^7.13.0",
-    "@babel/plugin-proposal-export-default-from": "^7.12.13",
-    "@babel/plugin-proposal-export-namespace-from": "^7.12.13",
-    "@babel/plugin-syntax-dynamic-import": "^7.8.3",
-    "@babel/plugin-syntax-import-meta": "^7.10.4",
-    "@babel/preset-env": "^7.13.15",
-    "@babel/preset-flow": "^7.13.13",
-    "@babel/preset-react": "^7.13.13",
     "@svgr/core": "^5.5.0",
     "@testing-library/react-hooks": "^4.0.1",
+    "@types/jest": "^26.0.23",
     "@typescript-eslint/eslint-plugin": "^4.26.0",
     "@typescript-eslint/parser": "^4.26.0",
-    "babel-eslint": "^10.1.0",
-    "babel-jest": "^26.6.3",
     "benchmark": "^2.1.4",
     "cross-env": "^7.0.3",
     "eslint": "^7.25.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-config-prettier": "^7.2.0",
-    "eslint-plugin-flowtype": "^5.7.2",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-prettier": "^3.4.0",
     "eslint-plugin-react": "^7.23.2",
     "eslint-plugin-react-hooks": "^4.2.0",
-    "flow-bin": "^0.133.0",
-    "flow-copy-source": "^2.0.9",
-    "flow-typed": "^2.6.2",
     "glob": "^7.1.7",
     "jest": "^26.6.3",
     "prettier": "2.0.x",
@@ -169,6 +122,8 @@
     "react-test-renderer": "^17.0.2",
     "rimraf": "^3.0.2",
     "timemachine": "^0.3.2",
+    "ts-jest": "^27.0.2",
+    "ts-node": "^10.0.0",
     "typescript": "^4.3.2"
   }
 }
