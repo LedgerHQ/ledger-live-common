@@ -1,6 +1,6 @@
 // @flow
 
-import type { SwapState, TradeMethod } from "./types";
+import type { SwapState, TradeMethod, AvailableProviderV3 } from "./types";
 import { isExchangeSupportedByApp } from "../";
 import type { AccountLike, TokenCurrency, CryptoCurrency } from "../../types";
 import type { InstalledItem } from "../../apps";
@@ -14,6 +14,18 @@ import { isCurrencyExchangeSupported } from "../";
 import { isCurrencySupported } from "../../currencies";
 
 const validCurrencyStatus = { ok: 1, noApp: 1, noAccounts: 1, outdatedApp: 1 };
+
+export const getSwapSelectableCurrencies = (
+  rawProviderData: Array<AvailableProviderV3>
+) => {
+  const ids = [];
+  rawProviderData.forEach((provider) => {
+    const { pairs } = provider;
+    pairs.forEach(({ from, to }) => ids.push(from, to));
+  });
+  return uniq<string>(ids);
+};
+
 // TODO deprecated when noWall
 export const getCurrenciesWithStatus = ({
   accounts,
@@ -96,7 +108,7 @@ export const getSupportedCurrencies = ({
   provider: string,
   tradeMethod?: string,
   fromCurrency?: CryptoCurrency | TokenCurrency,
-}) => {
+}): Array<CryptoCurrency | TokenCurrency> => {
   const providerData = providers.find((p) => p.provider === provider);
   invariant(provider, `No provider matching ${provider} was found`);
 
