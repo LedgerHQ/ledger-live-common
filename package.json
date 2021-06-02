@@ -13,7 +13,6 @@
     "flow-typed": "flow-typed install -s",
     "build": "./scripts/build.sh",
     "build-ts": "./scripts/build-ts.sh",
-    "prepare": "yarn build",
     "watch": "node scripts/buildReactIcons.js && BABEL_ENV=cjs babel -wsd lib src & flow-copy-source -wv src lib",
     "updateAppSupportsQuitApp": "node scripts/updateAppSupportsQuitApp.js",
     "prettier": "prettier --write 'src/**/*.?s' 'cli/src/**/*.?s'",
@@ -29,11 +28,10 @@
   },
   "files": [
     "lib",
+    "lib-es",
     "src",
-    "flow",
     "react.js",
-    "reactNative.js",
-    ".flowconfig"
+    "reactNative.js"
   ],
   "jest": {
     "testEnvironment": "node",
@@ -144,6 +142,8 @@
     "@babel/preset-react": "^7.13.13",
     "@svgr/core": "^5.5.0",
     "@testing-library/react-hooks": "^4.0.1",
+    "@typescript-eslint/eslint-plugin": "^4.26.0",
+    "@typescript-eslint/parser": "^4.26.0",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^26.6.3",
     "benchmark": "^2.1.4",
