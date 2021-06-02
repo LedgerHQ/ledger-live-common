@@ -70,22 +70,22 @@ export type ExchangeRateRaw = {
   providerURL?: ?string,
 };
 
-export type AvailableProvider =
-  | {
-      // v2
-      provider: string,
-      supportedCurrencies: string[],
-    }
-  | {
-      // v3
-      provider: string,
-      pairs: Array<{ from: string, to: string, tradeMethod: string }>,
-    };
+export type AvailableProviderV2 = {
+  provider: string,
+  supportedCurrencies: string[],
+};
+export type AvailableProviderV3 = {
+  provider: string,
+  pairs: Array<{ from: string, to: string, tradeMethod: string }>,
+};
+
+export type AvailableProvider = AvailableProviderV2 | AvailableProviderV3;
 
 export type GetExchangeRates = (
   Exchange,
   Transaction
 ) => Promise<ExchangeRate[]>;
+
 export type GetProviders = () => Promise<AvailableProvider[]>;
 
 export type InitSwapResult = {
