@@ -1,5 +1,3 @@
-// @flow
-
 // A pagination config holds the user's pagination state
 // this is a state that usually should leave during the app lifecycle, but is not persisted
 // it drives the number of operations to poll in accounts
@@ -8,17 +6,14 @@
 // The UI must always do max() to keep the increasing the counter and not going back to lower value: that optim the sync to not recompute things too much
 export type PaginationConfig = {
   // operations to pull for each account
-  operationsPerAccountId?: {
-    [_: string]: number,
-  },
+  operationsPerAccountId?: Record<string, number>;
   // if define and there is no specific account in operationsPerAccountId,
   // this will be the operations count used
-  operations?: number,
+  operations?: number;
 };
-
 export type SyncConfig = {
-  paginationConfig: PaginationConfig,
+  paginationConfig: PaginationConfig;
   // allows to disable the synchronization part – typically to only paginate more
-  withoutSynchronize?: boolean,
-  blacklistedTokenIds?: string[],
+  withoutSynchronize?: boolean;
+  blacklistedTokenIds?: string[];
 };

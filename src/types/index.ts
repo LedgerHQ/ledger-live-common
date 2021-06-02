@@ -1,5 +1,3 @@
-// @flow
-
 export * from "../derivation";
 export * from "./currencies";
 export * from "./account";
