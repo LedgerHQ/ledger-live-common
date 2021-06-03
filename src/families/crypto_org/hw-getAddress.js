@@ -2,15 +2,13 @@
 
 import Cosmos from "@ledgerhq/hw-app-cosmos";
 import type { Resolver } from "../../hw/getAddress/types";
-import { getEnv } from "../../env";
+import { TESTNET_CURRENCY_ID } from "./logic";
 
-const CRYPTO_ORG_USE_TESTNET = getEnv("CRYPTO_ORG_USE_TESTNET");
-
-const resolver: Resolver = async (transport, { path, verify }) => {
+const resolver: Resolver = async (transport, { path, verify, currency }) => {
   const cosmos = new Cosmos(transport);
-  const cointype = CRYPTO_ORG_USE_TESTNET ? "tcro" : "cro";
+  const useTestNet = currency.id == TESTNET_CURRENCY_ID ? true : false;
+  const cointype = useTestNet ? "tcro" : "cro";
   const r = await cosmos.getAddress(path, cointype, verify || false);
-
   return {
     address: r.address,
     publicKey: r.publicKey,

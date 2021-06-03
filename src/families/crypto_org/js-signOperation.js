@@ -15,9 +15,7 @@ import CryptoOrgApp from "@ledgerhq/hw-app-cosmos";
 import { utils } from "@crypto-com/chain-jslib";
 
 import { buildTransaction } from "./js-buildTransaction";
-import { getEnv } from "../../env";
-
-const CRYPTO_ORG_USE_TESTNET = getEnv("CRYPTO_ORG_USE_TESTNET");
+import { TESTNET_CURRENCY_ID } from "./logic";
 
 const buildOptimisticOperation = (
   account: Account,
@@ -71,7 +69,9 @@ const signOperation = ({
         // Get the public key
         const hwApp = new CryptoOrgApp(transport);
         const address = account.freshAddresses[0];
-        const cointype = CRYPTO_ORG_USE_TESTNET ? "tcro" : "cro";
+        const useTestNet =
+          account.currency.id == TESTNET_CURRENCY_ID ? true : false;
+        const cointype = useTestNet ? "tcro" : "cro";
         const { publicKey } = await hwApp.getAddress(
           address.derivationPath,
           cointype,

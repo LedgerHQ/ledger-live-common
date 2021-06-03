@@ -1,9 +1,10 @@
 // @flow
-import type { Operation, SignedOperation } from "../../types";
+import type { Operation, SignedOperation, Account } from "../../types";
 import { patchOperationWithHash } from "../../operation";
 
 import { broadcastTransaction } from "./api";
 import { CryptoOrgErrorBroadcasting } from "./errors";
+import { TESTNET_CURRENCY_ID } from "./logic";
 
 function isBroadcastTxFailure(result) {
   return !!result.code;
@@ -11,14 +12,16 @@ function isBroadcastTxFailure(result) {
 
 /**
  * Broadcast the signed transaction
- * @param {signature: string, operation: string} signedOperation
  */
 const broadcast = async ({
+  account,
   signedOperation: { signature, operation },
 }: {
+  account: Account,
   signedOperation: SignedOperation,
 }): Promise<Operation> => {
-  const broadcastResponse = await broadcastTransaction(signature);
+  const useTestNet = account.currency.id == TESTNET_CURRENCY_ID ? true : false;
+  const broadcastResponse = await broadcastTransaction(signature, useTestNet);
 
   if (isBroadcastTxFailure(broadcastResponse)) {
     throw new CryptoOrgErrorBroadcasting();

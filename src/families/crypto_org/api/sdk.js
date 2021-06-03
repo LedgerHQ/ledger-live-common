@@ -10,19 +10,12 @@ import {
 } from "./sdk.types";
 import { BigNumber } from "bignumber.js";
 import network from "../../../network";
-import { CroSdk } from "../logic";
+import { getCroSdk } from "../logic";
 
 import type { Operation, OperationType } from "../../../types";
 import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";
 
-const CRYPTO_ORG_USE_TESTNET = getEnv("CRYPTO_ORG_USE_TESTNET");
-const CRYPTO_ORG_INDEXER = CRYPTO_ORG_USE_TESTNET
-  ? getEnv("CRYPTO_ORG_TESTNET_INDEXER")
-  : getEnv("CRYPTO_ORG_INDEXER");
-const CRYPTO_ORG_RPC_URL = CRYPTO_ORG_USE_TESTNET
-  ? getEnv("CRYPTO_ORG_TESTNET_RPC_URL")
-  : getEnv("CRYPTO_ORG_RPC_URL");
 const PAGINATION_LIMIT = 200;
 
 let api = null;
@@ -30,9 +23,12 @@ let api = null;
 /**
  * Get CroClient
  */
-async function getClient() {
+async function getClient(useTestNet: boolean) {
+  const crypto_org_rpc_url = useTestNet
+    ? getEnv("CRYPTO_ORG_TESTNET_RPC_URL")
+    : getEnv("CRYPTO_ORG_RPC_URL");
   if (!api) {
-    api = await CroSdk.CroClient.connect(CRYPTO_ORG_RPC_URL);
+    api = await getCroSdk(useTestNet).CroClient.connect(crypto_org_rpc_url);
   }
 
   return api;
@@ -41,11 +37,12 @@ async function getClient() {
 /**
  * Extract only the cro amount from list of currencies
  */
-export const getCroAmount = (amounts: CryptoOrgAmount[]) => {
+export const getCroAmount = (
+  amounts: CryptoOrgAmount[],
+  useTestNet: boolean
+) => {
   let result = BigNumber(0);
-  const currency = CRYPTO_ORG_USE_TESTNET
-    ? CryptoOrgTestnetCurrency
-    : CryptoOrgCurrency;
+  const currency = useTestNet ? CryptoOrgTestnetCurrency : CryptoOrgCurrency;
   amounts.map(function (currentObject) {
     if (currentObject.denom == currency)
       result = result.plus(BigNumber(currentObject.amount));
@@ -57,9 +54,13 @@ export const getCroAmount = (amounts: CryptoOrgAmount[]) => {
 /**
  * Get account balances
  */
-export const getAccount = async (addr: string) => {
-  const client = await getClient();
+export const getAccount = async (addr: string, useTestNet: boolean) => {
+  const client = await getClient(useTestNet);
   const { header } = await client.getBlock();
+
+  const crypto_org_indexer = useTestNet
+    ? getEnv("CRYPTO_ORG_TESTNET_INDEXER")
+    : getEnv("CRYPTO_ORG_INDEXER");
 
   let balance = 0;
   let bondedBalance = 0;
@@ -70,7 +71,7 @@ export const getAccount = async (addr: string) => {
   try {
     const response = await network({
       method: "GET",
-      url: `${CRYPTO_ORG_INDEXER}/api/v1/accounts/${addr}`,
+      url: `${crypto_org_indexer}/api/v1/accounts/${addr}`,
     });
     data = response.data;
   } catch (error) {
@@ -80,11 +81,14 @@ export const getAccount = async (addr: string) => {
   }
 
   if (data) {
-    balance = getCroAmount(data.result.balance);
-    bondedBalance = getCroAmount(data.result.bondedBalance);
-    redelegatingBalance = getCroAmount(data.result.redelegatingBalance);
-    unbondingBalance = getCroAmount(data.result.unbondingBalance);
-    commissions = getCroAmount(data.result.commissions);
+    balance = getCroAmount(data.result.balance, useTestNet);
+    bondedBalance = getCroAmount(data.result.bondedBalance, useTestNet);
+    redelegatingBalance = getCroAmount(
+      data.result.redelegatingBalance,
+      useTestNet
+    );
+    unbondingBalance = getCroAmount(data.result.unbondingBalance, useTestNet);
+    commissions = getCroAmount(data.result.commissions, useTestNet);
   }
   return {
     blockHeight: header.height,
@@ -99,8 +103,8 @@ export const getAccount = async (addr: string) => {
 /**
  * Get account information for sending transactions
  */
-export const getAccountParams = async (addr: string) => {
-  const client = await getClient();
+export const getAccountParams = async (addr: string, useTestNet: boolean) => {
+  const client = await getClient(useTestNet);
   const { accountNumber, sequence } = await client.getAccount(addr);
 
   return {
@@ -130,15 +134,14 @@ function getOperationType(
  * Map transaction to a correct Operation Value (affecting account balance)
  */
 function getOperationValue(
-  messageSendContent: CryptoOrgMsgSendContent
+  messageSendContent: CryptoOrgMsgSendContent,
+  useTestNet: boolean
 ): BigNumber {
   let result = BigNumber(0);
   const amounts = messageSendContent.amount;
   for (let k = 0; k < amounts.length; k++) {
     const amount: CryptoOrgAmount = amounts[k];
-    const currency = CRYPTO_ORG_USE_TESTNET
-      ? CryptoOrgTestnetCurrency
-      : CryptoOrgCurrency;
+    const currency = useTestNet ? CryptoOrgTestnetCurrency : CryptoOrgCurrency;
     if (amount.denom == currency) {
       result = result.plus(amount.amount);
     }
@@ -153,7 +156,8 @@ function convertSendTransactionToOperation(
   accountId: string,
   addr: string,
   messageSendContent: CryptoOrgMsgSendContent,
-  transaction: CryptoOrgAccountTransaction
+  transaction: CryptoOrgAccountTransaction,
+  useTestNet: boolean
 ): Operation {
   const type = getOperationType(messageSendContent, addr);
 
@@ -161,7 +165,7 @@ function convertSendTransactionToOperation(
     id: encodeOperationId(accountId, messageSendContent.txHash, type),
     accountId,
     fee: transaction.fee,
-    value: getOperationValue(messageSendContent, addr),
+    value: getOperationValue(messageSendContent, addr, useTestNet),
     type,
     hash: messageSendContent.txHash,
     blockHash: transaction.blockHash,
@@ -180,14 +184,19 @@ function convertSendTransactionToOperation(
 export const getOperations = async (
   accountId: string,
   addr: string,
-  startAt: number
+  startAt: number,
+  useTestNet: boolean
 ): Promise<Operation[]> => {
   let rawTransactions: Operation[] = [];
+
+  const crypto_org_indexer = useTestNet
+    ? getEnv("CRYPTO_ORG_TESTNET_INDEXER")
+    : getEnv("CRYPTO_ORG_INDEXER");
 
   const { data } = await network({
     method: "GET",
     url:
-      CRYPTO_ORG_INDEXER +
+      crypto_org_indexer +
       `/api/v1/accounts/` +
       addr +
       `/transactions?pagination=offset&page=${
@@ -206,7 +215,8 @@ export const getOperations = async (
               accountId,
               addr,
               msgSend,
-              accountTransactions[i]
+              accountTransactions[i],
+              useTestNet
             )
           );
           break;
@@ -222,8 +232,11 @@ export const getOperations = async (
 /**
  * Broadcast blob to blockchain
  */
-export const broadcastTransaction = async (blob: string) => {
-  const client = await getClient();
+export const broadcastTransaction = async (
+  blob: string,
+  useTestNet: boolean
+) => {
+  const client = await getClient(useTestNet);
   const broadcastResponse = await client.broadcastTx(
     utils.Bytes.fromHexString(blob).toUint8Array()
   );
