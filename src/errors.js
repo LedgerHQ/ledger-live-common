@@ -196,3 +196,34 @@ export const FreshAddressIndexInvalid = createCustomErrorClass(
 );
 
 export * from "./families/polkadot/errors";
+
+/** Platform request account flow canceled */
+export const PlatformRequestAccountCanceled = createCustomErrorClass(
+  "PlatformRequestAccountCanceled"
+);
+
+export const PlatformNoAccountFound = createCustomErrorClass(
+  "PlatformNoAccountFound"
+);
+
+export const PlatformNoCurrencyFound = createCustomErrorClass(
+  "PlatformNoCurrencyFound"
+);
+
+/** Platform sign transaction flow canceled */
+export const PlatformSignTransactionCanceled = createCustomErrorClass(
+  "PlatformSignTransactionCanceled"
+);
+
+export const PlatformTransactionRequired = createCustomErrorClass(
+  "PlatformTransactionRequired"
+);
+
+export const PlatformAccountRequired = createCustomErrorClass(
+  "PlatformAccountRequired"
+);
+
+/** Platform generic flow canceled */
+export const PlatformUserCanceledRequest = createCustomErrorClass(
+  "PlatformUserCanceledRequest"
+);
