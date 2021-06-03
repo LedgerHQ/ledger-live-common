@@ -17,7 +17,8 @@ import {
 
 const getExchangeRates: GetExchangeRates = async (
   exchange: Exchange,
-  transaction: Transaction
+  transaction: Transaction,
+  userId?: string // TODO remove when wyre doesn't require this for rates
 ) => {
   if (getEnv("MOCK")) return mockGetExchangeRates(exchange, transaction);
 
@@ -38,6 +39,9 @@ const getExchangeRates: GetExchangeRates = async (
   const res = await network({
     method: "POST",
     url: `${getSwapAPIBaseURL()}/rate`,
+    headers: {
+      ...(userId ? { userId } : {}),
+    },
     data: usesV3 ? request : [request],
   });
 
