@@ -4,30 +4,30 @@ set -e
 cd $(dirname $0)
 
 targets="\
-customAddressValidation.js \
-hw-getAddress.js \
-hw-signMessage.js \
-libcore-buildOperation.js \
-libcore-buildSubAccounts.js \
-libcore-getFeesForTransaction.js \
-libcore-postSyncPatch.js \
-libcore-postBuildAccount.js \
-libcore-getAccountNetworkInfo.js \
-libcore-mergeOperations.js \
-transaction.js \
-bridge/js.js \
-bridge/libcore.js \
-bridge/mock.js \
-cli-transaction.js \
-specs.js \
-speculos-deviceActions.js \
-deviceTransactionConfig.js \
-test-dataset.js \
-test-specifics.js \
-mock.js \
-account.js \
-exchange.js \
-presync.js \
+customAddressValidation.ts \
+hw-getAddress.ts \
+hw-signMessage.ts \
+libcore-buildOperation.ts \
+libcore-buildSubAccounts.ts \
+libcore-getFeesForTransaction.ts \
+libcore-postSyncPatch.ts \
+libcore-postBuildAccount.ts \
+libcore-getAccountNetworkInfo.ts \
+libcore-mergeOperations.ts \
+transaction.ts \
+bridge/ts.ts \
+bridge/libcore.ts \
+bridge/mock.ts \
+cli-transaction.ts \
+specs.ts \
+speculos-deviceActions.ts \
+deviceTransactionConfig.ts \
+test-dataset.ts \
+test-specifics.ts \
+mock.ts \
+account.ts \
+exchange.ts \
+presync.ts \
 "
 
 withoutNetworkInfo=("algorand polkadot")
@@ -75,7 +75,7 @@ done
 
 for t in $targets; do
   out=../generated/$t
-  if [[ "$out" != *.js ]]; then
+  if [[ "$out" != *.ts ]]; then
     out=$out.js
   fi
   genTarget $t > $out
@@ -85,8 +85,8 @@ done
 
 genDeviceTransactionConfig () {
   for family in $families; do
-    if [ -f $family/deviceTransactionConfig.js ]; then
-      if grep -q "export type ExtraDeviceTransactionField" "$family/deviceTransactionConfig.js"; then
+    if [ -f $family/deviceTransactionConfig.ts ]; then
+      if grep -q "export type ExtraDeviceTransactionField" "$family/deviceTransactionConfig.ts"; then
         echo 'import type { ExtraDeviceTransactionField as ExtraDeviceTransactionField_'$family' } from "../families/'$family'/deviceTransactionConfig";'
       fi
     fi
@@ -94,8 +94,8 @@ genDeviceTransactionConfig () {
 
   echo 'export type ExtraDeviceTransactionField ='
   for family in $families; do
-    if [ -f $family/deviceTransactionConfig.js ]; then
-      if grep -q "export type ExtraDeviceTransactionField" "$family/deviceTransactionConfig.js"; then
+    if [ -f $family/deviceTransactionConfig.ts ]; then
+      if grep -q "export type ExtraDeviceTransactionField" "$family/deviceTransactionConfig.ts"; then
         echo '| ExtraDeviceTransactionField_'$family
       fi
     fi
@@ -161,6 +161,6 @@ genTypesFile () {
   echo '];'
 }
 
-genTypesFile > ../generated/types.js
+genTypesFile > ../generated/types.ts
 
-genDeviceTransactionConfig >> ../generated/deviceTransactionConfig.js
+genDeviceTransactionConfig >> ../generated/deviceTransactionConfig.ts
