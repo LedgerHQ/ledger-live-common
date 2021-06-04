@@ -12,6 +12,7 @@
   "scripts": {
     "build": "./scripts/build.sh",
     "build-ts": "./scripts/build-ts.sh",
+    "prepare": "yarn build-ts",
     "watch": "echo \"script not implemented yet: node scripts/buildReactIcons.js && build\" ",
     "updateAppSupportsQuitApp": "node scripts/updateAppSupportsQuitApp.js",
     "prettier": "prettier --write 'src/**/*.?s' 'cli/src/**/*.?s'",

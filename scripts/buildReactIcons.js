@@ -30,7 +30,7 @@ function reactTemplate(
     ${
       opts.native
         ? `interface Props {
-              size: number; 
+              size: number;
               color: string;
             }`
         : `interface Props {
@@ -47,7 +47,7 @@ function reactTemplate(
   }) {
       return ${jsx};
     }
-    
+
     ${exports}
   `;
 }

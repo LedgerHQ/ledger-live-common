@@ -40,7 +40,6 @@ mkdir generated/bridge
 
 genTarget () {
   t=$1
-  echo '// @flow'
   for family in $families; do
     if [ -f $family/$t ]; then
       echo -n 'import '$family' from "'
@@ -87,7 +86,7 @@ genDeviceTransactionConfig () {
   for family in $families; do
     if [ -f $family/deviceTransactionConfig.ts ]; then
       if grep -q "export type ExtraDeviceTransactionField" "$family/deviceTransactionConfig.ts"; then
-        echo 'import type { ExtraDeviceTransactionField as ExtraDeviceTransactionField_'$family' } from "../families/'$family'/deviceTransactionConfig";'
+        echo 'import { ExtraDeviceTransactionField as ExtraDeviceTransactionField_'$family' } from "../families/'$family'/deviceTransactionConfig";'
       fi
     fi
   done
@@ -106,15 +105,15 @@ genTypesFile () {
   echo '// @flow'
   for family in $families; do
     echo 'import { reflect as '$family'Reflect } from "../families/'$family'/types";'
-    echo 'import type { CoreStatics as CoreStatics_'$family' } from "../families/'$family'/types";'
-    echo 'import type { CoreAccountSpecifics as CoreAccountSpecifics_'$family' } from "../families/'$family'/types";'
-    echo 'import type { CoreOperationSpecifics as CoreOperationSpecifics_'$family' } from "../families/'$family'/types";'
-    echo 'import type { CoreCurrencySpecifics as CoreCurrencySpecifics_'$family' } from "../families/'$family'/types";'
-    echo 'import type { Transaction as '$family'Transaction } from "../families/'$family'/types";'
-    echo 'import type { TransactionRaw as '$family'TransactionRaw } from "../families/'$family'/types";'
+    echo 'import { CoreStatics as CoreStatics_'$family' } from "../families/'$family'/types";'
+    echo 'import { CoreAccountSpecifics as CoreAccountSpecifics_'$family' } from "../families/'$family'/types";'
+    echo 'import { CoreOperationSpecifics as CoreOperationSpecifics_'$family' } from "../families/'$family'/types";'
+    echo 'import { CoreCurrencySpecifics as CoreCurrencySpecifics_'$family' } from "../families/'$family'/types";'
+    echo 'import { Transaction as '$family'Transaction } from "../families/'$family'/types";'
+    echo 'import { TransactionRaw as '$family'TransactionRaw } from "../families/'$family'/types";'
     if [[ ! " ${withoutNetworkInfo[@]} " =~ " ${family} " ]]; then
-      echo 'import type { NetworkInfo as '$family'NetworkInfo } from "../families/'$family'/types";'
-      echo 'import type { NetworkInfoRaw as '$family'NetworkInfoRaw } from "../families/'$family'/types";'
+      echo 'import { NetworkInfo as '$family'NetworkInfo } from "../families/'$family'/types";'
+      echo 'import { NetworkInfoRaw as '$family'NetworkInfoRaw } from "../families/'$family'/types";'
     fi
   done
   echo
