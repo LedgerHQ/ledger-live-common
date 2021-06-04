@@ -1,4 +1,3 @@
-// @flow
 import { useMemo } from "react";
 import { BigNumber } from "bignumber.js";
 import type { AccountLikeArray, TokenAccount } from "../types";
@@ -9,14 +8,15 @@ import {
 import type { CompoundAccountSummary } from "./types";
 import { makeCompoundSummaryForAccount } from "./logic";
 import { findCompoundToken } from "../currencies";
-
 export function useSupplyMax(account: TokenAccount): BigNumber {
   return useMemo(() => getSupplyMax(account), [account]);
 }
-
 export const useSupplyMaxChoiceButtons = (
   supplyMax: BigNumber
-): Array<{ label: string, value: BigNumber }> => {
+): Array<{
+  label: string;
+  value: BigNumber;
+}> => {
   return useMemo(
     () => [
       {
@@ -46,15 +46,13 @@ const makeSummaries = (accounts: AccountLikeArray): CompoundAccountSummary[] =>
       if (acc.type !== "TokenAccount") return;
       const ctoken = findCompoundToken(acc.token);
       if (!ctoken) return;
-
       if (!isCompoundTokenSupported(ctoken)) return;
-
       const parentAccount = accounts.find((a) => a.id === acc.parentId);
       if (!parentAccount || parentAccount.type !== "Account") return;
       const summary = makeCompoundSummaryForAccount(acc, parentAccount);
       return summary;
     })
-    .filter(Boolean);
+    .filter(Boolean) as CompoundAccountSummary[];
 
 export function useCompoundSummaries(
   accounts: AccountLikeArray

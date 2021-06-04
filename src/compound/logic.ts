@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import { findCompoundToken } from "../currencies";
 import type { TokenAccount, Account, Operation } from "../types";
@@ -14,27 +13,28 @@ import {
   findCurrentRate,
   getEnabledAmount,
 } from "../families/ethereum/modules/compound";
-
 // to confirm in practice if this threshold is high enough / too high
-const unlimitedThreshold = BigNumber(2).pow(250);
-
+const unlimitedThreshold = new BigNumber(2).pow(250);
 export function getAccountCapabilities(
   account: TokenAccount
-): ?{
-  enabledAmount: BigNumber,
-  enabledAmountIsUnlimited: boolean,
-  canSupply: boolean,
-  canSupplyMax: boolean,
-  canWithdraw: boolean,
-  status: CompoundAccountStatus,
-} {
+):
+  | {
+      enabledAmount: BigNumber;
+      enabledAmountIsUnlimited: boolean;
+      canSupply: boolean;
+      canSupplyMax: boolean;
+      canWithdraw: boolean;
+      status: CompoundAccountStatus;
+    }
+  | null
+  | undefined {
   if (account.balance.eq(0)) return;
-
   const { token } = account;
   const ctoken = findCompoundToken(token);
+
   if (!ctoken) {
     return {
-      enabledAmount: BigNumber(0),
+      enabledAmount: new BigNumber(0),
       enabledAmountIsUnlimited: false,
       canSupply: false,
       canSupplyMax: false,
@@ -50,14 +50,12 @@ export function getAccountCapabilities(
   const canSupplyMax = canSupply && account.spendableBalance.lte(enabledAmount);
   const cdaiBalanceInDai = account.balance.minus(account.spendableBalance);
   const canWithdraw = cdaiBalanceInDai.gt(0);
-
   const notEnabled = enabledAmount.eq(0);
   const pendingOps = account.pendingOperations.filter(
     (op) => !account.operations.some((o) => o.hash === op.hash)
   );
   const enabling = pendingOps.some((op) => op.extra?.approving);
   const supplying = pendingOps.some((op) => op.type === "SUPPLY");
-
   let status;
 
   if (canWithdraw) {
@@ -86,8 +84,9 @@ export function getAccountCapabilities(
     status,
   };
 }
-
-export const getEnablingOp = (account: TokenAccount): ?Operation =>
+export const getEnablingOp = (
+  account: TokenAccount
+): Operation | null | undefined =>
   account.pendingOperations.find((op) => op.extra?.approving);
 
 const calcInterests = (
@@ -98,34 +97,32 @@ const calcInterests = (
 
 export function makeCompoundSummaryForAccount(
   account: TokenAccount,
-  parentAccount: ?Account
-): ?CompoundAccountSummary {
+  parentAccount: Account | null | undefined
+): CompoundAccountSummary | null | undefined {
   const capabilities = getAccountCapabilities(account);
   if (!capabilities) return;
   const { status } = capabilities;
   if (!status) return;
-
   const { operations } = account;
-
-  const opened: Array<{|
-    startingDate: Date,
-    amountSupplied: BigNumber,
-    openRate: BigNumber,
-    compoundValue: BigNumber,
-  |}> = [];
-  const closed: Array<{|
-    startingDate: Date,
-    endDate: Date,
-    amountSupplied: BigNumber,
-    openRate: BigNumber,
-    compoundValue: BigNumber,
-    closeRate: BigNumber,
-  |}> = [];
-  let totalSupplied = BigNumber(0);
-  let allTimeEarned = BigNumber(0);
-  let accruedInterests = BigNumber(0);
-
+  const opened: Array<{
+    startingDate: Date;
+    amountSupplied: BigNumber;
+    openRate: BigNumber;
+    compoundValue: BigNumber;
+  }> = [];
+  const closed: Array<{
+    startingDate: Date;
+    endDate: Date;
+    amountSupplied: BigNumber;
+    openRate: BigNumber;
+    compoundValue: BigNumber;
+    closeRate: BigNumber;
+  }> = [];
+  let totalSupplied = new BigNumber(0);
+  let allTimeEarned = new BigNumber(0);
+  let accruedInterests = new BigNumber(0);
   const currentRate = findCurrentRate(account.token);
+
   if (!currentRate) {
     return {
       opened: [],
@@ -148,32 +145,38 @@ export function makeCompoundSummaryForAccount(
         opened.push({
           startingDate: operation.date,
           amountSupplied: operation.value,
-          openRate: BigNumber(operation.extra.rate),
-          compoundValue: BigNumber(operation.extra.compoundValue),
+          openRate: new BigNumber(operation.extra.rate),
+          compoundValue: new BigNumber(operation.extra.compoundValue),
         });
       }
 
       if (operation.type === "REDEEM") {
         let amountToClose = operation.value;
+
         while (amountToClose.gt(0) && opened.length > 0) {
           const closingOperation = opened.shift();
+
+          // NOTE: Potentially not dangerous as we do check that
+          // opened.length > 0 so unshift should never be undefined
+          if (!closingOperation) return;
+
           if (amountToClose.gte(closingOperation.amountSupplied)) {
             closed.push({
               amountSupplied: closingOperation.amountSupplied,
               openRate: closingOperation.openRate,
-              closeRate: BigNumber(operation.extra.rate),
+              closeRate: new BigNumber(operation.extra.rate),
               endDate: operation.date,
               startingDate: closingOperation.startingDate,
-              compoundValue: BigNumber(operation.extra.compoundValue),
+              compoundValue: new BigNumber(operation.extra.compoundValue),
             });
           } else {
             closed.push({
               amountSupplied: amountToClose,
               openRate: closingOperation.openRate,
-              closeRate: BigNumber(operation.extra.rate),
+              closeRate: new BigNumber(operation.extra.rate),
               endDate: operation.date,
               startingDate: closingOperation.startingDate,
-              compoundValue: BigNumber(operation.extra.compoundValue),
+              compoundValue: new BigNumber(operation.extra.compoundValue),
             });
             opened.unshift({
               amountSupplied: closingOperation.amountSupplied.minus(
@@ -182,7 +185,7 @@ export function makeCompoundSummaryForAccount(
               openRate: closingOperation.openRate,
               startingDate: closingOperation.startingDate,
               compoundValue: closingOperation.compoundValue.minus(
-                BigNumber(operation.extra.compoundValue)
+                new BigNumber(operation.extra.compoundValue)
               ),
             });
           }
@@ -191,7 +194,6 @@ export function makeCompoundSummaryForAccount(
         }
       }
     });
-
   const o: OpenedLoan[] = opened.map((op) => {
     const { compoundValue, openRate, amountSupplied, startingDate } = op;
     const interestsEarned = calcInterests(
@@ -203,7 +205,6 @@ export function makeCompoundSummaryForAccount(
     totalSupplied = totalSupplied.plus(amountSupplied);
     accruedInterests = accruedInterests.plus(interestsEarned);
     allTimeEarned = allTimeEarned.plus(interestsEarned);
-
     return {
       startingDate,
       amountSupplied,
@@ -211,7 +212,6 @@ export function makeCompoundSummaryForAccount(
       percentageEarned: percentageEarned.toNumber(),
     };
   });
-
   const c: ClosedLoan[] = closed.map((op) => {
     const {
       compoundValue,
@@ -224,7 +224,6 @@ export function makeCompoundSummaryForAccount(
     const interestsEarned = calcInterests(compoundValue, openRate, closeRate);
     const percentageEarned = interestsEarned.div(amountSupplied).times(100);
     allTimeEarned = allTimeEarned.plus(interestsEarned);
-
     return {
       startingDate,
       endDate,
@@ -233,7 +232,6 @@ export function makeCompoundSummaryForAccount(
       percentageEarned: percentageEarned.toNumber(),
     };
   });
-
   return {
     account,
     parentAccount,
@@ -245,34 +243,29 @@ export function makeCompoundSummaryForAccount(
     status,
   };
 }
-
 export const makeClosedHistoryForAccounts = (
   summaries: CompoundAccountSummary[]
 ): ClosedLoansHistory =>
   summaries
     .reduce((loans, summary) => {
       if (!summary.closed.length) return loans;
-
       return loans.concat(
-        // $FlowFixMe issue on LLD side
         summary.closed.map((c) => ({
           ...c,
           account: summary.account,
           parentAccount: summary.parentAccount,
         }))
       );
-    }, [])
+    }, [] as ClosedLoansHistory)
     .sort((a, b) => {
       return b.endDate.getTime() - a.endDate.getTime();
     });
-
 export const makeOpenedHistoryForAccounts = (
   summaries: CompoundAccountSummary[]
 ): OpenedLoansHistory =>
   summaries
     .reduce((loans, summary) => {
       if (!summary.opened.length) return loans;
-
       return loans.concat(
         // $FlowFixMe issue on LLD side
         summary.opened.map((c) => ({
@@ -281,7 +274,7 @@ export const makeOpenedHistoryForAccounts = (
           parentAccount: summary.parentAccount,
         }))
       );
-    }, [])
+    }, [] as OpenedLoansHistory)
     .sort((a, b) => {
       return b.startingDate.getTime() - a.startingDate.getTime();
     });
