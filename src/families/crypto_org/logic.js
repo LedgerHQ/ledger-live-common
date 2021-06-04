@@ -1,3 +1,4 @@
+// @flow
 import { CroNetwork, CroSDK, utils } from "@crypto-com/chain-jslib";
 
 export const TESTNET_CURRENCY_ID = "crypto_org_croeseid";
@@ -26,6 +27,7 @@ let croSdk = null;
 
 /**
  * Get CroSdk
+ * @param {boolean} useTestNet
  */
 export function getCroSdk(useTestNet: boolean) {
   if (!croSdk) {
@@ -40,6 +42,7 @@ export function getCroSdk(useTestNet: boolean) {
  * Returns true if address is a valid md5
  *
  * @param {string} address
+ * @param {boolean} useTestNet
  */
 export const isValidAddress = (
   address: string,

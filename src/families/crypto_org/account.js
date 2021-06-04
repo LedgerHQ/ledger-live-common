@@ -22,11 +22,8 @@ function formatAccountSpecifics(account: Account): string {
 
   if (cryptoOrgResources.bondedBalance.gt(0)) {
     str +=
-      formatCurrencyUnit(
-        unit,
-        cryptoOrgResources.bondedBalance,
-        formatConfig
-      ) + " bonded. ";
+      formatCurrencyUnit(unit, cryptoOrgResources.bondedBalance, formatConfig) +
+      " bonded. ";
   }
 
   if (cryptoOrgResources.redelegatingBalance.gt(0)) {
@@ -49,11 +46,8 @@ function formatAccountSpecifics(account: Account): string {
 
   if (cryptoOrgResources.commissions.gt(0)) {
     str +=
-      formatCurrencyUnit(
-        unit,
-        cryptoOrgResources.commissions,
-        formatConfig
-      ) + " commissions. ";
+      formatCurrencyUnit(unit, cryptoOrgResources.commissions, formatConfig) +
+      " commissions. ";
   }
 
   return str;
