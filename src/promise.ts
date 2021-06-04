@@ -1,10 +1,6 @@
-// @flow
-
 import { log } from "@ledgerhq/logs";
-
 export const delay = (ms: number): Promise<void> =>
   new Promise((f) => setTimeout(f, ms));
-
 const defaults = {
   maxRetry: 4,
   interval: 300,
@@ -13,7 +9,7 @@ const defaults = {
 };
 export function retry<A>(
   f: () => Promise<A>,
-  options?: $Shape<typeof defaults>
+  options?: Partial<typeof defaults>
 ): Promise<A> {
   const { maxRetry, interval, intervalMultiplicator, context } = {
     ...defaults,
@@ -22,9 +18,11 @@ export function retry<A>(
 
   function rec(remainingTry, i) {
     const result = f();
+
     if (remainingTry <= 0) {
       return result;
     }
+
     // In case of failure, wait the interval, retry the action
     return result.catch((e) => {
       log(
@@ -39,10 +37,8 @@ export function retry<A>(
 
   return rec(maxRetry, interval);
 }
-
-type Job<R, A> = (...args: A) => Promise<R>;
-
-export const atomicQueue = <R, A: Array<*>>(
+type Job<R, A extends Array<any>> = (...args: A) => Promise<R>;
+export const atomicQueue = <R, A extends Array<any>>(
   job: Job<R, A>,
   queueIdentifier: (...args: A) => string = () => ""
 ): Job<R, A> => {
@@ -55,7 +51,6 @@ export const atomicQueue = <R, A: Array<*>>(
     return p;
   };
 };
-
 export function execAndWaitAtLeast<A>(
   ms: number,
   cb: () => Promise<A>
@@ -78,20 +73,29 @@ export function execAndWaitAtLeast<A>(
 export async function promiseAllBatched<A, B>(
   batch: number,
   items: Array<A>,
-  fn: (A, number) => Promise<B>
+  fn: (arg0: A, arg1: number) => Promise<B>
 ): Promise<B[]> {
   const data = Array(items.length);
-  const queue = items.map((item, index) => ({ item, index }));
+  const queue = items.map((item, index) => ({
+    item,
+    index,
+  }));
 
   async function step() {
     if (queue.length === 0) return;
-    const { item, index } = queue.shift();
-    data[index] = await fn(item, index);
+    const first = queue.shift();
+    if (first) {
+      const { item, index } = first;
+      data[index] = await fn(item, index);
+    }
     await step(); // each time an item redeem, we schedule another one
   }
 
   // initially, we schedule <batch> items in parallel
-  await Promise.all(Array(Math.min(batch, items.length)).fill().map(step));
-
+  await Promise.all(
+    Array(Math.min(batch, items.length))
+      .fill(() => undefined)
+      .map(step)
+  );
   return data;
 }
