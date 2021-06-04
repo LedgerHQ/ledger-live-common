@@ -101,55 +101,57 @@ const signOperation = ({
         //   A 1-byte length descriptor for the S value
         //   The S coordinate, as a big-endian integer
         //  = 7 bytes of overhead
-        if (signature[0] !== 0x30) {
-          throw new CryptoOrgWrongSignatureHeader();
+        if (signature != null) {
+          if (signature[0] !== 0x30) {
+            throw new CryptoOrgWrongSignatureHeader();
+          }
+
+          // decode DER string format
+          let rOffset = 4;
+          let rLen = signature[3];
+          const sLen = signature[4 + rLen + 1]; // skip over following 0x02 type prefix for s
+          let sOffset = signature.length - sLen;
+          // we can safely ignore the first byte in the 33 bytes cases
+          if (rLen === 33) {
+            rOffset++; // chop off 0x00 padding
+            rLen--;
+          }
+          if (sLen === 33) {
+            sOffset++;
+          } // as above
+          const sigR = signature.slice(rOffset, rOffset + rLen); // skip e.g. 3045022100 and pad
+          const sigS = signature.slice(sOffset);
+
+          const signatureFormatted = Buffer.concat([sigR, sigS]);
+          if (signatureFormatted.length !== 64) {
+            throw new CryptoOrgSignatureSize();
+          }
+
+          const signed = unsigned
+            .setSignature(
+              0,
+              utils.Bytes.fromUint8Array(new Uint8Array(signatureFormatted))
+            )
+            .toSigned()
+            .getHexEncoded();
+
+          o.next({ type: "device-signature-granted" });
+
+          const operation = buildOptimisticOperation(
+            account,
+            transaction,
+            transaction.fees ?? BigNumber(0)
+          );
+
+          o.next({
+            type: "signed",
+            signedOperation: {
+              operation,
+              signature: signed,
+              expirationDate: null,
+            },
+          });
         }
-
-        // decode DER string format
-        let rOffset = 4;
-        let rLen = signature[3];
-        const sLen = signature[4 + rLen + 1]; // skip over following 0x02 type prefix for s
-        let sOffset = signature.length - sLen;
-        // we can safely ignore the first byte in the 33 bytes cases
-        if (rLen === 33) {
-          rOffset++; // chop off 0x00 padding
-          rLen--;
-        }
-        if (sLen === 33) {
-          sOffset++;
-        } // as above
-        const sigR = signature.slice(rOffset, rOffset + rLen); // skip e.g. 3045022100 and pad
-        const sigS = signature.slice(sOffset);
-
-        const signatureFormatted = Buffer.concat([sigR, sigS]);
-        if (signatureFormatted.length !== 64) {
-          throw new CryptoOrgSignatureSize();
-        }
-
-        const signed = unsigned
-          .setSignature(
-            0,
-            utils.Bytes.fromUint8Array(new Uint8Array(signatureFormatted))
-          )
-          .toSigned()
-          .getHexEncoded();
-
-        o.next({ type: "device-signature-granted" });
-
-        const operation = buildOptimisticOperation(
-          account,
-          transaction,
-          transaction.fees ?? BigNumber(0)
-        );
-
-        o.next({
-          type: "signed",
-          signedOperation: {
-            operation,
-            signature: signed,
-            expirationDate: null,
-          },
-        });
       } finally {
         close(transport, deviceId);
       }

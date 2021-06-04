@@ -164,8 +164,8 @@ function convertSendTransactionToOperation(
   return {
     id: encodeOperationId(accountId, messageSendContent.txHash, type),
     accountId,
-    fee: transaction.fee,
-    value: getOperationValue(messageSendContent, addr, useTestNet),
+    fee: BigNumber(transaction.fee.amount),
+    value: getOperationValue(messageSendContent, useTestNet),
     type,
     hash: messageSendContent.txHash,
     blockHash: transaction.blockHash,
@@ -173,8 +173,8 @@ function convertSendTransactionToOperation(
     date: new Date(transaction.blockTime),
     senders: [messageSendContent.fromAddress],
     recipients: [messageSendContent.toAddress],
-    transactionSequenceNumber: messageSendContent.uuid,
     hasFailed: !transaction.success,
+    extra: undefined,
   };
 }
 

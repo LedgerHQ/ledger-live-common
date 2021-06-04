@@ -6,7 +6,6 @@ import { getMainAccount } from "../../account";
 
 import type { Transaction } from "./types";
 
-import { createTransaction } from "./js-transaction";
 import getEstimatedFees from "./js-getFeesForTransaction";
 
 /**
@@ -17,20 +16,13 @@ import getEstimatedFees from "./js-getFeesForTransaction";
 const estimateMaxSpendable = async ({
   account,
   parentAccount,
-  transaction,
 }: {
   account: AccountLike,
   parentAccount: ?Account,
   transaction: ?Transaction,
 }): Promise<BigNumber> => {
   const a = getMainAccount(account, parentAccount);
-  const t = {
-    ...createTransaction(),
-    ...transaction,
-    amount: a.spendableBalance,
-  };
-
-  const fees = await getEstimatedFees({ a, t });
+  const fees = await getEstimatedFees();
   return a.spendableBalance.minus(fees);
 };
 
