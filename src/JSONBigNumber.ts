@@ -112,7 +112,7 @@
 //  This is a reference implementation. You are free to copy, modify, or
 //  redistribute.
 import BigNumber from "bignumber.js";
-var rx_escapable = /[\\"\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g;
+const rx_escapable = /[\\"\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g;
 
 function f(n) {
   // Format integers to have at least two digits.
@@ -150,10 +150,10 @@ if (typeof Date.prototype.toJSON !== "function") {
   String.prototype.toJSON = this_value;
 }
 
-var gap;
-var indent;
-var meta;
-var rep;
+let gap;
+let indent;
+let meta;
+let rep;
 
 function quote(string) {
   // If the string contains no control characters, no quote characters, and no
@@ -175,17 +175,17 @@ function quote(string) {
 
 function str(key, holder) {
   // Produce a string from holder[key].
-  var i; // The loop counter.
+  let i; // The loop counter.
 
-  var k; // The member key.
+  let k; // The member key.
 
-  var v; // The member value.
+  let v; // The member value.
 
-  var length;
-  var mind = gap;
-  var partial;
-  var value = holder[key];
-  var isBigNumber =
+  let length;
+  let mind = gap;
+  let partial;
+  let value = holder[key];
+  let isBigNumber =
     value != null &&
     (value instanceof BigNumber || BigNumber.isBigNumber(value));
 
@@ -320,7 +320,7 @@ export function stringify(value, replacer, space) {
   // that can replace values, or an array of strings that will select the keys.
   // A default replacer method can be provided. Use of the space parameter can
   // produce text that is more easily readable.
-  var i;
+  let i;
   gap = "";
   indent = "";
 
@@ -354,11 +354,11 @@ export function stringify(value, replacer, space) {
 }
 // We are defining the function inside of another function to avoid creating
 // global variables.
-var at; // The index of the current character
+let at; // The index of the current character
 
-var ch; // The current character
+let ch; // The current character
 
-var escapee = {
+const escapee = {
   '"': '"',
   "\\": "\\",
   "/": "/",
@@ -368,9 +368,9 @@ var escapee = {
   r: "\r",
   t: "\t",
 };
-var text;
+let text;
 
-var error = function (m) {
+const error = function (m) {
   // Call error when something is wrong.
   throw {
     name: "SyntaxError",
@@ -380,7 +380,7 @@ var error = function (m) {
   };
 };
 
-var next = function (c?: any) {
+const next = function (c?: any) {
   // If a c parameter is provided, verify that it matches the current character.
   if (c && c !== ch) {
     error("Expected '" + c + "' instead of '" + ch + "'");
@@ -393,7 +393,7 @@ var next = function (c?: any) {
   return ch;
 };
 
-var number = function () {
+const number = function () {
   // Parse a number value to a BigNumber.
   var number;
   var string = "";
@@ -440,7 +440,7 @@ var number = function () {
   }
 };
 
-var string = function () {
+const string = function () {
   // Parse a string value.
   var hex;
   var i;
@@ -486,14 +486,14 @@ var string = function () {
   error("Bad string");
 };
 
-var white = function () {
+const white = function () {
   // Skip whitespace.
   while (ch && ch <= " ") {
     next();
   }
 };
 
-var word = function () {
+const word = function () {
   // true, false, or null.
   switch (ch) {
     case "t":
@@ -522,9 +522,9 @@ var word = function () {
   error("Unexpected '" + ch + "'");
 };
 
-var value; // Place holder for the value function.
+let value; // Place holder for the value function.
 
-var array = function () {
+const array = function () {
   // Parse an array value.
   var arr: any[] = [];
 
@@ -554,10 +554,10 @@ var array = function () {
   error("Bad array");
 };
 
-var object = function () {
+const object = function () {
   // Parse an object value.
-  var key;
-  var obj = {};
+  let key;
+  const obj = {};
 
   if (ch === "{") {
     next("{");
@@ -619,7 +619,7 @@ value = function () {
 // Set the New JSONBigNumber.parse function It will have access to all of the above
 // functions and variables.
 export function parse(source, reviver) {
-  var result;
+  let result;
   text = source;
   at = 0;
   ch = " ";
