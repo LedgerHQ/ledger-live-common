@@ -3,15 +3,13 @@ import {
   sortByMarketcapV2,
   sortByMarketcap,
 } from "./sortByMarketcap";
-import { listCryptoCurrencies, listTokens } from "../currencies";
+import { listCryptoCurrencies, listTokens } from ".";
 import { getBTCValues } from "../countervalues/mock";
-
 test("sortByMarketcap snapshot", () => {
   const list = listCryptoCurrencies().concat(listTokens());
   const tickers = Object.keys(getBTCValues());
   expect(sortByMarketcap(list, tickers).map((c) => c.id)).toMatchSnapshot();
 });
-
 test("sortByMarketcapV2 = sortByMarketcapV1", () => {
   const list = listCryptoCurrencies().concat(listTokens());
   const tickers = Object.keys(getBTCValues());

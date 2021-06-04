@@ -7,7 +7,7 @@ type EnvDef<V> = {
   def: V;
   parser: (arg0: unknown) => V | null | undefined;
 };
-type ExtractEnvValue = <V>(arg0: EnvDef<V>) => V;
+// type ExtractEnvValue = <V>(arg0: EnvDef<V>) => V;
 type EnvDefs = typeof envDefinitions;
 type Env = typeof env;
 export type EnvName = keyof EnvDefs;
@@ -462,12 +462,12 @@ const getDefinition = (name: string): EnvDef<any> | null | undefined =>
   envDefinitions[name];
 
 envDefinitions as Record<EnvName, EnvDef<any>>;
-const defaults: Record<EnvName, ExtractEnvValue> = (mapValues(
+const defaults: Record<EnvName, any> = (mapValues(
   envDefinitions,
   (o) => o.def
-) as unknown) as Record<EnvName, ExtractEnvValue>;
+) as unknown) as Record<EnvName, any>;
 // private local state
-const env: Record<EnvName, ExtractEnvValue> = { ...defaults };
+const env: Record<EnvName, any> = { ...defaults };
 export const getAllEnvNames = (): EnvName[] =>
   Object.keys(envDefinitions) as EnvName[];
 export const getAllEnvs = (): Env => ({ ...env });
