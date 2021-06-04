@@ -1,14 +1,10 @@
-// @flow
-
 import type {
   SignOperationEventRaw,
   SignOperationEvent,
   SignedOperationRaw,
   SignedOperation,
 } from "../types/transaction";
-
 import { fromOperationRaw, toOperationRaw } from "../account";
-
 export const fromSignedOperationRaw = (
   signedOp: SignedOperationRaw,
   accountId: string
@@ -19,12 +15,13 @@ export const fromSignedOperationRaw = (
     signature,
     expirationDate: expirationDate ? new Date(expirationDate) : null,
   };
+
   if (signatureRaw) {
     out.signatureRaw = signatureRaw;
   }
+
   return out;
 };
-
 export const toSignedOperationRaw = (
   signedOp: SignedOperation,
   preserveSubOperation?: boolean
@@ -35,12 +32,13 @@ export const toSignedOperationRaw = (
     signature,
     expirationDate: expirationDate ? expirationDate.toISOString() : null,
   };
+
   if (signatureRaw) {
     out.signatureRaw = signatureRaw;
   }
+
   return out;
 };
-
 export const fromSignOperationEventRaw = (
   e: SignOperationEventRaw,
   accountId: string
@@ -51,11 +49,11 @@ export const fromSignOperationEventRaw = (
         type: "signed",
         signedOperation: fromSignedOperationRaw(e.signedOperation, accountId),
       };
+
     default:
       return e;
   }
 };
-
 export const toSignOperationEventRaw = (
   e: SignOperationEvent
 ): SignOperationEventRaw => {
@@ -65,6 +63,7 @@ export const toSignOperationEventRaw = (
         type: "signed",
         signedOperation: toSignedOperationRaw(e.signedOperation, true),
       };
+
     default:
       return e;
   }

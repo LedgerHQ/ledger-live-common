@@ -1,5 +1,3 @@
-// @flow
-
 import mapValues from "lodash/mapValues";
 import { BigNumber } from "bignumber.js";
 import { deserializeError, serializeError } from "@ledgerhq/errors";
@@ -31,14 +29,13 @@ export const fromTransactionStatusRaw = (
 ): TransactionStatus => ({
   errors: mapValues(ts.errors, fromErrorRaw),
   warnings: mapValues(ts.warnings, fromErrorRaw),
-  estimatedFees: BigNumber(ts.estimatedFees),
-  amount: BigNumber(ts.amount),
-  totalSpent: BigNumber(ts.totalSpent),
+  estimatedFees: new BigNumber(ts.estimatedFees),
+  amount: new BigNumber(ts.amount),
+  totalSpent: new BigNumber(ts.totalSpent),
   recipientIsReadOnly: ts.recipientIsReadOnly,
   txInputs: ts.txInputs ? ts.txInputs.map(fromBitcoinInputRaw) : undefined,
   txOutputs: ts.txOutputs ? ts.txOutputs.map(fromBitcoinOutputRaw) : undefined,
 });
-
 export const toTransactionStatusRaw = (
   ts: TransactionStatus
 ): TransactionStatusRaw => ({
@@ -83,10 +80,12 @@ export const formatTransactionStatus = (
         .slice(0, displayAll ? txInputs.length : n)
         .map((o) => formatInput(mainAccount, o))
         .join("\n");
+
     if (!displayAll) {
       str += "\n...";
     }
   }
+
   if (txOutputs) {
     str +=
       `\nTX OUTPUTS (${txOutputs.length}):\n` +
@@ -99,28 +98,28 @@ export const formatTransactionStatus = (
       showCode: true,
       disableRounding: true,
     });
-
   str +=
     "\n  estimated fees: " +
     formatCurrencyUnit(getAccountUnit(mainAccount), estimatedFees, {
       showCode: true,
       disableRounding: true,
     });
-
   str +=
     "\n  total spent: " +
     formatCurrencyUnit(getAccountUnit(account), totalSpent, {
       showCode: true,
       disableRounding: true,
     });
-
   const errorKeys = Object.keys(errors);
+
   if (errorKeys.length) {
     str +=
       "\n  errors: " +
       errorKeys.map((k) => `${k}: ${formatErrorSmall(errors[k])}`).join(", ");
   }
+
   const warningKeys = Object.keys(warnings);
+
   if (warningKeys.length) {
     str +=
       "\n  warnings: " +
@@ -128,5 +127,6 @@ export const formatTransactionStatus = (
         .map((k) => `${k}: ${formatErrorSmall(warnings[k])}`)
         .join(", ");
   }
+
   return str;
 };
