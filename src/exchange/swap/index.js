@@ -38,11 +38,17 @@ const swapProviders: {
     needsKYC: false,
   },
   wyre: {
-    // FIXME we dont have these.
-    nameAndPubkey: Buffer.from(""),
-    signature: Buffer.from(""),
+    displayName: "Wyre",
+    nameAndPubkey: Buffer.from(
+      "095779726504AD01A6241929A5EC331046868FBACB424696FD7C8A4D824FEE61268374E9F4F87FFC5301F0E0A84CEA69FFED46E14C771F9CA1EEA345F6531994291C816E8AE6",
+      "hex"
+    ),
+    signature: Buffer.from(
+      "304402207b49e46d458a55daee9bc8ed96e1b404c2d99dbbc3d3c3c15430026eb7e01a05022011ab86db08a4c956874a83f23d918319a073fdd9df23a1c7eed8a0a22c98b1e3",
+      "hex"
+    ),
     curve: "secpk256k1",
-    needsKYC: false,
+    needsKYC: true,
   },
 };
 
