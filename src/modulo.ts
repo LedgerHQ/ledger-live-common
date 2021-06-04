@@ -1,6 +1,4 @@
-// @flow
 import { BigNumber } from "bignumber.js";
-
 export const upperModulo = (
   value: BigNumber,
   trackId: BigNumber,
