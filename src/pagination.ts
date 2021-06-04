@@ -1,13 +1,12 @@
-// @flow
 import type { SyncConfig } from "./types";
-
 export function getOperationsPageSize(
-  accountId: ?string,
+  accountId: string | null | undefined,
   syncConfig: SyncConfig
 ): number {
   const { paginationConfig } = syncConfig;
   const { operationsPerAccountId, operations } = paginationConfig;
-  const numbers = [];
+  const numbers: number[] = [];
+
   if (
     operationsPerAccountId &&
     accountId &&
@@ -15,9 +14,11 @@ export function getOperationsPageSize(
   ) {
     numbers.push(operationsPerAccountId[accountId]);
   }
+
   if (typeof operations === "number") {
     numbers.push(operations);
   }
+
   if (numbers.length === 0) return Infinity;
   return Math.max(...numbers);
 }
