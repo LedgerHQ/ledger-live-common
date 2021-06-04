@@ -1,35 +1,29 @@
-// @flow
-
 import type {
   CryptoCurrency,
   ExplorerView,
   TokenAccount,
   Account,
 } from "./types";
-
 export const getDefaultExplorerView = (
   currency: CryptoCurrency
-): ?ExplorerView => currency.explorerViews[0];
-
+): ExplorerView | null | undefined => currency.explorerViews[0];
 export const getTransactionExplorer = (
-  explorerView: ?ExplorerView,
+  explorerView: ExplorerView | null | undefined,
   txHash: string
-): ?string =>
+): string | null | undefined =>
   explorerView && explorerView.tx && explorerView.tx.replace("$hash", txHash);
-
 export const getAddressExplorer = (
-  explorerView: ?ExplorerView,
+  explorerView: ExplorerView | null | undefined,
   address: string
-): ?string =>
+): string | null | undefined =>
   explorerView &&
   explorerView.address &&
   explorerView.address.replace("$address", address);
-
 export const getAccountContractExplorer = (
-  explorerView: ?ExplorerView,
+  explorerView: ExplorerView | null | undefined,
   account: TokenAccount,
   parentAccount: Account
-): ?string =>
+): string | null | undefined =>
   explorerView &&
   explorerView.token &&
   explorerView.token
