@@ -14,7 +14,7 @@ import { LowerThanMinimumRelayFee } from "../../../errors";
 import { validateRecipient } from "../../../bridge/shared";
 import type { AccountBridge, CurrencyBridge } from "../../../types/bridge";
 import type { Account } from "../../../types/account";
-import type { Transaction } from "../types";
+import type { Transaction, NetworkInfo } from "../types";
 import { sync } from "../../../libcore/syncAccount";
 import { scanAccounts } from "../../../libcore/scanAccounts";
 import { getAccountNetworkInfo } from "../../../libcore/getAccountNetworkInfo";
@@ -27,6 +27,7 @@ import { getMinRelayFee } from "../fees";
 import { isChangeOutput, perCoinLogic } from "../transaction";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 import { requiresSatStackReady } from "../satstack";
+import * as explorerConfigAPI from "../../../api/explorerConfig";
 
 const receive = makeAccountBridgeReceive({
   injectGetAddressParams: (account) => {
@@ -37,24 +38,23 @@ const receive = makeAccountBridgeReceive({
   },
 });
 
-const calculateFees = makeLRUCache(
-  async (a, t) => {
-    return getFeesForTransaction({
-      account: a,
-      transaction: t,
-    });
-  },
-  (a, t) =>
-    `${a.id}_${a.blockHeight || 0}_${t.amount.toString()}_${String(
-      t.useAllAmount
-    )}_${t.recipient}_${t.feePerByte ? t.feePerByte.toString() : ""}_${
-      t.utxoStrategy.pickUnconfirmedRBF ? 1 : 0
-    }_${t.utxoStrategy.strategy}_${String(
-      t.rbf
-    )}_${t.utxoStrategy.excludeUTXOs
-      .map(({ hash, outputIndex }) => `${hash}@${outputIndex}`)
-      .join("+")}`
-);
+const getCacheKey = (a, t) =>
+  `${a.id}_${a.blockHeight || 0}_${t.amount.toString()}_${String(
+    t.useAllAmount
+  )}_${t.recipient}_${t.feePerByte ? t.feePerByte.toString() : ""}_${
+    t.utxoStrategy.pickUnconfirmedRBF ? 1 : 0
+  }_${t.utxoStrategy.strategy}_${String(
+    t.rbf
+  )}_${t.utxoStrategy.excludeUTXOs
+    .map(({ hash, outputIndex }) => `${hash}@${outputIndex}`)
+    .join("+")}`;
+
+const calculateFees = makeLRUCache(async (a, t) => {
+  return getFeesForTransaction({
+    account: a,
+    transaction: t,
+  });
+}, getCacheKey);
 
 const createTransaction = () => ({
   family: "bitcoin",
@@ -69,6 +69,7 @@ const createTransaction = () => ({
   feePerByte: null,
   networkInfo: null,
   useAllAmount: false,
+  feesStrategy: "medium",
 });
 
 const updateTransaction = (t, patch) => {
@@ -193,6 +194,19 @@ const getTransactionStatus = async (a, t) => {
   });
 };
 
+const inferFeePerByte = (t: Transaction, networkInfo: NetworkInfo) => {
+  if (t.feesStrategy) {
+    const speed = networkInfo.feeItems.items.find(
+      (item) => t.feesStrategy === item.speed
+    );
+    if (!speed) {
+      return networkInfo.feeItems.defaultFeePerByte;
+    }
+    return speed.feePerByte;
+  }
+  return t.feePerByte || networkInfo.feeItems.defaultFeePerByte;
+};
+
 const prepareTransaction = async (
   a: Account,
   t: Transaction
@@ -205,7 +219,8 @@ const prepareTransaction = async (
     networkInfo = await getAccountNetworkInfo(a);
     invariant(networkInfo.family === "bitcoin", "bitcoin networkInfo expected");
   }
-  const feePerByte = t.feePerByte || networkInfo.feeItems.defaultFeePerByte;
+
+  const feePerByte = inferFeePerByte(t, networkInfo);
   if (
     t.networkInfo === networkInfo &&
     (feePerByte === t.feePerByte || feePerByte.eq(t.feePerByte || 0))
@@ -220,10 +235,21 @@ const prepareTransaction = async (
   };
 };
 
+const preload = async () => {
+  const explorerConfig = await explorerConfigAPI.preload();
+  return { explorerConfig };
+};
+
+const hydrate = (maybeConfig: mixed) => {
+  if (maybeConfig && maybeConfig.explorerConfig) {
+    explorerConfigAPI.hydrate(maybeConfig.explorerConfig);
+  }
+};
+
 const currencyBridge: CurrencyBridge = {
   scanAccounts,
-  preload: () => Promise.resolve(),
-  hydrate: () => {},
+  preload,
+  hydrate,
 };
 
 const accountBridge: AccountBridge<Transaction> = {
@@ -235,7 +261,13 @@ const accountBridge: AccountBridge<Transaction> = {
   receive,
   sync,
   signOperation,
-  broadcast,
+  broadcast: async ({ account, signedOperation }) => {
+    calculateFees.reset();
+    return broadcast({
+      account,
+      signedOperation,
+    });
+  },
 };
 
 export default { currencyBridge, accountBridge };

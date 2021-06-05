@@ -2,6 +2,7 @@
 
 import { Subject } from "rxjs";
 import flatMap from "lodash/flatMap";
+import invariant from "invariant";
 import { getDeviceModel } from "@ledgerhq/devices";
 import type { App } from "../types/manager";
 import type {
@@ -108,6 +109,10 @@ export const reducer = (state: State, action: Action): State => {
           currentProgressSubject: new Subject(),
         };
       } else if (event.type === "runSuccess") {
+        if (state.currentProgressSubject) {
+          state.currentProgressSubject.complete();
+        }
+
         let nextState;
         if (appOp.type === "install") {
           const app = state.apps.find((a) => a.name === appOp.name);
@@ -176,6 +181,10 @@ export const reducer = (state: State, action: Action): State => {
           };
         }
         */
+
+        if (state.currentProgressSubject) {
+          state.currentProgressSubject.complete();
+        }
 
         // any other error stops everything
         return {
@@ -265,13 +274,15 @@ export const reducer = (state: State, action: Action): State => {
         return state;
       }
 
-      const depApp = state.appByName[name];
-      const deps = depApp && depApp.dependencies;
-      const dependentsOfDep =
-        deps && flatMap(deps, (dep) => findDependents(state.appByName, dep));
-      const depsInstalledOutdated =
-        deps &&
-        state.installed.filter((a) => deps.includes(a.name) && !a.updated);
+      const depApp: ?App = state.appByName[name];
+      invariant(depApp, "no such app '%s'", name);
+      const deps = depApp.dependencies;
+      const dependentsOfDep = flatMap(deps, (dep) =>
+        findDependents(state.appByName, dep)
+      );
+      const depsInstalledOutdated = state.installed.filter(
+        (a) => deps.includes(a.name) && !a.updated
+      );
 
       let installList = state.installQueue;
       // installing an app will remove if planned for uninstalling
@@ -285,11 +296,21 @@ export const reducer = (state: State, action: Action): State => {
       } else {
         // if app is already installed but outdated, we'll need to update related deps
         if ((existing && !existing.updated) || depsInstalledOutdated.length) {
+          // if app has installed direct dependent apps, we'll need to update them too
+          const directDependents = findDependents(
+            state.appByName,
+            name
+          ).filter((d) => state.installed.some((a) => a.name === d));
           const outdated = state.installed
             .filter(
               (a) =>
                 !a.updated &&
-                [name, ...deps, ...dependentsOfDep].includes(a.name)
+                [
+                  name,
+                  ...deps,
+                  ...directDependents,
+                  ...dependentsOfDep,
+                ].includes(a.name)
             )
             .map((a) => a.name);
           uninstallList = uninstallList.concat(outdated);
@@ -459,10 +480,12 @@ export const getNextAppOp = (state: State): ?AppOp => {
 };
 
 // resolve the State to predict when all queued ops are done
-export const predictOptimisticState = (state: State): State =>
-  getActionPlan(state)
+export const predictOptimisticState = (state: State): State => {
+  const s = { ...state, currentProgressSubject: null };
+  return getActionPlan(s)
     .map((appOp) => ({
       type: "onRunnerEvent",
       event: { type: "runSuccess", appOp },
     }))
-    .reduce(reducer, state);
+    .reduce(reducer, s);
+};

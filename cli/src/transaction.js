@@ -7,6 +7,7 @@ import shuffle from "lodash/shuffle";
 import flatMap from "lodash/flatMap";
 import { BigNumber } from "bignumber.js";
 import type {
+  TransactionStatus,
   Transaction,
   AccountLike,
   Account,
@@ -39,6 +40,7 @@ export type InferTransactionsOpts = $Shape<{
   recipient: string[],
   amount: string,
   shuffle: boolean,
+  "fees-strategy": string,
 }>;
 
 export const inferTransactionsOpts = uniqBy(
@@ -76,7 +78,7 @@ export const inferTransactionsOpts = uniqBy(
 export async function inferTransactions(
   mainAccount: Account,
   opts: InferTransactionsOpts
-): Promise<Transaction[]> {
+): Promise<[Transaction, TransactionStatus][]> {
   const bridge = getAccountBridge(mainAccount, null);
 
   const specific = perFamily[mainAccount.currency.family];
@@ -121,7 +123,7 @@ export async function inferTransactions(
       if (errorKeys.length) {
         throw status.errors[errorKeys[0]];
       }
-      return tx;
+      return [tx, status];
     })
   );
 

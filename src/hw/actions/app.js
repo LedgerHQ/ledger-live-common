@@ -21,7 +21,7 @@ import {
   takeWhile,
 } from "rxjs/operators";
 import isEqual from "lodash/isEqual";
-import { useEffect, useCallback, useState, useMemo } from "react";
+import { useEffect, useCallback, useState, useMemo, useRef } from "react";
 import { log } from "@ledgerhq/logs";
 import { getDeviceModel } from "@ledgerhq/devices";
 import {
@@ -46,16 +46,21 @@ type State = {|
   isLoading: boolean,
   requestQuitApp: boolean,
   requestOpenApp: ?string,
-  requiresAppInstallation: ?{ appName: string },
+  requiresAppInstallation: ?{ appName: string, appNames: string[] },
   opened: boolean,
   appAndVersion: ?AppAndVersion,
   unresponsive: boolean,
   allowOpeningRequestedWording: ?string,
   allowOpeningGranted: boolean,
+  allowManagerRequestedWording: ?string,
+  allowManagerGranted: boolean,
   device: ?Device,
   error: ?Error,
   derivation: ?{ address: string },
   displayUpgradeWarning: boolean,
+  installingApp?: boolean,
+  progress?: number,
+  listingApps?: boolean,
 |};
 
 export type AppState = {|
@@ -70,6 +75,7 @@ export type AppRequest = {
   currency?: ?CryptoCurrency,
   account?: ?Account,
   tokenCurrency?: ?TokenCurrency,
+  dependencies?: AppRequest[],
 };
 
 export type AppResult = {|
@@ -101,12 +107,16 @@ const getInitialState = (device?: ?Device): State => ({
   requiresAppInstallation: null,
   allowOpeningRequestedWording: null,
   allowOpeningGranted: false,
+  allowManagerRequestedWording: null,
+  allowManagerGranted: false,
   device: null,
   opened: false,
   appAndVersion: null,
   error: null,
   derivation: null,
   displayUpgradeWarning: false,
+  installingApp: false,
+  listingApps: false,
 });
 
 const reducer = (state: State, e: Event): State => {
@@ -126,12 +136,40 @@ const reducer = (state: State, e: Event): State => {
         device: e.device,
       };
 
+    case "stream-install":
+      return {
+        isLoading: false,
+        requestQuitApp: false,
+        requiresAppInstallation: null,
+        allowOpeningRequestedWording: null,
+        allowOpeningGranted: true,
+        allowManagerRequestedWording: null,
+        allowManagerGranted: true,
+        device: state.device,
+        opened: false,
+        appAndVersion: null,
+        error: null,
+        derivation: null,
+        displayUpgradeWarning: false,
+        unresponsive: false,
+        installingApp: true,
+        progress: e.progress || 0,
+        requestOpenApp: null,
+        listingApps: false,
+      };
+    case "listing-apps":
+      return {
+        ...state,
+        listingApps: true,
+      };
+
     case "error":
       return {
         ...getInitialState(e.device),
         device: e.device || null,
         error: e.error,
         isLoading: false,
+        listingApps: false,
       };
 
     case "ask-open-app":
@@ -141,6 +179,8 @@ const reducer = (state: State, e: Event): State => {
         requiresAppInstallation: null,
         allowOpeningRequestedWording: null,
         allowOpeningGranted: false,
+        allowManagerRequestedWording: null,
+        allowManagerGranted: false,
         device: state.device,
         opened: false,
         appAndVersion: null,
@@ -158,6 +198,8 @@ const reducer = (state: State, e: Event): State => {
         requiresAppInstallation: null,
         allowOpeningRequestedWording: null,
         allowOpeningGranted: false,
+        allowManagerRequestedWording: null,
+        allowManagerGranted: false,
         device: state.device,
         opened: false,
         appAndVersion: null,
@@ -174,7 +216,6 @@ const reducer = (state: State, e: Event): State => {
         requestQuitApp: false,
         requestOpenApp: null,
         requiresAppInstallation: null,
-        allowOpeningGranted: false,
         device: state.device,
         opened: false,
         appAndVersion: null,
@@ -182,7 +223,10 @@ const reducer = (state: State, e: Event): State => {
         derivation: null,
         displayUpgradeWarning: false,
         unresponsive: false,
-        allowOpeningRequestedWording: e.wording,
+        allowOpeningGranted: false,
+        allowOpeningRequestedWording: null,
+        allowManagerGranted: false,
+        allowManagerRequestedWording: e.wording,
       };
 
     case "device-permission-granted":
@@ -198,15 +242,16 @@ const reducer = (state: State, e: Event): State => {
         derivation: null,
         displayUpgradeWarning: false,
         unresponsive: false,
-        allowOpeningRequestedWording: null,
         allowOpeningGranted: true,
+        allowOpeningRequestedWording: null,
+        allowManagerGranted: true,
+        allowManagerRequestedWording: null,
       };
 
     case "app-not-installed":
       return {
         requestQuitApp: false,
         requestOpenApp: null,
-        allowOpeningGranted: false,
         device: state.device,
         opened: false,
         appAndVersion: null,
@@ -215,8 +260,14 @@ const reducer = (state: State, e: Event): State => {
         displayUpgradeWarning: false,
         isLoading: false,
         unresponsive: false,
+        allowOpeningGranted: false,
         allowOpeningRequestedWording: null,
-        requiresAppInstallation: { appName: e.appName },
+        allowManagerGranted: false,
+        allowManagerRequestedWording: null,
+        requiresAppInstallation: {
+          appNames: e.appNames,
+          appName: e.appName,
+        },
       };
 
     case "opened":
@@ -224,8 +275,10 @@ const reducer = (state: State, e: Event): State => {
         requestQuitApp: false,
         requestOpenApp: null,
         requiresAppInstallation: null,
-        allowOpeningRequestedWording: null,
         allowOpeningGranted: false,
+        allowOpeningRequestedWording: null,
+        allowManagerGranted: false,
+        allowManagerRequestedWording: null,
         device: state.device,
         error: null,
         isLoading: false,
@@ -249,6 +302,7 @@ function inferCommandParams(appRequest: AppRequest) {
   let appName = appRequest.appName;
   const account = appRequest.account;
   let currency = appRequest.currency;
+  let dependencies = appRequest.dependencies;
   if (!currency && account) {
     currency = account.currency;
   }
@@ -258,8 +312,12 @@ function inferCommandParams(appRequest: AppRequest) {
 
   invariant(appName, "appName or currency or account is missing");
 
+  if (dependencies) {
+    dependencies = dependencies.map((d) => inferCommandParams(d).appName);
+  }
+
   if (!currency) {
-    return { appName };
+    return { appName, dependencies };
   }
 
   let extra;
@@ -282,6 +340,7 @@ function inferCommandParams(appRequest: AppRequest) {
 
   return {
     appName,
+    dependencies,
     requiresDerivation: {
       derivationMode,
       path: derivationPath,
@@ -417,16 +476,31 @@ export function setDeviceMode(mode: $Keys<typeof implementations>) {
 export const createAction = (
   connectAppExec: (ConnectAppInput) => Observable<ConnectAppEvent>
 ): AppAction => {
-  const connectApp = (device, params) =>
-    !device
-      ? empty()
-      : connectAppExec({
-          modelId: device.modelId,
-          devicePath: device.deviceId,
-          ...params,
-        }).pipe(catchError((error: Error) => of({ type: "error", error })));
-
   const useHook = (device: ?Device, appRequest: AppRequest): AppState => {
+    const dependenciesResolvedRef = useRef(false);
+
+    const connectApp = useCallback(
+      (device, params) =>
+        !device
+          ? empty()
+          : connectAppExec({
+              modelId: device.modelId,
+              devicePath: device.deviceId,
+              ...params,
+              dependencies: dependenciesResolvedRef.current
+                ? undefined
+                : params.dependencies,
+            }).pipe(
+              tap((e) => {
+                if (e.type === "dependencies-resolved") {
+                  dependenciesResolvedRef.current = true;
+                }
+              }),
+              catchError((error: Error) => of({ type: "error", error }))
+            ),
+      []
+    );
+
     // repair modal will interrupt everything and be rendered instead of the background content
     const [state, setState] = useState(() => getInitialState(device));
     const [resetIndex, setResetIndex] = useState(0);
@@ -473,9 +547,11 @@ export const createAction = (
       return () => {
         sub.unsubscribe();
       };
-    }, [params, deviceSubject, state.opened, resetIndex]);
+    }, [params, deviceSubject, state.opened, resetIndex, connectApp]);
 
     const onRetry = useCallback(() => {
+      // After an error we can't guarantee dependencies are resolved
+      dependenciesResolvedRef.current = false;
       setResetIndex((i) => i + 1);
       setState(getInitialState(device));
     }, [device]);
