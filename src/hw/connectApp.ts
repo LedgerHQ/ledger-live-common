@@ -39,7 +39,7 @@ export type Input = {
 export type AppAndVersion = {
   name: string;
   version: string;
-  flags: number;
+  flags: number | Buffer;
 };
 export type ConnectAppEvent =
   | {
@@ -93,29 +93,30 @@ export const openAppFromDashboard = (
   appName: string
 ): Observable<ConnectAppEvent> =>
   concat(
-    of({
+    of<ConnectAppEvent>({
       type: "ask-open-app",
       appName,
     }),
     defer(() => from(openApp(transport, appName))).pipe(
       concatMap(() =>
-        of({
+        of<ConnectAppEvent>({
           type: "device-permission-granted",
         })
       ),
       catchError((e) => {
         if (e && e instanceof TransportStatusError) {
+          // @ts-expect-error TransportStatusError to be typed on ledgerjs
           switch (e.statusCode) {
             case 0x6984:
             case 0x6807:
               return getEnv("EXPERIMENTAL_INLINE_INSTALL")
-                ? streamAppInstall({
+                ? (streamAppInstall({
                     transport,
                     appNames: [appName],
                     onSuccessObs: () =>
                       from(openAppFromDashboard(transport, appName)),
-                  })
-                : of({
+                  }) as Observable<ConnectAppEvent>)
+                : of<ConnectAppEvent>({
                     type: "app-not-installed",
                     appName,
                     appNames: [appName],
@@ -139,7 +140,7 @@ const attemptToQuitApp = (
   appAndVersion && appSupportsQuitApp(appAndVersion)
     ? from(quitApp(transport)).pipe(
         concatMap(() =>
-          of({
+          of<ConnectAppEvent>({
             type: "disconnected",
           })
         ),
@@ -169,7 +170,7 @@ const derivationLogic = (
       })
     )
   ).pipe(
-    map(({ address }) => ({
+    map<any, ConnectAppEvent>(({ address }) => ({
       type: "opened",
       app: appAndVersion,
       derivation: {
@@ -180,13 +181,14 @@ const derivationLogic = (
       if (!e) return throwError(e);
 
       if (e instanceof BtcUnmatchedApp) {
-        return of({
+        return of<ConnectAppEvent>({
           type: "ask-open-app",
           appName,
         });
       }
 
       if (e instanceof TransportStatusError) {
+        // @ts-expect-error TransportStatusError to be typed on ledgerjs
         const { statusCode } = e;
 
         if (
@@ -194,7 +196,7 @@ const derivationLogic = (
           statusCode === 0x6700 ||
           (0x6600 <= statusCode && statusCode <= 0x67ff)
         ) {
-          return of({
+          return of<ConnectAppEvent>({
             type: "ask-open-app",
             appName,
           });
@@ -202,9 +204,7 @@ const derivationLogic = (
 
         switch (statusCode) {
           case 0x6f04: // FW-90. app was locked...
-
           case 0x6faa: // FW-90. app bricked, a reboot fixes it.
-
           case 0x6d00:
             // this is likely because it's the wrong app (LNS 1.3.1)
             return attemptToQuitApp(transport, appAndVersion);
@@ -229,7 +229,7 @@ const cmd = ({
           type: "unresponsiveDevice",
         })
           .pipe(delay(1000))
-          .subscribe((e) => o.next(e));
+          .subscribe((e) => o.next(e as ConnectAppEvent));
 
         const innerSub = ({ appName, dependencies }: any) =>
           defer(() => from(getAppAndVersion(transport))).pipe(
@@ -259,7 +259,10 @@ const cmd = ({
                 }
 
                 if (dependencies?.length || appAndVersion.name !== appName) {
-                  return attemptToQuitApp(transport, appAndVersion);
+                  return attemptToQuitApp(
+                    transport,
+                    appAndVersion as AppAndVersion
+                  );
                 }
 
                 if (
@@ -270,7 +273,7 @@ const cmd = ({
                   )
                 ) {
                   return throwError(
-                    new UpdateYourApp(null, {
+                    new UpdateYourApp(undefined, {
                       managerAppName: appAndVersion.name,
                     })
                   );
@@ -279,7 +282,7 @@ const cmd = ({
                 if (requiresDerivation) {
                   return derivationLogic(transport, {
                     requiresDerivation,
-                    appAndVersion,
+                    appAndVersion: appAndVersion as AppAndVersion,
                     appName,
                   });
                 } else {
@@ -304,7 +307,9 @@ const cmd = ({
               if (
                 e &&
                 e instanceof TransportStatusError &&
+                // @ts-expect-error TransportStatusError to be typed on ledgerjs
                 (e.statusCode === 0x6e00 || // in 1.3.1 dashboard
+                  // @ts-expect-error TransportStatusError to be typed on ledgerjs
                   e.statusCode === 0x6d00) // in 1.3.1 and bitcoin app
               ) {
                 // fallback on "old way" because device does not support getAppAndVersion
@@ -326,7 +331,9 @@ const cmd = ({
         const sub = innerSub({
           appName,
           dependencies,
+          // @ts-expect-error I have no idea how to fix this
         }).subscribe(o);
+
         return () => {
           timeoutSub.unsubscribe();
           sub.unsubscribe();

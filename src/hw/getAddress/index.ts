@@ -4,7 +4,7 @@ import {
   UserRefusedAddress,
 } from "@ledgerhq/errors";
 import { log } from "@ledgerhq/logs";
-import type { Resolver } from "./types";
+import { Resolver } from "./types";
 import perFamily from "../../generated/hw-getAddress";
 
 const dispatch: Resolver = (transport, opts) => {
