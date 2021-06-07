@@ -34,7 +34,7 @@ const initialExplorerConfig: FullConfig = {
       version: "v2",
     },
     experimental: {
-      base: "EXPLORER_BETA",
+      base: "EXPLORER",
       version: "v3",
     },
   },
