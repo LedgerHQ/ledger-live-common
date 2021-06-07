@@ -3,11 +3,10 @@ import type { Transaction } from "./types";
 import type { Account } from "../../types";
 import { Units, utils } from "@crypto-com/chain-jslib";
 import { getAccountParams } from "./api/sdk";
-import { getCroSdk, TESTNET_CURRENCY_ID } from "./logic";
+import { getCroSdk } from "./logic";
 
 const getTransactionAmount = (a: Account, t: Transaction) => {
-  const useTestNet = a.currency.id == TESTNET_CURRENCY_ID ? true : false;
-  const croSdk = getCroSdk(useTestNet);
+  const croSdk = getCroSdk(a.currency.id);
   switch (t.mode) {
     case "send":
       if (t.useAllAmount) {
@@ -31,12 +30,11 @@ export const buildTransaction = async (
   t: Transaction,
   publicKey: string
 ) => {
-  const useTestNet = a.currency.id == TESTNET_CURRENCY_ID ? true : false;
-  const croSdk = getCroSdk(useTestNet);
+  const croSdk = getCroSdk(a.currency.id);
   const address = a.freshAddresses[0].address;
   const { accountNumber, sequence } = await getAccountParams(
     address,
-    useTestNet
+    a.currency.id
   );
   const rawTx = new croSdk.RawTransaction();
   rawTx.setFee(new croSdk.Coin(t.fees.toString(), Units.BASE));

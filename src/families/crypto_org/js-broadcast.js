@@ -4,7 +4,6 @@ import { patchOperationWithHash } from "../../operation";
 
 import { broadcastTransaction } from "./api";
 import { CryptoOrgErrorBroadcasting } from "./errors";
-import { TESTNET_CURRENCY_ID } from "./logic";
 
 function isBroadcastTxFailure(result) {
   return !!result.code;
@@ -20,11 +19,15 @@ const broadcast = async ({
   account: Account,
   signedOperation: SignedOperation,
 }): Promise<Operation> => {
-  const useTestNet = account.currency.id == TESTNET_CURRENCY_ID ? true : false;
-  const broadcastResponse = await broadcastTransaction(signature, useTestNet);
+  const broadcastResponse = await broadcastTransaction(
+    signature,
+    account.currency.id
+  );
 
   if (isBroadcastTxFailure(broadcastResponse)) {
-    throw new CryptoOrgErrorBroadcasting();
+    throw new CryptoOrgErrorBroadcasting(
+      `broadcasting failed with error code ${broadcastResponse.code}`
+    );
   }
 
   return patchOperationWithHash(operation, broadcastResponse.transactionHash);

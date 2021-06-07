@@ -23,19 +23,28 @@ export const TestnetCroeseid3 = {
   rpcUrl: "https://testnet-croeseid-3.crypto.org:26657",
 };
 
-let croSdk = null;
+const croSdks = {};
+
+/**
+ * Returns true if we are using testnet
+ *
+ * @param {string} currency
+ */
+export function isTestNet(currency: string) {
+  return currency == TESTNET_CURRENCY_ID;
+}
 
 /**
  * Get CroSdk
- * @param {boolean} useTestNet
+ * @param {string} currency
  */
-export function getCroSdk(useTestNet: boolean) {
-  if (!croSdk) {
-    croSdk = useTestNet
+export function getCroSdk(currency: string) {
+  if (!croSdks[currency]) {
+    croSdks[currency] = isTestNet(currency)
       ? CroSDK({ network: TestnetCroeseid3 })
       : CroSDK({ network: CroNetwork.Mainnet });
   }
-  return croSdk;
+  return croSdks[currency];
 }
 
 /**
@@ -44,13 +53,10 @@ export function getCroSdk(useTestNet: boolean) {
  * @param {string} address
  * @param {boolean} useTestNet
  */
-export const isValidAddress = (
-  address: string,
-  useTestNet: boolean
-): boolean => {
+export const isValidAddress = (address: string, currency: string): boolean => {
   if (!address) return false;
 
-  const network = useTestNet ? TestnetCroeseid3 : CroNetwork.Mainnet;
+  const network = isTestNet(currency) ? TestnetCroeseid3 : CroNetwork.Mainnet;
 
   const addressProps = {
     address: address,

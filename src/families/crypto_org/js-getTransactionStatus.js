@@ -9,7 +9,7 @@ import {
 } from "@ledgerhq/errors";
 import type { Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
-import { isValidAddress, TESTNET_CURRENCY_ID } from "./logic";
+import { isValidAddress } from "./logic";
 
 const getTransactionStatus = async (
   a: Account,
@@ -41,10 +41,9 @@ const getTransactionStatus = async (
     errors.amount = new AmountRequired();
   }
 
-  const useTestNet = a.currency.id == TESTNET_CURRENCY_ID ? true : false;
   if (!t.recipient) {
     errors.recipient = new RecipientRequired();
-  } else if (!isValidAddress(t.recipient, useTestNet)) {
+  } else if (!isValidAddress(t.recipient, a.currency.id)) {
     errors.recipient = new InvalidAddress();
   }
 
