@@ -30,21 +30,21 @@ const croSdks = {};
  *
  * @param {string} currency
  */
-export function isTestNet(currency: string) {
-  return currency == TESTNET_CURRENCY_ID;
+export function isTestNet(currencyId: string) {
+  return currencyId == TESTNET_CURRENCY_ID;
 }
 
 /**
  * Get CroSdk
  * @param {string} currency
  */
-export function getCroSdk(currency: string) {
-  if (!croSdks[currency]) {
-    croSdks[currency] = isTestNet(currency)
+export function getCroSdk(currencyId: string) {
+  if (!croSdks[currencyId]) {
+    croSdks[currencyId] = isTestNet(currencyId)
       ? CroSDK({ network: TestnetCroeseid3 })
       : CroSDK({ network: CroNetwork.Mainnet });
   }
-  return croSdks[currency];
+  return croSdks[currencyId];
 }
 
 /**
@@ -53,10 +53,13 @@ export function getCroSdk(currency: string) {
  * @param {string} address
  * @param {boolean} useTestNet
  */
-export const isValidAddress = (address: string, currency: string): boolean => {
+export const isValidAddress = (
+  address: string,
+  currencyId: string
+): boolean => {
   if (!address) return false;
 
-  const network = isTestNet(currency) ? TestnetCroeseid3 : CroNetwork.Mainnet;
+  const network = isTestNet(currencyId) ? TestnetCroeseid3 : CroNetwork.Mainnet;
 
   const addressProps = {
     address: address,
