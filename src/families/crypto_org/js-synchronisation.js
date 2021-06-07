@@ -8,7 +8,6 @@ import { getAccount, getOperations } from "./api";
 const getAccountShape: GetAccountShape = async (info) => {
   const { id, address, initialAccount, currency } = info;
   const oldOperations = initialAccount?.operations || [];
-
   const {
     blockHeight,
     balance,
@@ -16,16 +15,16 @@ const getAccountShape: GetAccountShape = async (info) => {
     redelegatingBalance,
     unbondingBalance,
     commissions,
-  } = await getAccount(address, currency);
+  } = await getAccount(address, currency.id);
 
   // Merge new operations with the previously synced ones
   let startAt = 0;
   let maxIteration = 20;
   let operations = oldOperations;
-  let newOperations = await getOperations(id, address, startAt++, currency);
+  let newOperations = await getOperations(id, address, startAt++, currency.id);
   do {
     operations = mergeOps(operations, newOperations);
-    newOperations = await getOperations(id, address, startAt++, currency);
+    newOperations = await getOperations(id, address, startAt++, currency.id);
   } while (--maxIteration && newOperations.length != 0);
 
   const shape = {

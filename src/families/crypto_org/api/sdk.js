@@ -32,7 +32,6 @@ export async function getClient(currency) {
   instances[currency] = await getCroSdk(currency).CroClient.connect(
     crypto_org_rpc_url
   );
-  await instances[currency].connect();
   return instances[currency];
 }
 
