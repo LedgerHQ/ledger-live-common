@@ -13,7 +13,8 @@
     "moduleResolution": "node",
     "downlevelIteration": true,
     "outDir": "lib",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "jsx": "react"
   },
   "include": ["src/**/*"]
 }
