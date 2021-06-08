@@ -5,7 +5,6 @@ interface IAt {
 interface IBalanceLock {
   id: string;
   amount: string;
-  id: string;
 }
 interface IPallet {
   at: IAt;
