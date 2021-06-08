@@ -1,6 +1,4 @@
-// @flow
 import type { CryptoCurrency } from "../../types";
-
 // correspond ~ to min relay fees but determined empirically for a tx to be accepted by network
 const minFees = {
   bitcoin: 1000,
@@ -14,6 +12,5 @@ const minFees = {
   viacoin: 2000,
   peercoin: 2000,
 };
-
 export const getMinRelayFee = (currency: CryptoCurrency): number =>
   minFees[currency.id] || 0;
