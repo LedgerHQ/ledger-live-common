@@ -1,5 +1,3 @@
-// @flow
-
 export default {
   name: "digibyte seed 1",
   apdus: `

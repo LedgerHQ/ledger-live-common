@@ -1,26 +1,33 @@
-// @flow
-
 import { BigNumber } from "bignumber.js";
 import type { CurrenciesData } from "../../../types";
 import type { NetworkInfoRaw, Transaction } from "../types";
 import { fromTransactionRaw } from "../transaction";
 import scanAccounts1 from "./digibyte.scanAccounts.1";
-
 const networkInfo: NetworkInfoRaw = {
   family: "bitcoin",
   feeItems: {
     items: [
-      { key: "0", speed: "high", feePerByte: "12" },
-      { key: "1", speed: "standard", feePerByte: "8" },
-      { key: "2", speed: "low", feePerByte: "1" },
+      {
+        key: "0",
+        speed: "high",
+        feePerByte: "12",
+      },
+      {
+        key: "1",
+        speed: "standard",
+        feePerByte: "8",
+      },
+      {
+        key: "2",
+        speed: "low",
+        feePerByte: "1",
+      },
     ],
     defaultFeePerByte: "1",
   },
 };
-
 const dataset: CurrenciesData<Transaction> = {
   scanAccounts: [scanAccounts1],
-
   accounts: [
     {
       transactions: [
@@ -151,5 +158,4 @@ const dataset: CurrenciesData<Transaction> = {
     },
   ],
 };
-
 export default dataset;

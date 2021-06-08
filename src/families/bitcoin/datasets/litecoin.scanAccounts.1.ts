@@ -1,5 +1,3 @@
-// @flow
-
 export default {
   name: "litecoin seed 1",
   apdus: `

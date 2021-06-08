@@ -1,26 +1,33 @@
-// @flow
-
 import { BigNumber } from "bignumber.js";
 import type { CurrenciesData } from "../../../types";
 import type { NetworkInfoRaw, Transaction } from "../types";
 import { fromTransactionRaw } from "../transaction";
 import scanAccounts1 from "./litecoin.scanAccounts.1";
-
 const networkInfo: NetworkInfoRaw = {
   family: "bitcoin",
   feeItems: {
     items: [
-      { key: "0", speed: "high", feePerByte: "100" },
-      { key: "1", speed: "standard", feePerByte: "100" },
-      { key: "2", speed: "low", feePerByte: "100" },
+      {
+        key: "0",
+        speed: "high",
+        feePerByte: "100",
+      },
+      {
+        key: "1",
+        speed: "standard",
+        feePerByte: "100",
+      },
+      {
+        key: "2",
+        speed: "low",
+        feePerByte: "100",
+      },
     ],
     defaultFeePerByte: "39",
   },
 };
-
 const dataset: CurrenciesData<Transaction> = {
   scanAccounts: [scanAccounts1],
-
   accounts: [
     {
       transactions: [
@@ -44,8 +51,7 @@ const dataset: CurrenciesData<Transaction> = {
             errors: {},
             warnings: {},
             //  estimatedFees: BigNumber("5694"),
-            amount: BigNumber("200000"),
-            //  totalSpent: BigNumber("205694")
+            amount: new BigNumber("200000"), //  totalSpent: BigNumber("205694")
           },
         },
         {
@@ -68,8 +74,7 @@ const dataset: CurrenciesData<Transaction> = {
             errors: {},
             warnings: {},
             //  estimatedFees: BigNumber("5694"),
-            amount: BigNumber("147200"),
-            //  totalSpent: BigNumber("152894")
+            amount: new BigNumber("147200"), //  totalSpent: BigNumber("152894")
           },
         },
         {
@@ -92,8 +97,7 @@ const dataset: CurrenciesData<Transaction> = {
             errors: {},
             warnings: {},
             //  estimatedFees: BigNumber("5694"),
-            amount: BigNumber("205273"),
-            //  totalSpent: BigNumber("210967")
+            amount: new BigNumber("205273"), //  totalSpent: BigNumber("210967")
           },
         },
       ],
@@ -154,5 +158,4 @@ const dataset: CurrenciesData<Transaction> = {
     },
   ],
 };
-
 export default dataset;

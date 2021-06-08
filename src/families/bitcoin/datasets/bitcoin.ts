@@ -1,26 +1,34 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 // import { FeeTooHigh } from "@ledgerhq/errors";
 import type { CurrenciesData } from "../../../types";
 import type { NetworkInfoRaw, Transaction } from "../types";
 import { fromTransactionRaw } from "../transaction";
 import scanAccounts1 from "./bitcoin.scanAccounts.1";
-
 const networkInfo: NetworkInfoRaw = {
   family: "bitcoin",
   feeItems: {
     items: [
-      { key: "0", speed: "high", feePerByte: "3" },
-      { key: "1", speed: "standard", feePerByte: "2" },
-      { key: "2", speed: "low", feePerByte: "1" },
+      {
+        key: "0",
+        speed: "high",
+        feePerByte: "3",
+      },
+      {
+        key: "1",
+        speed: "standard",
+        feePerByte: "2",
+      },
+      {
+        key: "2",
+        speed: "low",
+        feePerByte: "1",
+      },
     ],
     defaultFeePerByte: "1",
   },
 };
-
 const dataset: CurrenciesData<Transaction> = {
   scanAccounts: [scanAccounts1],
-
   accounts: [
     {
       transactions: [
@@ -40,7 +48,7 @@ const dataset: CurrenciesData<Transaction> = {
             },
           }),
           expectedStatus: {
-            amount: BigNumber("999"),
+            amount: new BigNumber("999"),
             // FIXME fee are reloaded?
             // estimatedFees: BigNumber("250"),
             // totalSpent: BigNumber("1249"),
@@ -66,7 +74,7 @@ const dataset: CurrenciesData<Transaction> = {
             },
           }),
           expectedStatus: {
-            amount: BigNumber("998"),
+            amount: new BigNumber("998"),
             // FIXME fee are reloaded?
             // estimatedFees: BigNumber("250"),
             // totalSpent: BigNumber("1248"),
@@ -92,7 +100,7 @@ const dataset: CurrenciesData<Transaction> = {
             },
           }),
           expectedStatus: {
-            amount: BigNumber("997"),
+            amount: new BigNumber("997"),
             // FIXME fee are reloaded?
             // estimatedFees: BigNumber("250"),
             // totalSpent: BigNumber("1247"),
@@ -160,5 +168,4 @@ const dataset: CurrenciesData<Transaction> = {
     },
   ],
 };
-
 export default dataset;
