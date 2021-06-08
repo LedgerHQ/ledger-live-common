@@ -1,9 +1,7 @@
-// @flow
 import type Transport from "@ledgerhq/hw-transport";
 import { BigNumber } from "bignumber.js";
 import { TransportStatusError } from "@ledgerhq/errors";
 import invariant from "invariant";
-
 export const TRANSACTION_RATES = {
   FIXED: 0x00,
   FLOATING: 0x01,
@@ -12,29 +10,29 @@ export const TRANSACTION_TYPES = {
   SWAP: 0x00,
   SELL: 0x01,
 };
-type TransactionRate = $Values<typeof TRANSACTION_RATES>;
-type TransactionType = $Values<typeof TRANSACTION_TYPES>;
-
-const START_NEW_TRANSACTION_COMMAND: number = 0x03;
-const SET_PARTNER_KEY_COMMAND: number = 0x04;
-const CHECK_PARTNER_COMMAND: number = 0x05;
-const PROCESS_TRANSACTION_RESPONSE: number = 0x06;
-const CHECK_TRANSACTION_SIGNATURE: number = 0x07;
-const CHECK_PAYOUT_ADDRESS: number = 0x08;
-const CHECK_ASSET_IN: number = 0x08;
-const CHECK_REFUND_ADDRESS: number = 0x09;
-const SIGN_COIN_TRANSACTION: number = 0x0a;
+type TransactionRate = typeof TRANSACTION_RATES[keyof typeof TRANSACTION_RATES];
+type TransactionType = typeof TRANSACTION_TYPES[keyof typeof TRANSACTION_TYPES];
+const START_NEW_TRANSACTION_COMMAND = 0x03;
+const SET_PARTNER_KEY_COMMAND = 0x04;
+const CHECK_PARTNER_COMMAND = 0x05;
+const PROCESS_TRANSACTION_RESPONSE = 0x06;
+const CHECK_TRANSACTION_SIGNATURE = 0x07;
+const CHECK_PAYOUT_ADDRESS = 0x08;
+const CHECK_ASSET_IN = 0x08;
+const CHECK_REFUND_ADDRESS = 0x09;
+const SIGN_COIN_TRANSACTION = 0x0a;
 
 const maybeThrowProtocolError = (result: Buffer): void => {
   invariant(result.length >= 2, "ExchangeTransport: Unexpected result length");
   const resultCode = result.readUInt16BE(result.length - 2);
+
   if (resultCode !== 0x9000) {
     throw new TransportStatusError(resultCode);
   }
 };
 
 export default class Exchange {
-  transport: Transport<*>;
+  transport: Transport;
   transactionType: TransactionType;
   transactionRate: TransactionRate;
   allowedStatuses: Array<number> = [
@@ -51,7 +49,7 @@ export default class Exchange {
   ];
 
   constructor(
-    transport: Transport<*>,
+    transport: Transport,
     transactionType: TransactionType,
     transactionRate?: TransactionRate
   ) {
@@ -61,7 +59,7 @@ export default class Exchange {
   }
 
   async startNewTransaction(): Promise<string> {
-    let result: Buffer = await this.transport.send(
+    const result: Buffer = await this.transport.send(
       0xe0,
       START_NEW_TRANSACTION_COMMAND,
       this.transactionRate,
@@ -79,7 +77,7 @@ export default class Exchange {
   }
 
   async setPartnerKey(partnerNameAndPublicKey: Buffer): Promise<void> {
-    let result: Buffer = await this.transport.send(
+    const result: Buffer = await this.transport.send(
       0xe0,
       SET_PARTNER_KEY_COMMAND,
       this.transactionRate,
@@ -87,12 +85,11 @@ export default class Exchange {
       partnerNameAndPublicKey,
       this.allowedStatuses
     );
-
     maybeThrowProtocolError(result);
   }
 
   async checkPartner(signatureOfPartnerData: Buffer): Promise<void> {
-    let result: Buffer = await this.transport.send(
+    const result: Buffer = await this.transport.send(
       0xe0,
       CHECK_PARTNER_COMMAND,
       this.transactionRate,
@@ -100,23 +97,20 @@ export default class Exchange {
       signatureOfPartnerData,
       this.allowedStatuses
     );
-
     maybeThrowProtocolError(result);
   }
 
   async processTransaction(transaction: Buffer, fee: BigNumber): Promise<void> {
-    var hex: string = fee.toString(16);
+    let hex: string = fee.toString(16);
     hex = hex.padStart(hex.length + (hex.length % 2), "0");
-    var feeHex: Buffer = Buffer.from(hex, "hex");
-
+    const feeHex: Buffer = Buffer.from(hex, "hex");
     const bufferToSend: Buffer = Buffer.concat([
       Buffer.from([transaction.length]),
       transaction,
       Buffer.from([feeHex.length]),
       feeHex,
     ]);
-
-    let result: Buffer = await this.transport.send(
+    const result: Buffer = await this.transport.send(
       0xe0,
       PROCESS_TRANSACTION_RESPONSE,
       this.transactionRate,
@@ -124,12 +118,11 @@ export default class Exchange {
       bufferToSend,
       this.allowedStatuses
     );
-
     maybeThrowProtocolError(result);
   }
 
   async checkTransactionSignature(transactionSignature: Buffer): Promise<void> {
-    let result: Buffer = await this.transport.send(
+    const result: Buffer = await this.transport.send(
       0xe0,
       CHECK_TRANSACTION_SIGNATURE,
       this.transactionRate,
@@ -152,7 +145,6 @@ export default class Exchange {
         currencyConfigSignature.length <= 73,
       "Signature should be DER serialized and have length in [70, 73] bytes."
     );
-
     const bufferToSend: Buffer = Buffer.concat([
       Buffer.from([payoutCurrencyConfig.length]),
       payoutCurrencyConfig,
@@ -160,8 +152,7 @@ export default class Exchange {
       Buffer.from([addressParameters.length]),
       addressParameters,
     ]);
-
-    let result: Buffer = await this.transport.send(
+    const result: Buffer = await this.transport.send(
       0xe0,
       this.transactionType === TRANSACTION_TYPES.SWAP
         ? CHECK_PAYOUT_ADDRESS
@@ -186,7 +177,6 @@ export default class Exchange {
         currencyConfigSignature.length <= 73,
       "Signature should be DER serialized and have length in [70, 73] bytes."
     );
-
     const bufferToSend: Buffer = Buffer.concat([
       Buffer.from([refundCurrencyConfig.length]),
       refundCurrencyConfig,
@@ -194,8 +184,7 @@ export default class Exchange {
       Buffer.from([addressParameters.length]),
       addressParameters,
     ]);
-
-    let result: Buffer = await this.transport.send(
+    const result: Buffer = await this.transport.send(
       0xe0,
       CHECK_REFUND_ADDRESS,
       this.transactionRate,
@@ -207,7 +196,7 @@ export default class Exchange {
   }
 
   async signCoinTransaction(): Promise<void> {
-    let result: Buffer = await this.transport.send(
+    const result: Buffer = await this.transport.send(
       0xe0,
       SIGN_COIN_TRANSACTION,
       this.transactionRate,

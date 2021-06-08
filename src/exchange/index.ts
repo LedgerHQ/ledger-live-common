@@ -1,8 +1,6 @@
-// @flow
 import { valid, gte } from "semver";
 import type { CryptoCurrency, TokenCurrency } from "../types/currencies";
 import { findExchangeCurrencyConfig } from "@ledgerhq/cryptoassets";
-
 // Minimum version of a currency app which has exchange capabilities, meaning it can be used
 // for sell/swap, and do silent signing.
 const exchangeSupportAppVersions = {
@@ -22,17 +20,14 @@ const exchangeSupportAppVersions = {
   zcash: "1.5.0",
   zencash: "1.5.0",
 };
-
 export type ExchangeCurrencyNameAndSignature = {
-  config: Buffer,
-  signature: Buffer,
+  config: Buffer;
+  signature: Buffer;
 };
-
 export type ExchangeProviderNameAndSignature = {
-  nameAndPubkey: Buffer,
-  signature: Buffer,
+  nameAndPubkey: Buffer;
+  signature: Buffer;
 };
-
 export const isExchangeSupportedByApp = (
   appName: string,
   appVersion: string
@@ -45,14 +40,17 @@ const getCurrencyExchangeConfig = (
   currency: CryptoCurrency | TokenCurrency
 ): ExchangeCurrencyNameAndSignature => {
   const res = findExchangeCurrencyConfig(currency.id);
+
   if (!res) {
     throw new Error(`Exchange, missing configuration for ${currency.id}`);
   }
+
   return {
     config: Buffer.from(res.config, "hex"),
     signature: Buffer.from(res.signature, "hex"),
   };
 };
+
 const isCurrencyExchangeSupported = (
   currency: CryptoCurrency | TokenCurrency
 ): boolean => {
