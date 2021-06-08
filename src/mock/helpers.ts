@@ -1,15 +1,10 @@
-/**
- * @module mock/account
- * @flow
- */
 import Prando from "prando";
-
 import type { CryptoCurrency, TokenCurrency } from "../types";
 
 /**
  * @memberof mock/account
  */
-export function genBitcoinAddressLike(rng: Prando) {
+export function genBitcoinAddressLike(rng: Prando): string {
   const charset = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
   return `1${rng.nextString(rng.nextInt(25, 34), charset)}`;
 }
@@ -17,7 +12,7 @@ export function genBitcoinAddressLike(rng: Prando) {
 /**
  * @memberof mock/account
  */
-export function genHex(length: number, rng: Prando) {
+export function genHex(length: number, rng: Prando): string {
   return rng.nextString(length, "0123456789ABCDEF");
 }
 
@@ -27,7 +22,7 @@ export function genHex(length: number, rng: Prando) {
 export function genAddress(
   currency: CryptoCurrency | TokenCurrency,
   rng: Prando
-) {
+): string {
   if (
     currency.type === "CryptoCurrency"
       ? currency.family === "ethereum" // all eth family
@@ -35,5 +30,6 @@ export function genAddress(
   ) {
     return `0x${genHex(40, rng)}`;
   }
+
   return genBitcoinAddressLike(rng);
 }
