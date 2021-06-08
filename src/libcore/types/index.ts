@@ -1,8 +1,6 @@
-// @flow
-
+import { Class } from "utility-types";
 // NB this is a tradeoff that for now, we maintain ourself the types interface AND the JS declaration of them.
 // this allow to do wrapping on top of the different libcore interfaces
-
 import { reflectSpecifics } from "../../generated/types";
 import type {
   SpecificStatics,
@@ -12,7 +10,7 @@ import type {
 } from "../../generated/types";
 
 declare class CoreWalletPool {
-  static newInstance(
+  newInstance(
     name: string,
     pwd: string,
     httpClient: CoreHttpClient,
@@ -62,78 +60,73 @@ export const TimePeriod = {
   WEEK: 2,
   MONTH: 3,
 };
-
 declare type CoreAccount = {
-  getBalance(): Promise<CoreAmount>,
+  getBalance(): Promise<CoreAmount>;
   getBalanceHistory(
     from: string,
     to: string,
-    timePeriod: $Values<typeof TimePeriod>
-  ): Promise<CoreAmount[]>,
-  getLastBlock(): Promise<CoreBlock>,
-  getFreshPublicAddresses(): Promise<CoreAddress[]>,
-  getRestoreKey(): Promise<string>,
-  synchronize(): Promise<CoreEventBus>,
-  queryOperations(): Promise<CoreOperationQuery>,
+    timePeriod: typeof TimePeriod[keyof typeof TimePeriod]
+  ): Promise<CoreAmount[]>;
+  getLastBlock(): Promise<CoreBlock>;
+  getFreshPublicAddresses(): Promise<CoreAddress[]>;
+  getRestoreKey(): Promise<string>;
+  synchronize(): Promise<CoreEventBus>;
+  queryOperations(): Promise<CoreOperationQuery>;
 } & CoreAccountSpecifics;
-
 declare type CoreOperation = {
-  getDate(): Promise<string>,
-  getOperationType(): Promise<OperationType>,
-  getAmount(): Promise<CoreAmount>,
-  getFees(): Promise<?CoreAmount>,
-  getBlockHeight(): Promise<?number>,
-  getRecipients(): Promise<string[]>,
-  getSelfRecipients(): Promise<string[]>,
-  getSenders(): Promise<string[]>,
+  getDate(): Promise<string>;
+  getOperationType(): Promise<OperationType>;
+  getAmount(): Promise<CoreAmount>;
+  getFees(): Promise<CoreAmount | null | undefined>;
+  getBlockHeight(): Promise<number | null | undefined>;
+  getRecipients(): Promise<string[]>;
+  getSelfRecipients(): Promise<string[]>;
+  getSenders(): Promise<string[]>;
 } & CoreOperationSpecifics;
-
-declare type CoreCurrency = {} & CoreCurrencySpecifics;
+declare type CoreCurrency = Record<string, never> & CoreCurrencySpecifics;
 
 declare class CoreLedgerCore {
-  static getStringVersion(): Promise<string>;
-  static getIntVersion(): Promise<number>;
+  getStringVersion(): Promise<string>;
+  getIntVersion(): Promise<number>;
 }
 
 declare class CoreDatabaseBackend {
-  static getSqlite3Backend(): Promise<CoreDatabaseBackend>;
-  static flush(): Promise<void>;
+  getSqlite3Backend(): Promise<CoreDatabaseBackend>;
+  flush(): Promise<void>;
 }
 
 declare class CoreHttpClient {
-  static newInstance(): Promise<CoreHttpClient>;
-  static flush(): Promise<void>;
+  newInstance(): Promise<CoreHttpClient>;
+  flush(): Promise<void>;
 }
 
 declare class CoreWebSocketClient {
-  static newInstance(): Promise<CoreWebSocketClient>;
-  static flush(): Promise<void>;
+  newInstance(): Promise<CoreWebSocketClient>;
+  flush(): Promise<void>;
 }
 
 declare class CorePathResolver {
-  static newInstance(): Promise<CorePathResolver>;
-  static flush(): Promise<void>;
+  newInstance(): Promise<CorePathResolver>;
+  flush(): Promise<void>;
 }
 
 declare class CoreLogPrinter {
-  static newInstance(): Promise<CoreLogPrinter>;
-  static flush(): Promise<void>;
+  newInstance(): Promise<CoreLogPrinter>;
+  flush(): Promise<void>;
 }
 
 declare class CoreRandomNumberGenerator {
-  static newInstance(): Promise<CoreRandomNumberGenerator>;
-  static flush(): Promise<void>;
+  newInstance(): Promise<CoreRandomNumberGenerator>;
+  flush(): Promise<void>;
 }
 
 declare class CoreBigInt {
-  static fromIntegerString(s: string, radix: number): Promise<CoreBigInt>;
-
+  fromIntegerString(s: string, radix: number): Promise<CoreBigInt>;
   toString(base: number): Promise<string>;
 }
 
 declare class CoreAmount {
-  static fromHex(CoreCurrency, string): Promise<CoreAmount>;
-
+  fromHex(arg0: CoreCurrency, arg1: string): Promise<CoreAmount>;
   toBigInt(): Promise<CoreBigInt>;
 }
 
@@ -149,22 +142,22 @@ declare class CoreDerivationPath {
 export type OperationType = 0 | 1;
 
 declare class CoreAddress {
-  static isValid(recipient: string, currency: CoreCurrency): Promise<boolean>;
+  isValid(recipient: string, currency: CoreCurrency): Promise<boolean>;
   toString(): Promise<string>;
-  getDerivationPath(): Promise<?string>;
+  getDerivationPath(): Promise<string | null | undefined>;
 }
 
 declare class CoreOperationQuery {
-  offset(number): Promise<void>;
-  limit(number): Promise<void>;
+  offset(arg0: number): Promise<void>;
+  limit(arg0: number): Promise<void>;
   partial(): Promise<void>;
   complete(): Promise<void>;
-  addOrder(number, boolean): Promise<void>;
+  addOrder(arg0: number, arg1: boolean): Promise<void>;
   execute(): Promise<CoreOperation[]>;
 }
 
 declare class CoreAccountCreationInfo {
-  static init(
+  init(
     index: number,
     owners: string[],
     derivations: string[],
@@ -177,8 +170,9 @@ declare class CoreAccountCreationInfo {
   getOwners(): Promise<string[]>;
   getIndex(): Promise<number>;
 }
+
 declare class CoreExtendedKeyAccountCreationInfo {
-  static init(
+  init(
     index: number,
     owners: string[],
     derivations: string[],
@@ -191,17 +185,17 @@ declare class CoreExtendedKeyAccountCreationInfo {
 }
 
 declare class CoreDynamicObject {
-  static newInstance(): Promise<CoreDynamicObject>;
-  static flush(): Promise<void>;
-  putBoolean(string, boolean): Promise<void>;
-  putString(string, string): Promise<void>;
-  putInt(string, number): Promise<void>;
+  newInstance(): Promise<CoreDynamicObject>;
+  flush(): Promise<void>;
+  putBoolean(arg0: string, arg1: boolean): Promise<void>;
+  putString(arg0: string, arg1: string): Promise<void>;
+  putInt(arg0: string, arg1: number): Promise<void>;
 }
 
 declare class CoreSerialContext {}
 
 declare class CoreThreadDispatcher {
-  static newInstance(): Promise<CoreThreadDispatcher>;
+  newInstance(): Promise<CoreThreadDispatcher>;
   getMainExecutionContext(): Promise<CoreSerialContext>;
 }
 
@@ -213,43 +207,41 @@ declare class CoreEventBus {
 }
 
 declare class CoreEventReceiver {
-  static newInstance(): Promise<CoreEventReceiver>;
+  newInstance(): Promise<CoreEventReceiver>;
 }
 
 export type CoreStatics = {
-  Account: Class<CoreAccount>,
-  AccountCreationInfo: Class<CoreAccountCreationInfo>,
-  Address: Class<CoreAddress>,
-  Amount: Class<CoreAmount>,
-  BigInt: Class<CoreBigInt>,
-  Block: Class<CoreBlock>,
-  Currency: Class<CoreCurrency>,
-  DatabaseBackend: Class<CoreDatabaseBackend>,
-  DerivationPath: Class<CoreDerivationPath>,
-  DynamicObject: Class<CoreDynamicObject>,
-  EventBus: Class<CoreEventBus>,
-  EventReceiver: Class<CoreEventReceiver>,
-  ExtendedKeyAccountCreationInfo: Class<CoreExtendedKeyAccountCreationInfo>,
-  HttpClient: Class<CoreHttpClient>,
-  LedgerCore: Class<CoreLedgerCore>,
-  LogPrinter: Class<CoreLogPrinter>,
-  Operation: Class<CoreOperation>,
-  OperationQuery: Class<CoreOperationQuery>,
-  PathResolver: Class<CorePathResolver>,
-  RandomNumberGenerator: Class<CoreRandomNumberGenerator>,
-  SerialContext: Class<CoreSerialContext>,
-  ThreadDispatcher: Class<CoreThreadDispatcher>,
-  Wallet: Class<CoreWallet>,
-  WalletPool: Class<CoreWalletPool>,
-  WebSocketClient: Class<CoreWebSocketClient>,
+  Account: Class<CoreAccount>;
+  AccountCreationInfo: Class<CoreAccountCreationInfo>;
+  Address: Class<CoreAddress>;
+  Amount: Class<CoreAmount>;
+  BigInt: Class<CoreBigInt>;
+  Block: Class<CoreBlock>;
+  Currency: Class<CoreCurrency>;
+  DatabaseBackend: Class<CoreDatabaseBackend>;
+  DerivationPath: Class<CoreDerivationPath>;
+  DynamicObject: Class<CoreDynamicObject>;
+  EventBus: Class<CoreEventBus>;
+  EventReceiver: Class<CoreEventReceiver>;
+  ExtendedKeyAccountCreationInfo: Class<CoreExtendedKeyAccountCreationInfo>;
+  HttpClient: Class<CoreHttpClient>;
+  LedgerCore: Class<CoreLedgerCore>;
+  LogPrinter: Class<CoreLogPrinter>;
+  Operation: Class<CoreOperation>;
+  OperationQuery: Class<CoreOperationQuery>;
+  PathResolver: Class<CorePathResolver>;
+  RandomNumberGenerator: Class<CoreRandomNumberGenerator>;
+  SerialContext: Class<CoreSerialContext>;
+  ThreadDispatcher: Class<CoreThreadDispatcher>;
+  Wallet: Class<CoreWallet>;
+  WalletPool: Class<CoreWalletPool>;
+  WebSocketClient: Class<CoreWebSocketClient>;
 } & SpecificStatics;
-
 export type Core = CoreStatics & {
-  flush: () => Promise<void>,
-  getPoolInstance: () => CoreWalletPool,
-  getThreadDispatcher: () => CoreThreadDispatcher,
+  flush: () => Promise<void>;
+  getPoolInstance: () => CoreWalletPool;
+  getThreadDispatcher: () => CoreThreadDispatcher;
 };
-
 export type {
   CoreAccount,
   CoreAccountCreationInfo,
@@ -277,31 +269,23 @@ export type {
   CoreWalletPool,
   CoreWebSocketClient,
 };
-
 type SpecMapF = {
-  params?: Array<?string | string[]>,
-  returns?: string | string[],
-  njsField?: string,
-  njsInstanciateClass?: Array<Object>,
-  njsBuggyMethodIsNotStatic?: boolean | Function,
-  nodejsNotAvailable?: boolean,
+  params?: Array<(string | null | undefined) | string[]>;
+  returns?: string | string[];
+  njsField?: string;
+  njsInstanciateClass?: Array<Record<string, any>>;
+  njsBuggyMethodIsNotStatic?: boolean | ((...args: Array<any>) => any);
+  nodejsNotAvailable?: boolean;
 };
-
 export type Spec = {
-  njsUsesPlainObject?: boolean,
-  statics?: {
-    [_: string]: SpecMapF,
-  },
-  methods?: {
-    [_: string]: SpecMapF,
-  },
+  njsUsesPlainObject?: boolean;
+  statics?: Record<string, SpecMapF>;
+  methods?: Record<string, SpecMapF>;
 };
-
 // To make the above contract possible with current libcore bindings,
 // we need to define the code below and build-up abstraction wrappings on top of the lower level bindings.
 // We do this at runtime but ideally in the future, it will be at build time (generated code).
-
-export const reflect = (declare: (string, Spec) => void) => {
+export const reflect = (declare: (arg0: string, arg1: Spec) => void) => {
   const { AccountMethods, OperationMethods } = reflectSpecifics(declare).reduce(
     (all, extra) => ({
       AccountMethods: {
@@ -315,7 +299,6 @@ export const reflect = (declare: (string, Spec) => void) => {
     }),
     {}
   );
-
   declare("WalletPool", {
     statics: {
       newInstance: {
@@ -353,7 +336,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("Wallet", {
     methods: {
       getAccountCreationInfo: {
@@ -381,7 +363,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("Account", {
     methods: {
       ...AccountMethods,
@@ -406,21 +387,23 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("Operation", {
     methods: {
       ...OperationMethods,
       getDate: {},
       getOperationType: {},
-      getAmount: { returns: "Amount" },
-      getFees: { returns: "Amount" },
+      getAmount: {
+        returns: "Amount",
+      },
+      getFees: {
+        returns: "Amount",
+      },
       getBlockHeight: {},
       getRecipients: {},
       getSelfRecipients: {},
       getSenders: {},
     },
   });
-
   declare("Currency", {
     njsUsesPlainObject: true,
     methods: {
@@ -430,7 +413,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("BigInt", {
     statics: {
       fromIntegerString: {
@@ -442,7 +424,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       toString: {},
     },
   });
-
   declare("Amount", {
     statics: {
       fromHex: {
@@ -457,7 +438,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("Block", {
     njsUsesPlainObject: true,
     methods: {
@@ -466,14 +446,12 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("DerivationPath", {
     methods: {
       toString: {},
       isNull: {},
     },
   });
-
   declare("Address", {
     statics: {
       isValid: {
@@ -486,7 +464,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       getDerivationPath: {},
     },
   });
-
   declare("OperationQuery", {
     methods: {
       limit: {},
@@ -494,10 +471,11 @@ export const reflect = (declare: (string, Spec) => void) => {
       partial: {},
       complete: {},
       addOrder: {},
-      execute: { returns: ["Operation"] },
+      execute: {
+        returns: ["Operation"],
+      },
     },
   });
-
   declare("AccountCreationInfo", {
     njsUsesPlainObject: true,
     statics: {
@@ -516,14 +494,25 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
     methods: {
-      getDerivations: { njsField: "derivations" },
-      getChainCodes: { njsField: "chainCodes", returns: ["hex"] },
-      getPublicKeys: { njsField: "publicKeys", returns: ["hex"] },
-      getOwners: { njsField: "owners" },
-      getIndex: { njsField: "index" },
+      getDerivations: {
+        njsField: "derivations",
+      },
+      getChainCodes: {
+        njsField: "chainCodes",
+        returns: ["hex"],
+      },
+      getPublicKeys: {
+        njsField: "publicKeys",
+        returns: ["hex"],
+      },
+      getOwners: {
+        njsField: "owners",
+      },
+      getIndex: {
+        njsField: "index",
+      },
     },
   });
-
   declare("ExtendedKeyAccountCreationInfo", {
     njsUsesPlainObject: true,
     statics: {
@@ -540,13 +529,20 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
     methods: {
-      getIndex: { njsField: "index" },
-      getExtendedKeys: { njsField: "extendedKeys" },
-      getOwners: { njsField: "owners" },
-      getDerivations: { njsField: "derivations" },
+      getIndex: {
+        njsField: "index",
+      },
+      getExtendedKeys: {
+        njsField: "extendedKeys",
+      },
+      getOwners: {
+        njsField: "owners",
+      },
+      getDerivations: {
+        njsField: "derivations",
+      },
     },
   });
-
   declare("DynamicObject", {
     statics: {
       flush: {},
@@ -561,9 +557,7 @@ export const reflect = (declare: (string, Spec) => void) => {
       putInt: {},
     },
   });
-
   declare("SerialContext", {});
-
   declare("ThreadDispatcher", {
     statics: {
       newInstance: {
@@ -577,7 +571,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("EventBus", {
     methods: {
       subscribe: {
@@ -585,7 +578,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("EventReceiver", {
     statics: {
       newInstance: {
@@ -593,7 +585,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("HttpClient", {
     statics: {
       newInstance: {
@@ -602,7 +593,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       flush: {},
     },
   });
-
   declare("WebSocketClient", {
     statics: {
       newInstance: {
@@ -611,7 +601,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       flush: {},
     },
   });
-
   declare("PathResolver", {
     statics: {
       newInstance: {
@@ -620,7 +609,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       flush: {},
     },
   });
-
   declare("LogPrinter", {
     statics: {
       newInstance: {
@@ -629,7 +617,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       flush: {},
     },
   });
-
   declare("RandomNumberGenerator", {
     statics: {
       newInstance: {
@@ -638,7 +625,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       flush: {},
     },
   });
-
   declare("DatabaseBackend", {
     statics: {
       flush: {},
@@ -647,7 +633,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("LedgerCore", {
     statics: {
       getStringVersion: {
