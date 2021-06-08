@@ -1,5 +1,4 @@
-// @flow
-
+import { Class } from "utility-types";
 import type { BigNumber } from "bignumber.js";
 import type { Unit } from "../../types";
 import type {
@@ -18,9 +17,9 @@ declare class CoreRippleLikeTransaction {
   getReceiver(): Promise<CoreRippleLikeAddress>;
   getSender(): Promise<CoreRippleLikeAddress>;
   serialize(): Promise<string>;
-  setSignature(string, string): Promise<void>;
-  setDERSignature(string): Promise<void>;
-  getDestinationTag(): Promise<?number>;
+  setSignature(arg0: string, arg1: string): Promise<void>;
+  setDERSignature(arg0: string): Promise<void>;
+  getDestinationTag(): Promise<number | null | undefined>;
   getSequence(): Promise<CoreBigInt>;
 }
 
@@ -45,14 +44,12 @@ declare class CoreRippleLikeAccount {
 }
 
 export type CoreStatics = {
-  RippleLikeOperation: Class<CoreRippleLikeOperation>,
-  RippleLikeAddress: Class<CoreRippleLikeAddress>,
-  RippleLikeTransaction: Class<CoreRippleLikeTransaction>,
-  RippleLikeAccount: Class<CoreRippleLikeAccount>,
-  RippleLikeTransactionBuilder: Class<CoreRippleLikeTransactionBuilder>,
-  RippleLikeTransaction: Class<CoreRippleLikeTransaction>,
+  RippleLikeOperation: Class<CoreRippleLikeOperation>;
+  RippleLikeAddress: Class<CoreRippleLikeAddress>;
+  RippleLikeTransaction: Class<CoreRippleLikeTransaction>;
+  RippleLikeAccount: Class<CoreRippleLikeAccount>;
+  RippleLikeTransactionBuilder: Class<CoreRippleLikeTransactionBuilder>;
 };
-
 export type {
   CoreRippleLikeAccount,
   CoreRippleLikeAddress,
@@ -60,54 +57,43 @@ export type {
   CoreRippleLikeTransaction,
   CoreRippleLikeTransactionBuilder,
 };
-
 export type CoreAccountSpecifics = {
-  asRippleLikeAccount(): Promise<CoreRippleLikeAccount>,
+  asRippleLikeAccount(): Promise<CoreRippleLikeAccount>;
 };
-
 export type CoreOperationSpecifics = {
-  asRippleLikeOperation(): Promise<CoreRippleLikeOperation>,
+  asRippleLikeOperation(): Promise<CoreRippleLikeOperation>;
 };
-
-export type CoreCurrencySpecifics = {};
-
-export type NetworkInfo = {|
-  family: "ripple",
-  serverFee: BigNumber,
-  baseReserve: BigNumber,
-|};
-
-export type NetworkInfoRaw = {|
-  family: "ripple",
-  serverFee: string,
-  baseReserve: string,
-|};
-
-export type Transaction = {|
-  ...TransactionCommon,
-  family: "ripple",
-  fee: ?BigNumber,
-  networkInfo: ?NetworkInfo,
-  tag: ?number,
-  feeCustomUnit: ?Unit,
-|};
-
-export type TransactionRaw = {|
-  ...TransactionCommonRaw,
-  family: "ripple",
-  fee: ?string,
-  networkInfo: ?NetworkInfoRaw,
-  tag: ?number,
-  feeCustomUnit: ?Unit,
-|};
-
-export const reflect = (declare: (string, Spec) => void) => {
+export type CoreCurrencySpecifics = Record<string, never>;
+export type NetworkInfo = {
+  family: "ripple";
+  serverFee: BigNumber;
+  baseReserve: BigNumber;
+};
+export type NetworkInfoRaw = {
+  family: "ripple";
+  serverFee: string;
+  baseReserve: string;
+};
+export type Transaction = TransactionCommon & {
+  family: "ripple";
+  fee: BigNumber | null | undefined;
+  networkInfo: NetworkInfo | null | undefined;
+  tag: number | null | undefined;
+  feeCustomUnit: Unit | null | undefined;
+};
+export type TransactionRaw = TransactionCommonRaw & {
+  family: "ripple";
+  fee: string | null | undefined;
+  networkInfo: NetworkInfoRaw | null | undefined;
+  tag: number | null | undefined;
+  feeCustomUnit: Unit | null | undefined;
+};
+export const reflect = (declare: (arg0: string, arg1: Spec) => void) => {
   declare("RippleLikeAddress", {
     methods: {
       toBase58: {},
     },
   });
-
   declare("RippleLikeOperation", {
     methods: {
       getTransaction: {
@@ -115,16 +101,25 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("RippleLikeTransaction", {
     methods: {
       getHash: {},
       getDestinationTag: {},
-      getSequence: { returns: "BigInt" },
-      getFees: { returns: "Amount" },
-      getReceiver: { returns: "RippleLikeAddress" },
-      getSender: { returns: "RippleLikeAddress" },
-      serialize: { returns: "hex" },
+      getSequence: {
+        returns: "BigInt",
+      },
+      getFees: {
+        returns: "Amount",
+      },
+      getReceiver: {
+        returns: "RippleLikeAddress",
+      },
+      getSender: {
+        returns: "RippleLikeAddress",
+      },
+      serialize: {
+        returns: "hex",
+      },
       setSignature: {
         params: ["hex", "hex"],
       },
@@ -133,7 +128,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("RippleLikeTransactionBuilder", {
     methods: {
       wipeToAddress: {},
@@ -149,7 +143,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("RippleLikeAccount", {
     methods: {
       buildTransaction: {
@@ -167,7 +160,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       isAddressActivated: {},
     },
   });
-
   return {
     OperationMethods: {
       asRippleLikeOperation: {

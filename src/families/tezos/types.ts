@@ -1,10 +1,8 @@
-// @flow
-
+import { Class } from "utility-types";
 import type { BigNumber } from "bignumber.js";
 import type {
   CoreAmount,
   CoreBigInt,
-  OperationType,
   Spec,
   CoreOperationQuery,
 } from "../../libcore/types";
@@ -12,7 +10,6 @@ import type {
   TransactionCommon,
   TransactionCommonRaw,
 } from "../../types/transaction";
-
 export const tezosOperationTag = {
   OPERATION_TAG_NONE: 0,
   OPERATION_TAG_NONE1: 1,
@@ -26,10 +23,8 @@ export const tezosOperationTag = {
   OPERATION_TAG_ORIGINATION: 9,
   OPERATION_TAG_DELEGATION: 10,
 };
-
 export type TezosOperationMode = "send" | "delegate" | "undelegate";
-
-export type TezosOperationTag = $Values<typeof tezosOperationTag>;
+export type TezosOperationTag = typeof tezosOperationTag[keyof typeof tezosOperationTag];
 
 declare class CoreTezosLikeAddress {
   toBase58(): Promise<string>;
@@ -44,7 +39,7 @@ declare class CoreTezosLikeTransaction {
   getSender(): Promise<CoreTezosLikeAddress>;
   getGasLimit(): Promise<CoreAmount>;
   serialize(): Promise<string>;
-  setSignature(string): Promise<void>;
+  setSignature(arg0: string): Promise<void>;
   getStatus(): Promise<number>;
 }
 
@@ -87,13 +82,12 @@ declare class CoreTezosLikeOriginatedAccount {
 }
 
 export type CoreStatics = {
-  TezosLikeOperation: Class<CoreTezosLikeOperation>,
-  TezosLikeAddress: Class<CoreTezosLikeAddress>,
-  TezosLikeAccount: Class<CoreTezosLikeAccount>,
-  TezosLikeTransaction: Class<CoreTezosLikeTransaction>,
-  TezosLikeTransactionBuilder: Class<CoreTezosLikeTransactionBuilder>,
+  TezosLikeOperation: Class<CoreTezosLikeOperation>;
+  TezosLikeAddress: Class<CoreTezosLikeAddress>;
+  TezosLikeAccount: Class<CoreTezosLikeAccount>;
+  TezosLikeTransaction: Class<CoreTezosLikeTransaction>;
+  TezosLikeTransactionBuilder: Class<CoreTezosLikeTransactionBuilder>;
 };
-
 export type {
   CoreTezosLikeOperation,
   CoreTezosLikeAddress,
@@ -102,72 +96,72 @@ export type {
   CoreTezosLikeTransaction,
   CoreTezosLikeTransactionBuilder,
 };
-
 export type CoreAccountSpecifics = {
-  asTezosLikeAccount(): Promise<CoreTezosLikeAccount>,
+  asTezosLikeAccount(): Promise<CoreTezosLikeAccount>;
 };
-
 export type CoreOperationSpecifics = {
-  asTezosLikeOperation(): Promise<CoreTezosLikeOperation>,
+  asTezosLikeOperation(): Promise<CoreTezosLikeOperation>;
 };
-
-export type CoreCurrencySpecifics = {};
-
-export type NetworkInfo = {|
-  family: "tezos",
-  fees: BigNumber,
-|};
-
-export type NetworkInfoRaw = {|
-  family: "tezos",
-  fees: string,
-|};
-
+export type CoreCurrencySpecifics = Record<string, never>;
+export type NetworkInfo = {
+  family: "tezos";
+  fees: BigNumber;
+};
+export type NetworkInfoRaw = {
+  family: "tezos";
+  fees: string;
+};
 // TODO add a field for indicating if staking
-export type Transaction = {|
-  ...TransactionCommon,
-  family: "tezos",
-  mode: TezosOperationMode,
-  networkInfo: ?NetworkInfo,
-  fees: ?BigNumber,
-  gasLimit: ?BigNumber,
-  storageLimit: ?BigNumber,
-|};
-
-export type TransactionRaw = {|
-  ...TransactionCommonRaw,
-  family: "tezos",
-  mode: TezosOperationMode,
-  networkInfo: ?NetworkInfoRaw,
-  fees: ?string,
-  gasLimit: ?string,
-  storageLimit: ?string,
-|};
-
-export const reflect = (declare: (string, Spec) => void) => {
+export type Transaction = TransactionCommon & {
+  family: "tezos";
+  mode: TezosOperationMode;
+  networkInfo: NetworkInfo | null | undefined;
+  fees: BigNumber | null | undefined;
+  gasLimit: BigNumber | null | undefined;
+  storageLimit: BigNumber | null | undefined;
+};
+export type TransactionRaw = TransactionCommonRaw & {
+  family: "tezos";
+  mode: TezosOperationMode;
+  networkInfo: NetworkInfoRaw | null | undefined;
+  fees: string | null | undefined;
+  gasLimit: string | null | undefined;
+  storageLimit: string | null | undefined;
+};
+export const reflect = (declare: (arg0: string, arg1: Spec) => void) => {
   declare("TezosLikeAddress", {
     methods: {
       toBase58: {},
     },
   });
-
   declare("TezosLikeTransaction", {
     methods: {
       getType: {},
       getHash: {},
       getStatus: {},
-      getFees: { returns: "Amount" },
-      getValue: { returns: "Amount" },
-      getGasLimit: { returns: "Amount" },
-      getReceiver: { returns: "TezosLikeAddress" },
-      getSender: { returns: "TezosLikeAddress" },
-      serialize: { returns: "hex" },
+      getFees: {
+        returns: "Amount",
+      },
+      getValue: {
+        returns: "Amount",
+      },
+      getGasLimit: {
+        returns: "Amount",
+      },
+      getReceiver: {
+        returns: "TezosLikeAddress",
+      },
+      getSender: {
+        returns: "TezosLikeAddress",
+      },
+      serialize: {
+        returns: "hex",
+      },
       setSignature: {
         params: ["hex"],
       },
     },
   });
-
   declare("TezosLikeOperation", {
     methods: {
       getTransaction: {
@@ -175,7 +169,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("TezosLikeTransactionBuilder", {
     methods: {
       setType: {
@@ -205,7 +198,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("TezosLikeAccount", {
     methods: {
       broadcastRawTransaction: {
@@ -228,7 +220,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("TezosLikeOriginatedAccount", {
     methods: {
       getAddress: {},
@@ -246,7 +237,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   return {
     OperationMethods: {
       asTezosLikeOperation: {

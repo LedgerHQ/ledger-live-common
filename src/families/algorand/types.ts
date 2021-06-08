@@ -1,58 +1,51 @@
-// @flow
-
+import { Class } from "utility-types";
 import type { BigNumber } from "bignumber.js";
 import type {
   TransactionCommon,
   TransactionCommonRaw,
 } from "../../types/transaction";
-
 import type { Operation, OperationRaw } from "../../types/operation";
-import type { CoreAmount, CoreBigInt, Spec } from "../../libcore/types";
-
+import type { CoreAmount, Spec } from "../../libcore/types";
 export const AlgorandOperationTypeEnum = {
   PAYMENT: 0,
   ASSET_OPT_IN: 7,
   ASSET_OPT_OUT: 8,
   ASSET_TRANSFER: 9,
 };
-
 export type CoreStatics = {
-  AlgorandPaymentInfo: Class<AlgorandPaymentInfo>,
-  AlgorandAssetTransferInfo: Class<AlgorandAssetTransferInfo>,
-  AlgorandAddress: Class<AlgorandAddress>,
+  AlgorandPaymentInfo: Class<AlgorandPaymentInfo>;
+  AlgorandAssetTransferInfo: Class<AlgorandAssetTransferInfo>;
+  AlgorandAddress: Class<AlgorandAddress>;
 };
-
 export type CoreAccountSpecifics = {
-  asAlgorandAccount(): Promise<CoreAlgorandAccount>,
+  asAlgorandAccount(): Promise<CoreAlgorandAccount>;
 };
-
 export type CoreOperationSpecifics = {
-  asAlgorandOperation(): Promise<CoreAlgorandOperation>,
+  asAlgorandOperation(): Promise<CoreAlgorandOperation>;
 };
 
 declare class AlgorandAddress {
-  static fromPublicKey(pubkey: string): Promise<string>;
+  fromPublicKey(pubkey: string): Promise<string>;
 }
 
 declare class AlgorandPaymentInfo {
-  static init(
+  init(
     amount: string,
     recipientAddress: string,
-    closeAddress: ?string,
-    closeAmount: ?string
+    closeAddress: string | null | undefined,
+    closeAmount: string | null | undefined
   ): Promise<AlgorandPaymentInfo>;
 }
 
 declare class AlgorandAssetTransferInfo {
-  static init(
+  init(
     assetId: string,
     amount: string,
     recipientAddress: string,
-    closeAddress: ?string,
-    clawedBackAddress: ?string,
-    closeAmount: ?string
+    closeAddress: string | null | undefined,
+    clawedBackAddress: string | null | undefined,
+    closeAmount: string | null | undefined
   ): Promise<AlgorandAssetTransferInfo>;
-
   getAmount(): Promise<string>;
   getAssetId(): Promise<string>;
   getRecipientAddress(): Promise<string>;
@@ -67,11 +60,9 @@ declare class CoreAlgorandTransaction {
   getFee(): Promise<string>;
   getNote(): Promise<string>;
   getRound(): Promise<string>;
-
   setSender(sender: string): void;
   setFee(fee: string): void;
   setNote(note: string): void;
-
   setPaymentInfo(info: AlgorandPaymentInfo): void;
   setAssetTransferInfo(info: AlgorandAssetTransferInfo): void;
   serialize(): Promise<string>;
@@ -80,7 +71,7 @@ declare class CoreAlgorandTransaction {
 }
 
 declare class AlgorandAssetAmount {
-  static init(amount: string, assetId: string): Promise<AlgorandAssetAmount>;
+  init(amount: string, assetId: string): Promise<AlgorandAssetAmount>;
   getAmount(): Promise<string>;
   getAssetId(): Promise<string>;
 }
@@ -104,61 +95,60 @@ declare class CoreAlgorandOperation {
   getRewards(): Promise<string>;
 }
 
-export type CoreCurrencySpecifics = {};
-
-export type AlgorandResources = {|
-  rewards: BigNumber,
-  rewardsAccumulated: BigNumber,
-|};
-
-export type AlgorandResourcesRaw = {|
-  rewards: string,
-  rewardsAccumulated: string,
-|};
-
+export type CoreCurrencySpecifics = Record<string, never>;
+export type AlgorandResources = {
+  rewards: BigNumber;
+  rewardsAccumulated: BigNumber;
+};
+export type AlgorandResourcesRaw = {
+  rewards: string;
+  rewardsAccumulated: string;
+};
 export type AlgorandOperationMode = "send" | "optIn" | "claimReward";
-
 export type {
   CoreAlgorandOperation,
   CoreAlgorandAccount,
   CoreAlgorandTransaction,
 };
-
-export type Transaction = {|
-  ...TransactionCommon,
-  family: "algorand",
-  mode: AlgorandOperationMode,
-  fees: ?BigNumber,
-  assetId: ?string,
-  memo: ?string,
-|};
-
-export type TransactionRaw = {|
-  ...TransactionCommonRaw,
-  family: "algorand",
-  mode: AlgorandOperationMode,
-  fees: ?string,
-  assetId: ?string,
-  memo: ?string,
-|};
-
-export type AlgorandOperation = {|
-  ...Operation,
-  extra: AlgorandExtraTxInfo,
-|};
-
-export type AlgorandOperationRaw = {|
-  ...OperationRaw,
-  extra: AlgorandExtraTxInfo,
-|};
-
-export type AlgorandExtraTxInfo = {
-  rewards?: BigNumber,
-  memo?: string,
-  assetId?: string,
+export type Transaction = TransactionCommon & {
+  family: "algorand";
+  mode: AlgorandOperationMode;
+  fees: BigNumber | null | undefined;
+  assetId: string | null | undefined;
+  memo: string | null | undefined;
 };
-
-export const reflect = (declare: (string, Spec) => void) => {
+export type TransactionRaw = TransactionCommonRaw & {
+  family: "algorand";
+  mode: AlgorandOperationMode;
+  fees: string | null | undefined;
+  assetId: string | null | undefined;
+  memo: string | null | undefined;
+};
+export type AlgorandOperation = Operation & {
+  extra: AlgorandExtraTxInfo;
+};
+export type AlgorandOperationRaw = OperationRaw & {
+  extra: AlgorandExtraTxInfo;
+};
+export type AlgorandExtraTxInfo = {
+  rewards?: BigNumber;
+  memo?: string;
+  assetId?: string;
+};
+export const reflect = (
+  declare: (arg0: string, arg1: Spec) => void
+): {
+  OperationMethods: {
+    asAlgorandOperation: {
+      returns: "AlgorandOperation";
+    };
+  };
+  AccountMethods: {
+    asAlgorandAccount: {
+      returns: "AlgorandAccount";
+    };
+  };
+} => {
   declare("AlgorandAccount", {
     methods: {
       createTransaction: {
@@ -187,7 +177,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       hasAsset: {},
     },
   });
-
   declare("AlgorandAssetAmount", {
     njsUsesPlainObject: true,
     methods: {
@@ -199,7 +188,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("AlgorandOperation", {
     methods: {
       getTransaction: {
@@ -210,7 +198,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       getRewards: {},
     },
   });
-
   declare("AlgorandTransaction", {
     methods: {
       getId: {},
@@ -239,7 +226,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       getNote: {},
     },
   });
-
   declare("AlgorandPaymentInfo", {
     njsUsesPlainObject: true,
     statics: {
@@ -257,7 +243,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("AlgorandAddress", {
     statics: {
       fromPublicKey: {
@@ -266,7 +251,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   declare("AlgorandAssetTransferInfo", {
     njsUsesPlainObject: true,
     statics: {
@@ -303,7 +287,6 @@ export const reflect = (declare: (string, Spec) => void) => {
       },
     },
   });
-
   return {
     OperationMethods: {
       asAlgorandOperation: {
