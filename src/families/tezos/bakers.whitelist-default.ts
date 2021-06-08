@@ -1,5 +1,3 @@
-// @flow
-
 // unfinished list...
 const whitelist = `\
 tz1WCd2jm4uSt4vntk4vSuUWoZQGhLcDuR9q
@@ -40,8 +38,6 @@ tz1MQJPGNMijnXnVoBENFz9rUhaPt3S7rWoz
 tz1dRKU4FQ9QRRQPdaH4zCR6gmCmXfcvcgtB
 tz1ZcTRk5uxD86EFEn1vvNffWWqJy7q5eVhc
 tz1aDiEJf9ztRrAJEXZfcG3CKimoKsGhwVAi`.split("\n");
-
 // we give no ordering preference. it's settled at module load time
 whitelist.sort(() => Math.random() - 0.5);
-
 export default whitelist;

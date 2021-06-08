@@ -1,8 +1,7 @@
-// @flow
-
 export default {
   name: "tezos seed 1",
-  unstableAccounts: true, // accounts are staking so receive over time. we disable for now snapshot comparison
+  unstableAccounts: true,
+  // accounts are staking so receive over time. we disable for now snapshot comparison
   apdus: `
       => 8002000009028000002c800006c1
       <= 210280ca1bdf81e50b0c09df34557084edafcc9f7e1f749fe47596405bb6d802f0029000
