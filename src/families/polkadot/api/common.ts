@@ -1,5 +1,3 @@
-// @flow
-
 import { log } from "@ledgerhq/logs";
 import type { OperationType } from "../../../types";
 
