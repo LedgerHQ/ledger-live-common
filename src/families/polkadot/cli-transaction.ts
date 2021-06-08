@@ -1,12 +1,10 @@
-// @flow
 import { from, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { getValidators } from "./validators";
 import invariant from "invariant";
 import flatMap from "lodash/flatMap";
-import type { Transaction, AccountLike } from "../../types";
+import type { Transaction, AccountLike, Account } from "../../types";
 import { getCryptoCurrencyById, formatCurrencyUnit } from "../../currencies";
-
 const options = [
   {
     name: "mode",
@@ -29,19 +27,18 @@ const options = [
     type: String,
     desc: "Era of when to claim rewards",
   },
-  /** Different possible destionation : 
-    Staked - Pay into the stash account, increasing the amount at stake accordingly.
-    Stash - Pay into the stash account, not increasing the amount at stake.
-    Account - Pay into a custom account, like so: Account DMTHrNcmA8QbqRS4rBq8LXn8ipyczFoNMb1X4cY2WD9tdBX.
-    Controller - Pay into the controller account.
-   */
+  /** Different possible destionation :
+  Staked - Pay into the stash account, increasing the amount at stake accordingly.
+  Stash - Pay into the stash account, not increasing the amount at stake.
+  Account - Pay into a custom account, like so: Account DMTHrNcmA8QbqRS4rBq8LXn8ipyczFoNMb1X4cY2WD9tdBX.
+  Controller - Pay into the controller account.
+ */
   {
     name: "rewardDestination",
     type: String,
     desc: "Reward destination",
   },
 ];
-
 const polkadotValidatorsFormatters = {
   json: (list) => JSON.stringify(list),
   csv: (list) => {
@@ -54,7 +51,11 @@ const polkadotValidatorsFormatters = {
           `${v.address} "${v.identity}" ${formatCurrencyUnit(
             polkadotUnit,
             v.totalBonded,
-            { showCode: false, disableRounding: true, useGrouping: false }
+            {
+              showCode: false,
+              disableRounding: true,
+              useGrouping: false,
+            }
           )} ${formatCurrencyUnit(polkadotUnit, v.selfBonded, {
             showCode: false,
             disableRounding: true,
@@ -74,7 +75,11 @@ const polkadotValidatorsFormatters = {
           `${v.address} "${v.identity}" ${formatCurrencyUnit(
             polkadotUnit,
             v.totalBonded,
-            { showCode: true, disableRounding: true, useGrouping: false }
+            {
+              showCode: true,
+              disableRounding: true,
+              useGrouping: false,
+            }
           )} ${formatCurrencyUnit(polkadotUnit, v.selfBonded, {
             showCode: true,
             disableRounding: true,
@@ -87,7 +92,6 @@ const polkadotValidatorsFormatters = {
     return tableList;
   },
 };
-
 const polkadotValidators = {
   args: [
     {
@@ -111,37 +115,43 @@ const polkadotValidators = {
     format,
     status,
     validator,
-  }: $Shape<{
-    format: string,
-    status: string,
-    validator: string[],
+  }: Partial<{
+    format: string;
+    status: string;
+    validator: string[];
   }>): Observable<string> =>
     from(
       getValidators(validator && validator.length ? validator : status)
     ).pipe(
       map((validators) => {
         const f =
-          polkadotValidatorsFormatters[format] ||
+          (format && polkadotValidatorsFormatters[format]) ||
           polkadotValidatorsFormatters.default;
         return f(validators);
       })
     ),
 };
 
+function isAccountType(account: AccountLike): account is Account {
+  return (account as Account).type === "Account";
+}
+
 function inferTransactions(
-  transactions: Array<{ account: AccountLike, transaction: Transaction }>,
-  opts: Object,
-  { inferAmount }: *
+  transactions: Array<{
+    account: AccountLike;
+    transaction: Transaction;
+  }>,
+  opts: Record<string, any>,
+  { inferAmount }: any
 ): Transaction[] {
   return flatMap(transactions, ({ transaction, account }) => {
     invariant(transaction.family === "polkadot", "polkadot family");
 
-    if (account.type === "Account") {
+    if (isAccountType(account)) {
       invariant(account.polkadotResources, "unactivated account");
     }
 
     const validators: string[] = opts["validator"] || [];
-
     return {
       ...transaction,
       family: "polkadot",
@@ -150,7 +160,9 @@ function inferTransactions(
       validators,
       era: opts.era || null,
       rewardDestination: opts.rewardDestination || null,
-      numSlashingSpans: account.polkadotResources?.numSlashingSpans,
+      numSlashingSpans: isAccountType(account)
+        ? account.polkadotResources?.numSlashingSpans
+        : null,
     };
   });
 }

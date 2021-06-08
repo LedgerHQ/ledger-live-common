@@ -1,5 +1,3 @@
-// @flow
-
 import { from, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import invariant from "invariant";
@@ -10,11 +8,11 @@ import type {
   Account,
   AccountLike,
   AccountLikeArray,
+  SubAccount,
 } from "../../types";
 import type { Baker } from "./bakers";
 import { listBakers, fetchAllBakers } from "./bakers";
 import defaultList from "./bakers.whitelist-default";
-
 const options = [
   {
     name: "mode",
@@ -44,32 +42,42 @@ const options = [
   },
 ];
 
-function inferAccounts(account: Account, opts: Object): AccountLikeArray {
+function inferAccounts(
+  account: Account,
+  opts: Record<string, any>
+): AccountLikeArray {
   invariant(account.currency.family === "tezos", "tezos family");
+
   if (!opts.subAccount) {
     const accounts: Account[] = [account];
     return accounts;
   }
+
   const { subAccounts } = account;
   invariant(subAccounts, "no sub accounts");
   return opts.subAccount.map((i) => {
-    const acc = subAccounts[i];
+    const acc = (subAccounts as SubAccount[])[i];
     invariant(acc, "sub account not found (index %s)", i);
     return acc;
   });
 }
 
 function inferTransactions(
-  transactions: Array<{ account: AccountLike, transaction: Transaction }>,
-  opts: Object,
-  { inferAmount }: *
+  transactions: Array<{
+    account: AccountLike;
+    transaction: Transaction;
+  }>,
+  opts: Record<string, any>,
+  { inferAmount }: any
 ): Transaction[] {
   return flatMap(transactions, ({ transaction, account }) => {
     invariant(transaction.family === "tezos", "tezos family");
     let subAccountId;
+
     if (account.type === "ChildAccount") {
       subAccountId = account.id;
     }
+
     return {
       ...transaction,
       mode: opts.mode || "send",
@@ -91,7 +99,6 @@ const bakersFormatters = {
       )
       .join("\n"),
 };
-
 const tezosListBakers = {
   args: [
     {
@@ -108,18 +115,18 @@ const tezosListBakers = {
   job: ({
     whitelist,
     format,
-  }: $Shape<{
-    whitelist: boolean,
-    format: string,
+  }: Partial<{
+    whitelist: boolean;
+    format: string;
   }>): Observable<string> =>
     from(whitelist ? listBakers(defaultList) : fetchAllBakers()).pipe(
       map((list: Baker[]) => {
-        const f = bakersFormatters[format] || bakersFormatters.default;
+        const f =
+          (format && bakersFormatters[format]) || bakersFormatters.default;
         return f(list);
       })
     ),
 };
-
 export default {
   options,
   inferAccounts,

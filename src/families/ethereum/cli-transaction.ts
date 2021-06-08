@@ -1,5 +1,3 @@
-// @flow
-
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import flatMap from "lodash/flatMap";
@@ -55,20 +53,27 @@ const options = [
   },
 ];
 
-function inferAccounts(account: Account, opts: Object): AccountLikeArray {
+function inferAccounts(
+  account: Account,
+  opts: Record<string, any>
+): AccountLikeArray {
   invariant(account.currency.family === "ethereum", "ethereum family");
+
   if (!opts.token) {
     const accounts: Account[] = [account];
     return accounts;
   }
+
   return opts.token.map((token) => {
     const subAccounts = account.subAccounts || [];
+
     if (token) {
       const tkn = token.toLowerCase();
       const subAccount = subAccounts.find((t) => {
         const currency = getAccountCurrency(t);
         return tkn === currency.ticker.toLowerCase() || tkn === currency.id;
       });
+
       if (!subAccount) {
         throw new Error(
           "token account '" +
@@ -77,6 +82,7 @@ function inferAccounts(account: Account, opts: Object): AccountLikeArray {
             subAccounts.map((t) => getAccountCurrency(t).ticker).join(", ")
         );
       }
+
       return subAccount;
     }
   });
@@ -84,19 +90,21 @@ function inferAccounts(account: Account, opts: Object): AccountLikeArray {
 
 function inferTransactions(
   transactions: Array<{
-    account: AccountLike,
-    transaction: Transaction,
-    mainAccount: Account,
+    account: AccountLike;
+    transaction: Transaction;
+    mainAccount: Account;
   }>,
-  opts: Object,
-  { inferAmount }: *
+  opts: Record<string, any>,
+  { inferAmount }: any
 ): Transaction[] {
   return flatMap(transactions, ({ transaction, account, mainAccount }) => {
     invariant(transaction.family === "ethereum", "ethereum family");
     let subAccountId;
+
     if (account.type === "TokenAccount") {
       subAccountId = account.id;
     }
+
     return {
       ...transaction,
       family: "ethereum",
@@ -107,7 +115,7 @@ function inferTransactions(
       mode: opts.mode || "send",
       nonce: opts.nonce ? parseInt(opts.nonce) : undefined,
       data: opts.data ? hexAsBuffer(opts.data) : undefined,
-    };
+    } as Transaction;
   });
 }
 

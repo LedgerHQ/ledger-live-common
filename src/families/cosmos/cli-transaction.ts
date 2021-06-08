@@ -1,4 +1,3 @@
-// @flow
 import { from, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import invariant from "invariant";
@@ -7,9 +6,9 @@ import zipWith from "lodash/zipWith";
 import { BigNumber } from "bignumber.js";
 import { getValidators } from "./validators";
 import type { Transaction, AccountLike } from "../../types";
+import { Transaction as CosmosTransaction } from "./types";
 import type { CosmosDelegationInfo } from "./types";
 import { getCryptoCurrencyById } from "../../currencies";
-
 const options = [
   {
     name: "mode",
@@ -51,39 +50,39 @@ const options = [
 ];
 
 function inferTransactions(
-  transactions: Array<{ account: AccountLike, transaction: Transaction }>,
-  opts: Object,
-  { inferAmount }: *
+  transactions: Array<{
+    account: AccountLike;
+    transaction: Transaction;
+  }>,
+  opts: Record<string, any>,
+  { inferAmount }: any
 ): Transaction[] {
   return flatMap(transactions, ({ transaction, account }) => {
     invariant(transaction.family === "cosmos", "cosmos family");
-
     const validatorsAddresses: string[] = opts["cosmosValidator"] || [];
     const validatorsAmounts: BigNumber[] = (
       opts["cosmosAmountValidator"] || []
     ).map((value) => {
       return inferAmount(account, value);
     });
-
     const validators: CosmosDelegationInfo[] = zipWith(
       validatorsAddresses,
       validatorsAmounts,
       (address, amount) => ({
         address,
-        amount: amount || BigNumber(0),
+        amount: amount || new BigNumber(0),
       })
     );
-
     return {
       ...transaction,
       family: "cosmos",
       mode: opts.mode || "send",
       memo: opts.memo,
       fees: opts.fees ? inferAmount(account, opts.fees) : null,
-      gasLimit: opts.gasLimit ? new BigNumber(opts.gasLimit) : null,
+      gas: opts.gasLimit ? new BigNumber(opts.gasLimit) : null,
       validators: validators,
       cosmosSourceValidator: opts.cosmosSourceValidator,
-    };
+    } as CosmosTransaction;
   });
 }
 
@@ -97,7 +96,6 @@ const cosmosValidatorsFormatters = {
       )
       .join("\n"),
 };
-
 const cosmosValidators = {
   args: [
     {
@@ -106,17 +104,20 @@ const cosmosValidators = {
       type: String,
     },
   ],
-  job: ({ format }: $Shape<{ format: string }>): Observable<string> =>
+  job: ({
+    format,
+  }: Partial<{
+    format: string;
+  }>): Observable<string> =>
     from(getValidators(getCryptoCurrencyById("cosmos"))).pipe(
       map((validators) => {
         const f =
-          cosmosValidatorsFormatters[format] ||
+          (format && cosmosValidatorsFormatters[format]) ||
           cosmosValidatorsFormatters.default;
         return f(validators);
       })
     ),
 };
-
 export default {
   options,
   inferTransactions,

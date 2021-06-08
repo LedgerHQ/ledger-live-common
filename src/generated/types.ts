@@ -170,7 +170,7 @@ export type NetworkInfoRaw =
   | stellarNetworkInfoRaw
   | tezosNetworkInfoRaw
   | tronNetworkInfoRaw
-export const reflectSpecifics = (declare: *) => [
+export const reflectSpecifics = (declare: any): Array<{ OperationMethods: Record<string, unknown>, AccountMethods: Record<string, unknown> }> => [
   algorandReflect(declare),
   bitcoinReflect(declare),
   cosmosReflect(declare),
@@ -181,4 +181,4 @@ export const reflectSpecifics = (declare: *) => [
   stellarReflect(declare),
   tezosReflect(declare),
   tronReflect(declare),
-];
+] as Array<{ OperationMethods: Record<string, unknown>, AccountMethods: Record<string, unknown> }>;

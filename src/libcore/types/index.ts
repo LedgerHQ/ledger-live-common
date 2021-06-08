@@ -285,7 +285,7 @@ export type Spec = {
 // To make the above contract possible with current libcore bindings,
 // we need to define the code below and build-up abstraction wrappings on top of the lower level bindings.
 // We do this at runtime but ideally in the future, it will be at build time (generated code).
-export const reflect = (declare: (arg0: string, arg1: Spec) => void) => {
+export const reflect = (declare: (arg0: string, arg1: Spec) => void): void => {
   const { AccountMethods, OperationMethods } = reflectSpecifics(declare).reduce(
     (all, extra) => ({
       AccountMethods: {
@@ -297,7 +297,7 @@ export const reflect = (declare: (arg0: string, arg1: Spec) => void) => {
         ...(extra && extra.OperationMethods),
       },
     }),
-    {}
+    { AccountMethods: {}, OperationMethods: {} }
   );
   declare("WalletPool", {
     statics: {

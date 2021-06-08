@@ -1,10 +1,7 @@
-// @flow
-
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import type { Transaction, AccountLike } from "../../types";
 import { bitcoinPickingStrategy } from "./types";
-
 const options = [
   {
     name: "feePerByte",
@@ -38,8 +35,11 @@ const options = [
 ];
 
 function inferTransactions(
-  transactions: Array<{ account: AccountLike, transaction: Transaction }>,
-  opts: Object
+  transactions: Array<{
+    account: AccountLike;
+    transaction: Transaction;
+  }>,
+  opts: Record<string, any>
 ): Transaction[] {
   const feePerByte = new BigNumber(
     opts.feePerByte === undefined ? 1 : opts.feePerByte
@@ -59,7 +59,10 @@ function inferTransactions(
             hash && index && !isNaN(index),
             "invalid format for --excludeUTXO, -E"
           );
-          return { hash, outputIndex: parseInt(index, 10) };
+          return {
+            hash,
+            outputIndex: parseInt(index, 10),
+          };
         }),
       },
     };

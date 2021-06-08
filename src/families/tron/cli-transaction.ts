@@ -1,4 +1,3 @@
-// @flow
 import { from, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import invariant from "invariant";
@@ -6,6 +5,7 @@ import flatMap from "lodash/flatMap";
 import zipWith from "lodash/zipWith";
 import { getAccountCurrency } from "../../account";
 import { getTronSuperRepresentativeData } from "../../api/Tron";
+import type { Transaction as TronTransaction } from "./types";
 import type {
   Transaction,
   Account,
@@ -13,7 +13,6 @@ import type {
   AccountLikeArray,
 } from "../../types";
 import type { SuperRepresentativeData, Vote } from "./types";
-
 const options = [
   {
     name: "token",
@@ -50,14 +49,20 @@ const options = [
   },
 ];
 
-function inferAccounts(account: Account, opts: Object): AccountLikeArray {
+function inferAccounts(
+  account: Account,
+  opts: Record<string, any>
+): AccountLikeArray {
   invariant(account.currency.family === "tron", "tron family");
+
   if (!opts.token) {
     const accounts: Account[] = [account];
     return accounts;
   }
+
   return opts.token.map((token) => {
     const subAccounts = account.subAccounts || [];
+
     if (token) {
       const subAccount = subAccounts.find((t) => {
         const currency = getAccountCurrency(t);
@@ -66,6 +71,7 @@ function inferAccounts(account: Account, opts: Object): AccountLikeArray {
           token.toLowerCase() === currency.id
         );
       });
+
       if (!subAccount) {
         throw new Error(
           "token account '" +
@@ -74,22 +80,24 @@ function inferAccounts(account: Account, opts: Object): AccountLikeArray {
             subAccounts.map((t) => getAccountCurrency(t).ticker).join(", ")
         );
       }
+
       return subAccount;
     }
   });
 }
 
 function inferTransactions(
-  transactions: Array<{ account: AccountLike, transaction: Transaction }>,
-  opts: Object
+  transactions: Array<{
+    account: AccountLike;
+    transaction: Transaction;
+  }>,
+  opts: Record<string, any>
 ): Transaction[] {
   const mode = opts.mode || "send";
-
   invariant(
     ["send", "freeze", "unfreeze", "vote", "claimReward"].includes(mode),
     `Unexpected mode: ${mode}`
   );
-
   const resource = opts.resource ? opts.resource.toUpperCase() : undefined;
 
   if (resource) {
@@ -108,7 +116,6 @@ function inferTransactions(
     address: a,
     voteCount: c,
   }));
-
   return flatMap(transactions, ({ transaction, account }) => {
     invariant(transaction.family === "tron", "tron family");
 
@@ -128,33 +135,29 @@ function inferTransactions(
       mode,
       resource,
       votes,
-    };
+    } as TronTransaction;
   });
 }
 
-const formatOptStr = (str: ?string): string => str || "";
+const formatOptStr = (str: string | null | undefined): string => str || "";
 
 const superRepresentativesFormatters = {
-  json: (srData) => JSON.stringify(srData),
-  default: (srData) => {
+  json: (srData): string => JSON.stringify(srData),
+  default: (srData): string => {
     const headerList = 'address "name" url voteCount brokerage isJobs';
-
     const strList = srData.list.map(
       (sr) =>
         `${sr.address} "${formatOptStr(sr.name)}" ${formatOptStr(sr.url)} ${
           sr.voteCount
         } ${sr.brokerage} ${sr.isJobs}`
     );
-
     const metaData = [
       `nextVotingDate: ${srData.nextVotingDate}`,
       `totalVotes: ${srData.totalVotes}`,
     ];
-
     return [headerList].concat(strList).concat(metaData).join("\n");
   },
 };
-
 const tronSuperRepresentative = {
   args: [
     {
@@ -171,20 +174,19 @@ const tronSuperRepresentative = {
   job: ({
     max,
     format,
-  }: $Shape<{
-    max: ?number,
-    format: string,
+  }: Partial<{
+    max: number | null | undefined;
+    format: string;
   }>): Observable<string> =>
     from(getTronSuperRepresentativeData(max)).pipe(
       map((srData: SuperRepresentativeData) => {
         const f =
-          superRepresentativesFormatters[format] ||
+          (format && superRepresentativesFormatters[format]) ||
           superRepresentativesFormatters.default;
         return f(srData);
       })
     ),
 };
-
 export default {
   options,
   inferAccounts,

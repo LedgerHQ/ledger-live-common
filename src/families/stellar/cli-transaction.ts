@@ -1,8 +1,5 @@
-// @flow
-
 import invariant from "invariant";
 import type { Transaction, AccountLike } from "../../types";
-
 const options = [
   {
     name: "fee",
@@ -22,8 +19,11 @@ const options = [
 ];
 
 function inferTransactions(
-  transactions: Array<{ account: AccountLike, transaction: Transaction }>,
-  opts: Object
+  transactions: Array<{
+    account: AccountLike;
+    transaction: Transaction;
+  }>,
+  opts: Record<string, any>
 ): Transaction[] {
   return transactions.map(({ transaction }) => {
     invariant(transaction.family === "stellar", "stellar family");

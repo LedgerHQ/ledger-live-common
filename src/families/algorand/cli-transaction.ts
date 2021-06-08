@@ -1,4 +1,3 @@
-// @flow
 import invariant from "invariant";
 import flatMap from "lodash/flatMap";
 import type {
@@ -9,7 +8,6 @@ import type {
 } from "../../types";
 import { getAccountCurrency } from "../../account";
 import { extractTokenId } from "./tokens";
-
 const options = [
   {
     name: "mode",
@@ -40,14 +38,20 @@ const options = [
   },
 ];
 
-function inferAccounts(account: Account, opts: Object): AccountLikeArray {
+function inferAccounts(
+  account: Account,
+  opts: Record<string, any>
+): AccountLikeArray {
   invariant(account.currency.family === "algorand", "algorand family");
+
   if (!opts.token || opts.mode === "optIn") {
     const accounts: Account[] = [account];
     return accounts;
   }
+
   return opts.token.map((token) => {
     const subAccounts = account.subAccounts || [];
+
     if (token) {
       const subAccount = subAccounts.find((t) => {
         const currency = getAccountCurrency(t);
@@ -56,6 +60,7 @@ function inferAccounts(account: Account, opts: Object): AccountLikeArray {
           token.toLowerCase() === extractTokenId(currency.id)
         );
       });
+
       if (!subAccount) {
         throw new Error(
           "token account '" +
@@ -64,15 +69,19 @@ function inferAccounts(account: Account, opts: Object): AccountLikeArray {
             subAccounts.map((t) => getAccountCurrency(t).ticker).join(", ")
         );
       }
+
       return subAccount;
     }
   });
 }
 
 function inferTransactions(
-  transactions: Array<{ account: AccountLike, transaction: Transaction }>,
-  opts: Object,
-  { inferAmount }: *
+  transactions: Array<{
+    account: AccountLike;
+    transaction: Transaction;
+  }>,
+  opts: Record<string, any>,
+  { inferAmount }: any
 ): Transaction[] {
   return flatMap(transactions, ({ transaction, account }) => {
     invariant(transaction.family === "algorand", "algorand family");

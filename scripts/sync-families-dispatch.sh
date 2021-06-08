@@ -153,11 +153,11 @@ genTypesFile () {
     echo '  | '$family'NetworkInfoRaw'
     fi
   done
-  echo 'export const reflectSpecifics = (declare: *) => ['
+  echo 'export const reflectSpecifics = (declare: any): Array<{ OperationMethods: Record<string, unknown>, AccountMethods: Record<string, unknown> }> => ['
   for family in $families; do
     echo '  '$family'Reflect(declare),'
   done
-  echo '];'
+  echo '] as Array<{ OperationMethods: Record<string, unknown>, AccountMethods: Record<string, unknown> }>;'
 }
 
 genTypesFile > ../generated/types.ts
