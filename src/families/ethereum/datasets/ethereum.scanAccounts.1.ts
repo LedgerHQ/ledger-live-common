@@ -1,5 +1,3 @@
-// @flow
-
 export default {
   name: "ethereum seed 1",
   apdus: `
