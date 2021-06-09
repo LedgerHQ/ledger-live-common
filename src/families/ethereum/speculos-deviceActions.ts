@@ -1,4 +1,3 @@
-// @flow
 import type { DeviceAction } from "../../bot/types";
 import type { Transaction } from "./types";
 import { formatCurrencyUnit, findCompoundToken } from "../../currencies";
@@ -15,6 +14,7 @@ function expectedCompoundToken(t) {
   if (!t) {
     throw new Error("compound token was expected");
   }
+
   return t;
 }
 
@@ -33,7 +33,7 @@ const maxFeesExpectedValue = ({ account, status }) =>
     }
   ).replace(/\s/g, " ");
 
-const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
+const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
   steps: [
     {
       title: "Review",
@@ -56,6 +56,7 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
         const a = transaction.subAccountId
           ? subAccount(transaction.subAccountId, account)
           : null;
+
         if (
           transaction.mode === "erc20.approve" &&
           transaction.useAllAmount &&
@@ -74,7 +75,6 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
               ? expectedCompoundToken(findCompoundToken(a.token))
               : a.token
             ).units[0];
-
         const amount =
           a &&
           a.compoundBalance &&
@@ -82,7 +82,6 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
           transaction.useAllAmount
             ? a.compoundBalance
             : status.amount;
-
         return formatCurrencyUnit(
           {
             ...unit,
@@ -128,5 +127,6 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
     },
   ],
 });
-
-export default { acceptTransaction };
+export default {
+  acceptTransaction,
+};
