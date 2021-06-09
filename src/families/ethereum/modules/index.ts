@@ -1,4 +1,3 @@
-// @flow
 import values from "lodash/values";
 import type {
   CryptoCurrency,
@@ -10,7 +9,6 @@ import type {
 } from "../../../types";
 import type { Transaction } from "../types";
 import type { DeviceTransactionField } from "../../../transaction";
-
 // maintained union of all the modules
 import * as compound from "./compound";
 import * as erc20 from "./erc20";
@@ -18,7 +16,11 @@ import * as send from "./send";
 import type { Modes as CompoundModes } from "./compound";
 import type { Modes as ERC20Modes } from "./erc20";
 import type { Modes as SendModes } from "./send";
-const modules = { erc20, compound, send };
+const modules = {
+  erc20,
+  compound,
+  send,
+};
 export type TransactionMode = CompoundModes | ERC20Modes | SendModes;
 
 /**
@@ -35,44 +37,57 @@ export type ModeModule = {
    * typically to add status.errors and status.warnings in order to implement form validation
    * NB: the TransactionStatus is already filled with generic data in it
    */
-  fillTransactionStatus: (Account, Transaction, TransactionStatus) => void,
+  fillTransactionStatus: (
+    arg0: Account,
+    arg1: Transaction,
+    arg2: TransactionStatus
+  ) => void;
+
   /**
    * enable the possibility to complete an object "TxData" that is the INPUT of the library ethereumjs-tx
    * NB: the TransactionStatus is already filled with generic data in it
    * That TxData will then be used to serialize the transaction and sign it with the device
    */
   fillTransactionData: (
-    Account,
-    Transaction,
-    TxData
-  ) => { erc20contracts?: string[] } | void,
+    arg0: Account,
+    arg1: Transaction,
+    arg2: TxData
+  ) => {
+    erc20contracts?: string[];
+  } | void;
+
   /**
    * enable the possibility to complete the "Device validation step" of the UI of LL
    * it implements the extra field that the given mode will display on the device
    */
   fillDeviceTransactionConfig: (
     input: {
-      account: AccountLike,
-      parentAccount: ?Account,
-      transaction: Transaction,
-      status: TransactionStatus,
+      account: AccountLike;
+      parentAccount: Account | null | undefined;
+      transaction: Transaction;
+      status: TransactionStatus;
     },
     fields: DeviceTransactionField[]
-  ) => void,
+  ) => void;
+
   /**
    * enable the possibility to complete the optimistic operation resulted of a broadcast
    * NB: the Operation is already filled with the generic part, a mode might typically change the type, add subOperations,...
    */
-  fillOptimisticOperation: (Account, Transaction, Operation) => void,
+  fillOptimisticOperation: (
+    arg0: Account,
+    arg1: Transaction,
+    arg2: Operation
+  ) => void;
 };
-
-export const modes: { [_: TransactionMode]: ModeModule } = {};
+export const modes: Record<TransactionMode, ModeModule> = {};
 
 function loadModes() {
-  for (let k in modules) {
+  for (const k in modules) {
     const m = modules[k];
+
     if (m.modes) {
-      for (let j in m.modes) {
+      for (const j in m.modes) {
         // $FlowFixMe
         modes[j] = m.modes[j];
       }
@@ -81,30 +96,34 @@ function loadModes() {
 }
 
 loadModes();
-
-export async function preload(currency: CryptoCurrency): Promise<Object> {
+export async function preload(
+  currency: CryptoCurrency
+): Promise<Record<string, any>> {
   const value = {};
-  for (let k in modules) {
+
+  for (const k in modules) {
     const m = modules[k];
+
     if (m.preload) {
       value[k] = await m.preload(currency);
     }
   }
+
   return value;
 }
-
-export function hydrate(value: mixed, currency: CryptoCurrency) {
+export function hydrate(value: unknown, currency: CryptoCurrency) {
   if (!value || typeof value !== "object") return;
-  for (let k in value) {
+
+  for (const k in value) {
     if (k in modules) {
       const m = modules[k];
+
       if (m.hydrate) {
         m.hydrate(value[k], currency);
       }
     }
   }
 }
-
 export const prepareTokenAccounts = (
   currency: CryptoCurrency,
   subAccounts: TokenAccount[],
@@ -117,7 +136,6 @@ export const prepareTokenAccounts = (
       (p, fn) => p.then((s) => fn(currency, s, address)),
       Promise.resolve(subAccounts)
     );
-
 export const digestTokenAccounts = (
   currency: CryptoCurrency,
   subAccounts: TokenAccount[],
@@ -130,43 +148,49 @@ export const digestTokenAccounts = (
       (p, fn) => p.then((s) => fn(currency, s, address)),
       Promise.resolve(subAccounts)
     );
-
 type BufferLike = Buffer | string | number;
-
 // this type is from transactionjs-tx
 interface TxData {
   /**
    * The transaction's gas limit.
    */
   gasLimit?: BufferLike;
+
   /**
    * The transaction's gas price.
    */
   gasPrice?: BufferLike;
+
   /**
    * The transaction's the address is sent to.
    */
   to?: BufferLike;
+
   /**
    * The transaction's nonce.
    */
   nonce?: BufferLike;
+
   /**
    * This will contain the data of the message or the init of a contract
    */
   data?: BufferLike;
+
   /**
    * EC recovery ID.
    */
   v?: BufferLike;
+
   /**
    * EC signature parameter.
    */
   r?: BufferLike;
+
   /**
    * EC signature parameter.
    */
   s?: BufferLike;
+
   /**
    * The amount of Ether sent.
    */
