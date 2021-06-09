@@ -4,7 +4,6 @@ import { listen } from "@ledgerhq/logs";
 import "./setup";
 import { setEnvUnsafe } from "../../env";
 import implementLibcore from "../../libcore/platforms/nodejs";
-
 let setupCalled = null;
 export const setup = (testId) => {
   if (setupCalled) {
@@ -12,9 +11,11 @@ export const setup = (testId) => {
       "setup(" + testId + "): was already called with " + setupCalled
     );
   }
+
   setupCalled = testId;
   implementLibcore({
-    lib: () => require("@ledgerhq/ledger-core"), // eslint-disable-line global-require
+    lib: () => require("@ledgerhq/ledger-core"),
+    // eslint-disable-line global-require
     dbPath: "./libcoredb/" + testId,
   });
 };
@@ -22,15 +23,12 @@ export const setup = (testId) => {
 for (const k in process.env) setEnvUnsafe(k, process.env[k]);
 
 const { VERBOSE, VERBOSE_FILE } = process.env;
-
 const logger = winston.createLogger({
   level: "debug",
   transports: [],
 });
-
 const { format } = winston;
 const { combine, timestamp, json } = format;
-
 const winstonFormat = combine(timestamp(), json());
 
 if (VERBOSE_FILE) {
@@ -49,9 +47,8 @@ logger.add(
     silent: !VERBOSE,
   })
 );
-
 // eslint-disable-next-line no-unused-vars
-listen(({ id, date, type, message, ...rest }) => {
+listen(({ type, message, ...rest }) => {
   logger.log("debug", {
     message: type + (message ? ": " + message : ""),
     // $FlowFixMe
