@@ -1,4 +1,3 @@
-import { Class } from "utility-types";
 import type { BigNumber } from "bignumber.js";
 import type {
   TransactionCommon,
@@ -7,20 +6,18 @@ import type {
 import type { Operation, OperationRaw } from "../../types/operation";
 import type { CoreAmount, CoreBigInt, Spec } from "../../libcore/types";
 export type CoreStatics = {
-  CosmosLikeOperation: Class<CoreCosmosLikeOperation>;
-  CosmosLikeAddress: Class<CoreCosmosLikeAddress>;
-  CosmosLikeTransactionBuilder: Class<CoreCosmosLikeTransactionBuilder>;
-  CosmosLikeTransaction: Class<CoreCosmosLikeTransaction>;
-  CosmosLikeMessage: Class<CoreCosmosLikeMessage>;
-  CosmosLikeMsgWithdrawDelegationReward: Class<
-    CosmosMsgWithdrawDelegationReward
-  >;
-  CosmosLikeAmount: Class<CoreCosmosLikeAmount>;
-  CosmosLikeMsgSend: Class<CosmosMsgSend>;
-  CosmosLikeMsgDelegate: Class<CosmosMsgDelegate>;
-  CosmosLikeMsgUndelegate: Class<CosmosMsgUndelegate>;
-  CosmosLikeMsgBeginRedelegate: Class<CosmosMsgRedelegate>;
-  CosmosGasLimitRequest: Class<CoreCosmosGasLimitRequest>;
+  CosmosLikeOperation: CoreCosmosLikeOperation;
+  CosmosLikeAddress: CoreCosmosLikeAddress;
+  CosmosLikeTransactionBuilder: CoreCosmosLikeTransactionBuilder;
+  CosmosLikeTransaction: CoreCosmosLikeTransaction;
+  CosmosLikeMessage: CoreCosmosLikeMessage;
+  CosmosLikeMsgWithdrawDelegationReward: CosmosMsgWithdrawDelegationReward;
+  CosmosLikeAmount: CoreCosmosLikeAmount;
+  CosmosLikeMsgSend: CosmosMsgSend;
+  CosmosLikeMsgDelegate: CosmosMsgDelegate;
+  CosmosLikeMsgUndelegate: CosmosMsgUndelegate;
+  CosmosLikeMsgBeginRedelegate: CosmosMsgRedelegate;
+  CosmosGasLimitRequest: CoreCosmosGasLimitRequest;
 };
 export type CoreAccountSpecifics = {
   asCosmosLikeAccount(): Promise<CoreCosmosLikeAccount>;

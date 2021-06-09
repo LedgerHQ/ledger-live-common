@@ -1,4 +1,3 @@
-import { Class } from "utility-types";
 import type { BigNumber } from "bignumber.js";
 import type { Unit } from "../../types";
 import type {
@@ -44,11 +43,11 @@ declare class CoreRippleLikeAccount {
 }
 
 export type CoreStatics = {
-  RippleLikeOperation: Class<CoreRippleLikeOperation>;
-  RippleLikeAddress: Class<CoreRippleLikeAddress>;
-  RippleLikeTransaction: Class<CoreRippleLikeTransaction>;
-  RippleLikeAccount: Class<CoreRippleLikeAccount>;
-  RippleLikeTransactionBuilder: Class<CoreRippleLikeTransactionBuilder>;
+  RippleLikeOperation: CoreRippleLikeOperation;
+  RippleLikeAddress: CoreRippleLikeAddress;
+  RippleLikeTransaction: CoreRippleLikeTransaction;
+  RippleLikeAccount: CoreRippleLikeAccount;
+  RippleLikeTransactionBuilder: CoreRippleLikeTransactionBuilder;
 };
 export type {
   CoreRippleLikeAccount,
