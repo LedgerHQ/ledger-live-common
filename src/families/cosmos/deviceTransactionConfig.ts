@@ -1,30 +1,42 @@
-// @flow
-
 import type { AccountLike, Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
 import type { DeviceTransactionField } from "../../transaction";
 import { getMainAccount } from "../../account";
 import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
-
 export type ExtraDeviceTransactionField =
-  | { type: "cosmos.delegateValidators", label: string }
-  | { type: "cosmos.validatorName", label: string }
-  | { type: "cosmos.sourceValidatorName", label: string };
+  | {
+      type: "cosmos.delegateValidators";
+      label: string;
+    }
+  | {
+      type: "cosmos.validatorName";
+      label: string;
+    }
+  | {
+      type: "cosmos.sourceValidatorName";
+      label: string;
+    };
+
+type CosmosTransactionFieldType = {
+  type: string;
+  label: string;
+  value?: string;
+  address?: string;
+};
 
 const getSendFields = ({
   status: { amount },
   account,
   source,
 }: {
-  account: AccountLike,
-  parentAccount: ?Account,
-  transaction: Transaction,
-  status: TransactionStatus,
-  source: string,
+  account: AccountLike;
+  parentAccount: Account | null | undefined;
+  transaction: Transaction;
+  status: TransactionStatus;
+  source: string;
 }) => {
-  const fields = [];
-
+  const fields: CosmosTransactionFieldType[] = [];
   fields.push({
     type: "text",
     label: "Type",
@@ -47,7 +59,6 @@ const getSendFields = ({
     label: "From",
     address: source,
   });
-
   return fields;
 };
 
@@ -57,17 +68,16 @@ function getDeviceTransactionConfig({
   transaction,
   status,
 }: {
-  account: AccountLike,
-  parentAccount: ?Account,
-  transaction: Transaction,
-  status: TransactionStatus,
+  account: AccountLike;
+  parentAccount: Account | null | undefined;
+  transaction: Transaction;
+  status: TransactionStatus;
 }): Array<DeviceTransactionField> {
   const { mode, memo, validators } = transaction;
   const { estimatedFees } = status;
   const mainAccount = getMainAccount(account, parentAccount);
   const source = mainAccount.freshAddress;
-
-  let fields = [];
+  let fields: CosmosTransactionFieldType[] = [];
 
   switch (mode) {
     case "send":
@@ -86,7 +96,6 @@ function getDeviceTransactionConfig({
         label: "Type",
         value: "Delegate",
       });
-
       fields.push({
         type: "cosmos.delegateValidators",
         label: "Validators",
@@ -144,6 +153,7 @@ function getDeviceTransactionConfig({
         label: "Validator Source",
       });
       break;
+
     case "claimReward":
       fields.push({
         type: "text",
@@ -155,6 +165,7 @@ function getDeviceTransactionConfig({
         label: "Validator",
       });
       break;
+
     case "claimRewardCompound":
       fields.push({
         type: "text",
@@ -165,18 +176,17 @@ function getDeviceTransactionConfig({
         type: "cosmos.validatorName",
         label: "Validator",
       });
-
       fields.push({
         type: "text",
         label: "Type",
         value: "Delegate",
       });
-
       fields.push({
         type: "cosmos.delegateValidators",
         label: "Validators",
       });
       break;
+
     default:
       break;
   }

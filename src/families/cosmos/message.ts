@@ -1,5 +1,3 @@
-// @flow
-
 import type { Transaction, CosmosMessage } from "./types";
 import type { Core } from "../../libcore/types";
 import { promiseAllBatched } from "../../promise";
@@ -36,9 +34,11 @@ export const cosmosCreateMessage = async (
 
     case "delegate": {
       const { validators } = transaction;
+
       if (!validators || validators.length === 0) {
         throw new Error("no validators");
       }
+
       return await promiseAllBatched(
         2,
         validators,
@@ -55,9 +55,11 @@ export const cosmosCreateMessage = async (
 
     case "undelegate": {
       const { validators } = transaction;
+
       if (!validators || validators.length === 0) {
         throw new Error("no validators");
       }
+
       return await promiseAllBatched(
         2,
         validators,
@@ -74,13 +76,17 @@ export const cosmosCreateMessage = async (
 
     case "redelegate": {
       const { cosmosSourceValidator } = transaction;
+
       if (!cosmosSourceValidator) {
         throw new Error("source validator is empty");
       }
+
       const { validators } = transaction;
+
       if (!validators || validators.length === 0) {
         throw new Error("no validators");
       }
+
       return await promiseAllBatched(
         2,
         validators,
@@ -98,9 +104,11 @@ export const cosmosCreateMessage = async (
 
     case "claimReward": {
       const { validators } = transaction;
+
       if (!validators || validators.length === 0) {
         throw new Error("no validators");
       }
+
       return await promiseAllBatched(
         2,
         validators,
@@ -116,9 +124,11 @@ export const cosmosCreateMessage = async (
 
     case "claimRewardCompound": {
       const { validators } = transaction;
+
       if (!validators || validators.length === 0) {
         throw new Error("no validators");
       }
+
       return [
         ...(await promiseAllBatched(2, validators, async (validator) => {
           return await core.CosmosLikeMessage.wrapMsgWithdrawDelegationReward(
@@ -140,5 +150,6 @@ export const cosmosCreateMessage = async (
       ];
     }
   }
+
   throw new Error(`unknown message : ${transaction.mode}`);
 };

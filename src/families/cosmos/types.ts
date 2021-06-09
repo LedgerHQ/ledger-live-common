@@ -131,11 +131,12 @@ export type CosmosOperation = Operation & {
 export type CosmosOperationRaw = OperationRaw & {
   extra: CosmosExtraTxInfo;
 };
-export type CosmosExtraTxInfo =
-  | CosmosDelegateTxInfo
-  | CosmosUndelegateTxInfo
-  | CosmosRedelegateTxInfo
-  | CosmosClaimRewardsTxInfo;
+export type CosmosExtraTxInfo = {
+  validators?: CosmosDelegationInfo[];
+  cosmosSourceValidator?: string | null | undefined;
+  validator?: CosmosDelegationInfo;
+};
+
 export type CosmosDelegateTxInfo = {
   validators: CosmosDelegationInfo[];
 };
@@ -183,7 +184,7 @@ declare class CosmosMsgDelegate {
   amount: CoreCosmosLikeAmount;
 }
 
-type CosmosMsgUndelegate = CosmosMsgDelegate;
+export type CosmosMsgUndelegate = CosmosMsgDelegate;
 type CosmosAmount = {
   getAmount(): Promise<string>;
   amount: string;
@@ -381,6 +382,27 @@ export type TransactionRaw = TransactionCommonRaw & {
   validators: CosmosDelegationInfoRaw[];
   cosmosSourceValidator: string | null | undefined;
 };
+
+export type StatusErrorMap = {
+  recipient?: Error;
+  amount?: Error;
+  fees?: Error;
+  validators?: Error;
+  delegate?: Error;
+  redelegation?: Error;
+  unbonding?: Error;
+  claimReward?: Error;
+  feeTooHigh?: Error;
+};
+
+export type TransactionStatus = {
+  errors: StatusErrorMap;
+  warnings: StatusErrorMap;
+  estimatedFees: BigNumber;
+  amount: BigNumber;
+  totalSpent: BigNumber;
+};
+
 export type CosmosMappedDelegation = CosmosDelegation & {
   formattedAmount: string;
   formattedPendingRewards: string;

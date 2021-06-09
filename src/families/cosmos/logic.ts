@@ -1,4 +1,3 @@
-// @flow
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import { formatCurrencyUnit } from "../../currencies";
@@ -23,8 +22,9 @@ import { makeLRUCache } from "../../cache";
 export const COSMOS_MAX_REDELEGATIONS = 7;
 export const COSMOS_MAX_UNBONDINGS = 7;
 export const COSMOS_MAX_DELEGATIONS = 5;
-export const COSMOS_MIN_SAFE = BigNumber(100000); // 100000 uAtom
-export const COSMOS_MIN_FEES = BigNumber(6000); // 6000 uAtom
+export const COSMOS_MIN_SAFE = new BigNumber(100000); // 100000 uAtom
+
+export const COSMOS_MIN_FEES = new BigNumber(6000); // 6000 uAtom
 
 export function mapDelegations(
   delegations: CosmosDelegation[],
@@ -36,7 +36,6 @@ export function mapDelegations(
       (v) => v.validatorAddress === d.validatorAddress
     );
     const validator = validators[rank] ?? d;
-
     return {
       ...d,
       formattedAmount: formatCurrencyUnit(unit, d.amount, {
@@ -54,19 +53,17 @@ export function mapDelegations(
     };
   });
 }
-
 export function mapUnbondings(
   unbondings: CosmosUnbonding[],
   validators: CosmosValidatorItem[],
   unit: Unit
 ): CosmosMappedUnbonding[] {
   return unbondings
-    .sort((a, b) => a.completionDate - b.completionDate)
+    .sort((a, b) => a.completionDate.valueOf() - b.completionDate.valueOf())
     .map((u) => {
       const validator = validators.find(
         (v) => v.validatorAddress === u.validatorAddress
       );
-
       return {
         ...u,
         formattedAmount: formatCurrencyUnit(unit, u.amount, {
@@ -78,7 +75,6 @@ export function mapUnbondings(
       };
     });
 }
-
 export function mapRedelegations(
   redelegations: CosmosRedelegation[],
   validators: CosmosValidatorItem[],
@@ -88,11 +84,9 @@ export function mapRedelegations(
     const validatorSrc = validators.find(
       (v) => v.validatorAddress === r.validatorSrcAddress
     );
-
     const validatorDst = validators.find(
       (v) => v.validatorAddress === r.validatorDstAddress
     );
-
     return {
       ...r,
       formattedAmount: formatCurrencyUnit(unit, r.amount, {
@@ -105,7 +99,6 @@ export function mapRedelegations(
     };
   });
 }
-
 export const mapDelegationInfo = (
   delegations: CosmosDelegationInfo[],
   validators: CosmosValidatorItem[],
@@ -121,18 +114,15 @@ export const mapDelegationInfo = (
     }),
   }));
 };
-
 export const formatValue = (value: BigNumber, unit: Unit): number =>
   value
     .dividedBy(10 ** unit.magnitude)
     .integerValue(BigNumber.ROUND_FLOOR)
     .toNumber();
-
 export const searchFilter: CosmosSearchFilter = (query) => ({ validator }) => {
   const terms = `${validator?.name ?? ""} ${validator?.validatorAddress ?? ""}`;
   return terms.toLowerCase().includes(query.toLowerCase().trim());
 };
-
 export function getMaxDelegationAvailable(
   account: Account,
   validatorsLength: number
@@ -142,18 +132,17 @@ export function getMaxDelegationAvailable(
     validatorsLength || 1
   );
   const { spendableBalance } = account;
-
   return spendableBalance
     .minus(COSMOS_MIN_FEES.multipliedBy(numberOfDelegations))
     .minus(COSMOS_MIN_SAFE);
 }
-
 export const getMaxEstimatedBalance = (
   a: Account,
   estimatedFees: BigNumber
 ): BigNumber => {
   const { cosmosResources } = a;
-  let blockBalance = BigNumber(0);
+  let blockBalance = new BigNumber(0);
+
   if (cosmosResources) {
     blockBalance = cosmosResources.unbondingBalance.plus(
       cosmosResources.delegatedBalance
@@ -165,20 +154,28 @@ export const getMaxEstimatedBalance = (
   // If the fees are greater than the balance we will have a negative amount
   // so we round it to 0
   if (amount.lt(0)) {
-    return BigNumber(0);
+    return new BigNumber(0);
   }
 
   return amount;
 };
-
 export const calculateFees: CacheRes<
-  Array<{ a: Account, t: Transaction }>,
-  { estimatedFees: BigNumber, estimatedGas: ?BigNumber }
+  Array<{
+    a: Account;
+    t: Transaction;
+  }>,
+  {
+    estimatedFees: BigNumber;
+    estimatedGas: BigNumber | null | undefined;
+  }
 > = makeLRUCache(
   async ({
     a,
     t,
-  }): Promise<{ estimatedFees: BigNumber, estimatedGas: ?BigNumber }> => {
+  }): Promise<{
+    estimatedFees: BigNumber;
+    estimatedGas: BigNumber | null | undefined;
+  }> => {
     return getFeesForTransaction({
       account: a,
       transaction: t,
@@ -193,13 +190,11 @@ export const calculateFees: CacheRes<
       t.cosmosSourceValidator ? t.cosmosSourceValidator : ""
     }`
 );
-
 export function canUndelegate(account: Account): boolean {
   const { cosmosResources } = account;
-
   invariant(cosmosResources, "cosmosResources should exist");
   return (
-    cosmosResources.unbondings &&
+    !!cosmosResources?.unbondings &&
     cosmosResources.unbondings.length < COSMOS_MAX_UNBONDINGS
   );
 }
@@ -214,9 +209,9 @@ export function canRedelegate(
   delegation: CosmosDelegation
 ): boolean {
   const { cosmosResources } = account;
-
   invariant(cosmosResources, "cosmosResources should exist");
   return (
+    !!cosmosResources?.redelegations &&
     cosmosResources.redelegations.length < COSMOS_MAX_REDELEGATIONS &&
     !cosmosResources.redelegations.some(
       (rd) => rd.validatorDstAddress === delegation.validatorAddress
@@ -229,15 +224,13 @@ export async function canClaimRewards(
   delegation: CosmosDelegation
 ): Promise<boolean> {
   const { cosmosResources } = account;
-
   invariant(cosmosResources, "cosmosResources should exist");
-
   const res = await calculateFees({
     a: account,
     t: {
       family: "cosmos",
       mode: "claimReward",
-      amount: BigNumber(0),
+      amount: new BigNumber(0),
       fees: null,
       gas: null,
       recipient: "",
@@ -246,11 +239,13 @@ export async function canClaimRewards(
       memo: null,
       cosmosSourceValidator: null,
       validators: [
-        { address: delegation.validatorAddress, amount: BigNumber(0) },
+        {
+          address: delegation.validatorAddress,
+          amount: new BigNumber(0),
+        },
       ],
     },
   });
-
   return (
     res.estimatedFees.lt(account.spendableBalance) &&
     res.estimatedFees.lt(delegation.pendingRewards)
@@ -260,21 +255,19 @@ export async function canClaimRewards(
 export function getRedelegation(
   account: Account,
   delegation: CosmosMappedDelegation
-): ?CosmosRedelegation {
+): CosmosRedelegation | null | undefined {
   const { cosmosResources } = account;
   const redelegations = cosmosResources?.redelegations ?? [];
-
   const currentRedelegation = redelegations.find(
     (r) => r.validatorDstAddress === delegation.validatorAddress
   );
-
   return currentRedelegation;
 }
 
 export function getRedelegationCompletionDate(
   account: Account,
   delegation: CosmosMappedDelegation
-): ?Date {
+): Date | null | undefined {
   const currentRedelegation = getRedelegation(account, delegation);
   return currentRedelegation ? currentRedelegation.completionDate : null;
 }

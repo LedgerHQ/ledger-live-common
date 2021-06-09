@@ -1,5 +1,3 @@
-// @flow
-
 import CosmosApp from "@ledgerhq/hw-app-cosmos";
 import { makeSignOperation } from "../../libcore/signOperation";
 import buildTransaction from "./libcore-buildTransaction";
@@ -17,7 +15,6 @@ async function signTransaction({
 }) {
   const hwApp = new CosmosApp(transport);
   const serialized = await coreTransaction.serializeForSignature();
-
   onDeviceSignatureRequested();
   const { signature } = await hwApp.sign(freshAddressPath, serialized);
   onDeviceSignatureGranted();
@@ -27,29 +24,23 @@ async function signTransaction({
   } else {
     throw new Error("Cosmos: no Signature Found");
   }
-  if (isCancelled()) return;
 
+  if (isCancelled()) return;
   // Serialize the transaction to be broadcast
   // @param mode The supported broadcast modes include
   //        "block"(return after tx commit), (https://docs.cosmos.network/master/basics/tx-lifecycle.html#commit)
   //        "sync"(return afer CheckTx), (https://docs.cosmos.network/master/basics/tx-lifecycle.html#types-of-checks) and
   //        "async"(return right away).
   const hex = await coreTransaction.serializeForBroadcast("sync");
-
   if (isCancelled()) return;
-
   const feesRaw = await coreTransaction.getFee();
   if (isCancelled()) return;
-
   const fee = await libcoreAmountToBigNumber(feesRaw);
   if (isCancelled()) return;
-
   const recipients = [transaction.recipient];
   if (isCancelled()) return;
-
   const senders = [freshAddress];
   if (isCancelled()) return;
-
   const type =
     transaction.mode === "undelegate"
       ? "UNDELEGATE"
@@ -60,13 +51,18 @@ async function signTransaction({
       : ["claimReward", "claimRewardCompound"].includes(transaction.mode)
       ? "REWARD"
       : "OUT";
-
   const extra = {};
+
   if (transaction.mode === "redelegate") {
-    extra.cosmosSourceValidator = transaction.cosmosSourceValidator;
+    Object.assign(extra, {
+      cosmosSourceValidator: transaction.cosmosSourceValidator,
+    });
   }
+
   if (transaction.mode !== "send") {
-    extra.validators = transaction.validators;
+    Object.assign(extra, {
+      validators: transaction.validators,
+    });
   }
 
   const op = {
@@ -85,7 +81,6 @@ async function signTransaction({
     date: new Date(),
     extra,
   };
-
   return {
     operation: op,
     expirationDate: null,

@@ -1,14 +1,12 @@
-// @flow
-
 import type { CosmosPreloadData } from "./types";
-
 // Data manually fetched from the network between heights
 // 1685677 and 1685679
 const data: CosmosPreloadData = {
   validators: [
     {
       validatorAddress: "cosmosvaloper1qdxmyqkvt8jsxpn5pp45a38ngs36mn2604cqk9",
-      votingPower: 94068472660 / (0.7202 * 254624972017526), // Doing the tokens / bondedAmount division manually
+      votingPower: 94068472660 / (0.7202 * 254624972017526),
+      // Doing the tokens / bondedAmount division manually
       name: "\u771f\u672c\u806a&IOSG",
       commission: 0.1,
       estimatedYearlyRewardsRate: 0,
@@ -883,5 +881,4 @@ const data: CosmosPreloadData = {
     },
   ],
 };
-
 export default data;

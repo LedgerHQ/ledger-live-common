@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import {
   NotEnoughBalance,
@@ -6,7 +5,12 @@ import {
   InvalidAddress,
   FeeTooHigh,
 } from "@ledgerhq/errors";
-import type { Transaction } from "../types";
+import type { Account } from "../../../types";
+import type {
+  CosmosValidatorItem,
+  StatusErrorMap,
+  Transaction,
+} from "../types";
 import type { AccountBridge, CurrencyBridge } from "../../../types";
 import {
   scanAccounts,
@@ -22,16 +26,15 @@ import {
 import { getMainAccount } from "../../../account";
 import mockPreloadedData from "../preloadedData.mock";
 import { makeAccountBridgeReceive } from "../../../bridge/mockHelpers";
-
 const receive = makeAccountBridgeReceive();
 
 const defaultGetFees = (a, t) =>
-  (t.fees || BigNumber(0)).times(t.gas || BigNumber(0));
+  (t.fees || new BigNumber(0)).times(t.gas || new BigNumber(0));
 
 const createTransaction = (): Transaction => ({
   family: "cosmos",
   mode: "send",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   recipient: "",
   fees: null,
   gas: null,
@@ -48,26 +51,23 @@ const estimateMaxSpendable = ({ account, parentAccount, transaction }) => {
   const mainAccount = getMainAccount(account, parentAccount);
   const estimatedFees = transaction
     ? defaultGetFees(mainAccount, transaction)
-    : BigNumber(5000);
+    : new BigNumber(5000);
   return Promise.resolve(
     BigNumber.max(0, account.balance.minus(estimatedFees))
   );
 };
 
 const getTransactionStatus = (account, t) => {
-  const errors = {};
-  const warnings = {};
+  const errors: StatusErrorMap = {};
+  const warnings: StatusErrorMap = {};
   const useAllAmount = !!t.useAllAmount;
-
   const estimatedFees = defaultGetFees(account, t);
-
   const totalSpent = useAllAmount
     ? account.balance
-    : BigNumber(t.amount).plus(estimatedFees);
-
+    : new BigNumber(t.amount).plus(estimatedFees);
   const amount = useAllAmount
     ? account.balance.minus(estimatedFees)
-    : BigNumber(t.amount);
+    : new BigNumber(t.amount);
 
   if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
     warnings.feeTooHigh = new FeeTooHigh();
@@ -94,18 +94,22 @@ const getTransactionStatus = (account, t) => {
   });
 };
 
-const prepareTransaction = async (a, t) => {
+const prepareTransaction = async (
+  a: Account,
+  t: Transaction
+): Promise<Transaction> => {
   if (!t.networkInfo) {
     return {
       ...t,
-      gas: BigNumber(1),
-      fees: BigNumber(500),
+      gas: new BigNumber(1),
+      fees: new BigNumber(500),
       networkInfo: {
         family: "cosmos",
-        fees: BigNumber(500),
+        fees: new BigNumber(500),
       },
     };
   }
+
   return t;
 };
 
@@ -120,16 +124,17 @@ const accountBridge: AccountBridge<Transaction> = {
   signOperation,
   broadcast,
 };
-
 const currencyBridge: CurrencyBridge = {
   scanAccounts,
   preload: () => {
     setCosmosPreloadData(mockPreloadedData);
     return Promise.resolve(mockPreloadedData);
   },
-  hydrate: (data: mixed) => {
+  hydrate: (data: { validators?: CosmosValidatorItem[] }) => {
     setCosmosPreloadData(asSafeCosmosPreloadData(data));
   },
 };
-
-export default { currencyBridge, accountBridge };
+export default {
+  currencyBridge,
+  accountBridge,
+};

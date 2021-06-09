@@ -1,9 +1,7 @@
-// @flow
 import network from "../../network";
 import { log } from "@ledgerhq/logs";
 import { getEnv } from "../../env";
 import { makeLRUCache } from "../../cache";
-
 import type { CosmosValidatorItem, CosmosRewardsState } from "./types";
 import type { CryptoCurrency } from "../../types";
 
@@ -25,15 +23,19 @@ const isStargate = (currency: CryptoCurrency) => {
 
 const namespace = "cosmos";
 const version = "v1beta1";
-
 const cacheValidators = makeLRUCache(
-  async (rewardState: CosmosRewardsState, currency: CryptoCurrency) => {
+  async (
+    rewardState: CosmosRewardsState,
+    currency: CryptoCurrency
+  ): Promise<CosmosValidatorItem[]> => {
     if (isStargate(currency)) {
       const url = `${getBaseApiUrl(
         currency
       )}/${namespace}/staking/${version}/validators?status=BOND_STATUS_BONDED&pagination.limit=130`;
-      const { data } = await network({ url, method: "GET" });
-
+      const { data } = await network({
+        url,
+        method: "GET",
+      });
       const validators = data.validators.map((validator) => {
         const commission = parseFloat(
           validator.commission.commission_rates.rate
@@ -54,8 +56,10 @@ const cacheValidators = makeLRUCache(
       return validators;
     } else {
       const url = `${getBaseApiUrl(currency)}/staking/validators`;
-      const { data } = await network({ url, method: "GET" });
-
+      const { data } = await network({
+        url,
+        method: "GET",
+      });
       const validators = data.result.map((validator) => {
         const commission = parseFloat(
           validator.commission.commission_rates.rate
@@ -73,14 +77,14 @@ const cacheValidators = makeLRUCache(
           ),
         };
       });
-
       return validators;
     }
   },
   (_: CosmosRewardsState, currency: CryptoCurrency) => currency.id
 );
-
-export const getValidators = async (currency: CryptoCurrency) => {
+export const getValidators = async (
+  currency: CryptoCurrency
+): Promise<CosmosValidatorItem[]> => {
   if (isStargate(currency)) {
     const rewardsState = await getStargateRewardsState(currency);
     // validators need the rewardsState ONLY to compute voting power as
@@ -107,7 +111,6 @@ const getRewardsState = makeLRUCache(
       method: "GET",
     });
     const currentValueInflation = parseFloat(inflationData.result);
-
     const inflationParametersUrl = `${getBaseApiUrl(
       currency
     )}/minting/parameters`;
@@ -131,7 +134,6 @@ const getRewardsState = makeLRUCache(
     //  365.24 (days) * 24 (hours) * 60 (minutes) * 60 (seconds) = 31556736 seconds
     const assumedTimePerBlock =
       31556736.0 / parseFloat(inflationParametersData.result.blocks_per_year);
-
     const communityTaxUrl = `${getBaseApiUrl(
       currency
     )}/distribution/parameters`;
@@ -142,7 +144,6 @@ const getRewardsState = makeLRUCache(
     const communityPoolCommission = parseFloat(
       communityTax.result.community_tax
     );
-
     const supplyUrl = `${getBaseApiUrl(currency)}/supply/total`;
     const { data: totalSupplyData } = await network({
       url: supplyUrl,
@@ -151,18 +152,17 @@ const getRewardsState = makeLRUCache(
     const totalSupply = parseUatomStrAsAtomNumber(
       totalSupplyData.result[0].amount
     );
-
     const ratioUrl = `${getBaseApiUrl(currency)}/staking/pool`;
-    const { data: ratioData } = await network({ url: ratioUrl, method: "GET" });
+    const { data: ratioData } = await network({
+      url: ratioUrl,
+      method: "GET",
+    });
     const actualBondedRatio =
       parseUatomStrAsAtomNumber(ratioData.result.bonded_tokens) / totalSupply;
-
     // Arbitrary value in ATOM.
     const averageDailyFees = 20;
-
     // Arbitrary value in seconds
     const averageTimePerBlock = 7.5;
-
     return {
       targetBondedRatio,
       communityPoolCommission,
@@ -197,87 +197,80 @@ const getStargateRewardsState = makeLRUCache(
       currentValueInflation: 0.01,
     };
     /*
-    // All obtained values are strings ; so sometimes we will need to parse them as numbers
-    const inflationUrl = `${getBaseApiUrl(
-      currency
-    )}/cosmos/mint/v1beta1/inflation`;
-    const { data: inflationData } = await network({
-      url: inflationUrl,
-      method: "GET",
-    });
-    const currentValueInflation = parseFloat(inflationData.inflation);
-
-    const inflationParametersUrl = `${getBaseApiUrl(
-      currency
-    )}/cosmos/mint/v1beta1/params`;
-    const { data: inflationParametersData } = await network({
-      url: inflationParametersUrl,
-      method: "GET",
-    });
-    const inflationRateChange = parseFloat(
-      inflationParametersData.params.inflation_rate_change
-    );
-    const inflationMaxRate = parseFloat(
-      inflationParametersData.params.inflation_max
-    );
-    const inflationMinRate = parseFloat(
-      inflationParametersData.params.inflation_min
-    );
-    const targetBondedRatio = parseFloat(
-      inflationParametersData.params.goal_bonded
-    );
-    // Source for seconds per year : https://github.com/gavinly/CosmosParametersWiki/blob/master/Mint.md#notes-3
-    //  365.24 (days) * 24 (hours) * 60 (minutes) * 60 (seconds) = 31556736 seconds
-    const assumedTimePerBlock =
-      31556736.0 / parseFloat(inflationParametersData.params.blocks_per_year);
-
-    const communityTaxUrl = `${getBaseApiUrl(
-      currency
-    )}/cosmos/distribution/v1beta1/params`;
-    const { data: communityTax } = await network({
-      url: communityTaxUrl,
-      method: "GET",
-    });
-    const communityPoolCommission = parseFloat(
-      communityTax.params.community_tax
-    );
-
-    const supplyUrl = `${getBaseApiUrl(currency)}/cosmos/bank/v1beta1/supply/${
-      currency.id == "cosmos_testnet" ? "umuon" : "uatom"
-    }`;
-    const { data: totalSupplyData } = await network({
-      url: supplyUrl,
-      method: "GET",
-    });
-    const totalSupply = parseUatomStrAsAtomNumber(
-      totalSupplyData.amount.amount
-    );
-
-    const ratioUrl = `${getBaseApiUrl(currency)}/cosmos/staking/v1beta1/pool`;
-    const { data: ratioData } = await network({ url: ratioUrl, method: "GET" });
-    const actualBondedRatio =
-      parseUatomStrAsAtomNumber(ratioData.pool.bonded_tokens) / totalSupply;
-
-    // Arbitrary value in ATOM.
-    const averageDailyFees = 20;
-
-    // Arbitrary value in seconds
-    const averageTimePerBlock = 7.5;
-
-    return {
-      targetBondedRatio,
-      communityPoolCommission,
-      assumedTimePerBlock,
-      inflationRateChange,
-      inflationMaxRate,
-      inflationMinRate,
-      actualBondedRatio,
-      averageTimePerBlock,
-      totalSupply,
-      averageDailyFees,
-      currentValueInflation,
-    };
-    */
+  // All obtained values are strings ; so sometimes we will need to parse them as numbers
+  const inflationUrl = `${getBaseApiUrl(
+    currency
+  )}/cosmos/mint/v1beta1/inflation`;
+  const { data: inflationData } = await network({
+    url: inflationUrl,
+    method: "GET",
+  });
+  const currentValueInflation = parseFloat(inflationData.inflation);
+   const inflationParametersUrl = `${getBaseApiUrl(
+    currency
+  )}/cosmos/mint/v1beta1/params`;
+  const { data: inflationParametersData } = await network({
+    url: inflationParametersUrl,
+    method: "GET",
+  });
+  const inflationRateChange = parseFloat(
+    inflationParametersData.params.inflation_rate_change
+  );
+  const inflationMaxRate = parseFloat(
+    inflationParametersData.params.inflation_max
+  );
+  const inflationMinRate = parseFloat(
+    inflationParametersData.params.inflation_min
+  );
+  const targetBondedRatio = parseFloat(
+    inflationParametersData.params.goal_bonded
+  );
+  // Source for seconds per year : https://github.com/gavinly/CosmosParametersWiki/blob/master/Mint.md#notes-3
+  //  365.24 (days) * 24 (hours) * 60 (minutes) * 60 (seconds) = 31556736 seconds
+  const assumedTimePerBlock =
+    31556736.0 / parseFloat(inflationParametersData.params.blocks_per_year);
+   const communityTaxUrl = `${getBaseApiUrl(
+    currency
+  )}/cosmos/distribution/v1beta1/params`;
+  const { data: communityTax } = await network({
+    url: communityTaxUrl,
+    method: "GET",
+  });
+  const communityPoolCommission = parseFloat(
+    communityTax.params.community_tax
+  );
+   const supplyUrl = `${getBaseApiUrl(currency)}/cosmos/bank/v1beta1/supply/${
+    currency.id == "cosmos_testnet" ? "umuon" : "uatom"
+  }`;
+  const { data: totalSupplyData } = await network({
+    url: supplyUrl,
+    method: "GET",
+  });
+  const totalSupply = parseUatomStrAsAtomNumber(
+    totalSupplyData.amount.amount
+  );
+   const ratioUrl = `${getBaseApiUrl(currency)}/cosmos/staking/v1beta1/pool`;
+  const { data: ratioData } = await network({ url: ratioUrl, method: "GET" });
+  const actualBondedRatio =
+    parseUatomStrAsAtomNumber(ratioData.pool.bonded_tokens) / totalSupply;
+   // Arbitrary value in ATOM.
+  const averageDailyFees = 20;
+   // Arbitrary value in seconds
+  const averageTimePerBlock = 7.5;
+   return {
+    targetBondedRatio,
+    communityPoolCommission,
+    assumedTimePerBlock,
+    inflationRateChange,
+    inflationMaxRate,
+    inflationMinRate,
+    actualBondedRatio,
+    averageTimePerBlock,
+    totalSupply,
+    averageDailyFees,
+    currentValueInflation,
+  };
+  */
   },
   (currency: CryptoCurrency) => currency.id
 );
@@ -326,17 +319,15 @@ const computeAvgYearlyInflation = (rewardsState: CosmosRewardsState) => {
 export const validatorEstimatedRate = (
   validatorCommission: number,
   rewardsState: CosmosRewardsState
-) => {
+): number => {
   // This correction changes how inflation is computed vs. the value the network advertises
   const inexactBlockTimeCorrection =
     rewardsState.assumedTimePerBlock / rewardsState.averageTimePerBlock;
   // This correction assumes a constant bonded_ratio, this changes the yearly inflation
   const yearlyInflation = computeAvgYearlyInflation(rewardsState);
-
   // This correction adds the fees to the rate computation
   const yearlyFeeRate =
     (rewardsState.averageDailyFees * 365.24) / rewardsState.totalSupply;
-
   return (
     inexactBlockTimeCorrection *
     (yearlyInflation + yearlyFeeRate) *
@@ -346,7 +337,7 @@ export const validatorEstimatedRate = (
   );
 };
 
-export const hydrateValidators = (validators: CosmosValidatorItem[]) => {
+export const hydrateValidators = (validators: CosmosValidatorItem[]): void => {
   log("cosmos/validators", "hydrate " + validators.length + " validators");
   cacheValidators.hydrate("", validators);
 };
