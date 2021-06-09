@@ -1,24 +1,20 @@
-// @flow
-
 import type { DeviceTransactionField } from "../../transaction";
 import type { Account, AccountLike, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
 import { modes } from "./modules";
 
 function getDeviceTransactionConfig(input: {
-  account: AccountLike,
-  parentAccount: ?Account,
-  transaction: Transaction,
-  status: TransactionStatus,
+  account: AccountLike;
+  parentAccount: Account | null | undefined;
+  transaction: Transaction;
+  status: TransactionStatus;
 }): Array<DeviceTransactionField> {
   const {
     transaction,
     status: { estimatedFees },
   } = input;
-
   const m = modes[transaction.mode];
-
-  const fields = [];
+  const fields: Array<{ type: string; label: string }> = [];
 
   if (m && m.fillDeviceTransactionConfig) {
     m.fillDeviceTransactionConfig(input, fields);
