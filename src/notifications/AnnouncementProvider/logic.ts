@@ -1,10 +1,8 @@
-// @flow
 import type {
   RawAnnouncement,
   Announcement,
   AnnouncementsUserSettings,
 } from "./types";
-
 export function localizeAnnouncements(
   rawAnnouncements: RawAnnouncement[],
   context: AnnouncementsUserSettings
@@ -16,7 +14,6 @@ export function localizeAnnouncements(
       rawAnnouncement.content["en"],
   }));
 }
-
 const platformFilters = {
   desktop: ["desktop", "mac", "windows", "linux"],
   mobile: ["mobile", "android", "ios"],
@@ -26,7 +23,6 @@ const platformFilters = {
   ios: ["ios", "mobile"],
   android: ["android", "mobile"],
 };
-
 export function filterAnnouncements(
   announcements: Announcement[],
   context: AnnouncementsUserSettings
@@ -38,9 +34,7 @@ export function filterAnnouncements(
     lastSeenDevice,
     platform: contextPlatform,
   } = context;
-
   const date = getDate();
-
   return announcements.filter(
     ({
       currencies,
@@ -70,14 +64,12 @@ export function filterAnnouncements(
           !modelIds.includes(lastSeenDevice.modelId)
         )
           return false;
-
         if (
           versions &&
           versions.length &&
           !versions.includes(lastSeenDevice.deviceInfo.version)
         )
           return false;
-
         if (
           apps &&
           apps.length &&
@@ -100,6 +92,7 @@ export function filterAnnouncements(
       }
 
       const publishedAt = new Date(published_at);
+
       if (publishedAt > date) {
         return false;
       }

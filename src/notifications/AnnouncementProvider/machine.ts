@@ -1,9 +1,6 @@
-// @flow
-
 import { assign, Machine } from "xstate";
 import intersection from "lodash/intersection";
 import type { State } from "./types";
-
 const initialState: State = {
   cache: {},
   seenIds: [],
@@ -12,7 +9,6 @@ const initialState: State = {
   lastUpdateTime: null,
   isLoading: false,
 };
-
 export const announcementMachine = Machine(
   {
     id: "announcement",
@@ -26,14 +22,11 @@ export const announcementMachine = Machine(
             target: "updating",
             actions: assign((_, { data }) => {
               const { announcements, seenIds, lastUpdateTime } = data;
-
               const cache = {};
               announcements.forEach((announcement) => {
                 cache[announcement.uuid] = announcement;
               });
-
               const allIds = Object.keys(cache);
-
               return {
                 allIds,
                 cache,
@@ -53,7 +46,10 @@ export const announcementMachine = Machine(
         on: {
           UPDATE_DATA: {
             target: "updating",
-            actions: assign({ isLoading: true, error: null }),
+            actions: assign({
+              isLoading: true,
+              error: null,
+            }),
           },
         },
       },
@@ -63,16 +59,13 @@ export const announcementMachine = Machine(
           onDone: {
             target: "idle",
             actions: [
-              assign((context, { data }) => {
+              assign((context: any, { data }: any) => {
                 const { announcements, updateTime } = data;
-
                 const cache = {};
                 announcements.forEach((announcement) => {
                   cache[announcement.uuid] = announcement;
                 });
-
                 const allIds = Object.keys(cache);
-
                 return {
                   cache,
                   seenIds: intersection(allIds, context.seenIds),
@@ -96,14 +89,15 @@ export const announcementMachine = Machine(
     },
     on: {
       SET_AS_SEEN: {
-        cond: (context, event) => !context.seenIds.includes(event.seenId),
+        cond: (context: any, event: any) =>
+          !context.seenIds.includes(event.seenId),
         actions: ["setAsSeen", "saveData", "emitNewAnnouncement"],
       },
     },
   },
   {
     actions: {
-      setAsSeen: assign((context, event) => ({
+      setAsSeen: assign((context: any, event: any) => ({
         seenIds: [...context.seenIds, event.seenId],
       })),
     },

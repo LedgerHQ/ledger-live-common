@@ -1,11 +1,8 @@
-// @flow
-
 import type {
   ServiceStatusApi,
   ServiceStatusSummary,
   Incident,
 } from "../types";
-
 const statuses = {
   page: {
     id: "767c5rcj7z12",
@@ -556,11 +553,13 @@ const statuses = {
       only_show_if_degraded: false,
     },
   ],
-  incidents: [],
+  incidents: [] as Incident[],
   scheduled_maintenances: [],
-  status: { indicator: "none", description: "All Systems Operational" },
+  status: {
+    indicator: "none",
+    description: "All Systems Operational",
+  },
 };
-
 const mockedIncidents: Incident[] = [
   {
     created_at: "2021-02-22T17:58:18.792+02:00",
@@ -586,8 +585,7 @@ const mockedIncidents: Incident[] = [
     updated_at: "2021-02-22T17:58:18.792+02:00",
   },
 ];
-
-export function toggleMockIncident() {
+export function toggleMockIncident(): void {
   statuses.incidents = statuses.incidents.length > 0 ? [] : mockedIncidents;
 }
 
@@ -598,5 +596,4 @@ async function fetchStatusSummary(): Promise<ServiceStatusSummary> {
 const api: ServiceStatusApi = {
   fetchStatusSummary,
 };
-
 export default api;

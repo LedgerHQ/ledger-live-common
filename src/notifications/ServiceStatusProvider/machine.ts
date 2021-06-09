@@ -1,15 +1,11 @@
-// @flow
-
 import { assign, Machine } from "xstate";
 import type { State } from "./types";
-
 const initialState: State = {
   incidents: [],
   error: null,
   lastUpdateTime: null,
   isLoading: false,
 };
-
 export const serviceStatusMachine = Machine({
   id: "serviceStatus",
   initial: "updating",
@@ -24,7 +20,10 @@ export const serviceStatusMachine = Machine({
       on: {
         UPDATE_DATA: {
           target: "updating",
-          actions: assign({ isLoading: true, error: null }),
+          actions: assign({
+            isLoading: true,
+            error: null,
+          } as any),
         },
       },
     },
@@ -33,9 +32,8 @@ export const serviceStatusMachine = Machine({
         src: "fetchData",
         onDone: {
           target: "idle",
-          actions: assign((context, { data }) => {
+          actions: assign((_context, { data }) => {
             const { incidents, updateTime } = data;
-
             return {
               incidents,
               lastUpdateTime: updateTime,
