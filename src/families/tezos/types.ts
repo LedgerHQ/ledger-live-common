@@ -1,4 +1,3 @@
-import { Class } from "utility-types";
 import type { BigNumber } from "bignumber.js";
 import type {
   CoreAmount,
@@ -82,11 +81,11 @@ declare class CoreTezosLikeOriginatedAccount {
 }
 
 export type CoreStatics = {
-  TezosLikeOperation: Class<CoreTezosLikeOperation>;
-  TezosLikeAddress: Class<CoreTezosLikeAddress>;
-  TezosLikeAccount: Class<CoreTezosLikeAccount>;
-  TezosLikeTransaction: Class<CoreTezosLikeTransaction>;
-  TezosLikeTransactionBuilder: Class<CoreTezosLikeTransactionBuilder>;
+  TezosLikeOperation: CoreTezosLikeOperation;
+  TezosLikeAddress: CoreTezosLikeAddress;
+  TezosLikeAccount: CoreTezosLikeAccount;
+  TezosLikeTransaction: CoreTezosLikeTransaction;
+  TezosLikeTransactionBuilder: CoreTezosLikeTransactionBuilder;
 };
 export type {
   CoreTezosLikeOperation,

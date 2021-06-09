@@ -1,4 +1,3 @@
-import { Class } from "utility-types";
 import type { BigNumber } from "bignumber.js";
 import type {
   TransactionCommon,
@@ -13,9 +12,9 @@ export const AlgorandOperationTypeEnum = {
   ASSET_TRANSFER: 9,
 };
 export type CoreStatics = {
-  AlgorandPaymentInfo: Class<AlgorandPaymentInfo>;
-  AlgorandAssetTransferInfo: Class<AlgorandAssetTransferInfo>;
-  AlgorandAddress: Class<AlgorandAddress>;
+  AlgorandPaymentInfo: AlgorandPaymentInfo;
+  AlgorandAssetTransferInfo: AlgorandAssetTransferInfo;
+  AlgorandAddress: AlgorandAddress;
 };
 export type CoreAccountSpecifics = {
   asAlgorandAccount(): Promise<CoreAlgorandAccount>;

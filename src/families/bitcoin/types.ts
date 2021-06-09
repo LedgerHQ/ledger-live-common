@@ -1,4 +1,3 @@
-import { Class } from "utility-types";
 import type { BigNumber } from "bignumber.js";
 import type {
   TransactionCommon,
@@ -105,13 +104,13 @@ declare class CoreBitcoinLikeNetworkParameters {
 }
 
 export type CoreStatics = {
-  BitcoinLikeAccount: Class<CoreBitcoinLikeAccount>;
-  BitcoinLikeInput: Class<CoreBitcoinLikeInput>;
-  BitcoinLikeNetworkParameters: Class<CoreBitcoinLikeNetworkParameters>;
-  BitcoinLikeOperation: Class<CoreBitcoinLikeOperation>;
-  BitcoinLikeOutput: Class<CoreBitcoinLikeOutput>;
-  BitcoinLikeTransaction: Class<CoreBitcoinLikeTransaction>;
-  BitcoinLikeTransactionBuilder: Class<CoreBitcoinLikeTransactionBuilder>;
+  BitcoinLikeAccount: CoreBitcoinLikeAccount;
+  BitcoinLikeInput: CoreBitcoinLikeInput;
+  BitcoinLikeNetworkParameters: CoreBitcoinLikeNetworkParameters;
+  BitcoinLikeOperation: CoreBitcoinLikeOperation;
+  BitcoinLikeOutput: CoreBitcoinLikeOutput;
+  BitcoinLikeTransaction: CoreBitcoinLikeTransaction;
+  BitcoinLikeTransactionBuilder: CoreBitcoinLikeTransactionBuilder;
 };
 export type {
   CoreBitcoinLikeAccount,

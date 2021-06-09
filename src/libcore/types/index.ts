@@ -1,4 +1,3 @@
-import { Class } from "utility-types";
 // NB this is a tradeoff that for now, we maintain ourself the types interface AND the JS declaration of them.
 // this allow to do wrapping on top of the different libcore interfaces
 import { reflectSpecifics } from "../../generated/types";
@@ -211,31 +210,31 @@ declare class CoreEventReceiver {
 }
 
 export type CoreStatics = {
-  Account: Class<CoreAccount>;
-  AccountCreationInfo: Class<CoreAccountCreationInfo>;
-  Address: Class<CoreAddress>;
-  Amount: Class<CoreAmount>;
-  BigInt: Class<CoreBigInt>;
-  Block: Class<CoreBlock>;
-  Currency: Class<CoreCurrency>;
-  DatabaseBackend: Class<CoreDatabaseBackend>;
-  DerivationPath: Class<CoreDerivationPath>;
-  DynamicObject: Class<CoreDynamicObject>;
-  EventBus: Class<CoreEventBus>;
-  EventReceiver: Class<CoreEventReceiver>;
-  ExtendedKeyAccountCreationInfo: Class<CoreExtendedKeyAccountCreationInfo>;
-  HttpClient: Class<CoreHttpClient>;
-  LedgerCore: Class<CoreLedgerCore>;
-  LogPrinter: Class<CoreLogPrinter>;
-  Operation: Class<CoreOperation>;
-  OperationQuery: Class<CoreOperationQuery>;
-  PathResolver: Class<CorePathResolver>;
-  RandomNumberGenerator: Class<CoreRandomNumberGenerator>;
-  SerialContext: Class<CoreSerialContext>;
-  ThreadDispatcher: Class<CoreThreadDispatcher>;
-  Wallet: Class<CoreWallet>;
-  WalletPool: Class<CoreWalletPool>;
-  WebSocketClient: Class<CoreWebSocketClient>;
+  Account: CoreAccount;
+  AccountCreationInfo: CoreAccountCreationInfo;
+  Address: CoreAddress;
+  Amount: CoreAmount;
+  BigInt: CoreBigInt;
+  Block: CoreBlock;
+  Currency: CoreCurrency;
+  DatabaseBackend: CoreDatabaseBackend;
+  DerivationPath: CoreDerivationPath;
+  DynamicObject: CoreDynamicObject;
+  EventBus: CoreEventBus;
+  EventReceiver: CoreEventReceiver;
+  ExtendedKeyAccountCreationInfo: CoreExtendedKeyAccountCreationInfo;
+  HttpClient: CoreHttpClient;
+  LedgerCore: CoreLedgerCore;
+  LogPrinter: CoreLogPrinter;
+  Operation: CoreOperation;
+  OperationQuery: CoreOperationQuery;
+  PathResolver: CorePathResolver;
+  RandomNumberGenerator: CoreRandomNumberGenerator;
+  SerialContext: CoreSerialContext;
+  ThreadDispatcher: CoreThreadDispatcher;
+  Wallet: CoreWallet;
+  WalletPool: CoreWalletPool;
+  WebSocketClient: CoreWebSocketClient;
 } & SpecificStatics;
 export type Core = CoreStatics & {
   flush: () => Promise<void>;
