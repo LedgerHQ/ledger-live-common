@@ -1,4 +1,3 @@
-// @flow
 import { log } from "@ledgerhq/logs";
 import type { Account } from "../../types";
 import type { BitcoinResources } from "./types";
@@ -13,13 +12,15 @@ const postBuildAccount = async ({
   account,
   coreAccount,
 }: {
-  account: Account,
-  coreAccount: CoreAccount,
+  account: Account;
+  coreAccount: CoreAccount;
 }): Promise<Account> => {
   if (isSatStackEnabled() && account.currency.id === "bitcoin") {
     const inferred = inferDescriptorFromAccount(account);
+
     if (inferred) {
       const exists = await checkDescriptorExists(inferred.internal);
+
       if (!exists) {
         throw new SatStackDescriptorNotImported();
       }
@@ -36,6 +37,7 @@ const postBuildAccount = async ({
     ...account.bitcoinResources,
     utxos,
   };
+
   if (perCoin) {
     if (perCoin.postBuildBitcoinResources) {
       bitcoinResources = perCoin.postBuildBitcoinResources(
@@ -43,7 +45,9 @@ const postBuildAccount = async ({
         bitcoinResources
       );
     }
+
     const { syncReplaceAddress } = perCoin;
+
     if (syncReplaceAddress) {
       account.freshAddress = syncReplaceAddress(account, account.freshAddress);
       account.freshAddresses = account.freshAddresses.map((a) => ({
@@ -56,6 +60,7 @@ const postBuildAccount = async ({
       }));
     }
   }
+
   account.bitcoinResources = bitcoinResources;
   log("bitcoin/post-buildAccount", "bitcoinResources DONE");
   return account;

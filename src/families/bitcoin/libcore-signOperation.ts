@@ -1,5 +1,3 @@
-// @flow
-
 import { BigNumber } from "bignumber.js";
 import Btc from "@ledgerhq/hw-app-btc";
 import { log } from "@ledgerhq/logs";
@@ -35,83 +33,82 @@ async function signTransaction({
   onDeviceSignatureGranted,
 }) {
   log("hw", `signTransaction ${currency.id} for account ${account.id}`);
-
   const perCoin = perCoinLogic[currency.id];
-
   const networkParams = await coreCurrency.getBitcoinLikeNetworkParameters();
   if (isCancelled()) return;
-
   const sigHashTypeHex = await networkParams.getSigHash();
   const sigHashType = parseInt(sigHashTypeHex, 16);
+
   if (isNaN(sigHashType)) {
     throw new Error("sigHashType should not be NaN");
   }
-  if (isCancelled()) return;
 
+  if (isCancelled()) return;
   const hasTimestamp = await networkParams.getUsesTimestampedTransaction();
   if (isCancelled()) return;
-
   const hwApp = new Btc(transport);
   let additionals = [currency.id];
+
   if (account.derivationMode === "native_segwit") {
     additionals.push("bech32");
   }
+
   if (perCoin?.getAdditionals) {
-    additionals = additionals.concat(perCoin.getAdditionals({ transaction }));
+    additionals = additionals.concat(
+      perCoin.getAdditionals({
+        transaction,
+      })
+    );
   }
 
   const expiryHeight = perCoin?.hasExpiryHeight
     ? Buffer.from([0x00, 0x00, 0x00, 0x00])
     : undefined;
-
   const hasExtraData = perCoin?.hasExtraData || false;
-
   const rawInputs: CoreBitcoinLikeInput[] = await coreTransaction.getInputs();
   if (isCancelled()) return;
-
-  const inputs = await promiseAllBatched(5, rawInputs, async (input, i) => {
-    const hexPreviousTransaction = await input.getPreviousTransaction();
-    log("libcore", "splitTransaction " + String(hexPreviousTransaction));
-    // v1 of XST txs have timestamp but not v2
-    const inputHasTimestamp =
-      (currency.id === "stealthcoin" &&
-        hexPreviousTransaction.slice(0, 2) === "01") ||
-      hasTimestamp;
-
-    log("hw", `splitTransaction`, {
-      hexPreviousTransaction,
-      supportsSegwit: currency.supportsSegwit,
-      inputHasTimestamp,
-      hasExtraData,
-      additionals,
-    });
-    const previousTransaction = hwApp.splitTransaction(
-      hexPreviousTransaction,
-      currency.supportsSegwit,
-      inputHasTimestamp,
-      hasExtraData,
-      additionals
-    );
-
-    const outputIndex = await input.getPreviousOutputIndex();
-
-    // NB libcore's sequence is not used because int32 limit issue
-    const sequence = transaction.rbf ? 0 : 0xffffffff;
-
-    log("libcore", "inputs[" + i + "]", {
-      previousTransaction: JSON.stringify(previousTransaction),
-      outputIndex,
-      sequence,
-    });
-    return [
-      previousTransaction,
-      outputIndex,
-      undefined, // we don't use that TODO: document
-      sequence,
-    ];
-  });
+  const inputs: any[] = await promiseAllBatched(
+    5,
+    rawInputs,
+    async (input, i) => {
+      const hexPreviousTransaction = await input.getPreviousTransaction();
+      log("libcore", "splitTransaction " + String(hexPreviousTransaction));
+      // v1 of XST txs have timestamp but not v2
+      const inputHasTimestamp =
+        (currency.id === "stealthcoin" &&
+          hexPreviousTransaction.slice(0, 2) === "01") ||
+        hasTimestamp;
+      log("hw", `splitTransaction`, {
+        hexPreviousTransaction,
+        supportsSegwit: currency.supportsSegwit,
+        inputHasTimestamp,
+        hasExtraData,
+        additionals,
+      });
+      const previousTransaction = hwApp.splitTransaction(
+        hexPreviousTransaction,
+        currency.supportsSegwit,
+        inputHasTimestamp,
+        hasExtraData,
+        additionals
+      );
+      const outputIndex = await input.getPreviousOutputIndex();
+      // NB libcore's sequence is not used because int32 limit issue
+      const sequence = transaction.rbf ? 0 : 0xffffffff;
+      log("libcore", "inputs[" + i + "]", {
+        previousTransaction: JSON.stringify(previousTransaction),
+        outputIndex,
+        sequence,
+      });
+      return [
+        previousTransaction,
+        outputIndex,
+        undefined, // we don't use that TODO: document
+        sequence,
+      ];
+    }
+  );
   if (isCancelled()) return;
-
   const associatedKeysets = await promiseAllBatched(
     5,
     rawInputs,
@@ -124,14 +121,13 @@ async function signTransaction({
     }
   );
   if (isCancelled()) return;
-
   const outputs: CoreBitcoinLikeOutput[] = await coreTransaction.getOutputs();
   if (isCancelled()) return;
-
   let changePath;
 
   for (const o of outputs) {
     const output = await parseBitcoinOutput(o);
+
     if (isChangeOutput(output)) {
       changePath = output.path || undefined;
     }
@@ -139,12 +135,10 @@ async function signTransaction({
 
   const outputScriptHex = await coreTransaction.serializeOutputs();
   if (isCancelled()) return;
-
   const initialTimestamp = hasTimestamp
     ? await coreTransaction.getTimestamp()
     : undefined;
   if (isCancelled()) return;
-
   // FIXME
   // should be `transaction.getLockTime()` as soon as lock time is
   // handled by libcore (actually: it always returns a default value
@@ -170,9 +164,7 @@ async function signTransaction({
     additionals,
     expiryHeight: expiryHeight && expiryHeight.toString("hex"),
   });
-
   const signature = await hwApp.createPaymentTransactionNew({
-    // $FlowFixMe
     inputs,
     associatedKeysets,
     changePath,
@@ -187,34 +179,32 @@ async function signTransaction({
     onDeviceSignatureRequested,
     onDeviceStreaming,
   });
-
   const sendersInput = await coreTransaction.getInputs();
   const senders = (
-    await promiseAllBatched(5, sendersInput, (senderInput) =>
+    await promiseAllBatched(5, sendersInput, (senderInput: any) =>
       senderInput.getAddress()
     )
-  ).filter(Boolean);
-
+  ).filter(Boolean) as string[];
   const recipientsOutput = await coreTransaction.getOutputs();
   const recipients = (
-    await promiseAllBatched(5, recipientsOutput, (recipientOutput) =>
+    await promiseAllBatched(5, recipientsOutput, (recipientOutput: any) =>
       recipientOutput.getAddress()
     )
-  ).filter(Boolean);
-
+  ).filter(Boolean) as string[];
   const coreAmountFees = await coreTransaction.getFees();
+
   if (!coreAmountFees) {
     throw new Error("signAndBroadcast: fees should not be undefined");
   }
-  const fee = await libcoreAmountToBigNumber(coreAmountFees);
 
+  const fee = await libcoreAmountToBigNumber(coreAmountFees);
   const txHash = ""; // will be resolved in broadcast()
 
-  const operation: $Exact<Operation> = {
+  const operation: Operation = {
     id: `${account.id}-${txHash}-OUT`,
     hash: txHash,
     type: "OUT",
-    value: BigNumber(transaction.amount).plus(fee),
+    value: new BigNumber(transaction.amount).plus(fee),
     fee,
     blockHash: null,
     blockHeight: null,
@@ -224,7 +214,6 @@ async function signTransaction({
     date: new Date(),
     extra: {},
   };
-
   return {
     operation,
     expirationDate: null,
