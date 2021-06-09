@@ -1,4 +1,3 @@
-// @flow
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import type { DatasetTest } from "../../types";
@@ -90,11 +89,11 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("1000000"),
+                amount: new BigNumber("1000000"),
                 errors: {},
                 warnings: {},
-                totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("1000000"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -111,11 +110,11 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("10006000"),
+                amount: new BigNumber("10006000"),
                 errors: {},
                 warnings: {},
-                totalSpent: BigNumber("10006000"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("10006000"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -132,11 +131,11 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("9906000"),
+                amount: new BigNumber("9906000"),
                 errors: {},
                 warnings: {},
-                totalSpent: BigNumber("10006000"),
-                estimatedFees: BigNumber("100000"),
+                totalSpent: new BigNumber("10006000"),
+                estimatedFees: new BigNumber("100000"),
               },
             },
             {
@@ -152,11 +151,11 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("1000000"),
+                amount: new BigNumber("1000000"),
                 errors: {},
                 warnings: {},
-                totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("1000000"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -172,11 +171,11 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("1000000"),
+                amount: new BigNumber("1000000"),
                 errors: {},
                 warnings: {},
-                totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("1000000"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -201,11 +200,11 @@ const dataset: DatasetTest<Transaction> = {
                 ],
               }),
               expectedStatus: {
-                amount: BigNumber("0"),
+                amount: new BigNumber("0"),
                 errors: {},
                 warnings: {},
-                totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("0"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -221,11 +220,13 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("1000000"),
-                errors: { recipient: new RecipientRequired() },
+                amount: new BigNumber("1000000"),
+                errors: {
+                  recipient: new RecipientRequired(),
+                },
                 warnings: {},
-                totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("1000000"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -241,13 +242,13 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("1000000"),
+                amount: new BigNumber("1000000"),
                 errors: {
                   recipient: new InvalidAddressBecauseDestinationIsAlsoSource(),
                 },
                 warnings: {},
-                totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("1000000"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -263,11 +264,13 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("1000000"),
-                errors: { recipient: new InvalidAddress() },
+                amount: new BigNumber("1000000"),
+                errors: {
+                  recipient: new InvalidAddress(),
+                },
                 warnings: {},
-                totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("1000000"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -283,11 +286,13 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("0"),
-                errors: { amount: new AmountRequired() },
+                amount: new BigNumber("0"),
+                errors: {
+                  amount: new AmountRequired(),
+                },
                 warnings: {},
-                totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("0"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -303,11 +308,13 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("1000000000"),
-                errors: { amount: new NotEnoughBalance() },
+                amount: new BigNumber("1000000000"),
+                errors: {
+                  amount: new NotEnoughBalance(),
+                },
                 warnings: {},
-                totalSpent: BigNumber("1000000000"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("1000000000"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -318,7 +325,9 @@ const dataset: DatasetTest<Transaction> = {
                 amount: account.spendableBalance.minus(1),
               }),
               expectedStatus: () => ({
-                errors: { amount: new NotEnoughBalance() },
+                errors: {
+                  amount: new NotEnoughBalance(),
+                },
               }),
             },
             {
@@ -344,7 +353,8 @@ const dataset: DatasetTest<Transaction> = {
               }),
             },
             {
-              name: "estimatedFeesWarning", // send 1TRX to new account = +0.1TRX of fees
+              name: "estimatedFeesWarning",
+              // send 1TRX to new account = +0.1TRX of fees
               transaction: fromTransactionRaw({
                 family: "tron",
                 recipient: unactivatedAddress,
@@ -356,30 +366,33 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("1000000"),
+                amount: new BigNumber("1000000"),
                 errors: {},
-                warnings: { fee: new TronUnexpectedFees("Estimated fees") },
-                totalSpent: BigNumber("1100000"),
-                estimatedFees: BigNumber("100000"),
+                warnings: {
+                  fee: new TronUnexpectedFees("Estimated fees"),
+                },
+                totalSpent: new BigNumber("1100000"),
+                estimatedFees: new BigNumber("100000"),
               },
             },
             {
               name: "tronSendTrc20ToContractAddressSuccess",
               transaction: (t, account) => ({
                 ...t,
-                recipient: "TYmGYpY3LuHHge9jmTtq2aQmSpUpqKcZtJ", // corresponds to a valid deposit contract address
+                recipient: "TYmGYpY3LuHHge9jmTtq2aQmSpUpqKcZtJ",
+                // corresponds to a valid deposit contract address
                 subAccountId: getTokenAccountId(
                   account,
                   "tron/trc20/TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7"
                 ),
-                amount: BigNumber("1000000"),
+                amount: new BigNumber("1000000"),
               }),
               expectedStatus: {
-                amount: BigNumber("1000000"),
+                amount: new BigNumber("1000000"),
                 errors: {},
                 warnings: {},
-                totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("1000000"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -391,41 +404,43 @@ const dataset: DatasetTest<Transaction> = {
                   account,
                   "tron/trc20/TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7"
                 ),
-                amount: BigNumber("1000000"),
+                amount: new BigNumber("1000000"),
               }),
               expectedStatus: {
-                amount: BigNumber("1000000"),
-                errors: { recipient: new TronSendTrc20ToNewAccountForbidden() },
+                amount: new BigNumber("1000000"),
+                errors: {
+                  recipient: new TronSendTrc20ToNewAccountForbidden(),
+                },
                 warnings: {},
-                totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("1000000"),
+                estimatedFees: new BigNumber("0"),
               },
-            },
-            // FIXME account have moved...
+            }, // FIXME account have moved...
+
             /*
-            {
-              name: "tronSendTrc20NotEnoughEnergyWarning",
-              transaction: fromTransactionRaw({
-                family: "tron",
-                recipient: activatedAddress1,
-                subAccountId:
-                  "tronjs:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:+TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
-                amount: "1000000",
-                networkInfo: null,
-                mode: "send",
-                duration: undefined,
-                resource: undefined,
-                votes: []
-              }),
-              expectedStatus: {
-                amount: BigNumber("1000000"),
-                errors: {},
-                warnings: { amount: new TronNotEnoughEnergy() },
-                totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0")
-              }
-            },
-            */
+        {
+          name: "tronSendTrc20NotEnoughEnergyWarning",
+          transaction: fromTransactionRaw({
+            family: "tron",
+            recipient: activatedAddress1,
+            subAccountId:
+              "tronjs:2:tron:THAe4BNVxp293qgyQEqXEkHMpPcqtG73bi:+TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+            amount: "1000000",
+            networkInfo: null,
+            mode: "send",
+            duration: undefined,
+            resource: undefined,
+            votes: []
+          }),
+          expectedStatus: {
+            amount: new BigNumber("1000000"),
+            errors: {},
+            warnings: { amount: new TronNotEnoughEnergy() },
+            totalSpent: new BigNumber("1000000"),
+            estimatedFees: new BigNumber("0")
+          }
+        },
+        */
             {
               name: "tronSendTrc20Success",
               transaction: (t, account) => ({
@@ -435,14 +450,14 @@ const dataset: DatasetTest<Transaction> = {
                   account,
                   "tron/trc20/TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7"
                 ),
-                amount: BigNumber("1000000"),
+                amount: new BigNumber("1000000"),
               }),
               expectedStatus: {
-                amount: BigNumber("1000000"),
+                amount: new BigNumber("1000000"),
                 errors: {},
                 warnings: {},
-                totalSpent: BigNumber("1000000"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("1000000"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -458,11 +473,13 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("100000"),
-                errors: { amount: new TronInvalidFreezeAmount() },
+                amount: new BigNumber("100000"),
+                errors: {
+                  amount: new TronInvalidFreezeAmount(),
+                },
                 warnings: {},
-                totalSpent: BigNumber("100000"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("100000"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -478,11 +495,13 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("0"),
-                errors: { resource: new TronNoFrozenForEnergy() },
+                amount: new BigNumber("0"),
+                errors: {
+                  resource: new TronNoFrozenForEnergy(),
+                },
                 warnings: {},
-                totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("0"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -498,11 +517,13 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("0"),
-                errors: { vote: new TronVoteRequired() },
+                amount: new BigNumber("0"),
+                errors: {
+                  vote: new TronVoteRequired(),
+                },
                 warnings: {},
-                totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("0"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -515,14 +536,21 @@ const dataset: DatasetTest<Transaction> = {
                 mode: "vote",
                 duration: undefined,
                 resource: undefined,
-                votes: [{ address: "abcde", voteCount: 1 }],
+                votes: [
+                  {
+                    address: "abcde",
+                    voteCount: 1,
+                  },
+                ],
               }),
               expectedStatus: {
-                amount: BigNumber("0"),
-                errors: { vote: new InvalidAddress() },
+                amount: new BigNumber("0"),
+                errors: {
+                  vote: new InvalidAddress(),
+                },
                 warnings: {},
-                totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("0"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -543,11 +571,13 @@ const dataset: DatasetTest<Transaction> = {
                 ],
               }),
               expectedStatus: {
-                amount: BigNumber("0"),
-                errors: { vote: new TronInvalidVoteCount() },
+                amount: new BigNumber("0"),
+                errors: {
+                  vote: new TronInvalidVoteCount(),
+                },
                 warnings: {},
-                totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("0"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -572,11 +602,13 @@ const dataset: DatasetTest<Transaction> = {
                 ],
               }),
               expectedStatus: {
-                amount: BigNumber("0"),
-                errors: { vote: new TronNotEnoughTronPower() },
+                amount: new BigNumber("0"),
+                errors: {
+                  vote: new TronNotEnoughTronPower(),
+                },
                 warnings: {},
-                totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("0"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -592,11 +624,13 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("0"),
-                errors: { reward: new TronNoReward() },
+                amount: new BigNumber("0"),
+                errors: {
+                  reward: new TronNoReward(),
+                },
                 warnings: {},
-                totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("0"),
+                estimatedFees: new BigNumber("0"),
               },
             },
           ],
@@ -640,11 +674,11 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("0"),
+                amount: new BigNumber("0"),
                 errors: {},
                 warnings: {},
-                totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("0"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -660,11 +694,13 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("0"),
-                errors: { resource: new TronNoFrozenForBandwidth() },
+                amount: new BigNumber("0"),
+                errors: {
+                  resource: new TronNoFrozenForBandwidth(),
+                },
                 warnings: {},
-                totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("0"),
+                estimatedFees: new BigNumber("0"),
               },
             },
             {
@@ -681,29 +717,29 @@ const dataset: DatasetTest<Transaction> = {
                 votes: [],
               }),
               expectedStatus: {
-                amount: BigNumber("0"),
-                errors: { amount: new NotEnoughBalance() },
+                amount: new BigNumber("0"),
+                errors: {
+                  amount: new NotEnoughBalance(),
+                },
                 warnings: {},
-                totalSpent: BigNumber("0"),
-                estimatedFees: BigNumber("0"),
+                totalSpent: new BigNumber("0"),
+                estimatedFees: new BigNumber("0"),
               },
             },
           ],
           FIXME_tests: [
             /** 
-              Error:
-                - Expected
-                + Received
-                - "26003017"
-                + "26000197"
-
-              The live-common ignore all unsupported tokens (by the nano app) transactions.
-              
-              Difference of 2820 (0.00282 TRX) is due to an unsupported tr10 transaction which have fee:
-              https://tronscan.org/#/transaction/6fe0b288e0cce30396afe40b365ee57642be44146acc847672fe3d328309d2b0
-
-              To re-enable when the support will be done.
-            */
+          Error:
+            - Expected
+            + Received
+            - "26003017"
+            + "26000197"
+           The live-common ignore all unsupported tokens (by the nano app) transactions.
+          
+          Difference of 2820 (0.00282 TRX) is due to an unsupported tr10 transaction which have fee:
+          https://tronscan.org/#/transaction/6fe0b288e0cce30396afe40b365ee57642be44146acc847672fe3d328309d2b0
+           To re-enable when the support will be done.
+        */
             "balance is sum of ops",
           ],
           raw: {

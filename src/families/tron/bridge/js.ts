@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import { Observable } from "rxjs";
 import flatMap from "lodash/flatMap";
@@ -12,15 +11,27 @@ import type {
   TokenAccount,
   SubAccount,
   TransactionStatus,
+  SignedOperation,
+  AccountLike,
+  SignOperationEvent,
 } from "../../../types";
-import type { NetworkInfo, Transaction, TrongridExtraTxInfo } from "../types";
+import type {
+  NetworkInfo,
+  SuperRepresentative,
+  Transaction,
+  TrongridExtraTxInfo,
+} from "../types";
 import {
   isParentTx,
   txInfoToOperation,
   getOperationTypefromMode,
   getEstimatedBlockSize,
 } from "../utils";
-import type { CurrencyBridge, AccountBridge } from "../../../types/bridge";
+import type {
+  CurrencyBridge,
+  AccountBridge,
+  DeviceId,
+} from "../../../types/bridge";
 import { open, close } from "../../../hw";
 import signTransaction from "../../../hw/signTransaction";
 import { makeSync, makeScanAccounts } from "../../../bridge/jsHelpers";
@@ -77,27 +88,31 @@ import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 
 const receive = makeAccountBridgeReceive();
 
-const signOperation = ({ account, transaction, deviceId }) =>
+const signOperation = ({
+  account,
+  transaction,
+  deviceId,
+}: {
+  account: Account;
+  transaction: Transaction;
+  deviceId: DeviceId;
+}): Observable<SignOperationEvent> =>
   Observable.create((o) => {
     async function main() {
       const subAccount =
         transaction.subAccountId && account.subAccounts
           ? account.subAccounts.find((sa) => sa.id === transaction.subAccountId)
           : null;
-
       const isContractAddressRecipient =
         (await fetchTronContract(transaction.recipient)) !== undefined;
-
       const fee = await getEstimatedFees(
         account,
         transaction,
         isContractAddressRecipient
       );
-
       const balance = subAccount
         ? subAccount.balance
         : BigNumber.max(0, account.spendableBalance.minus(fee));
-
       transaction.amount = transaction.useAllAmount
         ? balance
         : transaction.amount;
@@ -119,12 +134,16 @@ const signOperation = ({ account, transaction, deviceId }) =>
         switch (transaction.mode) {
           case "freeze":
             return freezeTronTransaction(account, transaction);
+
           case "unfreeze":
             return unfreezeTronTransaction(account, transaction);
+
           case "vote":
             return voteTronSuperRepresentatives(account, transaction);
+
           case "claimReward":
             return claimRewardTronTransaction(account);
+
           default:
             return createTronTransaction(account, transaction, subAccount);
         }
@@ -134,8 +153,9 @@ const signOperation = ({ account, transaction, deviceId }) =>
       const transport = await open(deviceId);
 
       try {
-        o.next({ type: "device-signature-requested" });
-
+        o.next({
+          type: "device-signature-requested",
+        });
         // Sign by device
         const signature = await signTransaction(
           account.currency,
@@ -152,9 +172,9 @@ const signOperation = ({ account, transaction, deviceId }) =>
                 : undefined,
           }
         );
-
-        o.next({ type: "device-signature-granted" });
-
+        o.next({
+          type: "device-signature-granted",
+        });
         const hash = preparedTransaction.txID;
 
         const getValue = (): BigNumber => {
@@ -162,48 +182,50 @@ const signOperation = ({ account, transaction, deviceId }) =>
             case "send":
               return subAccount
                 ? fee
-                : BigNumber(transaction.amount || 0).plus(fee);
+                : new BigNumber(transaction.amount || 0).plus(fee);
+
             case "claimReward":
               return account.tronResources
                 ? account.tronResources.unwithdrawnReward
-                : BigNumber(0);
+                : new BigNumber(0);
+
             default:
-              return BigNumber(0);
+              return new BigNumber(0);
           }
         };
 
         const value = getValue();
-
         const operationType = getOperationTypefromMode(transaction.mode);
-
         const resource = transaction.resource || "BANDWIDTH";
 
-        const getExtra = (): ?TrongridExtraTxInfo => {
+        const getExtra = (): TrongridExtraTxInfo | null | undefined => {
           switch (transaction.mode) {
             case "freeze":
               return {
                 frozenAmount: transaction.amount,
               };
+
             case "unfreeze":
               return {
                 unfreezeAmount: get(
                   account.tronResources,
                   `frozen.${resource.toLocaleLowerCase()}.amount`,
-                  BigNumber(0)
+                  new BigNumber(0)
                 ),
               };
+
             case "vote":
               return {
                 votes: transaction.votes,
               };
+
             default:
               return undefined;
           }
         };
 
         const extra = getExtra() || {};
-
-        const operation: $Exact<Operation> = {
+        const operation: Operation = {
           id: `${account.id}-${hash}-${operationType}`,
           hash,
           // if it's a token op and there is no fee, this operation does not exist and is a "NONE"
@@ -228,8 +250,8 @@ const signOperation = ({ account, transaction, deviceId }) =>
               value:
                 transaction.useAllAmount && subAccount
                   ? subAccount.balance
-                  : BigNumber(transaction.amount || 0),
-              fee: BigNumber(0),
+                  : new BigNumber(transaction.amount || 0),
+              fee: new BigNumber(0),
               blockHash: null,
               blockHeight: null,
               senders: [account.freshAddress],
@@ -263,13 +285,15 @@ const signOperation = ({ account, transaction, deviceId }) =>
 
 const broadcast = async ({
   signedOperation: { signature, operation, signatureRaw },
-}) => {
+}: {
+  account: Account;
+  signedOperation: SignedOperation;
+}): Promise<Operation> => {
   const transaction = {
     raw_data: signatureRaw,
     txID: operation.hash,
     signature: [signature],
   };
-
   const submittedTransaction = await broadcastTron(transaction);
 
   if (submittedTransaction.result !== true) {
@@ -284,18 +308,21 @@ const getAccountShape = async (info, syncConfig) => {
   const tronAcc = await fetchTronAccount(info.address);
 
   if (tronAcc.length === 0) {
-    return { blockHeight, balance: BigNumber(0) };
+    return {
+      blockHeight,
+      balance: new BigNumber(0),
+    };
   }
 
   const acc = tronAcc[0];
-  const spendableBalance = acc.balance ? BigNumber(acc.balance) : BigNumber(0);
-
+  const spendableBalance = acc.balance
+    ? new BigNumber(acc.balance)
+    : new BigNumber(0);
   const cacheTransactionInfoById = {
     ...(info.initialAccount &&
       info.initialAccount.tronResources &&
       info.initialAccount.tronResources.cacheTransactionInfoById),
   };
-
   const operationsPageSize = Math.min(
     1000,
     getOperationsPageSize(
@@ -303,7 +330,6 @@ const getAccountShape = async (info, syncConfig) => {
       syncConfig
     )
   );
-
   // FIXME: this is not optional especially that we might already have info.initialAccount
   // use minimalOperationsBuilderSync to reconciliate and KEEP REF
   const txs = await fetchTronAccountTxs(
@@ -311,51 +337,49 @@ const getAccountShape = async (info, syncConfig) => {
     (txs) => txs.length < operationsPageSize,
     cacheTransactionInfoById
   );
-
   const tronResources = await getTronResources(
     acc,
     txs,
     cacheTransactionInfoById
   );
-
   const balance = spendableBalance
     .plus(
       tronResources.frozen.bandwidth
         ? tronResources.frozen.bandwidth.amount
-        : BigNumber(0)
+        : new BigNumber(0)
     )
     .plus(
       tronResources.frozen.energy
         ? tronResources.frozen.energy.amount
-        : BigNumber(0)
+        : new BigNumber(0)
     )
     .plus(
       tronResources.delegatedFrozen.bandwidth
         ? tronResources.delegatedFrozen.bandwidth.amount
-        : BigNumber(0)
+        : new BigNumber(0)
     )
     .plus(
       tronResources.delegatedFrozen.energy
         ? tronResources.delegatedFrozen.energy.amount
-        : BigNumber(0)
+        : new BigNumber(0)
     );
-
   const parentTxs = txs.filter(isParentTx);
   const parentOperations: Operation[] = compact(
     parentTxs.map((tx) => txInfoToOperation(info.id, info.address, tx))
   );
-
   const trc10Tokens = get(acc, "assetV2", []).map(({ key, value }) => ({
     type: "trc10",
     key,
     value,
   }));
-
   const trc20Tokens = get(acc, "trc20", []).map((obj) => {
     const [[key, value]] = Object.entries(obj);
-    return { type: "trc20", key, value };
+    return {
+      type: "trc20",
+      key,
+      value,
+    };
   });
-
   // TRC10 and TRC20 accounts
   // FIXME: this is bad for perf: we should reconciliate with potential existing data
   // we need to KEEP REF as much as possible & use minimalOperationsBuilderSync
@@ -374,7 +398,7 @@ const getAccountShape = async (info, syncConfig) => {
         info.initialAccount &&
         info.initialAccount.subAccounts &&
         info.initialAccount.subAccounts.find((a) => a.id === id);
-      const balance = BigNumber(value);
+      const balance = new BigNumber(value);
       const sub: TokenAccount = {
         type: "TokenAccount",
         id,
@@ -400,7 +424,6 @@ const getAccountShape = async (info, syncConfig) => {
       return sub;
     })
   );
-
   // get 'OUT' token operations with fee
   const subOutOperationsWithFee: Operation[] = flatMap(
     subAccounts.map((s) => s.operations)
@@ -412,11 +435,10 @@ const getAccountShape = async (info, syncConfig) => {
       value: o.fee,
       id: `${info.id}-${o.hash}-OUT`,
     }));
-
   // add them to the parent operations and sort by date desc
   const parentOpsAndSubOutOpsWithFee = parentOperations
     .concat(subOutOperationsWithFee)
-    .sort((a, b) => b.date - a.date);
+    .sort((a, b) => b.date.valueOf() - a.date.valueOf());
 
   return {
     balance,
@@ -430,7 +452,6 @@ const getAccountShape = async (info, syncConfig) => {
 };
 
 const scanAccounts = makeScanAccounts(getAccountShape);
-
 // the balance does not update straightaway so we should ignore recent operations if they are in pending for a bit
 const preferPendingOperationsUntilBlockValidation = 35;
 
@@ -438,8 +459,10 @@ const postSync = (initial: Account, parent: Account): Account => {
   function evictRecentOpsIfPending(a) {
     a.pendingOperations.forEach((pending) => {
       const i = a.operations.findIndex((o) => o.id === pending.id);
+
       if (i !== -1) {
         const diff = parent.blockHeight - (a.operations[i].blockHeight || 0);
+
         if (diff < preferPendingOperationsUntilBlockValidation) {
           a.operations.splice(i, 1);
         }
@@ -449,7 +472,6 @@ const postSync = (initial: Account, parent: Account): Account => {
 
   evictRecentOpsIfPending(parent);
   parent.subAccounts && parent.subAccounts.forEach(evictRecentOpsIfPending);
-
   return parent;
 };
 
@@ -458,11 +480,15 @@ const sync = makeSync(getAccountShape, postSync);
 const currencyBridge: CurrencyBridge = {
   preload: async () => {
     const superRepresentatives = await getTronSuperRepresentatives();
-    return { superRepresentatives };
+    return {
+      superRepresentatives,
+    };
   },
-  hydrate: (data: mixed) => {
-    if (!data || typeof data !== "object") return;
+  hydrate: (data?: { superRepresentatives?: SuperRepresentative[] }) => {
+    if (!data || !data.superRepresentatives) return;
+
     const { superRepresentatives } = data;
+
     if (
       !superRepresentatives ||
       typeof superRepresentatives !== "object" ||
@@ -474,9 +500,9 @@ const currencyBridge: CurrencyBridge = {
   scanAccounts,
 };
 
-const createTransaction = () => ({
+const createTransaction = (): Transaction => ({
   family: "tron",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   useAllAmount: false,
   mode: "send",
   duration: 3,
@@ -486,7 +512,13 @@ const createTransaction = () => ({
   votes: [],
 });
 
-const updateTransaction = (t, patch) => ({ ...t, ...patch });
+const updateTransaction = (
+  t: Transaction,
+  patch: Transaction
+): Transaction => ({
+  ...t,
+  ...patch,
+});
 
 // see : https://developers.tron.network/docs/bandwith#section-bandwidth-points-consumption
 // 1. cost around 200 Bandwidth, if not enough check Free Bandwidth
@@ -500,14 +532,13 @@ const getFeesFromBandwidth = (a: Account, t: Transaction): BigNumber => {
     .minus(freeUsed)
     .plus(gainedLimit)
     .minus(gainedUsed);
-
   const estimatedBandwidthCost = getEstimatedBlockSize(a, t);
 
   if (available.lt(estimatedBandwidthCost)) {
-    return BigNumber(2000); // cost is around 0.002 TRX
+    return new BigNumber(2000); // cost is around 0.002 TRX
   }
 
-  return BigNumber(0); // no fee
+  return new BigNumber(0); // no fee
 };
 
 // Special case: If activated an account, cost around 0.1 TRX
@@ -518,14 +549,13 @@ const getFeesFromAccountActivation = async (
   const recipientAccount = await fetchTronAccount(t.recipient);
   const { gainedUsed, gainedLimit } = extractBandwidthInfo(t.networkInfo);
   const available = gainedLimit.minus(gainedUsed);
-
   const estimatedBandwidthCost = getEstimatedBlockSize(a, t);
 
   if (recipientAccount.length === 0 && available.lt(estimatedBandwidthCost)) {
     return activationFees; // cost is around 0.1 TRX
   }
 
-  return BigNumber(0); // no fee
+  return new BigNumber(0); // no fee
 };
 
 const getEstimatedFees = async (
@@ -536,7 +566,7 @@ const getEstimatedFees = async (
   const feesFromAccountActivation =
     t.mode === "send" && !isContract
       ? await getFeesFromAccountActivation(a, t)
-      : BigNumber(0);
+      : new BigNumber(0);
 
   if (feesFromAccountActivation.gt(0)) {
     return feesFromAccountActivation;
@@ -550,17 +580,13 @@ const getTransactionStatus = async (
   a: Account,
   t: Transaction
 ): Promise<TransactionStatus> => {
-  const errors: { [string]: Error } = {};
-  const warnings: { [string]: Error } = {};
-
+  const errors: Record<string, Error> = {};
+  const warnings: Record<string, Error> = {};
   const { mode, recipient, resource, votes, useAllAmount = false } = t;
-
   const tokenAccount = !t.subAccountId
     ? null
     : a.subAccounts && a.subAccounts.find((ta) => ta.id === t.subAccountId);
-
   const account = tokenAccount || a;
-
   const isContractAddressRecipient =
     (await fetchTronContract(recipient)) !== undefined;
 
@@ -572,7 +598,7 @@ const getTransactionStatus = async (
     if (recipient === a.freshAddress) {
       errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
     } else if (recipient && !(await validateAddress(recipient))) {
-      errors.recipient = new InvalidAddress(null, {
+      errors.recipient = new InvalidAddress(undefined, {
         currencyName: a.currency.name,
       });
     } else if (
@@ -594,8 +620,11 @@ const getTransactionStatus = async (
     const expiredDatePath = recipient
       ? `tronResources.delegatedFrozen.${lowerCaseResource}.expiredAt`
       : `tronResources.frozen.${lowerCaseResource}.expiredAt`;
-
-    const expirationDate: ?Date = get(a, expiredDatePath, undefined);
+    const expirationDate: Date | null | undefined = get(
+      a,
+      expiredDatePath,
+      undefined
+    );
 
     if (!expirationDate) {
       if (resource === "BANDWIDTH") {
@@ -627,6 +656,7 @@ const getTransactionStatus = async (
       } else {
         const totalVoteCount = sumBy(votes, "voteCount");
         const tronPower = (a.tronResources && a.tronResources.tronPower) || 0;
+
         if (totalVoteCount > tronPower) {
           errors.vote = new TronNotEnoughTronPower();
         }
@@ -642,7 +672,10 @@ const getTransactionStatus = async (
 
     if (a.tronResources && a.tronResources.unwithdrawnReward.eq(0)) {
       errors.reward = new TronNoReward();
-    } else if (lastRewardOp && claimableRewardDate > new Date().getTime()) {
+    } else if (
+      lastRewardOp &&
+      claimableRewardDate.valueOf() > new Date().valueOf()
+    ) {
       errors.reward = new TronRewardNotAvailable("Reward is not claimable", {
         until: claimableRewardDate.toISOString(),
       });
@@ -651,17 +684,16 @@ const getTransactionStatus = async (
 
   const estimatedFees =
     Object.entries(errors).length > 0
-      ? BigNumber(0)
+      ? new BigNumber(0)
       : await getEstimatedFees(a, t, isContractAddressRecipient);
-
   const balance =
     account.type === "Account"
       ? BigNumber.max(0, account.spendableBalance.minus(estimatedFees))
       : account.balance;
-
   const amount = useAllAmount ? balance : t.amount;
-
-  const amountSpent = ["send", "freeze"].includes(mode) ? amount : BigNumber(0);
+  const amountSpent = ["send", "freeze"].includes(mode)
+    ? amount
+    : new BigNumber(0);
 
   if (mode === "freeze" && amount.lt(oneTrx)) {
     errors.amount = new TronInvalidFreezeAmount();
@@ -682,7 +714,8 @@ const getTransactionStatus = async (
       errors.amount = new NotEnoughBalance();
     }
 
-    const energy = (a.tronResources && a.tronResources.energy) || BigNumber(0);
+    const energy =
+      (a.tronResources && a.tronResources.energy) || new BigNumber(0);
 
     // For the moment, we rely on this rule:
     // Add a 'TronNotEnoughEnergy' warning only if the account sastifies theses 3 conditions:
@@ -698,6 +731,7 @@ const getTransactionStatus = async (
       const contractUserEnergyConsumption = await getContractUserEnergyRatioConsumption(
         account.token.contractAddress
       );
+
       if (contractUserEnergyConsumption > 0) {
         warnings.amount = new TronNotEnoughEnergy();
       }
@@ -709,8 +743,9 @@ const getTransactionStatus = async (
       showCode: true,
       disableRounding: true,
     });
-
-    warnings.fee = new TronUnexpectedFees("Estimated fees", { fees });
+    warnings.fee = new TronUnexpectedFees("Estimated fees", {
+      fees,
+    });
   }
 
   return Promise.resolve({
@@ -726,7 +761,11 @@ const estimateMaxSpendable = async ({
   account,
   parentAccount,
   transaction,
-}) => {
+}: {
+  account: AccountLike;
+  parentAccount: Account;
+  transaction: Transaction;
+}): Promise<BigNumber> => {
   const mainAccount = getMainAccount(account, parentAccount);
   const fees = await getEstimatedFees(
     mainAccount,
@@ -736,7 +775,7 @@ const estimateMaxSpendable = async ({
       ...transaction,
       recipient:
         transaction?.recipient || "0x0000000000000000000000000000000000000000",
-      amount: BigNumber(0),
+      amount: new BigNumber(0),
     },
     false
   );
@@ -748,7 +787,6 @@ const estimateMaxSpendable = async ({
 const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
   const networkInfo: NetworkInfo =
     t.networkInfo || (await getTronAccountNetwork(a.freshAddress));
-
   return t.networkInfo === networkInfo ? t : { ...t, networkInfo };
 };
 
@@ -764,4 +802,7 @@ const accountBridge: AccountBridge<Transaction> = {
   broadcast,
 };
 
-export default { currencyBridge, accountBridge };
+export default {
+  currencyBridge,
+  accountBridge,
+};

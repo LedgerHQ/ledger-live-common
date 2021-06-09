@@ -1,8 +1,6 @@
-// @flow
 import invariant from "invariant";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { getTronSuperRepresentatives } from "../../api/Tron";
-
 import { BigNumber } from "bignumber.js";
 import type { SuperRepresentative, Vote } from "./types";
 import type { Account } from "../../types";
@@ -10,22 +8,26 @@ import { useBridgeSync } from "../../bridge/react";
 import { oneTrx } from "./constants";
 
 export type Action = {
-  type: "updateVote" | "resetVotes" | "clearVotes",
-  address: string,
-  value: string,
+  type: "updateVote" | "resetVotes" | "clearVotes";
+  address: string;
+  value: string;
 };
 
 export type State = {
-  votes: { [address: string]: number }, // formatted Map of votes
-  votesAvailable: number, // total of available TP
-  votesUsed: number, // total of TP used
-  votesSelected: number, // number of SR votes selected
-  max: number, // votes remaining
-  initialVotes: { [address: string]: number }, // initial Map of votes
+  votes: Record<string, number>;
+  // formatted Map of votes
+  votesAvailable: number;
+  // total of available TP
+  votesUsed: number;
+  // total of TP used
+  votesSelected: number;
+  // number of SR votes selected
+  max: number;
+  // votes remaining
+  initialVotes: Record<string, number>; // initial Map of votes
 };
 
 export const MIN_TRANSACTION_AMOUNT = oneTrx;
-
 export const SR_THRESHOLD = 27;
 export const SR_MAX_VOTES = 5;
 
@@ -49,14 +51,16 @@ export const useTronSuperRepresentatives = (): Array<SuperRepresentative> => {
 };
 
 /** Get last time voted */
-export const getLastVotedDate = (account: Account): ?Date => {
+export const getLastVotedDate = (account: Account): Date | null | undefined => {
   return account.tronResources && account.tronResources.lastVotedDate
     ? account.tronResources.lastVotedDate
     : null;
 };
 
 /** Get next available date to claim rewards */
-export const getNextRewardDate = (account: Account): ?number => {
+export const getNextRewardDate = (
+  account: Account
+): number | null | undefined => {
   const lastWithdrawnRewardDate =
     account.tronResources && account.tronResources.lastWithdrawnRewardDate
       ? account.tronResources.lastWithdrawnRewardDate
@@ -73,20 +77,20 @@ export const getNextRewardDate = (account: Account): ?number => {
 
 /** format votes with superrepresentatives data */
 export const formatVotes = (
-  votes: ?Array<Vote>,
-  superRepresentatives: ?Array<SuperRepresentative>
-): Array<{|
-  ...Vote,
-  validator: ?SuperRepresentative,
-  isSR: boolean,
-  rank: number,
-|}> => {
+  votes: Array<Vote> | null | undefined,
+  superRepresentatives: Array<SuperRepresentative> | null | undefined
+): Array<
+  Vote & {
+    validator: SuperRepresentative | null | undefined;
+    isSR: boolean;
+    rank: number;
+  }
+> => {
   return votes && superRepresentatives
     ? votes.map(({ address, voteCount }) => {
         const srIndex = superRepresentatives.findIndex(
           (sp) => sp.address === address
         );
-
         return {
           validator: superRepresentatives[srIndex],
           rank: srIndex + 1,
@@ -99,13 +103,12 @@ export const formatVotes = (
 };
 
 // wait an effect of a tron freeze until it effectively change
-export function useTronPowerLoading(account: Account) {
+export function useTronPowerLoading(account: Account): boolean {
   const tronPower =
     (account.tronResources && account.tronResources.tronPower) || 0;
   const initialTronPower = useRef(tronPower);
   const initialAccount = useRef(account);
-
-  const [isLoading, setLoading] = useState(true);
+  const [isLoading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (initialTronPower.current !== tronPower) {
@@ -135,8 +138,8 @@ const searchFilter = (query?: string) => ({
   name,
   address,
 }: {
-  name: ?string,
-  address: string,
+  name: string | null | undefined;
+  address: string;
 }) => {
   if (!query) return true;
   const terms = `${name || ""} ${address}`;
@@ -149,14 +152,13 @@ export function useSortedSr(
   superRepresentatives: SuperRepresentative[],
   votes: Vote[]
 ): {
-  sr: SuperRepresentative,
-  name: ?string,
-  address: string,
-  rank: number,
-  isSR: boolean,
+  sr: SuperRepresentative;
+  name: string | null | undefined;
+  address: string;
+  rank: number;
+  isSR: boolean;
 }[] {
   const { current: initialVotes } = useRef(votes.map(({ address }) => address));
-
   const SR = useMemo(
     () =>
       superRepresentatives.map((sr, rank) => ({
@@ -168,7 +170,6 @@ export function useSortedSr(
       })),
     [superRepresentatives]
   );
-
   const sortedVotes = useMemo(
     () =>
       SR.filter(({ address }) => initialVotes.includes(address)).concat(
@@ -176,12 +177,10 @@ export function useSortedSr(
       ),
     [SR, initialVotes]
   );
-
   const sr = useMemo(
     () => (search ? SR.filter(searchFilter(search)) : sortedVotes),
     [search, SR, sortedVotes]
   );
-
   return sr;
 }
 
@@ -189,33 +188,38 @@ export function useSortedSr(
 export const getUnfreezeData = (
   account: Account
 ): {
-  unfreezeBandwidth: BigNumber,
-  unfreezeEnergy: BigNumber,
-  canUnfreezeBandwidth: boolean,
-  canUnfreezeEnergy: boolean,
-  bandwidthExpiredAt: ?Date,
-  energyExpiredAt: ?Date,
+  unfreezeBandwidth: BigNumber;
+  unfreezeEnergy: BigNumber;
+  canUnfreezeBandwidth: boolean;
+  canUnfreezeEnergy: boolean;
+  bandwidthExpiredAt: Date | null | undefined;
+  energyExpiredAt: Date | null | undefined;
 } => {
   const { tronResources } = account;
   invariant(tronResources, "getUnfreezeData: tron account is expected");
-  const {
-    frozen: { bandwidth, energy },
-  } = tronResources;
+
+  const frozen = tronResources?.frozen ?? { bandwidth: null, energy: null };
+  const bandwidth = frozen.bandwidth;
+  const energy = frozen.energy;
 
   /** ! expiredAt should always be set with the amount if not this will disable the field by default ! */
   const bandwidthExpiredAt = bandwidth ? bandwidth.expiredAt : null;
+
   // eslint-disable-next-line no-underscore-dangle
-  const _bandwidthExpiredAt = +new Date(+bandwidthExpiredAt);
+  const _bandwidthExpiredAt = +new Date(+(bandwidthExpiredAt ?? 0));
 
   const energyExpiredAt = energy ? energy.expiredAt : null;
-  // eslint-disable-next-line no-underscore-dangle
-  const _energyExpiredAt = +new Date(+energyExpiredAt);
 
-  const unfreezeBandwidth = BigNumber(bandwidth ? bandwidth.amount : 0);
+  // eslint-disable-next-line no-underscore-dangle
+  const _energyExpiredAt = +new Date(+(energyExpiredAt ?? 0));
+
+  const unfreezeBandwidth = new BigNumber(bandwidth ? bandwidth.amount : 0);
+
   const canUnfreezeBandwidth =
     unfreezeBandwidth.gt(0) && Date.now() > _bandwidthExpiredAt;
 
-  const unfreezeEnergy = BigNumber(energy ? energy.amount : 0);
+  const unfreezeEnergy = new BigNumber(energy ? energy.amount : 0);
+
   const canUnfreezeEnergy =
     unfreezeEnergy.gt(0) && Date.now() > _energyExpiredAt;
 

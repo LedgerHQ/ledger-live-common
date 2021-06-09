@@ -1,8 +1,7 @@
-// @flow
 import type { DeviceAction } from "../../bot/types";
 import { deviceActionFlow } from "../../bot/specs";
 import { formatCurrencyUnit } from "../../currencies";
-import type { Transaction } from "./types";
+import type { Transaction, Vote } from "./types";
 
 function subAccount(subAccountId, account) {
   const sub = (account.subAccounts || []).find((a) => a.id === subAccountId);
@@ -16,12 +15,11 @@ const resourceExpected = ({ transaction: { resource } }) =>
     ? resource.slice(0, 1).toUpperCase() + resource.slice(1).toLowerCase()
     : "";
 
-const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
+const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
   steps: [
     {
       title: "Review",
-      button: "Rr",
-      // TODO define expectedValue
+      button: "Rr", // TODO define expectedValue
     },
     {
       title: "Claim",
@@ -92,6 +90,7 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
         const title = `${vote.address.slice(0, 5)}...${vote.address.slice(
           vote.address.length - 5
         )}`;
+
         if (event.text === title) {
           return voteAction(vote, title);
         }
@@ -100,7 +99,10 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
   },
 });
 
-function voteAction(vote, title): any {
+function voteAction(
+  vote: Vote,
+  title: string
+): { title: string; button: string; expectedValue: () => string } {
   return {
     title,
     button: "Rr",
@@ -108,4 +110,6 @@ function voteAction(vote, title): any {
   };
 }
 
-export default { acceptTransaction };
+export default {
+  acceptTransaction,
+};
