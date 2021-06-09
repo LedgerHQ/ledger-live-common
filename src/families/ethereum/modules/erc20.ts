@@ -1,6 +1,4 @@
-// @flow
 // handle erc20 feature others than send.
-
 import abi from "ethereumjs-abi";
 import invariant from "invariant";
 import eip55 from "eip55";
@@ -16,8 +14,8 @@ import {
 } from "../../../currencies";
 import { getAccountCapabilities } from "../../../compound/logic";
 import { CompoundLowerAllowanceOfActiveAccountError } from "../../../errors";
-
-const infinite = BigNumber(2).pow(256).minus(1);
+import { DeviceTransactionField } from "../../../transaction";
+const infinite = new BigNumber(2).pow(256).minus(1);
 
 function contractField(transaction) {
   const recipientToken = findTokenByAddress(transaction.recipient);
@@ -46,6 +44,7 @@ const erc20approve: ModeModule = {
     const { status, enabledAmount } =
       (subAccount && getAccountCapabilities(subAccount)) || {};
     validateRecipient(a.currency, t.recipient, result);
+
     if (!t.useAllAmount) {
       if (t.amount.eq(0)) {
         result.errors.amount = new AmountRequired();
@@ -77,14 +76,18 @@ const erc20approve: ModeModule = {
   fillTransactionData(a, t, tx) {
     const subAccount = inferTokenAccount(a, t);
     invariant(subAccount, "sub account missing");
+    // FIXME: make sure it doesn't break
+    if (!subAccount) throw new Error("sub account missing");
     const recipient = eip55.encode(t.recipient);
     let amount;
+
     if (t.useAllAmount) {
       amount = infinite;
     } else {
       invariant(t.amount, "amount missing");
-      amount = BigNumber(t.amount);
+      amount = new BigNumber(t.amount);
     }
+
     const data = abi.simpleEncode(
       "approve(address,uint256)",
       recipient,
@@ -104,6 +107,7 @@ const erc20approve: ModeModule = {
       label: "Type",
       value: "Approve",
     });
+
     if (transaction.useAllAmount) {
       fields.push({
         type: "text",
@@ -118,7 +122,7 @@ const erc20approve: ModeModule = {
       });
     }
 
-    fields.push(contractField(transaction));
+    fields.push(contractField(transaction) as DeviceTransactionField);
   },
 
   fillOptimisticOperation(_account, _transaction, operation) {
@@ -129,7 +133,6 @@ const erc20approve: ModeModule = {
     };
   },
 };
-
-export const modes: { [_: Modes]: ModeModule } = {
+export const modes: Record<Modes, ModeModule> = {
   "erc20.approve": erc20approve,
 };
