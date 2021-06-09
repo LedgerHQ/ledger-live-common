@@ -1,14 +1,12 @@
-// @flow
-
 import type Transport from "@ledgerhq/hw-transport";
 import BIPPath from "bip32-path";
 import { getAddressFromScriptHash, getScriptHashFromPublicKey } from "./crypto";
-
 /**
  * Neo API
  *
  * @example
  */
+
 export default class Neo {
   transport: Transport<any>;
 
@@ -16,6 +14,7 @@ export default class Neo {
     this.transport = transport;
     transport.decorateAppAPIMethods(this, ["getAddress"], "NEO");
   }
+
   /**
    * Get Neo address for the given BIP 32 path.
    * @param path a path in BIP 32 format
@@ -25,7 +24,7 @@ export default class Neo {
    */
   async getAddress(path: string) {
     const bipPath = BIPPath.fromString(path).toPathArray();
-    let buf = Buffer.alloc(4 * bipPath.length);
+    const buf = Buffer.alloc(4 * bipPath.length);
     bipPath.forEach((segment, index) => {
       buf.writeUInt32BE(segment, 4 * index);
     });
@@ -33,6 +32,9 @@ export default class Neo {
     const publicKey = res.toString("hex").substring(0, 130);
     const scriptHash = getScriptHashFromPublicKey(publicKey);
     const address = getAddressFromScriptHash(scriptHash);
-    return { address, publicKey };
+    return {
+      address,
+      publicKey,
+    };
   }
 }
