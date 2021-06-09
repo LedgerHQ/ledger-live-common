@@ -1,5 +1,3 @@
-// @flow
-
 import { BigNumber } from "bignumber.js";
 import type { CosmosResourcesRaw, CosmosResources } from "./types";
 
@@ -13,6 +11,7 @@ export function toCosmosResourcesRaw(r: CosmosResources): CosmosResourcesRaw {
     redelegations,
     unbondings,
   } = r;
+
   return {
     delegations: delegations.map(
       ({ amount, status, pendingRewards, validatorAddress }) => ({
@@ -48,7 +47,6 @@ export function toCosmosResourcesRaw(r: CosmosResources): CosmosResourcesRaw {
     withdrawAddress,
   };
 }
-
 export function fromCosmosResourcesRaw(r: CosmosResourcesRaw): CosmosResources {
   const {
     delegatedBalance,
@@ -62,9 +60,9 @@ export function fromCosmosResourcesRaw(r: CosmosResourcesRaw): CosmosResources {
   return {
     delegations: delegations.map(
       ({ amount, status, pendingRewards, validatorAddress }) => ({
-        amount: BigNumber(amount),
+        amount: new BigNumber(amount),
         status,
-        pendingRewards: BigNumber(pendingRewards),
+        pendingRewards: new BigNumber(pendingRewards),
         validatorAddress,
       })
     ),
@@ -75,7 +73,7 @@ export function fromCosmosResourcesRaw(r: CosmosResourcesRaw): CosmosResources {
         validatorSrcAddress,
         validatorDstAddress,
       }) => ({
-        amount: BigNumber(amount),
+        amount: new BigNumber(amount),
         completionDate: new Date(completionDate),
         validatorSrcAddress,
         validatorDstAddress,
@@ -83,14 +81,14 @@ export function fromCosmosResourcesRaw(r: CosmosResourcesRaw): CosmosResources {
     ),
     unbondings: unbondings.map(
       ({ amount, completionDate, validatorAddress }) => ({
-        amount: BigNumber(amount),
+        amount: new BigNumber(amount),
         completionDate: new Date(completionDate),
         validatorAddress,
       })
     ),
-    delegatedBalance: BigNumber(delegatedBalance),
-    pendingRewardsBalance: BigNumber(pendingRewardsBalance),
-    unbondingBalance: BigNumber(unbondingBalance),
+    delegatedBalance: new BigNumber(delegatedBalance),
+    pendingRewardsBalance: new BigNumber(pendingRewardsBalance),
+    unbondingBalance: new BigNumber(unbondingBalance),
     withdrawAddress,
   };
 }

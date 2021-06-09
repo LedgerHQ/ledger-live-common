@@ -1,7 +1,12 @@
-// @flow
 import type { Account } from "../../types";
 import type { CoreAccount } from "../../libcore/types";
-import type { CosmosResources, CoreCosmosLikeAccount } from "./types";
+import type {
+  CosmosResources,
+  CoreCosmosLikeAccount,
+  CosmosUnbonding,
+  CosmosRedelegation,
+  CosmosDelegation,
+} from "./types";
 import { BigNumber } from "bignumber.js";
 import { log } from "@ledgerhq/logs";
 import {
@@ -18,10 +23,12 @@ const getValidatorStatus = async (
   const status = ["unbonded", "unbonding", "bonded"];
   const validatorInfo = await cosmosAccount.getValidatorInfo(address);
   const rawStatus = await validatorInfo.getActiveStatus();
+
   // Pre stargate
   if (["0", "1", "2"].includes(rawStatus)) {
     return status[parseInt(rawStatus)];
   }
+
   // Stargate
   const stargateStatusMap = {
     BOND_STATUS_UNBONDED: "unbonded",
@@ -31,14 +38,15 @@ const getValidatorStatus = async (
   return stargateStatusMap[rawStatus] || "unbonded";
 };
 
-const getFlattenDelegation = async (cosmosAccount) => {
+const getFlattenDelegation = async (
+  cosmosAccount: CoreCosmosLikeAccount
+): Promise<CosmosDelegation[]> => {
   const delegations = await cosmosAccount.getDelegations();
   const pendingRewards = await cosmosAccount.getPendingRewards();
-
   return await promiseAllBatched(10, delegations, async (delegation) => {
     const validatorAddress = await delegation.getValidatorAddress();
-
     let reward;
+
     for (let i = 0; i < pendingRewards.length; i++) {
       if (
         (await pendingRewards[i].getValidatorAddress()) === validatorAddress
@@ -55,15 +63,16 @@ const getFlattenDelegation = async (cosmosAccount) => {
       validatorAddress,
       pendingRewards: reward
         ? await libcoreAmountToBigNumber(reward)
-        : BigNumber(0),
+        : new BigNumber(0),
       status: await getValidatorStatus(cosmosAccount, validatorAddress),
     };
   });
 };
 
-const getFlattenRedelegations = async (cosmosAccount) => {
+const getFlattenRedelegations = async (
+  cosmosAccount: CoreCosmosLikeAccount
+): Promise<CosmosRedelegation[]> => {
   const redelegations = await cosmosAccount.getRedelegations();
-
   const toFlatten = await promiseAllBatched(
     3,
     redelegations,
@@ -81,13 +90,13 @@ const getFlattenRedelegations = async (cosmosAccount) => {
         })
       )
   );
-
   return toFlatten.reduce((old, current) => [...old, ...current], []);
 };
 
-const getFlattenUnbonding = async (cosmosAccount) => {
+const getFlattenUnbonding = async (
+  cosmosAccount: CoreCosmosLikeAccount
+): Promise<CosmosUnbonding[]> => {
   const unbondings = await cosmosAccount.getUnbondings();
-
   const toFlatten = await promiseAllBatched(
     3,
     unbondings,
@@ -104,7 +113,6 @@ const getFlattenUnbonding = async (cosmosAccount) => {
         })
       )
   );
-
   return toFlatten.reduce((old, current) => [...old, ...current], []);
 };
 
@@ -126,19 +134,18 @@ const getCosmosResources = async (
     unbondings: flattenUnbonding,
     delegatedBalance: flattenDelegation.reduce(
       (old, current) => old.plus(current.amount),
-      BigNumber(0)
+      new BigNumber(0)
     ),
     pendingRewardsBalance: flattenDelegation.reduce(
       (old, current) => old.plus(current.pendingRewards),
-      BigNumber(0)
+      new BigNumber(0)
     ),
     unbondingBalance: flattenUnbonding.reduce(
       (old, current) => old.plus(current.amount),
-      BigNumber(0)
+      new BigNumber(0)
     ),
     withdrawAddress: "",
   };
-
   return res;
 };
 
@@ -146,21 +153,24 @@ const postBuildAccount = async ({
   account,
   coreAccount,
 }: {
-  account: Account,
-  coreAccount: CoreAccount,
+  account: Account;
+  coreAccount: CoreAccount;
 }): Promise<Account> => {
   log("cosmos/post-buildAccount", "getCosmosResources");
   account.cosmosResources = await getCosmosResources(account, coreAccount);
   log("cosmos/post-buildAccount", "getCosmosResources DONE");
-  account.spendableBalance = getMaxEstimatedBalance(account, BigNumber(0));
+  account.spendableBalance = getMaxEstimatedBalance(account, new BigNumber(0));
+
   if (account.spendableBalance.lt(0)) {
-    account.spendableBalance = BigNumber(0);
+    account.spendableBalance = new BigNumber(0);
   }
+
   if (!account.used) {
     const cosmosAccount = await coreAccount.asCosmosLikeAccount();
     const seq = await cosmosAccount.getSequence();
     account.used = seq != "";
   }
+
   return account;
 };
 

@@ -1,8 +1,6 @@
-// @flow
 import type { DeviceAction } from "../../bot/types";
 import { deviceActionFlow } from "../../bot/specs";
 import type { Transaction } from "./types";
-
 const typeWording = {
   send: "Send",
   delegate: "Delegate",
@@ -11,8 +9,7 @@ const typeWording = {
   claimReward: "Withdraw Reward",
   claimRewardCompound: "(not tested)",
 };
-
-const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
+const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
   steps: [
     {
       title: "Sequence",
@@ -93,5 +90,6 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
     },
   ],
 });
-
-export default { acceptTransaction };
+export default {
+  acceptTransaction,
+};

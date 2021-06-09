@@ -1,4 +1,3 @@
-// @flow
 import invariant from "invariant";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -14,6 +13,7 @@ import type {
   CosmosSearchFilter,
   Transaction,
   CosmosExtraTxInfo,
+  CosmosPreloadData,
 } from "./types";
 import {
   mapDelegations,
@@ -24,7 +24,7 @@ import { getAccountUnit } from "../../account";
 import useMemoOnce from "../../hooks/useMemoOnce";
 import type { Account } from "../../types";
 
-export function useCosmosPreloadData() {
+export function useCosmosPreloadData(): CosmosPreloadData {
   const [state, setState] = useState(getCurrentCosmosPreloadData);
   useEffect(() => {
     const sub = getCosmosPreloadDataUpdates().subscribe(setState);
@@ -40,12 +40,13 @@ export function useCosmosMappedDelegations(
   const { validators } = useCosmosPreloadData();
   const delegations = account.cosmosResources?.delegations;
   invariant(delegations, "cosmos: delegations is required");
-
   const unit = getAccountUnit(account);
-
   return useMemo(() => {
-    const mappedDelegations = mapDelegations(delegations, validators, unit);
-
+    const mappedDelegations = mapDelegations(
+      delegations || [],
+      validators,
+      unit
+    );
     return mode === "claimReward"
       ? mappedDelegations.filter(({ pendingRewards }) => pendingRewards.gt(0))
       : mappedDelegations;
@@ -55,23 +56,20 @@ export function useCosmosMappedDelegations(
 export function useCosmosDelegationsQuerySelector(
   account: Account,
   transaction: Transaction,
-  delegationSearchFilter?: CosmosSearchFilter = defaultSearchFilter
+  delegationSearchFilter: CosmosSearchFilter = defaultSearchFilter
 ): {
-  query: string,
-  setQuery: (query: string) => void,
-  options: CosmosMappedDelegation[],
-  value: ?CosmosMappedDelegation,
+  query: string;
+  setQuery: (query: string) => void;
+  options: CosmosMappedDelegation[];
+  value: CosmosMappedDelegation | null | undefined;
 } {
   const [query, setQuery] = useState<string>("");
   const delegations = useCosmosMappedDelegations(account, transaction.mode);
-
   const options = useMemo<CosmosMappedDelegation[]>(
     () => delegations.filter(delegationSearchFilter(query)),
     [query, delegations, delegationSearchFilter]
   );
-
   const selectedValidator = transaction.validators && transaction.validators[0];
-
   const value = useMemo(() => {
     switch (transaction.mode) {
       case "redelegate":
@@ -83,6 +81,7 @@ export function useCosmosDelegationsQuerySelector(
           ({ validatorAddress }) =>
             validatorAddress === transaction.cosmosSourceValidator
         );
+
       default:
         return (
           selectedValidator &&
@@ -93,7 +92,6 @@ export function useCosmosDelegationsQuerySelector(
         );
     }
   }, [delegations, selectedValidator, transaction, options]);
-
   return {
     query,
     setQuery,
@@ -107,12 +105,11 @@ export function useSortedValidators(
   search: string,
   validators: CosmosValidatorItem[],
   delegations: CosmosDelegationInfo[],
-  validatorSearchFilter?: CosmosSearchFilter = defaultSearchFilter
+  validatorSearchFilter: CosmosSearchFilter = defaultSearchFilter
 ): CosmosMappedValidator[] {
   const initialVotes = useMemoOnce(() =>
     delegations.map(({ address }) => address)
   );
-
   const mappedValidators = useMemo(
     () =>
       validators.map((validator, rank) => ({
@@ -121,7 +118,6 @@ export function useSortedValidators(
       })),
     [validators]
   );
-
   const sortedVotes = useMemo(
     () =>
       mappedValidators
@@ -136,7 +132,6 @@ export function useSortedValidators(
         ),
     [mappedValidators, initialVotes]
   );
-
   const sr = useMemo(
     () =>
       search
@@ -144,7 +139,6 @@ export function useSortedValidators(
         : sortedVotes,
     [search, mappedValidators, sortedVotes, validatorSearchFilter]
   );
-
   return sr;
 }
 
@@ -152,12 +146,11 @@ export function useMappedExtraOperationDetails({
   account,
   extra,
 }: {
-  account: Account,
-  extra: CosmosExtraTxInfo,
-}) {
+  account: Account;
+  extra: CosmosExtraTxInfo;
+}): CosmosExtraTxInfo {
   const { validators } = useCosmosPreloadData();
   const unit = getAccountUnit(account);
-
   return {
     validators: extra.validators
       ? mapDelegationInfo(extra.validators, validators, unit)

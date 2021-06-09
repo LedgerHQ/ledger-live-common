@@ -1,11 +1,19 @@
-// @flow
-
-import type { Operation } from "../../types";
+import { $Shape } from "utility-types";
+import type { Operation, OperationType } from "../../types";
 import type { Core, CoreOperation } from "../../libcore/types";
 import { BigNumber } from "bignumber.js";
+import { CosmosMessage } from "./types";
 
-const translateExtraInfo = async (core: Core, msg, type) => {
-  let unwrapped, amount, address, cosmosSourceValidator;
+const translateExtraInfo = async (
+  core: Core,
+  msg: CosmosMessage,
+  type: OperationType
+) => {
+  let unwrapped: any;
+  let amount: BigNumber | undefined;
+  let address: string | undefined;
+  let cosmosSourceValidator: string;
+
   switch (type) {
     case "DELEGATE": {
       unwrapped = await core.CosmosLikeMessage.unwrapMsgDelegate(msg);
@@ -28,7 +36,7 @@ const translateExtraInfo = async (core: Core, msg, type) => {
         msg
       );
       address = await unwrapped.getValidatorAddress();
-      amount = BigNumber(0);
+      amount = new BigNumber(0);
       break;
     }
 
@@ -50,13 +58,13 @@ const translateExtraInfo = async (core: Core, msg, type) => {
     }
   }
 
+  const validator = {
+    address,
+    amount,
+  };
+
   return {
-    validators: [
-      {
-        address,
-        amount,
-      },
-    ],
+    validators: [validator],
   };
 };
 
@@ -64,9 +72,9 @@ async function cosmosBuildOperation({
   core,
   coreOperation,
 }: {
-  core: Core,
-  coreOperation: CoreOperation,
-}) {
+  core: Core;
+  coreOperation: CoreOperation;
+}): Promise<Partial<Operation>> {
   const cosmosLikeOperation = await coreOperation.asCosmosLikeOperation();
   const cosmosLikeTransaction = await cosmosLikeOperation.getTransaction();
   const hash = await cosmosLikeTransaction.getHash();

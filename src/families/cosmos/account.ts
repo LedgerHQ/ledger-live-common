@@ -1,20 +1,23 @@
-// @flow
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
-import type { Account, Operation, Unit } from "../../types";
+import type { Account, Unit } from "../../types";
 import { getCurrentCosmosPreloadData } from "./preloadedData";
 import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
+import { CosmosOperation, CosmosExtraTxInfo } from "./types";
 import { mapDelegations, mapUnbondings, mapRedelegations } from "./logic";
 
-function formatOperationSpecifics(op: Operation, unit: ?Unit): string {
+function formatOperationSpecifics(
+  op: CosmosOperation,
+  unit: Unit | null | undefined
+): string {
   const { validators } = op.extra;
   return (validators || [])
     .map(
       (v) =>
         `\n    to ${v.address} ${
           unit
-            ? formatCurrencyUnit(unit, BigNumber(v.amount), {
+            ? formatCurrencyUnit(unit, new BigNumber(v.amount), {
                 showCode: true,
                 disableRounding: true,
               }).padEnd(16)
@@ -34,28 +37,29 @@ function formatAccountSpecifics(account: Account): string {
     alwaysShowSign: false,
     showCode: true,
   };
-
   let str = " ";
-
   str +=
     formatCurrencyUnit(unit, account.spendableBalance, formatConfig) +
     " spendable. ";
-  if (cosmosResources.delegatedBalance.gt(0)) {
+
+  if (cosmosResources?.delegatedBalance.gt(0)) {
     str +=
       formatCurrencyUnit(unit, cosmosResources.delegatedBalance, formatConfig) +
       " delegated. ";
   }
-  if (cosmosResources.unbondingBalance.gt(0)) {
+
+  if (cosmosResources?.unbondingBalance.gt(0)) {
     str +=
       formatCurrencyUnit(unit, cosmosResources.unbondingBalance, formatConfig) +
       " unbonding. ";
   }
 
   const mappedDelegations = mapDelegations(
-    cosmosResources.delegations,
+    cosmosResources?.delegations ?? [],
     validators,
     unit
   );
+
   if (mappedDelegations.length) {
     str += "\nDELEGATIONS\n";
     str += mappedDelegations
@@ -78,10 +82,11 @@ function formatAccountSpecifics(account: Account): string {
   }
 
   const mappedUnbondings = mapUnbondings(
-    cosmosResources.unbondings,
+    cosmosResources?.unbondings ?? [],
     validators,
     unit
   );
+
   if (mappedUnbondings.length) {
     str += "\nUNDELEGATIONS\n";
     str += mappedUnbondings
@@ -94,11 +99,13 @@ function formatAccountSpecifics(account: Account): string {
       )
       .join("\n");
   }
+
   const mappedRedelegations = mapRedelegations(
-    cosmosResources.redelegations,
+    cosmosResources?.redelegations ?? [],
     validators,
     unit
   );
+
   if (mappedRedelegations.length) {
     str += "\nREDELEGATIONS\n";
     str += mappedRedelegations
@@ -113,23 +120,28 @@ function formatAccountSpecifics(account: Account): string {
       )
       .join("\n");
   }
+
   return str;
 }
 
-export function fromOperationExtraRaw(extra: ?Object) {
+export function fromOperationExtraRaw(
+  extra: Record<string, any> | null | undefined
+): CosmosExtraTxInfo | Record<string, any> | null | undefined {
   if (extra && extra.validators) {
     return {
       ...extra,
       validators: extra.validators.map((o) => ({
         ...o,
-        amount: BigNumber(o.amount),
+        amount: new BigNumber(o.amount),
       })),
     };
   }
+
   return extra;
 }
-
-export function toOperationExtraRaw(extra: ?Object) {
+export function toOperationExtraRaw(
+  extra: Record<string, any> | null | undefined
+): CosmosExtraTxInfo | Record<string, any> | null | undefined {
   if (extra && extra.validators) {
     return {
       ...extra,
@@ -139,9 +151,9 @@ export function toOperationExtraRaw(extra: ?Object) {
       })),
     };
   }
+
   return extra;
 }
-
 export default {
   formatAccountSpecifics,
   formatOperationSpecifics,

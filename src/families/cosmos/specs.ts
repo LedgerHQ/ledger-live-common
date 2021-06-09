@@ -1,4 +1,3 @@
-// @flow
 import expect from "expect";
 import sample from "lodash/sample";
 import sampleSize from "lodash/sampleSize";
@@ -18,7 +17,6 @@ import {
   canRedelegate,
   getMaxDelegationAvailable,
 } from "./logic";
-
 const cosmos: AppSpec<Transaction> = {
   name: "Cosmos",
   currency: getCryptoCurrencyById("cosmos"),
@@ -30,7 +28,7 @@ const cosmos: AppSpec<Transaction> = {
     invariant(maxSpendable.gt(COSMOS_MIN_SAFE), "balance is too low");
   },
   test: ({ operation, optimisticOperation }) => {
-    const opExpected: Object = toOperationRaw({
+    const opExpected: Record<string, any> = toOperationRaw({
       ...optimisticOperation,
     });
     delete opExpected.value;
@@ -38,9 +36,8 @@ const cosmos: AppSpec<Transaction> = {
     delete opExpected.date;
     delete opExpected.blockHash;
     delete opExpected.blockHeight;
-    expect(toOperationRaw(operation)).toMatchObject(opExpected);
+    expect(toOperationRaw(operation)).toMatchObject(opExpected); // TODO check it is between operation.value-fees (excluded) and operation.value
 
-    // TODO check it is between operation.value-fees (excluded) and operation.value
     /*
     // balance move
     expect(account.balance.toString()).toBe(
@@ -56,18 +53,23 @@ const cosmos: AppSpec<Transaction> = {
         return {
           transaction: bridge.createTransaction(account),
           updates: [
-            { recipient: pickSiblings(siblings, 7).freshAddress },
+            {
+              recipient: pickSiblings(siblings, 7).freshAddress,
+            },
             {
               amount: maxSpendable
                 .times(0.3 + 0.4 * Math.random())
                 .integerValue(),
             },
-            Math.random() < 0.5 ? { memo: "LedgerLiveBot" } : null,
+            Math.random() < 0.5
+              ? {
+                  memo: "LedgerLiveBot",
+                }
+              : null,
           ],
         };
       },
     },
-
     {
       name: "send max",
       maxRun: 1,
@@ -78,7 +80,9 @@ const cosmos: AppSpec<Transaction> = {
             {
               recipient: pickSiblings(siblings, 7).freshAddress,
             },
-            { useAllAmount: true },
+            {
+              useAllAmount: true,
+            },
           ],
         };
       },
@@ -86,7 +90,6 @@ const cosmos: AppSpec<Transaction> = {
         expect(account.spendableBalance.toString()).toBe("0");
       },
     },
-
     {
       name: "delegate new validators",
       maxRun: 2,
@@ -160,7 +163,6 @@ const cosmos: AppSpec<Transaction> = {
         });
       },
     },
-
     {
       name: "undelegate",
       maxRun: 3,
@@ -197,8 +199,7 @@ const cosmos: AppSpec<Transaction> = {
               validators: [
                 {
                   address: undelegateCandidate.validatorAddress,
-                  amount: undelegateCandidate.amount
-                    // most of the time, undelegate all
+                  amount: undelegateCandidate.amount // most of the time, undelegate all
                     .times(Math.random() > 0.3 ? 1 : Math.random())
                     .integerValue(),
                 },
@@ -226,7 +227,6 @@ const cosmos: AppSpec<Transaction> = {
         });
       },
     },
-
     {
       name: "redelegate",
       maxRun: 1,
@@ -269,10 +269,8 @@ const cosmos: AppSpec<Transaction> = {
         invariant(cosmosResources, "cosmos");
         transaction.validators.forEach((v) => {
           const d = cosmosResources.redelegations
-            .slice(0)
-            // recent first
-            .sort((a, b) => b.completionDate - a.completionDate)
-            // find the related redelegation
+            .slice(0) // recent first
+            .sort((a, b) => b.completionDate - a.completionDate) // find the related redelegation
             .find(
               (d) =>
                 d.validatorDstAddress === v.address &&
@@ -290,7 +288,6 @@ const cosmos: AppSpec<Transaction> = {
         });
       },
     },
-
     {
       name: "claim rewards",
       maxRun: 1,
@@ -317,7 +314,7 @@ const cosmos: AppSpec<Transaction> = {
                   // but it won't work until COIN-665 is fixed until then,
                   // amount is set to 0 in
                   // src/families/cosmos/libcore-buildOperation in the REWARD case
-                  amount: BigNumber(0),
+                  amount: new BigNumber(0),
                 },
               ],
             },
@@ -341,5 +338,6 @@ const cosmos: AppSpec<Transaction> = {
     },
   ],
 };
-
-export default { cosmos };
+export default {
+  cosmos,
+};

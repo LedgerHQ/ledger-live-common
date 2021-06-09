@@ -1,4 +1,3 @@
-// @flow
 import type { Operation } from "../../types";
 import type { CosmosBroadcastResponse } from "./types";
 import { makeBroadcast } from "../../libcore/broadcast";
@@ -12,10 +11,14 @@ async function broadcast({
   const cosmosLikeAccount = await coreAccount.asCosmosLikeAccount();
   const res = await cosmosLikeAccount.broadcastRawTransaction(signature);
   const parsed: CosmosBroadcastResponse = JSON.parse(res);
+
   if (parsed.code && parsed.code > 0) {
     throw new CosmosBroadcastError[parsed.code]();
   }
+
   return patchOperationWithHash(operation, parsed.txhash);
 }
 
-export default makeBroadcast({ broadcast });
+export default makeBroadcast({
+  broadcast,
+});
