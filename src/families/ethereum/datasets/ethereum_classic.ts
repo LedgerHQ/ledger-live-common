@@ -1,7 +1,5 @@
-// @flow
 import type { CurrenciesData } from "../../../types";
 import type { Transaction } from "../types";
-
 const dataset: CurrenciesData<Transaction> = {
   scanAccounts: [
     {
@@ -66,5 +64,4 @@ const dataset: CurrenciesData<Transaction> = {
     },
   ],
 };
-
 export default dataset;
