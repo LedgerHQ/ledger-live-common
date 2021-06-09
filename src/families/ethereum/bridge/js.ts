@@ -1,4 +1,3 @@
-// @flow
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import {
@@ -30,7 +29,6 @@ import { signOperation } from "../signOperation";
 import { modes } from "../modules";
 import postSyncPatch from "../postSyncPatch";
 import { inferDynamicRange } from "../../../range";
-
 const receive = makeAccountBridgeReceive();
 
 const broadcast = async ({
@@ -43,13 +41,12 @@ const broadcast = async ({
 };
 
 const scanAccounts = makeScanAccounts(getAccountShape);
-
 const sync = makeSync(getAccountShape, postSyncPatch);
 
-const createTransaction = () => ({
+const createTransaction = (): Transaction => ({
   family: "ethereum",
   mode: "send",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   recipient: "",
   gasPrice: null,
   userGasLimit: null,
@@ -64,23 +61,28 @@ const updateTransaction = (t, patch) => {
   if ("recipient" in patch && patch.recipient !== t.recipient) {
     return { ...t, ...patch, userGasLimit: null, estimatedGasLimit: null };
   }
+
   return { ...t, ...patch };
 };
 
 const getTransactionStatus = (a, t) => {
   const gasLimit = getGasLimit(t);
-  const estimatedFees = (t.gasPrice || BigNumber(0)).times(gasLimit);
-
-  const errors = {};
-  const warnings = {};
+  const estimatedFees = (t.gasPrice || new BigNumber(0)).times(gasLimit);
+  const errors: {
+    gasPrice?: Error;
+    gasLimit?: Error;
+    recipient?: Error;
+  } = {};
+  const warnings: {
+    gasLimit?: Error;
+  } = {};
   const result = {
     errors,
     warnings,
     estimatedFees,
-    amount: BigNumber(0),
-    totalSpent: BigNumber(0),
+    amount: new BigNumber(0),
+    totalSpent: new BigNumber(0),
   };
-
   const m = modes[t.mode];
   invariant(m, "missing module for mode=" + t.mode);
   m.fillTransactionStatus(a, t, result);
@@ -105,9 +107,12 @@ const getTransactionStatus = (a, t) => {
 
 const getNetworkInfoByOneGasPrice = async (c) => {
   const { gas_price } = await getEstimatedFees(c);
-  const initial = BigNumber(gas_price);
+  const initial = new BigNumber(gas_price);
   const gasPrice = inferDynamicRange(initial);
-  return { family: "ethereum", gasPrice };
+  return {
+    family: "ethereum",
+    gasPrice,
+  };
 };
 
 const getNetworkInfoByGasTrackerBarometer = async (c) => {
@@ -116,8 +121,14 @@ const getNetworkInfoByGasTrackerBarometer = async (c) => {
   const minValue = low;
   const maxValue = high.lte(low) ? low.times(2) : high;
   const initial = medium;
-  const gasPrice = inferDynamicRange(initial, { minValue, maxValue });
-  return { family: "ethereum", gasPrice };
+  const gasPrice = inferDynamicRange(initial, {
+    minValue,
+    maxValue,
+  });
+  return {
+    family: "ethereum",
+    gasPrice,
+  };
 };
 
 const getNetworkInfo = (c) =>
@@ -126,6 +137,7 @@ const getNetworkInfo = (c) =>
     if (e.status === 404) {
       return getNetworkInfoByOneGasPrice(c);
     }
+
     throw e;
   });
 
@@ -141,13 +153,15 @@ const inferGasPrice = (t: Transaction, networkInfo: NetworkInfo) => {
 
 const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
   const networkInfo = t.networkInfo || (await getNetworkInfo(a.currency));
-  const gasPrice = inferGasPrice(t, networkInfo);
+  const gasPrice = inferGasPrice(t, networkInfo as NetworkInfo);
+
   if (t.gasPrice !== gasPrice || t.networkInfo !== networkInfo) {
-    t = { ...t, networkInfo, gasPrice };
+    t = { ...t, networkInfo: networkInfo as NetworkInfo, gasPrice };
   }
 
   let estimatedGasLimit;
   const request = inferEthereumGasLimitRequest(a, t);
+
   if (request.to) {
     estimatedGasLimit = await estimateGasLimit(a, request.to, request);
   }
@@ -174,7 +188,6 @@ const estimateMaxSpendable = async ({
     ...transaction,
     recipient:
       transaction?.recipient || "0x0000000000000000000000000000000000000000",
-
     useAllAmount: true,
   });
   const s = await getTransactionStatus(mainAccount, t);
@@ -191,7 +204,6 @@ const currencyBridge: CurrencyBridge = {
   hydrate,
   scanAccounts,
 };
-
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   updateTransaction,
@@ -203,5 +215,7 @@ const accountBridge: AccountBridge<Transaction> = {
   signOperation,
   broadcast,
 };
-
-export default { currencyBridge, accountBridge };
+export default {
+  currencyBridge,
+  accountBridge,
+};
