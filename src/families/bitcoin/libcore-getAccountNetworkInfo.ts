@@ -1,27 +1,24 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import type { NetworkInfo } from "./types";
 import type { Account } from "../../types";
 import type { CoreAccount } from "../../libcore/types";
 import { promiseAllBatched } from "../../promise";
 import { libcoreBigIntToBigNumber } from "../../libcore/buildBigNumber";
-
 type Input = {
-  coreAccount: CoreAccount,
-  account: Account,
+  coreAccount: CoreAccount;
+  account: Account;
 };
-
 type Output = Promise<NetworkInfo>;
-
 const speeds = ["fast", "medium", "slow"];
-
 export function avoidDups(nums: Array<BigNumber>): Array<BigNumber> {
   nums = nums.slice(0);
+
   for (let i = nums.length - 2; i >= 0; i--) {
     if (nums[i + 1].gte(nums[i])) {
       nums[i] = nums[i + 1].plus(1);
     }
   }
+
   return nums;
 }
 

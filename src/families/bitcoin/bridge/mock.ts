@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import {
   NotEnoughBalance,
@@ -18,16 +17,16 @@ import {
 } from "../../../bridge/mockHelpers";
 import { getMainAccount } from "../../../account";
 import { makeAccountBridgeReceive } from "../../../bridge/mockHelpers";
-
 const receive = makeAccountBridgeReceive();
 
-const defaultGetFees = (a, t: *) => (t.feePerByte || BigNumber(0)).times(250);
+const defaultGetFees = (a, t: any) =>
+  (t.feePerByte || new BigNumber(0)).times(250);
 
 const createTransaction = (): Transaction => ({
   family: "bitcoin",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   recipient: "",
-  feePerByte: BigNumber(10),
+  feePerByte: new BigNumber(10),
   networkInfo: null,
   useAllAmount: false,
   rbf: false,
@@ -44,26 +43,23 @@ const estimateMaxSpendable = ({ account, parentAccount, transaction }) => {
   const mainAccount = getMainAccount(account, parentAccount);
   const estimatedFees = transaction
     ? defaultGetFees(mainAccount, transaction)
-    : BigNumber(5000);
+    : new BigNumber(5000);
   return Promise.resolve(
     BigNumber.max(0, account.balance.minus(estimatedFees))
   );
 };
 
 const getTransactionStatus = (account, t) => {
-  const errors = {};
-  const warnings = {};
+  const errors: { [key: string]: any } = {};
+  const warnings: { [key: string]: any } = {};
   const useAllAmount = !!t.useAllAmount;
-
   const estimatedFees = defaultGetFees(account, t);
-
   const totalSpent = useAllAmount
     ? account.balance
-    : BigNumber(t.amount).plus(estimatedFees);
-
+    : new BigNumber(t.amount).plus(estimatedFees);
   const amount = useAllAmount
     ? account.balance.minus(estimatedFees)
-    : BigNumber(t.amount);
+    : new BigNumber(t.amount);
 
   if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
     warnings.feeTooHigh = new FeeTooHigh();
@@ -90,7 +86,7 @@ const getTransactionStatus = (account, t) => {
   });
 };
 
-const prepareTransaction = async (a, t) => {
+const prepareTransaction = async (a, t): Promise<Transaction> => {
   // TODO it needs to set the fee if not in t as well
   if (!t.networkInfo) {
     const feeItems = await getFeeItems(a.currency);
@@ -102,6 +98,7 @@ const prepareTransaction = async (a, t) => {
       },
     };
   }
+
   return t;
 };
 
@@ -116,11 +113,12 @@ const accountBridge: AccountBridge<Transaction> = {
   signOperation,
   broadcast,
 };
-
 const currencyBridge: CurrencyBridge = {
   scanAccounts,
-  preload: () => Promise.resolve(),
+  preload: () => Promise.resolve({}),
   hydrate: () => {},
 };
-
-export default { currencyBridge, accountBridge };
+export default {
+  currencyBridge,
+  accountBridge,
+};
