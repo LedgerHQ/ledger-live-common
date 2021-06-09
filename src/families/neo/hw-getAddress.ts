@@ -1,5 +1,3 @@
-// @flow
-
 import Neo from "./hw-app-neo";
 import type { Resolver } from "../../hw/getAddress/types";
 
