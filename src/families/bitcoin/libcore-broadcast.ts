@@ -1,5 +1,3 @@
-// @flow
-
 import { patchOperationWithHash } from "../../operation";
 import { makeBroadcast } from "../../libcore/broadcast";
 
@@ -12,4 +10,6 @@ async function broadcast({
   return patchOperationWithHash(operation, txHash);
 }
 
-export default makeBroadcast({ broadcast });
+export default makeBroadcast({
+  broadcast,
+});
