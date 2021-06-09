@@ -1,14 +1,11 @@
-// @flow
 import type { DeviceInfo } from "../types/manager";
 import { getEnv } from "../env";
-
-export const PROVIDERS: { [_: string]: number } = {
+export const PROVIDERS: Record<string, number> = {
   das: 2,
   club: 3,
   shitcoins: 4,
   ee: 5,
 };
-
 export function getProviderId({ providerName }: DeviceInfo): number {
   const forceProvider = getEnv("FORCE_PROVIDER");
   if (forceProvider && forceProvider !== 1) return forceProvider;
