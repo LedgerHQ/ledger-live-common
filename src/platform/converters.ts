@@ -1,8 +1,5 @@
-// @flow
-
 import type { Account, CryptoCurrency } from "../types";
 import type { PlatformAccount, PlatformCurrency } from "./types";
-
 export function accountToPlatformAccount(account: Account): PlatformAccount {
   return {
     id: account.id,
@@ -15,7 +12,6 @@ export function accountToPlatformAccount(account: Account): PlatformAccount {
     lastSyncDate: account.lastSyncDate,
   };
 }
-
 export function currencyToPlatformCurrency(
   currency: CryptoCurrency
 ): PlatformCurrency {
