@@ -1,4 +1,3 @@
-// @flow
 import { getAbandonSeedAddress } from "@ledgerhq/cryptoassets";
 import { log } from "@ledgerhq/logs";
 import { BigNumber } from "bignumber.js";
@@ -28,10 +27,10 @@ import { isChangeOutput, perCoinLogic } from "../transaction";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 import { requiresSatStackReady } from "../satstack";
 import * as explorerConfigAPI from "../../../api/explorerConfig";
-
 const receive = makeAccountBridgeReceive({
   injectGetAddressParams: (account) => {
     const perCoin = perCoinLogic[account.currency.id];
+
     if (perCoin && perCoin.injectGetAddressParams) {
       return perCoin.injectGetAddressParams(account);
     }
@@ -56,9 +55,9 @@ const calculateFees = makeLRUCache(async (a, t) => {
   });
 }, getCacheKey);
 
-const createTransaction = () => ({
+const createTransaction = (): Transaction => ({
   family: "bitcoin",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   utxoStrategy: {
     strategy: 0,
     pickUnconfirmedRBF: false,
@@ -74,9 +73,11 @@ const createTransaction = () => ({
 
 const updateTransaction = (t, patch) => {
   const updatedT = { ...t, ...patch };
+
   if (updatedT.recipient.toLowerCase().indexOf("bc1") === 0) {
     updatedT.recipient = updatedT.recipient.toLowerCase();
   }
+
   return updatedT;
 };
 
@@ -99,11 +100,18 @@ const estimateMaxSpendable = async ({
 };
 
 const getTransactionStatus = async (a, t) => {
-  const errors = {};
-  const warnings = {};
+  const errors: {
+    recipient?: Error;
+    feePerByte?: Error;
+    amount?: Error;
+  } = {};
+  const warnings: {
+    recipient?: Error;
+    feePerByte?: Error;
+    feeTooHigh?: Error;
+  } = {};
   const useAllAmount = !!t.useAllAmount;
-
-  let { recipientError, recipientWarning } = await validateRecipient(
+  const { recipientError, recipientWarning } = await validateRecipient(
     a.currency,
     t.recipient
   );
@@ -118,7 +126,8 @@ const getTransactionStatus = async (a, t) => {
 
   let txInputs;
   let txOutputs;
-  let estimatedFees = BigNumber(0);
+  let estimatedFees = new BigNumber(0);
+
   if (!t.feePerByte) {
     errors.feePerByte = new FeeNotLoaded();
   } else if (t.feePerByte.eq(0)) {
@@ -142,11 +151,11 @@ const getTransactionStatus = async (a, t) => {
 
   const sumOfInputs = (txInputs || []).reduce(
     (sum, input) => sum.plus(input.value),
-    BigNumber(0)
+    new BigNumber(0)
   );
   const sumOfChanges = (txOutputs || [])
     .filter(isChangeOutput)
-    .reduce((sum, output) => sum.plus(output.value), BigNumber(0));
+    .reduce((sum, output) => sum.plus(output.value), new BigNumber(0));
 
   if (txInputs) {
     log("bitcoin", `${txInputs.length} inputs, sum: ${sumOfInputs.toString()}`);
@@ -161,7 +170,6 @@ const getTransactionStatus = async (a, t) => {
 
   const totalSpent = sumOfInputs.minus(sumOfChanges);
   const amount = useAllAmount ? totalSpent.minus(estimatedFees) : t.amount;
-
   log(
     "bitcoin",
     `totalSpent ${totalSpent.toString()} amount ${amount.toString()}`
@@ -199,11 +207,14 @@ const inferFeePerByte = (t: Transaction, networkInfo: NetworkInfo) => {
     const speed = networkInfo.feeItems.items.find(
       (item) => t.feesStrategy === item.speed
     );
+
     if (!speed) {
       return networkInfo.feeItems.defaultFeePerByte;
     }
+
     return speed.feePerByte;
   }
+
   return t.feePerByte || networkInfo.feeItems.defaultFeePerByte;
 };
 
@@ -214,33 +225,37 @@ const prepareTransaction = async (
   if (a.currency.id === "bitcoin") {
     await requiresSatStackReady();
   }
+
   let networkInfo = t.networkInfo;
+
   if (!networkInfo) {
     networkInfo = await getAccountNetworkInfo(a);
-    invariant(networkInfo.family === "bitcoin", "bitcoin networkInfo expected");
+    invariant(
+      networkInfo && networkInfo.family === "bitcoin",
+      "bitcoin networkInfo expected"
+    );
   }
 
-  const feePerByte = inferFeePerByte(t, networkInfo);
+  const feePerByte = inferFeePerByte(t, networkInfo as NetworkInfo);
+
   if (
     t.networkInfo === networkInfo &&
-    (feePerByte === t.feePerByte || feePerByte.eq(t.feePerByte || 0))
-    // nothing changed
+    (feePerByte === t.feePerByte || feePerByte.eq(t.feePerByte || 0)) // nothing changed
   ) {
     return t;
   }
-  return {
-    ...t,
-    networkInfo,
-    feePerByte,
-  };
+
+  return { ...t, networkInfo, feePerByte };
 };
 
 const preload = async () => {
   const explorerConfig = await explorerConfigAPI.preload();
-  return { explorerConfig };
+  return {
+    explorerConfig,
+  };
 };
 
-const hydrate = (maybeConfig: mixed) => {
+const hydrate = (maybeConfig: any) => {
   if (maybeConfig && maybeConfig.explorerConfig) {
     explorerConfigAPI.hydrate(maybeConfig.explorerConfig);
   }
@@ -251,7 +266,6 @@ const currencyBridge: CurrencyBridge = {
   preload,
   hydrate,
 };
-
 const accountBridge: AccountBridge<Transaction> = {
   estimateMaxSpendable,
   createTransaction,
@@ -269,5 +283,7 @@ const accountBridge: AccountBridge<Transaction> = {
     });
   },
 };
-
-export default { currencyBridge, accountBridge };
+export default {
+  currencyBridge,
+  accountBridge,
+};
