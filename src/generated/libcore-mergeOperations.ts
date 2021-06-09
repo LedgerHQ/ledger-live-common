@@ -1,4 +1,5 @@
-import cosmos from "../families/cosmos/libcore-mergeOperations.ts";
+import cosmos from "../families/cosmos/libcore-mergeOperations";
+
 
 export default {
   cosmos,

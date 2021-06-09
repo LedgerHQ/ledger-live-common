@@ -1,6 +1,9 @@
-import polkadot from "../families/polkadot/test-specifics.ts";
-import tezos from "../families/tezos/test-specifics.ts";
-import tron from "../families/tron/test-specifics.ts";
+import polkadot from "../families/polkadot/test-specifics";
+
+import tezos from "../families/tezos/test-specifics";
+
+import tron from "../families/tron/test-specifics";
+
 
 export default {
   polkadot,

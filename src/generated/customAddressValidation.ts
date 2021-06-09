@@ -1,4 +1,5 @@
-import bitcoin from "../families/bitcoin/customAddressValidation.ts";
+import bitcoin from "../families/bitcoin/customAddressValidation";
+
 
 export default {
   bitcoin,

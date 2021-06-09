@@ -49,7 +49,9 @@ genTarget () {
         echo -n '../'
       done
       IFS=$OIFS
-      echo -n 'families/'$family/$t'";'
+      # echo -n 'families/'$family/$t'";'
+      str='families/'$family/$t'";'
+      echo "${str/.ts/}"
       echo
     fi
   done

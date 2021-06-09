@@ -1,4 +1,5 @@
-import bitcoin from "../families/bitcoin/presync.ts";
+import bitcoin from "../families/bitcoin/presync";
+
 
 export default {
   bitcoin,

@@ -1,8 +1,13 @@
-import bitcoin from "../families/bitcoin/exchange.ts";
-import ethereum from "../families/ethereum/exchange.ts";
-import ripple from "../families/ripple/exchange.ts";
-import stellar from "../families/stellar/exchange.ts";
-import tezos from "../families/tezos/exchange.ts";
+import bitcoin from "../families/bitcoin/exchange";
+
+import ethereum from "../families/ethereum/exchange";
+
+import ripple from "../families/ripple/exchange";
+
+import stellar from "../families/stellar/exchange";
+
+import tezos from "../families/tezos/exchange";
+
 
 export default {
   bitcoin,
