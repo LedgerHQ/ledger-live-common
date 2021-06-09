@@ -1,5 +1,3 @@
-// @flow
-
 import Xtz from "@ledgerhq/hw-app-tezos";
 import type { Resolver } from "../../hw/getAddress/types";
 

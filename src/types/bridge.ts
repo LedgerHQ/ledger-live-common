@@ -165,7 +165,9 @@ export type CurrenciesData<T extends Transaction> = {
   }>;
   test?: (arg0: ExpectFn, arg1: CurrencyBridge) => any;
 };
-export type DatasetTest<T> = {
+export type DatasetTest<T extends Transaction> = {
   implementations: string[];
-  currencies: Record<CryptoCurrencyIds, CurrenciesData<T>>;
+  currencies:
+    | Record<CryptoCurrencyIds, CurrenciesData<T>>
+    | Record<string, never>;
 };

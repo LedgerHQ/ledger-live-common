@@ -44,7 +44,7 @@ function expectBalanceIsOpsSum(a) {
   expect(a.balance).toEqual(
     a.operations.reduce(
       (sum, op) => sum.plus(getOperationAmountNumber(op)),
-      BigNumber(0)
+      new BigNumber(0)
     )
   );
 }
@@ -506,7 +506,7 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
             "empty transaction is an object with empty recipient and zero amount",
             () => {
               expect(bridge.createTransaction(initialAccount)).toMatchObject({
-                amount: BigNumber(0),
+                amount: new BigNumber(0),
                 recipient: "",
               });
             }
@@ -526,7 +526,7 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
               const account = await getSynced();
               const t = {
                 ...bridge.createTransaction(account),
-                amount: BigNumber(1000),
+                amount: new BigNumber(1000),
                 recipient: account.freshAddress,
               };
               expect(fromTransactionRaw(toTransactionRaw(t))).toEqual(t);
@@ -549,7 +549,7 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
             const account = await getSynced();
             await expectStability(account, {
               ...bridge.createTransaction(account),
-              amount: BigNumber(1000),
+              amount: new BigNumber(1000),
               recipient: account.freshAddress,
             });
           });
@@ -559,7 +559,7 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
               const account = await getSynced();
               const t = {
                 ...bridge.createTransaction(account),
-                amount: BigNumber(1000),
+                amount: new BigNumber(1000),
                 recipient: account.freshAddress,
               };
               const stable = await bridge.prepareTransaction(account, t);
@@ -588,7 +588,7 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
             expect(s.estimatedFees).toBeInstanceOf(BigNumber);
             expect(s).toHaveProperty("amount");
             expect(s.amount).toBeInstanceOf(BigNumber);
-            expect(s.amount).toEqual(BigNumber(0));
+            expect(s.amount).toEqual(new BigNumber(0));
           });
           makeTest(
             "can be called on an empty prepared transaction",

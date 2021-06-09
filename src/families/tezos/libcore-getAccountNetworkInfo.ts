@@ -1,18 +1,15 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import type { Account } from "../../types";
 import type { NetworkInfo, CoreTezosLikeAccount } from "./types";
 import type { CoreAccount } from "../../libcore/types";
 import { libcoreBigIntToBigNumber } from "../../libcore/buildBigNumber";
-
 type Input = {
-  coreAccount: CoreAccount,
-  account: Account,
+  coreAccount: CoreAccount;
+  account: Account;
 };
+type Output = NetworkInfo;
 
-type Output = Promise<NetworkInfo>;
-
-async function tezos({ coreAccount }: Input): Output {
+async function tezos({ coreAccount }: Input): Promise<Output> {
   const tezosLikeAccount: CoreTezosLikeAccount = await coreAccount.asTezosLikeAccount();
   const bigInt = await tezosLikeAccount.getFees();
   const networkFees = await libcoreBigIntToBigNumber(bigInt);

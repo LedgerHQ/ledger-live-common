@@ -14,7 +14,7 @@ function getDeviceTransactionConfig(input: {
     status: { estimatedFees },
   } = input;
   const m = modes[transaction.mode];
-  const fields: Array<{ type: string; label: string }> = [];
+  const fields: Array<DeviceTransactionField> = [];
 
   if (m && m.fillDeviceTransactionConfig) {
     m.fillDeviceTransactionConfig(input, fields);

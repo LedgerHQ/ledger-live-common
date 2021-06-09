@@ -1,5 +1,3 @@
-// @flow
-
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import { FeeNotLoaded } from "@ledgerhq/errors";
@@ -18,7 +16,6 @@ import type {
 } from "./types";
 import { tezosOperationTag } from "./types";
 import { upperModulo } from "../../modulo";
-
 export async function tezosBuildTransaction({
   account,
   core,
@@ -27,42 +24,48 @@ export async function tezosBuildTransaction({
   transaction,
   isCancelled,
 }: {
-  account: Account,
-  core: Core,
-  coreAccount: CoreAccount,
-  coreCurrency: CoreCurrency,
-  transaction: Transaction,
-  isPartial: boolean,
-  isCancelled: () => boolean,
-}): Promise<?CoreTezosLikeTransaction> {
+  account: Account;
+  core: Core;
+  coreAccount: CoreAccount;
+  coreCurrency: CoreCurrency;
+  transaction: Transaction;
+  isPartial: boolean;
+  isCancelled: () => boolean;
+}): Promise<CoreTezosLikeTransaction | null | undefined> {
   const { currency } = account;
   const { recipient, fees, gasLimit, storageLimit, subAccountId } = transaction;
-
   const subAccount = subAccountId
     ? account.subAccounts &&
       account.subAccounts.find((t) => t.id === subAccountId)
     : null;
-
-  let tezosAccount: ?CoreTezosLikeAccount | ?CoreTezosLikeOriginatedAccount;
+  let tezosAccount:
+    | (CoreTezosLikeAccount | null | undefined)
+    | (CoreTezosLikeOriginatedAccount | null | undefined);
   const tezosLikeAccount = await coreAccount.asTezosLikeAccount();
   if (isCancelled()) return;
 
   if (subAccount && subAccount.type === "ChildAccount") {
     const accounts = await tezosLikeAccount.getOriginatedAccounts();
+
     for (const a of accounts) {
       const addr = await a.getAddress();
+
       if (addr === subAccount.address) {
         tezosAccount = a;
         break;
       }
     }
+
     invariant(tezosAccount, "sub account not found " + subAccount.id);
   } else {
     tezosAccount = tezosLikeAccount;
   }
 
   if (transaction.mode !== "undelegate") {
-    await isValidRecipient({ currency, recipient });
+    await isValidRecipient({
+      currency,
+      recipient,
+    });
     if (isCancelled()) return;
   }
 
@@ -72,11 +75,14 @@ export async function tezosBuildTransaction({
 
   const feesAmount = await bigNumberToLibcoreAmount(core, coreCurrency, fees);
   if (isCancelled()) return;
-
   let gasLimitRounded = gasLimit;
 
   if (["delegate", "undelegate"].includes(transaction.mode)) {
-    gasLimitRounded = upperModulo(gasLimit, BigNumber(136), BigNumber(1000));
+    gasLimitRounded = upperModulo(
+      gasLimit,
+      new BigNumber(136),
+      new BigNumber(1000)
+    );
   }
 
   const gasLimitAmount = await bigNumberToLibcoreAmount(
@@ -85,18 +91,17 @@ export async function tezosBuildTransaction({
     gasLimitRounded
   );
   if (isCancelled()) return;
-
   const storageBigInt = await bigNumberToLibcoreBigInt(core, storageLimit);
   if (isCancelled()) return;
-
-  const transactionBuilder = await tezosAccount.buildTransaction();
+  const transactionBuilder = await (tezosAccount as CoreTezosLikeAccount).buildTransaction();
   if (isCancelled()) return;
-
   let type;
+
   switch (transaction.mode) {
     case "send":
       type = tezosOperationTag.OPERATION_TAG_TRANSACTION;
       break;
+
     case "delegate":
     case "undelegate":
       invariant(
@@ -109,6 +114,7 @@ export async function tezosBuildTransaction({
       );
       type = tezosOperationTag.OPERATION_TAG_DELEGATION;
       break;
+
     default:
       throw new Error("Unsupported transaction.mode = " + transaction.mode);
   }
@@ -124,27 +130,21 @@ export async function tezosBuildTransaction({
     const amount = await bigNumberToLibcoreAmount(
       core,
       coreCurrency,
-      BigNumber(transaction.amount)
+      new BigNumber(transaction.amount)
     );
     if (isCancelled()) return;
-
     await transactionBuilder.sendToAddress(amount, recipient);
     if (isCancelled()) return;
   }
 
   await transactionBuilder.setGasLimit(gasLimitAmount);
   if (isCancelled()) return;
-
   await transactionBuilder.setFees(feesAmount);
   if (isCancelled()) return;
-
   await transactionBuilder.setStorageLimit(storageBigInt);
   if (isCancelled()) return;
-
   const builded = await transactionBuilder.build();
   if (isCancelled()) return;
-
   return builded;
 }
-
 export default tezosBuildTransaction;

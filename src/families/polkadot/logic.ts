@@ -2,14 +2,14 @@ import { BigNumber } from "bignumber.js";
 import { decodeAddress } from "@polkadot/util-crypto";
 import type { Account, OperationType } from "../../types";
 import type { Transaction } from "./types";
-export const EXISTENTIAL_DEPOSIT = BigNumber(10000000000);
-export const MINIMUM_BOND_AMOUNT = BigNumber(10000000000);
+export const EXISTENTIAL_DEPOSIT = new BigNumber(10000000000);
+export const MINIMUM_BOND_AMOUNT = new BigNumber(10000000000);
 export const MAX_NOMINATIONS = 16;
 export const MAX_UNLOCKINGS = 32;
 export const PRELOAD_MAX_AGE = 60 * 1000;
 export const MAX_AMOUNT_INPUT = 0xffffffffffffffff;
 export const POLKADOT_SS58_PREFIX = 0;
-export const FEES_SAFETY_BUFFER = BigNumber(1000000000); // Arbitrary buffer for paying fees of next transactions
+export const FEES_SAFETY_BUFFER = new BigNumber(1000000000); // Arbitrary buffer for paying fees of next transactions
 
 /**
  * Returns true if address is valid, false if it's invalid (can't parse or wrong checksum)
@@ -94,7 +94,7 @@ export const getMinimalLockedBalance = (a: Account): BigNumber => {
     return MINIMUM_BOND_AMOUNT.minus(remainingActiveLockedBalance);
   }
 
-  return BigNumber(0);
+  return new BigNumber(0);
 };
 
 /**
@@ -125,8 +125,10 @@ export const hasMaxUnlockings = (a: Account) => {
  * @param {Account} a
  */
 export const hasLockedBalance = (a: Account) => {
-  const { lockedBalance = BigNumber(0), unlockingBalance = BigNumber(0) } =
-    a.polkadotResources || {};
+  const {
+    lockedBalance = new BigNumber(0),
+    unlockingBalance = new BigNumber(0),
+  } = a.polkadotResources || {};
   return lockedBalance.minus(unlockingBalance).gt(0);
 };
 
@@ -180,7 +182,7 @@ const calculateMaxBond = (a: Account, t: Transaction): BigNumber => {
   const amount = a.spendableBalance
     .minus(t.fees || 0)
     .minus(FEES_SAFETY_BUFFER);
-  return amount.lt(0) ? BigNumber(0) : amount;
+  return amount.lt(0) ? new BigNumber(0) : amount;
 };
 
 /**
@@ -192,7 +194,7 @@ const calculateMaxUnbond = (a: Account): BigNumber => {
   return (
     a.polkadotResources?.lockedBalance.minus(
       a.polkadotResources.unlockingBalance
-    ) ?? BigNumber(0)
+    ) ?? new BigNumber(0)
   );
 };
 
@@ -202,7 +204,7 @@ const calculateMaxUnbond = (a: Account): BigNumber => {
  * @param {*} account
  */
 const calculateMaxRebond = (a: Account): BigNumber => {
-  return a.polkadotResources?.unlockingBalance ?? BigNumber(0);
+  return a.polkadotResources?.unlockingBalance ?? new BigNumber(0);
 };
 
 /**
@@ -213,7 +215,7 @@ const calculateMaxRebond = (a: Account): BigNumber => {
  */
 const calculateMaxSend = (a: Account, t: Transaction): BigNumber => {
   const amount = a.spendableBalance.minus(t.fees || 0);
-  return amount.lt(0) ? BigNumber(0) : amount;
+  return amount.lt(0) ? new BigNumber(0) : amount;
 };
 
 /**
@@ -253,14 +255,14 @@ export const calculateAmount = ({
         break;
     }
   } else if (t.amount.gt(MAX_AMOUNT_INPUT)) {
-    return BigNumber(MAX_AMOUNT_INPUT);
+    return new BigNumber(MAX_AMOUNT_INPUT);
   }
 
-  return amount.lt(0) ? BigNumber(0) : amount;
+  return amount.lt(0) ? new BigNumber(0) : amount;
 };
 export const getMinimumBalance = (a: Account): BigNumber => {
   const lockedBalance = a.balance.minus(a.spendableBalance);
   return lockedBalance.lte(EXISTENTIAL_DEPOSIT)
     ? EXISTENTIAL_DEPOSIT.minus(lockedBalance)
-    : BigNumber(0);
+    : new BigNumber(0);
 };

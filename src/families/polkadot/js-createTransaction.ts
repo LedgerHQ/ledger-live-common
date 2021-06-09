@@ -9,7 +9,7 @@ import type { Transaction } from "./types";
 const createTransaction = (): Transaction => ({
   family: "polkadot",
   mode: "send",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   recipient: "",
   useAllAmount: false,
   fees: null,

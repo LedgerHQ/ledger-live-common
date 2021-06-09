@@ -8,7 +8,7 @@ import type { Transaction } from "./types";
  */
 const createTransaction = (): Transaction => ({
   family: "stellar",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   baseReserve: null,
   networkInfo: null,
   fees: null,

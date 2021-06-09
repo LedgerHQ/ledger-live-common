@@ -1,5 +1,3 @@
-// @flow
-
 import invariant from "invariant";
 import Xtz from "@ledgerhq/hw-app-tezos";
 import type { CoreTezosLikeTransaction, Transaction } from "./types";
@@ -17,58 +15,45 @@ async function signTransaction({
   onDeviceSignatureRequested,
 }) {
   // Sign with the device
-
   const hwApp = new Xtz(transport);
   const serialized = await coreTransaction.serialize();
-
   onDeviceSignatureRequested();
   const { signature } = await hwApp.signOperation(freshAddressPath, serialized);
   onDeviceSignatureGranted();
-
   if (isCancelled()) return;
-
   await coreTransaction.setSignature(signature);
   if (isCancelled()) return;
-
   const hex = await coreTransaction.serialize();
   if (isCancelled()) return;
-
   const receiver = await coreTransaction.getReceiver();
   if (isCancelled()) return;
-
   const sender = await coreTransaction.getSender();
   if (isCancelled()) return;
-
   const recipients = [
     transaction.mode === "undelegate" ? "" : await receiver.toBase58(),
   ];
   if (isCancelled()) return;
-
   const senders = [await sender.toBase58()];
   if (isCancelled()) return;
-
   const feesRaw = await coreTransaction.getFees();
   if (isCancelled()) return;
-
   const fee = await libcoreAmountToBigNumber(feesRaw);
   if (isCancelled()) return;
-
   // Make an optimistic response
-
   let op;
-
   const txHash = ""; // resolved in broadcast()
+
   const type =
     transaction.mode === "undelegate"
       ? "UNDELEGATE"
       : transaction.mode === "delegate"
       ? "DELEGATE"
       : "OUT";
-
   const subAccount =
     transaction.subAccountId && subAccounts
       ? subAccounts.find((a) => a.id === transaction.subAccountId)
       : null;
+
   if (!subAccount) {
     op = {
       id: `${id}-${txHash}-${type}`,

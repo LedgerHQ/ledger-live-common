@@ -1,4 +1,3 @@
-// @flow
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import {
@@ -30,13 +29,14 @@ import { getCoreAccount } from "../../../libcore/getCoreAccount";
 import { fetchAllBakers, hydrateBakers, isAccountDelegating } from "../bakers";
 import { getEnv } from "../../../env";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
-
 const receive = makeAccountBridgeReceive();
-
 type EstimateGasLimitAndStorage = (
-  Account,
-  string
-) => Promise<{ gasLimit: BigNumber, storage: BigNumber }>;
+  arg0: Account,
+  arg1: string
+) => Promise<{
+  gasLimit: BigNumber;
+  storage: BigNumber;
+}>;
 export const estimateGasLimitAndStorage: EstimateGasLimitAndStorage = makeLRUCache(
   (account, addr) =>
     withLibcore(async (core) => {
@@ -45,19 +45,21 @@ export const estimateGasLimitAndStorage: EstimateGasLimitAndStorage = makeLRUCac
       const gasLimit = await libcoreBigIntToBigNumber(
         await tezosLikeAccount.getEstimatedGasLimit(addr)
       );
-
       // for babylon network 257 is the current cost of sending to new account.
-      const storage = BigNumber(257);
+      const storage = new BigNumber(257);
+
       /*
-      const storage = await libcoreBigIntToBigNumber(
-        await tezosLikeAccount.getStorage(addr)
-      );
-      */
-      return { gasLimit, storage };
+  const storage = await libcoreBigIntToBigNumber(
+    await tezosLikeAccount.getStorage(addr)
+  );
+  */
+      return {
+        gasLimit,
+        storage,
+      };
     }),
   (a, addr) => a.id + "|" + addr
 );
-
 const calculateFees = makeLRUCache(
   async (a, t) => {
     return getFeesForTransaction({
@@ -73,10 +75,10 @@ const calculateFees = makeLRUCache(
     }_${String(t.useAllAmount)}_${String(t.subAccountId)}`
 );
 
-const createTransaction = () => ({
+const createTransaction = (): Transaction => ({
   family: "tezos",
   mode: "send",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   fees: null,
   gasLimit: null,
   storageLimit: null,
@@ -88,17 +90,23 @@ const createTransaction = () => ({
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
 const getTransactionStatus = async (a, t) => {
-  const errors = {};
-  const warnings = {};
+  const errors: {
+    recipient?: Error;
+    amount?: Error;
+    fees?: Error;
+  } = {};
+  const warnings: {
+    amount?: Error;
+    feeTooHigh?: Error;
+    recipient?: Error;
+  } = {};
   const subAcc = !t.subAccountId
     ? null
     : a.subAccounts && a.subAccounts.find((ta) => ta.id === t.subAccountId);
-
   invariant(
     t.mode === "send" || !subAcc,
     "delegation features not supported for sub accounts"
   );
-
   const account = subAcc || a;
 
   if (t.mode !== "undelegate") {
@@ -128,7 +136,7 @@ const getTransactionStatus = async (a, t) => {
     errors.recipient = new NotSupportedLegacyAddress();
   }
 
-  let estimatedFees = BigNumber(0);
+  let estimatedFees = new BigNumber(0);
   let amount = t.amount;
 
   if (!t.fees) {
@@ -163,8 +171,8 @@ const getTransactionStatus = async (a, t) => {
     (amount.lt(0) || totalSpent.gt(account.balance))
   ) {
     errors.amount = new NotEnoughBalance();
-    totalSpent = BigNumber(0);
-    amount = BigNumber(0);
+    totalSpent = new BigNumber(0);
+    amount = new BigNumber(0);
   }
 
   if (t.mode === "send") {
@@ -205,6 +213,7 @@ const getTransactionStatus = async (a, t) => {
 
 const prepareTransaction = async (a, t) => {
   let networkInfo = t.networkInfo;
+
   if (!networkInfo) {
     const ni = await getAccountNetworkInfo(a);
     invariant(ni.family === "tezos", "tezos networkInfo expected");
@@ -213,11 +222,13 @@ const prepareTransaction = async (a, t) => {
 
   let gasLimit = t.gasLimit;
   let storageLimit = t.storageLimit;
+
   if (!gasLimit || !storageLimit) {
     const { recipientError } =
       t.mode === "undelegate"
-        ? {}
+        ? { recipientError: undefined }
         : await validateRecipient(a.currency, t.recipient);
+
     if (!recipientError) {
       const r = await estimateGasLimitAndStorage(a, t.recipient);
       gasLimit = r.gasLimit;
@@ -225,7 +236,7 @@ const prepareTransaction = async (a, t) => {
     }
   }
 
-  let fees = t.fees || networkInfo.fees;
+  const fees = t.fees || networkInfo.fees;
 
   if (
     t.networkInfo !== networkInfo ||
@@ -259,10 +270,12 @@ const estimateMaxSpendable = async ({
 
 const preload = async () => {
   const bakers = await fetchAllBakers();
-  return { bakers };
+  return {
+    bakers,
+  };
 };
 
-const hydrate = (data: mixed) => {
+const hydrate = (data: any) => {
   if (!data || typeof data !== "object") return;
   const { bakers } = data;
   if (!bakers || typeof bakers !== "object" || !Array.isArray(bakers)) return;
@@ -274,7 +287,6 @@ const currencyBridge: CurrencyBridge = {
   hydrate,
   scanAccounts,
 };
-
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   updateTransaction,
@@ -286,5 +298,7 @@ const accountBridge: AccountBridge<Transaction> = {
   signOperation,
   broadcast,
 };
-
-export default { currencyBridge, accountBridge };
+export default {
+  currencyBridge,
+  accountBridge,
+};

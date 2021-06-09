@@ -1,13 +1,16 @@
-// @flow
-
 import type { AccountLike, Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
 import type { DeviceTransactionField } from "../../transaction";
 import { getMainAccount } from "../../account";
-
 export type ExtraDeviceTransactionField =
-  | { type: "tezos.delegateValidator", label: string }
-  | { type: "tezos.storageLimit", label: string };
+  | {
+      type: "tezos.delegateValidator";
+      label: string;
+    }
+  | {
+      type: "tezos.storageLimit";
+      label: string;
+    };
 
 function getDeviceTransactionConfig({
   account,
@@ -15,10 +18,10 @@ function getDeviceTransactionConfig({
   transaction: { mode, recipient },
   status: { amount, estimatedFees },
 }: {
-  account: AccountLike,
-  parentAccount: ?Account,
-  transaction: Transaction,
-  status: TransactionStatus,
+  account: AccountLike;
+  parentAccount: Account | null | undefined;
+  transaction: Transaction;
+  status: TransactionStatus;
 }): Array<DeviceTransactionField> {
   const mainAccount = getMainAccount(account, parentAccount);
   const source =
@@ -26,8 +29,7 @@ function getDeviceTransactionConfig({
       ? account.address
       : mainAccount.freshAddress;
   const isDelegateOperation = mode === "delegate";
-
-  const fields = [
+  const fields: Array<DeviceTransactionField> = [
     {
       type: "address",
       label: "Source",
@@ -67,7 +69,6 @@ function getDeviceTransactionConfig({
     type: "tezos.storageLimit",
     label: "Storage Limit",
   });
-
   return fields;
 }
 

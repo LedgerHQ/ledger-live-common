@@ -40,7 +40,7 @@ async function bitcoin({ coreAccount }: Input): Output {
       feePerByte,
     })),
     defaultFeePerByte:
-      normalized[Math.floor(normalized.length / 2)] || BigNumber(0),
+      normalized[Math.floor(normalized.length / 2)] || new BigNumber(0),
   };
   return {
     family: "bitcoin",

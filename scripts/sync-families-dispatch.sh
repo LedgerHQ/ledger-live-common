@@ -75,7 +75,7 @@ done
 for t in $targets; do
   out=../generated/$t
   if [[ "$out" != *.ts ]]; then
-    out=$out.js
+    out=$out.ts
   fi
   genTarget $t > $out
 done
@@ -102,7 +102,6 @@ genDeviceTransactionConfig () {
 }
 
 genTypesFile () {
-  echo '// @flow'
   for family in $families; do
     echo 'import { reflect as '$family'Reflect } from "../families/'$family'/types";'
     echo 'import { CoreStatics as CoreStatics_'$family' } from "../families/'$family'/types";'

@@ -1,4 +1,3 @@
-// @flow
 import invariant from "invariant";
 import {
   NotEnoughBalance,
@@ -11,20 +10,17 @@ import { BigNumber } from "bignumber.js";
 import { fromTransactionRaw } from "./transaction";
 import type { DatasetTest } from "../../types";
 import type { Transaction } from "./types";
-import tezosScanAccounts1 from "./datasets/tezos.scanAccounts.1.js";
-
+import tezosScanAccounts1 from "./datasets/tezos.scanAccounts.1";
 export const accountTZrevealedDelegating = makeAccount(
   "TZrevealedDelegating",
   "02389ffd73423626894cb151416e51c72ec285376673daf83545eb5edb45b261ce",
   "tezbox"
 );
-
 const accountTZwithKT = makeAccount(
   "TZwithKT",
   "0294e8344ae6df2d3123fa100b5abd40cee339c67838b1c34c4f243cc582f4d2d8",
   "tezbox"
 );
-
 const accountTZnew = makeAccount(
   "TZnew",
   "02a9ae8b0ff5f9a43565793ad78e10db6f12177d904d208ada591b8a5b9999e3fd",
@@ -40,13 +36,11 @@ const accountTZRevealedNoDelegate = makeAccount(
   "029bfe70b3e94ff23623f6c42f6e081a9ca8cc78f74b0d8da58f0d4cdc41c33c1a",
   "tezosbip44h"
 );
-
 const accountTZemptyWithKT = makeAccount(
   "TZemptyWithKT",
   "020c38103f932f446dc4c09ac946e9643386609453e77716d3df45f1149aa52072",
   "tezbox"
 );
-
 const addressAccountTZrevealedDelegating =
   "tz1boBHAVpwcvKkNFAQHYr7mjxAz1PpVgKq7";
 const addressTZregular = "tz1T72nyqnJWwxad6RQnh7imKQz7mzToamWd";
@@ -55,10 +49,11 @@ const addressKT = "KT1V99vDN5DHNpU9swVXg1cAT2ji981cccXC";
 const addressDelegator = "tz1WCd2jm4uSt4vntk4vSuUWoZQGhLcDuR9q";
 
 const reservedAmountForStorageLimit = (storageLimit) =>
-  BigNumber(storageLimit || 0).times("1000");
+  new BigNumber(storageLimit || 0).times("1000");
 
 const dataset: DatasetTest<Transaction> = {
   implementations: ["libcore"],
+  // @ts-expect-error we disable the test by giving an empty object
   currencies: {} || {
     tezos: {
       FIXME_ignoreOperationFields: ["blockHeight"],
@@ -78,7 +73,10 @@ const dataset: DatasetTest<Transaction> = {
                 useAllAmount: true,
                 family: "tezos",
                 mode: "send",
-                networkInfo: { family: "tezos", fees: "3075" },
+                networkInfo: {
+                  family: "tezos",
+                  fees: "3075",
+                },
                 fees: "3075",
                 gasLimit: "10600",
                 storageLimit: "300",
@@ -88,7 +86,7 @@ const dataset: DatasetTest<Transaction> = {
                 warnings: {
                   amount: new RecommendUndelegation(),
                 },
-                estimatedFees: BigNumber("3075"),
+                estimatedFees: new BigNumber("3075"),
                 amount: account.balance
                   .minus(reservedAmountForStorageLimit("300"))
                   .minus("3075"),
@@ -103,7 +101,9 @@ const dataset: DatasetTest<Transaction> = {
                 recipient: addressTZnew,
               }),
               expectedStatus: {
-                errors: { amount: new NotEnoughBalance() },
+                errors: {
+                  amount: new NotEnoughBalance(),
+                },
                 warnings: {},
               },
             },
@@ -124,7 +124,7 @@ const dataset: DatasetTest<Transaction> = {
                   estimatedFees: fees,
                   amount: account.balance
                     .minus(reservedAmountForStorageLimit(storageLimit))
-                    .minus(fees),
+                    .minus(fees as BigNumber),
                   totalSpent: account.balance,
                 }
               ),
@@ -144,7 +144,7 @@ const dataset: DatasetTest<Transaction> = {
                     amount: new RecommendUndelegation(),
                   },
                   estimatedFees: fees,
-                  amount: account.balance.minus(fees),
+                  amount: account.balance.minus(fees as BigNumber),
                   totalSpent: account.balance,
                 }
               ),
@@ -154,7 +154,7 @@ const dataset: DatasetTest<Transaction> = {
               transaction: (t) => ({
                 ...t,
                 recipient: addressAccountTZrevealedDelegating,
-                amount: BigNumber(0.1),
+                amount: new BigNumber(0.1),
               }),
               expectedStatus: {
                 errors: {
@@ -165,23 +165,19 @@ const dataset: DatasetTest<Transaction> = {
             },
             {
               name: "undelegate",
-              transaction: (t) => ({
-                ...t,
-                mode: "undelegate",
-              }),
+              transaction: (t) => ({ ...t, mode: "undelegate" }),
               expectedStatus: (account, { fees }) => (
                 invariant(fees, "fees are required"),
                 {
                   errors: {},
                   warnings: {},
-                  amount: BigNumber(0),
+                  amount: new BigNumber(0),
                   estimatedFees: fees,
                 }
               ),
             },
           ],
         },
-
         {
           FIXME_tests: [
             "balance is sum of ops", // https://ledgerhq.atlassian.net/browse/LLC-591
@@ -203,7 +199,7 @@ const dataset: DatasetTest<Transaction> = {
                   estimatedFees: fees,
                   amount: account.balance
                     .minus(reservedAmountForStorageLimit(storageLimit))
-                    .minus(fees),
+                    .minus(fees as BigNumber),
                   totalSpent: account.balance,
                 }
               ),
@@ -221,7 +217,7 @@ const dataset: DatasetTest<Transaction> = {
                   errors: {},
                   warnings: {},
                   estimatedFees: fees,
-                  amount: account.balance.minus(fees),
+                  amount: account.balance.minus(fees as BigNumber),
                   totalSpent: account.balance,
                 }
               ),
@@ -238,14 +234,13 @@ const dataset: DatasetTest<Transaction> = {
                 {
                   errors: {},
                   warnings: {},
-                  amount: BigNumber(0),
+                  amount: new BigNumber(0),
                   estimatedFees: fees,
                 }
               ),
             },
           ],
         },
-
         {
           raw: accountTZnotRevealed,
           FIXME_tests: [
@@ -260,7 +255,9 @@ const dataset: DatasetTest<Transaction> = {
                 amount: account.balance.div(10),
               }),
               expectedStatus: {
-                errors: { recipient: new NotSupportedLegacyAddress() },
+                errors: {
+                  recipient: new NotSupportedLegacyAddress(),
+                },
                 warnings: {},
               },
             },
@@ -276,15 +273,16 @@ const dataset: DatasetTest<Transaction> = {
                 {
                   errors: {},
                   warnings: {},
-                  estimatedFees: fees.times(2),
+                  estimatedFees: (fees as BigNumber).times(2),
                   amount: account.balance.div(10),
-                  totalSpent: account.balance.div(10).plus(fees.times(2)),
+                  totalSpent: account.balance
+                    .div(10)
+                    .plus((fees as BigNumber).times(2)),
                 }
               ),
             },
           ],
         },
-
         {
           raw: accountTZnew,
           test: (expect, account) => {
@@ -307,7 +305,6 @@ const dataset: DatasetTest<Transaction> = {
             },
           ],
         },
-
         {
           FIXME_tests: [
             "balance is sum of ops", // https://ledgerhq.atlassian.net/browse/LLC-503
@@ -322,6 +319,7 @@ const dataset: DatasetTest<Transaction> = {
                 invariant(account.subAccounts, "subAccounts"),
                 {
                   ...t,
+                  // @ts-expect-error we know subAccounts exist with invariant
                   subAccountId: account.subAccounts[0].id,
                   recipient: addressTZnew,
                   useAllAmount: true,
@@ -333,9 +331,11 @@ const dataset: DatasetTest<Transaction> = {
                   errors: {},
                   warnings: {},
                   estimatedFees: fees,
+                  // @ts-expect-error we know subAccounts exist with invariant
                   amount: subAccounts[0].balance.minus(
                     reservedAmountForStorageLimit(storageLimit)
                   ),
+                  // @ts-expect-error we know subAccounts exist with invariant
                   totalSpent: subAccounts[0].balance,
                 }
               ),
@@ -349,6 +349,7 @@ const dataset: DatasetTest<Transaction> = {
                 ),
                 {
                   ...t,
+                  // @ts-expect-error we know subAccounts exist with invariant
                   subAccountId: account.subAccounts[1].id,
                   recipient: addressTZnew,
                   useAllAmount: true,
@@ -363,7 +364,9 @@ const dataset: DatasetTest<Transaction> = {
                   errors: {},
                   warnings: {},
                   estimatedFees: fees,
+                  // @ts-expect-error we know subAccounts exist with invariant
                   amount: subAccounts[1].balance,
+                  // @ts-expect-error we know subAccounts exist with invariant
                   totalSpent: subAccounts[1].balance,
                 }
               ),
@@ -382,30 +385,35 @@ const dataset: DatasetTest<Transaction> = {
                 invariant(account.subAccounts, "subAccounts"),
                 {
                   ...t,
+                  // @ts-expect-error we know subAccounts exist with invariant
                   subAccountId: account.subAccounts[0].id,
                   recipient: addressTZregular,
                   useAllAmount: true,
                 }
               ),
               expectedStatus: {
-                errors: { amount: new NotEnoughBalanceInParentAccount() },
+                errors: {
+                  amount: new NotEnoughBalanceInParentAccount(),
+                },
                 warnings: {},
               },
             },
-
             {
               name: "from KT 1, send 10%",
               transaction: (t, account) => (
                 invariant(account.subAccounts, "subAccounts"),
                 {
                   ...t,
+                  // @ts-expect-error we know subAccounts exist with invariant
                   subAccountId: account.subAccounts[0].id,
                   amount: account.balance.div(10),
                   recipient: addressTZregular,
                 }
               ),
               expectedStatus: {
-                errors: { amount: new NotEnoughBalanceInParentAccount() },
+                errors: {
+                  amount: new NotEnoughBalanceInParentAccount(),
+                },
                 warnings: {},
               },
             },
@@ -415,7 +423,6 @@ const dataset: DatasetTest<Transaction> = {
     },
   },
 };
-
 export default dataset;
 
 function makeAccount(name, pubKey, derivationMode) {

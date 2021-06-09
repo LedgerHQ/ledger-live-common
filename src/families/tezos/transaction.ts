@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import type { Transaction, TransactionRaw } from "./types";
 import {
@@ -8,7 +7,6 @@ import {
 import type { Account } from "../../types";
 import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
-
 export const formatTransaction = (
   {
     mode,
@@ -40,7 +38,6 @@ with fees=${!fees ? "?" : formatCurrencyUnit(mainAccount.unit, fees)}
 with gasLimit=${!gasLimit ? "?" : gasLimit.toString()}
 with storageLimit=${!storageLimit ? "?" : storageLimit.toString()}`;
 };
-
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
   const { networkInfo } = tr;
@@ -50,14 +47,13 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     mode: tr.mode,
     networkInfo: networkInfo && {
       family: networkInfo.family,
-      fees: BigNumber(networkInfo.fees),
+      fees: new BigNumber(networkInfo.fees),
     },
-    fees: tr.fees ? BigNumber(tr.fees) : null,
-    gasLimit: tr.gasLimit ? BigNumber(tr.gasLimit) : null,
-    storageLimit: tr.storageLimit ? BigNumber(tr.storageLimit) : null,
+    fees: tr.fees ? new BigNumber(tr.fees) : null,
+    gasLimit: tr.gasLimit ? new BigNumber(tr.gasLimit) : null,
+    storageLimit: tr.storageLimit ? new BigNumber(tr.storageLimit) : null,
   };
 };
-
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
   const { networkInfo } = t;
@@ -74,5 +70,8 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
     storageLimit: t.storageLimit ? t.storageLimit.toString() : null,
   };
 };
-
-export default { formatTransaction, fromTransactionRaw, toTransactionRaw };
+export default {
+  formatTransaction,
+  fromTransactionRaw,
+  toTransactionRaw,
+};

@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import {
   NotEnoughBalance,
@@ -30,24 +29,25 @@ import {
   isAccountDelegating,
 } from "../bakers";
 import { makeAccountBridgeReceive } from "../../../bridge/mockHelpers";
-
 const receive = makeAccountBridgeReceive();
 
 const estimateGasLimitAndStorage = () => {
-  const storage = BigNumber(257);
-  const gasLimit = BigNumber(10600);
-
-  return { storage, gasLimit };
+  const storage = new BigNumber(257);
+  const gasLimit = new BigNumber(10600);
+  return {
+    storage,
+    gasLimit,
+  };
 };
 
-const defaultGetFees = (a, t: *) =>
-  (t.fees || BigNumber(0)).times(t.gasLimit || BigNumber(0));
+const defaultGetFees = (a, t: any) =>
+  (t.fees || new BigNumber(0)).times(t.gasLimit || new BigNumber(0));
 
 const estimateMaxSpendable = ({ account, parentAccount, transaction }) => {
   const mainAccount = getMainAccount(account, parentAccount);
   const estimatedFees = transaction
     ? defaultGetFees(mainAccount, transaction)
-    : BigNumber(10);
+    : new BigNumber(10);
   return Promise.resolve(
     BigNumber.max(0, account.balance.minus(estimatedFees))
   );
@@ -56,7 +56,7 @@ const estimateMaxSpendable = ({ account, parentAccount, transaction }) => {
 const createTransaction = (): Transaction => ({
   family: "tezos",
   mode: "send",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   fees: null,
   gasLimit: null,
   storageLimit: null,
@@ -68,12 +68,17 @@ const createTransaction = (): Transaction => ({
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
 const getTransactionStatus = (a, t) => {
-  const errors = {};
-  const warnings = {};
+  const errors: {
+    recipient?: Error;
+    amount?: Error;
+  } = {};
+  const warnings: {
+    amount?: Error;
+    feeTooHigh?: Error;
+  } = {};
   const subAcc = !t.subAccountId
     ? null
     : a.subAccounts && a.subAccounts.find((ta) => ta.id === t.subAccountId);
-
   const account = subAcc || a;
 
   if (t.mode !== "undelegate") {
@@ -92,29 +97,24 @@ const getTransactionStatus = (a, t) => {
   }
 
   let amount = t.amount;
-
   // FIXME: maybe we need this
   // if (!t.fees) {
   //   errors.fees = new FeeNotLoaded();
   // } else if (!errors.recipient) {
   //   estimatedFees = defaultGetFees(a, t);
   // }
-
-  let estimatedFees = defaultGetFees(a, t);
-
+  const estimatedFees = defaultGetFees(a, t);
   const useAllAmount = !!t.useAllAmount;
-
   let totalSpent = useAllAmount
     ? account.balance
     : subAcc
-    ? BigNumber(t.amount)
-    : BigNumber(t.amount).plus(estimatedFees);
-
+    ? new BigNumber(t.amount)
+    : new BigNumber(t.amount).plus(estimatedFees);
   amount = useAllAmount
     ? subAcc
-      ? BigNumber(t.amount)
+      ? new BigNumber(t.amount)
       : account.balance.minus(estimatedFees)
-    : BigNumber(t.amount);
+    : new BigNumber(t.amount);
 
   if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
     warnings.feeTooHigh = new FeeTooHigh();
@@ -130,8 +130,8 @@ const getTransactionStatus = (a, t) => {
     (amount.lt(0) || totalSpent.gt(account.balance))
   ) {
     errors.amount = new NotEnoughBalance();
-    totalSpent = BigNumber(0);
-    amount = BigNumber(0);
+    totalSpent = new BigNumber(0);
+    amount = new BigNumber(0);
   }
 
   if (t.mode === "send") {
@@ -172,13 +172,18 @@ const getTransactionStatus = (a, t) => {
 
 const prepareTransaction = async (a, t) => {
   let networkInfo = t.networkInfo;
+
   if (!networkInfo) {
-    const ni = { family: "tezos", fees: t.fees || BigNumber(0) };
+    const ni = {
+      family: "tezos",
+      fees: t.fees || new BigNumber(0),
+    };
     networkInfo = ni;
   }
 
   let gasLimit = t.gasLimit;
   let storageLimit = t.storageLimit;
+
   if (!gasLimit || storageLimit) {
     if (t.mode === "undelegate" || isInvalidRecipient(t.recipient)) {
       const r = estimateGasLimitAndStorage();
@@ -187,7 +192,7 @@ const prepareTransaction = async (a, t) => {
     }
   }
 
-  let fees = t.fees || networkInfo.fees;
+  const fees = t.fees || networkInfo.fees;
 
   if (
     t.networkInfo !== networkInfo ||
@@ -212,11 +217,12 @@ const accountBridge: AccountBridge<Transaction> = {
   signOperation,
   broadcast,
 };
-
 const currencyBridge: CurrencyBridge = {
-  preload: () => Promise.resolve(),
+  preload: () => Promise.resolve({}),
   hydrate: () => {},
   scanAccounts,
 };
-
-export default { currencyBridge, accountBridge };
+export default {
+  currencyBridge,
+  accountBridge,
+};

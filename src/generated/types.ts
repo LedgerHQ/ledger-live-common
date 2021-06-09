@@ -1,4 +1,3 @@
-// @flow
 import { reflect as algorandReflect } from "../families/algorand/types";
 import { CoreStatics as CoreStatics_algorand } from "../families/algorand/types";
 import { CoreAccountSpecifics as CoreAccountSpecifics_algorand } from "../families/algorand/types";
