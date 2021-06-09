@@ -1,5 +1,4 @@
-// @flow
-import { Observable, from, of, empty } from "rxjs";
+import { Observable, from, of, EMPTY } from "rxjs";
 import { concatMap } from "rxjs/operators";
 import invariant from "invariant";
 import bs58 from "bs58";
@@ -14,13 +13,14 @@ import {
 } from "../../derivation";
 import { withDevice } from "../../hw/deviceAccess";
 import getAddress from "../../hw/getAddress";
-
 export type AccountDescriptor = {
-  internal: string,
-  external: string,
+  internal: string;
+  external: string;
 };
-
-const perDerivation: { [_: DerivationMode]: ?(string) => string } = {
+const perDerivation: Partial<Record<
+  DerivationMode,
+  ((arg0: string) => string) | null | undefined
+>> = {
   "": (fragment) => `pkh(${fragment})`,
   segwit: (fragment) => `sh(wpkh(${fragment}))`,
   native_segwit: (fragment) => `wpkh(${fragment})`,
@@ -40,7 +40,10 @@ function makeDescriptor({
   const tmpl = perDerivation[derivationMode];
   if (!tmpl || !xpub) return;
   const keyOrigin = fingerprint.toString("hex");
-  const scheme = getDerivationScheme({ currency, derivationMode });
+  const scheme = getDerivationScheme({
+    currency,
+    derivationMode,
+  });
   const accountPath = runAccountDerivationScheme(scheme, currency, {
     account: index,
   });
@@ -52,13 +55,19 @@ function makeDescriptor({
 
 export function inferDescriptorFromAccount(
   account: Account
-): ?AccountDescriptor {
+): AccountDescriptor | null | undefined {
   if (account.currency.family !== "bitcoin") return;
   const { xpub, derivationMode, seedIdentifier, currency, index } = account;
   const fingerprint = makeFingerprint(
     compressPublicKeySECP256(Buffer.from(seedIdentifier, "hex"))
   );
-  return makeDescriptor({ derivationMode, currency, fingerprint, xpub, index });
+  return makeDescriptor({
+    derivationMode,
+    currency,
+    fingerprint,
+    xpub,
+    index,
+  });
 }
 
 function asBufferUInt32BE(n) {
@@ -102,15 +111,20 @@ export function inferDescriptorFromDeviceInfo({
   parentDerivation,
   accountDerivation,
 }: {
-  derivationMode: DerivationMode,
-  currency: CryptoCurrency,
-  index: number,
-  parentDerivation: Result,
-  accountDerivation: Result,
-}): ?AccountDescriptor {
+  derivationMode: DerivationMode;
+  currency: CryptoCurrency;
+  index: number;
+  parentDerivation: Result;
+  accountDerivation: Result;
+}): AccountDescriptor | null | undefined {
   invariant(currency.bitcoinLikeInfo, "bitcoin currency expected");
   const { bitcoinLikeInfo } = currency;
-  const { XPUBVersion } = bitcoinLikeInfo;
+  const { XPUBVersion } = bitcoinLikeInfo as {
+    P2PKH: number;
+    P2SH: number;
+    XPUBVersion?: number;
+    hasTimestamp?: boolean;
+  };
   invariant(XPUBVersion, "unsupported bitcoin fork %s", currency.id);
   const { chainCode } = accountDerivation;
   invariant(chainCode, "chainCode is required");
@@ -122,7 +136,7 @@ export function inferDescriptorFromDeviceInfo({
     depth: 3,
     parentFingerprint: fingerprint,
     index,
-    chainCode: Buffer.from(chainCode, "hex"),
+    chainCode: Buffer.from(chainCode as string, "hex"),
     pubKey: compressPublicKeySECP256(
       Buffer.from(accountDerivation.publicKey, "hex")
     ),
@@ -135,11 +149,10 @@ export function inferDescriptorFromDeviceInfo({
     index,
   });
 }
-
 export function scanDescriptors(
   deviceId: string,
   currency: CryptoCurrency,
-  limit: number = 10
+  limit = 10
 ): Observable<AccountDescriptor> {
   const derivateAddress = (opts) =>
     withDevice(deviceId)((transport) => from(getAddress(transport, opts)));
@@ -157,7 +170,12 @@ export function scanDescriptors(
       parentDerivation,
       accountDerivation,
     });
-    return !result ? empty() : of({ result, complete: index >= limit });
+    return !result
+      ? EMPTY
+      : of({
+          result,
+          complete: index >= limit,
+        });
   }
 
   return from(getDerivationModesForCurrency(currency)).pipe(

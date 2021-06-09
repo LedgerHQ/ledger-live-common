@@ -1,5 +1,3 @@
-// @flow
-
 import { BigNumber } from "bignumber.js";
 import { libcoreAmountToBigNumber } from "../../libcore/buildBigNumber";
 import buildTransaction from "./libcore-buildTransaction";
@@ -11,16 +9,25 @@ import {
 import { promiseAllBatched } from "../../promise";
 import type { BitcoinInput, BitcoinOutput } from "./types";
 
-async function bitcoin(arg: *) {
+async function bitcoin(
+  arg: any
+): Promise<{
+  estimatedFees: BigNumber;
+  value: BigNumber;
+  txInputs: BitcoinInput[];
+  txOutputs: BitcoinOutput[];
+} | void> {
   const builded = await buildTransaction(arg);
   if (!builded) return;
   const feesAmount = await builded.getFees();
+
   if (!feesAmount) {
     throw new Error("getFeesForTransaction: fees should not be undefined");
   }
+
   const estimatedFees = await libcoreAmountToBigNumber(feesAmount);
   // TODO we don't have a getValue on bitcoin
-  const value = BigNumber(0);
+  const value = new BigNumber(0);
   const inputs = await builded.getInputs();
   let txInputs: BitcoinInput[] = await promiseAllBatched(
     4,
@@ -33,11 +40,12 @@ async function bitcoin(arg: *) {
     outputs,
     parseBitcoinOutput
   );
-
   const { account } = arg;
   const perCoin = perCoinLogic[account.currency.id];
+
   if (perCoin) {
     const { syncReplaceAddress } = perCoin;
+
     if (syncReplaceAddress) {
       txInputs = txInputs.map((i) => ({
         ...i,
@@ -50,7 +58,12 @@ async function bitcoin(arg: *) {
     }
   }
 
-  return { estimatedFees, value, txInputs, txOutputs };
+  return {
+    estimatedFees,
+    value,
+    txInputs,
+    txOutputs,
+  };
 }
 
 export default bitcoin;

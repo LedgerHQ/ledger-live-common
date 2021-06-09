@@ -1,16 +1,15 @@
-// @flow
 import type { DeviceAction } from "../../bot/types";
 import type { Transaction } from "./types";
 import { formatCurrencyUnit } from "../../currencies";
 import { deviceActionFlow } from "../../bot/specs";
 import { perCoinLogic } from "./transaction";
-
-const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
+const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
   steps: [
     {
       title: "Amount",
       button: "Rr",
-      ignoreAssertionFailure: true, // https://ledgerhq.atlassian.net/browse/LLC-676
+      ignoreAssertionFailure: true,
+      // https://ledgerhq.atlassian.net/browse/LLC-676
       expectedValue: ({ account, status }) =>
         formatCurrencyUnit(
           {
@@ -27,7 +26,8 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
     {
       title: "Fees",
       button: "Rr",
-      ignoreAssertionFailure: true, // https://ledgerhq.atlassian.net/browse/LLC-676
+      ignoreAssertionFailure: true,
+      // https://ledgerhq.atlassian.net/browse/LLC-676
       expectedValue: ({ account, status }) =>
         formatCurrencyUnit(
           {
@@ -46,9 +46,11 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
       button: "Rr",
       expectedValue: ({ transaction, account }) => {
         const perCoin = perCoinLogic[account.currency.id];
+
         if (perCoin?.onScreenTransactionRecipient) {
           return perCoin.onScreenTransactionRecipient(transaction.recipient);
         }
+
         return transaction.recipient;
       },
     },
@@ -66,5 +68,6 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
     },
   ],
 });
-
-export default { acceptTransaction };
+export default {
+  acceptTransaction,
+};
