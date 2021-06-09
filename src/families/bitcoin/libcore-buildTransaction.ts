@@ -1,4 +1,3 @@
-// @flow
 import { log } from "@ledgerhq/logs";
 import { BigNumber } from "bignumber.js";
 import { FeeNotLoaded, InvalidAddress } from "@ledgerhq/errors";
@@ -20,36 +19,37 @@ async function bitcoinBuildTransaction({
   isPartial,
   isCancelled,
 }: {
-  account: Account,
-  core: Core,
-  coreAccount: CoreAccount,
-  coreCurrency: CoreCurrency,
-  transaction: Transaction,
-  isPartial: boolean,
-  isCancelled: () => boolean,
-}): Promise<?CoreBitcoinLikeTransaction> {
+  account: Account;
+  core: Core;
+  coreAccount: CoreAccount;
+  coreCurrency: CoreCurrency;
+  transaction: Transaction;
+  isPartial: boolean;
+  isCancelled: () => boolean;
+}): Promise<CoreBitcoinLikeTransaction | null | undefined> {
   const { currency } = account;
-
   const perCoin = perCoinLogic[currency.id];
   const recipient = perCoin?.asLibcoreTransactionRecipient
     ? perCoin.asLibcoreTransactionRecipient(transaction.recipient)
     : transaction.recipient;
-
   const bitcoinLikeAccount = await coreAccount.asBitcoinLikeAccount();
-
-  const isValid = await isValidRecipient({ currency, recipient });
+  const isValid = await isValidRecipient({
+    currency,
+    recipient,
+  });
 
   if (isValid !== null) {
-    throw new InvalidAddress("", { currencyName: currency.name });
+    throw new InvalidAddress("", {
+      currencyName: currency.name,
+    });
   }
 
   const { feePerByte } = transaction;
   if (!feePerByte) throw new FeeNotLoaded();
-
   const fees = await bigNumberToLibcoreAmount(
     core,
     coreCurrency,
-    BigNumber(feePerByte)
+    new BigNumber(feePerByte)
   );
   if (isCancelled()) return;
   const transactionBuilder = await bitcoinLikeAccount.buildTransaction(
@@ -69,6 +69,7 @@ async function bitcoinBuildTransaction({
 
   if (perCoin) {
     const { syncReplaceAddress } = perCoin;
+
     if (syncReplaceAddress) {
       utxos = utxos.map((u) => ({
         ...u,
@@ -79,6 +80,7 @@ async function bitcoinBuildTransaction({
 
   for (const utxo of utxos) {
     const s = getUTXOStatus(utxo, utxoStrategy);
+
     if (s.excluded) {
       log(
         "bitcoin",
@@ -93,7 +95,7 @@ async function bitcoinBuildTransaction({
     const amount = await bigNumberToLibcoreAmount(
       core,
       coreCurrency,
-      BigNumber(transaction.amount)
+      new BigNumber(transaction.amount)
     );
     if (isCancelled()) return;
     await transactionBuilder.sendToAddress(amount, recipient);
@@ -102,16 +104,14 @@ async function bitcoinBuildTransaction({
 
   await transactionBuilder.pickInputs(
     utxoStrategy.strategy,
-    0 /* not used, out of int32 range issue. patched in signature time. */
+    0
+    /* not used, out of int32 range issue. patched in signature time. */
   );
   if (isCancelled()) return;
-
   await transactionBuilder.setFeesPerByte(fees);
   if (isCancelled()) return;
-
   const builded = await transactionBuilder.build();
   if (isCancelled()) return;
-
   return builded;
 }
 

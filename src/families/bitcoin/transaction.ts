@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import bchaddr from "bchaddrjs";
 import cashaddr from "cashaddrjs";
@@ -28,12 +27,14 @@ import { libcoreAmountToBigNumber } from "../../libcore/buildBigNumber";
 
 function bchExplicit(str: string): string {
   const explicit = str.includes(":") ? str : "bitcoincash:" + str;
+
   try {
     const { type } = cashaddr.decode(explicit);
     if (type === "P2PKH") return explicit;
   } catch (e) {
     // ignore errors
   }
+
   return str;
 }
 
@@ -41,17 +42,25 @@ const bchToCashaddrAddressWithoutPrefix = (recipient) =>
   recipient ? bchaddr.toCashAddress(recipient).split(":")[1] : recipient;
 
 export type CoinLogic = {
-  hasExtraData?: boolean,
-  hasExpiryHeight?: boolean,
-  getAdditionals?: ({ transaction: Transaction }) => string[],
-  asLibcoreTransactionRecipient?: (string) => string,
-  onScreenTransactionRecipient?: (string) => string,
-  postBuildBitcoinResources?: (Account, BitcoinResources) => BitcoinResources,
-  syncReplaceAddress?: (existingAccount: ?Account, addr: string) => string,
-  injectGetAddressParams?: (Account) => any,
+  hasExtraData?: boolean;
+  hasExpiryHeight?: boolean;
+  getAdditionals?: (arg0: { transaction: Transaction }) => string[];
+  asLibcoreTransactionRecipient?: (arg0: string) => string;
+  onScreenTransactionRecipient?: (arg0: string) => string;
+  postBuildBitcoinResources?: (
+    arg0: Account,
+    arg1: BitcoinResources
+  ) => BitcoinResources;
+  syncReplaceAddress?: (
+    existingAccount: Account | null | undefined,
+    addr: string
+  ) => string;
+  injectGetAddressParams?: (arg0: Account) => any;
 };
-
-export const perCoinLogic: { [_: CryptoCurrencyIds]: ?CoinLogic } = {
+export const perCoinLogic: Record<
+  CryptoCurrencyIds,
+  CoinLogic | null | undefined
+> = {
   zencash: {
     hasExtraData: true, // FIXME investigate why we need this here and drop
   },
@@ -74,37 +83,35 @@ export const perCoinLogic: { [_: CryptoCurrencyIds]: ?CoinLogic } = {
   bitcoin_cash: {
     getAdditionals: ({ transaction }) => {
       const additionals = ["bip143"];
+
       if (bchExplicit(transaction.recipient).startsWith("bitcoincash:")) {
         additionals.push("cashaddr");
       }
+
       return additionals;
     },
-
     // due to libcore minimal support, we need to return the explicit format of bitcoincash:.. if it's a P2PKH
     asLibcoreTransactionRecipient: bchExplicit,
-
     // to represent what happens on the device, which do not display the bitcoincash: prefix
     onScreenTransactionRecipient: (str: string): string => {
       const prefix = "bitcoincash:";
       return str.startsWith(prefix) ? str.slice(prefix.length) : str;
     },
-
     syncReplaceAddress: (existingAccount, addr) =>
       bchToCashaddrAddressWithoutPrefix(addr),
-
-    injectGetAddressParams: () => ({ forceFormat: "cashaddr" }),
+    injectGetAddressParams: () => ({
+      forceFormat: "cashaddr",
+    }),
   },
 };
-
 export type UTXOStatus =
   | {
-      excluded: true,
-      reason: "pickUnconfirmedRBF" | "userExclusion",
+      excluded: true;
+      reason: "pickUnconfirmedRBF" | "userExclusion";
     }
   | {
-      excluded: false,
+      excluded: false;
     };
-
 export async function parseBitcoinInput(
   input: CoreBitcoinLikeInput
 ): Promise<BitcoinInput> {
@@ -113,32 +120,49 @@ export async function parseBitcoinInput(
   const value = rawValue ? await libcoreAmountToBigNumber(rawValue) : null;
   const previousTxHash = await input.getPreviousTxHash();
   const previousOutputIndex = await input.getPreviousOutputIndex();
-  return { address, value, previousTxHash, previousOutputIndex };
+  return {
+    address,
+    value,
+    previousTxHash,
+    previousOutputIndex,
+  };
 }
-
 export async function parseBitcoinOutput(
   output: CoreBitcoinLikeOutput
 ): Promise<BitcoinOutput> {
   let blockHeight = await output.getBlockHeight();
+
   if (!blockHeight || blockHeight < 0) {
     blockHeight = undefined;
   }
+
   const hash = await output.getTransactionHash();
   const outputIndex = await output.getOutputIndex();
   const address = await output.getAddress();
   const derivationPath = await output.getDerivationPath();
   let path;
+
   if (derivationPath) {
     const isDerivationPathNull = await derivationPath.isNull();
+
     if (!isDerivationPathNull) {
       path = await derivationPath.toString();
     }
   }
+
   const value = await libcoreAmountToBigNumber(await output.getValue());
   const rbf = false; // this is unsafe to generically call this at the moment. libcore segfault.
-  return { hash, outputIndex, blockHeight, address, path, value, rbf };
-}
 
+  return {
+    hash,
+    outputIndex,
+    blockHeight,
+    address,
+    path,
+    value,
+    rbf,
+  };
+}
 export async function parseBitcoinUTXO(
   output: CoreBitcoinLikeOutput
 ): Promise<BitcoinOutput> {
@@ -146,24 +170,32 @@ export async function parseBitcoinUTXO(
   utxo.rbf = await output.isReplaceable();
   return utxo;
 }
-
 export function getUTXOStatus(
   utxo: BitcoinOutput,
   utxoStrategy: UtxoStrategy
 ): UTXOStatus {
   if (!utxoStrategy.pickUnconfirmedRBF && utxo.rbf && !utxo.blockHeight) {
-    return { excluded: true, reason: "pickUnconfirmedRBF" };
+    return {
+      excluded: true,
+      reason: "pickUnconfirmedRBF",
+    };
   }
+
   if (
     utxoStrategy.excludeUTXOs.some(
       (u) => u.hash === utxo.hash && u.outputIndex === utxo.outputIndex
     )
   ) {
-    return { excluded: true, reason: "userExclusion" };
+    return {
+      excluded: true,
+      reason: "userExclusion",
+    };
   }
-  return { excluded: false };
-}
 
+  return {
+    excluded: false,
+  };
+}
 export function isChangeOutput(output: BitcoinOutput): boolean {
   if (!output.path) return false;
   const p = output.path.split("/");
@@ -174,9 +206,9 @@ const fromFeeItemsRaw = (fir: FeeItemsRaw): FeeItems => ({
   items: fir.items.map((fi) => ({
     key: fi.key,
     speed: fi.speed,
-    feePerByte: BigNumber(fi.feePerByte),
+    feePerByte: new BigNumber(fi.feePerByte),
   })),
-  defaultFeePerByte: BigNumber(fir.defaultFeePerByte),
+  defaultFeePerByte: new BigNumber(fir.defaultFeePerByte),
 });
 
 const toFeeItemsRaw = (fir: FeeItems): FeeItemsRaw => ({
@@ -195,7 +227,7 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     rbf: tr.rbf,
     utxoStrategy: tr.utxoStrategy,
     family: tr.family,
-    feePerByte: tr.feePerByte ? BigNumber(tr.feePerByte) : null,
+    feePerByte: tr.feePerByte ? new BigNumber(tr.feePerByte) : null,
     networkInfo: tr.networkInfo && {
       family: tr.networkInfo.family,
       feeItems: fromFeeItemsRaw(tr.networkInfo.feeItems),
@@ -203,7 +235,6 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     feesStrategy: tr.feesStrategy,
   };
 };
-
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
   return {
@@ -220,7 +251,14 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   };
 };
 
-const formatNetworkInfo = (networkInfo: ?{ feeItems: FeeItems }) => {
+const formatNetworkInfo = (
+  networkInfo:
+    | {
+        feeItems: FeeItems;
+      }
+    | null
+    | undefined
+) => {
   if (!networkInfo) return "network info not loaded";
   return `network fees: ${networkInfo.feeItems.items
     .map((i) => i.key + "=" + i.feePerByte.toString())
@@ -257,5 +295,8 @@ ${[
     .map((utxo) => `\nexclude ${utxo.hash} @${utxo.outputIndex}`)
     .join("")}`;
 };
-
-export default { fromTransactionRaw, toTransactionRaw, formatTransaction };
+export default {
+  fromTransactionRaw,
+  toTransactionRaw,
+  formatTransaction,
+};
