@@ -1,5 +1,3 @@
-// @flow
-
 import { BigNumber } from "bignumber.js";
 import type {
   BitcoinResourcesRaw,
@@ -9,7 +7,6 @@ import type {
   BitcoinOutputRaw,
   BitcoinOutput,
 } from "./types";
-
 export function toBitcoinInputRaw({
   address,
   value,
@@ -23,7 +20,6 @@ export function toBitcoinInputRaw({
     previousOutputIndex,
   ];
 }
-
 export function fromBitcoinInputRaw([
   address,
   value,
@@ -32,12 +28,11 @@ export function fromBitcoinInputRaw([
 ]: BitcoinInputRaw): BitcoinInput {
   return {
     address: address || undefined,
-    value: value ? BigNumber(value) : undefined,
+    value: value ? new BigNumber(value) : undefined,
     previousTxHash: previousTxHash || undefined,
     previousOutputIndex,
   };
 }
-
 export function toBitcoinOutputRaw({
   hash,
   outputIndex,
@@ -57,7 +52,6 @@ export function toBitcoinOutputRaw({
     rbf ? 1 : 0,
   ];
 }
-
 export function fromBitcoinOutputRaw([
   hash,
   outputIndex,
@@ -73,11 +67,10 @@ export function fromBitcoinOutputRaw([
     blockHeight: blockHeight || undefined,
     address: address || undefined,
     path: path || undefined,
-    value: BigNumber(value),
+    value: new BigNumber(value),
     rbf: !!rbf,
   };
 }
-
 export function toBitcoinResourcesRaw(
   r: BitcoinResources
 ): BitcoinResourcesRaw {
@@ -85,7 +78,6 @@ export function toBitcoinResourcesRaw(
     utxos: r.utxos.map(toBitcoinOutputRaw),
   };
 }
-
 export function fromBitcoinResourcesRaw(
   r: BitcoinResourcesRaw
 ): BitcoinResources {
