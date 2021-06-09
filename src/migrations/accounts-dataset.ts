@@ -1,7 +1,5 @@
-// @flow
 import { fromAccountRaw } from "../account";
 import type { Account } from "../types";
-
 const accounts: Account[] = [
   {
     id:
@@ -245,5 +243,4 @@ const accounts: Account[] = [
     ],
   },
 ].map(fromAccountRaw);
-
 export default accounts;
