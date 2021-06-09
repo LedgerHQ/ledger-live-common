@@ -65,9 +65,13 @@ const getExchangeRates: GetExchangeRates = async (
       };
     }
     const toMagnitudePow = BigNumber(10).pow(unitTo.magnitude);
+    const magnitudeChange = BigNumber(10).pow(
+      unitFrom.magnitude - unitTo.magnitude
+    );
+
     if (tradeMethod === "fixed") {
       return {
-        magnitudeAwareRate: BigNumber(rate),
+        magnitudeAwareRate: BigNumber(rate).div(magnitudeChange),
         provider,
         rate,
         rateId,
@@ -75,10 +79,6 @@ const getExchangeRates: GetExchangeRates = async (
         tradeMethod,
       };
     } else {
-      // NB For floating trades we don't have a guaranteed rate but rather an estimated `amountTo`
-      const magnitudeChange = BigNumber(10).pow(
-        unitFrom.magnitude - unitTo.magnitude
-      );
       return {
         magnitudeAwareRate: BigNumber(amountTo)
           .div(amountFrom)
