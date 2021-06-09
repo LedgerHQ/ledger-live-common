@@ -1,6 +1,4 @@
-// @flow
 // handle send and erc20 send
-
 import abi from "ethereumjs-abi";
 import invariant from "invariant";
 import eip55 from "eip55";
@@ -17,14 +15,11 @@ import {
   getGasLimit,
   validateRecipient,
 } from "../transaction";
-
 export type Modes = "send";
-
 const send: ModeModule = {
   fillTransactionStatus(a, t, result) {
     const tokenAccount = inferTokenAccount(a, t);
     const account = tokenAccount || a;
-
     validateRecipient(a.currency, t.recipient, result);
 
     if (!result.errors.recipient) {
@@ -77,17 +72,17 @@ const send: ModeModule = {
 
   fillTransactionData(a, t, tx) {
     const subAccount = inferTokenAccount(a, t);
+
     if (subAccount) {
       const { token } = subAccount;
-
       const data = serializeTransactionData(a, t);
       invariant(data, "serializeTransactionData provided no data");
-
-      tx.data = "0x" + data.toString("hex");
+      tx.data = "0x" + (data as Buffer).toString("hex");
       tx.to = token.contractAddress;
       tx.value = "0x00";
     } else {
       let amount;
+
       if (t.useAllAmount) {
         const gasLimit = getGasLimit(t);
         amount = a.spendableBalance.minus(gasLimit.times(t.gasPrice || 0));
@@ -95,10 +90,12 @@ const send: ModeModule = {
         invariant(t.amount, "amount is missing");
         amount = t.amount;
       }
+
       if (t.data) {
         tx.data = "0x" + t.data.toString("hex");
       }
-      tx.value = `0x${BigNumber(amount).toString(16)}`;
+
+      tx.value = `0x${new BigNumber(amount).toString(16)}`;
       tx.to = t.recipient;
     }
   },
@@ -110,19 +107,17 @@ const send: ModeModule = {
         label: "Amount",
       });
     }
+
     if (transaction.data?.length) {
       /*
       TODO: LL-4219
-
-      import uniq from "lodash/uniq";
+       import uniq from "lodash/uniq";
       import { findTokenByAddress } from "../../../currencies";
       import { getAccountCurrency, getAccountUnit } from "../../../account";
-
-      const token = findTokenByAddress(transaction.recipient);
+       const token = findTokenByAddress(transaction.recipient);
       // $FlowFixMe (transaction data is not null, you flow)
       const method = transaction.data.slice(0, 4).toString("hex");
-
-      if (method === "095ea7b3" && token) {
+       if (method === "095ea7b3" && token) {
         fields.push({
           type: "text",
           label: "Type",
@@ -133,11 +128,9 @@ const send: ModeModule = {
           label: "Amount (1/2)",
           value: token.ticker,
         });
-
-        // $FlowFixMe (transaction data is not null, you flow)
+         // $FlowFixMe (transaction data is not null, you flow)
         const amountHex = transaction.data.slice(36, 36 + 32).toString("hex");
-
-        if (uniq(amountHex.split("")) === ["f"]) {
+         if (uniq(amountHex.split("")) === ["f"]) {
           fields.push({
             type: "text",
             label: "Amount (2/2)",
@@ -171,6 +164,7 @@ const send: ModeModule = {
 
   fillOptimisticOperation(a, t, op) {
     const subAccount = inferTokenAccount(a, t);
+
     if (subAccount) {
       // ERC20 transfer
       op.type = "FEES";
@@ -182,7 +176,7 @@ const send: ModeModule = {
           type: "OUT",
           value: t.useAllAmount
             ? subAccount.spendableBalance
-            : BigNumber(t.amount || 0),
+            : new BigNumber(t.amount || 0),
           fee: op.fee,
           blockHash: null,
           blockHeight: null,
@@ -197,21 +191,27 @@ const send: ModeModule = {
   },
 };
 
-function serializeTransactionData(account, transaction): ?Buffer {
+function serializeTransactionData(
+  account,
+  transaction
+): Buffer | null | undefined {
   const tokenAccount = inferTokenAccount(account, transaction);
   if (!tokenAccount) return;
   const recipient = eip55.encode(transaction.recipient);
   const { spendableBalance } = tokenAccount;
   let amount;
+
   if (transaction.useAllAmount) {
     amount = spendableBalance;
   } else {
     if (!transaction.amount) return;
-    amount = BigNumber(transaction.amount);
+    amount = new BigNumber(transaction.amount);
+
     if (amount.gt(tokenAccount.spendableBalance)) {
       throw new NotEnoughBalance();
     }
   }
+
   return abi.simpleEncode(
     "transfer(address,uint256)",
     recipient,
@@ -219,6 +219,6 @@ function serializeTransactionData(account, transaction): ?Buffer {
   );
 }
 
-export const modes: { [_: Modes]: ModeModule } = {
+export const modes: Record<Modes, ModeModule> = {
   send,
 };

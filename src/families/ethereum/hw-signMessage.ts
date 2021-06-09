@@ -1,17 +1,13 @@
-// @flow
-
 import Eth from "@ledgerhq/hw-app-eth";
 import type Transport from "@ledgerhq/hw-transport";
 import { TypedDataUtils } from "eth-sig-util";
 import { bufferToHex } from "ethereumjs-util";
 import type { MessageData, Result } from "../../hw/signMessage/types";
 import type { TypedMessageData, TypedMessage } from "./types";
-
 type EthResolver = (
-  Transport<*>,
-  MessageData | TypedMessageData
+  arg0: Transport,
+  arg1: MessageData | TypedMessageData
 ) => Promise<Result>;
-
 export const stringHash = (message: string) => {
   return Buffer.from(message).toString("hex");
 };
@@ -34,7 +30,6 @@ export const messageHash = (message: TypedMessage) => {
 
 const resolver: EthResolver = async (transport, { path, message }) => {
   const eth = new Eth(transport);
-
   let result;
 
   if (typeof message === "string") {
@@ -47,14 +42,18 @@ const resolver: EthResolver = async (transport, { path, message }) => {
     );
   }
 
-  var v = result["v"] - 27;
+  let v: string | number = result["v"] - 27;
   v = v.toString(16);
+
   if (v.length < 2) {
     v = "0" + v;
   }
-  const signature = `0x${result["r"]}${result["s"]}${v}`;
 
-  return { rsv: result, signature };
+  const signature = `0x${result["r"]}${result["s"]}${v}`;
+  return {
+    rsv: result,
+    signature,
+  };
 };
 
 export default resolver;

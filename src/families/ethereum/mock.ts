@@ -1,4 +1,3 @@
-// @flow
 import Prando from "prando";
 import { BigNumber } from "bignumber.js";
 import type {
@@ -17,11 +16,11 @@ function genBaseOperation({
   type,
   amount,
 }: {
-  account: AccountLike,
-  parentAccount: Account,
-  rng: Prando,
-  type: OperationType,
-  amount?: BigNumber,
+  account: AccountLike;
+  parentAccount: Account;
+  rng: Prando;
+  type: OperationType;
+  amount?: BigNumber;
 }): Operation {
   const { operations: ops } = account;
   const op = genOperation(parentAccount, account, ops, rng);
@@ -35,11 +34,7 @@ function genBaseOperation({
   }
 
   if (amount && ["REDEEM", "SUPPLY"].includes(type)) {
-    op.extra = {
-      ...op.extra,
-      compoundValue: amount.toString(),
-    };
-
+    op.extra = { ...op.extra, compoundValue: amount.toString() };
     op.value = amount.times(op.extra.rate);
   } else if (amount) {
     op.value = amount;
@@ -59,7 +54,6 @@ function addOperationWithType(
   const daiAccount = subAccounts.find(
     (sub) => sub.type === "TokenAccount" && findCompoundToken(sub.token)
   );
-
   genBaseOperation({
     parentAccount: account,
     account: daiAccount || account,
@@ -95,14 +89,16 @@ function addApproveOperations(account: Account, rng: Prando): Account {
 
 function genAccountEnhanceOperations(account: Account, rng: Prando): Account {
   const nbrRounds = rng.nextInt(1, 4);
-  const output = [];
+  const output: Array<{
+    args: [Account, Prando, BigNumber];
+    type: string;
+  }> = [];
   let redeemable = 0;
+
   for (let i = 0; i < nbrRounds; i++) {
     let toSupply = rng.nextInt(0, 3000);
     redeemable += toSupply;
-
     let toRedeem = rng.nextInt(0, redeemable);
-
     const nbrSupplyOps = rng.nextInt(1, 2);
     const nbrRedeemOps = rng.nextInt(1, 2);
 
@@ -111,10 +107,9 @@ function genAccountEnhanceOperations(account: Account, rng: Prando): Account {
         j === nbrSupplyOps - 1 ? toSupply : rng.nextInt(0, toSupply);
       toSupply -= supplyVal;
       output.push({
-        args: [account, rng, BigNumber(supplyVal)],
+        args: [account, rng, new BigNumber(supplyVal)],
         type: "supply",
-      });
-      // addSupplyOperations(account, rng, BigNumber(supplyVal));
+      }); // addSupplyOperations(account, rng, BigNumber(supplyVal));
     }
 
     for (let k = 0; k < nbrRedeemOps; k++) {
@@ -123,10 +118,9 @@ function genAccountEnhanceOperations(account: Account, rng: Prando): Account {
       toRedeem -= redeemVal;
       redeemable -= redeemVal;
       output.push({
-        args: [account, rng, BigNumber(redeemVal)],
+        args: [account, rng, new BigNumber(redeemVal)],
         type: "redeem",
-      });
-      // addRedeemOperations(account, rng, BigNumber(redeemVal));
+      }); // addRedeemOperations(account, rng, BigNumber(redeemVal));
     }
   }
 
@@ -139,7 +133,6 @@ function genAccountEnhanceOperations(account: Account, rng: Prando): Account {
       addRedeemOperations(...args);
     }
   });
-
   addApproveOperations(account, rng);
   return account;
 }
