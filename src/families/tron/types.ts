@@ -115,7 +115,7 @@ export type FreezeTransactionData = {
 };
 export type SendTransactionDataSuccess = {
   raw_data_hex?: string;
-  raw_data: Record<string, any>;
+  raw_data: Record<string, any> | undefined;
   txID: string;
   signature: string[] | null | undefined;
 };

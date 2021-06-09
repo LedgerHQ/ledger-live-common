@@ -1,10 +1,7 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import { decodeAddress } from "@polkadot/util-crypto";
 import type { Account, OperationType } from "../../types";
-
 import type { Transaction } from "./types";
-
 export const EXISTENTIAL_DEPOSIT = BigNumber(10000000000);
 export const MINIMUM_BOND_AMOUNT = BigNumber(10000000000);
 export const MAX_NOMINATIONS = 16;
@@ -24,6 +21,7 @@ export const isValidAddress = (
   ss58Format: number = POLKADOT_SS58_PREFIX
 ): boolean => {
   if (!address) return false;
+
   try {
     decodeAddress(address, false, ss58Format);
     return true;
@@ -81,7 +79,6 @@ export const hasExternalStash = (a: Account): boolean => {
  */
 export const canBond = (a: Account): boolean => {
   const { balance } = a;
-
   return EXISTENTIAL_DEPOSIT.lte(balance);
 };
 
@@ -96,6 +93,7 @@ export const getMinimalLockedBalance = (a: Account): BigNumber => {
   if (remainingActiveLockedBalance.lt(MINIMUM_BOND_AMOUNT)) {
     return MINIMUM_BOND_AMOUNT.minus(remainingActiveLockedBalance);
   }
+
   return BigNumber(0);
 };
 
@@ -162,14 +160,12 @@ export const isFirstBond = (a: Account): boolean => !isStash(a);
  */
 export const getNonce = (a: Account): number => {
   const lastPendingOp = a.pendingOperations[0];
-
   const nonce = Math.max(
     a.polkadotResources?.nonce || 0,
     lastPendingOp && typeof lastPendingOp.transactionSequenceNumber === "number"
       ? lastPendingOp.transactionSequenceNumber + 1
       : 0
   );
-
   return nonce;
 };
 
@@ -229,10 +225,11 @@ export const calculateAmount = ({
   a,
   t,
 }: {
-  a: Account,
-  t: Transaction,
+  a: Account;
+  t: Transaction;
 }): BigNumber => {
   let amount = t.amount;
+
   if (t.useAllAmount) {
     switch (t.mode) {
       case "send":
@@ -261,10 +258,8 @@ export const calculateAmount = ({
 
   return amount.lt(0) ? BigNumber(0) : amount;
 };
-
 export const getMinimumBalance = (a: Account): BigNumber => {
   const lockedBalance = a.balance.minus(a.spendableBalance);
-
   return lockedBalance.lte(EXISTENTIAL_DEPOSIT)
     ? EXISTENTIAL_DEPOSIT.minus(lockedBalance)
     : BigNumber(0);

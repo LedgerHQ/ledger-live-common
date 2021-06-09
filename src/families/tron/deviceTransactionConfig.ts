@@ -1,13 +1,18 @@
-// @flow
-
 import type { AccountLike, Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
 import { getMainAccount } from "../../account";
 import type { DeviceTransactionField } from "../../transaction";
 
 export type ExtraDeviceTransactionField =
-  | { type: "tron.resource", label: string, value: string }
-  | { type: "tron.votes", label: string };
+  | {
+      type: "tron.resource";
+      label: string;
+      value: string;
+    }
+  | {
+      type: "tron.votes";
+      label: string;
+    };
 
 function getDeviceTransactionConfig({
   transaction: { votes, resource, mode },
@@ -15,13 +20,13 @@ function getDeviceTransactionConfig({
   parentAccount,
   status: { amount },
 }: {
-  account: AccountLike,
-  parentAccount: ?Account,
-  transaction: Transaction,
-  status: TransactionStatus,
+  account: AccountLike;
+  parentAccount: Account | null | undefined;
+  transaction: Transaction;
+  status: TransactionStatus;
 }): Array<DeviceTransactionField> {
   const mainAccount = getMainAccount(account, parentAccount);
-  const fields = [];
+  const fields: Array<DeviceTransactionField> = [];
 
   if (resource) {
     fields.push({

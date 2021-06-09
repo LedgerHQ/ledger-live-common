@@ -1,13 +1,10 @@
-// @flow
-
 import { BigNumber } from "bignumber.js";
 import { canUnbond, MAX_UNLOCKINGS } from "./logic";
 import type { Account } from "../../types";
-
 export default () => {
   describe("canUnbond", () => {
     test("can unbond", () => {
-      const account: $Shape<Account> = {
+      const account: Partial<Account> = {
         polkadotResources: {
           controller: "",
           stash: "",
@@ -25,11 +22,10 @@ export default () => {
           ],
         },
       };
-
       expect(canUnbond(account)).toBeTruthy();
     });
     test("can't unbond because unlockings is too much", () => {
-      const account: $Shape<Account> = {
+      const account: Partial<Account> = {
         polkadotResources: {
           controller: "",
           stash: "",
@@ -47,12 +43,10 @@ export default () => {
           ],
         },
       };
-
       expect(canUnbond(account)).toBeFalsy();
     });
-
     test("can't unbond because not enough lockedBalance", () => {
-      const account: $Shape<Account> = {
+      const account: Partial<Account> = {
         polkadotResources: {
           controller: "",
           stash: "",
@@ -70,7 +64,6 @@ export default () => {
           ],
         },
       };
-
       expect(canUnbond(account)).toBeFalsy();
     });
   });

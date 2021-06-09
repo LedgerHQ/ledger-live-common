@@ -88,6 +88,7 @@ export const freezeTronTransaction = async (
   const result = await post(url, txData);
   return result;
 };
+
 export const unfreezeTronTransaction = async (
   a: Account,
   t: Transaction
@@ -101,6 +102,7 @@ export const unfreezeTronTransaction = async (
   const result = await post(url, txData);
   return result;
 };
+
 // Send trx or trc10/trc20 tokens
 export const createTronTransaction = async (
   a: Account,

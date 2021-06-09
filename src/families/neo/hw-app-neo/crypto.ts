@@ -1,13 +1,9 @@
-// @flow
 // from https://github.com/CityOfZion/neon-js
-
 import hexEncoding from "crypto-js/enc-hex";
 import SHA256 from "crypto-js/sha256";
 import RIPEMD160 from "crypto-js/ripemd160";
-
 import base58 from "bs58";
 import { ab2hexstring, hexstring2ab, reverseHex } from "../../../convert";
-
 const ADDR_VERSION = "17";
 
 function hash(hex, hashingFunction) {
@@ -41,6 +37,7 @@ function sha256(hex: string): string {
  */
 function getPublicKeyEncoded(unencodedKey: string): string {
   const publicKeyArray = new Uint8Array(hexstring2ab(unencodedKey));
+
   if (publicKeyArray[64] % 2 === 1) {
     return "03" + ab2hexstring(publicKeyArray.slice(1, 33));
   } else {
@@ -66,6 +63,7 @@ export const getScriptHashFromPublicKey = (publicKey: string): string => {
   if (publicKey.substring(0, 2) === "04") {
     publicKey = getPublicKeyEncoded(publicKey);
   }
+
   const verificationScript = getVerificationScriptFromPublicKey(publicKey);
   return reverseHex(hash160(verificationScript));
 };

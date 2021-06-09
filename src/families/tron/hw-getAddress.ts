@@ -1,5 +1,3 @@
-// @flow
-
 import Trx from "@ledgerhq/hw-app-trx";
 import type { Resolver } from "../../hw/getAddress/types";
 

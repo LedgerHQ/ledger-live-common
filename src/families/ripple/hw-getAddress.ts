@@ -1,5 +1,3 @@
-// @flow
-
 import Xrp from "@ledgerhq/hw-app-xrp";
 import type { Resolver } from "../../hw/getAddress/types";
 
@@ -13,7 +11,12 @@ const resolver: Resolver = async (
     verify,
     askChainCode || false
   );
-  return { path, address, publicKey, chainCode };
+  return {
+    path,
+    address,
+    publicKey,
+    chainCode,
+  };
 };
 
 export default resolver;

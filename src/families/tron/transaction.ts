@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import type { Transaction, TransactionRaw } from "./types";
 import {
@@ -16,12 +15,12 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     ...common,
     networkInfo: networkInfo && {
       family: "tron",
-      freeNetUsed: BigNumber(networkInfo.freeNetUsed),
-      freeNetLimit: BigNumber(networkInfo.freeNetLimit),
-      netUsed: BigNumber(networkInfo.netUsed),
-      netLimit: BigNumber(networkInfo.netLimit),
-      energyUsed: BigNumber(networkInfo.energyUsed),
-      energyLimit: BigNumber(networkInfo.energyLimit),
+      freeNetUsed: new BigNumber(networkInfo.freeNetUsed),
+      freeNetLimit: new BigNumber(networkInfo.freeNetLimit),
+      netUsed: new BigNumber(networkInfo.netUsed),
+      netLimit: new BigNumber(networkInfo.netLimit),
+      energyUsed: new BigNumber(networkInfo.energyUsed),
+      energyLimit: new BigNumber(networkInfo.energyLimit),
     },
     family: tr.family,
     mode: tr.mode,
@@ -80,4 +79,8 @@ ${t.mode.toUpperCase()}${t.resource ? " " + t.resource : ""} ${
 TO ${t.recipient}`;
 };
 
-export default { formatTransaction, fromTransactionRaw, toTransactionRaw };
+export default {
+  formatTransaction,
+  fromTransactionRaw,
+  toTransactionRaw,
+};
