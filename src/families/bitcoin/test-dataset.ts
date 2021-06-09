@@ -1,7 +1,5 @@
-// @flow
 import type { DatasetTest } from "../../types";
 import type { Transaction } from "./types";
-
 import bitcoin_cash from "./datasets/bitcoin_cash";
 import bitcoin_gold from "./datasets/bitcoin_gold";
 import bitcoin from "./datasets/bitcoin";
@@ -20,7 +18,6 @@ import stealthcoin from "./datasets/stealthcoin";
 import vertcoin from "./datasets/vertcoin";
 import viacoin from "./datasets/viacoin";
 import zcash from "./datasets/zcash";
-
 const dataset: DatasetTest<Transaction> = {
   implementations: ["libcore", "mock"],
   currencies: {
@@ -44,5 +41,4 @@ const dataset: DatasetTest<Transaction> = {
     zcash,
   },
 };
-
 export default dataset;
