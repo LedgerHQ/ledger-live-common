@@ -1,18 +1,15 @@
-// @flow
-
 import { connect } from "react-redux";
 import React from "react";
 import Transport from "@ledgerhq/hw-transport";
 import { NotEnoughBalance } from "@ledgerhq/errors";
 import { log } from "@ledgerhq/logs";
-
 export function checkLibs(
-  libs: $Shape<{
-    NotEnoughBalance: typeof NotEnoughBalance,
-    React: typeof React,
-    log: typeof log,
-    Transport: typeof Transport,
-    connect: typeof connect,
+  libs: Partial<{
+    NotEnoughBalance: typeof NotEnoughBalance;
+    React: typeof React;
+    log: typeof log;
+    Transport: typeof Transport;
+    connect: typeof connect;
   }>
 ) {
   check(libs.NotEnoughBalance, NotEnoughBalance, "@ledgerhq/errors");
