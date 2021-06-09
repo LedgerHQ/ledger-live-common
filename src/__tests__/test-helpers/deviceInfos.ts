@@ -1,7 +1,5 @@
-// @flow
 import type { DeviceModelId } from "@ledgerhq/devices";
 import type { DeviceInfo } from "../../types/manager";
-
 const deviceInfos = {
   NanoS120: {
     modelId: "nanoS",
@@ -74,15 +72,19 @@ const deviceInfos = {
     },
   },
 };
-
 export function lenseDevice(
-  id: $Keys<typeof deviceInfos>
-): { deviceInfo: DeviceInfo, modelId: DeviceModelId } {
+  id: keyof typeof deviceInfos
+): {
+  deviceInfo: DeviceInfo;
+  modelId: DeviceModelId;
+} {
   return deviceInfos[id];
 }
-
 export function lenseDevices(
-  ids: Array<$Keys<typeof deviceInfos>>
-): Array<{ deviceInfo: DeviceInfo, modelId: DeviceModelId }> {
+  ids: Array<keyof typeof deviceInfos>
+): Array<{
+  deviceInfo: DeviceInfo;
+  modelId: DeviceModelId;
+}> {
   return ids.map((id) => deviceInfos[id]);
 }

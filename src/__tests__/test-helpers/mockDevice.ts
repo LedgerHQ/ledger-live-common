@@ -1,15 +1,12 @@
-// @flow
 import invariant from "invariant";
 import {
   createTransportReplayer,
   RecordStore,
 } from "@ledgerhq/hw-transport-mocker";
 import { registerTransportModule } from "../../hw";
-
 let idCounter = 0;
 const transports = {};
 const recordStores = {};
-
 export function releaseMockDevice(id: string) {
   const store = recordStores[id];
   invariant(store, "MockDevice does not exist (%s)", id);
@@ -17,7 +14,6 @@ export function releaseMockDevice(id: string) {
   delete recordStores[id];
   delete transports[id];
 }
-
 export function mockDeviceWithAPDUs(apdus: string) {
   const id = `mock:${++idCounter}`;
   const store = RecordStore.fromString(apdus);
@@ -25,7 +21,6 @@ export function mockDeviceWithAPDUs(apdus: string) {
   transports[id] = createTransportReplayer(store);
   return id;
 }
-
 registerTransportModule({
   id: "mock",
   open: (id) => {
