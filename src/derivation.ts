@@ -234,13 +234,17 @@ export const getAllDerivationModes = (): DerivationMode[] =>
   Object.keys(modes) as DerivationMode[];
 export const getMandatoryEmptyAccountSkip = (
   derivationMode: DerivationMode
-): number => modes[derivationMode].mandatoryEmptyAccountSkip || 0;
+): number =>
+  (modes[derivationMode] as { mandatoryEmptyAccountSkip: number })
+    .mandatoryEmptyAccountSkip || 0;
 export const isInvalidDerivationMode = (
   derivationMode: DerivationMode
-): boolean => modes[derivationMode].isInvalid || false;
+): boolean =>
+  (modes[derivationMode] as { isInvalid: boolean }).isInvalid || false;
 export const isSegwitDerivationMode = (
   derivationMode: DerivationMode
-): boolean => modes[derivationMode].isSegwit || false;
+): boolean =>
+  (modes[derivationMode] as { isSegwit: boolean }).isSegwit || false;
 export const getLibcoreConfig = (
   currency: CryptoCurrency,
   derivationMode: DerivationMode
@@ -248,7 +252,8 @@ export const getLibcoreConfig = (
   const obj = {};
   const extra = {
     ...extraConfigPerCurrency[currency.id],
-    ...modes[derivationMode].libcoreConfig,
+    ...(modes[derivationMode] as { libcoreConfig: LibcoreConfig })
+      .libcoreConfig,
   };
 
   for (const k in extra) {
@@ -265,21 +270,23 @@ export const getLibcoreConfig = (
 };
 export const isUnsplitDerivationMode = (
   derivationMode: DerivationMode
-): boolean => modes[derivationMode].isUnsplit || false;
+): boolean =>
+  (modes[derivationMode] as { isUnsplit: boolean }).isUnsplit || false;
 export const isIterableDerivationMode = (
   derivationMode: DerivationMode
-): boolean => !modes[derivationMode].isNonIterable;
+): boolean =>
+  !(modes[derivationMode] as { isNonIterable: boolean }).isNonIterable;
 export const getDerivationModeStartsAt = (
   derivationMode: DerivationMode
-): number => modes[derivationMode].startsAt || 0;
+): number => (modes[derivationMode] as { startsAt: number }).startsAt || 0;
 export const getPurposeDerivationMode = (
   derivationMode: DerivationMode
-): number => modes[derivationMode].purpose || 44;
+): number => (modes[derivationMode] as { purpose: number }).purpose || 44;
 export const getTagDerivationMode = (
   currency: CryptoCurrency,
   derivationMode: DerivationMode
 ): string | null | undefined => {
-  const mode = modes[derivationMode];
+  const mode = modes[derivationMode] as { tag: any; isInvalid: any };
 
   if (mode.tag) {
     return mode.tag;
@@ -297,13 +304,15 @@ export const getTagDerivationMode = (
 };
 export const getAddressFormatDerivationMode = (
   derivationMode: DerivationMode
-): string => modes[derivationMode].addressFormat || "legacy";
+): string =>
+  (modes[derivationMode] as { addressFormat: string }).addressFormat ||
+  "legacy";
 export const derivationModeSupportsIndex = (
   derivationMode: DerivationMode,
   index: number
 ): boolean => {
   const mode = modes[derivationMode];
-  if (mode.skipFirst && index === 0) return false;
+  if ((mode as { skipFirst: boolean }).skipFirst && index === 0) return false;
   return true;
 };
 const currencyForceCoinType = {
@@ -321,7 +330,10 @@ export const getDerivationScheme = ({
   derivationMode: DerivationMode;
   currency: CryptoCurrency;
 }): string => {
-  const { overridesDerivation, overridesCoinType } = modes[derivationMode];
+  const { overridesDerivation, overridesCoinType } = modes[derivationMode] as {
+    overridesDerivation: string;
+    overridesCoinType: string;
+  };
   if (overridesDerivation) return overridesDerivation;
   const splitFrom =
     isUnsplitDerivationMode(derivationMode) && currency.forkedFrom;
@@ -446,9 +458,11 @@ export const getPreferredNewAccountScheme = (
 ): DerivationMode[] | null | undefined => {
   if (currency.family !== "bitcoin") return null;
   const derivationsModes = getDerivationModesForCurrency(currency);
-  const list = preferredList.filter((p) => derivationsModes.includes(p));
+  const list = preferredList.filter((p) =>
+    derivationsModes.includes(p as DerivationMode)
+  );
   if (list.length === 1) return null;
-  return list;
+  return list as DerivationMode[];
 };
 export const getDefaultPreferredNewAccountScheme = (
   currency: CryptoCurrency
