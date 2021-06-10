@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import type {
   AccountLike,
@@ -8,17 +7,19 @@ import type {
 } from "../types";
 import { flattenAccounts, getAccountCurrency } from "./helpers";
 import type { FlattenAccountsOptions } from "./helpers";
-
 type AccountComparator = (a: AccountLike, b: AccountLike) => number;
 
 const sortNameLense = (a: AccountLike): string => {
   switch (a.type) {
     case "Account":
       return a.name;
+
     case "TokenAccount":
       return a.token.name;
+
     case "ChildAccount":
       return a.currency.name;
+
     default:
       return "";
   }
@@ -29,30 +30,34 @@ export const sortAccountsComparatorFromOrder = (
   calculateCountervalue: (
     currency: TokenCurrency | CryptoCurrency,
     value: BigNumber
-  ) => ?BigNumber
+  ) => BigNumber | null | undefined
 ): AccountComparator => {
   const [order, sort] = orderAccounts.split("|");
   const ascValue = sort === "desc" ? -1 : 1;
+
   if (order === "name") {
     return (a, b) =>
       ascValue * sortNameLense(a).localeCompare(sortNameLense(b));
   }
+
   const cvCaches = {};
+
   const lazyCalcCV = (a) => {
     if (a.id in cvCaches) return cvCaches[a.id];
     const v =
-      calculateCountervalue(getAccountCurrency(a), a.balance) || BigNumber(-1);
+      calculateCountervalue(getAccountCurrency(a), a.balance) ||
+      new BigNumber(-1);
     cvCaches[a.id] = v;
     return v;
   };
+
   return (a, b) => {
     const diff = ascValue * lazyCalcCV(a).minus(lazyCalcCV(b)).toNumber();
     if (diff === 0) return sortNameLense(a).localeCompare(sortNameLense(b));
     return diff;
   };
 };
-
-export const comparatorSortAccounts = <TA: AccountLike>(
+export const comparatorSortAccounts = <TA extends AccountLike>(
   accounts: TA[],
   comparator: AccountComparator
 ): TA[] => {
@@ -62,14 +67,15 @@ export const comparatorSortAccounts = <TA: AccountLike>(
       index,
     }))
     .sort((a, b) => comparator(a.account, b.account));
+
   if (meta.every((m, i) => m.index === i)) {
     // account ordering is preserved, we keep the same array reference (this should happen most of the time)
     return accounts;
   }
+
   // otherwise, need to reorder
   return meta.map((m) => accounts[m.index]);
 };
-
 // flatten accounts and sort between them (used for grid mode)
 export const flattenSortAccounts = (
   accounts: Account[],
@@ -78,7 +84,6 @@ export const flattenSortAccounts = (
 ): AccountLike[] => {
   return comparatorSortAccounts(flattenAccounts(accounts, o), comparator);
 };
-
 // sort top level accounts and the inner sub accounts if necessary (used for lists)
 export const nestedSortAccounts = (
   topAccounts: Account[],
@@ -91,10 +96,7 @@ export const nestedSortAccounts = (
     const subAccounts = comparatorSortAccounts(a.subAccounts, comparator);
     if (subAccounts === a.subAccounts) return a;
     oneAccountHaveChanged = true;
-    return {
-      ...a,
-      subAccounts,
-    };
+    return { ...a, subAccounts };
   });
   // then we sort again between them
   return comparatorSortAccounts(

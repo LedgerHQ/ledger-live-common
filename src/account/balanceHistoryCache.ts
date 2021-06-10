@@ -1,4 +1,3 @@
-// @flow
 import type {
   BalanceHistoryCache,
   BalanceHistoryDataCache,
@@ -9,7 +8,6 @@ import type {
 } from "../types";
 import { getOperationAmountNumberWithInternals } from "../operation";
 import { granularities } from "../portfolio/v2/range";
-
 export const emptyHistoryCache = {
   HOUR: {
     latestDate: null,
@@ -27,18 +25,18 @@ export const emptyHistoryCache = {
 
 function generateHistoryFromOperationsG(
   account: AccountLike,
-  g: GranularityId,
-  // partial=true allows a faster implementation that only recompose the last part of the history
+  g: GranularityId, // partial=true allows a faster implementation that only recompose the last part of the history
   // to only use when we do not recalculate the history but we just want to access it
-  partial: boolean = false
+  partial = false
 ): BalanceHistoryDataCache {
   const { increment, startOf, maxDatapoints } = granularities[g];
   const latestDate = startOf(new Date()).getTime();
-  let balances = [];
+  let balances: number[] = [];
   let { balance } = account;
   const operationsLength = account.operations.length;
   let date = latestDate;
   const reference = account.balanceHistoryCache[g];
+
   for (let i = 0; i < operationsLength; ) {
     if (
       (partial && reference.latestDate && date < reference.latestDate) ||
@@ -48,19 +46,29 @@ function generateHistoryFromOperationsG(
     }
 
     // accumulate operations after time t
-    while (i < operationsLength && account.operations[i].date > date) {
+    while (
+      i < operationsLength &&
+      // FIXME: added valueOf here to make typescript happy
+      account.operations[i].date.valueOf() > date
+    ) {
       balance = balance.minus(
         getOperationAmountNumberWithInternals(account.operations[i])
       );
       i++;
     }
+
     balances.unshift(Math.max(balance.toNumber(), 0));
     date -= increment;
   }
+
   if (partial) {
     balances = reference.balances.concat(balances);
   }
-  return { balances, latestDate };
+
+  return {
+    balances,
+    latestDate,
+  };
 }
 
 export function generateHistoryFromOperations(
@@ -83,9 +91,11 @@ export function getAccountHistoryBalances(
   const { balances, latestDate } = account.balanceHistoryCache[g];
   const { startOf } = granularities[g];
   const now = startOf(new Date()).getTime();
+
   if (latestDate && latestDate === now) {
     return balances;
   }
+
   // account cache was not up to date. recalculating on the fly
   return generateHistoryFromOperationsG(account, g, true).balances;
 }
@@ -102,8 +112,10 @@ export function recalculateAccountBalanceHistories(
     // we only regenerate if it was not overriden by the implemenetation.
     res = { ...res, balanceHistoryCache: generateHistoryFromOperations(res) };
   }
+
   const prevSubAccounts = prev.subAccounts;
   const nextSubAccounts = res.subAccounts;
+
   if (
     nextSubAccounts &&
     prevSubAccounts &&
@@ -113,6 +125,7 @@ export function recalculateAccountBalanceHistories(
     res.subAccounts = nextSubAccounts.map(
       (subAccount: SubAccount): SubAccount => {
         const old = prevSubAccounts.find((a) => a.id === subAccount.id);
+
         if (
           !old ||
           old.balanceHistoryCache === subAccount.balanceHistoryCache
@@ -123,6 +136,7 @@ export function recalculateAccountBalanceHistories(
             balanceHistoryCache: generateHistoryFromOperations(subAccount),
           };
         }
+
         return subAccount;
       }
     );

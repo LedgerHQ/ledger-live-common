@@ -1,5 +1,3 @@
-// @flow
-
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import {
@@ -18,8 +16,8 @@ const isSignificantAccount = (acc) =>
   acc.balance.gt(10 ** (getAccountUnit(acc).magnitude - 6));
 
 const formatOp = (
-  unitByAccountId: (string) => ?Unit,
-  familySpecific: (Operation, ?Unit) => string
+  unitByAccountId: (arg0: string) => Unit | null | undefined,
+  familySpecific: (arg0: Operation, arg1: Unit | null | undefined) => string
 ) => {
   const format = (op: Operation, level = 0) => {
     const unit = unitByAccountId(op.accountId);
@@ -52,13 +50,14 @@ const formatOp = (
       .join("");
     return `\n${head}${sub}`;
   };
+
   return (op: Operation) => format(op, 0);
 };
 
 function maybeDisplaySumOfOpsIssue(ops, balance, unit) {
   const sumOfOps = ops.reduce(
     (sum, op) => sum.plus(getOperationAmountNumber(op)),
-    BigNumber(0)
+    new BigNumber(0)
   );
   if (sumOfOps.eq(balance)) return "";
   return (
@@ -71,7 +70,7 @@ function maybeDisplaySumOfOpsIssue(ops, balance, unit) {
   );
 }
 
-const cliFormat = (account, level) => {
+const cliFormat = (account, level?: string) => {
   const {
     name,
     freshAddress,
@@ -81,33 +80,28 @@ const cliFormat = (account, level) => {
     xpub,
     operations,
   } = account;
-
   const balance = formatCurrencyUnit(account.unit, account.balance, {
     showCode: true,
   });
-
   const opsCount = `${operations.length}ops`;
   const freshInfo = `${freshAddress} on ${freshAddressPath}`;
   const derivationInfo = `${derivationMode}#${index}`;
   let str = `${name}: ${balance} (${opsCount}) (${freshInfo}) ${derivationInfo} ${
     xpub || ""
   }`;
-
   if (level === "head") return str;
-
   str += maybeDisplaySumOfOpsIssue(
     operations,
     account.balance,
     getAccountUnit(account)
   );
-
   const family = byFamily[account.currency.family];
+
   if (family && family.formatAccountSpecifics) {
     str += family.formatAccountSpecifics(account);
   }
 
   const subAccounts = account.subAccounts || [];
-
   str += subAccounts
     .map(
       (ta) =>
@@ -126,9 +120,7 @@ const cliFormat = (account, level) => {
         maybeDisplaySumOfOpsIssue(ta.operations, ta.balance, getAccountUnit(ta))
     )
     .join("\n");
-
   if (level === "basic") return str;
-
   str += "\nOPERATIONS (" + operations.length + ")";
   str += operations
     .map(
@@ -143,31 +135,27 @@ const cliFormat = (account, level) => {
           if (family && family.formatOperationSpecifics) {
             return family.formatOperationSpecifics(operation, unit);
           }
+
           return "";
         }
       )
     )
     .join("");
-
   return str;
 };
 
 const stats = (account) => {
   const { subAccounts, operations } = account;
-
   const sumOfAllOpsNumber = operations.reduce(
     (sum: BigNumber, op) => sum.plus(getOperationAmountNumberWithInternals(op)),
-    BigNumber(0)
+    new BigNumber(0)
   );
-
   const sumOfAllOps = formatCurrencyUnit(account.unit, sumOfAllOpsNumber, {
     showCode: true,
   });
-
   const balance = formatCurrencyUnit(account.unit, account.balance, {
     showCode: true,
   });
-
   return {
     balance,
     sumOfAllOps,
@@ -176,7 +164,7 @@ const stats = (account) => {
   };
 };
 
-export const accountFormatters: { [_: string]: (Account) => any } = {
+export const accountFormatters: Record<string, (arg0: Account) => any> = {
   json: (account) => JSON.stringify(toAccountRaw(account)),
   head: (account) => cliFormat(account, "head"),
   default: (account) => cliFormat(account),
@@ -189,30 +177,31 @@ export const accountFormatters: { [_: string]: (Account) => any } = {
       .map((ta) => getAccountCurrency(ta).ticker)
       .join("\n"),
 };
-
-export function formatAccount(
-  account: Account,
-  format: string = "full"
-): string {
+export function formatAccount(account: Account, format = "full"): string {
   const f = accountFormatters[format];
   invariant(f, "missing account formatter=" + format);
   return f(account);
 }
-
-export function formatOperation(account: ?Account): (Operation) => string {
+export function formatOperation(
+  account: Account | null | undefined
+): (arg0: Operation) => string {
   const unitByAccountId = (id: string) => {
     if (!account) return;
     if (account.id === id) return account.unit;
     const ta = (account.subAccounts || []).find((a) => a.id === id);
     if (ta) return getAccountUnit(ta);
   };
+
   const familyExtra = (operation, unit) => {
     if (!account) return "";
     const family = byFamily[account.currency.family];
+
     if (family && family.formatOperationSpecifics) {
       return family.formatOperationSpecifics(operation, unit);
     }
+
     return "";
   };
+
   return formatOp(unitByAccountId, familyExtra);
 }

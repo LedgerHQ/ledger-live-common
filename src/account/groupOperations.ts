@@ -1,30 +1,29 @@
-// @flow
 import type { AccountLikeArray, AccountLike, Operation } from "../types";
 import { flattenAccounts } from "./helpers";
 import { flattenOperationWithInternals } from "../operation";
-
 export type DailyOperationsSection = {
-  day: Date,
-  data: Operation[],
+  day: Date;
+  data: Operation[];
 };
-
 export type DailyOperations = {
   // operations grouped by day
-  sections: DailyOperationsSection[],
+  sections: DailyOperationsSection[];
   // Is the sections complete? means there is no more operations to pull
-  completed: boolean,
+  completed: boolean;
 };
 
 function startOfDay(t) {
   return new Date(t.getFullYear(), t.getMonth(), t.getDate());
 }
 
-const emptyDailyOperations = { sections: [], completed: true };
-
+const emptyDailyOperations = {
+  sections: [],
+  completed: true,
+};
 type GroupOpsByDayOpts = {
-  count: number,
-  withSubAccounts?: boolean,
-  filterOperation?: (Operation, AccountLike) => boolean,
+  count: number;
+  withSubAccounts?: boolean;
+  filterOperation?: (arg0: Operation, arg1: AccountLike) => boolean;
 };
 
 const hasStableOperation = (account, hash) =>
@@ -44,14 +43,26 @@ export function groupAccountsOperationsByDay(
   const indexes: number[] = Array(accounts.length).fill(0);
   // Track indexes of account.pendingOperations[] for each account
   const indexesPending: number[] = Array(accounts.length).fill(0);
+
   // Returns the next most recent operation from the account with current indexes
-  function getNext(): ?{ ops: Operation[], date: Date } {
-    let bestOp: ?Operation;
-    let bestOpInfo = { accountI: 0, fromPending: false };
+  function getNext():
+    | {
+        ops: Operation[];
+        date: Date;
+      }
+    | null
+    | undefined {
+    let bestOp: Operation | null | undefined;
+    let bestOpInfo = {
+      accountI: 0,
+      fromPending: false,
+    };
+
     for (let i = 0; i < accounts.length; i++) {
       const account = accounts[i];
       // look in operations
       let op = account.operations[indexes[i]];
+
       if (filterOperation) {
         // skip operation we want to filter out
         while (op && !filterOperation(op, account)) {
@@ -61,17 +72,18 @@ export function groupAccountsOperationsByDay(
 
       if (op && (!bestOp || op.date > bestOp.date)) {
         bestOp = op;
-        bestOpInfo = { accountI: i, fromPending: false };
+        bestOpInfo = {
+          accountI: i,
+          fromPending: false,
+        };
       }
 
       // look in pending operations
       let opP = account.pendingOperations[indexesPending[i]];
 
       while (
-        opP &&
-        // skip all pending operations that are already in operations
-        (hasStableOperation(account, opP.hash) ||
-          // but also if we want to filter it
+        opP && // skip all pending operations that are already in operations
+        (hasStableOperation(account, opP.hash) || // but also if we want to filter it
           (filterOperation && !filterOperation(opP, account)))
       ) {
         opP = account.pendingOperations[++indexesPending[i]];
@@ -79,7 +91,10 @@ export function groupAccountsOperationsByDay(
 
       if (opP && (!bestOp || opP.date > bestOp.date)) {
         bestOp = opP;
-        bestOpInfo = { accountI: i, fromPending: true };
+        bestOpInfo = {
+          accountI: i,
+          fromPending: true,
+        };
       }
     }
 
@@ -89,34 +104,52 @@ export function groupAccountsOperationsByDay(
       } else {
         indexes[bestOpInfo.accountI]++;
       }
+
       const ops = flattenOperationWithInternals(bestOp);
-      return { ops, date: bestOp.date };
+      return {
+        ops,
+        date: bestOp.date,
+      };
     }
   }
 
   let next = getNext();
   if (!next) return emptyDailyOperations;
-  const sections = [];
+  const sections: Array<{
+    day: Date;
+    data: Operation[];
+  }> = [];
   let totalOperations = 0;
   let day = startOfDay(next.date);
   let data: Operation[] = [];
+
   while (totalOperations < count && next) {
     if (next.date < day) {
       if (data.length > 0) {
         const slicedData = data.slice(0, count - totalOperations);
-        sections.push({ day, data: slicedData });
+        sections.push({
+          day,
+          data: slicedData,
+        });
         totalOperations += slicedData.length;
       }
+
       day = startOfDay(next.date);
       data = next.ops;
     } else {
       data = data.concat(next.ops);
     }
+
     next = getNext();
   }
+
   if (data.length > 0 && totalOperations < count) {
-    sections.push({ day, data });
+    sections.push({
+      day,
+      data,
+    });
   }
+
   return {
     sections,
     completed: !next,

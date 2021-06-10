@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import type {
   Account,
@@ -48,23 +47,19 @@ import {
   emptyHistoryCache,
   generateHistoryFromOperations,
 } from "./balanceHistoryCache";
-
 export { toCosmosResourcesRaw, fromCosmosResourcesRaw };
 export { toAlgorandResourcesRaw, fromAlgorandResourcesRaw };
 export { toBitcoinResourcesRaw, fromBitcoinResourcesRaw };
 export { toPolkadotResourcesRaw, fromPolkadotResourcesRaw };
-
 export function toBalanceHistoryRaw(b: BalanceHistory): BalanceHistoryRaw {
   return b.map(({ date, value }) => [date.toISOString(), value.toString()]);
 }
-
 export function fromBalanceHistoryRaw(b: BalanceHistoryRaw): BalanceHistory {
   return b.map(([date, value]) => ({
     date: new Date(date),
     value: new BigNumber(value),
   }));
 }
-
 export function toBalanceHistoryRawMap(
   bhm: BalanceHistoryMap
 ): BalanceHistoryRawMap {
@@ -72,9 +67,8 @@ export function toBalanceHistoryRawMap(
   Object.keys(bhm).forEach((range) => {
     map[range] = toBalanceHistoryRaw(bhm[range]);
   });
-  return map;
+  return map as BalanceHistoryRawMap;
 }
-
 export function fromBalanceHistoryRawMap(
   bhm: BalanceHistoryRawMap
 ): BalanceHistoryMap {
@@ -82,9 +76,8 @@ export function fromBalanceHistoryRawMap(
   Object.keys(bhm).forEach((range) => {
     map[range] = fromBalanceHistoryRaw(bhm[range]);
   });
-  return map;
+  return map as BalanceHistoryMap;
 }
-
 export const toOperationRaw = (
   {
     date,
@@ -107,17 +100,20 @@ export const toOperationRaw = (
   preserveSubOperation?: boolean
 ): OperationRaw => {
   let e = extra;
+
   if (e) {
     const family = inferFamilyFromAccountId(accountId);
+
     if (family) {
       const abf = accountByFamily[family];
+
       if (abf && abf.toOperationExtraRaw) {
         e = abf.toOperationExtraRaw(e);
       }
     }
   }
 
-  const copy: $Exact<OperationRaw> = {
+  const copy: OperationRaw = {
     id,
     hash,
     type,
@@ -143,35 +139,41 @@ export const toOperationRaw = (
   if (subOperations && preserveSubOperation) {
     copy.subOperations = subOperations.map((o) => toOperationRaw(o));
   }
+
   if (internalOperations) {
     copy.internalOperations = internalOperations.map((o) => toOperationRaw(o));
   }
+
   return copy;
 };
-
 export const inferSubOperations = (
   txHash: string,
   subAccounts: SubAccount[]
 ): Operation[] => {
-  const all = [];
+  const all: Operation[] = [];
+
   for (let i = 0; i < subAccounts.length; i++) {
     const ta = subAccounts[i];
+
     for (let j = 0; j < ta.operations.length; j++) {
       const op = ta.operations[j];
+
       if (op.hash === txHash) {
         all.push(op);
       }
     }
+
     for (let j = 0; j < ta.pendingOperations.length; j++) {
       const op = ta.pendingOperations[j];
+
       if (op.hash === txHash) {
         all.push(op);
       }
     }
   }
+
   return all;
 };
-
 export const fromOperationRaw = (
   {
     date,
@@ -191,13 +193,16 @@ export const fromOperationRaw = (
     hasFailed,
   }: OperationRaw,
   accountId: string,
-  subAccounts?: ?(SubAccount[])
+  subAccounts?: SubAccount[] | null | undefined
 ): Operation => {
   let e = extra;
+
   if (e) {
     const family = inferFamilyFromAccountId(accountId);
+
     if (family) {
       const abf = accountByFamily[family];
+
       if (abf && abf.fromOperationExtraRaw) {
         e = abf.fromOperationExtraRaw(e);
       }
@@ -214,8 +219,8 @@ export const fromOperationRaw = (
     blockHash,
     blockHeight,
     date: new Date(date),
-    value: BigNumber(value),
-    fee: BigNumber(fee),
+    value: new BigNumber(value),
+    fee: new BigNumber(fee),
     extra: e || {},
   };
 
@@ -243,7 +248,6 @@ export const fromOperationRaw = (
 
   return res;
 };
-
 export const toTronResourcesRaw = ({
   frozen,
   delegatedFrozen,
@@ -261,7 +265,8 @@ export const toTronResourcesRaw = ({
   const delegatedFrozenBandwidth = delegatedFrozen.bandwidth;
   const delegatedFrozenEnergy = delegatedFrozen.energy;
   const cacheTransactionInfoById = {};
-  for (let k in cacheTx) {
+
+  for (const k in cacheTx) {
     const { fee, blockNumber, withdraw_amount, unfreeze_amount } = cacheTx[k];
     cacheTransactionInfoById[k] = [
       fee,
@@ -288,10 +293,14 @@ export const toTronResourcesRaw = ({
     },
     delegatedFrozen: {
       bandwidth: delegatedFrozenBandwidth
-        ? { amount: delegatedFrozenBandwidth.amount.toString() }
+        ? {
+            amount: delegatedFrozenBandwidth.amount.toString(),
+          }
         : undefined,
       energy: delegatedFrozenEnergy
-        ? { amount: delegatedFrozenEnergy.amount.toString() }
+        ? {
+            amount: delegatedFrozenEnergy.amount.toString(),
+          }
         : undefined,
     },
     votes,
@@ -311,7 +320,6 @@ export const toTronResourcesRaw = ({
     cacheTransactionInfoById,
   };
 };
-
 export const fromTronResourcesRaw = ({
   frozen,
   delegatedFrozen,
@@ -329,8 +337,9 @@ export const fromTronResourcesRaw = ({
   const delegatedFrozenBandwidth = delegatedFrozen.bandwidth;
   const delegatedFrozenEnergy = delegatedFrozen.energy;
   const cacheTransactionInfoById = {};
+
   if (cacheTransactionInfoByIdRaw) {
-    for (let k in cacheTransactionInfoByIdRaw) {
+    for (const k in cacheTransactionInfoByIdRaw) {
       const [
         fee,
         blockNumber,
@@ -345,39 +354,44 @@ export const fromTronResourcesRaw = ({
       };
     }
   }
+
   return {
     frozen: {
       bandwidth: frozenBandwidth
         ? {
-            amount: BigNumber(frozenBandwidth.amount),
+            amount: new BigNumber(frozenBandwidth.amount),
             expiredAt: new Date(frozenBandwidth.expiredAt),
           }
         : undefined,
       energy: frozenEnergy
         ? {
-            amount: BigNumber(frozenEnergy.amount),
+            amount: new BigNumber(frozenEnergy.amount),
             expiredAt: new Date(frozenEnergy.expiredAt),
           }
         : undefined,
     },
     delegatedFrozen: {
       bandwidth: delegatedFrozenBandwidth
-        ? { amount: BigNumber(delegatedFrozenBandwidth.amount) }
+        ? {
+            amount: new BigNumber(delegatedFrozenBandwidth.amount),
+          }
         : undefined,
       energy: delegatedFrozenEnergy
-        ? { amount: BigNumber(delegatedFrozenEnergy.amount) }
+        ? {
+            amount: new BigNumber(delegatedFrozenEnergy.amount),
+          }
         : undefined,
     },
     votes,
     tronPower,
-    energy: BigNumber(energy),
+    energy: new BigNumber(energy),
     bandwidth: {
-      freeUsed: BigNumber(bandwidth.freeUsed),
-      freeLimit: BigNumber(bandwidth.freeLimit),
-      gainedUsed: BigNumber(bandwidth.gainedUsed),
-      gainedLimit: BigNumber(bandwidth.gainedLimit),
+      freeUsed: new BigNumber(bandwidth.freeUsed),
+      freeLimit: new BigNumber(bandwidth.freeLimit),
+      gainedUsed: new BigNumber(bandwidth.gainedUsed),
+      gainedLimit: new BigNumber(bandwidth.gainedLimit),
     },
-    unwithdrawnReward: BigNumber(unwithdrawnReward),
+    unwithdrawnReward: new BigNumber(unwithdrawnReward),
     lastWithdrawnRewardDate: lastWithdrawnRewardDate
       ? new Date(lastWithdrawnRewardDate)
       : undefined,
@@ -385,27 +399,22 @@ export const fromTronResourcesRaw = ({
     cacheTransactionInfoById,
   };
 };
-
 export function fromSwapOperationRaw(raw: SwapOperationRaw): SwapOperation {
   const { fromAmount, toAmount } = raw;
-
   return {
     ...raw,
-    fromAmount: BigNumber(fromAmount),
-    toAmount: BigNumber(toAmount),
+    fromAmount: new BigNumber(fromAmount),
+    toAmount: new BigNumber(toAmount),
   };
 }
-
 export function toSwapOperationRaw(so: SwapOperation): SwapOperationRaw {
   const { fromAmount, toAmount } = so;
-
   return {
     ...so,
     fromAmount: fromAmount.toString(),
     toAmount: toAmount.toString(),
   };
 }
-
 export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
   const {
     id,
@@ -424,18 +433,22 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
     approvals,
   } = raw;
   const token = getTokenById(tokenId);
+
   const convertOperation = (op) => fromOperationRaw(op, id);
+
   const res = {
     type: "TokenAccount",
     id,
     parentId,
     token,
     starred: starred || false,
-    balance: BigNumber(balance),
+    balance: new BigNumber(balance),
     spendableBalance: spendableBalance
-      ? BigNumber(spendableBalance)
-      : BigNumber(balance),
-    compoundBalance: compoundBalance ? BigNumber(compoundBalance) : undefined,
+      ? new BigNumber(spendableBalance)
+      : new BigNumber(balance),
+    compoundBalance: compoundBalance
+      ? new BigNumber(compoundBalance)
+      : undefined,
     balanceHistory: balanceHistory
       ? fromBalanceHistoryRawMap(balanceHistory)
       : undefined,
@@ -448,10 +461,9 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
     approvals,
     balanceHistoryCache: balanceHistoryCache || emptyHistoryCache,
   };
-  res.balanceHistoryCache = generateHistoryFromOperations(res);
-  return res;
+  res.balanceHistoryCache = generateHistoryFromOperations(res as TokenAccount);
+  return res as TokenAccount;
 }
-
 export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
   const {
     id,
@@ -490,7 +502,6 @@ export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
     approvals,
   };
 }
-
 export function fromChildAccountRaw(raw: ChildAccountRaw): ChildAccount {
   const {
     id,
@@ -509,8 +520,10 @@ export function fromChildAccountRaw(raw: ChildAccountRaw): ChildAccount {
     swapHistory,
   } = raw;
   const currency = getCryptoCurrencyById(currencyId);
+
   const convertOperation = (op) => fromOperationRaw(op, id);
-  const res: $Exact<ChildAccount> = {
+
+  const res: ChildAccount = {
     type: "ChildAccount",
     id,
     name,
@@ -518,7 +531,7 @@ export function fromChildAccountRaw(raw: ChildAccountRaw): ChildAccount {
     parentId,
     currency,
     address,
-    balance: BigNumber(balance),
+    balance: new BigNumber(balance),
     balanceHistory: balanceHistory
       ? fromBalanceHistoryRawMap(balanceHistory)
       : undefined,
@@ -530,10 +543,8 @@ export function fromChildAccountRaw(raw: ChildAccountRaw): ChildAccount {
     balanceHistoryCache: balanceHistoryCache || emptyHistoryCache,
   };
   res.balanceHistoryCache = generateHistoryFromOperations(res);
-
   return res;
 }
-
 export function toChildAccountRaw(ca: ChildAccount): ChildAccountRaw {
   const {
     id,
@@ -571,29 +582,32 @@ export function toChildAccountRaw(ca: ChildAccount): ChildAccountRaw {
     swapHistory: (swapHistory || []).map(toSwapOperationRaw),
   };
 }
-
 export function fromSubAccountRaw(raw: SubAccountRaw): SubAccount {
   switch (raw.type) {
     case "ChildAccountRaw":
       return fromChildAccountRaw(raw);
+
     case "TokenAccountRaw":
       return fromTokenAccountRaw(raw);
+
     default:
-      throw new Error("invalid raw.type=" + raw.type);
+      throw new Error("invalid raw.type=" + (raw as SubAccountRaw).type);
   }
 }
-
 export function toSubAccountRaw(subAccount: SubAccount): SubAccountRaw {
   switch (subAccount.type) {
     case "ChildAccount":
       return toChildAccountRaw(subAccount);
+
     case "TokenAccount":
       return toTokenAccountRaw(subAccount);
+
     default:
-      throw new Error("invalid subAccount.type=" + subAccount.type);
+      throw new Error(
+        "invalid subAccount.type=" + (subAccount as SubAccount).type
+      );
   }
 }
-
 export function fromAccountLikeRaw(
   rawAccountLike: AccountRawLike
 ): AccountLike {
@@ -601,19 +615,19 @@ export function fromAccountLikeRaw(
     //$FlowFixMe
     return fromSubAccountRaw(rawAccountLike);
   }
+
   //$FlowFixMe
   return fromAccountRaw(rawAccountLike);
 }
-
 export function toAccountLikeRaw(accountLike: AccountLike): AccountRawLike {
   switch (accountLike.type) {
     case "Account":
       return toAccountRaw(accountLike);
+
     default:
       return toSubAccountRaw(accountLike);
   }
 }
-
 export function fromAccountRaw(rawAccount: AccountRaw): Account {
   const {
     id,
@@ -649,7 +663,6 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     syncHash,
     polkadotResources,
   } = rawAccount;
-
   const subAccounts =
     subAccountsRaw &&
     subAccountsRaw
@@ -663,20 +676,20 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
         }
       })
       .filter(Boolean);
-
   const currency = getCryptoCurrencyById(currencyId);
-
   const unit =
     currency.units.find((u) => u.magnitude === unitMagnitude) ||
     currency.units[0];
 
-  const convertOperation = (op) => fromOperationRaw(op, id, subAccounts);
+  const convertOperation = (op) =>
+    fromOperationRaw(op, id, subAccounts as SubAccount[]);
 
-  const res: $Exact<Account> = {
+  const res: Account = {
     type: "Account",
     id,
     starred: starred || false,
-    used: false, // filled again below
+    used: false,
+    // filled again below
     seedIdentifier,
     derivationMode,
     index,
@@ -684,16 +697,19 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     freshAddressPath,
     freshAddresses: freshAddresses || [
       // in case user come from an old data that didn't support freshAddresses
-      { derivationPath: freshAddressPath, address: freshAddress },
+      {
+        derivationPath: freshAddressPath,
+        address: freshAddress,
+      },
     ],
     name,
     blockHeight,
     creationDate: new Date(creationDate || Date.now()),
-    balance: BigNumber(balance),
+    balance: new BigNumber(balance),
     balanceHistory: balanceHistory
       ? fromBalanceHistoryRawMap(balanceHistory)
       : undefined,
-    spendableBalance: BigNumber(spendableBalance || balance),
+    spendableBalance: new BigNumber(spendableBalance || balance),
     operations: (operations || []).map(convertOperation),
     operationsCount: operationsCount || (operations && operations.length) || 0,
     pendingOperations: (pendingOperations || []).map(convertOperation),
@@ -722,7 +738,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
   }
 
   if (subAccounts) {
-    res.subAccounts = subAccounts;
+    res.subAccounts = subAccounts as SubAccount[];
   }
 
   if (tronResources) {
@@ -736,6 +752,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
   if (bitcoinResources) {
     res.bitcoinResources = fromBitcoinResourcesRaw(bitcoinResources);
   }
+
   if (swapHistory) {
     res.swapHistory = swapHistory.map(fromSwapOperationRaw);
   }
@@ -750,7 +767,6 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
 
   return res;
 }
-
 export function toAccountRaw({
   id,
   seedIdentifier,
@@ -785,7 +801,7 @@ export function toAccountRaw({
   syncHash,
   polkadotResources,
 }: Account): AccountRaw {
-  const res: $Exact<AccountRaw> = {
+  const res: AccountRaw = {
     id,
     seedIdentifier,
     name,
@@ -808,38 +824,50 @@ export function toAccountRaw({
     balance: balance.toString(),
     spendableBalance: spendableBalance.toString(),
   };
+
   if (balanceHistory) {
     res.balanceHistory = toBalanceHistoryRawMap(balanceHistory);
   }
+
   if (balanceHistoryCache) {
     res.balanceHistoryCache = balanceHistoryCache;
   }
+
   if (endpointConfig) {
     res.endpointConfig = endpointConfig;
   }
+
   if (xpub) {
     res.xpub = xpub;
   }
+
   if (subAccounts) {
     res.subAccounts = subAccounts.map(toSubAccountRaw);
   }
+
   if (tronResources) {
     res.tronResources = toTronResourcesRaw(tronResources);
   }
+
   if (cosmosResources) {
     res.cosmosResources = toCosmosResourcesRaw(cosmosResources);
   }
+
   if (bitcoinResources) {
     res.bitcoinResources = toBitcoinResourcesRaw(bitcoinResources);
   }
+
   if (swapHistory) {
     res.swapHistory = swapHistory.map(toSwapOperationRaw);
   }
+
   if (algorandResources) {
     res.algorandResources = toAlgorandResourcesRaw(algorandResources);
   }
+
   if (polkadotResources) {
     res.polkadotResources = toPolkadotResourcesRaw(polkadotResources);
   }
+
   return res;
 }

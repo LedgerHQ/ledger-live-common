@@ -1,5 +1,3 @@
-// @flow
-
 export * from "./helpers";
 export * from "./addAccounts";
 export * from "./support";

@@ -1,14 +1,13 @@
-// @flow
 import type { Account, Operation, SubAccount } from "../types";
 import { getEnv } from "../env";
-
 export function shouldRetainPendingOperation(
   account: Account,
   op: Operation
 ): boolean {
-  const delay = new Date() - op.date;
-
+  // FIXME: valueOf to compare dates in typescript
+  const delay = new Date().valueOf() - op.date.valueOf();
   const last = account.operations[0];
+
   if (
     last &&
     last.transactionSequenceNumber &&
@@ -36,6 +35,7 @@ export const addPendingOperation = (account: Account, operation: Operation) => {
 
   function addInSubAccount(subaccounts, op) {
     const acc = subaccounts.find((sub) => sub.id === op.accountId);
+
     if (acc) {
       // $FlowFixMe
       const copy: SubAccount = { ...acc };
@@ -51,6 +51,7 @@ export const addPendingOperation = (account: Account, operation: Operation) => {
     });
     accountCopy.subAccounts = taCopy;
   }
+
   if (accountCopy.id === operation.accountId) {
     accountCopy.pendingOperations = appendPendingOp(
       accountCopy.pendingOperations,
@@ -61,5 +62,6 @@ export const addPendingOperation = (account: Account, operation: Operation) => {
     addInSubAccount(taCopy, operation);
     accountCopy.subAccounts = taCopy;
   }
+
   return accountCopy;
 };
