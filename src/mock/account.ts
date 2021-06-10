@@ -1,7 +1,3 @@
-/**
- * @module mock/account
- * @flow
- */
 import Prando from "prando";
 import { BigNumber } from "bignumber.js";
 import {
@@ -25,16 +21,16 @@ import {
   generateHistoryFromOperations,
 } from "../account";
 import { getDerivationScheme, runDerivationScheme } from "../derivation";
-
 import { genHex, genAddress } from "./helpers";
-
 import perFamilyMock from "../generated/mock";
 
 function ensureNoNegative(operations) {
-  let total = BigNumber(0);
+  let total = new BigNumber(0);
+
   for (let i = operations.length - 1; i >= 0; i--) {
     const op = operations[i];
     const amount = getOperationAmountNumber(op);
+
     if (total.plus(amount).isNegative()) {
       if (op.type === "IN") {
         op.type = "OUT";
@@ -42,8 +38,10 @@ function ensureNoNegative(operations) {
         op.type = "IN";
       }
     }
+
     total = total.plus(getOperationAmountNumber(op));
   }
+
   return total;
 }
 
@@ -177,7 +175,6 @@ const hardcodedMarketcap = [
   "algorand/asa/312769",
   "algorand/asa/163650",
 ];
-
 // for the mock generation we need to adjust to the actual market price of things, we want to avoid having things < 0.01 EUR
 const tickerApproxMarketPrice = {
   BTC: 0.0073059,
@@ -192,22 +189,21 @@ const tickerApproxMarketPrice = {
   PPC: 0.000226,
   ZEC: 0.000205798,
 };
-
 // mock only use subset of cryptocurrencies to not affect tests when adding coins
 const currencies = listCryptoCurrencies().filter(
   (c) => tickerApproxMarketPrice[c.ticker]
 );
-
 // TODO fix the mock to never generate negative balance...
+
 /**
  * @memberof mock/account
  */
 export function genOperation(
   superAccount: Account,
   account: AccountLike,
-  ops: *,
+  ops: any,
   rng: Prando
-): $Exact<Operation> {
+): Operation {
   const ticker =
     account.type === "TokenAccount"
       ? account.token.ticker
@@ -219,29 +215,32 @@ export function genOperation(
   );
   const address = genAddress(superAccount.currency, rng);
   const type = rng.next() < 0.3 ? "OUT" : "IN";
-  const value = BigNumber(
+  const value = new BigNumber(
     Math.floor(
       rng.nextInt(0, 100000 * rng.next() * rng.next()) /
         (tickerApproxMarketPrice[ticker] || tickerApproxMarketPrice.BTC)
     )
   );
+
   if (Number.isNaN(value)) {
     throw new Error("invalid amount generated for " + ticker);
   }
+
   const hash = genHex(64, rng);
-  const op: $Exact<Operation> = {
+  const op: Operation = {
     id: String(`mock_op_${ops.length}_${account.id}`),
     hash,
     type,
     value,
-    fee: BigNumber(Math.round(value.toNumber() * 0.01)),
+    fee: new BigNumber(Math.round(value.toNumber() * 0.01)),
     senders: [type !== "IN" ? genAddress(superAccount.currency, rng) : address],
     recipients: [
       type === "IN" ? genAddress(superAccount.currency, rng) : address,
     ],
     blockHash: genHex(64, rng),
     blockHeight:
-      superAccount.blockHeight - Math.floor((Date.now() - date) / 900000),
+      superAccount.blockHeight -
+      Math.floor((Date.now() - (date as any)) / 900000),
     accountId: account.id,
     date,
     extra: {},
@@ -249,6 +248,7 @@ export function genOperation(
 
   if (account.type === "Account") {
     const { subAccounts } = account;
+
     if (subAccounts) {
       // TODO make sure tokenAccounts sometimes reuse an existing op hash from main account
       op.subOperations = inferSubOperations(hash, subAccounts);
@@ -275,13 +275,10 @@ export function genAddingOperationsInAccount(
       return ops.concat(op);
     }, copy.operations);
   copy.spendableBalance = copy.balance = ensureNoNegative(copy.operations);
-
   const perFamilyOperation = perFamilyMock[account.currency.id];
   const postSyncAccount =
     perFamilyOperation && perFamilyOperation.postSyncAccount;
-
   if (postSyncAccount) postSyncAccount(copy);
-
   return copy;
 }
 
@@ -290,20 +287,19 @@ export function genAddingOperationsInAccount(
  * @memberof mock/account
  */
 type GenAccountOptions = {
-  operationsSize?: number,
-  currency?: CryptoCurrency,
-  subAccountsCount?: number,
-  swapHistorySize?: number,
+  operationsSize?: number;
+  currency?: CryptoCurrency;
+  subAccountsCount?: number;
+  swapHistorySize?: number;
 };
 
 function genTokenAccount(
   index: number,
   account: Account,
   token: TokenCurrency
-): $Exact<TokenAccount> {
+): TokenAccount {
   const rng = new Prando(account.id + "|" + index);
-
-  const tokenAccount: $Exact<TokenAccount> = {
+  const tokenAccount: TokenAccount = {
     type: "TokenAccount",
     starred: false,
     id: account.id + "|" + index,
@@ -312,13 +308,12 @@ function genTokenAccount(
     operationsCount: 0,
     operations: [],
     pendingOperations: [],
-    balance: BigNumber(0),
-    spendableBalance: BigNumber(0),
+    balance: new BigNumber(0),
+    spendableBalance: new BigNumber(0),
     creationDate: new Date(),
     swapHistory: [],
     balanceHistoryCache: emptyHistoryCache,
   };
-
   const operationsSize = rng.nextInt(1, 200);
   tokenAccount.operations = Array(operationsSize)
     .fill(null)
@@ -334,7 +329,6 @@ function genTokenAccount(
     tokenAccount.operations.length > 0
       ? tokenAccount.operations[tokenAccount.operations.length - 1].date
       : new Date();
-
   tokenAccount.balanceHistoryCache = generateHistoryFromOperations(
     tokenAccount
   );
@@ -344,24 +338,28 @@ function genTokenAccount(
 export function genAccount(
   id: number | string,
   opts: GenAccountOptions = {}
-): $Exact<Account> {
+): Account {
   const rng = new Prando(id);
   const currency = opts.currency || rng.nextArrayItem(currencies);
   const operationsSize = opts.operationsSize || rng.nextInt(1, 200);
   const swapHistorySize = opts.swapHistorySize || 0;
   const address = genAddress(currency, rng);
   const derivationPath = runDerivationScheme(
-    getDerivationScheme({ currency, derivationMode: "" }),
+    getDerivationScheme({
+      currency,
+      derivationMode: "",
+    }),
     currency
   );
-  const freshAddress = { address, derivationPath };
-
+  const freshAddress = {
+    address,
+    derivationPath,
+  };
   // nb Make the third (ethereum_classic, dogecoin) account originally migratable
   const outdated =
     ["ethereum_classic", "dogecoin"].includes(currency.id) &&
     `${id}`.endsWith("_2");
-
-  const account: $Exact<Account> = {
+  const account: Account = {
     type: "Account",
     id: `mock:${outdated ? 0 : 1}:${currency.id}:${id}:`,
     seedIdentifier: "mock",
@@ -374,8 +372,8 @@ export function genAccount(
     name: rng.nextString(rng.nextInt(4, 34)),
     starred: false,
     used: false,
-    balance: BigNumber(0),
-    spendableBalance: BigNumber(0),
+    balance: new BigNumber(0),
+    spendableBalance: new BigNumber(0),
     blockHeight: rng.nextInt(100000, 200000),
     currency,
     unit: rng.nextArrayItem(currency.units),
@@ -393,8 +391,8 @@ export function genAccount(
         receiverAccountId: "receiver-id",
         operationId: "operation-id",
         tokenId: "token-id",
-        fromAmount: BigNumber("1000"),
-        toAmount: BigNumber("2000"),
+        fromAmount: new BigNumber("1000"),
+        toAmount: new BigNumber("2000"),
       })),
     balanceHistoryCache: emptyHistoryCache,
   };
@@ -405,9 +403,9 @@ export function genAccount(
       delegations: [],
       redelegations: [],
       unbondings: [],
-      delegatedBalance: BigNumber(0),
-      pendingRewardsBalance: BigNumber(0),
-      unbondingBalance: BigNumber(0),
+      delegatedBalance: new BigNumber(0),
+      pendingRewardsBalance: new BigNumber(0),
+      unbondingBalance: new BigNumber(0),
       withdrawAddress: address,
     };
   }
@@ -420,8 +418,8 @@ export function genAccount(
 
   if (currency.family === "algorand") {
     account.algorandResources = {
-      rewards: BigNumber(0),
-      rewardsAccumulated: BigNumber(0),
+      rewards: new BigNumber(0),
+      rewardsAccumulated: new BigNumber(0),
     };
   }
 
@@ -430,9 +428,9 @@ export function genAccount(
       stash: null,
       controller: null,
       nonce: 0,
-      lockedBalance: BigNumber(0),
-      unlockingBalance: BigNumber(0),
-      unlockedBalance: BigNumber(0),
+      lockedBalance: new BigNumber(0),
+      unlockingBalance: new BigNumber(0),
+      unlockedBalance: new BigNumber(0),
       unlockings: [],
       nominations: [],
       numSlashingSpans: 0,
@@ -446,13 +444,11 @@ export function genAccount(
       typeof opts.subAccountsCount === "number"
         ? opts.subAccountsCount
         : rng.nextInt(0, 8);
-
     const all = listTokensForCryptoCurrency(account.currency).filter((t) =>
       hardcodedMarketcap.includes(t.id)
     );
     const compoundReadyTokens = all.filter(findCompoundToken);
     const notCompoundReadyTokens = all.filter((a) => !findCompoundToken(a));
-
     // favorize the generation of compound tokens
     const tokens = compoundReadyTokens
       .concat(
@@ -462,7 +458,6 @@ export function genAccount(
         )
       )
       .slice(0, tokenCount);
-
     account.subAccounts = tokens.map((token, i) =>
       genTokenAccount(i, account, token)
     );
@@ -474,26 +469,19 @@ export function genAccount(
       const op = genOperation(account, account, ops, rng);
       return ops.concat(op);
     }, []);
-
   account.creationDate =
     account.operations.length > 0
       ? account.operations[account.operations.length - 1].date
       : new Date();
-
   account.operationsCount = account.operations.length;
-
   account.spendableBalance = account.balance = ensureNoNegative(
     account.operations
   );
   account.used = !isAccountEmpty(account);
-
   const perFamilyOperation = perFamilyMock[currency.id];
   const genAccountEnhanceOperations =
     perFamilyOperation && perFamilyOperation.genAccountEnhanceOperations;
-
   if (genAccountEnhanceOperations) genAccountEnhanceOperations(account, rng);
-
   account.balanceHistoryCache = generateHistoryFromOperations(account);
-
   return account;
 }
