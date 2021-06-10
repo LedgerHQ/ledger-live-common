@@ -4,6 +4,8 @@ import cosmos from "../families/cosmos/hw-getAddress";
 
 import ethereum from "../families/ethereum/hw-getAddress";
 
+import neo from "../families/neo/hw-getAddress";
+
 import polkadot from "../families/polkadot/hw-getAddress";
 
 import ripple from "../families/ripple/hw-getAddress";
@@ -19,6 +21,7 @@ export default {
   bitcoin,
   cosmos,
   ethereum,
+  neo,
   polkadot,
   ripple,
   stellar,
