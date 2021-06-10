@@ -49,7 +49,7 @@ async function bitcoin(
     if (syncReplaceAddress) {
       txInputs = txInputs.map((i) => ({
         ...i,
-        address: syncReplaceAddress(account, i.address),
+        address: syncReplaceAddress(account, i.address as string),
       }));
       txOutputs = txOutputs.map((o) => ({
         ...o,
