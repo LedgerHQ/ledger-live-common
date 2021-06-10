@@ -79,6 +79,11 @@ export const streamAppInstall = ({
             initState(e.result)
           );
 
+          if (!state.installQueue.length) {
+            // NB nothing to do
+            return defer(onSuccessObs || empty);
+          }
+
           if (
             isOutOfMemoryState(predictOptimisticState(state)) ||
             !getEnv("EXPERIMENTAL_INLINE_INSTALL")
@@ -89,7 +94,7 @@ export const streamAppInstall = ({
             return of({
               type: "app-not-installed",
               appNames: missingAppNames,
-              appName: missingAppNames[0], // TODO remove when LLD/LLM integrate appNames
+              appName: missingAppNames[0] || appNames[0], // TODO remove when LLD/LLM integrate appNames
             });
           }
 
