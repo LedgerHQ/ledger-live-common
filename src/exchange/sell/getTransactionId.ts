@@ -1,4 +1,3 @@
-// @flow
 import type Transport from "@ledgerhq/hw-transport";
 import Exchange from "../hw-app-exchange/Exchange";
 import type { SellRequestEvent } from "./types";
@@ -8,7 +7,7 @@ function base64EncodeUrl(str) {
   return str.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-export default async (transport: Transport<*>): Promise<SellRequestEvent> => {
+export default async (transport: Transport): Promise<SellRequestEvent> => {
   const sell = new Exchange(transport, TRANSACTION_TYPES.SELL);
   const txId = await sell.startNewTransaction();
   return {

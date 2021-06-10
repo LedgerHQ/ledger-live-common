@@ -1,4 +1,3 @@
-// @flow
 import type Transport from "@ledgerhq/hw-transport";
 import { TransportStatusError } from "@ledgerhq/hw-transport";
 import { WrongDeviceForAccount } from "@ledgerhq/errors";
@@ -19,16 +18,16 @@ import { getProvider } from "./index";
 import { delay } from "../../promise";
 
 type SellInput = {
-  parentAccount: ?Account,
-  account: AccountLike,
-  transaction: Transaction,
-  status: TransactionStatus,
-  binaryPayload: string,
-  payloadSignature: string,
+  parentAccount: Account | null | undefined;
+  account: AccountLike;
+  transaction: Transaction;
+  status: TransactionStatus;
+  binaryPayload: string;
+  payloadSignature: string;
 };
 
 export default async (
-  transport: Transport<*>,
+  transport: Transport,
   input: SellInput
 ): Promise<SellRequestEvent> => {
   const {
@@ -39,11 +38,11 @@ export default async (
     payloadSignature,
     transaction,
   } = input;
-
   const exchange = new Exchange(transport, TRANSACTION_TYPES.SELL);
   const mainAccount = getMainAccount(account, parentAccount);
   const { estimatedFees } = status;
   const provider = getProvider("coinify"); // FIXME Don't forget to switch to prod
+
   await exchange.setPartnerKey(provider.nameAndPubkey);
   await exchange.checkPartner(provider.signature);
   await exchange.processTransaction(
@@ -55,12 +54,10 @@ export default async (
   );
   const mainPayoutCurrency = getAccountCurrency(mainAccount);
   const payoutCurrency = getAccountCurrency(account);
-
   invariant(
     mainPayoutCurrency.type === "CryptoCurrency",
     "This should be a cryptocurrency"
   );
-
   const payoutAddressParameters = await perFamily[
     mainPayoutCurrency.family
   ].getSerializedAddressParameters(
@@ -68,7 +65,6 @@ export default async (
     mainAccount.derivationMode,
     mainAccount.id
   );
-
   const {
     config: payoutAddressConfig,
     signature: payoutAddressConfigSignature,
@@ -81,19 +77,22 @@ export default async (
       payoutAddressParameters.addressParameters
     );
   } catch (e) {
+    // @ts-expect-error TransportStatusError to be typed on ledgerjs
     if (e instanceof TransportStatusError && e.statusCode === 0x6a83) {
-      throw new WrongDeviceForAccount(null, {
+      throw new WrongDeviceForAccount(undefined, {
         accountName: mainAccount.name,
       });
     }
+
     throw e;
   }
 
   await exchange.signCoinTransaction();
   await delay(3000);
-
   return {
     type: "init-sell-result",
-    initSellResult: { transaction },
+    initSellResult: {
+      transaction,
+    },
   };
 };
