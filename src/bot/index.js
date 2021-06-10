@@ -58,7 +58,8 @@ export async function bot({ currency, mutation }: Arg = {}) {
       if (
         !isCurrencySupported(spec.currency) ||
         spec.disabled ||
-        spec.currency.id == "stakenet"
+        spec.currency.id == "stakenet" ||
+        spec.currency.id == "digibyte"
       ) {
         continue;
       }
