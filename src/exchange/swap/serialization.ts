@@ -1,5 +1,3 @@
-// @flow
-
 import { BigNumber } from "bignumber.js";
 import type {
   Exchange,
@@ -24,7 +22,6 @@ export const fromExchangeRaw = (exchangeRaw: ExchangeRaw): Exchange => {
   const toParentAccount = exchangeRaw.toParentAccount
     ? fromAccountRaw(exchangeRaw.toParentAccount)
     : null;
-
   return {
     fromAccount,
     fromParentAccount,
@@ -40,7 +37,6 @@ export const toExchangeRaw = (exchange: Exchange): ExchangeRaw => {
     toAccount,
     toParentAccount,
   } = exchange;
-
   return {
     fromAccount: toAccountLikeRaw(fromAccount),
     fromParentAccount: fromParentAccount
@@ -65,7 +61,6 @@ export const toExchangeRateRaw = (
     tradeMethod,
     error,
   } = exchangeRate;
-
   return {
     rate: rate.toString(),
     magnitudeAwareRate: magnitudeAwareRate.toString(),
@@ -93,7 +88,6 @@ export const fromExchangeRateRaw = (
     tradeMethod,
     error,
   } = exchangeRateRaw;
-
   return {
     rate: new BigNumber(rate),
     magnitudeAwareRate: new BigNumber(magnitudeAwareRate),

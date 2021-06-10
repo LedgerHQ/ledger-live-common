@@ -9,6 +9,7 @@ import type {
   TokenCurrency,
   TransactionRaw,
 } from "../../types";
+import { Transaction } from "ethereumjs-tx";
 export type Exchange = {
   fromParentAccount: Account | null | undefined;
   fromAccount: AccountLike;
@@ -148,10 +149,17 @@ export type SwapState = {
   exchangeRate?: ExchangeRate | null | undefined;
   withExpiration?: boolean;
 };
+
+export type SwapTransaction = Transaction & {
+  tag?: number;
+  memoValue?: string;
+  memoType?: string;
+};
+
 export type InitSwapInput = {
   exchange: Exchange;
   exchangeRate: ExchangeRate;
-  transaction: Transaction;
+  transaction: SwapTransaction;
   deviceId: string;
 };
 export type InitSwapInputRaw = {

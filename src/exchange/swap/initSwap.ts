@@ -1,5 +1,3 @@
-// @flow
-
 import { getAbandonSeedAddress } from "@ledgerhq/cryptoassets";
 import { log } from "@ledgerhq/logs";
 import { from } from "rxjs";
@@ -29,6 +27,7 @@ import {
   TRANSACTION_RATES,
   TRANSACTION_TYPES,
 } from "../hw-app-exchange/Exchange";
+
 const withDevicePromise = (deviceId, fn) =>
   withDevice(deviceId)((transport) => from(fn(transport))).toPromise();
 
@@ -36,14 +35,15 @@ const withDevicePromise = (deviceId, fn) =>
 // throw if TransactionStatus have errors
 // you get at the end a final Transaction to be done (it's not yet signed, nor broadcasted!) and a swapId
 const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
-  let { exchange, exchangeRate, transaction, deviceId } = input;
+  let { transaction } = input;
+  const { exchange, exchangeRate, deviceId } = input;
   if (getEnv("MOCK")) return mockInitSwap(exchange, exchangeRate, transaction);
   return Observable.create((o) => {
     let unsubscribed = false;
+
     const confirmSwap = async () => {
       let swapId;
       let ignoreTransportError;
-
       log("swap", `attempt to connect to ${deviceId}`);
       await withDevicePromise(deviceId, async (transport) => {
         const ratesFlag =
@@ -51,12 +51,10 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
             ? TRANSACTION_RATES.FIXED
             : TRANSACTION_RATES.FLOATING;
         const swap = new Exchange(transport, TRANSACTION_TYPES.SWAP, ratesFlag);
-
         // NB this id is crucial to prevent replay attacks, if it changes
         // we need to start the flow again.
         const deviceTransactionId = await swap.startNewTransaction();
         if (unsubscribed) return;
-
         const { provider, rateId } = exchangeRate;
         const {
           fromParentAccount,
@@ -71,13 +69,13 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
         const payoutCurrency = getAccountCurrency(toAccount);
         const refundAccount = getMainAccount(fromAccount, fromParentAccount);
         const payoutAccount = getMainAccount(toAccount, toParentAccount);
-        const apiAmount = BigNumber(amount).div(
-          BigNumber(10).pow(unitFrom.magnitude)
+        const apiAmount = new BigNumber(amount).div(
+          new BigNumber(10).pow(unitFrom.magnitude)
         );
-
         // Request a swap, this locks the rates for fixed trade method only.
         // NB Added the try/catch because of the API stability issues.
         let res;
+
         try {
           res = await network({
             method: "POST",
@@ -93,7 +91,11 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
               address: payoutAccount.freshAddress,
               refundAddress: refundAccount.freshAddress,
               deviceTransactionId,
-              ...(rateId ? { rateId } : {}), // NB float rates dont need rate ids.
+              ...(rateId
+                ? {
+                    rateId,
+                  }
+                : {}), // NB float rates dont need rate ids.
             },
           });
           if (unsubscribed || !res || !res.data) return;
@@ -111,7 +113,6 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
         const providerNameAndSignature = getProviderNameAndSignature(
           swapResult.provider
         );
-
         const accountBridge = getAccountBridge(refundAccount);
         transaction = accountBridge.updateTransaction(transaction, {
           recipient: swapResult.payinAddress,
@@ -119,7 +120,7 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
 
         if (refundCurrency.id === "ripple") {
           transaction = accountBridge.updateTransaction(transaction, {
-            tag: BigNumber(swapResult.payinExtraId).toNumber(),
+            tag: new BigNumber(swapResult.payinExtraId).toNumber(),
           });
           invariant(
             transaction.tag,
@@ -146,13 +147,11 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
             ),
           "Recipient address should never be the abandonseed address"
         );
-
         transaction = await accountBridge.prepareTransaction(
           refundAccount,
           transaction
         );
         if (unsubscribed) return;
-
         const {
           errors,
           estimatedFees,
@@ -161,8 +160,8 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
           transaction
         );
         if (unsubscribed) return;
-
         const errorsKeys = Object.keys(errors);
+
         if (errorsKeys.length > 0) {
           throw errors[errorsKeys[0]]; // throw the first error
         }
@@ -170,22 +169,18 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
         // Prepare swap app to receive the tx to forward.
         await swap.setPartnerKey(providerNameAndSignature.nameAndPubkey);
         if (unsubscribed) return;
-
         await swap.checkPartner(providerNameAndSignature.signature);
         if (unsubscribed) return;
-
         await swap.processTransaction(
           Buffer.from(swapResult.binaryPayload, "hex"),
           estimatedFees
         );
         if (unsubscribed) return;
-
-        const goodSign = secp256k1.signatureExport(
-          Buffer.from(swapResult.signature, "hex")
+        const goodSign = <Buffer>(
+          secp256k1.signatureExport(Buffer.from(swapResult.signature, "hex"))
         );
         await swap.checkTransactionSignature(goodSign);
         if (unsubscribed) return;
-
         const mainPayoutCurrency = getAccountCurrency(payoutAccount);
         invariant(
           mainPayoutCurrency.type === "CryptoCurrency",
@@ -199,7 +194,6 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
           mainPayoutCurrency.id
         );
         if (unsubscribed) return;
-
         const {
           config: payoutAddressConfig,
           signature: payoutAddressConfigSignature,
@@ -212,16 +206,17 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
             payoutAddressParameters.addressParameters
           );
         } catch (e) {
+          // @ts-expect-error TransportStatusError to be typed on ledgerjs
           if (e instanceof TransportStatusError && e.statusCode === 0x6a83) {
-            throw new WrongDeviceForAccount(null, {
+            throw new WrongDeviceForAccount(undefined, {
               accountName: payoutAccount.name,
             });
           }
+
           throw e;
         }
 
         if (unsubscribed) return;
-
         const mainRefundCurrency = getAccountCurrency(refundAccount);
         invariant(
           mainRefundCurrency.type === "CryptoCurrency",
@@ -235,20 +230,18 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
           mainRefundCurrency.id
         );
         if (unsubscribed) return;
-
         const {
           config: refundAddressConfig,
           signature: refundAddressConfigSignature,
         } = getCurrencyExchangeConfig(refundCurrency);
-
         if (unsubscribed) return;
-
         // NB Floating rates may change the original amountTo so we can pass an override
         // to properly render the amount on the device confirmation steps.
         let amountExpectedTo;
+
         if (swapResult?.amountExpectedTo) {
-          amountExpectedTo = BigNumber(swapResult.amountExpectedTo)
-            .times(BigNumber(10).pow(unitTo.magnitude))
+          amountExpectedTo = new BigNumber(swapResult.amountExpectedTo)
+            .times(new BigNumber(10).pow(unitTo.magnitude))
             .toString();
         }
 
@@ -265,36 +258,42 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
             refundAddressParameters.addressParameters
           );
         } catch (e) {
+          // @ts-expect-error TransportStatusError to be typed on ledgerjs
           if (e instanceof TransportStatusError && e.statusCode === 0x6a83) {
-            throw new WrongDeviceForAccount(null, {
+            throw new WrongDeviceForAccount(undefined, {
               accountName: refundAccount.name,
             });
           }
+
           throw e;
         }
+
         if (unsubscribed) return;
         ignoreTransportError = true;
         await swap.signCoinTransaction();
       }).catch((e) => {
         if (ignoreTransportError) return;
+
+        // @ts-expect-error TransportStatusError to be typed on ledgerjs
         if (e instanceof TransportStatusError && e.statusCode === 0x6a84) {
           throw new TransactionRefusedOnDevice();
         }
+
         throw e;
       });
-
       if (!swapId) return;
-
       log("swap", "awaiting device disconnection");
       await delay(3000);
-
       if (unsubscribed) return;
-
       o.next({
         type: "init-swap-result",
-        initSwapResult: { transaction, swapId },
+        initSwapResult: {
+          transaction,
+          swapId,
+        },
       });
     };
+
     confirmSwap().then(
       () => {
         o.complete();
