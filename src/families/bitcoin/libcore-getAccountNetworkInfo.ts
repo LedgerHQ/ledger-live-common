@@ -8,7 +8,6 @@ type Input = {
   coreAccount: CoreAccount;
   account: Account;
 };
-type Output = Promise<NetworkInfo>;
 const speeds = ["fast", "medium", "slow"];
 export function avoidDups(nums: Array<BigNumber>): Array<BigNumber> {
   nums = nums.slice(0);
@@ -22,7 +21,7 @@ export function avoidDups(nums: Array<BigNumber>): Array<BigNumber> {
   return nums;
 }
 
-async function bitcoin({ coreAccount }: Input): Output {
+async function bitcoin({ coreAccount }: Input): Promise<NetworkInfo> {
   const bitcoinLikeAccount = await coreAccount.asBitcoinLikeAccount();
   const bigInts = await bitcoinLikeAccount.getFees();
   const bigNumbers = await promiseAllBatched(
