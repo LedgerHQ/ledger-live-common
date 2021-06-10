@@ -26,7 +26,7 @@ function getDeviceTransactionConfig({
     });
   }
 
-  return fields;
+  return fields as Array<DeviceTransactionField>;
 }
 
 export default getDeviceTransactionConfig;
