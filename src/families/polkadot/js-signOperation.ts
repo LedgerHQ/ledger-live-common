@@ -1,20 +1,15 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import { Observable } from "rxjs";
 import { TypeRegistry } from "@polkadot/types";
 import { u8aConcat } from "@polkadot/util";
 import { FeeNotLoaded } from "@ledgerhq/errors";
 import Polkadot from "@ledgerhq/hw-app-polkadot";
-
 import type { Transaction } from "./types";
 import type { Account, Operation, SignOperationEvent } from "../../types";
-
 import { open, close } from "../../hw";
 import { encodeOperationId } from "../../operation";
-
 import { buildTransaction } from "./js-buildTransaction";
 import { calculateAmount, getNonce, isFirstBond } from "./logic";
-
 const MODE_TO_TYPE = {
   send: "OUT",
   bond: "BOND",
@@ -26,7 +21,6 @@ const MODE_TO_TYPE = {
   claimReward: "REWARD_PAYOUT",
   default: "FEES",
 };
-
 const MODE_TO_PALLET_METHOD = {
   send: "balances.transferKeepAlive",
   bond: "staking.bond",
@@ -53,21 +47,26 @@ const getExtra = (type: string, account: Account, transaction: Transaction) => {
 
   switch (type) {
     case "OUT":
-      return { ...extra, transferAmount: BigNumber(transaction.amount) };
+      return { ...extra, transferAmount: new BigNumber(transaction.amount) };
+
     case "BOND":
-      return { ...extra, bondedAmount: BigNumber(transaction.amount) };
+      return { ...extra, bondedAmount: new BigNumber(transaction.amount) };
+
     case "UNBOND":
-      return { ...extra, unbondedAmount: BigNumber(transaction.amount) };
+      return { ...extra, unbondedAmount: new BigNumber(transaction.amount) };
+
     case "WITHDRAW_UNBONDED":
       return {
         ...extra,
-        withdrawUnbondedAmount: BigNumber(
+        withdrawUnbondedAmount: new BigNumber(
           account.polkadotResources?.unlockedBalance || 0
         ),
       };
+
     case "NOMINATE":
       return { ...extra, validators: transaction.validators };
   }
+
   return extra;
 };
 
@@ -77,13 +76,12 @@ const buildOptimisticOperation = (
   fee: BigNumber
 ): Operation => {
   const type = MODE_TO_TYPE[transaction.mode] ?? MODE_TO_TYPE.default;
-
   const value =
-    type === "OUT" ? BigNumber(transaction.amount).plus(fee) : BigNumber(fee);
-
+    type === "OUT"
+      ? new BigNumber(transaction.amount).plus(fee)
+      : new BigNumber(fee);
   const extra = getExtra(type, account, transaction);
-
-  const operation: $Exact<Operation> = {
+  const operation: Operation = {
     id: encodeOperationId(account.id, "", type),
     hash: "",
     type,
@@ -98,7 +96,6 @@ const buildOptimisticOperation = (
     date: new Date(),
     extra,
   };
-
   return operation;
 };
 
@@ -112,7 +109,7 @@ const buildOptimisticOperation = (
  * @param registry - Registry used for constructing the payload.
  */
 export const signExtrinsic = async (
-  unsigned: Object,
+  unsigned: Record<string, any>,
   signature: any,
   registry: typeof TypeRegistry
 ) => {
@@ -130,7 +127,7 @@ export const signExtrinsic = async (
  * @param registry - Registry used for constructing the payload.
  */
 export const fakeSignExtrinsic = async (
-  unsigned: Object,
+  unsigned: Record<string, any>,
   registry: typeof TypeRegistry
 ) => {
   const fakeSignature = u8aConcat(
@@ -148,15 +145,18 @@ const signOperation = ({
   deviceId,
   transaction,
 }: {
-  account: Account,
-  deviceId: *,
-  transaction: Transaction,
+  account: Account;
+  deviceId: any;
+  transaction: Transaction;
 }): Observable<SignOperationEvent> =>
   Observable.create((o) => {
     async function main() {
       const transport = await open(deviceId);
+
       try {
-        o.next({ type: "device-signature-requested" });
+        o.next({
+          type: "device-signature-requested",
+        });
 
         if (!transaction.fees) {
           throw new FeeNotLoaded();
@@ -165,35 +165,35 @@ const signOperation = ({
         // Ensure amount is filled when useAllAmount
         const transactionToSign = {
           ...transaction,
-          amount: calculateAmount({ a: account, t: transaction }),
+          amount: calculateAmount({
+            a: account,
+            t: transaction,
+          }),
         };
-
         const { unsigned, registry } = await buildTransaction(
           account,
           transactionToSign,
           true
         );
-
         const payload = registry
           .createType("ExtrinsicPayload", unsigned, {
             version: unsigned.version,
           })
-          .toU8a({ method: true });
-
+          .toU8a({
+            method: true,
+          });
         // Sign by device
         const polkadot = new Polkadot(transport);
         const r = await polkadot.sign(account.freshAddressPath, payload);
-
         const signed = await signExtrinsic(unsigned, r.signature, registry);
-
-        o.next({ type: "device-signature-granted" });
-
+        o.next({
+          type: "device-signature-granted",
+        });
         const operation = buildOptimisticOperation(
           account,
           transactionToSign,
-          transactionToSign.fees ?? BigNumber(0)
+          transactionToSign.fees ?? new BigNumber(0)
         );
-
         o.next({
           type: "signed",
           signedOperation: {
@@ -206,6 +206,7 @@ const signOperation = ({
         close(transport, deviceId);
       }
     }
+
     main().then(
       () => o.complete(),
       (e) => o.error(e)

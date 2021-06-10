@@ -1,15 +1,9 @@
-// @flow
-
 import { stringCamelCase } from "@polkadot/util";
-
 import type { Transaction } from "./types";
 import type { Account } from "../../types";
-
 import { getRegistry, getTransactionParams } from "./cache";
 import { isFirstBond, getNonce } from "./logic";
-
 const EXTRINSIC_VERSION = 4;
-
 // Default values for tx parameters, if the user doesn't specify any
 const DEFAULTS = {
   tip: 0,
@@ -30,6 +24,7 @@ const getExtrinsicParams = (a: Account, t: Transaction) => {
         name: t.useAllAmount ? "transfer" : "transferKeepAlive",
         pallet: "balances",
       };
+
     case "bond":
       if (isFirstBond(a)) {
         return {
@@ -49,16 +44,21 @@ const getExtrinsicParams = (a: Account, t: Transaction) => {
         return {
           pallet: "staking",
           name: "bondExtra",
-          args: { maxAdditional: t.amount.toString() },
+          args: {
+            maxAdditional: t.amount.toString(),
+          },
         };
       }
+
     case "unbond":
       // Construct a transaction to unbond funds from a Stash account.
       // Must be signed by the controller, and can be only called when `EraElectionStatus` is `Closed`.
       return {
         pallet: "staking",
         name: "unbond",
-        args: { value: t.amount.toString() },
+        args: {
+          value: t.amount.toString(),
+        },
       };
 
     case "rebond":
@@ -67,7 +67,9 @@ const getExtrinsicParams = (a: Account, t: Transaction) => {
       return {
         pallet: "staking",
         name: "rebond",
-        args: { value: t.amount.toString() },
+        args: {
+          value: t.amount.toString(),
+        },
       };
 
     case "withdrawUnbonded":
@@ -76,7 +78,9 @@ const getExtrinsicParams = (a: Account, t: Transaction) => {
       return {
         pallet: "staking",
         name: "withdrawUnbonded",
-        args: { numSlashingSpans: a.polkadotResources?.numSlashingSpans || 0 },
+        args: {
+          numSlashingSpans: a.polkadotResources?.numSlashingSpans || 0,
+        },
       };
 
     case "nominate":
@@ -85,7 +89,9 @@ const getExtrinsicParams = (a: Account, t: Transaction) => {
       return {
         pallet: "staking",
         name: "nominate",
-        args: { targets: t.validators },
+        args: {
+          targets: t.validators,
+        },
       };
 
     case "chill":
@@ -104,7 +110,10 @@ const getExtrinsicParams = (a: Account, t: Transaction) => {
       return {
         pallet: "staking",
         name: "payoutStakers",
-        args: { validatorStash: validator, era: t.era },
+        args: {
+          validatorStash: validator,
+          era: t.era,
+        },
       };
 
     default:
@@ -121,16 +130,14 @@ const getExtrinsicParams = (a: Account, t: Transaction) => {
 export const buildTransaction = async (
   a: Account,
   t: Transaction,
-  forceLatestParams: boolean = false
+  forceLatestParams = false
 ) => {
   const { extrinsics, registry } = await getRegistry();
   const info = forceLatestParams
     ? await getTransactionParams.force()
     : await getTransactionParams();
-
   // Get the correct extrinsics params depending on transaction
   const extrinsicParams = getExtrinsicParams(a, t);
-
   const address = a.freshAddress;
   const { blockHash, genesisHash } = info;
   const blockNumber = registry
@@ -150,7 +157,6 @@ export const buildTransaction = async (
   const transactionVersion = registry
     .createType("u32", info.transactionVersion)
     .toHex();
-
   const methodFunction =
     extrinsics[extrinsicParams.pallet][extrinsicParams.name];
   const methodArgs = methodFunction.meta.args;
@@ -165,10 +171,10 @@ export const buildTransaction = async (
           } expects argument ${arg.toString()}, but got undefined`
         );
       }
+
       return extrinsicParams.args[stringCamelCase(arg.name.toString())];
     })
   ).toHex();
-
   const unsigned = {
     address,
     blockHash,
@@ -183,6 +189,8 @@ export const buildTransaction = async (
     transactionVersion,
     version: EXTRINSIC_VERSION,
   };
-
-  return { registry, unsigned };
+  return {
+    registry,
+    unsigned,
+  };
 };

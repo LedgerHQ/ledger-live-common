@@ -1,14 +1,10 @@
-//@flow
 import network from "../../../network";
 import querystring from "querystring";
-
 import { BigNumber } from "bignumber.js";
 import { encodeOperationId } from "../../../operation";
-
 import { getEnv } from "../../../env";
 import { getOperationType } from "./common";
 import type { OperationType, Operation } from "../../../types";
-
 const LIMIT = 200;
 
 /**
@@ -44,9 +40,9 @@ const getWithdrawUnbondedAmount = (extrinsic) => {
   return (
     extrinsic?.staking?.eventStaking.reduce((acc, curr) => {
       return curr.method === "Withdrawn"
-        ? BigNumber(acc).plus(curr.value)
-        : BigNumber(0);
-    }, BigNumber(0)) || BigNumber(0)
+        ? new BigNumber(acc).plus(curr.value)
+        : new BigNumber(0);
+    }, new BigNumber(0)) || new BigNumber(0)
   );
 };
 
@@ -58,8 +54,17 @@ const getWithdrawUnbondedAmount = (extrinsic) => {
  *
  * @returns {Object}
  */
-const getExtra = (type: OperationType, extrinsic: *): Object => {
-  let extra = {
+const getExtra = (type: OperationType, extrinsic: any): Record<string, any> => {
+  let extra: {
+    transferAmount?: BigNumber;
+    palletMethod: string;
+    bondedAmount?: BigNumber;
+    unbondedAmount?: BigNumber;
+    amount?: BigNumber;
+    withdrawUnbondedAmount?: any;
+    validatorStash?: any;
+    validators?: any;
+  } = {
     palletMethod: `${extrinsic.section}.${extrinsic.method}`,
   };
 
@@ -67,23 +72,23 @@ const getExtra = (type: OperationType, extrinsic: *): Object => {
     case "IN":
     case "OUT":
       if (extrinsic.amount || extrinsic.amount === 0) {
-        extra = { ...extra, transferAmount: BigNumber(extrinsic.amount) };
+        extra = { ...extra, transferAmount: new BigNumber(extrinsic.amount) };
       }
+
       break;
 
     case "BOND":
       if (extrinsic.amount || extrinsic.amount === 0) {
-        extra = { ...extra, bondedAmount: BigNumber(extrinsic.amount) };
+        extra = { ...extra, bondedAmount: new BigNumber(extrinsic.amount) };
       }
+
       break;
 
     case "UNBOND":
       if (extrinsic.amount || extrinsic.amount === 0) {
-        extra = {
-          ...extra,
-          unbondedAmount: BigNumber(extrinsic.amount),
-        };
+        extra = { ...extra, unbondedAmount: new BigNumber(extrinsic.amount) };
       }
+
       break;
 
     case "WITHDRAW_UNBONDED":
@@ -98,7 +103,7 @@ const getExtra = (type: OperationType, extrinsic: *): Object => {
       extra = {
         ...extra,
         validatorStash: extrinsic.validatorStash,
-        amount: BigNumber(extrinsic.value),
+        amount: new BigNumber(extrinsic.value),
       };
       break;
 
@@ -126,20 +131,21 @@ const getExtra = (type: OperationType, extrinsic: *): Object => {
  */
 const getValue = (extrinsic, type: OperationType): BigNumber => {
   if (!extrinsic.isSuccess) {
-    return type === "IN" ? BigNumber(0) : BigNumber(extrinsic.partialFee || 0);
+    return type === "IN" ? new BigNumber(0) : new BigNumber(extrinsic.partialFee || 0);
   }
 
   switch (type) {
     case "OUT":
       return extrinsic.signer !== extrinsic.affectedAddress1
-        ? BigNumber(extrinsic.amount).plus(extrinsic.partialFee)
-        : BigNumber(extrinsic.partialFee);
+        ? new BigNumber(extrinsic.amount).plus(extrinsic.partialFee)
+        : new BigNumber(extrinsic.partialFee);
+
     case "IN":
     case "SLASH":
-      return BigNumber(extrinsic.amount);
+      return new BigNumber(extrinsic.amount);
 
     default:
-      return BigNumber(extrinsic.partialFee);
+      return new BigNumber(extrinsic.partialFee);
   }
 };
 
@@ -156,8 +162,9 @@ const extrinsicToOperation = (
   addr: string,
   accountId: string,
   extrinsic
-): $Shape<Operation> | null => {
+): Partial<Operation> | null => {
   let type = getOperationType(extrinsic.section, extrinsic.method);
+
   if (
     type === "OUT" &&
     extrinsic.affectedAddress1 === addr &&
@@ -173,7 +180,7 @@ const extrinsicToOperation = (
   return {
     id: encodeOperationId(accountId, extrinsic.hash, type),
     accountId,
-    fee: BigNumber(extrinsic.partialFee || 0),
+    fee: new BigNumber(extrinsic.partialFee || 0),
     value: getValue(extrinsic, type),
     type,
     hash: extrinsic.hash,
@@ -203,15 +210,14 @@ const rewardToOperation = (
   addr: string,
   accountId: string,
   reward
-): $Shape<Operation> => {
+): Partial<Operation> => {
   const hash = reward.extrinsicHash;
   const type = "REWARD_PAYOUT";
-
   return {
     id: encodeOperationId(accountId, `${hash}+${reward.index}`, type),
     accountId,
-    fee: BigNumber(0),
-    value: BigNumber(reward.value),
+    fee: new BigNumber(0),
+    value: new BigNumber(reward.value),
     type: type,
     hash,
     blockHeight: reward.blockNumber,
@@ -235,15 +241,14 @@ const slashToOperation = (
   addr: string,
   accountId: string,
   slash
-): $Shape<Operation> => {
+): Partial<Operation> => {
   const hash = `${slash.blockNumber}`;
   const type = "SLASH";
-
   return {
     id: encodeOperationId(accountId, `${hash}+${slash.index}`, type),
     accountId,
-    fee: BigNumber(0),
-    value: BigNumber(slash.value),
+    fee: new BigNumber(0),
+    value: new BigNumber(slash.value),
     type: type,
     hash: hash,
     blockHeight: slash.blockNumber,
@@ -268,26 +273,22 @@ const fetchOperationList = async (
   accountId: string,
   addr: string,
   startAt: number,
-  offset: number = 0,
+  offset = 0,
   prevOperations: Operation[] = []
 ) => {
   const { data } = await network({
     method: "GET",
     url: getAccountOperationUrl(addr, offset, startAt),
   });
-
   const operations = data.extrinsics.map((extrinsic) =>
     extrinsicToOperation(addr, accountId, extrinsic)
   );
-
   const rewards = data.rewards.map((reward) =>
     rewardToOperation(addr, accountId, reward)
   );
-
   const slashes = data.slashes.map((slash) =>
     slashToOperation(addr, accountId, slash)
   );
-
   const mergedOp = [...prevOperations, ...operations, ...rewards, ...slashes];
 
   if (
@@ -319,7 +320,7 @@ const fetchOperationList = async (
 export const getOperations = async (
   accountId: string,
   addr: string,
-  startAt: number = 0
+  startAt = 0
 ) => {
   return await fetchOperationList(accountId, addr, startAt);
 };

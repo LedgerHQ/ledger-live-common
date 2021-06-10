@@ -1,20 +1,16 @@
-// @flow
 import { useState, useEffect, useMemo, useRef } from "react";
 import useMemoOnce from "../../hooks/useMemoOnce";
 import type { Account } from "../../types";
 import { useBridgeSync } from "../../bridge/react";
-
 import {
   getCurrentPolkadotPreloadData,
   getPolkadotPreloadDataUpdates,
 } from "./preload";
-
 import type {
   PolkadotValidator,
   PolkadotNomination,
   PolkadotSearchFilter,
 } from "./types";
-
 const SYNC_REFRESH_RATE = 6000; // 6s - block time
 
 export function usePolkadotPreloadData() {
@@ -27,7 +23,6 @@ export function usePolkadotPreloadData() {
   }, []);
   return state;
 }
-
 export const searchFilter: PolkadotSearchFilter = (query) => (validator) => {
   const terms = `${validator?.identity ?? ""} ${validator?.address ?? ""}`;
   return terms.toLowerCase().includes(query.toLowerCase().trim());
@@ -38,12 +33,11 @@ export function useSortedValidators(
   search: string,
   validators: PolkadotValidator[],
   nominations: PolkadotNomination[],
-  validatorSearchFilter?: PolkadotSearchFilter = searchFilter
+  validatorSearchFilter: PolkadotSearchFilter = searchFilter
 ): PolkadotValidator[] {
   const initialVotes = useMemoOnce(() =>
     nominations.map(({ address }) => address)
   );
-
   const sortedVotes = useMemo(
     () =>
       validators
@@ -55,13 +49,11 @@ export function useSortedValidators(
         ),
     [validators, initialVotes]
   );
-
   const sr = useMemo(
     () =>
       search ? validators.filter(validatorSearchFilter(search)) : sortedVotes,
     [search, validators, sortedVotes, validatorSearchFilter]
   );
-
   return sr;
 }
 
@@ -74,15 +66,12 @@ export function usePolkadotBondLoading(account: Account) {
   const controller = account.polkadotResources?.controller || null;
   const initialAccount = useRef(account);
   const [isLoading, setLoading] = useState(!controller);
-
   useEffect(() => {
     if (controller) {
       setLoading(false);
     }
   }, [controller]);
-
   const sync = useBridgeSync();
-
   useEffect(() => {
     if (!isLoading) return;
     const interval = setInterval(() => {
@@ -94,6 +83,5 @@ export function usePolkadotBondLoading(account: Account) {
     }, SYNC_REFRESH_RATE);
     return () => clearInterval(interval);
   }, [initialAccount, sync, isLoading]);
-
   return isLoading;
 }

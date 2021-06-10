@@ -1,10 +1,8 @@
-// @flow
 import type { DeviceAction } from "../../bot/types";
 import type { Transaction } from "./types";
 import { deviceActionFlow } from "../../bot/specs";
 import { formatCurrencyUnit } from "../../currencies";
-
-const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
+const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
   steps: [
     {
       title: "Staking",
@@ -28,10 +26,12 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
           formatCurrencyUnit(account.unit, transaction.amount, {
             disableRounding: true,
           });
+
         if (!formattedValue.includes(".")) {
           // if the value is pure integer, in the app it will automatically add an .0
           return formattedValue + ".0";
         }
+
         return formattedValue;
       },
     },
@@ -84,5 +84,6 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
     },
   ],
 });
-
-export default { acceptTransaction };
+export default {
+  acceptTransaction,
+};

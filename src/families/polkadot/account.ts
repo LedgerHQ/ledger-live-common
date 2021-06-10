@@ -1,11 +1,14 @@
-// @flow
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import type { Account, Operation, Unit } from "../../types";
 import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
+import { PolkadotResources } from "./types";
 
-function formatOperationSpecifics(op: Operation, unit: ?Unit): string {
+function formatOperationSpecifics(
+  op: Operation,
+  unit: Unit | null | undefined
+): string {
   const {
     validators,
     bondedAmount,
@@ -15,13 +18,11 @@ function formatOperationSpecifics(op: Operation, unit: ?Unit): string {
     amount,
   } = op.extra;
   let str = (validators || []).map((v) => `\n    ${v}`).join("");
-
   const formatConfig = {
     disableRounding: true,
     alwaysShowSign: false,
     showCode: true,
   };
-
   str +=
     bondedAmount && !bondedAmount.isNaN()
       ? `\n    bondedAmount: ${
@@ -42,15 +43,12 @@ function formatOperationSpecifics(op: Operation, unit: ?Unit): string {
             : withdrawUnbondedAmount
         }`
       : "";
-
   str += validatorStash ? `\n    validatorStash: ${validatorStash}` : "";
-
   str += amount
     ? `\n    amount: ${
         unit ? formatCurrencyUnit(unit, amount, formatConfig) : amount
       }`
     : "";
-
   return str;
 }
 
@@ -63,111 +61,105 @@ function formatAccountSpecifics(account: Account): string {
     alwaysShowSign: false,
     showCode: true,
   };
-
   let str = " ";
-
   str +=
     formatCurrencyUnit(unit, account.spendableBalance, formatConfig) +
     " spendable. ";
-  if (polkadotResources.lockedBalance.gt(0)) {
-    str +=
-      formatCurrencyUnit(unit, polkadotResources.lockedBalance, formatConfig) +
-      " locked. ";
-  }
-  if (polkadotResources.unlockedBalance.gt(0)) {
+
+  if ((polkadotResources as PolkadotResources).lockedBalance.gt(0)) {
     str +=
       formatCurrencyUnit(
         unit,
-        polkadotResources.unlockedBalance,
+        (polkadotResources as PolkadotResources).lockedBalance,
+        formatConfig
+      ) + " locked. ";
+  }
+
+  if ((polkadotResources as PolkadotResources).unlockedBalance.gt(0)) {
+    str +=
+      formatCurrencyUnit(
+        unit,
+        (polkadotResources as PolkadotResources).unlockedBalance,
         formatConfig
       ) + " unlocked. ";
   }
-  if (polkadotResources.stash) {
-    str += "\nstash : " + polkadotResources.stash;
-  }
-  if (polkadotResources.controller) {
-    str += "\ncontroller : " + polkadotResources.controller;
+
+  if ((polkadotResources as PolkadotResources).stash) {
+    str += "\nstash : " + (polkadotResources as PolkadotResources).stash;
   }
 
-  if (polkadotResources.nominations?.length) {
+  if ((polkadotResources as PolkadotResources).controller) {
+    str += "\ncontroller : " + (polkadotResources as PolkadotResources).controller;
+  }
+
+  if ((polkadotResources as PolkadotResources).nominations?.length) {
     str += "\nNominations\n";
-    str += polkadotResources.nominations
+    str += ((polkadotResources as PolkadotResources).nominations as any[])
       .map((v) => `  to ${v.address}`)
       .join("\n");
   }
+
   return str;
 }
 
-export function fromOperationExtraRaw(extra: ?Object) {
+export function fromOperationExtraRaw(
+  extra: Record<string, any> | null | undefined
+) {
   if (extra && extra.transferAmount) {
-    extra = {
-      ...extra,
-      transferAmount: extra.transferAmount.toString(),
-    };
+    extra = { ...extra, transferAmount: extra.transferAmount.toString() };
   }
+
   if (extra && extra.bondedAmount) {
-    return {
-      ...extra,
-      bondedAmount: BigNumber(extra.bondedAmount),
-    };
+    return { ...extra, bondedAmount: new BigNumber(extra.bondedAmount) };
   }
+
   if (extra && extra.unbondedAmount) {
-    return {
-      ...extra,
-      unbondedAmount: BigNumber(extra.unbondedAmount),
-    };
+    return { ...extra, unbondedAmount: new BigNumber(extra.unbondedAmount) };
   }
+
   if (extra && extra.withdrawUnbondedAmount) {
     return {
       ...extra,
-      withdrawUnbondedAmount: BigNumber(extra.withdrawUnbondedAmount),
+      withdrawUnbondedAmount: new BigNumber(extra.withdrawUnbondedAmount),
     };
   }
+
   // for subscan reward & slash
   if (extra && extra.amount) {
-    return {
-      ...extra,
-      amount: BigNumber(extra.amount),
-    };
+    return { ...extra, amount: new BigNumber(extra.amount) };
   }
+
   return extra;
 }
-
-export function toOperationExtraRaw(extra: ?Object) {
+export function toOperationExtraRaw(
+  extra: Record<string, any> | null | undefined
+) {
   if (extra && extra.transferAmount) {
-    extra = {
-      ...extra,
-      transferAmount: extra.transferAmount.toString(),
-    };
+    extra = { ...extra, transferAmount: extra.transferAmount.toString() };
   }
+
   if (extra && extra.bondedAmount) {
-    return {
-      ...extra,
-      bondedAmount: extra.bondedAmount.toString(),
-    };
+    return { ...extra, bondedAmount: extra.bondedAmount.toString() };
   }
+
   if (extra && extra.unbondedAmount) {
-    return {
-      ...extra,
-      unbondedAmount: extra.unbondedAmount.toString(),
-    };
+    return { ...extra, unbondedAmount: extra.unbondedAmount.toString() };
   }
+
   if (extra && extra.withdrawUnbondedAmount) {
     return {
       ...extra,
       withdrawUnbondedAmount: extra.withdrawUnbondedAmount.toString(),
     };
   }
+
   // for subscan reward & slash
   if (extra && extra.amount) {
-    return {
-      ...extra,
-      amount: extra.amount.toString(),
-    };
+    return { ...extra, amount: extra.amount.toString() };
   }
+
   return extra;
 }
-
 export default {
   formatAccountSpecifics,
   formatOperationSpecifics,

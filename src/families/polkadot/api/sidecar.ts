@@ -1,17 +1,13 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import querystring from "querystring";
-
 import { TypeRegistry, ModulesWithCalls } from "@polkadot/types";
 import { getSpecTypes } from "@polkadot/types-known";
 import { Metadata } from "@polkadot/metadata";
 import { expandMetadata } from "@polkadot/metadata/decorate";
-
 import { makeLRUCache } from "../../../cache";
 import type { CacheRes } from "../../../cache";
 import { getEnv } from "../../../env";
 import network from "../../../network";
-
 import type {
   PolkadotValidator,
   PolkadotStakingProgress,
@@ -52,7 +48,9 @@ const getSidecarUrl = (route): string => `${getBaseSidecarUrl()}${route || ""}`;
 
 const VALIDATOR_COMISSION_RATIO = 1000000000;
 const ELECTION_STATUS_OPTIMISTIC_THRESHOLD =
-  getEnv("POLKADOT_ELECTION_STATUS_THRESHOLD") || 25; // blocks = 2 minutes 30
+  getEnv("POLKADOT_ELECTION_STATUS_THRESHOLD") || 25;
+
+// blocks = 2 minutes 30
 
 /**
  * Fetch Balance from the api.
@@ -65,11 +63,14 @@ const ELECTION_STATUS_OPTIMISTIC_THRESHOLD =
 const fetchBalanceInfo = async (
   addr: string
 ): Promise<SidecarAccountBalanceInfo> => {
-  const { data }: { data: SidecarAccountBalanceInfo } = await network({
+  const {
+    data,
+  }: {
+    data: SidecarAccountBalanceInfo;
+  } = await network({
     method: "GET",
     url: getSidecarUrl(`/accounts/${addr}/balance-info`),
   });
-
   return data;
 };
 
@@ -82,11 +83,14 @@ const fetchBalanceInfo = async (
  * @returns {string}
  */
 const fetchStashAddr = async (addr: string): Promise<string | null> => {
-  const { data }: { data: SidecarPalletStorageItem } = await network({
+  const {
+    data,
+  }: {
+    data: SidecarPalletStorageItem;
+  } = await network({
     method: "GET",
     url: getSidecarUrl(`/pallets/staking/storage/ledger?key1=${addr}`),
   });
-
   return data.value?.stash ?? null;
 };
 
@@ -99,11 +103,14 @@ const fetchStashAddr = async (addr: string): Promise<string | null> => {
  * @returns {string}
  */
 const fetchControllerAddr = async (addr: string): Promise<string | null> => {
-  const { data }: { data: SidecarPalletStorageItem } = await network({
+  const {
+    data,
+  }: {
+    data: SidecarPalletStorageItem;
+  } = await network({
     method: "GET",
     url: getSidecarUrl(`/pallets/staking/storage/bonded?key1=${addr}`),
   });
-
   return data.value ?? null;
 };
 
@@ -116,11 +123,14 @@ const fetchControllerAddr = async (addr: string): Promise<string | null> => {
  * @returns {SidecarStakingInfo}
  */
 const fetchStakingInfo = async (addr: string): Promise<SidecarStakingInfo> => {
-  const { data }: { data: SidecarStakingInfo } = await network({
+  const {
+    data,
+  }: {
+    data: SidecarStakingInfo;
+  } = await network({
     method: "GET",
     url: getSidecarUrl(`/accounts/${addr}/staking-info`),
   });
-
   return data;
 };
 
@@ -133,11 +143,14 @@ const fetchStakingInfo = async (addr: string): Promise<SidecarStakingInfo> => {
  * @returns {SidecarNominations}
  */
 const fetchNominations = async (addr: string): Promise<SidecarNominations> => {
-  const { data }: { data: SidecarNominations } = await network({
+  const {
+    data,
+  }: {
+    data: SidecarNominations;
+  } = await network({
     method: "GET",
     url: getSidecarUrl(`/accounts/${addr}/nominations`),
   });
-
   return data;
 };
 
@@ -149,12 +162,15 @@ const fetchNominations = async (addr: string): Promise<SidecarNominations> => {
  *
  * @returns {Object}
  */
-const fetchConstants = async (): Promise<Object> => {
-  const { data }: { data: SidecarConstants } = await network({
+const fetchConstants = async (): Promise<Record<string, any>> => {
+  const {
+    data,
+  }: {
+    data: SidecarConstants;
+  } = await network({
     method: "GET",
     url: getSidecarUrl(`/runtime/constants`),
   });
-
   return data.consts;
 };
 
@@ -166,11 +182,14 @@ const fetchConstants = async (): Promise<Object> => {
  * @returns {SidecarPalletStorageItem}
  */
 const fetchActiveEra = async (): Promise<SidecarPalletStorageItem> => {
-  const { data }: { data: SidecarPalletStorageItem } = await network({
+  const {
+    data,
+  }: {
+    data: SidecarPalletStorageItem;
+  } = await network({
     method: "GET",
     url: getSidecarUrl("/pallets/staking/storage/activeEra"),
   });
-
   return data;
 };
 
@@ -199,11 +218,14 @@ const fetchValidators = async (
     params = { ...params, addresses: addresses.join(",") };
   }
 
-  const { data }: { data: SidecarValidators } = await network({
+  const {
+    data,
+  }: {
+    data: SidecarValidators;
+  } = await network({
     method: "GET",
     url: getSidecarUrl(`/validators?${querystring.stringify(params)}`),
   });
-
   return data;
 };
 
@@ -214,12 +236,17 @@ const fetchValidators = async (
  *
  * @returns {SidecarPalletStakingProgress}
  */
-const fetchStakingProgress = async (): Promise<SidecarPalletStakingProgress> => {
-  const { data }: { data: SidecarPalletStakingProgress } = await network({
+const fetchStakingProgress = async (): Promise<
+  SidecarPalletStakingProgress
+> => {
+  const {
+    data,
+  }: {
+    data: SidecarPalletStakingProgress;
+  } = await network({
     method: "GET",
     url: getSidecarUrl("/pallets/staking/progress"),
   });
-
   return data;
 };
 
@@ -235,12 +262,14 @@ const fetchTransactionMaterial = async (
 ): Promise<SidecarTransactionMaterial> => {
   // By default we don't want any metadata.
   const params = withMetadata ? "" : "?noMeta=true";
-
-  const { data }: { data: SidecarTransactionMaterial } = await network({
+  const {
+    data,
+  }: {
+    data: SidecarTransactionMaterial;
+  } = await network({
     method: "GET",
     url: getSidecarUrl(`/transaction/material${params}`),
   });
-
   return data;
 };
 
@@ -252,11 +281,14 @@ const fetchTransactionMaterial = async (
  * @returns {SidecarRuntimeSpec}
  */
 const fetchChainSpec = async () => {
-  const { data }: { data: SidecarRuntimeSpec } = await network({
+  const {
+    data,
+  }: {
+    data: SidecarRuntimeSpec;
+  } = await network({
     method: "GET",
     url: getSidecarUrl("/runtime/spec"),
   });
-
   return data;
 };
 
@@ -273,7 +305,6 @@ export const disconnect = () => {};
  */
 export const isElectionClosed = async (): Promise<boolean> => {
   const progress = await fetchStakingProgress();
-
   return !progress.electionStatus?.status?.Open;
 };
 
@@ -287,8 +318,7 @@ export const isElectionClosed = async (): Promise<boolean> => {
  */
 export const isNewAccount = async (addr: string): Promise<boolean> => {
   const { nonce, free } = await fetchBalanceInfo(addr);
-
-  return BigNumber(0).isEqualTo(nonce) && BigNumber(0).isEqualTo(free);
+  return new BigNumber(0).isEqualTo(nonce) && new BigNumber(0).isEqualTo(free);
 };
 
 /**
@@ -301,7 +331,6 @@ export const isNewAccount = async (addr: string): Promise<boolean> => {
  */
 export const isControllerAddress = async (addr: string): Promise<boolean> => {
   const stash = await fetchStashAddr(addr);
-
   return !!stash;
 };
 
@@ -318,7 +347,6 @@ export const verifyValidatorAddresses = async (
 ): Promise<string[]> => {
   const existingValidators = await fetchValidators("all", validators);
   const existingIds = existingValidators.map((v) => v.accountId);
-
   return validators.filter((v) => !existingIds.includes(v));
 };
 
@@ -332,12 +360,7 @@ export const getAccount = async (addr: string) => {
   const balances = await getBalances(addr);
   const stakingInfo = await getStakingInfo(addr);
   const nominations = await getNominations(addr);
-
-  return {
-    ...balances,
-    ...stakingInfo,
-    nominations,
-  };
+  return { ...balances, ...stakingInfo, nominations };
 };
 
 /**
@@ -348,27 +371,26 @@ export const getAccount = async (addr: string) => {
  */
 const getBalances = async (addr: string) => {
   const balanceInfo = await fetchBalanceInfo(addr);
-
   // Locked is the highest value among locks
   const totalLocked = balanceInfo.locks.reduce((total, lock) => {
-    const amount = BigNumber(lock.amount);
+    const amount = new BigNumber(lock.amount);
+
     if (amount.gt(total)) {
       return amount;
     }
+
     return total;
-  }, BigNumber(0));
-
-  const balance = BigNumber(balanceInfo.free);
+  }, new BigNumber(0));
+  const balance = new BigNumber(balanceInfo.free);
   const spendableBalance = totalLocked.gt(balance)
-    ? BigNumber(0)
+    ? new BigNumber(0)
     : balance.minus(totalLocked);
-
   return {
     blockHeight: balanceInfo.at?.height ? Number(balanceInfo.at.height) : null,
     balance,
     spendableBalance,
     nonce: Number(balanceInfo.nonce),
-    lockedBalance: BigNumber(balanceInfo.miscFrozen),
+    lockedBalance: new BigNumber(balanceInfo.miscFrozen),
   };
 };
 
@@ -389,8 +411,8 @@ export const getStakingInfo = async (addr: string) => {
     return {
       controller: null,
       stash: stash || null,
-      unlockedBalance: BigNumber(0),
-      unlockingBalance: BigNumber(0),
+      unlockedBalance: new BigNumber(0),
+      unlockingBalance: new BigNumber(0),
       unlockings: [],
     };
   }
@@ -400,39 +422,37 @@ export const getStakingInfo = async (addr: string) => {
     fetchActiveEra(),
     getConstants(),
   ]);
-
   const activeEraIndex = Number(activeEra.value?.index || 0);
   const activeEraStart = Number(activeEra.value?.start || 0);
+  const blockTime = new BigNumber(consts?.babe?.expectedBlockTime || 6000); // 6000 ms
 
-  const blockTime = BigNumber(consts?.babe?.expectedBlockTime || 6000); // 6000 ms
-  const epochDuration = BigNumber(consts?.babe?.epochDuration || 2400); // 2400 blocks
-  const sessionsPerEra = BigNumber(consts?.staking?.sessionsPerEra || 6); // 6 sessions
+  const epochDuration = new BigNumber(consts?.babe?.epochDuration || 2400); // 2400 blocks
+
+  const sessionsPerEra = new BigNumber(consts?.staking?.sessionsPerEra || 6); // 6 sessions
+
   const eraLength = sessionsPerEra
     .multipliedBy(epochDuration)
     .multipliedBy(blockTime)
     .toNumber();
-
   const unlockings = stakingInfo?.staking.unlocking
     ? stakingInfo?.staking?.unlocking.map<PolkadotUnlocking>((lock) => ({
-        amount: BigNumber(lock.value),
+        amount: new BigNumber(lock.value),
         completionDate: new Date(
           activeEraStart + (Number(lock.era) - activeEraIndex) * eraLength
         ), // This is an estimation of the date of completion, since it depends on block validation speed
       }))
     : [];
-
   const now = new Date();
   const unlocked = unlockings.filter((lock) => lock.completionDate <= now);
   const unlockingBalance = unlockings.reduce(
     (sum, lock) => sum.plus(lock.amount),
-    BigNumber(0)
+    new BigNumber(0)
   );
   const unlockedBalance = unlocked.reduce(
     (sum, lock) => sum.plus(lock.amount),
-    BigNumber(0)
+    new BigNumber(0)
   );
   const numSlashingSpans = Number(stakingInfo?.numSlashingSpans || 0);
-
   return {
     controller: controller || null,
     stash: stash || null,
@@ -455,12 +475,10 @@ export const getNominations = async (
   addr: string
 ): Promise<PolkadotNomination[]> => {
   const nominations = await fetchNominations(addr);
-
   if (!nominations) return [];
-
   return nominations.targets.map<PolkadotNomination>((nomination) => ({
     address: nomination.address,
-    value: BigNumber(nomination.value || 0),
+    value: new BigNumber(nomination.value || 0),
     status: nomination.status,
   }));
 };
@@ -472,7 +490,6 @@ export const getNominations = async (
  */
 export const getTransactionParams = async () => {
   const material = await fetchTransactionMaterial();
-
   return {
     blockHash: material.at.hash,
     blockNumber: material.at.height,
@@ -493,7 +510,11 @@ export const getTransactionParams = async () => {
  * @returns {string>} - the broadcasted transaction's hah
  */
 export const submitExtrinsic = async (extrinsic: string): Promise<string> => {
-  const { data }: { data: SidecarTransactionBroadcast } = await network({
+  const {
+    data,
+  }: {
+    data: SidecarTransactionBroadcast;
+  } = await network({
     method: "POST",
     url: getSidecarUrl("/transaction"),
     data: {
@@ -515,14 +536,17 @@ export const submitExtrinsic = async (extrinsic: string): Promise<string> => {
 export const paymentInfo = async (
   extrinsic: string
 ): Promise<SidecarPaymentInfo> => {
-  const { data }: { data: SidecarPaymentInfo } = await network({
+  const {
+    data,
+  }: {
+    data: SidecarPaymentInfo;
+  } = await network({
     method: "POST",
     url: getSidecarUrl("/transaction/fee-estimate"),
     data: {
       tx: extrinsic,
     },
   });
-
   return data;
 };
 
@@ -547,7 +571,7 @@ export const getValidators = async (
     validators = await fetchValidators(stashes);
   }
 
-  return validators.map<PolkadotValidator>((v) => ({
+  return validators.map((v) => ({
     address: v.accountId,
     identity: v.identity
       ? [v.identity.displayParent, v.identity.display]
@@ -556,10 +580,12 @@ export const getValidators = async (
           .trim()
       : "",
     nominatorsCount: Number(v.nominatorsCount),
-    rewardPoints: v.rewardsPoints ? BigNumber(v.rewardsPoints) : null,
-    commission: BigNumber(v.commission).dividedBy(VALIDATOR_COMISSION_RATIO),
-    totalBonded: BigNumber(v.total),
-    selfBonded: BigNumber(v.own),
+    rewardPoints: v.rewardsPoints ? new BigNumber(v.rewardsPoints) : null,
+    commission: new BigNumber(v.commission).dividedBy(
+      VALIDATOR_COMISSION_RATIO
+    ),
+    totalBonded: new BigNumber(v.total),
+    selfBonded: new BigNumber(v.own),
     isElected: v.isElected,
     isOversubscribed: v.isOversubscribed,
   }));
@@ -572,17 +598,17 @@ export const getValidators = async (
  *
  * @returns {PolkadotStakingProgress}
  */
-export const getStakingProgress = async (): Promise<PolkadotStakingProgress> => {
+export const getStakingProgress = async (): Promise<
+  PolkadotStakingProgress
+> => {
   const [progress, consts] = await Promise.all([
     fetchStakingProgress(),
     getConstants(),
   ]);
-
   const activeEra = Number(progress.activeEra);
   const currentBlock = Number(progress.at.height);
   const toggleEstimate = Number(progress.electionStatus?.toggleEstimate);
   const electionClosed = !progress.electionStatus?.status?.Open;
-
   // Consider election open if in the THERSHOLD blocks before the real expected change
   // It disables staking flows that are subject to fail or block because of election status
   // update while user is signing
@@ -594,7 +620,6 @@ export const getStakingProgress = async (): Promise<PolkadotStakingProgress> => 
     currentBlock >= toggleEstimate - ELECTION_STATUS_OPTIMISTIC_THRESHOLD
       ? false
       : electionClosed;
-
   return {
     activeEra,
     electionClosed: optimisticElectionClosed,
@@ -612,27 +637,24 @@ export const getStakingProgress = async (): Promise<PolkadotStakingProgress> => 
  * @returns {Object} - { registry, extrinsics }
  */
 export const getRegistry = async (): Promise<{
-  registry: typeof TypeRegistry,
-  extrinsics: typeof ModulesWithCalls,
+  registry: typeof TypeRegistry;
+  extrinsics: typeof ModulesWithCalls;
 }> => {
   const [material, spec] = await Promise.all([
     fetchTransactionMaterial(true),
     fetchChainSpec(),
   ]);
-
   const registry = new TypeRegistry();
   const metadata = new Metadata(registry, material.metadata);
-
   // Register types specific to chain/runtimeVersion
   registry.register(
     getSpecTypes(
       registry,
       material.chainName,
       material.specName,
-      material.specVersion
+      Number(material.specVersion)
     )
   );
-
   // Register the chain properties for this registry
   registry.setChainProperties(
     registry.createType("ChainProperties", {
@@ -641,12 +663,12 @@ export const getRegistry = async (): Promise<{
       tokenSymbol: spec.properties.tokenSymbol,
     })
   );
-
   registry.setMetadata(metadata);
-
   const extrinsics = expandMetadata(registry, metadata).tx;
-
-  return { registry, extrinsics };
+  return {
+    registry,
+    extrinsics,
+  };
 };
 
 /*
@@ -661,11 +683,15 @@ export const getRegistry = async (): Promise<{
  *
  * @returns {Promise<Object>} consts
  */
-export const getConstants: CacheRes<Array<void>, Object> = makeLRUCache(
-  async (): Promise<Object> => fetchConstants(),
+export const getConstants: CacheRes<
+  Array<void>,
+  Record<string, any>
+> = makeLRUCache(
+  async (): Promise<Record<string, any>> => fetchConstants(),
   () => "polkadot",
   {
-    max: 1, // Store only one constnats object since we only have polkadot.
+    max: 1,
+    // Store only one constnats object since we only have polkadot.
     maxAge: 60 * 60 * 1000, // 1 hour
   }
 );

@@ -1,11 +1,8 @@
-// @flow
 import { TypeRegistry, ModulesWithCalls } from "@polkadot/types";
-
 import { makeLRUCache } from "../../cache";
 import type { CacheRes } from "../../cache";
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
-
 import {
   isNewAccount as apiIsNewAccount,
   isControllerAddress as apiIsControllerAddress,
@@ -37,21 +34,28 @@ const hashTransactionParams = (
   switch (t.mode) {
     case "send":
       return `${prefix}_${byteSize}`;
+
     case "bond":
       return t.rewardDestination
         ? `${prefix}_${byteSize}_${t.rewardDestination}`
         : `${prefix}_${byteSize}`;
+
     case "unbond":
     case "rebond":
       return `${prefix}_${byteSize}`;
+
     case "nominate":
       return `${prefix}_${t.validators?.length ?? "0"}`;
+
     case "withdrawUnbonded":
       return `${prefix}_${t.numSlashingSpans ?? "0"}`;
+
     case "chill":
       return `${prefix}`;
+
     case "claimReward":
       return `${prefix}_${t.era || "0"}`;
+
     default:
       throw new Error("Unknown mode in transaction");
   }
@@ -65,8 +69,11 @@ const hashTransactionParams = (
  *
  * @returns {Promise<Object>} txInfo
  */
-export const getTransactionParams: CacheRes<Array<void>, Object> = makeLRUCache(
-  async (): Promise<Object> => apiGetTransactionParams(),
+export const getTransactionParams: CacheRes<
+  Array<void>,
+  Record<string, any>
+> = makeLRUCache(
+  async (): Promise<Record<string, any>> => apiGetTransactionParams(),
   () => "polkadot",
   {
     maxAge: 5 * 60 * 1000, // 5 minutes
@@ -82,10 +89,20 @@ export const getTransactionParams: CacheRes<Array<void>, Object> = makeLRUCache(
  * @returns {Promise<BigBumber>}
  */
 export const getPaymentInfo: CacheRes<
-  Array<{ a: Account, t: Transaction, signedTx: string }>,
-  { partialFee: string }
+  Array<{
+    a: Account;
+    t: Transaction;
+    signedTx: string;
+  }>,
+  {
+    partialFee: string;
+  }
 > = makeLRUCache(
-  async ({ signedTx }): Promise<{ partialFee: string }> => {
+  async ({
+    signedTx,
+  }): Promise<{
+    partialFee: string;
+  }> => {
     return await apiPaymentInfo(signedTx);
   },
   ({ a, t, signedTx }) => hashTransactionParams(a, t, signedTx),
@@ -93,11 +110,13 @@ export const getPaymentInfo: CacheRes<
     maxAge: 5 * 60 * 1000, // 5 minutes
   }
 );
-
-export const getRegistry: CacheRes<Array<void>, Object> = makeLRUCache(
+export const getRegistry: CacheRes<
+  Array<void>,
+  Record<string, any>
+> = makeLRUCache(
   async (): Promise<{
-    registry: typeof TypeRegistry,
-    extrinsics: typeof ModulesWithCalls,
+    registry: typeof TypeRegistry;
+    extrinsics: typeof ModulesWithCalls;
   }> => {
     return await apiGetRegistry();
   },

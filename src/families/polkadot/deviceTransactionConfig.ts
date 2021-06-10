@@ -1,28 +1,23 @@
-// @flow
-
 import type { AccountLike, Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
 import type { DeviceTransactionField } from "../../transaction";
 import { getMainAccount } from "../../account";
 import { formatCurrencyUnit, getCryptoCurrencyById } from "../../currencies";
 import { isStash } from "./logic";
-
 const currency = getCryptoCurrencyById("polkadot");
-
 export type ExtraDeviceTransactionField = {
-  type: "polkadot.validators",
-  label: string,
+  type: "polkadot.validators";
+  label: string;
 };
 
 const getSendFields = ({
   transaction,
   status: { amount },
 }: {
-  transaction: Transaction,
-  status: TransactionStatus,
+  transaction: Transaction;
+  status: TransactionStatus;
 }) => {
-  const fields = [];
-
+  const fields: { type: string; label: string; value: string }[] = [];
   fields.push({
     type: "text",
     label: "Balances",
@@ -31,7 +26,6 @@ const getSendFields = ({
         ? "Transfer"
         : "Transfer keep alive",
   });
-
   fields.push({
     type: "text",
     label: "Amount",
@@ -40,7 +34,6 @@ const getSendFields = ({
       disableRounding: true,
     }),
   });
-
   return fields;
 };
 
@@ -50,16 +43,15 @@ function getDeviceTransactionConfig({
   transaction,
   status,
 }: {
-  account: AccountLike,
-  parentAccount: ?Account,
-  transaction: Transaction,
-  status: TransactionStatus,
+  account: AccountLike;
+  parentAccount: Account | null | undefined;
+  transaction: Transaction;
+  status: TransactionStatus;
 }): Array<DeviceTransactionField> {
   const { mode, recipient, rewardDestination } = transaction;
   const { amount } = status;
   const mainAccount = getMainAccount(account, parentAccount);
-
-  let fields = [];
+  let fields: { type: string; label: string; value?: string }[] = [];
 
   switch (mode) {
     case "send":
@@ -75,7 +67,6 @@ function getDeviceTransactionConfig({
         label: "Staking",
         value: "Nominate",
       });
-
       fields.push({
         type: "polkadot.validators",
         label: "Targets",
@@ -89,13 +80,11 @@ function getDeviceTransactionConfig({
           label: "Staking",
           value: "Bond",
         });
-
         fields.push({
           type: "text",
           label: "Controller",
           value: recipient,
         });
-
         fields.push({
           type: "text",
           label: "Amount",
@@ -104,7 +93,6 @@ function getDeviceTransactionConfig({
             disableRounding: true,
           }),
         });
-
         fields.push({
           type: "text",
           label: "Payee",
@@ -116,7 +104,6 @@ function getDeviceTransactionConfig({
           label: "Staking",
           value: "Bond extra",
         });
-
         fields.push({
           type: "text",
           label: "Amount",
@@ -135,7 +122,6 @@ function getDeviceTransactionConfig({
         label: "Staking",
         value: "Rebond",
       });
-
       fields.push({
         type: "text",
         label: "Amount",
@@ -152,7 +138,6 @@ function getDeviceTransactionConfig({
         label: "Staking",
         value: "Unbond",
       });
-
       fields.push({
         type: "text",
         label: "Amount",
@@ -195,8 +180,7 @@ function getDeviceTransactionConfig({
     type: "fees",
     label: "Fees",
   });
-
-  return fields;
+  return fields as DeviceTransactionField[];
 }
 
 export default getDeviceTransactionConfig;

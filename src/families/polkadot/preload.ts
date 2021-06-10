@@ -1,20 +1,19 @@
 /* eslint-disable no-prototype-builtins */
-// @flow
 import { BigNumber } from "bignumber.js";
 import { Observable, Subject } from "rxjs";
 import { log } from "@ledgerhq/logs";
-
 import { PRELOAD_MAX_AGE } from "./logic";
 import { getRegistry } from "./cache";
 import type { PolkadotPreloadData, PolkadotValidator } from "./types";
 import { getStakingProgress, getValidators } from "./validators";
-
 let currentPolkadotPreloadedData: PolkadotPreloadData = {
   validators: [],
   staking: null,
 };
 
-function fromHydrateValidator(validatorRaw: Object): PolkadotValidator {
+function fromHydrateValidator(
+  validatorRaw: Record<string, any>
+): PolkadotValidator {
   return {
     address: validatorRaw.address,
     identity: validatorRaw.identity,
@@ -22,18 +21,23 @@ function fromHydrateValidator(validatorRaw: Object): PolkadotValidator {
     rewardPoints:
       validatorRaw.rewardPoints === null
         ? null
-        : BigNumber(validatorRaw.rewardPoints),
-    commission: BigNumber(validatorRaw.commission),
-    totalBonded: BigNumber(validatorRaw.totalBonded),
-    selfBonded: BigNumber(validatorRaw.selfBonded),
+        : new BigNumber(validatorRaw.rewardPoints),
+    commission: new BigNumber(validatorRaw.commission),
+    totalBonded: new BigNumber(validatorRaw.totalBonded),
+    selfBonded: new BigNumber(validatorRaw.selfBonded),
     isElected: !!validatorRaw.isElected,
     isOversubscribed: !!validatorRaw.isOversubscribed,
   };
 }
 
-function fromHydratePreloadData(data: mixed): PolkadotPreloadData {
-  let validators = [];
-  let staking = null;
+function fromHydratePreloadData(data: any): PolkadotPreloadData {
+  let validators: PolkadotValidator[] = [];
+  let staking: {
+    electionClosed: boolean;
+    activeEra: number;
+    maxNominatorRewardedPerValidator: number;
+    bondingDuration: number;
+  } | null = null;
 
   if (typeof data === "object" && data) {
     if (Array.isArray(data.validators)) {
@@ -47,7 +51,6 @@ function fromHydratePreloadData(data: mixed): PolkadotPreloadData {
         maxNominatorRewardedPerValidator,
         bondingDuration,
       } = data.staking;
-
       staking = {
         electionClosed: !!electionClosed,
         activeEra: Number(activeEra),
@@ -65,20 +68,17 @@ function fromHydratePreloadData(data: mixed): PolkadotPreloadData {
 }
 
 const updates = new Subject<PolkadotPreloadData>();
-
 export function getCurrentPolkadotPreloadData(): PolkadotPreloadData {
   return currentPolkadotPreloadedData;
 }
-
 export function setPolkadotPreloadData(data: PolkadotPreloadData) {
   if (data === currentPolkadotPreloadedData) return;
-
   currentPolkadotPreloadedData = data;
-
   updates.next(data);
 }
-
-export function getPolkadotPreloadDataUpdates(): Observable<PolkadotPreloadData> {
+export function getPolkadotPreloadDataUpdates(): Observable<
+  PolkadotPreloadData
+> {
   return updates.asObservable();
 }
 
@@ -95,13 +95,12 @@ const shouldRefreshValidators = (previousState, currentState) => {
 
 export const preload = async (): Promise<PolkadotPreloadData> => {
   await getRegistry(); // ensure registry is already in cache.
-  const currentStakingProgress = await getStakingProgress();
 
+  const currentStakingProgress = await getStakingProgress();
   const {
     validators: previousValidators,
     staking: previousStakingProgress,
   } = currentPolkadotPreloadedData;
-
   let validators = previousValidators;
 
   if (
@@ -110,10 +109,13 @@ export const preload = async (): Promise<PolkadotPreloadData> => {
     shouldRefreshValidators(previousStakingProgress, currentStakingProgress)
   ) {
     log("polkadot/preload", "refreshing polkadot validators...");
+
     try {
       validators = await getValidators("all");
     } catch (error) {
-      log("polkadot/preload", "failed to fetch validators", { error });
+      log("polkadot/preload", "failed to fetch validators", {
+        error,
+      });
     }
   }
 
@@ -122,14 +124,11 @@ export const preload = async (): Promise<PolkadotPreloadData> => {
     staking: currentStakingProgress,
   };
 };
-
-export const hydrate = (data: mixed) => {
+export const hydrate = (data: unknown) => {
   const hydrated = fromHydratePreloadData(data);
-
   log(
     "polkadot/preload",
     "hydrate " + hydrated.validators.length + " polkadot validators"
   );
-
   setPolkadotPreloadData(hydrated);
 };

@@ -1,7 +1,5 @@
-// @flow
 import expect from "expect";
 import invariant from "invariant";
-
 import sampleSize from "lodash/sampleSize";
 import { BigNumber } from "bignumber.js";
 import { getCurrentPolkadotPreloadData } from "../../families/polkadot/preload";
@@ -17,13 +15,10 @@ import {
   isFirstBond,
   getMinimalLockedBalance,
 } from "../../families/polkadot/logic";
-
 const currency = getCryptoCurrencyById("polkadot");
-
 const POLKADOT_MIN_SAFE = parseCurrencyUnit(currency.units[0], "0.05");
 const EXISTENTIAL_DEPOSIT = parseCurrencyUnit(currency.units[0], "1.0");
 const MIN_LOCKED_BALANCE_REQ = parseCurrencyUnit(currency.units[0], "1.0");
-
 const polkadot: AppSpec<Transaction> = {
   name: "Polkadot",
   currency: getCryptoCurrencyById("polkadot"),
@@ -36,7 +31,7 @@ const polkadot: AppSpec<Transaction> = {
     invariant(maxSpendable.gt(POLKADOT_MIN_SAFE), "balance is too low");
   },
   test: ({ operation, optimisticOperation }) => {
-    const opExpected: Object = toOperationRaw({
+    const opExpected: Record<string, any> = toOperationRaw({
       ...optimisticOperation,
     });
     delete opExpected.value;
@@ -69,7 +64,9 @@ const polkadot: AppSpec<Transaction> = {
         return {
           transaction: bridge.createTransaction(account),
           updates: [
-            { recipient: pickSiblings(siblings, 1).freshAddress },
+            {
+              recipient: pickSiblings(siblings, 1).freshAddress,
+            },
             {
               amount,
             },
@@ -83,13 +80,17 @@ const polkadot: AppSpec<Transaction> = {
       transaction: ({ account, bridge }) => {
         invariant(canBond(account), "can't bond");
         invariant(
-          BigNumber(100000).gt(getMinimalLockedBalance(account)),
+          new BigNumber(100000).gt(getMinimalLockedBalance(account)),
           "can't bond because too much unbond"
         );
         const { polkadotResources } = account;
         invariant(polkadotResources, "polkadot");
+        const options: {
+          recipient?: string;
+          rewardDestination?: string;
+          amount?: BigNumber;
+        }[] = [];
 
-        const options = [];
         if (isFirstBond(account)) {
           invariant(
             account.balance.gt(EXISTENTIAL_DEPOSIT.plus(POLKADOT_MIN_SAFE)),
@@ -99,20 +100,27 @@ const polkadot: AppSpec<Transaction> = {
             recipient: account.freshAddress,
             rewardDestination: "Stash",
           });
-          options.push({ amount: EXISTENTIAL_DEPOSIT });
+          options.push({
+            amount: EXISTENTIAL_DEPOSIT,
+          });
         } else {
           invariant(
             account.spendableBalance.gt(POLKADOT_MIN_SAFE),
             "cant cover fee + bonding amount"
           );
           options.push({
-            amount: BigNumber(100000),
+            amount: new BigNumber(100000),
           });
         }
 
         return {
           transaction: bridge.createTransaction(account),
-          updates: [{ mode: "bond" }, ...options],
+          updates: [
+            {
+              mode: "bond",
+            },
+            ...options,
+          ],
         };
       },
     },
@@ -130,10 +138,16 @@ const polkadot: AppSpec<Transaction> = {
         const amount = polkadotResources.lockedBalance
           .minus(polkadotResources.unlockingBalance)
           .times(0.2);
-
         return {
           transaction: bridge.createTransaction(account),
-          updates: [{ mode: "unbond" }, { amount }],
+          updates: [
+            {
+              mode: "unbond",
+            },
+            {
+              amount,
+            },
+          ],
         };
       },
     },
@@ -157,10 +171,16 @@ const polkadot: AppSpec<Transaction> = {
           polkadotResources.unlockingBalance.times(0.2),
           MIN_LOCKED_BALANCE_REQ
         );
-
         return {
           transaction: bridge.createTransaction(account),
-          updates: [{ mode: "rebond" }, { amount }],
+          updates: [
+            {
+              mode: "rebond",
+            },
+            {
+              amount,
+            },
+          ],
         };
       },
     },
@@ -180,11 +200,12 @@ const polkadot: AppSpec<Transaction> = {
           data.validators.map((v) => v.address),
           2
         );
-
         return {
           transaction: bridge.createTransaction(account),
           updates: [
-            { mode: "nominate" },
+            {
+              mode: "nominate",
+            },
             ...validators.map((_, i) => ({
               validators: validators.slice(0, i + 1),
             })),
@@ -194,5 +215,6 @@ const polkadot: AppSpec<Transaction> = {
     },
   ],
 };
-
-export default { polkadot };
+export default {
+  polkadot,
+};

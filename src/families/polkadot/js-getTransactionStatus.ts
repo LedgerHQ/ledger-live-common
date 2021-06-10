@@ -1,6 +1,4 @@
-// @flow
 import { BigNumber } from "bignumber.js";
-
 import {
   NotEnoughBalance,
   RecipientRequired,
@@ -12,7 +10,6 @@ import {
 } from "@ledgerhq/errors";
 import type { Account, TransactionStatus } from "../../types";
 import { formatCurrencyUnit } from "../../currencies";
-
 import type { Transaction } from "./types";
 import {
   PolkadotUnauthorizedOperation,
@@ -49,8 +46,8 @@ const getSendTransactionStatus = async (
   a: Account,
   t: Transaction
 ): Promise<TransactionStatus> => {
-  const errors = {};
-  const warnings = {};
+  const errors: any = {};
+  const warnings: any = {};
 
   if (!t.fees) {
     errors.fees = new FeeNotLoaded();
@@ -64,8 +61,11 @@ const getSendTransactionStatus = async (
     errors.recipient = new InvalidAddress("");
   }
 
-  const estimatedFees = t.fees || BigNumber(0);
-  const amount = calculateAmount({ a, t });
+  const estimatedFees = t.fees || new BigNumber(0);
+  const amount = calculateAmount({
+    a,
+    t,
+  });
   const totalSpent = amount.plus(estimatedFees);
 
   if (amount.lte(0) && !t.useAllAmount) {
@@ -103,7 +103,9 @@ const getSendTransactionStatus = async (
       minimalAmount: formatCurrencyUnit(
         a.currency.units[0],
         EXISTENTIAL_DEPOSIT,
-        { showCode: true }
+        {
+          showCode: true,
+        }
       ),
     });
   }
@@ -112,14 +114,14 @@ const getSendTransactionStatus = async (
     errors,
     warnings,
     estimatedFees,
-    amount: amount.lt(0) ? BigNumber(0) : amount,
+    amount: amount.lt(0) ? new BigNumber(0) : amount,
     totalSpent,
   });
 };
 
 const getTransactionStatus = async (a: Account, t: Transaction) => {
-  const errors = {};
-  const warnings = {};
+  const errors: any = {};
+  const warnings: any = {};
   const { staking, validators } = getCurrentPolkadotPreloadData();
 
   if (t.mode === "send") {
@@ -133,15 +135,17 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
     errors.staking = new PolkadotElectionClosed();
   }
 
-  const amount = calculateAmount({ a, t });
-
+  const amount = calculateAmount({
+    a,
+    t,
+  });
   const unlockingBalance =
-    a.polkadotResources?.unlockingBalance || BigNumber(0);
-
-  const unlockedBalance = a.polkadotResources?.unlockedBalance || BigNumber(0);
-
+    a.polkadotResources?.unlockingBalance || new BigNumber(0);
+  const unlockedBalance =
+    a.polkadotResources?.unlockedBalance || new BigNumber(0);
   const currentBonded =
-    a.polkadotResources?.lockedBalance.minus(unlockingBalance) || BigNumber(0);
+    a.polkadotResources?.lockedBalance.minus(unlockingBalance) ||
+    new BigNumber(0);
 
   switch (t.mode) {
     case "bond":
@@ -163,7 +167,9 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
             minimalAmount: formatCurrencyUnit(
               a.currency.units[0],
               MINIMUM_BOND_AMOUNT,
-              { showCode: true }
+              {
+                showCode: true,
+              }
             ),
           });
         }
@@ -172,7 +178,9 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
           minimalAmount: formatCurrencyUnit(
             a.currency.units[0],
             getMinimalLockedBalance(a),
-            { showCode: true }
+            {
+              showCode: true,
+            }
           ),
         });
       }
@@ -198,6 +206,7 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
       } else if (amount.gt(currentBonded)) {
         errors.amount = new NotEnoughBalance();
       }
+
       break;
 
     case "rebond":
@@ -214,10 +223,13 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
           minimalAmount: formatCurrencyUnit(
             a.currency.units[0],
             getMinimalLockedBalance(a),
-            { showCode: true }
+            {
+              showCode: true,
+            }
           ),
         });
       }
+
       break;
 
     case "withdrawUnbonded":
@@ -244,7 +256,7 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
           );
 
           if (notValidators && notValidators.length) {
-            errors.staking = new PolkadotNotValidator(null, {
+            errors.staking = new PolkadotNotValidator(undefined, {
               validators: notValidators,
             });
           }
@@ -255,13 +267,14 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
           );
 
           if (notValidators.length) {
-            errors.staking = new PolkadotNotValidator(null, {
+            errors.staking = new PolkadotNotValidator(undefined, {
               validators: notValidators,
             });
             break;
           }
         }
       }
+
       break;
 
     case "chill":
@@ -270,12 +283,12 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
       } else if (!a.polkadotResources?.nominations) {
         errors.staking = new PolkadotNoNominations();
       }
+
       break;
   }
 
-  const estimatedFees = t.fees || BigNumber(0);
-
-  let totalSpent =
+  const estimatedFees = t.fees || new BigNumber(0);
+  const totalSpent =
     t.mode === "bond" ? amount.plus(estimatedFees) : estimatedFees;
 
   if (t.mode === "bond" || t.mode === "unbond" || t.mode === "rebond") {
@@ -299,7 +312,7 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
     errors,
     warnings,
     estimatedFees,
-    amount: amount.lt(0) ? BigNumber(0) : amount,
+    amount: amount.lt(0) ? new BigNumber(0) : amount,
     totalSpent,
   });
 };

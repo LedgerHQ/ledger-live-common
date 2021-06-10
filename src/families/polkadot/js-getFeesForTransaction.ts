@@ -1,10 +1,7 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import { getAbandonSeedAddress } from "@ledgerhq/cryptoassets";
-
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
-
 import { getPaymentInfo } from "./cache";
 import { calculateAmount } from "./logic";
 import { buildTransaction } from "./js-buildTransaction";
@@ -20,15 +17,18 @@ const getEstimatedFees = async ({
   a,
   t,
 }: {
-  a: Account,
-  t: Transaction,
+  a: Account;
+  t: Transaction;
 }): Promise<BigNumber> => {
   const transaction = {
     ...t,
-    recipient: getAbandonSeedAddress(a.currency.id), // Always use a fake recipient to estimate fees
-    amount: calculateAmount({ a, t: { ...t, fees: BigNumber(0) } }), // Remove fees if present since we are fetching fees
+    recipient: getAbandonSeedAddress(a.currency.id),
+    // Always use a fake recipient to estimate fees
+    amount: calculateAmount({
+      a,
+      t: { ...t, fees: new BigNumber(0) },
+    }), // Remove fees if present since we are fetching fees
   };
-
   const { unsigned, registry } = await buildTransaction(a, transaction);
   const fakeSignedTx = await fakeSignExtrinsic(unsigned, registry);
   const payment = await getPaymentInfo({
@@ -36,8 +36,7 @@ const getEstimatedFees = async ({
     t: transaction,
     signedTx: fakeSignedTx,
   });
-
-  return BigNumber(payment.partialFee);
+  return new BigNumber(payment.partialFee);
 };
 
 export default getEstimatedFees;

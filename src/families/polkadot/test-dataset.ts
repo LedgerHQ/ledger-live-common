@@ -1,5 +1,3 @@
-// @flow
-
 import { BigNumber } from "bignumber.js";
 import {
   NotEnoughBalance,
@@ -9,7 +7,6 @@ import {
   AmountRequired,
   NotEnoughBalanceBecauseDestinationNotCreated,
 } from "@ledgerhq/errors";
-
 import {
   PolkadotUnauthorizedOperation,
   PolkadotNotValidator,
@@ -18,11 +15,9 @@ import {
   PolkadotAllFundsWarning,
   PolkadotDoMaxSendInstead,
 } from "./errors";
-
 import type { DatasetTest } from "../../types";
 import { fromTransactionRaw } from "./transaction";
 import type { Transaction } from "./types";
-
 const ACCOUNT_SAME_STASHCONTROLLER =
   "12YA86tRQhHgwU3SSj56aesUKB7GKvdnZTTTXRop4vd3YgDV";
 const ACCOUNT_STASH = "13jAJfhpFkRZj1TSSdFopaiFeKnof2q7g4GNdcxcg8Lvx6QN";
@@ -30,7 +25,6 @@ const ACCOUNT_CONTROLLER = "15oodc5d8DWJodZhTD6qsxxSQRYWhdkWCrwqNHajDirXRrAD";
 const ACCOUNT_EMPTY = "111111111111111111111111111111111HC1";
 const ACCOUNT_WITH_NO_OPERATION =
   "12EsPA79dvhtjp1bYvCiEWPsQmmdKGss44GzE3CT9tTo9g4Q";
-
 const dataset: DatasetTest<Transaction> = {
   implementations: ["js"],
   currencies: {
@@ -92,7 +86,7 @@ const dataset: DatasetTest<Transaction> = {
                 numSlashingSpans: 0,
               }),
               expectedStatus: {
-                amount: BigNumber("100000000"),
+                amount: new BigNumber("100000000"),
                 errors: {
                   recipient: new InvalidAddressBecauseDestinationIsAlsoSource(),
                 },
@@ -193,7 +187,7 @@ const dataset: DatasetTest<Transaction> = {
                 numSlashingSpans: 0,
               }),
               expectedStatus: {
-                amount: BigNumber("10000000000"),
+                amount: new BigNumber("10000000000"),
                 errors: {},
                 warnings: {},
               },
@@ -208,7 +202,9 @@ const dataset: DatasetTest<Transaction> = {
               }),
               expectedStatus: (account) => ({
                 errors: {},
-                warnings: { amount: new PolkadotAllFundsWarning() },
+                warnings: {
+                  amount: new PolkadotAllFundsWarning(),
+                },
                 totalSpent: account.spendableBalance,
               }),
             },
@@ -286,7 +282,7 @@ const dataset: DatasetTest<Transaction> = {
                 numSlashingSpans: 0,
               }),
               expectedStatus: {
-                amount: BigNumber("10000000000"),
+                amount: new BigNumber("10000000000"),
                 errors: {},
                 warnings: {},
               },
@@ -687,5 +683,4 @@ const dataset: DatasetTest<Transaction> = {
     },
   },
 };
-
 export default dataset;

@@ -20,9 +20,7 @@ export {
 } from "./websocket";
 
 */
-
 export { getOperations } from "./bisontrails";
-
 export {
   isElectionClosed,
   isNewAccount,
