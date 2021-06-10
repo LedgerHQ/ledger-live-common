@@ -1,5 +1,3 @@
-// @flow
-
 import { log } from "@ledgerhq/logs";
 import type { Currency } from "../../types";
 import type { RateGranularity, TrackingPair } from "../types";
@@ -17,34 +15,38 @@ export const installModule = (module: Module): void => {
 export const fetchHistorical = (
   granularity: RateGranularity,
   pair: TrackingPair
-): Promise<Object> => {
+): Promise<Record<string, any>> => {
   let fn = api.fetchHistorical;
   // a module can override the default api. first who handle wins.
   const m = modules.find(
     (m) => m.handleAPI && m.handleAPI(pair) && m.fetchHistorical
   );
+
   if (m && m.fetchHistorical) {
     fn = m.fetchHistorical;
   }
+
   return fn(granularity, pair);
+};
+
+type CountervaluesJobs = {
+  fn: (pairs: TrackingPair[]) => Promise<Array<number | null | undefined>>;
+  pairs: TrackingPair[];
+  indexes: number[];
 };
 
 export const fetchLatest = async (
   pairs: TrackingPair[]
-): Promise<Array<?number>> => {
+): Promise<Array<number | null | undefined>> => {
   // a module can override as well. but as latest is a "one api" call,
   // we need to segment the pairs in diff modules
-  const jobs: Array<{
-    fn: (pairs: TrackingPair[]) => Promise<Array<?number>>,
-    pairs: TrackingPair[],
-    indexes: number[],
-  }> = [
+  const jobs: CountervaluesJobs[] = [
     {
       fn: api.fetchLatest,
       pairs: [],
       indexes: [],
     },
-    ...modules
+    ...(<CountervaluesJobs[]>modules
       .map(
         (m) =>
           m.fetchLatest && {
@@ -53,14 +55,16 @@ export const fetchLatest = async (
             indexes: [],
           }
       )
-      .filter(Boolean),
+      .filter(Boolean)),
   ];
 
   for (let i = 0; i < pairs.length; i++) {
     const pair = pairs[i];
     const m = modules.find((m) => m.handleAPI && m.handleAPI(pair));
+
     if (m && m.fetchLatest) {
       const j = jobs.find((j) => m.fetchLatest === j.fn);
+
       if (j) {
         j.pairs.push(pair);
         j.indexes.push(i);
@@ -70,6 +74,7 @@ export const fetchLatest = async (
       jobs[0].indexes.push(i);
     }
   }
+
   const result = Array(pairs.length).fill(0);
   await Promise.all(
     jobs
@@ -91,26 +96,35 @@ export const fetchLatest = async (
 };
 
 export const mapRate = (
-  pair: { from: Currency, to: Currency },
+  pair: {
+    from: Currency;
+    to: Currency;
+  },
   rate: number
 ): number =>
   modules.reduce((rate, m) => (m.mapRate ? m.mapRate(pair, rate) : rate), rate);
 
 export const aliasPair = (pair: {
-  from: Currency,
-  to: Currency,
-}): { from: Currency, to: Currency } =>
+  from: Currency;
+  to: Currency;
+}): {
+  from: Currency;
+  to: Currency;
+} =>
   modules.reduce((pair, m) => (m.aliasPair ? m.aliasPair(pair) : pair), pair);
 
 export const resolveTrackingPair = (pair: {
-  from: Currency,
-  to: Currency,
-}): { from: Currency, to: Currency } =>
+  from: Currency;
+  to: Currency;
+}): {
+  from: Currency;
+  to: Currency;
+} =>
   modules.reduce(
     (pair, m) => (m.resolveTrackingPair ? m.resolveTrackingPair(pair) : pair),
     pair
   );
 
-export const isCountervalueEnabled = (c: Currency) =>
+export const isCountervalueEnabled = (c: Currency): boolean =>
   !c.disableCountervalue ||
   modules.some((m) => m.handleCountervalue && m.handleCountervalue(c));

@@ -1,5 +1,3 @@
-// @flow
-
 import { getEnv } from "../../env";
 import type { CounterValuesAPI } from "../types";
 import prodAPI from "./api";
@@ -10,10 +8,8 @@ const api: CounterValuesAPI = {
     getEnv("MOCK")
       ? mockAPI.fetchHistorical(granularity, pair)
       : prodAPI.fetchHistorical(granularity, pair),
-
   fetchLatest: (pairs) =>
     getEnv("MOCK") ? mockAPI.fetchLatest(pairs) : prodAPI.fetchLatest(pairs),
-
   fetchMarketcapTickers: () =>
     getEnv("MOCK")
       ? mockAPI.fetchMarketcapTickers()
