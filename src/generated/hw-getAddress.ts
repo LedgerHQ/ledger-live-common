@@ -1,3 +1,5 @@
+import algorand from "../families/algorand/hw-getAddress";
+
 import bitcoin from "../families/bitcoin/hw-getAddress";
 
 import cosmos from "../families/cosmos/hw-getAddress";
@@ -18,6 +20,7 @@ import tron from "../families/tron/hw-getAddress";
 
 
 export default {
+  algorand,
   bitcoin,
   cosmos,
   ethereum,
