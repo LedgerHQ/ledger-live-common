@@ -1,10 +1,13 @@
-// @flow
-
 import type { ExchangeProviderNameAndSignature } from "../";
 
-const sellProviders: {
-  [string]: { nameAndPubkey: Buffer, signature: Buffer, curve: string },
-} = {
+const sellProviders: Record<
+  string,
+  {
+    nameAndPubkey: Buffer;
+    signature: Buffer;
+    curve: string;
+  }
+> = {
   coinify: {
     nameAndPubkey: Buffer.concat([
       Buffer.from([7]),
@@ -14,7 +17,6 @@ const sellProviders: {
         "hex"
       ),
     ]),
-
     signature: Buffer.from(
       "3043021f023ecbbb1dfd44f390944bd1f6c039942943009a51ca4f134589441476651a02200cbfdf2ebe32eb0b0a88be9b1fec343ed5b230a69e65a1d15b4e34ef4206a9dd",
       "hex"
@@ -27,9 +29,11 @@ const getProvider = (
   providerName: string
 ): ExchangeProviderNameAndSignature => {
   const res = sellProviders[providerName.toLowerCase()];
+
   if (!res) {
     throw new Error(`Unknown partner ${providerName}`);
   }
+
   return res;
 };
 
