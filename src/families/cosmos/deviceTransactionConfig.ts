@@ -18,7 +18,7 @@ export type ExtraDeviceTransactionField =
       label: string;
     };
 
-type CosmosTransactionFieldType = {
+type CosmosTransactionFieldType = DeviceTransactionField & {
   type: string;
   label: string;
   value?: string;
@@ -72,7 +72,7 @@ function getDeviceTransactionConfig({
   parentAccount: Account | null | undefined;
   transaction: Transaction;
   status: TransactionStatus;
-}): Array<DeviceTransactionField> {
+}): Array<CosmosTransactionFieldType> {
   const { mode, memo, validators } = transaction;
   const { estimatedFees } = status;
   const mainAccount = getMainAccount(account, parentAccount);

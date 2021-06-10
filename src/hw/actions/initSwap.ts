@@ -3,9 +3,8 @@ import { scan, tap, catchError } from "rxjs/operators";
 import { useEffect, useState } from "react";
 import { getMainAccount } from "../../account";
 import type { ConnectAppEvent, Input as ConnectAppInput } from "../connectApp";
-import type { InitSwapInput } from "../../exchange/swap/types";
+import type { InitSwapInput, SwapTransaction } from "../../exchange/swap/types";
 import type { Action, Device } from "./types";
-import type { Transaction } from "../../types";
 import type { AppState } from "./app";
 import { log } from "@ledgerhq/logs";
 import { createAction as createAppAction } from "./app";
@@ -27,7 +26,7 @@ type InitSwapState = AppState & State;
 type InitSwapRequest = {
   exchange: Exchange;
   exchangeRate: ExchangeRate;
-  transaction: Transaction;
+  transaction: SwapTransaction;
 };
 type Result =
   | {
@@ -60,14 +59,7 @@ const initialState: State = {
   freezeReduxDevice: false,
 };
 
-const reducer = (
-  state: any,
-  e:
-    | SwapRequestEvent
-    | {
-        type: "init-swap";
-      }
-) => {
+const reducer = (state: State, e: SwapRequestEvent) => {
   switch (e.type) {
     case "init-swap":
       return { ...state, freezeReduxDevice: true };
@@ -150,7 +142,7 @@ export const createAction = (
       }
 
       const sub = concat(
-        of({
+        of(<SwapRequestEvent>{
           type: "init-swap",
         }),
         initSwapExec({
@@ -164,8 +156,8 @@ export const createAction = (
           tap((e) => {
             log("actions-initSwap-event", e.type, e);
           }),
-          catchError((error) =>
-            of({
+          catchError((error: Error) =>
+            of(<SwapRequestEvent>{
               type: "init-swap-error",
               error,
             })

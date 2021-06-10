@@ -59,14 +59,7 @@ const initialState: State = {
   freezeReduxDevice: false,
 };
 
-const reducer = (
-  state: any,
-  e:
-    | SellRequestEvent
-    | {
-        type: "init-sell";
-      }
-) => {
+const reducer = (state: State, e: SellRequestEvent) => {
   switch (e.type) {
     case "init-sell":
       return { ...state, freezeReduxDevice: true };
@@ -118,7 +111,7 @@ export const createAction = (
     reduxDevice: Device | null | undefined,
     initSellRequest: InitSellRequest
   ): InitSellState => {
-    const [state, setState] = useState(initialState);
+    const [state, setState] = useState<State>(initialState);
     const [coinifyContext, setCoinifyContext] = useState<{
       binaryPayload: string;
       payloadSignature: string;
@@ -144,12 +137,14 @@ export const createAction = (
       }
 
       const sub = concat(
-        of({
+        of(<SellRequestEvent>{
           type: "init-sell",
         }),
         getTransactionId({
           deviceId: device.deviceId,
-        }).pipe(
+        })
+      )
+        .pipe(
           tap((e: SellRequestEvent) => {
             if (e && e.type === "init-sell-get-transaction-id") {
               onTransactionId(e.value).then(setCoinifyContext);
@@ -157,15 +152,15 @@ export const createAction = (
 
             log("actions-initSell-event", e.type, e);
           }),
-          catchError((error) =>
-            of({
+          catchError((error: Error) =>
+            of(<SellRequestEvent>{
               type: "init-sell-error",
               error,
             })
           ),
           scan(reducer, initialState)
         )
-      ).subscribe(setState);
+        .subscribe(setState);
       return () => {
         sub.unsubscribe();
       };
@@ -189,7 +184,7 @@ export const createAction = (
       })
         .pipe(
           catchError((error) =>
-            of({
+            of(<SellRequestEvent>{
               type: "init-sell-error",
               error,
             })

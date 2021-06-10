@@ -4,6 +4,9 @@ export type InitSellResult = {
 };
 export type SellRequestEvent =
   | {
+      type: "init-sell";
+    }
+  | {
       type: "init-sell-requested";
     }
   | {

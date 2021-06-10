@@ -9,7 +9,7 @@ import type {
   TokenCurrency,
   TransactionRaw,
 } from "../../types";
-import { Transaction } from "ethereumjs-tx";
+
 export type Exchange = {
   fromParentAccount: Account | null | undefined;
   fromAccount: AccountLike;
@@ -85,6 +85,7 @@ export type GetMultipleStatus = (
   arg0: SwapStatusRequest[]
 ) => Promise<SwapStatus[]>;
 export type SwapRequestEvent =
+  | { type: "init-swap" }
   | {
       type: "init-swap-requested";
       amountExpectedTo?: string;
