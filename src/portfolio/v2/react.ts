@@ -1,4 +1,3 @@
-// @flow
 import type {
   Account,
   AccountLike,
@@ -16,44 +15,41 @@ import {
   getPortfolioCount,
 } from "./";
 import type { PortfolioRange } from "./types";
-
 export function useBalanceHistoryWithCountervalue({
   account,
   range,
   to,
 }: {
-  account: AccountLike,
-  range: PortfolioRange,
-  to: Currency,
+  account: AccountLike;
+  range: PortfolioRange;
+  to: Currency;
 }) {
   const state = useCountervaluesState();
   const count = getPortfolioCount([account], range);
   return getBalanceHistoryWithCountervalue(account, range, count, state, to);
 }
-
 export function usePortfolio({
   accounts,
   range,
   to,
 }: {
-  accounts: Account[],
-  range: PortfolioRange,
-  to: Currency,
+  accounts: Account[];
+  range: PortfolioRange;
+  to: Currency;
 }) {
   const state = useCountervaluesState();
   return getPortfolio(accounts, range, state, to);
 }
-
 export function useCurrencyPortfolio({
   accounts: rawAccounts,
   range,
   to,
   currency,
 }: {
-  accounts: Account[],
-  range: PortfolioRange,
-  to: Currency,
-  currency: CryptoCurrency | TokenCurrency,
+  accounts: Account[];
+  range: PortfolioRange;
+  to: Currency;
+  currency: CryptoCurrency | TokenCurrency;
 }) {
   const accounts = flattenAccounts(rawAccounts).filter(
     (a) => getAccountCurrency(a) === currency
@@ -61,13 +57,12 @@ export function useCurrencyPortfolio({
   const state = useCountervaluesState();
   return getCurrencyPortfolio(accounts, range, state, to);
 }
-
 export function useDistribution({
   accounts,
   to,
 }: {
-  accounts: Account[],
-  to: Currency,
+  accounts: Account[];
+  to: Currency;
 }) {
   const state = useCountervaluesState();
   return getAssetsDistribution(accounts, state, to, {

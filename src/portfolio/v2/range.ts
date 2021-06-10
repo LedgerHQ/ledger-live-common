@@ -1,4 +1,3 @@
-// @flow
 import {
   weekIncrement,
   dayIncrement,
@@ -8,13 +7,11 @@ import {
   startOfHour,
 } from "../range";
 import type { PortfolioRangeConfig, PortfolioRange } from "./types";
-
 export function getPortfolioRangeConfig(
   r: PortfolioRange
 ): PortfolioRangeConfig {
   return ranges[r];
 }
-
 export const granularities = {
   WEEK: {
     increment: weekIncrement,
@@ -32,9 +29,8 @@ export const granularities = {
     maxDatapoints: 8 * 24, // we only need a week
   },
 };
-
 // TODO Protfolio: this would require to introduce Account#olderOperationDate
-const ranges: { [k: PortfolioRange]: PortfolioRangeConfig } = {
+const ranges: Record<PortfolioRange, PortfolioRangeConfig> = {
   all: {
     increment: weekIncrement,
     startOf: startOfWeek,
@@ -65,20 +61,19 @@ const ranges: { [k: PortfolioRange]: PortfolioRangeConfig } = {
     granularityId: "HOUR",
   },
 };
-
 export function getDates(r: PortfolioRange, count: number): Date[] {
   const now = new Date(Date.now());
   if (count === 1) return [now];
-
   const conf = getPortfolioRangeConfig(r);
-  const last = new Date(conf.startOf(now) - 1);
+  const last = new Date((conf.startOf(now) as any) - 1);
   const dates = [now];
+
   for (let i = 0; i < count - 1; i++) {
-    dates.unshift(new Date(last - conf.increment * i));
+    dates.unshift(new Date((last as any) - conf.increment * i));
   }
+
   return dates;
 }
-
-export function getRanges(): PortfolioRange[] {
+export function getRanges(): string[] {
   return Object.keys(ranges);
 }
