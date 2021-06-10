@@ -6,8 +6,6 @@ import type {
   FiatCurrency,
   Currency,
   CryptoCurrencyIds,
-  CryptoCurrencyConfig,
-  CryptoCurrencyObjMap,
 } from "@ledgerhq/cryptoassets/lib/types";
 export type {
   Unit,
@@ -17,6 +15,4 @@ export type {
   FiatCurrency,
   Currency,
   CryptoCurrencyIds,
-  CryptoCurrencyConfig,
-  CryptoCurrencyObjMap,
 };

@@ -138,7 +138,7 @@ export const createAction = (
         })
         .pipe(
           catchError((error) =>
-            of({
+            of<{ type: "error"; error: Error }>({
               type: "error",
               error,
             })
@@ -146,7 +146,7 @@ export const createAction = (
           tap((e: Event) => log("actions-transaction-event", e.type, e)),
           scan(reducer, initialState)
         )
-        .subscribe(setState);
+        .subscribe((x: any) => setState(x));
       return () => {
         sub.unsubscribe();
       };

@@ -219,9 +219,9 @@ export function getPortfolio(
     arg2: Date
   ) => BigNumber | null | undefined
 ): Portfolio {
-  const accounts: Account[] = flattenAccounts(topAccounts);
-  const availableAccounts: Account[] = [];
-  const unavailableAccounts: Account[] = [];
+  const accounts: AccountLike[] = flattenAccounts(topAccounts);
+  const availableAccounts: AccountLike[] = [];
+  const unavailableAccounts: AccountLike[] = [];
   const histories: BalanceHistoryWithCountervalue[] = [];
   const changes: BigNumber[] = [];
   const countervalueReceiveSums: BigNumber[] = [];

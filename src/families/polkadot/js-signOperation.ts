@@ -111,12 +111,12 @@ const buildOptimisticOperation = (
 export const signExtrinsic = async (
   unsigned: Record<string, any>,
   signature: any,
-  registry: typeof TypeRegistry
-) => {
+  registry: TypeRegistry
+): Promise<string> => {
   const extrinsic = registry.createType("Extrinsic", unsigned, {
     version: unsigned.version,
   });
-  extrinsic.addSignature(unsigned.address, signature, unsigned);
+  extrinsic.addSignature(unsigned.address, signature, unsigned as any);
   return extrinsic.toHex();
 };
 
@@ -128,8 +128,8 @@ export const signExtrinsic = async (
  */
 export const fakeSignExtrinsic = async (
   unsigned: Record<string, any>,
-  registry: typeof TypeRegistry
-) => {
+  registry: TypeRegistry
+): Promise<string> => {
   const fakeSignature = u8aConcat(
     new Uint8Array([1]),
     new Uint8Array(64).fill(0x42)
@@ -149,7 +149,7 @@ const signOperation = ({
   deviceId: any;
   transaction: Transaction;
 }): Observable<SignOperationEvent> =>
-  Observable.create((o) => {
+  new Observable((o) => {
     async function main() {
       const transport = await open(deviceId);
 

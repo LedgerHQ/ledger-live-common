@@ -1,5 +1,5 @@
 import { fromAccountRaw } from "../account";
-import type { Account } from "../types";
+import type { Account, AccountRaw } from "../types";
 const accounts: Account[] = [
   {
     id:
@@ -242,5 +242,5 @@ const accounts: Account[] = [
       },
     ],
   },
-].map(fromAccountRaw);
+].map((raw) => fromAccountRaw(raw as AccountRaw));
 export default accounts;

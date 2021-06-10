@@ -5,6 +5,10 @@ import invariant from "invariant";
 import flatMap from "lodash/flatMap";
 import type { Transaction, AccountLike, Account } from "../../types";
 import { getCryptoCurrencyById, formatCurrencyUnit } from "../../currencies";
+import {
+  SidecarValidatorsParamAddresses,
+  SidecarValidatorsParamStatus,
+} from "./api/sidecar.types";
 const options = [
   {
     name: "mode",
@@ -117,7 +121,7 @@ const polkadotValidators = {
     validator,
   }: Partial<{
     format: string;
-    status: string;
+    status: SidecarValidatorsParamStatus | SidecarValidatorsParamAddresses;
     validator: string[];
   }>): Observable<string> =>
     from(

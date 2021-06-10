@@ -11,6 +11,11 @@ import type {
   AccountBridge,
   SyncConfig,
   DatasetTest,
+  CurrenciesData,
+  CryptoCurrency,
+  AccountLike,
+  SubAccount,
+  AccountRawLike,
 } from "../../types";
 import {
   fromAccountRaw,
@@ -63,12 +68,23 @@ export function syncAccount<T extends Transaction>(
     .pipe(reduce((a, f: (arg0: Account) => Account) => f(a), account))
     .toPromise();
 }
-// @ts-expect-error parametric type issue
-export function testBridge<T>(family: string, data: DatasetTest<T>) {
+
+export function testBridge<T extends Transaction>(
+  family: string,
+  data: DatasetTest<T>
+) {
   // covers all bridges through many different accounts
   // to test the common shared properties of bridges.
-  const accountsRelated = [];
-  const currenciesRelated = [];
+  const accountsRelated: Array<{
+    account: Account;
+    currencyData: CurrenciesData<T>;
+    accountData: any;
+    impl: string;
+  }> = [];
+  const currenciesRelated: Array<{
+    currencyData: CurrenciesData<T>;
+    currency: CryptoCurrency;
+  }> = [];
   const { implementations, currencies } = data;
   Object.keys(currencies).forEach((currencyId) => {
     const currencyData = currencies[currencyId];
@@ -121,7 +137,7 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
           .pipe(
             filter((e) => e.type === "discovered"),
             map((e) => e.account),
-            reduce((all, a) => all.concat(a), [])
+            reduce((all, a) => all.concat(a), [] as Account[])
           )
           .toPromise();
         return implicitMigration(accounts);
@@ -204,10 +220,13 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
               });
 
               if (!sa.unstableAccounts) {
-                const raws = flatMap(accounts, (a) => {
+                const raws: AccountRawLike[] = flatMap(accounts, (a) => {
                   const main = toAccountRaw(a);
                   if (!main.subAccounts) return [main];
-                  return [{ ...main, subAccounts: [] }, ...main.subAccounts];
+                  return [
+                    { ...main, subAccounts: [] },
+                    ...main.subAccounts,
+                  ] as AccountRawLike[];
                 });
                 const heads = raws.map((a) => {
                   const copy = omit(
@@ -315,8 +334,8 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
     const accounts = currencyData.accounts || [];
 
     if (accounts.length) {
-      const accountsInScan = [];
-      const accountsNotInScan = [];
+      const accountsInScan: string[] = [];
+      const accountsNotInScan: string[] = [];
       accounts.forEach(({ raw }) => {
         if (accountsFoundInScanAccountsMap[raw.id]) {
           accountsInScan.push(raw.id);
@@ -686,20 +705,22 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
 
                   const inferSubAccount = () => {
                     invariant(subAccounts, "sub accounts available");
-                    const a = subAccounts.find((a) => a.id === subAccountId);
+                    const a = (subAccounts as SubAccount[]).find(
+                      (a) => a.id === subAccountId
+                    );
                     invariant(a, "sub account not found");
                     return a;
                   };
 
                   const obj = subAccountId
                     ? {
-                        transaction: t,
-                        account: inferSubAccount(),
+                        transaction: t as Transaction,
+                        account: inferSubAccount() as AccountLike,
                         parentAccount: account,
                       }
                     : {
-                        transaction: t,
-                        account,
+                        transaction: t as Transaction,
+                        account: account as AccountLike,
                       };
 
                   if (typeof t.mode !== "string" || t.mode === "send") {
@@ -725,7 +746,7 @@ export function testBridge<T>(family: string, data: DatasetTest<T>) {
                       })
                       .pipe(
                         filter((e) => e.type === "signed"),
-                        map((e) => e.signedOperation)
+                        map((e: any) => e.signedOperation)
                       )
                       .toPromise();
 

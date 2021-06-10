@@ -1,9 +1,10 @@
 import { BigNumber } from "bignumber.js";
 import querystring from "querystring";
-import { TypeRegistry, ModulesWithCalls } from "@polkadot/types";
+import { TypeRegistry } from "@polkadot/types";
 import { getSpecTypes } from "@polkadot/types-known";
 import { Metadata } from "@polkadot/metadata";
 import { expandMetadata } from "@polkadot/metadata/decorate";
+import { Extrinsics } from "@polkadot/metadata/decorate/types";
 import { makeLRUCache } from "../../../cache";
 import type { CacheRes } from "../../../cache";
 import { getEnv } from "../../../env";
@@ -637,8 +638,8 @@ export const getStakingProgress = async (): Promise<
  * @returns {Object} - { registry, extrinsics }
  */
 export const getRegistry = async (): Promise<{
-  registry: typeof TypeRegistry;
-  extrinsics: typeof ModulesWithCalls;
+  registry: TypeRegistry;
+  extrinsics: Extrinsics;
 }> => {
   const [material, spec] = await Promise.all([
     fetchTransactionMaterial(true),

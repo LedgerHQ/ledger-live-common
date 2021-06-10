@@ -43,10 +43,10 @@ const getAccountShape: GetAccountShape = async (info) => {
       numSlashingSpans,
     },
   };
-  return { ...shape, operations };
+  return { ...shape, operations } as Partial<Account>;
 };
 
-const postSync = (initial: Account, parent: Account) => {
+const postSync = (_initial: Account, parent: Account) => {
   return parent;
 };
 

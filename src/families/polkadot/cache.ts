@@ -1,4 +1,5 @@
-import { TypeRegistry, ModulesWithCalls } from "@polkadot/types";
+import { TypeRegistry } from "@polkadot/types";
+import { Extrinsics } from "@polkadot/metadata/decorate/types";
 import { makeLRUCache } from "../../cache";
 import type { CacheRes } from "../../cache";
 import type { Account } from "../../types";
@@ -112,11 +113,11 @@ export const getPaymentInfo: CacheRes<
 );
 export const getRegistry: CacheRes<
   Array<void>,
-  Record<string, any>
+  { registry: TypeRegistry; extrinsics: Extrinsics }
 > = makeLRUCache(
   async (): Promise<{
-    registry: typeof TypeRegistry;
-    extrinsics: typeof ModulesWithCalls;
+    registry: TypeRegistry;
+    extrinsics: Extrinsics;
   }> => {
     return await apiGetRegistry();
   },
