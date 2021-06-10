@@ -8,9 +8,9 @@ import { getAddressFromScriptHash, getScriptHashFromPublicKey } from "./crypto";
  */
 
 export default class Neo {
-  transport: Transport<any>;
+  transport: Transport;
 
-  constructor(transport: Transport<any>) {
+  constructor(transport: Transport) {
     this.transport = transport;
     transport.decorateAppAPIMethods(this, ["getAddress"], "NEO");
   }
