@@ -1,4 +1,3 @@
-// @flow
 import "../__tests__/test-helpers/setup";
 import { BigNumber } from "bignumber.js";
 import eip55 from "eip55";
@@ -9,7 +8,6 @@ import { getCryptoCurrencyById, setSupportedCurrencies } from "../currencies";
 import type { Account } from "../types/account";
 import { emptyHistoryCache } from "../account";
 import { setEnv } from "../env";
-
 describe("walletconnect", () => {
   const account: Account = {
     type: "Account",
@@ -24,8 +22,8 @@ describe("walletconnect", () => {
     name: "test",
     starred: false,
     used: true,
-    balance: BigNumber(0),
-    spendableBalance: BigNumber(0),
+    balance: new BigNumber(0),
+    spendableBalance: new BigNumber(0),
     creationDate: new Date(),
     blockHeight: 1,
     unit: getCryptoCurrencyById("ethereum").units[0],
@@ -36,7 +34,6 @@ describe("walletconnect", () => {
     swapHistory: [],
     balanceHistoryCache: emptyHistoryCache,
   };
-
   beforeAll(() => {
     setEnv("MOCK", true);
     setSupportedCurrencies(["ethereum"]);
@@ -44,7 +41,6 @@ describe("walletconnect", () => {
   afterAll(() => {
     setEnv("MOCK", false);
   });
-
   test("should fail on wrong payload", async () => {
     await expect(
       parseCallRequest(account, {
@@ -54,12 +50,10 @@ describe("walletconnect", () => {
       })
     ).rejects.toThrow("wrong payload");
   });
-
   test("should parse personal_sign payloads", async () => {
     expect(
       await parseCallRequest(account, {
         id: "1606134269395933",
-        jsonrpc: "2.0",
         method: "personal_sign",
         params: [
           "0x4d7920656d61696c206973206a6f686e40646f652e636f6d202d2031353337383336323036313031",
@@ -80,15 +74,12 @@ describe("walletconnect", () => {
       type: "message",
     });
   });
-
   test("should parse eth_signTypedData payloads", async () => {
     const raw =
       '{"types":{"EIP712Domain":[{"name":"name","type":"string"},{"name":"version","type":"string"},{"name":"verifyingContract","type":"address"}],"RelayRequest":[{"name":"target","type":"address"},{"name":"encodedFunction","type":"bytes"},{"name":"gasData","type":"GasData"},{"name":"relayData","type":"RelayData"}],"GasData":[{"name":"gasLimit","type":"uint256"},{"name":"gasPrice","type":"uint256"},{"name":"pctRelayFee","type":"uint256"},{"name":"baseRelayFee","type":"uint256"}],"RelayData":[{"name":"senderAddress","type":"address"},{"name":"senderNonce","type":"uint256"},{"name":"relayWorker","type":"address"},{"name":"paymaster","type":"address"}]},"domain":{"name":"GSN Relayed Transaction","version":"1","chainId":42,"verifyingContract":"0x6453D37248Ab2C16eBd1A8f782a2CBC65860E60B"},"primaryType":"RelayRequest","message":{"target":"0x9cf40ef3d1622efe270fe6fe720585b4be4eeeff","encodedFunction":"0xa9059cbb0000000000000000000000002e0d94754b348d208d64d52d78bcd443afa9fa520000000000000000000000000000000000000000000000000000000000000007","gasData":{"gasLimit":"39507","gasPrice":"1700000000","pctRelayFee":"70","baseRelayFee":"0"},"relayData":{"senderAddress":"0x22d491bde2303f2f43325b2108d26f1eaba1e32b","senderNonce":"3","relayWorker":"0x3baee457ad824c94bd3953183d725847d023a2cf","paymaster":"0x957F270d45e9Ceca5c5af2b49f1b5dC1Abb0421c"}}}';
-
     expect(
       await parseCallRequest(account, {
         id: "1606135178131543",
-        jsonrpc: "2.0",
         method: "eth_signTypedData",
         params: ["0xCA220B75b7aF206bFCc67E2EcE06E2e144FA294a", raw],
       })
@@ -108,7 +99,6 @@ describe("walletconnect", () => {
       type: "message",
     });
   });
-
   test("should parse eth_sendTransaction payloads", async () => {
     const raw: WCPayloadTransaction = {
       data: "0x",
@@ -119,32 +109,27 @@ describe("walletconnect", () => {
       to: "0xCA220B75b7aF206bFCc67E2EcE06E2e144FA294a",
       value: "0x0",
     };
-
     const bridge = getAccountBridge(account);
     let transaction = bridge.createTransaction(account);
-
     transaction = bridge.updateTransaction(transaction, {
       data: Buffer.from(raw.data.slice(2), "hex"),
       // $FlowFixMe
-      amount: BigNumber(raw.value, 16),
+      amount: new BigNumber(raw.value as string, 16),
       recipient: raw.to,
       // $FlowFixMe
-      gasPrice: BigNumber(raw.gasPrice, 16),
+      gasPrice: new BigNumber(raw.gasPrice as string, 16),
       nonce: raw.nonce,
     });
     transaction = bridge.updateTransaction(transaction, {
       // $FlowFixMe
-      userGasLimit: BigNumber(raw.gas, 16),
+      userGasLimit: new BigNumber(raw.gas as string, 16),
     });
-
     transaction = await bridge.prepareTransaction(account, transaction);
     delete transaction.networkInfo;
     delete transaction.gasPrice;
-
     expect(
       await parseCallRequest(account, {
         id: "1606135657415541",
-        jsonrpc: "2.0",
         method: "eth_sendTransaction",
         params: [raw],
       })
@@ -154,7 +139,6 @@ describe("walletconnect", () => {
       type: "transaction",
     });
   });
-
   test("should parse eth_sendTransaction payloads and eip55 encode lowercase addresses", async () => {
     const raw: WCPayloadTransaction = {
       data: "0x",
@@ -165,32 +149,27 @@ describe("walletconnect", () => {
       to: "0xca220b75b7af206bfcc67e2ece06e2e144fa294a",
       value: "0x0",
     };
-
     const bridge = getAccountBridge(account);
     let transaction = bridge.createTransaction(account);
-
     transaction = bridge.updateTransaction(transaction, {
       data: Buffer.from(raw.data.slice(2), "hex"),
       // $FlowFixMe
-      amount: BigNumber(raw.value, 16),
-      recipient: eip55.encode(raw.to),
+      amount: new BigNumber(raw.value as string, 16),
+      recipient: eip55.encode(raw.to as string),
       // $FlowFixMe
-      gasPrice: BigNumber(raw.gasPrice, 16),
+      gasPrice: new BigNumber(raw.gasPrice as string, 16),
       nonce: raw.nonce,
     });
     transaction = bridge.updateTransaction(transaction, {
       // $FlowFixMe
-      userGasLimit: BigNumber(raw.gas, 16),
+      userGasLimit: new BigNumber(raw.gas as string, 16),
     });
-
     transaction = await bridge.prepareTransaction(account, transaction);
     delete transaction.networkInfo;
     delete transaction.gasPrice;
-
     expect(
       await parseCallRequest(account, {
         id: "1606135657415541",
-        jsonrpc: "2.0",
         method: "eth_sendTransaction",
         params: [raw],
       })

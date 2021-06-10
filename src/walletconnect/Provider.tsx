@@ -1,42 +1,41 @@
-/* @flow */
 import React, { useEffect, useReducer } from "react";
 import WalletConnectClient from "@walletconnect/client";
 import { parseCallRequest } from "./index";
 import type { AccountLike } from "../types";
-
 export const STATUS = {
   DISCONNECTED: 0x00,
   CONNECTING: 0x01,
   ERROR: 0x02,
   CONNECTED: 0x03,
 };
-
 const clientMeta = {
   description: "LedgerLive",
   url: "https://ledger.fr",
   icons: ["https://cdn.live.ledger.com/live/icon-512.png"],
   name: "LedgerLive",
 };
-
 type State = {
-  status: number,
-  initDone: boolean,
-  session: { accountId?: string, session?: { peerMeta: any } },
-  socketReady: boolean,
-  connector: any,
-
-  error: any | null,
-  currentCallRequestId: string | null,
-  dappInfo: any | null,
+  status: number;
+  initDone: boolean;
+  session: {
+    accountId?: string;
+    session?: {
+      peerMeta: any;
+    };
+  };
+  socketReady: boolean;
+  connector: any;
+  error: any | null;
+  currentCallRequestId: string | null;
+  dappInfo: any | null;
 };
-
 // actions
 // it makes them available and current from connector events handlers
 export let connect: (uri?: string) => void = () => {};
-export let disconnect: Function = () => {};
+export let disconnect: (...args: Array<any>) => any = () => {};
 export let approveSession: (account: AccountLike) => void = () => {};
-export let setCurrentCallRequestResult: Function = () => {};
-export let setCurrentCallRequestError: Function = () => {};
+export let setCurrentCallRequestResult: (...args: Array<any>) => any = () => {};
+export let setCurrentCallRequestError: (...args: Array<any>) => any = () => {};
 export let handleCallRequest: (payload: any) => Promise<any> = () =>
   Promise.resolve();
 
@@ -48,12 +47,10 @@ const reducer = (state: State, update) => {
     session:
       update.session === null
         ? {}
-        : {
-            ...state.session,
-            ...(update.session || {}),
-          },
+        : { ...state.session, ...(update.session || {}) },
   };
 };
+
 const initialState = {
   session: {},
   socketReady: false,
@@ -64,7 +61,6 @@ const initialState = {
   currentCallRequestId: null,
   dappInfo: null,
 };
-
 export const context = React.createContext<State>(initialState);
 
 const ProviderCommon = ({
@@ -78,29 +74,33 @@ const ProviderCommon = ({
   getWCSession,
   WalletConnect = WalletConnectClient,
 }: {
-  children: React$Node,
-  useAccount: Function,
-  onMessage: Function,
-  onSessionRestarted: Function,
-  onRemoteDisconnected: Function,
-  isReady: boolean,
-  saveWCSession: Function,
-  getWCSession: Function,
-  WalletConnect: Function,
+  children: React.ReactNode;
+  useAccount: (...args: Array<any>) => any;
+  onMessage: (...args: Array<any>) => any;
+  onSessionRestarted: (...args: Array<any>) => any;
+  onRemoteDisconnected: (...args: Array<any>) => any;
+  isReady: boolean;
+  saveWCSession: (...args: Array<any>) => any;
+  getWCSession: (...args: Array<any>) => any;
+  WalletConnect: any;
 }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const account = useAccount(state.session.accountId);
 
   // actions
-
   connect = (uri) => {
     let connector;
 
     try {
       connector = new WalletConnect(
         state.session.session
-          ? { session: state.session.session }
-          : { uri, clientMeta }
+          ? {
+              session: state.session.session,
+            }
+          : {
+              uri,
+              clientMeta,
+            }
       );
     } catch (e) {
       dispatch({
@@ -125,7 +125,6 @@ const ProviderCommon = ({
         dappInfo: payload.params[0].peerMeta,
       });
     });
-
     connector.on("connect", () => {
       dispatch({
         session: {
@@ -134,18 +133,15 @@ const ProviderCommon = ({
         status: STATUS.CONNECTED,
       });
     });
-
     connector.on("disconnect", () => {
       disconnect();
     });
-
     connector.on("error", (error) => {
       dispatch({
         status: STATUS.ERROR,
         error,
       });
     });
-
     connector.on("call_request", (error, payload) => {
       if (error) {
         dispatch({
@@ -157,7 +153,6 @@ const ProviderCommon = ({
 
       handleCallRequest(payload);
     });
-
     dispatch({
       error: null,
       connector,
@@ -174,7 +169,6 @@ const ProviderCommon = ({
     if (state.status !== STATUS.DISCONNECTED) {
       const disconnectedAccount =
         state.status === STATUS.CONNECTED ? account : null;
-
       dispatch({
         session: null,
         dappInfo: null,
@@ -183,7 +177,6 @@ const ProviderCommon = ({
         currentCallRequestId: null,
         status: STATUS.DISCONNECTED,
       });
-
       onRemoteDisconnected(disconnectedAccount);
     }
   };
@@ -213,6 +206,7 @@ const ProviderCommon = ({
     }
 
     const handler = onMessage(wcCallRequest, account);
+
     if (handler) {
       dispatch({
         currentCallRequestId: payload.id,
@@ -232,6 +226,7 @@ const ProviderCommon = ({
     if (!state.connector || account.type !== "Account") {
       return;
     }
+
     state.connector.approveSession({
       accounts: [account.freshAddress],
       chainId: account.currency.ethereumLikeInfo?.chainId,
@@ -256,6 +251,7 @@ const ProviderCommon = ({
       currentCallRequestId: null,
     });
   };
+
   setCurrentCallRequestError = (error) => {
     if (!state.currentCallRequestId || !state.connector) {
       return;
@@ -263,7 +259,9 @@ const ProviderCommon = ({
 
     state.connector.rejectRequest({
       id: state.currentCallRequestId,
-      error: { message: error.message },
+      error: {
+        message: error.message,
+      },
     });
     dispatch({
       currentCallRequestId: null,
@@ -271,7 +269,6 @@ const ProviderCommon = ({
   };
 
   // effects
-
   useEffect(() => {
     if (state.initDone) {
       return;
@@ -290,9 +287,9 @@ const ProviderCommon = ({
     if (!state.initDone) {
       return;
     }
+
     saveWCSession(state.session);
   }, [saveWCSession, state.initDone, state.session]);
-
   useEffect(() => {
     if (
       account &&
@@ -301,11 +298,9 @@ const ProviderCommon = ({
       isReady
     ) {
       connect();
-
       onSessionRestarted(account);
     }
   });
-
   useEffect(() => {
     if (!state.session.session) {
       dispatch({
@@ -320,13 +315,11 @@ const ProviderCommon = ({
         socketReady: state.connector?._transport?._socket?.readyState === 1,
       });
     }, 1000);
-
     // eslint-disable-next-line consistent-return
     return () => {
       clearInterval(interval);
     };
   }, [state.session.session, state.connector]);
-
   return <context.Provider value={state}>{children}</context.Provider>;
 };
 
