@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import {
   NotEnoughBalance,
@@ -17,15 +16,14 @@ import {
 } from "../../../bridge/mockHelpers";
 import { getMainAccount } from "../../../account";
 import { makeAccountBridgeReceive } from "../../../bridge/mockHelpers";
-
 const receive = makeAccountBridgeReceive();
 
-const defaultGetFees = (a, t) => t.fees || BigNumber(0);
+const defaultGetFees = (a, t) => t.fees || new BigNumber(0);
 
 const createTransaction = (): Transaction => ({
   family: "algorand",
   mode: "send",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   recipient: "",
   fees: null,
   memo: null,
@@ -39,26 +37,23 @@ const estimateMaxSpendable = ({ account, parentAccount, transaction }) => {
   const mainAccount = getMainAccount(account, parentAccount);
   const estimatedFees = transaction
     ? defaultGetFees(mainAccount, transaction)
-    : BigNumber(5000);
+    : new BigNumber(5000);
   return Promise.resolve(
     BigNumber.max(0, account.balance.minus(estimatedFees))
   );
 };
 
 const getTransactionStatus = (account, t) => {
-  const errors = {};
-  const warnings = {};
+  const errors: any = {};
+  const warnings: any = {};
   const useAllAmount = !!t.useAllAmount;
-
   const estimatedFees = defaultGetFees(account, t);
-
   const totalSpent = useAllAmount
     ? account.balance
-    : BigNumber(t.amount).plus(estimatedFees);
-
+    : new BigNumber(t.amount).plus(estimatedFees);
   const amount = useAllAmount
     ? account.balance.minus(estimatedFees)
-    : BigNumber(t.amount);
+    : new BigNumber(t.amount);
 
   if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
     warnings.feeTooHigh = new FeeTooHigh();
@@ -87,11 +82,9 @@ const getTransactionStatus = (account, t) => {
 
 const prepareTransaction = async (a, t) => {
   if (!t.fees) {
-    return {
-      ...t,
-      fees: BigNumber(500),
-    };
+    return { ...t, fees: new BigNumber(500) };
   }
+
   return t;
 };
 
@@ -106,7 +99,6 @@ const accountBridge: AccountBridge<Transaction> = {
   signOperation,
   broadcast,
 };
-
 const currencyBridge: CurrencyBridge = {
   scanAccounts,
   preload: () => {
@@ -114,5 +106,7 @@ const currencyBridge: CurrencyBridge = {
   },
   hydrate: () => {},
 };
-
-export default { currencyBridge, accountBridge };
+export default {
+  currencyBridge,
+  accountBridge,
+};

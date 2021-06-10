@@ -1,5 +1,3 @@
-// @flow
-
 import type {
   AccountLike,
   TransactionStatus,
@@ -10,14 +8,17 @@ import type { DeviceTransactionField } from "../../transaction";
 import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit, findTokenById } from "../../currencies";
 import { extractTokenId } from "./tokens";
-
 export const displayTokenValue = (token: TokenCurrency) =>
   `${token.name} (#${extractTokenId(token.id)})`;
 
 const getSendFields = (transaction, status, account, addRecipient: boolean) => {
   const { estimatedFees, amount } = status;
-  const fields = [];
-
+  const fields: {
+    type: string;
+    label: string;
+    value?: string;
+    address?: string;
+  }[] = [];
   fields.push({
     type: "text",
     label: "Type",
@@ -66,19 +67,24 @@ function getDeviceTransactionConfig({
   transaction,
   status,
 }: {
-  account: AccountLike,
-  transaction: Transaction,
-  status: TransactionStatus,
+  account: AccountLike;
+  transaction: Transaction;
+  status: TransactionStatus;
 }): Array<DeviceTransactionField> {
   const { mode, assetId } = transaction;
   const { estimatedFees } = status;
-
-  let fields = [];
+  let fields: {
+    type: string;
+    label: string;
+    value?: string;
+    address?: string;
+  }[] = [];
 
   switch (mode) {
     case "send":
       fields = getSendFields(transaction, status, account, false);
       break;
+
     case "claimReward":
       fields = getSendFields(transaction, status, account, true);
       break;
@@ -133,7 +139,7 @@ function getDeviceTransactionConfig({
       break;
   }
 
-  return fields;
+  return fields as Array<DeviceTransactionField>;
 }
 
 export default getDeviceTransactionConfig;

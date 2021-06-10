@@ -1,17 +1,20 @@
-// @flow
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import type { Account, Operation, Unit } from "../../types";
 import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
+import { AlgorandResources } from "./types";
 
-function formatOperationSpecifics(op: Operation, unit: ?Unit): string {
+function formatOperationSpecifics(
+  op: Operation,
+  unit: Unit | null | undefined
+): string {
   const { rewards } = op.extra;
   return rewards
     ? " REWARDS : " +
         `${
           unit
-            ? formatCurrencyUnit(unit, BigNumber(rewards), {
+            ? formatCurrencyUnit(unit, new BigNumber(rewards), {
                 showCode: true,
                 disableRounding: true,
               }).padEnd(16)
@@ -29,22 +32,25 @@ function formatAccountSpecifics(account: Account): string {
     alwaysShowSign: false,
     showCode: true,
   };
-
   let str = " ";
-
   str +=
     formatCurrencyUnit(unit, account.spendableBalance, formatConfig) +
     " spendable. ";
-  if (algorandResources.rewards.gt(0)) {
-    str +=
-      formatCurrencyUnit(unit, algorandResources.rewards, formatConfig) +
-      " rewards. ";
-  }
-  if (algorandResources.rewardsAccumulated.gt(0)) {
+
+  if ((algorandResources as AlgorandResources).rewards.gt(0)) {
     str +=
       formatCurrencyUnit(
         unit,
-        algorandResources.rewardsAccumulated,
+        (algorandResources as AlgorandResources).rewards,
+        formatConfig
+      ) + " rewards. ";
+  }
+
+  if ((algorandResources as AlgorandResources).rewardsAccumulated.gt(0)) {
+    str +=
+      formatCurrencyUnit(
+        unit,
+        (algorandResources as AlgorandResources).rewardsAccumulated,
         formatConfig
       ) + " rewardsAccumulated. ";
   }
@@ -52,26 +58,24 @@ function formatAccountSpecifics(account: Account): string {
   return str;
 }
 
-export function fromOperationExtraRaw(extra: ?Object) {
+export function fromOperationExtraRaw(
+  extra: Record<string, any> | null | undefined
+) {
   if (extra && extra.rewards) {
-    return {
-      ...extra,
-      rewards: BigNumber(extra.rewards),
-    };
+    return { ...extra, rewards: new BigNumber(extra.rewards) };
   }
+
   return extra;
 }
-
-export function toOperationExtraRaw(extra: ?Object) {
+export function toOperationExtraRaw(
+  extra: Record<string, any> | null | undefined
+) {
   if (extra && extra.rewards) {
-    return {
-      ...extra,
-      rewards: extra.rewards.toString(),
-    };
+    return { ...extra, rewards: extra.rewards.toString() };
   }
+
   return extra;
 }
-
 export default {
   formatAccountSpecifics,
   formatOperationSpecifics,

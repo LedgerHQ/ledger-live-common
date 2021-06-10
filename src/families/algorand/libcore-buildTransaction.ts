@@ -1,4 +1,3 @@
-// @flow
 import { FeeNotLoaded } from "@ledgerhq/errors";
 import type { Account } from "../../types";
 import { libcoreAmountToBigNumber } from "../../libcore/buildBigNumber";
@@ -15,8 +14,9 @@ const setInfo = async (
   isPartial
 ) => {
   const { amount, recipient, assetId, mode, useAllAmount } = transaction;
+
   if (subAccount || (assetId && mode === "optIn")) {
-    let targetAssetId =
+    const targetAssetId =
       subAccount && subAccount.type === "TokenAccount"
         ? extractTokenId(subAccount.token.id)
         : assetId
@@ -61,13 +61,13 @@ export async function algorandBuildTransaction({
   isCancelled,
   isPartial,
 }: {
-  account: Account,
-  core: Core,
-  coreAccount: CoreAccount,
-  transaction: Transaction,
-  isPartial: boolean,
-  isCancelled: () => boolean,
-}): Promise<?CoreAlgorandTransaction> {
+  account: Account;
+  core: Core;
+  coreAccount: CoreAccount;
+  transaction: Transaction;
+  isPartial: boolean;
+  isCancelled: () => boolean;
+}): Promise<CoreAlgorandTransaction | null | undefined> {
   const { fees, memo, subAccountId } = transaction;
   const subAccount = subAccountId
     ? account.subAccounts &&
@@ -80,10 +80,8 @@ export async function algorandBuildTransaction({
 
   const algorandAccount = await coreAccount.asAlgorandAccount();
   if (isCancelled()) return;
-
   const buildedTransaction = await algorandAccount.createTransaction();
   if (isCancelled()) return;
-
   // set Payment or Asset if token
   await setInfo(
     core,
@@ -100,7 +98,7 @@ export async function algorandBuildTransaction({
   }
 
   // if Partial getEstimateFees here
-  let feesToSet = isPartial
+  const feesToSet = isPartial
     ? await libcoreAmountToBigNumber(
         await algorandAccount.getFeeEstimate(buildedTransaction)
       )
@@ -114,5 +112,4 @@ export async function algorandBuildTransaction({
   // return transaction
   return buildedTransaction;
 }
-
 export default algorandBuildTransaction;

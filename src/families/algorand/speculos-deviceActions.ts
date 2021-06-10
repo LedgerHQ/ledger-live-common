@@ -1,4 +1,3 @@
-// @flow
 import type { DeviceAction } from "../../bot/types";
 import type { Transaction } from "./types";
 import { formatCurrencyUnit, findTokenById } from "../../currencies";
@@ -12,7 +11,7 @@ const expectedAmount = ({ account, status }) =>
     disableRounding: true,
   });
 
-const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
+const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
   steps: [
     {
       title: "Txn Type",
@@ -71,7 +70,10 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
       expectedValue: ({ account, status, transaction }) =>
         transaction.mode === "claimReward"
           ? "0"
-          : expectedAmount({ account, status }),
+          : expectedAmount({
+              account,
+              status,
+            }),
     },
     {
       title: "Sign",
@@ -91,5 +93,6 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
     }, // Only on testnet
   ],
 });
-
-export default { acceptTransaction };
+export default {
+  acceptTransaction,
+};

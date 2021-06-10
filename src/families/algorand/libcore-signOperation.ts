@@ -1,5 +1,3 @@
-// @flow
-
 import Algorand from "@ledgerhq/hw-app-algorand";
 import { makeSignOperation } from "../../libcore/signOperation";
 import buildTransaction from "./libcore-buildTransaction";
@@ -24,7 +22,6 @@ async function signTransaction({
 }) {
   const hwApp = new Algorand(transport);
   const serialized = await coreTransaction.serialize();
-
   onDeviceSignatureRequested();
   // Call the hw-app signature
   const { signature } = await hwApp.sign(freshAddressPath, serialized);
@@ -37,12 +34,9 @@ async function signTransaction({
   // Set signature here
   await coreTransaction.setSignature(signature.toString("hex"));
   if (isCancelled()) return;
-
   // Get the serialization after signature to send it to broadcast
   const hex = await coreTransaction.serialize();
-
   if (isCancelled()) return;
-
   // Add fees, senders (= account.freshAddress) and recipients.
   const senders = [freshAddress];
   const recipients = [transaction.recipient];
@@ -58,21 +52,19 @@ async function signTransaction({
   };
 
   const type = getType();
-
   const tokenAccount = !subAccountId
     ? null
     : subAccounts && subAccounts.find((ta) => ta.id === subAccountId);
-
-  const op: $Exact<Operation> = {
+  const op: Operation = {
     id: `${id}--${type}`,
     hash: "",
     type,
     value: subAccountId
-      ? BigNumber(fee)
+      ? new BigNumber(fee)
       : transaction.useAllAmount
       ? spendableBalance
       : transaction.amount.plus(fee),
-    fee: BigNumber(fee),
+    fee: new BigNumber(fee),
     blockHash: null,
     blockHeight: null,
     senders,
@@ -91,7 +83,7 @@ async function signTransaction({
         value: transaction.useAllAmount
           ? tokenAccount.balance
           : transaction.amount,
-        fee: BigNumber(0),
+        fee: new BigNumber(0),
         blockHash: null,
         blockHeight: null,
         senders,

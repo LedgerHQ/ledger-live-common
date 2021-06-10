@@ -1,4 +1,3 @@
-// @flow
 import type { Account } from "../../types";
 import type { CoreAccount } from "../../libcore/types";
 import { libcoreAmountToBigNumber } from "../../libcore/buildBigNumber";
@@ -12,13 +11,14 @@ const getAlgorandResources = async (
   const algorandAccount = await coreAccount.asAlgorandAccount();
   const rewardsBigInt = await algorandAccount.getPendingRewards();
   const rewardsAccumulatedBigInt = await algorandAccount.getTotalRewards();
-
   const rewards = await libcoreAmountToBigNumber(rewardsBigInt);
   const rewardsAccumulated = await libcoreAmountToBigNumber(
     rewardsAccumulatedBigInt
   );
-
-  return { rewards, rewardsAccumulated };
+  return {
+    rewards,
+    rewardsAccumulated,
+  };
 };
 
 const getAlgorandSpendableBalance = async (coreAccount) => {
@@ -29,7 +29,6 @@ const getAlgorandSpendableBalance = async (coreAccount) => {
   const spendableBalance = await libcoreAmountToBigNumber(
     spendableBalanceBigInt
   );
-
   return spendableBalance;
 };
 
@@ -37,12 +36,11 @@ const postBuildAccount = async ({
   account,
   coreAccount,
 }: {
-  account: Account,
-  coreAccount: CoreAccount,
+  account: Account;
+  coreAccount: CoreAccount;
 }): Promise<Account> => {
   account.algorandResources = await getAlgorandResources(account, coreAccount);
   account.spendableBalance = await getAlgorandSpendableBalance(coreAccount);
-
   return account;
 };
 

@@ -1,4 +1,3 @@
-// @flow
 import { getAbandonSeedAddress } from "@ledgerhq/cryptoassets";
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
@@ -14,7 +13,7 @@ import {
 import { AlgorandASANotOptInInRecipient } from "../../../errors";
 import { validateRecipient } from "../../../bridge/shared";
 import type { AccountBridge, CurrencyBridge, Account } from "../../../types";
-import type { Transaction } from "../types";
+import type { AlgorandResources, Transaction } from "../types";
 import { AlgorandOperationTypeEnum } from "../types";
 import { scanAccounts } from "../../../libcore/scanAccounts";
 import { sync } from "../../../libcore/syncAccount";
@@ -31,17 +30,24 @@ import { extractTokenId } from "../tokens";
 import { ALGORAND_MAX_MEMO_SIZE } from "../logic";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 import { ClaimRewardsFeesWarning } from "../../../errors";
-
 const receive = makeAccountBridgeReceive();
-
 export const calculateFees: CacheRes<
-  Array<{ a: Account, t: Transaction }>,
-  { estimatedFees: BigNumber, estimatedGas: ?BigNumber }
+  Array<{
+    a: Account;
+    t: Transaction;
+  }>,
+  {
+    estimatedFees: BigNumber;
+    estimatedGas: BigNumber | null | undefined;
+  }
 > = makeLRUCache(
   async ({
     a,
     t,
-  }): Promise<{ estimatedFees: BigNumber, estimatedGas: ?BigNumber }> => {
+  }): Promise<{
+    estimatedFees: BigNumber;
+    estimatedGas: BigNumber | null | undefined;
+  }> => {
     return await getFeesForTransaction({
       account: a,
       transaction: t,
@@ -56,7 +62,6 @@ export const calculateFees: CacheRes<
 const getSpendableMaxForOptIn = async (account) =>
   await withLibcore(async (core) => {
     const { coreAccount } = await getCoreAccount(core, account);
-
     const algorandAccount = await coreAccount.asAlgorandAccount();
     const spendableBalanceBigInt = await algorandAccount.getSpendableBalance(
       AlgorandOperationTypeEnum.ASSET_OPT_IN
@@ -64,13 +69,12 @@ const getSpendableMaxForOptIn = async (account) =>
     const spendableBalance = await libcoreAmountToBigNumber(
       spendableBalanceBigInt
     );
-
     return spendableBalance;
   });
 
 const createTransaction = () => ({
   family: "algorand",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   fees: null,
   recipient: "",
   useAllAmount: false,
@@ -86,25 +90,22 @@ const updateTransaction = (t, patch) => {
 const recipientHasAsset = async (assetId, recipient, account) =>
   await withLibcore(async (core) => {
     const { coreAccount } = await getCoreAccount(core, account);
-
     const algorandAccount = await coreAccount.asAlgorandAccount();
     const hasAsset = await algorandAccount.hasAsset(recipient, assetId);
-
     return hasAsset;
   });
 
 const getAmountValid = async (recipient, amount, account) =>
   await withLibcore(async (core) => {
     const { coreAccount } = await getCoreAccount(core, account);
-
     const algorandAccount = await coreAccount.asAlgorandAccount();
     const isValid = await algorandAccount.isAmountValid(
       recipient,
       amount.toString()
     );
-
     return isValid;
   });
+
 /*
  * Here are the list of the differents things we check
  * - Check if recipient is the same in case of send
@@ -116,8 +117,8 @@ const getAmountValid = async (recipient, amount, account) =>
  * - Check if memo is too long
  */
 const getTransactionStatus = async (a: Account, t) => {
-  const errors = {};
-  const warnings = {};
+  const errors: any = {};
+  const warnings: any = {};
   const tokenAccount = !t.subAccountId
     ? null
     : a.subAccounts && a.subAccounts.find((ta) => ta.id === t.subAccountId);
@@ -139,7 +140,7 @@ const getTransactionStatus = async (a: Account, t) => {
     }
   }
 
-  let estimatedFees = t.fees || BigNumber(0);
+  const estimatedFees = t.fees || new BigNumber(0);
   let amount = t.amount;
   let totalSpent = estimatedFees;
 
@@ -173,7 +174,7 @@ const getTransactionStatus = async (a: Account, t) => {
         : amount;
 
       if (amount.lt(0)) {
-        amount = BigNumber(0);
+        amount = new BigNumber(0);
       }
 
       totalSpent = tokenAccount ? amount : amount.plus(estimatedFees);
@@ -224,9 +225,11 @@ const getTransactionStatus = async (a: Account, t) => {
       }
 
       const spendableBalance = await getSpendableMaxForOptIn(a);
+
       if (spendableBalance.lt(estimatedFees)) {
         errors.amount = new NotEnoughBalance();
       }
+
       break;
     }
 
@@ -236,7 +239,10 @@ const getTransactionStatus = async (a: Account, t) => {
       }
 
       invariant(a.algorandResources, "Algorand family");
-      if (estimatedFees.gt(a.algorandResources.rewards)) {
+
+      if (
+        estimatedFees.gt((a.algorandResources as AlgorandResources).rewards)
+      ) {
         warnings.claimReward = new ClaimRewardsFeesWarning();
       }
 
@@ -266,20 +272,19 @@ const prepareTransaction = async (a, t) => {
 
   if (t.mode === "optIn" || t.mode === "claimReward") {
     recipient = a.freshAddress;
-    amount = BigNumber(0);
+    amount = new BigNumber(0);
   }
 
   if (recipient || t.mode !== "send") {
     let errors = (await validateRecipient(a.currency, recipient))
       .recipientError;
-
     errors = errors || (t.mode === "optIn" && !t.assetId);
+
     if (!errors) {
       const res = await calculateFees({
         a,
         t,
       });
-
       fees = res.estimatedFees;
     }
   }
@@ -322,7 +327,6 @@ const currencyBridge: CurrencyBridge = {
   hydrate,
   scanAccounts,
 };
-
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   updateTransaction,
@@ -334,5 +338,7 @@ const accountBridge: AccountBridge<Transaction> = {
   broadcast,
   estimateMaxSpendable,
 };
-
-export default { currencyBridge, accountBridge };
+export default {
+  currencyBridge,
+  accountBridge,
+};

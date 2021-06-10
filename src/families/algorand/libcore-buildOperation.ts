@@ -1,5 +1,3 @@
-// @flow
-
 import { BigNumber } from "bignumber.js";
 import type { CoreOperation } from "../../libcore/types";
 import type { Operation } from "../../types";
@@ -10,6 +8,7 @@ const getAssetId = async (transaction) => {
     const assetInfo = await transaction.getAssetTransferInfo();
     return assetInfo.getAssetId();
   }
+
   return null;
 };
 
@@ -35,32 +34,33 @@ const getOperationType = async (algorandOperation, transaction) => {
 async function algorandBuildOperation({
   coreOperation,
 }: {
-  coreOperation: CoreOperation,
+  coreOperation: CoreOperation;
 }) {
   const algorandLikeOperation = await coreOperation.asAlgorandOperation();
   const algorandLikeTransaction = await algorandLikeOperation.getTransaction();
   const hash = await algorandLikeTransaction.getId();
-
-  const out: $Shape<Operation> = {
+  const out: Partial<Operation> = {
     hash,
   };
-
   const type = await getOperationType(
     algorandLikeOperation,
     algorandLikeTransaction
   );
+
   if (type) {
     out.type = type;
   }
 
   const assetId = await getAssetId(algorandLikeTransaction);
+
   if (assetId) {
     out.extra = { ...out.extra, assetId: assetId };
   }
 
   const rewards = await algorandLikeOperation.getRewards();
+
   if (rewards) {
-    out.extra = { ...out.extra, rewards: BigNumber(rewards) };
+    out.extra = { ...out.extra, rewards: new BigNumber(rewards) };
   }
 
   return out;
