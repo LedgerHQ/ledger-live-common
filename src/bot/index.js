@@ -55,7 +55,13 @@ export async function bot({ currency, mutation }: Arg = {}) {
     const familySpecs = allSpecs[family];
     for (const key in familySpecs) {
       let spec = familySpecs[key];
-      if (!isCurrencySupported(spec.currency) || spec.disabled || spec.currency.id != "stakenet") {
+      if (
+        !isCurrencySupported(spec.currency) ||
+        spec.disabled ||
+        (spec.currency.id != "stakenet" &&
+          spec.currency.id != "stealthcoin" &&
+          spec.currency.id != "digibyte")
+      ) {
         continue;
       }
       if (!maybeCurrency || maybeCurrency === spec.currency) {
