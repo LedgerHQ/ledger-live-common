@@ -210,7 +210,7 @@ export const isUpToDateAccount = (account: Account | null | undefined) => {
 };
 export const getVotesCount = (
   account: AccountLike,
-  parentAccount: Account | null | undefined
+  parentAccount?: Account | null | undefined
 ): number => {
   const mainAccount = getMainAccount(account, parentAccount);
 

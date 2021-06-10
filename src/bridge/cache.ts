@@ -1,23 +1,23 @@
-// @flow
 import type { CryptoCurrency } from "../types";
 import { makeLRUCache } from "../cache";
 import { getCurrencyBridge } from "./";
-
 export type BridgeCacheSystem = {
-  hydrateCurrency: (currency: CryptoCurrency) => Promise<?mixed>,
-  prepareCurrency: (currency: CryptoCurrency) => Promise<?mixed>,
+  hydrateCurrency: (
+    currency: CryptoCurrency
+  ) => Promise<unknown | null | undefined>;
+  prepareCurrency: (
+    currency: CryptoCurrency
+  ) => Promise<unknown | null | undefined>;
 };
-
 const defaultCacheStrategy = {
   preloadMaxAge: 5 * 60 * 1000,
 };
-
 export function makeBridgeCacheSystem({
   saveData,
   getData,
 }: {
-  saveData: (currency: CryptoCurrency, data: mixed) => Promise<void>,
-  getData: (currency: CryptoCurrency) => Promise<?mixed>,
+  saveData: (currency: CryptoCurrency, data: unknown) => Promise<void>;
+  getData: (currency: CryptoCurrency) => Promise<unknown | null | undefined>;
 }): BridgeCacheSystem {
   const hydrateCurrency = async (currency: CryptoCurrency) => {
     const value = await getData(currency);
@@ -35,21 +35,27 @@ export function makeBridgeCacheSystem({
       ...(bridge.getPreloadStrategy && bridge.getPreloadStrategy(currency)),
     };
     let cache = lruCaches[currency.id];
+
     if (!cache) {
       cache = makeLRUCache(
         async () => {
           const preloaded = await bridge.preload(currency);
+
           if (preloaded) {
             bridge.hydrate(preloaded, currency);
             await saveData(currency, preloaded);
           }
+
           return preloaded;
         },
         () => "",
-        { maxAge: preloadMaxAge }
+        {
+          maxAge: preloadMaxAge,
+        }
       );
       lruCaches[currency.id] = cache;
     }
+
     return cache();
   };
 

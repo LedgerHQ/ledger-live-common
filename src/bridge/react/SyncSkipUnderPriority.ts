@@ -1,14 +1,17 @@
-// @flow
-
 import { useEffect } from "react";
 import { useBridgeSync } from "./context";
 
-const SyncSkipUnderPriorityInstances = [];
+type Instance = {
+  priority: number;
+};
+
+const SyncSkipUnderPriorityInstances: Array<Instance> = [];
 export const SyncSkipUnderPriority = ({ priority }: { priority: number }) => {
   const sync = useBridgeSync();
-
   useEffect(() => {
-    const instance = { priority };
+    const instance = {
+      priority,
+    };
     SyncSkipUnderPriorityInstances.push(instance);
 
     const update = () => {
@@ -18,11 +21,13 @@ export const SyncSkipUnderPriority = ({ priority }: { priority: number }) => {
         SyncSkipUnderPriorityInstances.length === 0
           ? -1
           : Math.max(...SyncSkipUnderPriorityInstances.map((i) => i.priority));
-      sync({ type: "SET_SKIP_UNDER_PRIORITY", priority });
+      sync({
+        type: "SET_SKIP_UNDER_PRIORITY",
+        priority,
+      });
     };
 
     update();
-
     return () => {
       const i = SyncSkipUnderPriorityInstances.indexOf(instance);
       if (i === -1) return;
@@ -30,6 +35,5 @@ export const SyncSkipUnderPriority = ({ priority }: { priority: number }) => {
       update();
     };
   }, [sync, priority]);
-
   return null;
 };

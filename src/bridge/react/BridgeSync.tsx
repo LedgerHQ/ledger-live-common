@@ -1,10 +1,8 @@
-// @flow
 import { log } from "@ledgerhq/logs";
 import shuffle from "lodash/shuffle";
 import priorityQueue from "async/priorityQueue";
 import { concat, from } from "rxjs";
 import { ignoreElements } from "rxjs/operators";
-
 import React, {
   useEffect,
   useCallback,
@@ -19,30 +17,31 @@ import { getAccountCurrency } from "../../account";
 import { getEnv } from "../../env";
 import type { SyncAction, SyncState, BridgeSyncState } from "./types";
 import { BridgeSyncContext, BridgeSyncStateContext } from "./context";
-
 export type Props = {
   // this is a wrapping component that you need to put in your tree
-  children: React$Node,
+  children: React.ReactNode;
   // you need to inject the accounts to sync on
-  accounts: Account[],
+  accounts: Account[];
   // provide a way to save the result of an account sync update
   updateAccountWithUpdater: (
     accountId: string,
-    updater: (Account) => Account
-  ) => void,
+    updater: (arg0: Account) => Account
+  ) => void;
   // handles an error / log / do action with it
   // if the function returns falsy, the sync will ignore error, otherwise it's treated as error with the error you return (likely the same)
-  recoverError: (Error) => ?Error,
+  recoverError: (arg0: Error) => Error | null | undefined;
   // track sync lifecycle for analytics
-  trackAnalytics: (string, ?Object) => void,
+  trackAnalytics: (
+    arg0: string,
+    arg1: Record<string, any> | null | undefined
+  ) => void;
   // load all data needed for a currency (it's calling currencyBridge prepare mechanism)
-  prepareCurrency: (currency: CryptoCurrency) => Promise<*>,
+  prepareCurrency: (currency: CryptoCurrency) => Promise<any>;
   // provide an implementation of hydrate (it preload from a local storage impl the data cached from a previous prepare)
-  hydrateCurrency: (currency: CryptoCurrency) => Promise<*>,
+  hydrateCurrency: (currency: CryptoCurrency) => Promise<any>;
   // an array of token ids to blacklist from the account sync
-  blacklistedTokenIds?: string[],
+  blacklistedTokenIds?: string[];
 };
-
 export const BridgeSync = ({
   children,
   accounts,
@@ -57,7 +56,6 @@ export const BridgeSync = ({
     accounts,
     hydrateCurrency,
   });
-
   const [syncQueue, syncState] = useSyncQueue({
     accounts,
     prepareCurrency,
@@ -66,21 +64,17 @@ export const BridgeSync = ({
     updateAccountWithUpdater,
     blacklistedTokenIds,
   });
-
   const sync = useSync({
     syncQueue,
     accounts,
   });
-
   useSyncBackground({
     sync,
   });
-
   useSyncContinouslyPendingOperations({
     sync,
     accounts,
   });
-
   return (
     <BridgeSyncStateContext.Provider value={syncState}>
       <BridgeSyncContext.Provider value={sync}>
@@ -91,15 +85,15 @@ export const BridgeSync = ({
 };
 
 // utility internal hooks for <BridgeSync>
-
 // useHydrate: bridge.hydrate once for each currency
-
 function useHydrate({ accounts, hydrateCurrency }) {
   const hydratedCurrencies = useRef({});
   useEffect(() => {
     const hydrated = hydratedCurrencies.current;
+
     for (const account of accounts) {
       const { currency } = account;
+
       if (!hydrated[currency.id]) {
         hydrated[currency.id] = true;
         hydrateCurrency(currency);
@@ -108,11 +102,13 @@ function useHydrate({ accounts, hydrateCurrency }) {
   }, [accounts, hydrateCurrency]);
 }
 
-const lastTimeAnalyticsTrackPerAccountId: { [accountId: string]: number } = {};
-const nothingState = { pending: false, error: null };
+const lastTimeAnalyticsTrackPerAccountId: Record<string, number> = {};
+const nothingState = {
+  pending: false,
+  error: null,
+};
 
 // useHydrate: returns a sync queue and bridge sync state
-
 function useSyncQueue({
   accounts,
   prepareCurrency,
@@ -121,41 +117,46 @@ function useSyncQueue({
   updateAccountWithUpdater,
   blacklistedTokenIds,
 }) {
-  const [bridgeSyncState, setBridgeSyncState]: [BridgeSyncState, *] = useState(
-    {}
-  );
-
+  const [bridgeSyncState, setBridgeSyncState]: [
+    BridgeSyncState,
+    any
+  ] = useState({});
   const setAccountSyncState = useCallback((accountId: string, s: SyncState) => {
     setBridgeSyncState((state) => ({ ...state, [accountId]: s }));
   }, []);
-
   const synchronize = useCallback(
     (accountId: string, next: () => void) => {
       const state = bridgeSyncState[accountId] || nothingState;
+
       if (state.pending) {
         next();
         return;
       }
+
       const account = accounts.find((a) => a.id === accountId);
+
       if (!account) {
         next();
         return;
       }
 
       // FIXME if we want to stop syncs for specific currency (e.g. api down) we would do it here
-
       try {
         const bridge = getAccountBridge(account);
-        setAccountSyncState(accountId, { pending: true, error: null });
-
+        setAccountSyncState(accountId, {
+          pending: true,
+          error: null,
+        });
         const startSyncTime = Date.now();
         const trackedRecently =
           lastTimeAnalyticsTrackPerAccountId[accountId] &&
           startSyncTime - lastTimeAnalyticsTrackPerAccountId[accountId] <
             90 * 1000;
+
         if (!trackedRecently) {
           lastTimeAnalyticsTrackPerAccountId[accountId] = startSyncTime;
         }
+
         const trackEnd = (event) => {
           if (trackedRecently) return;
           const account = accounts.find((a) => a.id === accountId);
@@ -196,7 +197,6 @@ function useSyncQueue({
           paginationConfig: {},
           blacklistedTokenIds,
         };
-
         concat(
           from(prepareCurrency(account.currency)).pipe(ignoreElements()),
           bridge.sync(account, syncConfig)
@@ -229,12 +229,18 @@ function useSyncQueue({
               trackEnd("SyncError");
             }
 
-            setAccountSyncState(accountId, { pending: false, error });
+            setAccountSyncState(accountId, {
+              pending: false,
+              error,
+            });
             next();
           },
         });
       } catch (error) {
-        setAccountSyncState(accountId, { pending: false, error });
+        setAccountSyncState(accountId, {
+          pending: false,
+          error,
+        });
         next();
       }
     },
@@ -249,27 +255,24 @@ function useSyncQueue({
       blacklistedTokenIds,
     ]
   );
-
   const synchronizeRef = useRef(synchronize);
   useEffect(() => {
     synchronizeRef.current = synchronize;
   }, [synchronize]);
-
   const [syncQueue] = useState(() =>
     priorityQueue(
+      // FIXME: i don't know what to do here
+      // @ts-expect-error we might need to stop using nasty spreads
       (...a) => synchronizeRef.current(...a),
       getEnv("SYNC_MAX_CONCURRENT")
     )
   );
-
   return [syncQueue, bridgeSyncState];
 }
 
 // useSync: returns a sync function with the syncQueue
-
 function useSync({ syncQueue, accounts }) {
   const skipUnderPriority = useRef(-1);
-
   const sync = useMemo(() => {
     const schedule = (ids: string[], priority: number) => {
       if (priority < skipUnderPriority.current) return;
@@ -289,48 +292,47 @@ function useSync({ syncQueue, accounts }) {
           schedule(shuffledAccountIds(), -1);
         }
       },
-
       SET_SKIP_UNDER_PRIORITY: ({ priority }: { priority: number }) => {
         if (priority === skipUnderPriority.current) return;
         skipUnderPriority.current = priority;
         syncQueue.remove(({ priority }) => priority < skipUnderPriority);
+
         if (priority === -1 && !accounts.every(isUpToDateAccount)) {
           // going back to -1 priority => retriggering a background sync if it is "Paused"
           schedule(shuffledAccountIds(), -1);
         }
       },
-
       SYNC_ALL_ACCOUNTS: ({ priority }: { priority: number }) => {
         schedule(shuffledAccountIds(), priority);
       },
-
       SYNC_ONE_ACCOUNT: ({
         accountId,
         priority,
       }: {
-        accountId: string,
-        priority: number,
+        accountId: string;
+        priority: number;
       }) => {
         schedule([accountId], priority);
       },
-
       SYNC_SOME_ACCOUNTS: ({
         accountIds,
         priority,
       }: {
-        accountIds: string[],
-        priority: number,
+        accountIds: string[];
+        priority: number;
       }) => {
         schedule(accountIds, priority);
       },
     };
-
     return (action: SyncAction) => {
       const handler = handlers[action.type];
+
       if (handler) {
-        log("bridge", `action ${action.type}`, { action, type: "syncQueue" });
-        // $FlowFixMe
-        handler(action);
+        log("bridge", `action ${action.type}`, {
+          action,
+          type: "syncQueue",
+        });
+        handler(action as any);
       } else {
         log("warn", "BridgeSyncContext unsupported action", {
           action,
@@ -339,47 +341,45 @@ function useSync({ syncQueue, accounts }) {
       }
     };
   }, [accounts, syncQueue]);
-
   const ref = useRef(sync);
   useEffect(() => {
     ref.current = sync;
   }, [sync]);
-
   const syncFn = useCallback((action) => ref.current(action), [ref]);
-
   return syncFn;
 }
 
 // useSyncBackground: continuously synchronize accounts in background
-
 function useSyncBackground({ sync }) {
   useEffect(() => {
     let syncTimeout;
+
     const syncLoop = async () => {
-      sync({ type: "BACKGROUND_TICK" });
+      sync({
+        type: "BACKGROUND_TICK",
+      });
       syncTimeout = setTimeout(syncLoop, getEnv("SYNC_ALL_INTERVAL"));
     };
+
     syncTimeout = setTimeout(syncLoop, getEnv("SYNC_BOOT_DELAY"));
     return () => clearTimeout(syncTimeout);
   }, [sync]);
 }
 
 // useSyncContinouslyPendingOperations: continously sync accounts with pending operations
-
 function useSyncContinouslyPendingOperations({ sync, accounts }) {
   const ids = useMemo(
     () =>
       accounts.filter((a) => a.pendingOperations.length > 0).map((a) => a.id),
     [accounts]
   );
-
   const refIds = useRef(ids);
   useEffect(() => {
     refIds.current = ids;
   }, [ids]);
-
   useEffect(() => {
     let timeout;
+
     const update = () => {
       sync({
         type: "SYNC_SOME_ACCOUNTS",
@@ -388,6 +388,7 @@ function useSyncContinouslyPendingOperations({ sync, accounts }) {
       });
       timeout = setTimeout(update, getEnv("SYNC_PENDING_INTERVAL"));
     };
+
     timeout = setTimeout(update, getEnv("SYNC_PENDING_INTERVAL"));
     return () => clearTimeout(timeout);
   }, [sync]);

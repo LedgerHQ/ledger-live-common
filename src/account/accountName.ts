@@ -14,7 +14,7 @@ export const getNewAccountPlaceholderName = getAccountPlaceholderName; // same n
 
 export const validateNameEdition = (
   account: Account,
-  name: string | null | undefined
+  name?: string | null | undefined
 ): string =>
   (
     (name || account.name || "").replace(/\s+/g, " ").trim() ||

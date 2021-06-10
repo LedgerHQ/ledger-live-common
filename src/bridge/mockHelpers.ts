@@ -1,6 +1,4 @@
-// @flow
 // TODO makeMockBridge need to be exploded into families (bridge/mock) with utility code shared.
-
 import Prando from "prando";
 import { Observable, of } from "rxjs";
 import { BigNumber } from "bignumber.js";
@@ -12,16 +10,11 @@ import { delay } from "../promise";
 import type { Operation, Account } from "../types";
 import type { CurrencyBridge, AccountBridge } from "../types/bridge";
 import { getEnv } from "../env";
-
 import perFamilyMock from "../generated/mock";
-
 const MOCK_DATA_SEED = getEnv("MOCK") || "MOCK";
-
-const broadcasted: { [_: string]: Operation[] } = {};
-
+const broadcasted: Record<string, Operation[]> = {};
 const syncTimeouts = {};
-
-export const sync: $PropertyType<AccountBridge<*>, "sync"> = (initialAccount) =>
+export const sync: AccountBridge<any>["sync"] = (initialAccount) =>
   Observable.create((o) => {
     const accountId = initialAccount.id;
 
@@ -30,6 +23,7 @@ export const sync: $PropertyType<AccountBridge<*>, "sync"> = (initialAccount) =>
         o.error(new SyncError("mock failure"));
         return;
       }
+
       const ops = broadcasted[accountId] || [];
       broadcasted[accountId] = [];
       o.next((acc) => {
@@ -37,7 +31,6 @@ export const sync: $PropertyType<AccountBridge<*>, "sync"> = (initialAccount) =>
           (sum, op) => sum.plus(getOperationAmountNumber(op)),
           acc.balance
         );
-
         const nextAcc = {
           ...acc,
           blockHeight: acc.blockHeight + 1,
@@ -47,34 +40,28 @@ export const sync: $PropertyType<AccountBridge<*>, "sync"> = (initialAccount) =>
           balance,
           spendableBalance: balance,
         };
-
         const perFamilyOperation = perFamilyMock[acc.currency.id];
         const postSyncAccount =
           perFamilyOperation && perFamilyOperation.postSyncAccount;
-
         if (postSyncAccount) return postSyncAccount(nextAcc);
-
         return nextAcc;
       });
       o.complete();
     };
 
     syncTimeouts[accountId] = setTimeout(sync, 2000);
-
     return () => {
       clearTimeout(syncTimeouts[accountId]);
       syncTimeouts[accountId] = null;
     };
   });
-
-export const broadcast: $PropertyType<AccountBridge<*>, "broadcast"> = ({
+export const broadcast: AccountBridge<any>["broadcast"] = ({
   signedOperation,
 }) => Promise.resolve(signedOperation.operation);
-
-export const signOperation: $PropertyType<
-  AccountBridge<any>,
-  "signOperation"
-> = ({ account, transaction }) =>
+export const signOperation: AccountBridge<any>["signOperation"] = ({
+  account,
+  transaction,
+}) =>
   Observable.create((o) => {
     let cancelled = false;
 
@@ -83,17 +70,23 @@ export const signOperation: $PropertyType<
       if (cancelled) return;
 
       for (let i = 0; i <= 1; i += 0.1) {
-        o.next({ type: "device-streaming", progress: i, index: i, total: 10 });
+        o.next({
+          type: "device-streaming",
+          progress: i,
+          index: i,
+          total: 10,
+        });
         await delay(300);
       }
 
-      o.next({ type: "device-signature-requested" });
-
+      o.next({
+        type: "device-signature-requested",
+      });
       await delay(2000);
       if (cancelled) return;
-
-      o.next({ type: "device-signature-granted" });
-
+      o.next({
+        type: "device-signature-granted",
+      });
       const rng = new Prando("");
       const op = genOperation(account, account, account.operations, rng);
       op.type = "OUT";
@@ -104,7 +97,6 @@ export const signOperation: $PropertyType<
       op.recipients = [transaction.recipient];
       op.blockHeight = account.blockHeight;
       op.date = new Date();
-
       await delay(1000);
       if (cancelled) return;
       broadcasted[account.id] = (broadcasted[account.id] || []).concat(op);
@@ -122,26 +114,24 @@ export const signOperation: $PropertyType<
       () => o.complete(),
       (e) => o.error(e)
     );
-
     return () => {
       cancelled = true;
     };
   });
-
 export const isInvalidRecipient = (recipient: string) =>
   recipient.includes("invalid") || recipient.length <= 3;
 
 const subtractOneYear = (date) =>
   new Date(new Date(date).setFullYear(new Date(date).getFullYear() - 1));
 
-export const scanAccounts: $PropertyType<CurrencyBridge, "scanAccounts"> = ({
-  currency,
-}) =>
+export const scanAccounts: CurrencyBridge["scanAccounts"] = ({ currency }) =>
   Observable.create((o) => {
     let unsubscribed = false;
+
     async function job() {
       // TODO offer a way to mock a failure
       const nbAccountToGen = 3;
+
       for (let i = 0; i < nbAccountToGen && !unsubscribed; i++) {
         const isLast = i === 2;
         await delay(500);
@@ -160,34 +150,43 @@ export const scanAccounts: $PropertyType<CurrencyBridge, "scanAccounts"> = ({
         account.used = isLast ? false : account.used;
         account.name = "";
         account.name = validateNameEdition(account);
+
         if (isLast) {
-          account.spendableBalance = account.balance = BigNumber(0);
+          account.spendableBalance = account.balance = new BigNumber(0);
         }
 
         const perFamilyOperation = perFamilyMock[currency.id];
         const postScanAccount =
           perFamilyOperation && perFamilyOperation.postScanAccount;
-
-        if (postScanAccount) postScanAccount(account, { isEmpty: isLast });
-
-        if (!unsubscribed) o.next({ type: "discovered", account });
+        if (postScanAccount)
+          postScanAccount(account, {
+            isEmpty: isLast,
+          });
+        if (!unsubscribed)
+          o.next({
+            type: "discovered",
+            account,
+          });
       }
+
       if (!unsubscribed) o.complete();
     }
 
     job();
-
     return () => {
       unsubscribed = true;
     };
   });
-
 export const makeAccountBridgeReceive: () => (
   account: Account,
-  { verify?: boolean, deviceId: string, subAccountId?: string }
+  arg1: {
+    verify?: boolean;
+    deviceId: string;
+    subAccountId?: string;
+  }
 ) => Observable<{
-  address: string,
-  path: string,
+  address: string;
+  path: string;
 }> = () => (account) =>
   of({
     address: account.freshAddress,

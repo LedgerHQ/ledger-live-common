@@ -1,5 +1,3 @@
-// @flow
-
 export * from "./context";
 export * from "./BridgeSync";
 export * from "./SyncAllAccountsOnMount";

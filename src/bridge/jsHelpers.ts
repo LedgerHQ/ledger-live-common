@@ -1,4 +1,3 @@
-// @flow
 import isEqual from "lodash/isEqual";
 import { BigNumber } from "bignumber.js";
 import { Observable, from } from "rxjs";
@@ -37,18 +36,16 @@ import type { CurrencyBridge, AccountBridge } from "../types/bridge";
 import getAddress from "../hw/getAddress";
 import { open, close } from "../hw";
 import { withDevice } from "../hw/deviceAccess";
-
 export type GetAccountShape = (
-  {
-    currency: CryptoCurrency,
-    address: string,
-    id: string,
-    initialAccount?: Account,
+  arg0: {
+    currency: CryptoCurrency;
+    address: string;
+    id: string;
+    initialAccount?: Account;
   },
-  SyncConfig
-) => Promise<$Shape<Account>>;
-
-type AccountUpdater = (Account) => Account;
+  arg1: SyncConfig
+) => Promise<Partial<Account>>;
+type AccountUpdater = (arg0: Account) => Account;
 
 // compare that two dates are roughly the same date in order to update the case it would have drastically changed
 const sameDate = (a, b) => Math.abs(a - b) < 1000 * 60 * 30;
@@ -63,21 +60,18 @@ export const sameOp = (a: Operation, b: Operation) =>
     a.blockHeight === b.blockHeight &&
     isEqual(a.senders, b.senders) &&
     isEqual(a.recipients, b.recipients));
-
 // efficiently prepend newFetched operations to existing operations
-export function mergeOps(
-  // existing operations. sorted (newer to older). deduped.
-  existing: Operation[],
-  // new fetched operations. not sorted. not deduped. time is allowed to overlap inside existing.
+export function mergeOps( // existing operations. sorted (newer to older). deduped.
+  existing: Operation[], // new fetched operations. not sorted. not deduped. time is allowed to overlap inside existing.
   newFetched: Operation[]
 ): // return a list of operations, deduped and sorted from newer to older
 Operation[] {
   // there is new fetched
   if (newFetched.length === 0) return existing;
-
   // efficient lookup map of id.
   const existingIds = {};
-  for (let o of existing) {
+
+  for (const o of existing) {
     existingIds[o.id] = o;
   }
 
@@ -85,35 +79,35 @@ Operation[] {
   const newOpsIds = {};
   const newOps = newFetched
     .filter((o) => !existingIds[o.id] || !sameOp(existingIds[o.id], o))
-    .sort((a, b) => b.date - a.date);
+    // FIXME: valueOf for typescript date operations
+    .sort((a, b) => b.date.valueOf() - a.date.valueOf());
   newOps.forEach((op) => {
     newOpsIds[op.id] = op;
   });
-
   // return existins when there is no real new operations
   if (newOps.length === 0) return existing;
-
   // edge case, existing can be empty. return the sorted list.
   if (existing.length === 0) return newOps;
-
   // building up merging the ops
-  const all = [];
-  for (let o of existing) {
+  const all: Operation[] = [];
+
+  for (const o of existing) {
     // prepend all the new ops that have higher date
     while (newOps.length > 0 && newOps[0].date > o.date) {
-      all.push(newOps.shift());
+      all.push(newOps.shift() as Operation);
     }
+
     if (!newOpsIds[o.id]) {
       all.push(o);
     }
   }
+
   return all;
 }
-
 export const makeSync = (
   getAccountShape: GetAccountShape,
   postSync: (initial: Account, synced: Account) => Account = (_, a) => a
-): $PropertyType<AccountBridge<any>, "sync"> => (
+): AccountBridge<any>["sync"] => (
   initial,
   syncConfig
 ): Observable<AccountUpdater> =>
@@ -121,6 +115,7 @@ export const makeSync = (
     async function main() {
       const accountId = `js:2:${initial.currency.id}:${initial.freshAddress}:${initial.derivationMode}`;
       const needClear = initial.id !== accountId;
+
       try {
         const shape = await getAccountShape(
           {
@@ -160,18 +155,19 @@ export const makeSync = (
         o.error(e);
       }
     }
+
     main();
   });
-
 export const makeScanAccounts = (
   getAccountShape: GetAccountShape
-): $PropertyType<CurrencyBridge, "scanAccounts"> => ({
+): CurrencyBridge["scanAccounts"] => ({
   currency,
   deviceId,
   syncConfig,
 }): Observable<ScanAccountEvent> =>
   Observable.create((o) => {
     let finished = false;
+
     const unsubscribe = () => {
       finished = true;
     };
@@ -180,17 +176,15 @@ export const makeScanAccounts = (
 
     // in future ideally what we want is:
     // return mergeMap(addressesObservable, address => fetchAccount(address))
-
     async function stepAccount(
       index,
       { address, path: freshAddressPath },
       derivationMode,
       seedIdentifier
-    ): Promise<?Account> {
+    ): Promise<Account | null | undefined> {
       if (finished) return;
-
       const accountId = `js:2:${currency.id}:${address}:${derivationMode}`;
-      const accountShape: Account = await getAccountShape(
+      const accountShape: Partial<Account> = await getAccountShape(
         {
           currency,
           id: accountId,
@@ -199,7 +193,6 @@ export const makeScanAccounts = (
         syncConfig
       );
       if (finished) return;
-
       const freshAddress = address;
       const operations = accountShape.operations || [];
       const operationsCount = accountShape.operationsCount || operations.length;
@@ -207,12 +200,11 @@ export const makeScanAccounts = (
         operations.length > 0
           ? operations[operations.length - 1].date
           : new Date();
-      const balance = accountShape.balance || BigNumber(0);
-      const spendableBalance = accountShape.spendableBalance || BigNumber(0);
-
+      const balance = accountShape.balance || new BigNumber(0);
+      const spendableBalance =
+        accountShape.spendableBalance || new BigNumber(0);
       if (balance.isNaN()) throw new Error("invalid balance NaN");
-
-      const initialAccount: $Exact<Account> = {
+      const initialAccount: Account = {
         type: "Account",
         id: accountId,
         seedIdentifier,
@@ -243,11 +235,7 @@ export const makeScanAccounts = (
         blockHeight: 0,
         balanceHistoryCache: emptyHistoryCache,
       };
-
-      const account = {
-        ...initialAccount,
-        ...accountShape,
-      };
+      const account = { ...initialAccount, ...accountShape };
 
       if (account.balanceHistoryCache === emptyHistoryCache) {
         account.balanceHistoryCache = generateHistoryFromOperations(account);
@@ -263,19 +251,20 @@ export const makeScanAccounts = (
     async function main() {
       // TODO switch to withDevice
       let transport;
+
       try {
         transport = await open(deviceId);
         const derivationModes = getDerivationModesForCurrency(currency);
+
         for (const derivationMode of derivationModes) {
           if (finished) break;
-
           const path = getSeedIdentifierDerivation(currency, derivationMode);
           log(
             "scanAccounts",
             `scanning ${currency.id} on derivationMode=${derivationMode}`
           );
-
           let result = derivationsCache[path];
+
           if (!result) {
             result = await getAddress(transport, {
               currency,
@@ -284,10 +273,9 @@ export const makeScanAccounts = (
             });
             derivationsCache[path] = result;
           }
+
           if (!result) continue;
-
           const seedIdentifier = result.publicKey;
-
           let emptyCount = 0;
           const mandatoryEmptyAccountSkip = getMandatoryEmptyAccountSkip(
             derivationMode
@@ -299,9 +287,9 @@ export const makeScanAccounts = (
           const showNewAccount = shouldShowNewAccount(currency, derivationMode);
           const stopAt = isIterableDerivationMode(derivationMode) ? 255 : 1;
           const startsAt = getDerivationModeStartsAt(derivationMode);
+
           for (let index = startsAt; index < stopAt; index++) {
             if (finished) break;
-
             if (!derivationModeSupportsIndex(derivationMode, index)) continue;
             const freshAddressPath = runDerivationScheme(
               derivationScheme,
@@ -310,8 +298,8 @@ export const makeScanAccounts = (
                 account: index,
               }
             );
-
             let res = derivationsCache[freshAddressPath];
+
             if (!res) {
               res = await getAddress(transport, {
                 currency,
@@ -327,7 +315,6 @@ export const makeScanAccounts = (
               derivationMode,
               seedIdentifier
             );
-
             log(
               "scanAccounts",
               `scanning ${currency.id} at ${freshAddressPath}: ${
@@ -339,17 +326,23 @@ export const makeScanAccounts = (
               }`
             );
             if (!account) return;
-
             account.name = !account.used
               ? getNewAccountPlaceholderName({
                   currency,
                   index,
                   derivationMode,
                 })
-              : getAccountPlaceholderName({ currency, index, derivationMode });
+              : getAccountPlaceholderName({
+                  currency,
+                  index,
+                  derivationMode,
+                });
 
             if (account.used || showNewAccount) {
-              o.next({ type: "discovered", account });
+              o.next({
+                type: "discovered",
+                account,
+              });
             }
 
             if (!account.used) {
@@ -358,6 +351,7 @@ export const makeScanAccounts = (
             }
           }
         }
+
         o.complete();
       } catch (e) {
         o.error(e);
@@ -369,30 +363,30 @@ export const makeScanAccounts = (
     }
 
     main();
-
     return unsubscribe;
   });
-
 export function makeAccountBridgeReceive({
   injectGetAddressParams,
 }: {
-  injectGetAddressParams?: (Account) => *,
+  injectGetAddressParams?: (arg0: Account) => any;
 } = {}): (
   account: Account,
-  {
-    verify?: boolean,
-    deviceId: string,
-    subAccountId?: string,
-    freshAddressIndex?: number,
+  arg1: {
+    verify?: boolean;
+    deviceId: string;
+    subAccountId?: string;
+    freshAddressIndex?: number;
   }
 ) => Observable<{
-  address: string,
-  path: string,
+  address: string;
+  path: string;
 }> {
   return (account, { verify, deviceId, freshAddressIndex }) => {
     let freshAddress;
+
     if (freshAddressIndex !== undefined && freshAddressIndex !== null) {
       freshAddress = account.freshAddresses[freshAddressIndex];
+
       if (freshAddress === undefined) {
         throw new FreshAddressIndexInvalid();
       }
@@ -413,6 +407,7 @@ export function makeAccountBridgeReceive({
           const accountAddress = freshAddress
             ? freshAddress.address
             : account.freshAddress;
+
           if (r.address !== accountAddress) {
             throw new WrongDeviceForAccount(
               `WrongDeviceForAccount ${account.name}`,
@@ -421,6 +416,7 @@ export function makeAccountBridgeReceive({
               }
             );
           }
+
           return r;
         })
       )
