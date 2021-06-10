@@ -1,16 +1,16 @@
-// @flow
 import type { SwapOperation } from "./types";
 
 export default (
-  existingSwapHistory: ?(SwapOperation[]),
-  importedSwapHistory: ?(SwapOperation[])
-) => {
-  const usedSwapIds = [];
+  existingSwapHistory: SwapOperation[] | null | undefined,
+  importedSwapHistory: SwapOperation[] | null | undefined
+): SwapOperation[] => {
+  const usedSwapIds: string[] = [];
   const dirtyJoin = [
     ...(existingSwapHistory || []),
     ...(importedSwapHistory || []),
   ];
-  let cleanSwapHistory = [];
+  const cleanSwapHistory: SwapOperation[] = [];
+
   for (let i = dirtyJoin.length - 1; i >= 0; i--) {
     // Iterate backwards to prioritise imported swaps
     const swapOperation = dirtyJoin[i];
@@ -18,5 +18,6 @@ export default (
     usedSwapIds.push(swapOperation.swapId);
     cleanSwapHistory.push(swapOperation);
   }
+
   return cleanSwapHistory;
 };

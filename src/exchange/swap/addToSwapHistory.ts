@@ -1,4 +1,4 @@
-// @flow
+import { $Shape } from "utility-types";
 import type { Account, SubAccount, Operation, Transaction } from "../../types";
 import type { Exchange, ExchangeRate } from "./types";
 import { getAccountCurrency, getMainAccount } from "../../account";
@@ -11,21 +11,20 @@ export default ({
   swap,
   swapId,
 }: {
-  account: Account,
-  operation: Operation,
-  transaction: Transaction,
+  account: Account;
+  operation: Operation;
+  transaction: Transaction;
   swap: {
-    exchange: $Shape<Exchange>,
-    exchangeRate: ExchangeRate,
-  },
-  swapId: string,
-}) => {
+    exchange: $Shape<Exchange>;
+    exchangeRate: ExchangeRate;
+  };
+  swapId: string;
+}): Account => {
   const { exchange, exchangeRate } = swap;
   const { fromAccount, toAccount, toParentAccount } = exchange;
   const mainToAccount = getMainAccount(toAccount, toParentAccount);
   const toCurrency = getAccountCurrency(toAccount);
   const fromCurrency = getAccountCurrency(fromAccount);
-
   const subAccounts = account.type === "Account" && account.subAccounts;
   const tokenId =
     toCurrency.type === "TokenCurrency" ? toCurrency.id : undefined;
@@ -34,12 +33,10 @@ export default ({
     isFromToken && operation.subOperations
       ? operation.subOperations[0].id
       : operation.id;
-
   // Nb deduct the payoutnetworkfees if they are present
   const toAmount = transaction.amount
     .times(exchangeRate.magnitudeAwareRate)
     .minus(exchangeRate.payoutNetworkFees || 0);
-
   const swapOperation: SwapOperation = {
     status: "pending",
     provider: exchangeRate.provider,
@@ -51,7 +48,6 @@ export default ({
     fromAmount: transaction.amount,
     toAmount,
   };
-
   return isFromToken && subAccounts
     ? {
         ...account,
@@ -60,11 +56,8 @@ export default ({
             ...a,
             swapHistory: [...a.swapHistory, swapOperation],
           };
-          return a.id === fromAccount.id ? subAccount : a;
+          return a.id === fromAccount?.id ? subAccount : a;
         }),
       }
-    : {
-        ...account,
-        swapHistory: [...account.swapHistory, swapOperation],
-      };
+    : { ...account, swapHistory: [...account.swapHistory, swapOperation] };
 };

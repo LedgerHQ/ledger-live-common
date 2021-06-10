@@ -1,15 +1,11 @@
-// @flow
-
 import { formatCurrencyUnit } from "../../currencies";
 import { getAccountCurrency, getMainAccount } from "../../account";
 import type { SwapHistorySection, MappedSwapOperation } from "./types";
 type Field = {
-  title: string,
-  cell: (MappedSwapOperation) => string,
+  title: string;
+  cell: (arg0: MappedSwapOperation) => string;
 };
-
 const newLine = "\r\n";
-
 const fields: Field[] = [
   {
     title: "Operator",
@@ -76,11 +72,11 @@ const fields: Field[] = [
     },
   },
 ];
-
 export const mappedSwapOperationsToCSV = (
   swapHistorySections: SwapHistorySection[]
-) => {
-  const mappedSwapOperations = [];
+): string => {
+  const mappedSwapOperations: MappedSwapOperation[] = [];
+
   for (const section of swapHistorySections) {
     mappedSwapOperations.push(...section.data);
   }

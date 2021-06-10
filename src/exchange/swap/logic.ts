@@ -1,23 +1,28 @@
-// @flow
-
+import { $Keys, $Shape } from "utility-types";
 import type { SwapState, TradeMethod } from "./types";
 import { isExchangeSupportedByApp } from "../";
 import type { AccountLike, TokenCurrency, CryptoCurrency } from "../../types";
 import type { InstalledItem } from "../../apps";
 import { flattenAccounts, getAccountCurrency } from "../../account";
 export type CurrencyStatus = $Keys<typeof validCurrencyStatus>;
-export type CurrenciesStatus = { [string]: CurrencyStatus };
+export type CurrenciesStatus = Record<string, CurrencyStatus>;
 import uniq from "lodash/uniq";
 
-const validCurrencyStatus = { ok: 1, noApp: 1, noAccounts: 1, outdatedApp: 1 };
+const validCurrencyStatus = {
+  ok: 1,
+  noApp: 1,
+  noAccounts: 1,
+  outdatedApp: 1,
+};
+
 export const getCurrenciesWithStatus = ({
   accounts,
   selectableCurrencies,
   installedApps,
 }: {
-  accounts: AccountLike[],
-  selectableCurrencies: (TokenCurrency | CryptoCurrency)[],
-  installedApps: InstalledItem[],
+  accounts: AccountLike[];
+  selectableCurrencies: (TokenCurrency | CryptoCurrency)[];
+  installedApps: InstalledItem[];
 }): CurrenciesStatus => {
   const statuses = {};
   const installedAppMap = {};
@@ -35,7 +40,6 @@ export const getCurrenciesWithStatus = ({
         : c.type === "CryptoCurrency"
         ? c
         : null;
-
     if (!mainCurrency) continue;
     statuses[c.id] =
       mainCurrency.managerAppName in installedAppMap
@@ -49,6 +53,7 @@ export const getCurrenciesWithStatus = ({
           : "outdatedApp"
         : "noApp";
   }
+
   return statuses;
 };
 
@@ -58,26 +63,28 @@ const reset = {
   error: undefined,
   exchangeRate: undefined,
 };
-
 const ratesExpirationThreshold = 60000;
 
 export const getValidToCurrencies = ({
   selectableCurrencies,
   fromCurrency,
 }: {
-  selectableCurrencies: { [TradeMethod]: (TokenCurrency | CryptoCurrency)[] },
-  fromCurrency: ?(TokenCurrency | CryptoCurrency),
+  selectableCurrencies: Record<TradeMethod, (TokenCurrency | CryptoCurrency)[]>;
+  fromCurrency: (TokenCurrency | CryptoCurrency) | null | undefined;
 }): (TokenCurrency | CryptoCurrency)[] => {
-  const out = [];
+  const out: (TokenCurrency | CryptoCurrency)[] = [];
   const tradeMethods = Object.keys(selectableCurrencies);
+
   for (const tradeMethod of tradeMethods) {
     const currenciesForTradeMethod = selectableCurrencies[tradeMethod];
+
     if (currenciesForTradeMethod.includes(fromCurrency)) {
       out.push(
         ...selectableCurrencies[tradeMethod].filter((c) => c !== fromCurrency)
       );
     }
   }
+
   return uniq(out);
 };
 
@@ -88,13 +95,16 @@ export const getEnabledTradeMethods = ({
   fromCurrency,
   toCurrency,
 }: {
-  selectableCurrencies: { [TradeMethod]: (TokenCurrency | CryptoCurrency)[] },
-  toCurrency: ?(TokenCurrency | CryptoCurrency),
-  fromCurrency: ?(TokenCurrency | CryptoCurrency),
+  selectableCurrencies: Record<TradeMethod, (TokenCurrency | CryptoCurrency)[]>;
+  toCurrency: (TokenCurrency | CryptoCurrency) | null | undefined;
+  fromCurrency: (TokenCurrency | CryptoCurrency) | null | undefined;
 }): TradeMethod[] => {
-  const tradeMethods = Object.keys(selectableCurrencies).filter((m) =>
-    allTradeMethods.includes(m)
+  const tradeMethods: TradeMethod[] = <TradeMethod[]>(
+    Object.keys(selectableCurrencies).filter((m) =>
+      allTradeMethods.includes(<TradeMethod>m)
+    )
   );
+
   return fromCurrency && toCurrency
     ? tradeMethods.filter(
         (method) =>
@@ -107,14 +117,18 @@ export const getEnabledTradeMethods = ({
 
 export const reducer = (
   state: SwapState,
-  { type, payload }: { type: string, payload: $Shape<SwapState> }
-) => {
+  {
+    type,
+    payload,
+  }: {
+    type: string;
+    payload: $Shape<SwapState>;
+  }
+): SwapState => {
   switch (type) {
     case "onResetRate":
-      return {
-        ...state,
-        ...reset,
-      };
+      return { ...state, ...reset };
+
     case "onSetFromCurrency":
       return {
         ...state,
@@ -126,6 +140,7 @@ export const reducer = (
             : state.toCurrency,
         exchangeRate: undefined,
       };
+
     case "onSetToCurrency":
       return {
         ...state,
@@ -134,11 +149,10 @@ export const reducer = (
         toParentAccount: undefined,
         ...reset,
       };
+
     case "onSetError":
-      return {
-        ...state,
-        error: payload.error,
-      };
+      return { ...state, error: payload.error };
+
     case "onSetExchangeRate":
       return {
         ...state,
@@ -148,22 +162,20 @@ export const reducer = (
           ? new Date(new Date().getTime() + ratesExpirationThreshold)
           : undefined,
       };
+
     case "onSetUseAllAmount":
-      return {
-        ...state,
-        useAllAmount: payload.useAllAmount,
-      };
+      return { ...state, useAllAmount: payload.useAllAmount };
+
     case "onSetToAccount":
       return {
         ...state,
         toAccount: payload.toAccount,
         toParentAccount: payload.toParentAccount,
       };
+
     case "onSetLoadingRates":
-      return {
-        ...state,
-        loadingRates: payload.loadingRates,
-      };
+      return { ...state, loadingRates: payload.loadingRates };
+
     case "onFlip":
       return {
         ...state,
@@ -173,5 +185,6 @@ export const reducer = (
         toParentAccount: payload.toParentAccount,
       };
   }
+
   return state || {};
 };

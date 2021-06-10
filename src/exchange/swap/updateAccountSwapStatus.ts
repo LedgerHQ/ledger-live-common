@@ -1,32 +1,40 @@
-// @flow
-
 import { getMultipleStatus } from "./getStatus";
 import type { SubAccount, Account } from "../../types";
-import type { UpdateAccountSwapStatus, SwapOperation } from "./types";
+import type {
+  UpdateAccountSwapStatus,
+  SwapOperation,
+  SwapStatusRequest,
+} from "./types";
 import { operationStatusList } from "./";
 
 const maybeGetUpdatedSwapHistory = async (
-  swapHistory: ?(SwapOperation[])
-): Promise<?(SwapOperation[])> => {
-  const pendingSwapIds = [];
+  swapHistory: SwapOperation[] | null | undefined
+): Promise<SwapOperation[] | null | undefined> => {
+  const pendingSwapIds: SwapStatusRequest[] = [];
   let accountNeedsUpdating = false;
-  let consolidatedSwapHistory = [];
+  let consolidatedSwapHistory: SwapOperation[] = [];
 
   if (swapHistory) {
     for (const { provider, swapId, status } of swapHistory) {
       if (operationStatusList.pending.includes(status)) {
-        pendingSwapIds.push({ provider, swapId });
+        pendingSwapIds.push({
+          provider,
+          swapId,
+        });
       }
     }
+
     if (pendingSwapIds.length) {
       const newStatusList = await getMultipleStatus(pendingSwapIds);
       consolidatedSwapHistory = swapHistory.map<SwapOperation>(
         (swap: SwapOperation) => {
           const newStatus = newStatusList.find((s) => s.swapId === swap.swapId);
+
           if (newStatus && newStatus.status !== swap.status) {
             accountNeedsUpdating = true;
             return { ...swap, status: newStatus.status };
           }
+
           return swap;
         }
       );
@@ -41,11 +49,11 @@ const maybeGetUpdatedSwapHistory = async (
 const updateAccountSwapStatus: UpdateAccountSwapStatus = async (
   account: Account
 ) => {
-  let swapHistoryUpdated = await maybeGetUpdatedSwapHistory(
+  const swapHistoryUpdated = await maybeGetUpdatedSwapHistory(
     account.swapHistory
   );
   let subAccountSwapHistoryUpdated = false;
-  let subAccounts = [];
+  let subAccounts: SubAccount[] = [];
 
   if (account.type === "Account" && account.subAccounts?.length) {
     subAccounts = await Promise.all(
@@ -54,7 +62,6 @@ const updateAccountSwapStatus: UpdateAccountSwapStatus = async (
           const updatedSwapHistory = await maybeGetUpdatedSwapHistory(
             subAccount.swapHistory
           );
-
           //As soon as we get one update, we will need to update the parent account
           if (updatedSwapHistory) subAccountSwapHistoryUpdated = true;
           return {

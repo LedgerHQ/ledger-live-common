@@ -1,5 +1,3 @@
-// @flow
-
 import { BigNumber } from "bignumber.js";
 import type {
   Exchange,
@@ -20,21 +18,21 @@ import { Observable, of } from "rxjs";
 export const mockGetExchangeRates = async (
   exchange: Exchange,
   transaction: Transaction
-) => {
+): Promise<(ExchangeRate & { expirationDate?: Date })[]> => {
   const { fromAccount, toAccount } = exchange;
   const amount = transaction.amount;
   const unitFrom = getAccountUnit(fromAccount);
   const unitTo = getAccountUnit(toAccount);
-  const tenPowMagnitude = BigNumber(10).pow(unitFrom.magnitude);
+  const tenPowMagnitude = new BigNumber(10).pow(unitFrom.magnitude);
   const amountFrom = amount.div(tenPowMagnitude);
-  const minAmountFrom = BigNumber(0.0001);
-  const maxAmountFrom = BigNumber(1000);
+  const minAmountFrom = new BigNumber(0.0001);
+  const maxAmountFrom = new BigNumber(1000);
 
   if (amountFrom.lte(minAmountFrom)) {
     throw new SwapExchangeRateAmountTooLow(null, {
       minAmountFromFormatted: formatCurrencyUnit(
         unitFrom,
-        BigNumber(minAmountFrom).times(tenPowMagnitude),
+        new BigNumber(minAmountFrom).times(tenPowMagnitude),
         {
           alwaysShowSign: false,
           disableRounding: true,
@@ -48,7 +46,7 @@ export const mockGetExchangeRates = async (
     throw new SwapExchangeRateAmountTooHigh(null, {
       maxAmountFromFormatted: formatCurrencyUnit(
         unitFrom,
-        BigNumber(maxAmountFrom).times(tenPowMagnitude),
+        new BigNumber(maxAmountFrom).times(tenPowMagnitude),
         {
           alwaysShowSign: false,
           disableRounding: true,
@@ -60,14 +58,13 @@ export const mockGetExchangeRates = async (
 
   //Fake delay to show loading UI
   await new Promise((r) => setTimeout(r, 800));
-  const magnitudeAwareRate = BigNumber(1)
-    .div(BigNumber(10).pow(unitFrom.magnitude))
-    .times(BigNumber(10).pow(unitTo.magnitude));
-
+  const magnitudeAwareRate = new BigNumber(1)
+    .div(new BigNumber(10).pow(unitFrom.magnitude))
+    .times(new BigNumber(10).pow(unitTo.magnitude));
   //Mock OK, not really magnitude aware
   return [
     {
-      rate: BigNumber("1"),
+      rate: new BigNumber("1"),
       toAmount: amount.times(magnitudeAwareRate),
       magnitudeAwareRate,
       rateId: "mockedRateId",
@@ -76,7 +73,7 @@ export const mockGetExchangeRates = async (
       tradeMethod: "fixed",
     },
     {
-      rate: BigNumber("1"),
+      rate: new BigNumber("1"),
       toAmount: amount.times(magnitudeAwareRate),
       magnitudeAwareRate,
       rateId: "mockedRateId",
@@ -86,7 +83,6 @@ export const mockGetExchangeRates = async (
     },
   ];
 };
-
 export const mockInitSwap = (
   exchange: Exchange,
   exchangeRate: ExchangeRate,
@@ -100,11 +96,9 @@ export const mockInitSwap = (
     },
   });
 };
-
 export const mockGetProviders: GetProviders = async () => {
   //Fake delay to show loading UI
   await new Promise((r) => setTimeout(r, 800));
-
   return [
     {
       provider: "changelly",
@@ -134,7 +128,6 @@ export const mockGetProviders: GetProviders = async () => {
     },
   ];
 };
-
 export const mockGetStatus: GetMultipleStatus = async (statusList) => {
   //Fake delay to show loading UI
   await new Promise((r) => setTimeout(r, 800));
