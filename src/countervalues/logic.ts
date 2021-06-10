@@ -1,5 +1,3 @@
-// @flow
-
 import { log } from "@ledgerhq/logs";
 import type { Currency, Account } from "../types";
 import { flattenAccounts, getAccountCurrency } from "../account/helpers";
@@ -23,7 +21,6 @@ import {
   incrementPerGranularity,
   datapointLimits,
 } from "./helpers";
-
 import {
   fetchHistorical,
   fetchLatest,
@@ -38,15 +35,21 @@ export function exportCountervalues({
   data,
   status,
 }: CounterValuesState): CounterValuesStateRaw {
-  const out = { status };
-  for (let path in data) {
+  const out = {
+    status,
+  };
+
+  for (const path in data) {
     const obj = {};
-    for (let [k, v] of data[path]) {
+
+    for (const [k, v] of data[path]) {
       obj[k] = v;
     }
+
     out[path] = obj;
   }
-  return out;
+
+  return <CounterValuesStateRaw>out;
 }
 
 // restore a countervalues state from the raw version
@@ -55,14 +58,18 @@ export function importCountervalues(
   settings: CountervaluesSettings
 ): CounterValuesState {
   const data = {};
-  for (let path in rest) {
+
+  for (const path in rest) {
     const obj = rest[path];
-    let map = new Map();
-    for (let k in obj) {
+    const map = new Map();
+
+    for (const k in obj) {
       map.set(k, obj[k]);
     }
+
     data[path] = map;
   }
+
   return {
     data,
     status,
@@ -70,13 +77,12 @@ export function importCountervalues(
       (prev, [key, val]) => ({
         ...prev,
         // $FlowFixMe
-        [key]: generateCache(key, val, settings),
+        [key]: generateCache(key, <RateMap>val, settings),
       }),
       {}
     ),
   };
 }
-
 // infer the tracking pair from user accounts to know which pairs are concerned
 export function inferTrackingPairForAccounts(
   accounts: Account[],
@@ -84,7 +90,6 @@ export function inferTrackingPairForAccounts(
 ): TrackingPair[] {
   const yearAgo = new Date();
   yearAgo.setFullYear(yearAgo.getFullYear() - 1);
-
   return resolveTrackingPairs(
     flattenAccounts(accounts).map((a) => {
       const currency = getAccountCurrency(a);
@@ -96,15 +101,12 @@ export function inferTrackingPairForAccounts(
     })
   );
 }
-
 export const initialState: CounterValuesState = {
   data: {},
   status: {},
   cache: {},
 };
-
 const MAX_RETRY_DELAY = 7 * incrementPerGranularity.daily;
-
 // synchronize all countervalues incrementally (async update of the countervalues state)
 export async function loadCountervalues(
   state: CounterValuesState,
@@ -113,21 +115,24 @@ export async function loadCountervalues(
   const data = { ...state.data };
   const cache = { ...state.cache };
   const status = { ...state.status };
-
   const nowDate = new Date();
   const latestToFetch = settings.trackingPairs;
-
   // determines what historical data need to be fetched
-  const histoToFetch = [];
-  ["daily", "hourly"].forEach((granularity: RateGranularity) => {
+  const histoToFetch: any[] = [];
+
+  const rateGranularities: RateGranularity[] = ["daily", "hourly"];
+
+  rateGranularities.forEach((granularity: RateGranularity) => {
     const format = formatPerGranularity[granularity];
     const earliestHisto = format(nowDate);
     log("countervalues", "earliestHisto=" + earliestHisto);
-
     const limit = datapointLimits[granularity];
     settings.trackingPairs.forEach(({ from, to, startDate }) => {
-      const key = pairId({ from, to });
-      const c: ?PairRateMapCache = cache[key];
+      const key = pairId({
+        from,
+        to,
+      });
+      const c: PairRateMapCache | null | undefined = cache[key];
       const stats = c && c.stats;
       const s = status[key];
 
@@ -139,11 +144,12 @@ export async function loadCountervalues(
           MAX_RETRY_DELAY
         );
         const nextTarget = timestamp + 1000 * secondsBetweenRetries;
-        if (nowDate < nextTarget) {
+
+        if (nowDate.valueOf() < nextTarget) {
           log(
             "countervalues",
             `${key}@${granularity} discarded: too much HTTP failures (${failures}) retry in ~${Math.round(
-              (nextTarget - nowDate) / 1000
+              (nextTarget - nowDate.valueOf()) / 1000
             )}s`
           );
           return;
@@ -152,12 +158,14 @@ export async function loadCountervalues(
 
       let start = startDate || nowDate;
       const limitDate = Date.now() - limit;
-      if (limitDate && start < limitDate) {
+
+      if (limitDate && start.valueOf() < limitDate) {
         start = new Date(limitDate);
       }
 
       const needOlderReload =
         s && s.oldestDateRequested && start < new Date(s.oldestDateRequested);
+
       if (needOlderReload) {
         log(
           "countervalues",
@@ -166,6 +174,7 @@ export async function loadCountervalues(
           )})`
         );
       }
+
       if (!needOlderReload) {
         // we do not miss datapoints in the past so we can ask the only remaining part
         if (
@@ -179,16 +188,21 @@ export async function loadCountervalues(
 
       // nothing to fetch for historical
       if (format(start) === earliestHisto) return;
-
-      histoToFetch.push([granularity, { from, to, startDate: start }, key]);
+      histoToFetch.push([
+        granularity,
+        {
+          from,
+          to,
+          startDate: start,
+        },
+        key,
+      ]);
     });
   });
-
   log(
     "countervalues",
     `${histoToFetch.length} historical value to fetch (${settings.trackingPairs.length} pairs)`
   );
-
   // Fetch it all
   const [histo, latest] = await Promise.all([
     promiseAllBatched(10, histoToFetch, ([granularity, pair, key]) =>
@@ -197,6 +211,7 @@ export async function loadCountervalues(
           // Update status infos
           const id = pairId(pair);
           let oldestDateRequested = status[id]?.oldestDateRequested;
+
           if (pair.startDate) {
             if (
               !oldestDateRequested ||
@@ -205,8 +220,14 @@ export async function loadCountervalues(
               oldestDateRequested = pair.startDate.toISOString();
             }
           }
-          status[id] = { timestamp: Date.now(), oldestDateRequested };
-          return { [key]: rates };
+
+          status[id] = {
+            timestamp: Date.now(),
+            oldestDateRequested,
+          };
+          return {
+            [key]: rates,
+          };
         })
         .catch((e) => {
           // TODO work on the semantic of failure.
@@ -241,7 +262,9 @@ export async function loadCountervalues(
           const key = pairId(pair);
           const latest = rates[i];
           if (data[key]?.get("latest") === latest) return;
-          out[key] = { latest: rates[i] };
+          out[key] = {
+            latest: rates[i],
+          };
           hasData = true;
         });
         if (!hasData) return null;
@@ -260,76 +283,82 @@ export async function loadCountervalues(
         return null;
       }),
   ]);
-
-  const updates = histo.concat(latest).filter(Boolean);
-
+  const updates: any[] = histo.concat(latest).filter(Boolean);
   log("countervalues", updates.length + " updates to apply");
-
   const changesKeys = {};
   updates.forEach((patch) => {
     Object.keys(patch).forEach((key) => {
       changesKeys[key] = 1;
+
       if (!data[key]) {
         data[key] = new Map();
       }
+
       Object.entries(patch[key]).forEach(([k, v]) => {
         if (typeof v === "number") data[key].set(k, v);
       });
     });
   });
-
   // synchronize the cache
   Object.keys(changesKeys).forEach((pair) => {
     cache[pair] = generateCache(pair, data[pair], settings);
   });
-
-  return { data, cache, status };
+  return {
+    data,
+    cache,
+    status,
+  };
 }
-
 export function lenseRateMap(
   state: CounterValuesState,
-  pair: { from: Currency, to: Currency }
-): ?PairRateMapCache {
+  pair: {
+    from: Currency;
+    to: Currency;
+  }
+): PairRateMapCache | null | undefined {
   if (!isCountervalueEnabled(pair.from) || !isCountervalueEnabled(pair.to)) {
     return;
   }
+
   const rateId = pairId(pair);
   return state.cache[rateId];
 }
-
 export function lenseRate(
   { stats, fallback, map }: PairRateMapCache,
   query: {
-    from: Currency,
-    to: Currency,
-    date?: ?Date,
+    from: Currency;
+    to: Currency;
+    date?: Date | null | undefined;
   }
-): ?number {
+): number | null | undefined {
   const { date } = query;
   if (!date) return map.get("latest");
   const { iso, hour, day } = formatCounterValueHashes(date);
   if (stats.earliest && iso > stats.earliest) return map.get("latest");
   return map.get(hour) || map.get(day) || fallback;
 }
-
 export function calculate(
   state: CounterValuesState,
   initialQuery: {
-    value: number,
-    from: Currency,
-    to: Currency,
-    disableRounding?: boolean,
-    date?: ?Date,
-    reverse?: boolean,
+    value: number;
+    from: Currency;
+    to: Currency;
+    disableRounding?: boolean;
+    date?: Date | null | undefined;
+    reverse?: boolean;
   }
-): ?number {
+): number | null | undefined {
   const { from, to } = aliasPair({
     from: initialQuery.from,
     to: initialQuery.to,
   });
   if (from === to) return initialQuery.value;
   const { date, value, disableRounding, reverse } = initialQuery;
-  const query = { date, from, to };
+  const query = {
+    date,
+    from,
+    to,
+  };
   const map = lenseRateMap(state, query);
   if (!map) return;
   let rate = lenseRate(map, query);
@@ -338,41 +367,53 @@ export function calculate(
     ? magFromTo(initialQuery.to, initialQuery.from)
     : magFromTo(initialQuery.from, initialQuery.to);
   rate = mapRate(initialQuery, rate);
-  if (reverse) {
+
+  if (reverse && rate) {
     rate = 1 / rate;
   }
-  const val = value * rate * mult;
+
+  const val = rate ? value * rate * mult : 0;
   return disableRounding ? val : Math.round(val);
 }
 
 export function calculateMany(
   state: CounterValuesState,
-  dataPoints: Array<{ value: number, date: ?Date }>,
+  dataPoints: Array<{
+    value: number;
+    date: Date | null | undefined;
+  }>,
   initialQuery: {
-    from: Currency,
-    to: Currency,
-    disableRounding?: boolean,
-    reverse?: boolean,
+    from: Currency;
+    to: Currency;
+    disableRounding?: boolean;
+    reverse?: boolean;
   }
-): Array<?number> {
+): Array<number | null | undefined> {
   const { reverse, disableRounding } = initialQuery;
   const query = aliasPair(initialQuery);
   const { from, to } = query;
   if (from === to) return dataPoints.map((d) => d.value);
   const map = lenseRateMap(state, query);
-  if (!map) return Array(dataPoints.length).fill(); // undefined array
+  if (!map) return Array(dataPoints.length).fill(undefined); // undefined array
+
   const mult = reverse
     ? magFromTo(initialQuery.to, initialQuery.from)
     : magFromTo(initialQuery.from, initialQuery.to);
   return dataPoints.map(({ value, date }) => {
     if (from === to) return value;
-    let rate = lenseRate(map, { from, to, date });
+    let rate = lenseRate(map, {
+      from,
+      to,
+      date,
+    });
     if (!rate) return;
     rate = mapRate(initialQuery, rate);
-    if (reverse) {
+
+    if (reverse && rate) {
       rate = 1 / rate;
     }
-    const val = value * rate * mult;
+
+    const val = rate ? value * rate * mult : 0;
     return disableRounding ? val : Math.round(val);
   });
 }
@@ -383,7 +424,6 @@ function generateCache(
   settings: CountervaluesSettings
 ): PairRateMapCache {
   const map = new Map(rateMap);
-
   const sorted = Array.from(map.keys())
     .sort()
     .filter((k) => k !== "latest");
@@ -392,7 +432,6 @@ function generateCache(
   const oldestDate = oldest ? parseFormattedDate(oldest) : null;
   const earliestDate = earliest ? parseFormattedDate(earliest) : null;
   let earliestStableDate = earliestDate;
-
   let fallback;
   let hasHole = false;
 
@@ -402,17 +441,21 @@ function generateCache(
     const now = Date.now();
     const oldestTime = oldestDate.getTime();
     let shiftingValue = map.get(oldest) || 0;
+
     if (settings.autofillGaps) {
       fallback = shiftingValue;
     }
+
     for (let t = oldestTime; t < now; t += incrementPerGranularity.daily) {
       const d = new Date(t);
       const k = formatCounterValueDay(d);
+
       if (!map.has(k)) {
         if (!hasHole) {
           hasHole = true;
           earliestStableDate = d;
         }
+
         if (settings.autofillGaps) {
           map.set(k, shiftingValue);
         }
@@ -422,6 +465,7 @@ function generateCache(
         }
       }
     }
+
     if (!map.get("latest") && settings.autofillGaps) {
       map.set("latest", shiftingValue);
     }
@@ -438,26 +482,40 @@ function generateCache(
     earliestDate,
     earliestStableDate,
   };
-  return { map, stats, fallback };
+  return {
+    map,
+    stats,
+    fallback,
+  };
 }
 
 // apply dedup & aliasing logics
 export function resolveTrackingPairs(pairs: TrackingPair[]): TrackingPair[] {
-  const d: { [_: string]: TrackingPair } = {};
+  const d: Record<string, TrackingPair> = {};
   pairs.map((p) => {
-    const { from, to } = resolveTrackingPair({ from: p.from, to: p.to });
+    const { from, to } = resolveTrackingPair({
+      from: p.from,
+      to: p.to,
+    });
     if (!isCountervalueEnabled(from) || !isCountervalueEnabled(to)) return;
     if (from === to) return;
     // dedup and keep oldest date
     let date = p.startDate;
     const k = pairId(p);
+
     if (d[k]) {
       const { startDate } = d[k];
+
       if (startDate && date) {
         date = date < startDate ? date : startDate;
       }
     }
-    d[k] = { from, to, startDate: date };
+
+    d[k] = {
+      from,
+      to,
+      startDate: date,
+    };
   });
   // $FlowFixMe -_-
   return Object.values(d);

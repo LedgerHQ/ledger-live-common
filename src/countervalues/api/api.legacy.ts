@@ -1,5 +1,3 @@
-// @flow
-
 import { findCurrencyByTicker } from "../../currencies";
 import { getEnv } from "../../env";
 import network from "../../network";
@@ -12,7 +10,11 @@ import type { CounterValuesAPI } from "../types";
 
 const baseURL = () => getEnv("LEDGER_COUNTERVALUES_API");
 
-const legacyReverseRate = (from: string, to: string, rateMap: Object) => {
+const legacyReverseRate = (
+  from: string,
+  to: string,
+  rateMap: Record<string, any>
+): Record<string, any> => {
   const r = {};
   const fromC = findCurrencyByTicker(from);
   const toC = findCurrencyByTicker(to);
@@ -33,7 +35,13 @@ const api: CounterValuesAPI = {
       method: "POST",
       url: `${baseURL()}/rates/${granularity}`,
       data: {
-        pairs: [{ from, to, after: startDate ? format(startDate) : undefined }],
+        pairs: [
+          {
+            from,
+            to,
+            after: startDate ? format(startDate) : undefined,
+          },
+        ],
       },
     });
     if (!data) return {};
@@ -42,11 +50,14 @@ const api: CounterValuesAPI = {
     const fromLevel = toLevel[from];
     if (!fromLevel || typeof fromLevel !== "object") return {};
     const [key] = Object.keys(fromLevel);
-    const res: Object = legacyReverseRate(from, to, fromLevel[key]);
+    const res: Record<string, any> = legacyReverseRate(
+      from,
+      to,
+      fromLevel[key]
+    );
     delete res.latest;
     return res;
   },
-
   fetchLatest: async (pairs) => {
     const { data } = await network({
       method: "POST",
@@ -62,14 +73,13 @@ const api: CounterValuesAPI = {
     return pairs.map(({ from, to }) => {
       const fromTo = (data[to.ticker] || {})[from.ticker];
       if (!fromTo) return;
-      const first = Object.values(fromTo)[0];
-      if (!first || !first.latest) return;
+      const first: any = Object.values(fromTo)[0];
+      if (!first && !first.latest) return;
       return legacyReverseRate(from.ticker, to.ticker, {
         latest: Number(first.latest),
       }).latest;
     });
   },
-
   fetchMarketcapTickers: async () => {
     const { data } = await network({
       method: "GET",
@@ -78,5 +88,4 @@ const api: CounterValuesAPI = {
     return data;
   },
 };
-
 export default api;
