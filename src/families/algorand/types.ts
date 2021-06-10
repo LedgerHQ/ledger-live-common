@@ -103,7 +103,7 @@ export type AlgorandResourcesRaw = {
   rewards: string;
   rewardsAccumulated: string;
 };
-export type AlgorandOperationMode = "send" | "optIn" | "claimReward";
+export type AlgorandOperationMode = "send" | "optIn" | "claimReward" | "optOut";
 export type {
   CoreAlgorandOperation,
   CoreAlgorandAccount,
