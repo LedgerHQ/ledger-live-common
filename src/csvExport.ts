@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import type { Currency, Account, AccountLike, Operation } from "./types";
 import { formatCurrencyUnit } from "./currencies";
@@ -8,14 +7,14 @@ import { calculate } from "./countervalues/logic";
 import type { CounterValuesState } from "./countervalues/types";
 
 type Field = {
-  title: string,
+  title: string;
   cell: (
-    AccountLike,
-    ?Account,
-    Operation,
-    ?Currency,
-    ?CounterValuesState
-  ) => string,
+    arg0: AccountLike,
+    arg1: Account | null | undefined,
+    arg2: Operation,
+    arg3: Currency | null | undefined,
+    arg4: CounterValuesState | null | undefined
+  ) => string;
 };
 
 const newLine = "\r\n";
@@ -93,10 +92,14 @@ const fields: Field[] = [
             })
           : null;
       return value && counterValueCurrency
-        ? formatCurrencyUnit(counterValueCurrency.units[0], BigNumber(value), {
-            disableRounding: true,
-            useGrouping: false,
-          })
+        ? formatCurrencyUnit(
+            counterValueCurrency.units[0],
+            new BigNumber(value),
+            {
+              disableRounding: true,
+              useGrouping: false,
+            }
+          )
         : "";
     },
   },
@@ -119,10 +122,14 @@ const fields: Field[] = [
             })
           : null;
       return value && counterValueCurrency
-        ? formatCurrencyUnit(counterValueCurrency.units[0], BigNumber(value), {
-            disableRounding: true,
-            useGrouping: false,
-          })
+        ? formatCurrencyUnit(
+            counterValueCurrency.units[0],
+            new BigNumber(value),
+            {
+              disableRounding: true,
+              useGrouping: false,
+            }
+          )
         : "";
     },
   },
@@ -130,12 +137,15 @@ const fields: Field[] = [
 
 const accountRows = (
   account: AccountLike,
-  parentAccount: ?Account,
+  parentAccount: Account | null | undefined,
   counterValueCurrency?: Currency,
   countervalueState?: CounterValuesState
 ): Array<string[]> =>
   account.operations
-    .reduce((ops, op) => ops.concat(flattenOperationWithInternals(op)), [])
+    .reduce(
+      (ops: Operation[], op) => ops.concat(flattenOperationWithInternals(op)),
+      []
+    )
     .map((operation) =>
       fields.map((field) =>
         field.cell(
@@ -152,8 +162,8 @@ const accountsRows = (
   accounts: Account[],
   counterValueCurrency?: Currency,
   countervalueState?: CounterValuesState
-) =>
-  flattenAccounts(accounts).reduce((all, account) => {
+): Array<string[]> =>
+  flattenAccounts(accounts).reduce((all: Array<string[]>, account) => {
     const parentAccount =
       account.type !== "Account"
         ? accounts.find((a) => a.id === account.parentId)
@@ -170,9 +180,9 @@ const accountsRows = (
 
 export const accountsOpToCSV = (
   accounts: Account[],
-  counterValueCurrency?: Currency, // required for countervalues export
+  counterValueCurrency?: Currency,
   countervalueState?: CounterValuesState // cvs state required for countervalues export
-) =>
+): string =>
   fields.map((field) => field.title).join(",") +
   newLine +
   accountsRows(accounts, counterValueCurrency, countervalueState)

@@ -1,12 +1,11 @@
-// @flow
 import type { App } from "../types/manager";
 import type { InstalledItem } from "./types";
 import { getCryptoCurrencyById, isCurrencySupported } from "../currencies";
 import { useMemo } from "react";
 
 export type SortOptions = {
-  type: "name" | "marketcap" | "default",
-  order: "asc" | "desc",
+  type: "name" | "marketcap" | "default";
+  order: "asc" | "desc";
 };
 
 export type AppType =
@@ -18,15 +17,13 @@ export type AppType =
   | "updatable";
 
 export type FilterOptions = {
-  query?: string,
-  installQueue?: string[],
-  installedApps: InstalledItem[],
-  type: AppType[],
+  query?: string;
+  installQueue?: string[];
+  installedApps: InstalledItem[];
+  type: AppType[];
 };
 
-type UpdateAwareInstalledApps = {
-  [string]: boolean, // NB [AppName]: isUpdated
-};
+type UpdateAwareInstalledApps = Record<string, boolean>;
 
 const searchFilter = (query?: string) => ({ name, currencyId }) => {
   if (!query) return true;
@@ -54,27 +51,33 @@ const typeFilter = (
           installQueue.includes(app.name) ||
           app.name in updateAwareInstalledApps
         );
+
       case "not_installed":
         return !(app.name in updateAwareInstalledApps);
+
       case "updatable":
         return (
           app.name in updateAwareInstalledApps &&
           !updateAwareInstalledApps[app.name]
         );
+
       case "supported":
         return (
           app.currencyId &&
           isCurrencySupported(getCryptoCurrencyById(app.currencyId))
         );
+
       case "not_supported":
         return !(
           app.currencyId &&
           isCurrencySupported(getCryptoCurrencyById(app.currencyId))
         );
+
       default:
         return true;
     }
   });
+
 export const sortApps = (apps: App[], _options: SortOptions): App[] => {
   const { type, order } = _options;
   const asc = order === "asc";
@@ -91,10 +94,10 @@ export const sortApps = (apps: App[], _options: SortOptions): App[] => {
     return diff;
   });
 };
-
 export const filterApps = (apps: App[], _options: FilterOptions): App[] => {
   const { query, installedApps, installQueue, type = ["all"] } = _options;
   const updateAwareInstalledApps: UpdateAwareInstalledApps = {};
+
   for (let i = 0; i < installedApps.length; i++) {
     updateAwareInstalledApps[installedApps[i].name] = installedApps[i].updated;
   }
@@ -116,7 +119,7 @@ export const useSortedFilteredApps = (
   apps: App[],
   _filterOptions: FilterOptions,
   _sortOptions: SortOptions
-) => {
+): App[] => {
   const {
     query,
     installedApps,
@@ -124,13 +127,20 @@ export const useSortedFilteredApps = (
     installQueue,
   } = _filterOptions;
   const { type: sortType, order } = _sortOptions;
-
   return useMemo(
     () =>
       sortFilterApps(
         apps,
-        { query, installedApps, type: filterType, installQueue },
-        { type: sortType, order }
+        {
+          query,
+          installedApps,
+          type: filterType,
+          installQueue,
+        },
+        {
+          type: sortType,
+          order,
+        }
       ),
     [apps, query, installedApps, filterType, installQueue, sortType, order]
   );

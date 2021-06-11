@@ -51,7 +51,7 @@ const attemptToQuitApp = (
   appAndVersion && appSupportsQuitApp(appAndVersion)
     ? from(quitApp(transport)).pipe(
         concatMap(() =>
-          of({
+          of(<ConnectManagerEvent>{
             type: "unresponsiveDevice",
           })
         ),

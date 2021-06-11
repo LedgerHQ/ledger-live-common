@@ -1,4 +1,3 @@
-// @flow
 import { of, throwError } from "rxjs";
 import {
   ManagerAppDepInstallRequired,
@@ -9,6 +8,7 @@ import { findCryptoCurrency } from "../currencies";
 import type { ListAppsResult, AppOp, Exec, InstalledItem } from "./types";
 import type { App, DeviceInfo, FinalFirmware } from "../types/manager";
 import { getBTCValues } from "../countervalues/mock";
+import { DeviceModelId } from "@ledgerhq/devices";
 
 export const deviceInfo155 = {
   version: "1.5.5",
@@ -21,7 +21,6 @@ export const deviceInfo155 = {
   majMin: "1.5",
   targetId: 823132164,
 };
-
 const firmware155: FinalFirmware = {
   id: 24,
   name: "1.5.5",
@@ -34,6 +33,7 @@ const firmware155: FinalFirmware = {
   firmware: "nanos/1.5.5/fw_1.4.2/upgrade_1.5.5",
   firmware_key: "nanos/1.5.5/fw_1.4.2/upgrade_1.5.5_key",
   hash: "",
+  // @ts-expect-error mock extra unecessary data maybe
   distribution_ratio: null,
   exclude_by_default: false,
   osu_versions: [],
@@ -53,6 +53,7 @@ export const parseInstalled = (installedDesc: string): InstalledItem[] =>
     .map((a) => {
       const trimmed = a.trim();
       const m = /(.*)\(outdated\)/.exec(trimmed);
+
       if (m) {
         const name = m[1].trim();
         return {
@@ -67,7 +68,9 @@ export const parseInstalled = (installedDesc: string): InstalledItem[] =>
 
       // Check if the name contains the number of blocks too
       const b = /(.*)_(\d*)blocks/.exec(trimmed);
+
       const _name = b ? b[1] : trimmed;
+
       return {
         name: _name,
         updated: true,
@@ -84,7 +87,6 @@ export function mockListAppsResult(
   deviceInfo: DeviceInfo
 ): ListAppsResult {
   const tickersByMarketCap = Object.keys(getBTCValues());
-
   const apps = appDesc
     .split(",")
     .map((a) => a.trim())
@@ -95,14 +97,14 @@ export function mockListAppsResult(
       const indexOfMarketCap = currency
         ? tickersByMarketCap.indexOf(currency.ticker)
         : -1;
-
       return {
         id: i,
         app: i,
         name,
         version: "0.0.0",
         description: null,
-        icon: "bitcoin", // we use bitcoin icon for all for convenience
+        icon: "bitcoin",
+        // we use bitcoin icon for all for convenience
         perso: "",
         authorName: "",
         supportURL: "",
@@ -127,14 +129,12 @@ export function mockListAppsResult(
   apps.forEach((app) => {
     appByName[app.name] = app;
   });
-
   const installed = parseInstalled(installedDesc);
-
   return {
     appByName,
     appsListNames: apps.map((a) => a.name),
     deviceInfo,
-    deviceModelId: "nanoS",
+    deviceModelId: <DeviceModelId>"nanoS",
     firmware: firmware155,
     installed,
     installedAvailable: true,
@@ -162,6 +162,7 @@ export const mockExecWithInstalledContext = (
       const deps = getDependencies(app.name);
       deps.forEach((dep) => {
         const depInstalled = installed.find((i) => i.name === dep);
+
         if (!depInstalled || !depInstalled.updated) {
           return throwError(new ManagerAppDepInstallRequired(""));
         }
@@ -180,6 +181,7 @@ export const mockExecWithInstalledContext = (
             availableVersion: "1.0.0",
           });
         }
+
         break;
 
       case "uninstall":
@@ -187,6 +189,16 @@ export const mockExecWithInstalledContext = (
         break;
     }
 
-    return of({ progress: 0 }, { progress: 0.5 }, { progress: 1 });
+    return of(
+      {
+        progress: 0,
+      },
+      {
+        progress: 0.5,
+      },
+      {
+        progress: 1,
+      }
+    );
   };
 };

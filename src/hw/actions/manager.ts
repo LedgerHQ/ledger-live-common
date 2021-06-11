@@ -222,7 +222,7 @@ const implementations = {
               return err instanceof TimeoutError
                 ? of({
                     type: "error",
-                    error: new ConnectManagerTimeout(null, {
+                    error: new ConnectManagerTimeout(undefined, {
                       productName,
                     }) as Error,
                   })

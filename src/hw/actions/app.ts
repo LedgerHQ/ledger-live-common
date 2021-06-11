@@ -435,7 +435,7 @@ const implementations = {
               return err instanceof TimeoutError
                 ? of({
                     type: "error",
-                    error: new ConnectAppTimeout(null, {
+                    error: new ConnectAppTimeout(undefined, {
                       productName,
                     }) as Error,
                   })
