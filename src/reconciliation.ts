@@ -1,7 +1,5 @@
-// @flow
 // libcore reconciliation by the React definition. https://reactjs.org/docs/reconciliation.html
 // TODO move to account/
-
 import isEqual from "lodash/isEqual";
 import { BigNumber } from "bignumber.js";
 import { sameOp } from "./bridge/jsHelpers";
@@ -33,9 +31,8 @@ import consoleWarnExpectToEqual from "./consoleWarnExpectToEqual";
 export async function minimalOperationsBuilder<CO>(
   existingOperations: Operation[],
   coreOperations: CO[],
-  buildOp: (coreOperation: CO) => Promise<?Operation>,
-  // if defined, allows to merge some consecutive operation that have same hash
-  mergeSameHashOps?: (Operation[]) => Operation
+  buildOp: (coreOperation: CO) => Promise<Operation | null | undefined>, // if defined, allows to merge some consecutive operation that have same hash
+  mergeSameHashOps?: (arg0: Operation[]) => Operation
 ): Promise<Operation[]> {
   if (existingOperations.length === 0 && coreOperations.length === 0) {
     return existingOperations;
@@ -47,14 +44,15 @@ export async function minimalOperationsBuilder<CO>(
     existingOps: existingOperations || [],
     immutableOpCmpDoneOnce: false,
   };
+  let operationWithSameHash: Operation[] = [];
 
-  let operationWithSameHash = [];
   for (let i = coreOperations.length - 1; i >= 0; i--) {
     const coreOperation = coreOperations[i];
     const op = await buildOp(coreOperation);
     if (!op) continue; // some operation can be skipped by implementation
 
     let newOp;
+
     if (mergeSameHashOps) {
       if (
         operationWithSameHash.length === 0 ||
@@ -64,6 +62,7 @@ export async function minimalOperationsBuilder<CO>(
         operationWithSameHash.push(op);
         continue;
       }
+
       // when the new op no longer matches the one accumulated,
       // we can "release" one operation resulting of merging the accumulation
       newOp = mergeSameHashOps(operationWithSameHash);
@@ -86,15 +85,15 @@ export async function minimalOperationsBuilder<CO>(
 
   return state.operations;
 }
-
 export function minimalOperationsBuilderSync<CO>(
   existingOperations: Operation[],
   coreOperations: CO[],
-  buildOp: (coreOperation: CO) => ?Operation
+  buildOp: (coreOperation: CO) => Operation | null | undefined
 ): Operation[] {
   if (existingOperations.length === 0 && coreOperations.length === 0) {
     return existingOperations;
   }
+
   const state: StepBuilderState = {
     finished: false,
     operations: [],
@@ -107,10 +106,12 @@ export function minimalOperationsBuilderSync<CO>(
     const newOp = buildOp(coreOperation);
     if (!newOp) continue;
     stepBuilder(state, newOp, i);
+
     if (state.finished) {
       return state.operations;
     }
   }
+
   return state.operations;
 }
 
@@ -121,10 +122,13 @@ const shouldRefreshBalanceHistoryCache = (
   const oldH = account.balanceHistoryCache.HOUR;
   const newH = balanceHistoryCache.HOUR;
   if (oldH.latestDate !== newH.latestDate) return true; // date have changed, need to refresh the array
+
   if (oldH.balances.length !== newH.balances.length) return true; // balances length changes (new ops for instance)
-  let length = newH.balances.length;
+
+  const length = newH.balances.length;
   if (length === 0) return false;
   if (oldH.balances[length - 1] !== newH.balances[length - 1]) return true; // latest datapoint changes.
+
   return false;
 };
 
@@ -141,9 +145,7 @@ const shouldRefreshBalanceHistory = (
   const [, lastValue] = week[week.length - 1];
   const { date: firstAccountDate } = accountWeek[0];
   const { value: lastAccountValue } = accountWeek[accountWeek.length - 1];
-
   const isSameDate = firstDate === firstAccountDate.toISOString();
-
   return (
     !isSameDate || // start date of the range has changed
     lastValue !== lastAccountValue.toString() || // final balance has changed
@@ -168,8 +170,8 @@ export function patchAccount(
 ): Account {
   // id can change after a sync typically if changing the version or filling more info. in that case we consider all changes.
   if (account.id !== updatedRaw.id) return fromAccountRaw(updatedRaw);
-
   let subAccounts;
+
   if (updatedRaw.subAccounts) {
     const existingSubAccounts = account.subAccounts || [];
     let subAccountsChanged =
@@ -177,11 +179,14 @@ export function patchAccount(
     subAccounts = updatedRaw.subAccounts.map((ta) => {
       const existing = existingSubAccounts.find((t) => t.id === ta.id);
       const patched = patchSubAccount(existing, ta);
+
       if (patched !== existing) {
         subAccountsChanged = true;
       }
+
       return patched;
     });
+
     if (!subAccountsChanged) {
       subAccounts = existingSubAccounts;
     }
@@ -193,16 +198,13 @@ export function patchAccount(
     updatedRaw.id,
     subAccounts
   );
-
   const pendingOperations = patchOperations(
     account.pendingOperations,
     updatedRaw.pendingOperations,
     updatedRaw.id,
     subAccounts
   );
-
   const next: Account = { ...account };
-
   let changed = false;
 
   if (subAccounts && account.subAccounts !== subAccounts) {
@@ -229,12 +231,13 @@ export function patchAccount(
   }
 
   if (updatedRaw.balance !== account.balance.toString()) {
-    next.balance = BigNumber(updatedRaw.balance);
+    next.balance = new BigNumber(updatedRaw.balance);
     changed = true;
   }
 
   // DEPRECATED post portfolio v2
   const { balanceHistory } = updatedRaw;
+
   if (balanceHistory) {
     if (shouldRefreshBalanceHistory(balanceHistory, account)) {
       next.balanceHistory = fromBalanceHistoryRawMap(balanceHistory);
@@ -246,7 +249,7 @@ export function patchAccount(
   }
 
   if (updatedRaw.spendableBalance !== account.spendableBalance.toString()) {
-    next.spendableBalance = BigNumber(
+    next.spendableBalance = new BigNumber(
       updatedRaw.spendableBalance || updatedRaw.balance
     );
     changed = true;
@@ -286,6 +289,7 @@ export function patchAccount(
   }
 
   const { balanceHistoryCache } = updatedRaw;
+
   if (balanceHistoryCache) {
     if (shouldRefreshBalanceHistoryCache(balanceHistoryCache, account)) {
       next.balanceHistoryCache = balanceHistoryCache;
@@ -295,6 +299,7 @@ export function patchAccount(
 
   if (
     updatedRaw.tronResources &&
+    // @ts-expect-error check if this is valid for deep equal check
     account.tronResources !== updatedRaw.tronResources
   ) {
     next.tronResources = fromTronResourcesRaw(updatedRaw.tronResources);
@@ -303,6 +308,7 @@ export function patchAccount(
 
   if (
     updatedRaw.cosmosResources &&
+    // @ts-expect-error check if this is valid for deep equal check
     account.cosmosResources !== updatedRaw.cosmosResources
   ) {
     next.cosmosResources = fromCosmosResourcesRaw(updatedRaw.cosmosResources);
@@ -311,6 +317,7 @@ export function patchAccount(
 
   if (
     updatedRaw.algorandResources &&
+    // @ts-expect-error check if this is valid for deep equal check
     account.algorandResources !== updatedRaw.algorandResources
   ) {
     next.algorandResources = fromAlgorandResourcesRaw(
@@ -331,6 +338,7 @@ export function patchAccount(
 
   if (
     updatedRaw.polkadotResources &&
+    // @ts-expect-error check if this is valid for deep equal check
     account.polkadotResources !== updatedRaw.polkadotResources
   ) {
     next.polkadotResources = fromPolkadotResourcesRaw(
@@ -343,9 +351,8 @@ export function patchAccount(
 
   return next;
 }
-
 export function patchSubAccount(
-  account: ?SubAccount,
+  account: SubAccount | null | undefined,
   updatedRaw: SubAccountRaw
 ): SubAccount {
   // id can change after a sync typically if changing the version or filling more info. in that case we consider all changes.
@@ -360,20 +367,17 @@ export function patchSubAccount(
   const operations = patchOperations(
     account.operations,
     updatedRaw.operations,
-    updatedRaw.id
+    updatedRaw.id,
+    undefined
   );
-
   const pendingOperations = patchOperations(
     account.pendingOperations,
     updatedRaw.pendingOperations,
-    updatedRaw.id
+    updatedRaw.id,
+    undefined
   );
-
   // $FlowFixMe destructing union type?
-  const next: SubAccount = {
-    ...account,
-  };
-
+  const next: SubAccount = { ...account };
   let changed = false;
 
   if (
@@ -403,7 +407,7 @@ export function patchSubAccount(
   }
 
   if (updatedRaw.balance !== account.balance.toString()) {
-    next.balance = BigNumber(updatedRaw.balance);
+    next.balance = new BigNumber(updatedRaw.balance);
     changed = true;
   }
 
@@ -413,7 +417,7 @@ export function patchSubAccount(
     updatedRaw.type === "TokenAccountRaw"
   ) {
     if (updatedRaw.spendableBalance !== account.spendableBalance.toString()) {
-      next.spendableBalance = BigNumber(
+      next.spendableBalance = new BigNumber(
         updatedRaw.spendableBalance || updatedRaw.balance
       );
       changed = true;
@@ -421,7 +425,7 @@ export function patchSubAccount(
 
     if (updatedRaw.compoundBalance !== account.compoundBalance?.toString()) {
       next.compoundBalance = updatedRaw.compoundBalance
-        ? BigNumber(updatedRaw.compoundBalance)
+        ? new BigNumber(updatedRaw.compoundBalance)
         : undefined;
       changed = true;
     }
@@ -436,6 +440,7 @@ export function patchSubAccount(
   }
 
   const { balanceHistoryCache } = updatedRaw;
+
   if (balanceHistoryCache) {
     if (shouldRefreshBalanceHistoryCache(balanceHistoryCache, account)) {
       next.balanceHistoryCache = balanceHistoryCache;
@@ -447,12 +452,11 @@ export function patchSubAccount(
 
   return next;
 }
-
 export function patchOperations(
   operations: Operation[],
   updated: OperationRaw[],
   accountId: string,
-  subAccounts: ?(SubAccount[])
+  subAccounts: SubAccount[] | null | undefined
 ): Operation[] {
   return minimalOperationsBuilderSync(
     operations,
@@ -466,10 +470,10 @@ function findExistingOp(ops, op) {
 }
 
 type StepBuilderState = {
-  operations: Operation[],
-  existingOps: Operation[],
-  immutableOpCmpDoneOnce: boolean,
-  finished: boolean,
+  operations: Operation[];
+  existingOps: Operation[];
+  immutableOpCmpDoneOnce: boolean;
+  finished: boolean;
 };
 
 // This is one step of the logic of minimalOperationsBuilder
@@ -486,6 +490,7 @@ function stepBuilder(state, newOp, i) {
       return;
     } else {
       state.immutableOpCmpDoneOnce = true;
+
       // we still check the first existing op we meet...
       if (!sameOp(existingOp, newOp)) {
         // this implement a failsafe in case an op changes (when we fix bugs)
@@ -506,6 +511,7 @@ function stepBuilder(state, newOp, i) {
     // as soon as we've found a first matching op in old op list,
     const j = state.existingOps.indexOf(existingOp);
     const rest = state.existingOps.slice(j);
+
     if (rest.length > i + 1) {
       // if libcore happen to have less ops that what we had,
       // we actually need to continue because we don't know where hole will be,
@@ -520,6 +526,7 @@ function stepBuilder(state, newOp, i) {
       } else {
         state.operations = state.operations.concat(rest);
       }
+
       state.finished = true;
       return;
     }

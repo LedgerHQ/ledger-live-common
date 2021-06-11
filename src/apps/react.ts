@@ -1,5 +1,3 @@
-// @flow
-
 import { useState, useReducer, useEffect, useMemo } from "react";
 import type { Exec, State, Action, ListAppsResult } from "./types";
 import type { App } from "../types/manager";
@@ -14,8 +12,7 @@ import {
 } from "./logic";
 import { runAppOp } from "./runner";
 
-type UseAppsRunnerResult = [State, (Action) => void];
-
+type UseAppsRunnerResult = [State, (arg0: Action) => void];
 // use for React apps. support dynamic change of the state.
 export const useAppsRunner = (
   listResult: ListAppsResult,
@@ -26,45 +23,53 @@ export const useAppsRunner = (
   const [state, dispatch] = useReducer(reducer, null, () =>
     initState(listResult, appsToRestore)
   );
-
   const nextAppOp = useMemo(() => getNextAppOp(state), [state]);
   const appOp = state.currentAppOp || nextAppOp;
   useEffect(() => {
     if (appOp) {
       const sub = runAppOp(state, appOp, exec).subscribe((event) => {
-        dispatch({ type: "onRunnerEvent", event });
+        dispatch({
+          type: "onRunnerEvent",
+          event,
+        });
       });
       return () => {
         sub.unsubscribe();
       };
-    }
-    // we only want to redo the effect on appOp changes here
+    } // we only want to redo the effect on appOp changes here
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listResult, appOp, exec]);
-
   return [state, dispatch];
 };
 
-export function useNotEnoughMemoryToInstall(state: State, name: string) {
+export function useNotEnoughMemoryToInstall(
+  state: State,
+  name: string
+): boolean {
   return useMemo(
     () =>
       isOutOfMemoryState(
-        predictOptimisticState(reducer(state, { type: "install", name }))
+        predictOptimisticState(
+          reducer(state, {
+            type: "install",
+            name,
+          })
+        )
       ),
     [name, state]
   );
 }
 
 type AppsSections = {
-  catalog: App[],
-  device: App[],
-  update: App[],
+  catalog: App[];
+  device: App[];
+  update: App[];
 };
 
 type AppsSectionsOpts = {
-  query: string,
-  appFilter: AppType,
-  sort: SortOptions,
+  query: string;
+  appFilter: AppType;
+  sort: SortOptions;
 };
 
 export function useAppsSections(
@@ -72,12 +77,10 @@ export function useAppsSections(
   opts: AppsSectionsOpts
 ): AppsSections {
   const { updateAllQueue, appByName, installed, installQueue, apps } = state;
-
   const appsUpdating = useMemo(
     () => updateAllQueue.map((name) => appByName[name]).filter(Boolean),
     [appByName, updateAllQueue]
   );
-
   const updatableAppList = useMemo(
     () =>
       apps.filter(({ name }) =>
@@ -85,9 +88,7 @@ export function useAppsSections(
       ),
     [apps, installed]
   );
-
   const update = appsUpdating.length > 0 ? appsUpdating : updatableAppList;
-
   const filterParam = useMemo(
     () => ({
       query: opts.query,
@@ -98,7 +99,6 @@ export function useAppsSections(
   );
 
   const catalog = useSortedFilteredApps(apps, filterParam, opts.sort);
-
   const installedAppList = useSortedFilteredApps(
     apps,
     {
@@ -107,22 +107,32 @@ export function useAppsSections(
       installQueue,
       type: ["installed"],
     },
-    { type: "default", order: "asc" }
+    {
+      type: "default",
+      order: "asc",
+    }
   );
 
   const device = installedAppList
     .sort(({ name: _name }, { name }) =>
-      installed.indexOf(_name) > installed.indexOf(name) ? -1 : 0
+      installed.findIndex((n) => n.name === _name) >
+      installed.findIndex((n) => n.name === name)
+        ? -1
+        : 0
     )
     .sort(
       ({ name: _name }, { name }) =>
         installQueue.indexOf(_name) > installQueue.indexOf(name) ? -1 : 0 // place install queue on top of list
     );
 
-  return { update, catalog, device };
+  return {
+    update,
+    catalog,
+    device,
+  };
 }
 
-export function useAppInstallProgress(state: State, name: string) {
+export function useAppInstallProgress(state: State, name: string): number {
   const { currentProgressSubject, currentAppOp } = state;
   const [progress, setProgress] = useState(0);
   useEffect(() => {
@@ -134,6 +144,7 @@ export function useAppInstallProgress(state: State, name: string) {
       setProgress(0);
       return;
     }
+
     const sub = currentProgressSubject.subscribe(setProgress);
     return () => sub.unsubscribe();
   }, [currentProgressSubject, currentAppOp, name]);
@@ -141,6 +152,7 @@ export function useAppInstallProgress(state: State, name: string) {
   if (currentProgressSubject && currentAppOp && currentAppOp.name === name) {
     return progress;
   }
+
   return 1;
 }
 
@@ -149,9 +161,14 @@ export function useAppInstallProgress(state: State, name: string) {
 export function useAppInstallNeedsDeps(
   state: State,
   app: App
-): ?{ app: App, dependencies: App[] } {
+):
+  | {
+      app: App;
+      dependencies: App[];
+    }
+  | null
+  | undefined {
   const { appByName, installed: installedList, installQueue } = state;
-
   const res = useMemo(() => {
     const dependencies = (app.dependencies || [])
       .map((name) => appByName[name])
@@ -161,12 +178,16 @@ export function useAppInstallNeedsDeps(
           !installedList.some((app) => app.name === dep.name) &&
           !installQueue.includes(dep.name)
       );
+
     if (dependencies.length) {
-      return { app, dependencies };
+      return {
+        app,
+        dependencies,
+      };
     }
+
     return null;
   }, [appByName, app, installQueue, installedList]);
-
   return res;
 }
 
@@ -175,9 +196,14 @@ export function useAppInstallNeedsDeps(
 export function useAppUninstallNeedsDeps(
   state: State,
   app: App
-): ?{ dependents: App[], app: App } {
+):
+  | {
+      dependents: App[];
+      app: App;
+    }
+  | null
+  | undefined {
   const { apps, installed } = state;
-
   const res = useMemo(() => {
     const dependents = apps.filter(
       (a) =>
@@ -186,10 +212,13 @@ export function useAppUninstallNeedsDeps(
     );
 
     if (dependents.length) {
-      return { dependents, app };
+      return {
+        dependents,
+        app,
+      };
     }
+
     return null;
   }, [app, apps, installed]);
-
   return res;
 }

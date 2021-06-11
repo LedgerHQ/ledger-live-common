@@ -1,11 +1,9 @@
-// @flow
 import { useEffect, useState } from "react";
 import { changes, getEnv } from "./env";
 import type { EnvName, EnvValue } from "./env";
 
-export const useEnv = <Name: EnvName>(type: Name): EnvValue<Name> => {
+export const useEnv = <Name extends EnvName>(type: Name): EnvValue<Name> => {
   const [env, setEnv] = useState(() => getEnv(type));
-
   useEffect(() => {
     const sub = changes.subscribe(({ name, value }) => {
       if (type === name) {
@@ -14,6 +12,5 @@ export const useEnv = <Name: EnvName>(type: Name): EnvValue<Name> => {
     });
     return () => sub.unsubscribe();
   }, [type]);
-
   return env;
 };
