@@ -1,4 +1,3 @@
-// @flow
 import { log } from "@ledgerhq/logs";
 import network from "../../network";
 import type { FullConfig, FullConfigOverrides } from "./types";
@@ -248,44 +247,54 @@ const initialExplorerConfig: FullConfig = {
     },
   },
 };
-
 let explorerConfig: FullConfig = initialExplorerConfig;
-
 export function getExplorerConfig(): FullConfig {
   return explorerConfig;
 }
-
 // these two function follows the same principle of CurrencyBridge's preload & hydrate
 // and for this current PoC will be only used by the bitcoin family
 // if we want in future to generalize it to all family, we would need to adapt this.
-
-let cacheConfig: ?{ timestamp: number, config: FullConfigOverrides } = null;
-
-export const preload = async (): Promise<?FullConfigOverrides> => {
+let cacheConfig:
+  | {
+      timestamp: number;
+      config: FullConfigOverrides;
+    }
+  | null
+  | undefined = null;
+export const preload = async (): Promise<
+  FullConfigOverrides | null | undefined
+> => {
   if (cacheConfig && Date.now() - cacheConfig.timestamp < 60 * 1000) {
     return cacheConfig.config;
   }
+
   const { data } = await network({
     url: "https://cdn.live.ledger.com/config/explorerConfig.v1.json",
     method: "GET",
   });
+
   try {
     const config = asFullConfigOverrides(data);
-    cacheConfig = { timestamp: Date.now(), config };
+    cacheConfig = {
+      timestamp: Date.now(),
+      config,
+    };
     return config;
   } catch (e) {
     log("explorerConfig", "failed to load explorerConfig: " + e);
   }
 };
 
-export const hydrate = (maybeConfig: mixed) => {
+export const hydrate = (maybeConfig: Record<string, any>): void => {
   if (!maybeConfig) return;
   let safe;
+
   try {
     safe = asFullConfigOverrides(maybeConfig);
   } catch (e) {
     log("explorerConfig", "failed to hydrate explorerConfig: " + e);
   }
+
   if (!safe) return;
   // update explorerConfig with remote config
   explorerConfig = applyFullConfigOverrides(initialExplorerConfig, safe);

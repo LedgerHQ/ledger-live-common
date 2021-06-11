@@ -1,13 +1,10 @@
-// @flow
-
 import type { SuperRepresentative } from "../../families/tron/types";
-
 import superRepresentatives from "./superRepresentativesData";
 
 export const getTronSuperRepresentatives = (): Promise<
   SuperRepresentative[]
 > => {
-  return Promise.resolve(superRepresentatives);
+  return Promise.resolve(<SuperRepresentative[]>superRepresentatives);
 };
 
 export const __NEXT_VOTING_DATE__ = new Date(0);
