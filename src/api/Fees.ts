@@ -1,4 +1,3 @@
-// @flow
 import invariant from "invariant";
 import { FeeEstimationFailed } from "@ledgerhq/errors";
 import type { CryptoCurrency } from "../types";
@@ -6,9 +5,7 @@ import { makeLRUCache } from "../cache";
 import { blockchainBaseURL } from "./Ledger";
 import network from "../network";
 
-export type Fees = {
-  [_: string]: number,
-};
+export type Fees = Record<string, number>;
 
 export const getEstimatedFees: (
   currency: CryptoCurrency
@@ -20,9 +17,11 @@ export const getEstimatedFees: (
       method: "GET",
       url: `${baseURL}/fees`,
     });
+
     if (data) {
       return data;
     }
+
     throw new FeeEstimationFailed(`FeeEstimationFailed ${status}`, {
       httpStatus: status,
     });
