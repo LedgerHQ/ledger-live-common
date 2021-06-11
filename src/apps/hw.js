@@ -1,7 +1,7 @@
 // @flow
 
 import Transport from "@ledgerhq/hw-transport";
-import { getDeviceModel } from "@ledgerhq/devices";
+import { getDeviceModel, identifyTargetId } from "@ledgerhq/devices";
 import { UnexpectedBootloader } from "@ledgerhq/errors";
 import { concat, of, empty, from, Observable, throwError, defer } from "rxjs";
 import { mergeMap, map } from "rxjs/operators";
@@ -119,6 +119,7 @@ export const listApps = (
   const deviceModelId =
     // $FlowFixMe
     (transport.deviceModel && transport.deviceModel.id) ||
+    (deviceInfo && identifyTargetId(deviceInfo.targetId))?.id ||
     getEnv("DEVICE_PROXY_MODEL");
 
   return Observable.create((o) => {
