@@ -118,7 +118,8 @@ export const listApps = (
 
   const deviceModelId =
     // $FlowFixMe
-    (transport.deviceModel && transport.deviceModel.id) || "nanoS";
+    (transport.deviceModel && transport.deviceModel.id) ||
+    getEnv("DEVICE_PROXY_MODEL");
 
   return Observable.create((o) => {
     let sub;
