@@ -5,4 +5,7 @@ declare module "react-native-svg" {
   export class Path extends React.Component<any, any> {}
   export class Rect extends React.Component<any, any> {}
   export class Text extends React.Component<any, any> {}
+  export class Defs extends React.Component<any, any> {}
+  export class ClipPath extends React.Component<any, any> {}
+  export class G extends React.Component<any, any> {}
 }

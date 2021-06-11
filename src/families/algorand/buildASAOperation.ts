@@ -58,7 +58,6 @@ export async function buildASAOperation(arg: {
     recipients: receiver,
     blockHeight,
     blockHash: null,
-    // FIXME: why? (unused)
     accountId,
     date,
     extra: {},

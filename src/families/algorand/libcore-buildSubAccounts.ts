@@ -4,7 +4,7 @@ import type {
   Account,
   SyncConfig,
 } from "../../types";
-import type { CoreAccount } from "../../libcore/types";
+import type { CoreAccount, CoreOperation } from "../../libcore/types";
 import { minimalOperationsBuilder } from "../../reconciliation";
 import { buildASAOperation } from "./buildASAOperation";
 import { BigNumber } from "bignumber.js";
@@ -34,7 +34,7 @@ async function buildAlgorandTokenAccount({
     const operations = await minimalOperationsBuilder(
       (existingTokenAccount && existingTokenAccount.operations) || [],
       coreOperations,
-      (coreOperation) =>
+      (coreOperation: CoreOperation) =>
         buildASAOperation({
           coreOperation,
           accountId: id,

@@ -11,7 +11,7 @@ export const getStatus: GetStatus = async (status) => {
     return updatedStatus[0];
   }
 
-  throw new SwapUnknownSwapId({ ...status });
+  throw new SwapUnknownSwapId(undefined, { ...status });
 };
 export const getMultipleStatus: GetMultipleStatus = async (statusList) => {
   if (getEnv("MOCK")) return mockGetStatus(statusList);

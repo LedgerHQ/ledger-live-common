@@ -2,7 +2,7 @@
 import winston from "winston";
 import { listen } from "@ledgerhq/logs";
 import "./setup";
-import { setEnvUnsafe } from "../../env";
+import { EnvName, setEnvUnsafe } from "../../env";
 import implementLibcore from "../../libcore/platforms/nodejs";
 let setupCalled = null;
 export const setup = (testId) => {
@@ -20,7 +20,7 @@ export const setup = (testId) => {
   });
 };
 
-for (const k in process.env) setEnvUnsafe(k, process.env[k]);
+for (const k in process.env) setEnvUnsafe(k as EnvName, process.env[k]);
 
 const { VERBOSE, VERBOSE_FILE } = process.env;
 const logger = winston.createLogger({

@@ -58,7 +58,7 @@ const erc20approve: ModeModule = {
         const unit = getAccountUnit(subAccount);
         // if account curently supplied we can't lower the initial amount enabled just augment it
         result.errors.amount = new CompoundLowerAllowanceOfActiveAccountError(
-          null,
+          undefined,
           {
             minimumAmount: formatCurrencyUnit(unit, enabledAmount, {
               disableRounding: true,

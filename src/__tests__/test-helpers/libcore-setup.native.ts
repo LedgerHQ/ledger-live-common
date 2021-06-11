@@ -2,6 +2,15 @@
 import { listen } from "@ledgerhq/logs";
 import "./setup";
 import "./implement-react-native-libcore";
+
+declare global {
+  namespace NodeJS {
+    interface Global {
+      _JEST_SETUP: (testName: string) => void;
+    }
+  }
+}
+
 export const setup = (testName) => {
   global._JEST_SETUP(testName);
 };

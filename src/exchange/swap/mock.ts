@@ -29,7 +29,7 @@ export const mockGetExchangeRates = async (
   const maxAmountFrom = new BigNumber(1000);
 
   if (amountFrom.lte(minAmountFrom)) {
-    throw new SwapExchangeRateAmountTooLow(null, {
+    throw new SwapExchangeRateAmountTooLow(undefined, {
       minAmountFromFormatted: formatCurrencyUnit(
         unitFrom,
         new BigNumber(minAmountFrom).times(tenPowMagnitude),
@@ -43,7 +43,7 @@ export const mockGetExchangeRates = async (
   }
 
   if (amountFrom.gte(maxAmountFrom)) {
-    throw new SwapExchangeRateAmountTooHigh(null, {
+    throw new SwapExchangeRateAmountTooHigh(undefined, {
       maxAmountFromFormatted: formatCurrencyUnit(
         unitFrom,
         new BigNumber(maxAmountFrom).times(tenPowMagnitude),

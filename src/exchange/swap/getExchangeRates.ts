@@ -53,7 +53,7 @@ const getExchangeRates: GetExchangeRates = async (
       if (!amountFrom) {
         const isTooSmall = new BigNumber(apiAmount).lte(minAmountFrom);
         error = isTooSmall
-          ? new SwapExchangeRateAmountTooLow(null, {
+          ? new SwapExchangeRateAmountTooLow(undefined, {
               minAmountFromFormatted: formatCurrencyUnit(
                 unitFrom,
                 new BigNumber(minAmountFrom).times(tenPowMagnitude),
@@ -64,7 +64,7 @@ const getExchangeRates: GetExchangeRates = async (
                 }
               ),
             })
-          : new SwapExchangeRateAmountTooHigh(null, {
+          : new SwapExchangeRateAmountTooHigh(undefined, {
               maxAmountFromFormatted: formatCurrencyUnit(
                 unitFrom,
                 new BigNumber(maxAmountFrom).times(tenPowMagnitude),

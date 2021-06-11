@@ -1,8 +1,14 @@
-import type { DeviceModelId } from "@ledgerhq/devices";
-import type { DeviceInfo } from "../../types/manager";
-const deviceInfos = {
+import { DeviceModelId } from "@ledgerhq/devices";
+import { DeviceInfo } from "../../types/manager";
+const deviceInfos: Record<
+  string,
+  {
+    modelId: DeviceModelId;
+    deviceInfo: DeviceInfo;
+  }
+> = {
   NanoS120: {
-    modelId: "nanoS",
+    modelId: DeviceModelId.nanoS,
     deviceInfo: {
       version: "1.2",
       mcuVersion: "1.0",
@@ -16,7 +22,7 @@ const deviceInfos = {
     },
   },
   NanoS142: {
-    modelId: "nanoS",
+    modelId: DeviceModelId.nanoS,
     deviceInfo: {
       version: "1.4.2",
       isBootloader: false,
@@ -30,7 +36,7 @@ const deviceInfos = {
     },
   },
   NanoS155: {
-    modelId: "nanoS",
+    modelId: DeviceModelId.nanoS,
     deviceInfo: {
       version: "1.5.5",
       isBootloader: false,
@@ -44,7 +50,7 @@ const deviceInfos = {
     },
   },
   NanoX1242rc5: {
-    modelId: "nanoX",
+    modelId: DeviceModelId.nanoX,
     deviceInfo: {
       version: "1.2.4-2-rc5",
       mcuVersion: "2.9-rc1",
@@ -58,7 +64,7 @@ const deviceInfos = {
     },
   },
   Blue211: {
-    modelId: "blue",
+    modelId: DeviceModelId.blue,
     deviceInfo: {
       version: "2.1.1",
       mcuVersion: "3.4-hw15",

@@ -98,7 +98,11 @@ export const importAccountsMakeItems = ({
       }
     })
     .filter(Boolean)
-    .sort((a, b) => itemModeDisplaySort[a.mode] - itemModeDisplaySort[b.mode]);
+    .sort(
+      (a, b) =>
+        itemModeDisplaySort[(a as ImportItem).mode] -
+        itemModeDisplaySort[(b as ImportItem).mode]
+    ) as ImportItem[];
 export const importAccountsReduce = (
   existingAccounts: Account[],
   {
