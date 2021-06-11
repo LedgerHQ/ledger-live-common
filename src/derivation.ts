@@ -9,7 +9,7 @@ import {
 } from "rxjs/operators";
 import { log } from "@ledgerhq/logs";
 import { TransportStatusError, UserRefusedAddress } from "@ledgerhq/errors";
-import type { CryptoCurrency, CryptoCurrencyConfig } from "./types";
+import type { CryptoCurrency, CryptoCurrencyIds } from "./types";
 import { getCryptoCurrencyById } from "./currencies";
 import { getEnv } from "./env";
 import type { GetAddressOptions, Result } from "./hw/getAddress/types";
@@ -211,7 +211,9 @@ const modes = Object.freeze({
 });
 modes as Record<DerivationMode, ModeSpec>; // eslint-disable-line
 
-const legacyDerivations: Partial<CryptoCurrencyConfig<DerivationMode[]>> = {
+// FIXME: CryptoCurrencyConfig was a flowtype we could not easily convert to ts so it has been deleted
+// previous types: Partial<CryptoCurrencyConfig<DerivationMode[]>>
+const legacyDerivations: Record<CryptoCurrencyIds, DerivationMode[]> = {
   aeternity: ["aeternity"],
   bitcoin_cash: [],
   bitcoin: ["legacy_on_bch"],

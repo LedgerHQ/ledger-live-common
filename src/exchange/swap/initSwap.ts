@@ -186,6 +186,10 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
           mainPayoutCurrency.type === "CryptoCurrency",
           "This should be a cryptocurrency"
         );
+        // FIXME: invariant not triggering typescriptp type guard
+        if (mainPayoutCurrency.type !== "CryptoCurrency") {
+          throw new Error("This should be a cryptocurrency");
+        }
         const payoutAddressParameters = await perFamily[
           mainPayoutCurrency.family
         ].getSerializedAddressParameters(
@@ -222,6 +226,10 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
           mainRefundCurrency.type === "CryptoCurrency",
           "This should be a cryptocurrency"
         );
+        // FIXME: invariant not triggering typescriptp type guard
+        if (mainRefundCurrency.type !== "CryptoCurrency") {
+          throw new Error("This should be a cryptocurrency");
+        }
         const refundAddressParameters = await perFamily[
           mainRefundCurrency.family
         ].getSerializedAddressParameters(

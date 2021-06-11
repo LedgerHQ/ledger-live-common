@@ -72,7 +72,7 @@ const getSpendableMaxForOptIn = async (account) =>
     return spendableBalance;
   });
 
-const createTransaction = () => ({
+const createTransaction = (): Transaction => ({
   family: "algorand",
   amount: new BigNumber(0),
   fees: null,
@@ -276,8 +276,9 @@ const prepareTransaction = async (a, t) => {
   }
 
   if (recipient || t.mode !== "send") {
-    let errors = (await validateRecipient(a.currency, recipient))
-      .recipientError;
+    let errors: Error | undefined | null | boolean = (
+      await validateRecipient(a.currency, recipient)
+    ).recipientError;
     errors = errors || (t.mode === "optIn" && !t.assetId);
 
     if (!errors) {
@@ -318,7 +319,7 @@ const estimateMaxSpendable = async ({
   return s.amount;
 };
 
-const preload = async () => {};
+const preload = async () => Promise.resolve({});
 
 const hydrate = () => {};
 

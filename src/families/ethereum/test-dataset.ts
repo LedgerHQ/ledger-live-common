@@ -11,7 +11,7 @@ import type { Transaction } from "./types";
 import ethereumScanAccounts1 from "./datasets/ethereum.scanAccounts.1";
 import ethereum_classic from "./datasets/ethereum_classic";
 import { syncAccount } from "../../__tests__/test-helpers/bridge";
-export const ethereum1 = {
+export const ethereum1: AccountRaw = {
   id: "js:1:ethereum:0x0E3F0bb9516F01f2C34c25E0957518b8aC9414c5:",
   seedIdentifier: "0x0E3F0bb9516F01f2C34c25E0957518b8aC9414c5",
   name: "Ethereum legacy xpub6Bem...JyAdpYZy",

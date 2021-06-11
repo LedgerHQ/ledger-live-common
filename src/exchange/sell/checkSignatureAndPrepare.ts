@@ -58,6 +58,10 @@ export default async (
     mainPayoutCurrency.type === "CryptoCurrency",
     "This should be a cryptocurrency"
   );
+  // FIXME: invariant not triggering typescriptp type guard
+  if (mainPayoutCurrency.type !== "CryptoCurrency") {
+    throw new Error("This should be a cryptocurrency");
+  }
   const payoutAddressParameters = await perFamily[
     mainPayoutCurrency.family
   ].getSerializedAddressParameters(

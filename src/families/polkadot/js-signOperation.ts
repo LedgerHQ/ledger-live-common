@@ -184,7 +184,8 @@ const signOperation = ({
           });
         // Sign by device
         const polkadot = new Polkadot(transport);
-        const r = await polkadot.sign(account.freshAddressPath, payload);
+        // FIXME: the type of payload Uint8Array is not compatible with the signature of sign which accept a string
+        const r = await polkadot.sign(account.freshAddressPath, payload as any);
         const signed = await signExtrinsic(unsigned, r.signature, registry);
         o.next({
           type: "device-signature-granted",

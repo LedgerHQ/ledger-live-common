@@ -2,7 +2,7 @@ import "../../__tests__/test-helpers/setup";
 import { reduce } from "rxjs/operators";
 import { fromAccountRaw } from "../../account";
 import { getAccountCurrency } from "../../account/helpers";
-import type { Account } from "../../types";
+import type { Account, SubAccount } from "../../types";
 import { getAccountBridge } from "../../bridge";
 import { makeBridgeCacheSystem } from "../../bridge/cache";
 import { ethereum1 } from "./test-dataset";
@@ -21,7 +21,6 @@ describe("blacklistedTokenIds functionality", () => {
   });
   test("initial raw account contains no token accounts", async () => {
     await cache.prepareCurrency(account.currency);
-    // @ts-expect-error we know there are no subAccounts there
     expect(ethereum1.subAccounts?.length).toBeFalsy();
   });
   test("sync finds tokens, but not blacklisted ones", async () => {
@@ -38,13 +37,13 @@ describe("blacklistedTokenIds functionality", () => {
     expect(synced.subAccounts?.length).toBeTruthy();
     // Contains a known token
     expect(
-      synced.subAccounts.find(
+      (synced.subAccounts as SubAccount[]).find(
         (a) => getAccountCurrency(a)?.id === "ethereum/erc20/0x_project"
       )
     ).toBeTruthy();
     // Does not contain a blacklisted token
     expect(
-      synced.subAccounts.find((a) =>
+      (synced.subAccounts as SubAccount[]).find((a) =>
         blacklistedTokenIds.includes(getAccountCurrency(a)?.id)
       )
     ).toBe(undefined);
@@ -63,7 +62,7 @@ describe("blacklistedTokenIds functionality", () => {
     expect(syncedWithoutWeth.subAccounts?.length).toBeTruthy();
     // Does not contain a blacklisted token
     expect(
-      syncedWithoutWeth.subAccounts.find((a) =>
+      (syncedWithoutWeth.subAccounts as SubAccount[]).find((a) =>
         blacklistedTokenIds.includes(getAccountCurrency(a)?.id)
       )
     ).toBe(undefined);
@@ -77,7 +76,7 @@ describe("blacklistedTokenIds functionality", () => {
       .toPromise();
     // Does not contain a blacklisted token
     expect(
-      synced.subAccounts.find(
+      (synced.subAccounts as SubAccount[]).find(
         (a) => getAccountCurrency(a)?.id === "ethereum/erc20/weth"
       )
     ).toBeTruthy();

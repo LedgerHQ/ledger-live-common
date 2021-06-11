@@ -80,7 +80,10 @@ export type ModeModule = {
     arg2: Operation
   ) => void;
 };
-export const modes: Record<TransactionMode, ModeModule> = {};
+export const modes: Record<TransactionMode, ModeModule> = {} as Record<
+  TransactionMode,
+  ModeModule
+>;
 
 function loadModes() {
   for (const k in modules) {
@@ -88,7 +91,6 @@ function loadModes() {
 
     if (m.modes) {
       for (const j in m.modes) {
-        // $FlowFixMe
         modes[j] = m.modes[j];
       }
     }
@@ -111,7 +113,7 @@ export async function preload(
 
   return value;
 }
-export function hydrate(value: unknown, currency: CryptoCurrency) {
+export function hydrate(value: unknown, currency: CryptoCurrency): void {
   if (!value || typeof value !== "object") return;
 
   for (const k in value) {
@@ -130,6 +132,7 @@ export const prepareTokenAccounts = (
   address: string
 ): Promise<TokenAccount[]> =>
   values(modules)
+    // @ts-expect-error too weird for me to understand
     .map((m) => m.prepareTokenAccounts)
     .filter(Boolean)
     .reduce(
@@ -142,6 +145,7 @@ export const digestTokenAccounts = (
   address: string
 ): Promise<TokenAccount[]> =>
   values(modules)
+    // @ts-expect-error too weird for me to understand
     .map((m) => m.digestTokenAccounts)
     .filter(Boolean)
     .reduce(

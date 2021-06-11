@@ -102,8 +102,11 @@ export const signOperation = ({
                 v = cv.toString(16);
               }
 
+              // @ts-expect-error expects Buffer but works with string
               tx.v = "0x" + v;
+              // @ts-expect-error expects Buffer but works with string
               tx.r = "0x" + result.r;
+              // @ts-expect-error expects Buffer but works with string
               tx.s = "0x" + result.s;
               // Generate the signature ready to be broadcasted
               const signature = `0x${tx.serialize().toString("hex")}`;

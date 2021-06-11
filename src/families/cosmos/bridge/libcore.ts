@@ -54,7 +54,7 @@ const updateTransaction = (t, patch) => {
 };
 
 const isTransactionValidForEstimatedFees = async (a, t) => {
-  let errors = null;
+  let errors: Error | undefined | null = null;
 
   if (t.mode === "send" && (t.amount.gt(0) || t.useAllAmount)) {
     errors = (await validateRecipient(a.currency, t.recipient)).recipientError;

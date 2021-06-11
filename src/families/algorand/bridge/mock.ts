@@ -102,7 +102,7 @@ const accountBridge: AccountBridge<Transaction> = {
 const currencyBridge: CurrencyBridge = {
   scanAccounts,
   preload: () => {
-    return Promise.resolve();
+    return Promise.resolve({});
   },
   hydrate: () => {},
 };
