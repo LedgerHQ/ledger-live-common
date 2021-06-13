@@ -187,11 +187,9 @@ export async function runWithAppSpec<T: Transaction>(
     const length = accounts.length;
     for (let i = 0; i < length; i++) {
       log("engine", `spec ${spec.name} sync all accounts`);
-      console.log(`spec ${spec.name} sync all accounts`);
       // resync all accounts (necessary between mutations)
       t = now();
       accounts = await promiseAllBatched(5, accounts, syncAccount);
-      console.log(`spec ${spec.name} sync finished ${i}`);
       appReport.accountsAfter = accounts;
       const syncAllAccountsTime = now() - t;
       const account = accounts[i];
