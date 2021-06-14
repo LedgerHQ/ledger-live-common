@@ -1,4 +1,3 @@
-// @flow
 import Prando from "prando";
 import { getEnv } from "../../../env";
 import type { AnnouncementsApi, RawAnnouncement } from "../types";
@@ -77,10 +76,10 @@ const announcementsPool: RawAnnouncement[] = [
   },
 ];
 
-const announcements: RawAnnouncement[] = [].concat(announcementsPool);
+const announcements: RawAnnouncement[] = [...announcementsPool];
 const rng = new Prando(getEnv("MOCK"));
 
-export const addMockAnnouncement = (params?: *) => {
+export const addMockAnnouncement = (params?: RawAnnouncement): void => {
   const now = new Date();
   const expiryDate = new Date(now.getTime() + 2 * 60 * 1000);
   const newAnnouncement = {
@@ -94,7 +93,6 @@ export const addMockAnnouncement = (params?: *) => {
     expired_at: expiryDate.toISOString(),
     ...params,
   };
-
   announcements.push(newAnnouncement);
 };
 
@@ -105,5 +103,4 @@ async function fetchAnnouncements(): Promise<RawAnnouncement[]> {
 const api: AnnouncementsApi = {
   fetchAnnouncements,
 };
-
 export default api;

@@ -1,38 +1,43 @@
-// @flow
-
-import React, { createContext, useContext, useMemo, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useCallback,
+  ReactElement,
+} from "react";
 import type { State } from "./types";
 import networkApi from "./api";
 import { useMachine } from "@xstate/react";
 import { serviceStatusMachine } from "./machine";
-
 type Props = {
-  children: React$Node,
-  autoUpdateDelay: number,
+  children: React.ReactNode;
+  autoUpdateDelay: number;
 };
-
 type API = {
-  updateData: () => Promise<void>,
+  updateData: () => Promise<void>;
 };
-
 export type StatusContextType = State & API;
-
-const ServiceStatusContext = createContext<StatusContextType>({});
-
+const ServiceStatusContext = createContext<StatusContextType>({
+  incidents: [],
+  isLoading: false,
+  lastUpdateTime: undefined,
+  error: undefined,
+  updateData: () => Promise.resolve(),
+});
 export function useServiceStatus(): StatusContextType {
   return useContext(ServiceStatusContext);
 }
-
-export const ServiceStatusProvider = ({ children, autoUpdateDelay }: Props) => {
+export const ServiceStatusProvider = ({
+  children,
+  autoUpdateDelay,
+}: Props): ReactElement => {
   const fetchData = useCallback(async () => {
     const serviceStatusSummary = await networkApi.fetchStatusSummary();
-
     return {
       incidents: serviceStatusSummary.incidents,
       updateTime: Date.now(),
     };
   }, []);
-
   const [state, send] = useMachine(serviceStatusMachine, {
     services: {
       fetchData,
@@ -41,21 +46,17 @@ export const ServiceStatusProvider = ({ children, autoUpdateDelay }: Props) => {
       AUTO_UPDATE_DELAY: autoUpdateDelay,
     },
   });
-
   const api = useMemo(
     () => ({
       updateData: async () => {
-        send({ type: "UPDATE_DATA" });
+        send({
+          type: "UPDATE_DATA",
+        });
       },
     }),
     [send]
   );
-
-  const value = {
-    ...state.context,
-    ...api,
-  };
-
+  const value = { ...(state.context || {}), ...api };
   return (
     <ServiceStatusContext.Provider value={value}>
       {children}
