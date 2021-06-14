@@ -1,7 +1,5 @@
-// @flow
 import semver from "semver";
 import type { AppAndVersion } from "./hw/connectApp";
-
 export const req = {
   method: "POST",
   url: "https://appstore.aws.prd.ldg-tech.com/api/get_apps",
@@ -11,7 +9,6 @@ export const req = {
     provider: 1,
   },
 };
-
 export const minAppVersion = {
   Aeternity: "0.4.3",
   Aion: "1.0.2",
@@ -154,7 +151,6 @@ export const minAppVersion = {
   Zilliqa: "0.4.2",
   kUSD: "1.3.7",
 };
-
 export default ({ name, version }: AppAndVersion) =>
   !(name in minAppVersion) ||
   semver.gte(semver.coerce(version), minAppVersion[name]);

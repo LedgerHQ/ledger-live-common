@@ -439,7 +439,10 @@ async function openImplicitSpeculos(query: string) {
 
   const appCandidate = findAppCandidate(apps, search);
   invariant(appCandidate, "could not find an app that matches '%s'", query);
-  log("speculos", "using app " + formatAppCandidate(appCandidate));
+  log(
+    "speculos",
+    "using app " + formatAppCandidate(appCandidate as AppCandidate)
+  );
   const device = appCandidate
     ? await createSpeculosDevice({
         ...appCandidate,

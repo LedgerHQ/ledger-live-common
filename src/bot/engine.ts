@@ -88,10 +88,12 @@ export async function runWithAppSpec<T extends Transaction>(
   );
   log(
     "engine",
-    `spec ${spec.name} will use ${formatAppCandidate(appCandidate)}`
+    `spec ${spec.name} will use ${formatAppCandidate(
+      appCandidate as AppCandidate
+    )}`
   );
   const deviceParams = {
-    ...appCandidate,
+    ...(appCandidate as AppCandidate),
     appName: spec.currency.managerAppName,
     seed,
     dependency,
@@ -151,7 +153,7 @@ export async function runWithAppSpec<T extends Transaction>(
       `Spec ${spec.name} found ${accounts.length} ${
         currency.name
       } accounts${preloadStats}. Will use ${formatAppCandidate(
-        appCandidate
+        appCandidate as AppCandidate
       )}\n${accounts
         .map(
           (a) =>
