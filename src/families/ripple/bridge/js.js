@@ -53,7 +53,7 @@ import {
 } from "../../../api/Ripple";
 
 const checkAccountNotFound = (e) => {
-  return e.message !== "actNotFound" && e.data.error !== "actNotFound";
+  return e.message !== "actNotFound" && e.data && e.data.error !== "actNotFound";
 };
 
 const receive = makeAccountBridgeReceive();
