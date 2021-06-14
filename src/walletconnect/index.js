@@ -7,10 +7,7 @@ import { bufferToHex } from "ethereumjs-util";
 import { getAccountBridge } from "../bridge";
 import { getCryptoCurrencyById } from "../currencies";
 import type { Account, Transaction } from "../types";
-import type {
-  TypedMessageData,
-  TypedMessage,
-} from "../families/ethereum/types";
+import type { TypedMessageData } from "../families/ethereum/types";
 import { domainHash, messageHash } from "../families/ethereum/hw-signMessage";
 import type { MessageData } from "../hw/signMessage/types";
 
