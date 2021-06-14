@@ -52,8 +52,9 @@ import {
   getTransactions,
 } from "../../../api/Ripple";
 
+// true if the error should be forwarded and is not a "not found" case
 const checkAccountNotFound = (e) => {
-  return e.message !== "actNotFound" && e.data && e.data.error !== "actNotFound";
+  return !e.data || e.message !== "actNotFound" && e.data.error !== "actNotFound";
 };
 
 const receive = makeAccountBridgeReceive();
