@@ -1,4 +1,3 @@
-// @flow
 import { useState, useEffect } from "react";
 import semver from "semver";
 import type { DeviceModelInfo } from "../types/manager";
@@ -12,7 +11,6 @@ async function hasOudatedApps({
   apps,
 }: DeviceModelInfo): Promise<boolean> {
   const provider = getProviderId(deviceInfo);
-
   const deviceVersion = await ManagerAPI.getDeviceVersion(
     deviceInfo.targetId,
     provider
@@ -22,25 +20,25 @@ async function hasOudatedApps({
     version: deviceInfo.version,
     provider,
   });
-
   const compatibleAppVersionsList = await ManagerAPI.applicationsByDevice({
     provider,
     current_se_firmware_final_version: firmware.id,
     device_version: deviceVersion.id,
   });
-
   return apps.some((app) => {
     const currApp = compatibleAppVersionsList.find((e) => e.name === app.name);
     return currApp && semver.gt(currApp.version, app.version);
   });
 }
 
-export function useManagerBlueDot(dmi: ?DeviceModelInfo): boolean {
+export function useManagerBlueDot(
+  dmi: DeviceModelInfo | null | undefined
+): boolean {
   const [display, setDisplay] = useState(!dmi);
   const forceProvider = useEnv("FORCE_PROVIDER");
-
   useEffect(() => {
     let cancelled = false;
+
     function cancel() {
       cancelled = true;
     }
@@ -51,7 +49,6 @@ export function useManagerBlueDot(dmi: ?DeviceModelInfo): boolean {
     }
 
     const { deviceInfo } = dmi;
-
     Promise.all([
       manager.getLatestFirmwareForDevice(deviceInfo),
       hasOudatedApps(dmi),
@@ -70,9 +67,7 @@ export function useManagerBlueDot(dmi: ?DeviceModelInfo): boolean {
         console.error(err);
         setDisplay(false);
       });
-
     return cancel;
   }, [dmi, forceProvider]);
-
   return display;
 }
