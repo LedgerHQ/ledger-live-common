@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import {
   AmountRequired,
@@ -25,9 +24,18 @@ import {
   isMemoValid,
 } from "./logic";
 
-const getTransactionStatus = async (a: Account, t: Transaction) => {
-  const errors = {};
-  const warnings = {};
+const getTransactionStatus = async (
+  a: Account,
+  t: Transaction
+): Promise<{
+  errors: Record<string, Error>;
+  warnings: Record<string, Error>;
+  estimatedFees: BigNumber;
+  amount: BigNumber;
+  totalSpent: BigNumber;
+}> => {
+  const errors: Record<string, Error> = {};
+  const warnings: Record<string, Error> = {};
   const useAllAmount = !!t.useAllAmount;
 
   if (a.pendingOperations.length > 0) {
@@ -52,9 +60,8 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
     errors.fees = new FeeNotLoaded();
   }
 
-  let estimatedFees = !t.fees ? BigNumber(0) : t.fees;
-  let baseReserve = !t.baseReserve ? BigNumber(0) : t.baseReserve;
-
+  const estimatedFees = !t.fees ? new BigNumber(0) : t.fees;
+  const baseReserve = !t.baseReserve ? new BigNumber(0) : t.baseReserve;
   let amount = !useAllAmount
     ? t.amount
     : a.balance.minus(baseReserve).minus(estimatedFees);
@@ -63,7 +70,7 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
     : a.balance.minus(baseReserve);
 
   if (totalSpent.gt(a.balance.minus(baseReserve))) {
-    errors.amount = new NotEnoughSpendableBalance(null, {
+    errors.amount = new NotEnoughSpendableBalance(undefined, {
       minimumAmount: formatCurrencyUnit(a.currency.units[0], baseReserve, {
         disableRounding: true,
         showCode: true,
@@ -84,8 +91,8 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
     (amount.lt(0) || totalSpent.gt(a.balance))
   ) {
     errors.amount = new NotEnoughBalance();
-    totalSpent = BigNumber(0);
-    amount = BigNumber(0);
+    totalSpent = new BigNumber(0);
+    amount = new BigNumber(0);
   }
 
   if (!errors.amount && amount.eq(0)) {
@@ -97,7 +104,10 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
     !errors.recipient &&
     t.recipient &&
     !errors.amount &&
-    !(await checkRecipientExist({ account: a, recipient: t.recipient })) &&
+    !(await checkRecipientExist({
+      account: a,
+      recipient: t.recipient,
+    })) &&
     amount.lt(10000000)
   ) {
     errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {

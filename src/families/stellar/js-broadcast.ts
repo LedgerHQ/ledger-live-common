@@ -1,4 +1,3 @@
-// @flow
 import { patchOperationWithHash } from "../../operation";
 import type { Operation, SignedOperation } from "../../types";
 import { broadcastTransaction as apiBroadcast } from "./api";
@@ -10,12 +9,10 @@ import { broadcastTransaction as apiBroadcast } from "./api";
 const broadcast = async ({
   signedOperation,
 }: {
-  signedOperation: SignedOperation,
+  signedOperation: SignedOperation;
 }): Promise<Operation> => {
   const { signature, operation } = signedOperation;
-
   const hash = await apiBroadcast(signature);
-
   return patchOperationWithHash(operation, hash);
 };
 

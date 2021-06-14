@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import type { Transaction, TransactionRaw } from "./types";
 import {
@@ -12,8 +11,7 @@ import { formatCurrencyUnit } from "../../currencies";
 export const formatTransaction = (
   { amount, recipient, fees, memoValue, useAllAmount }: Transaction,
   account: Account
-): string =>
-  `
+): string => `
     SEND ${
       useAllAmount
         ? "MAX"
@@ -35,18 +33,17 @@ export const formatTransaction = (
 const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
   const { networkInfo } = tr;
-
   return {
     ...common,
     family: tr.family,
-    fees: tr.fees ? BigNumber(tr.fees) : null,
-    baseReserve: tr.baseReserve ? BigNumber(tr.baseReserve) : null,
+    fees: tr.fees ? new BigNumber(tr.fees) : null,
+    baseReserve: tr.baseReserve ? new BigNumber(tr.baseReserve) : null,
     memoValue: tr.memoValue ? tr.memoValue : null,
     memoType: tr.memoType ? tr.memoType : null,
     networkInfo: networkInfo && {
       family: networkInfo.family,
-      fees: BigNumber(networkInfo.fees),
-      baseReserve: BigNumber(networkInfo.baseReserve),
+      fees: new BigNumber(networkInfo.fees),
+      baseReserve: new BigNumber(networkInfo.baseReserve),
     },
   };
 };
@@ -69,4 +66,8 @@ const toTransactionRaw = (t: Transaction): TransactionRaw => {
   };
 };
 
-export default { formatTransaction, fromTransactionRaw, toTransactionRaw };
+export default {
+  formatTransaction,
+  fromTransactionRaw,
+  toTransactionRaw,
+};

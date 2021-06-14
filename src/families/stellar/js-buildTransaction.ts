@@ -1,4 +1,3 @@
-// @flow
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import StellarSdk from "stellar-sdk";
@@ -20,7 +19,7 @@ import { addressExists } from "./logic";
 export const buildTransaction = async (
   account: Account,
   transaction: Transaction
-) => {
+): Promise<any> => {
   const {
     recipient,
     useAllAmount,
@@ -29,27 +28,24 @@ export const buildTransaction = async (
     memoType,
     memoValue,
   } = transaction;
+
   if (!fees) {
     throw new FeeNotLoaded();
   }
 
   invariant(networkInfo && networkInfo.family === "stellar", "stellar family");
-
-  let amount = BigNumber(0);
-  amount = useAllAmount
-    ? account.balance.minus(networkInfo.baseReserve).minus(fees)
-    : transaction.amount;
-
+  let amount = new BigNumber(0);
+  amount =
+    useAllAmount && networkInfo
+      ? account.balance.minus(networkInfo.baseReserve).minus(fees)
+      : transaction.amount;
   if (!amount) throw new AmountRequired();
-
   const source = await loadAccount(account.freshAddress);
   if (!source) throw new NetworkDown();
-
   const transactionBuilder = buildTransactionBuilder(source, fees);
-
   let operation = null;
-
   const recipientExists = await addressExists(transaction.recipient); // TODO: use cache with checkRecipientExist instead?
+
   if (recipientExists) {
     operation = buildPaymentOperation(recipient, amount);
   } else {
@@ -57,7 +53,6 @@ export const buildTransaction = async (
   }
 
   transactionBuilder.addOperation(operation);
-
   let memo = null;
 
   if (memoType && memoValue) {
@@ -85,8 +80,6 @@ export const buildTransaction = async (
   }
 
   const built = transactionBuilder.setTimeout(0).build();
-
   return built;
 };
-
 export default buildTransaction;

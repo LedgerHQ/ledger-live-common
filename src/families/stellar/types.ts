@@ -7,11 +7,13 @@ export type CoreStatics = Record<string, never>;
 export type CoreAccountSpecifics = Record<string, never>;
 export type CoreOperationSpecifics = Record<string, never>;
 export type CoreCurrencySpecifics = Record<string, never>;
+
 export type NetworkInfo = {
   family: "stellar";
   fees: BigNumber;
   baseReserve: BigNumber;
 };
+
 export type NetworkInfoRaw = {
   family: "stellar";
   fees: string;
@@ -24,6 +26,7 @@ export const StellarMemoType = [
   "MEMO_HASH",
   "MEMO_RETURN",
 ];
+
 export type Transaction = TransactionCommon & {
   family: "stellar";
   networkInfo: NetworkInfo | null | undefined;

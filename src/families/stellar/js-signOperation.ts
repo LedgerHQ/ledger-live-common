@@ -1,12 +1,9 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import { Observable } from "rxjs";
 import Stellar from "@ledgerhq/hw-app-str";
 import { FeeNotLoaded } from "@ledgerhq/errors";
-
 import type { Account, Operation, SignOperationEvent } from "../../types";
 import { open, close } from "../../hw";
-
 import type { Transaction } from "./types";
 import { buildTransaction } from "./js-buildTransaction";
 import { fetchSequence } from "./api";
@@ -16,9 +13,8 @@ const buildOptimisticOperation = async (
   transaction: Transaction
 ): Promise<Operation> => {
   const transactionSequenceNumber = await fetchSequence(account);
-  const fees = transaction.fees ?? BigNumber(0);
-
-  const operation: $Exact<Operation> = {
+  const fees = transaction.fees ?? new BigNumber(0);
+  const operation: Operation = {
     id: `${account.id}--OUT`,
     hash: "",
     type: "OUT",
@@ -37,7 +33,6 @@ const buildOptimisticOperation = async (
     transactionSequenceNumber: transactionSequenceNumber?.plus(1).toNumber(),
     extra: {},
   };
-
   return operation;
 };
 
@@ -49,15 +44,18 @@ const signOperation = ({
   deviceId,
   transaction,
 }: {
-  account: Account,
-  deviceId: *,
-  transaction: Transaction,
+  account: Account;
+  deviceId: any;
+  transaction: Transaction;
 }): Observable<SignOperationEvent> =>
   Observable.create((o) => {
     async function main() {
       const transport = await open(deviceId);
+
       try {
-        o.next({ type: "device-signature-requested" });
+        o.next({
+          type: "device-signature-requested",
+        });
 
         // Fees are loaded during prepareTransaction
         if (!transaction.fees) {
@@ -65,26 +63,21 @@ const signOperation = ({
         }
 
         const unsigned = await buildTransaction(account, transaction);
-
         const unsignedPayload = unsigned.signatureBase();
-
         // Sign by device
         const hwApp = new Stellar(transport);
-
         const { signature } = await hwApp.signTransaction(
           account.freshAddressPath,
           unsignedPayload
         );
-
         unsigned.addSignature(
           account.freshAddress,
           signature.toString("base64")
         );
-
-        o.next({ type: "device-signature-granted" });
-
+        o.next({
+          type: "device-signature-granted",
+        });
         const operation = await buildOptimisticOperation(account, transaction);
-
         o.next({
           type: "signed",
           signedOperation: {
@@ -97,6 +90,7 @@ const signOperation = ({
         close(transport, deviceId);
       }
     }
+
     main().then(
       () => o.complete(),
       (e) => o.error(e)

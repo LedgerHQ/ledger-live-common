@@ -1,4 +1,3 @@
-// @flow
 import type { DeviceAction } from "../../bot/types";
 import type { Transaction } from "./types";
 import { formatCurrencyUnit } from "../../currencies";
@@ -10,7 +9,7 @@ const expectedAmount = ({ account, status }) =>
     useGrouping: false,
   }) + " XLM";
 
-const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
+const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
   steps: [
     {
       title: "Starting Balance",
@@ -69,5 +68,6 @@ const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
     },
   ],
 });
-
-export default { acceptTransaction };
+export default {
+  acceptTransaction,
+};

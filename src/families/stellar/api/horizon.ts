@@ -1,6 +1,6 @@
-//@flow
 import { BigNumber } from "bignumber.js";
 import StellarSdk, {
+  // @ts-expect-error stellar-sdk ts definition missing?
   AccountRecord,
   NotFoundError,
   NetworkError,
@@ -17,13 +17,13 @@ import { NetworkDown, LedgerAPI4xx, LedgerAPI5xx } from "@ledgerhq/errors";
 
 const LIMIT = getEnv("API_STELLAR_HORIZON_FETCH_LIMIT");
 const FALLBACK_BASE_FEE = 100;
-
 const currency = getCryptoCurrencyById("stellar");
-
 const server = new StellarSdk.Server(getEnv("API_STELLAR_HORIZON"));
 
 StellarSdk.HorizonAxiosClient.interceptors.request.use((request) => {
-  log("network", `${request.method} ${request.url}`, { data: request.data });
+  log("network", `${request.method} ${request.url}`, {
+    data: request.data,
+  });
   return request;
 });
 
@@ -31,24 +31,29 @@ StellarSdk.HorizonAxiosClient.interceptors.response.use((response) => {
   log(
     "network",
     `${response.status} ${response.config.method} ${response.config.url}`,
-    getEnv("DEBUG_HTTP_RESPONSE") ? { data: response.data } : undefined
+    getEnv("DEBUG_HTTP_RESPONSE")
+      ? {
+          data: response.data,
+        }
+      : undefined
   );
-
   // FIXME: workaround for the Stellar SDK not using the correct URL: the "next" URL
   // included in server responses points to the node itself instead of our reverse proxy...
   // (https://github.com/stellar/js-stellar-sdk/issues/637)
   const url = response?.data?._links?.next?.href;
+
   if (url) {
     const next = new URL(url);
     next.host = new URL(getEnv("API_STELLAR_HORIZON")).host;
     response.data._links.next.href = next.toString();
   }
+
   return response;
 });
 
 const getFormattedAmount = (amount: BigNumber) => {
   return amount
-    .div(BigNumber(10).pow(currency.units[0].magnitude))
+    .div(new BigNumber(10).pow(currency.units[0].magnitude))
     .toString(10);
 };
 
@@ -70,9 +75,16 @@ export const fetchBaseFee = async (): Promise<number> => {
  * @async
  * @param {*} addr
  */
-export const fetchAccount = async (addr: string) => {
+export const fetchAccount = async (
+  addr: string
+): Promise<{
+  blockHeight?: number;
+  balance: BigNumber;
+  spendableBalance: BigNumber;
+}> => {
   let account: typeof AccountRecord = {};
-  let balance = {};
+  let balance: Record<string, any> = {};
+
   try {
     account = await server.accounts().accountId(addr).call();
     balance = account.balances.find((balance) => {
@@ -86,6 +98,7 @@ export const fetchAccount = async (addr: string) => {
     currency.units[0],
     balance.balance
   );
+
   const spendableBalance = await getAccountSpendableBalance(
     formattedBalance,
     account
@@ -110,14 +123,15 @@ export const fetchAccount = async (addr: string) => {
 export const fetchOperations = async (
   accountId: string,
   addr: string,
-  startAt: number = 0
+  startAt = 0
 ): Promise<Operation[]> => {
   if (!addr || !addr.length) {
     return [];
   }
 
-  let operations = [];
-  let rawOperations = [];
+  let operations: Operation[] = [];
+  let rawOperations: Record<string, any> = {};
+
   try {
     rawOperations = await server
       .operations()
@@ -131,15 +145,19 @@ export const fetchOperations = async (
     // FIXME: terrible hacks, because Stellar SDK fails to cast network failures to typed errors in react-native...
     // (https://github.com/stellar/js-stellar-sdk/issues/638)
     const errorMsg = e ? e.toString() : "";
+
     if (e instanceof NotFoundError || errorMsg.match(/status code 404/)) {
       return [];
     }
+
     if (errorMsg.match(/status code 4[0-9]{2}/)) {
       return new LedgerAPI4xx();
     }
+
     if (errorMsg.match(/status code 5[0-9]{2}/)) {
       return new LedgerAPI5xx();
     }
+
     if (
       e instanceof NetworkError ||
       errorMsg.match(/ECONNRESET|ECONNREFUSED|ENOTFOUND|EPIPE|ETIMEDOUT/) ||
@@ -168,7 +186,6 @@ export const fetchOperations = async (
 
   return operations;
 };
-
 export const fetchAccountNetworkInfo = async (
   account: Account
 ): Promise<NetworkInfo> => {
@@ -177,20 +194,15 @@ export const fetchAccountNetworkInfo = async (
       .accounts()
       .accountId(account.freshAddress)
       .call();
-
     const numberOfEntries = extendedAccount.subentry_count;
-
     const ledger = await server
       .ledgers()
       .ledger(extendedAccount.last_modified_ledger)
       .call();
-
-    const baseReserve = BigNumber(
+    const baseReserve = new BigNumber(
       (ledger.base_reserve_in_stroops * (2 + numberOfEntries)).toString()
     );
-
-    const fees = BigNumber(ledger.base_fee_in_stroops.toString());
-
+    const fees = new BigNumber(ledger.base_fee_in_stroops.toString());
     return {
       family: "stellar",
       fees,
@@ -199,15 +211,17 @@ export const fetchAccountNetworkInfo = async (
   } catch (error) {
     return {
       family: "stellar",
-      fees: BigNumber(0),
-      baseReserve: BigNumber(0),
+      fees: new BigNumber(0),
+      baseReserve: new BigNumber(0),
     };
   }
 };
 
-export const fetchSequence = async (a: Account) => {
+export const fetchSequence = async (a: Account): Promise<BigNumber> => {
   const extendedAccount = await loadAccount(a.freshAddress);
-  return extendedAccount ? BigNumber(extendedAccount.sequence) : BigNumber(0);
+  return extendedAccount
+    ? new BigNumber(extendedAccount.sequence)
+    : new BigNumber(0);
 };
 
 export const fetchSigners = async (a: Account) => {
@@ -229,7 +243,6 @@ export const broadcastTransaction = async (
     signedTransaction,
     StellarSdk.Networks.PUBLIC
   );
-
   const res = await server.submitTransaction(transaction, {
     skipMemoRequiredCheck: true,
   });
@@ -239,9 +252,8 @@ export const broadcastTransaction = async (
 export const buildPaymentOperation = (
   destination: string,
   amount: BigNumber
-) => {
+): any => {
   const formattedAmount = getFormattedAmount(amount);
-
   return StellarSdk.Operation.payment({
     destination: destination,
     amount: formattedAmount,
@@ -252,9 +264,8 @@ export const buildPaymentOperation = (
 export const buildCreateAccountOperation = (
   destination: string,
   amount: BigNumber
-) => {
+): any => {
   const formattedAmount = getFormattedAmount(amount);
-
   return StellarSdk.Operation.createAccount({
     destination: destination,
     startingBalance: formattedAmount,
@@ -264,16 +275,15 @@ export const buildCreateAccountOperation = (
 export const buildTransactionBuilder = (
   source: typeof StellarSdk.Account,
   fee: BigNumber
-) => {
+): any => {
   const formattedFee = fee.toString();
-
   return new StellarSdk.TransactionBuilder(source, {
     fee: formattedFee,
     networkPassphrase: StellarSdk.Networks.PUBLIC,
   });
 };
 
-export const loadAccount = async (addr: string) => {
+export const loadAccount = async (addr: string): Promise<any> => {
   if (!addr || !addr.length) {
     return null;
   }

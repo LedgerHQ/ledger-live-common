@@ -1,4 +1,3 @@
-// @flow
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 import type {
   AccountBridge,
@@ -6,7 +5,6 @@ import type {
   CurrencyBridge,
 } from "../../../types";
 import type { Transaction } from "../types";
-
 import { scanAccounts, sync } from "../js-synchronization";
 import getTransactionStatus from "../js-getTransactionStatus";
 import estimateMaxSpendable from "../js-estimateMaxSpendable";
@@ -15,16 +13,19 @@ import prepareTransaction from "../js-prepareTransaction";
 import signOperation from "../js-signOperation";
 import broadcast from "../js-broadcast";
 
-const preload = async () => {};
+const preload = async (): Promise<any> => {};
 
-const hydrate = () => {};
+const hydrate = (): void => {};
 
 const receive = makeAccountBridgeReceive();
 
-const updateTransaction = (t, patch) => ({ ...t, ...patch });
+const updateTransaction = (
+  t: Transaction,
+  patch: Transaction
+): Transaction => ({ ...t, ...patch });
 
-// eslint-disable-next-line no-unused-vars
-export const getPreloadStrategy = (currency: CryptoCurrency) => ({});
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const getPreloadStrategy = (currency: CryptoCurrency): any => ({});
 
 const currencyBridge: CurrencyBridge = {
   getPreloadStrategy,
@@ -45,4 +46,7 @@ const accountBridge: AccountBridge<Transaction> = {
   broadcast,
 };
 
-export default { currencyBridge, accountBridge };
+export default {
+  currencyBridge,
+  accountBridge,
+};

@@ -1,28 +1,24 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import StellarSdk, {
+  // @ts-expect-error stellar-sdk ts definition missing?
   TransactionRecord,
+  // @ts-expect-error stellar-sdk ts definition missing?
   OperationRecord,
+  // @ts-expect-error stellar-sdk ts definition missing?
   AccountRecord,
 } from "stellar-sdk";
-
 import type { CacheRes } from "../../cache";
 import { makeLRUCache } from "../../cache";
 import type { Account, Operation, OperationType } from "../../types";
-
 import { fetchSigners, fetchBaseFee, loadAccount } from "./api";
-
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
 import { encodeOperationId } from "../../operation";
-
 const currency = getCryptoCurrencyById("stellar");
 
 const getMinimumBalance = (account: typeof AccountRecord): BigNumber => {
   const baseReserve = 0.5;
   const numberOfEntries = account.subentry_count;
-
   const minimumBalance = (2 + numberOfEntries) * baseReserve;
-
   return parseCurrencyUnit(currency.units[0], minimumBalance.toString());
 };
 
@@ -34,7 +30,6 @@ export const getAccountSpendableBalance = async (
   const baseFee = await fetchBaseFee();
   return BigNumber.max(balance.minus(minimumBalance).minus(baseFee), 0);
 };
-
 export const getOperationType = (
   operation: typeof OperationRecord,
   addr: string
@@ -42,11 +37,14 @@ export const getOperationType = (
   switch (operation.type) {
     case "create_account":
       return operation.funder === addr ? "OUT" : "IN";
+
     case "payment":
       if (operation.from === addr && operation.to !== addr) {
         return "OUT";
       }
+
       return "IN";
+
     case "path_payment_strict_send":
       return "OUT";
 
@@ -57,6 +55,7 @@ export const getOperationType = (
       if (operation.source_account === addr) {
         return "OUT";
       }
+
       return "IN";
   }
 };
@@ -65,6 +64,7 @@ const getRecipients = (operation): string[] => {
   switch (operation.type) {
     case "create_account":
       return [operation.account];
+
     case "payment":
       return [operation.to];
 
@@ -82,17 +82,15 @@ export const formatOperation = async (
   const type = getOperationType(rawOperation, addr);
   const value = getValue(rawOperation, transaction, type);
   const recipients = getRecipients(rawOperation);
-
   const memo = transaction.memo
     ? transaction.memo_type === "hash" || transaction.memo_type === "return"
       ? Buffer.from(transaction.memo, "base64").toString("hex")
       : transaction.memo
     : null;
-
   const operation = {
     id: encodeOperationId(accountId, rawOperation.transaction_hash, type),
     accountId,
-    fee: BigNumber(transaction.fee_charged),
+    fee: new BigNumber(transaction.fee_charged),
     value,
     type: type,
     hash: rawOperation.transaction_hash,
@@ -103,9 +101,12 @@ export const formatOperation = async (
     transactionSequenceNumber: Number(transaction.source_account_sequence),
     hasFailed: !rawOperation.transaction_successful,
     blockHash: null,
-    extra: memo ? { memo } : {},
+    extra: memo
+      ? {
+          memo,
+        }
+      : {},
   };
-
   return operation;
 };
 
@@ -114,18 +115,20 @@ const getValue = (
   transaction: typeof TransactionRecord,
   type: OperationType
 ): BigNumber => {
-  let value = BigNumber(0);
+  let value = new BigNumber(0);
 
   if (!operation.transaction_successful) {
-    return type === "IN" ? value : BigNumber(transaction.fee_charged || 0);
+    return type === "IN" ? value : new BigNumber(transaction.fee_charged || 0);
   }
 
   switch (operation.type) {
     case "create_account":
       value = parseCurrencyUnit(currency.units[0], operation.starting_balance);
+
       if (type === "OUT") {
         value = value.plus(transaction.fee_charged);
       }
+
       return value;
 
     case "payment":
@@ -134,39 +137,48 @@ const getValue = (
       value =
         operation.asset_type === "native"
           ? parseCurrencyUnit(currency.units[0], operation.amount)
-          : BigNumber(0);
+          : new BigNumber(0);
+
       if (type === "OUT") {
         value = value.plus(transaction.fee_charged);
       }
+
       return value;
 
     default:
-      return type !== "IN" ? BigNumber(transaction.fee_charged) : value;
+      return type !== "IN" ? new BigNumber(transaction.fee_charged) : value;
   }
 };
 
 // TODO: Move to cache.js
 export const checkRecipientExist: CacheRes<
-  Array<{ account: Account, recipient: string }>,
+  Array<{
+    account: Account;
+    recipient: string;
+  }>,
   boolean
 > = makeLRUCache(
   async ({ recipient }) => await addressExists(recipient),
   (extract) => extract.recipient,
-  { max: 300, maxAge: 5 * 60 } // 5 minutes
+  {
+    max: 300,
+    maxAge: 5 * 60,
+  } // 5 minutes
 );
-
 export const isMemoValid = (memoType: string, memoValue: string): boolean => {
   switch (memoType) {
     case "MEMO_TEXT":
       if (memoValue.length > 28) {
         return false;
       }
+
       break;
 
     case "MEMO_ID":
-      if (BigNumber(memoValue.toString()).isNaN()) {
+      if (new BigNumber(memoValue.toString()).isNaN()) {
         return false;
       }
+
       break;
 
     case "MEMO_HASH":
@@ -174,14 +186,14 @@ export const isMemoValid = (memoType: string, memoValue: string): boolean => {
       if (!memoValue.length || memoValue.length !== 64) {
         return false;
       }
+
       break;
   }
+
   return true;
 };
-
 export const isAccountMultiSign = async (account: Account) => {
   const signers = await fetchSigners(account);
-
   return signers.length > 1;
 };
 
@@ -192,6 +204,7 @@ export const isAccountMultiSign = async (account: Account) => {
  */
 export const isAddressValid = (address: string): boolean => {
   if (!address) return false;
+
   try {
     return StellarSdk.StrKey.isValidEd25519PublicKey(address);
   } catch (err) {
@@ -209,7 +222,6 @@ export const addressExists = async (address: string): Promise<boolean> => {
   const account = await loadAccount(address);
   return !!account;
 };
-
 export const rawOperationsToOperations = async (
   operations: typeof OperationRecord[],
   addr: string,
