@@ -3,9 +3,10 @@ import { makeSignOperation } from "../../libcore/signOperation";
 import buildTransaction from "./libcore-buildTransaction";
 import type { Transaction, CoreCosmosLikeTransaction } from "./types";
 import { libcoreAmountToBigNumber } from "../../libcore/buildBigNumber";
+import { OperationType } from "../../types";
 
 async function signTransaction({
-  account: { freshAddressPath, spendableBalance, id, freshAddress },
+  account,
   transport,
   transaction,
   coreTransaction,
@@ -13,6 +14,7 @@ async function signTransaction({
   onDeviceSignatureGranted,
   onDeviceSignatureRequested,
 }) {
+  const { freshAddressPath, spendableBalance, id, freshAddress } = account;
   const hwApp = new CosmosApp(transport);
   const serialized = await coreTransaction.serializeForSignature();
   onDeviceSignatureRequested();
@@ -41,7 +43,7 @@ async function signTransaction({
   if (isCancelled()) return;
   const senders = [freshAddress];
   if (isCancelled()) return;
-  const type =
+  const type: OperationType =
     transaction.mode === "undelegate"
       ? "UNDELEGATE"
       : transaction.mode === "delegate"

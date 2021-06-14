@@ -1,5 +1,3 @@
-// @flow
-
 import { Observable, from, defer } from "rxjs";
 import { map } from "rxjs/operators";
 import { log } from "@ledgerhq/logs";
@@ -22,7 +20,8 @@ import postSyncPatchPerFamily from "../generated/libcore-postSyncPatch";
 import perFamilyPresync from "../generated/presync";
 
 let coreSyncCounter = 0;
-export const newSyncLogId = () => ++coreSyncCounter;
+
+export const newSyncLogId = (): number => ++coreSyncCounter;
 
 export async function syncCoreAccount({
   core,
@@ -36,32 +35,33 @@ export async function syncCoreAccount({
   logId,
   syncConfig,
 }: {
-  core: *,
-  coreWallet: *,
-  coreAccount: *,
-  currency: CryptoCurrency,
-  accountIndex: number,
-  derivationMode: DerivationMode,
-  seedIdentifier: string,
-  existingAccount?: ?Account,
-  logId: number,
-  syncConfig: SyncConfig,
+  core: any;
+  coreWallet: any;
+  coreAccount: any;
+  currency: CryptoCurrency;
+  accountIndex: number;
+  derivationMode: DerivationMode;
+  seedIdentifier: string;
+  existingAccount?: Account | null | undefined;
+  logId: number;
+  syncConfig: SyncConfig;
+  walletName?: string; // @ts-check this is unused somehow
 }): Promise<Account> {
   const presync = perFamilyPresync[currency.family];
+
   if (presync) {
     await presync(currency);
   }
+
   try {
     if (!syncConfig.withoutSynchronize) {
       log("libcore", `sync(${logId}) syncCoreAccount`);
       const eventReceiver = await core.EventReceiver.newInstance();
       const eventBus = await coreAccount.synchronize();
-
       log("libcore", `sync(${logId}) DONE coreAccount.synchronize`);
       const serialContext = await core
         .getThreadDispatcher()
         .getMainExecutionContext();
-
       await eventBus.subscribe(serialContext, eventReceiver);
       log("libcore", `sync(${logId}) DONE eventBus.subscribe`);
     }
@@ -78,7 +78,6 @@ export async function syncCoreAccount({
       logId,
       syncConfig,
     });
-
     return account;
   } catch (e) {
     const specificError = remapLibcoreErrors(e);
@@ -93,7 +92,7 @@ const defaultPostSyncPatch = (initial: Account, synced: Account): Account =>
 export function sync(
   existingAccount: Account,
   syncConfig: SyncConfig
-): Observable<(Account) => Account> {
+): Observable<(arg0: Account) => Account> {
   const logId = newSyncLogId();
   const { derivationMode, seedIdentifier, currency } = existingAccount;
   const postSyncPatch =
