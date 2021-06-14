@@ -28,12 +28,12 @@ const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
     {
       title: "Gain",
       button: "Rr",
-      expectedValue: resourceExpected,
+      expectedValue: (arg) => resourceExpected(arg),
     },
     {
       title: "Resource",
       button: "Rr",
-      expectedValue: resourceExpected,
+      expectedValue: (arg) => resourceExpected(arg),
     },
     {
       title: "Amount",

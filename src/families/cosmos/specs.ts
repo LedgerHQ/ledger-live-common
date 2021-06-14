@@ -3,7 +3,13 @@ import sample from "lodash/sample";
 import sampleSize from "lodash/sampleSize";
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
-import type { Transaction } from "../../families/cosmos/types";
+import type {
+  CosmosDelegation,
+  CosmosRedelegation,
+  CosmosResources,
+  CosmosUnbonding,
+  Transaction,
+} from "../../families/cosmos/types";
 import { getCurrentCosmosPreloadData } from "../../families/cosmos/preloadedData";
 import { getCryptoCurrencyById } from "../../currencies";
 import { pickSiblings } from "../../bot/specs";
@@ -17,11 +23,12 @@ import {
   canRedelegate,
   getMaxDelegationAvailable,
 } from "./logic";
+import { DeviceModelId } from "@ledgerhq/devices";
 const cosmos: AppSpec<Transaction> = {
   name: "Cosmos",
   currency: getCryptoCurrencyById("cosmos"),
   appQuery: {
-    model: "nanoS",
+    model: DeviceModelId.nanoS,
     appName: "Cosmos",
   },
   transactionCheck: ({ maxSpendable }) => {
@@ -102,7 +109,7 @@ const cosmos: AppSpec<Transaction> = {
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         invariant(
-          cosmosResources.delegations.length < 10,
+          (cosmosResources as CosmosResources).delegations.length < 10,
           "already enough delegations"
         );
         const data = getCurrentCosmosPreloadData();
@@ -112,7 +119,7 @@ const cosmos: AppSpec<Transaction> = {
         );
         const all = data.validators.filter(
           (v) =>
-            !cosmosResources.delegations.some(
+            !(cosmosResources as CosmosResources).delegations.some(
               // new delegations only
               (d) => d.validatorAddress === v.validatorAddress
             )
@@ -148,7 +155,7 @@ const cosmos: AppSpec<Transaction> = {
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         transaction.validators.forEach((v) => {
-          const d = cosmosResources.delegations.find(
+          const d = (cosmosResources as CosmosResources).delegations.find(
             (d) => d.validatorAddress === v.address
           );
           invariant(d, "delegated %s must be found in account", v.address);
@@ -157,8 +164,14 @@ const cosmos: AppSpec<Transaction> = {
             // we round last digit
             amount: "~" + v.amount.div(10).integerValue().times(10).toString(),
           }).toMatchObject({
-            address: d.validatorAddress,
-            amount: "~" + d.amount.div(10).integerValue().times(10).toString(),
+            address: (d as CosmosDelegation).validatorAddress,
+            amount:
+              "~" +
+              (d as CosmosDelegation).amount
+                .div(10)
+                .integerValue()
+                .times(10)
+                .toString(),
           });
         });
       },
@@ -171,18 +184,18 @@ const cosmos: AppSpec<Transaction> = {
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         invariant(
-          cosmosResources.delegations.length > 0,
+          (cosmosResources as CosmosResources).delegations.length > 0,
           "already enough delegations"
         );
         const undelegateCandidate = sample(
-          cosmosResources.delegations.filter(
+          (cosmosResources as CosmosResources).delegations.filter(
             (d) =>
-              !cosmosResources.redelegations.some(
+              !(cosmosResources as CosmosResources).redelegations.some(
                 (r) =>
                   r.validatorSrcAddress === d.validatorAddress ||
                   r.validatorDstAddress === d.validatorAddress
               ) &&
-              !cosmosResources.unbondings.some(
+              !(cosmosResources as CosmosResources).unbondings.some(
                 (r) => r.validatorAddress === d.validatorAddress
               )
           )
@@ -198,8 +211,9 @@ const cosmos: AppSpec<Transaction> = {
             {
               validators: [
                 {
-                  address: undelegateCandidate.validatorAddress,
-                  amount: undelegateCandidate.amount // most of the time, undelegate all
+                  address: (undelegateCandidate as CosmosDelegation)
+                    .validatorAddress,
+                  amount: (undelegateCandidate as CosmosDelegation).amount // most of the time, undelegate all
                     .times(Math.random() > 0.3 ? 1 : Math.random())
                     .integerValue(),
                 },
@@ -212,7 +226,7 @@ const cosmos: AppSpec<Transaction> = {
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         transaction.validators.forEach((v) => {
-          const d = cosmosResources.unbondings.find(
+          const d = (cosmosResources as CosmosResources).unbondings.find(
             (d) => d.validatorAddress === v.address
           );
           invariant(d, "undelegated %s must be found in account", v.address);
@@ -221,8 +235,14 @@ const cosmos: AppSpec<Transaction> = {
             // we round last digit
             amount: "~" + v.amount.div(10).integerValue().times(10).toString(),
           }).toMatchObject({
-            address: d.validatorAddress,
-            amount: "~" + d.amount.div(10).integerValue().times(10).toString(),
+            address: (d as CosmosUnbonding).validatorAddress,
+            amount:
+              "~" +
+              (d as CosmosUnbonding).amount
+                .div(10)
+                .integerValue()
+                .times(10)
+                .toString(),
           });
         });
       },
@@ -234,12 +254,16 @@ const cosmos: AppSpec<Transaction> = {
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         const sourceDelegation = sample(
-          cosmosResources.delegations.filter((d) => canRedelegate(account, d))
+          (cosmosResources as CosmosResources).delegations.filter((d) =>
+            canRedelegate(account, d)
+          )
         );
         invariant(sourceDelegation, "none can redelegate");
         const delegation = sample(
-          cosmosResources.delegations.filter(
-            (d) => d.validatorAddress !== sourceDelegation.validatorAddress
+          (cosmosResources as CosmosResources).delegations.filter(
+            (d) =>
+              d.validatorAddress !==
+              (sourceDelegation as CosmosDelegation).validatorAddress
           )
         );
         return {
@@ -248,11 +272,12 @@ const cosmos: AppSpec<Transaction> = {
             {
               mode: "redelegate",
               memo: "LedgerLiveBot",
-              cosmosSourceValidator: sourceDelegation.validatorAddress,
+              cosmosSourceValidator: (sourceDelegation as CosmosDelegation)
+                .validatorAddress,
               validators: [
                 {
-                  address: delegation.validatorAddress,
-                  amount: sourceDelegation.amount
+                  address: (delegation as CosmosDelegation).validatorAddress,
+                  amount: (sourceDelegation as CosmosDelegation).amount
                     .times(
                       // most of the time redelegate all
                       Math.random() > 0.3 ? 1 : Math.random()
@@ -268,9 +293,12 @@ const cosmos: AppSpec<Transaction> = {
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         transaction.validators.forEach((v) => {
-          const d = cosmosResources.redelegations
+          const d = (cosmosResources as CosmosResources).redelegations
             .slice(0) // recent first
-            .sort((a, b) => b.completionDate - a.completionDate) // find the related redelegation
+            .sort(
+              // FIXME: valueOf for date arithmetic operations in typescript
+              (a, b) => b.completionDate.valueOf() - a.completionDate.valueOf()
+            ) // find the related redelegation
             .find(
               (d) =>
                 d.validatorDstAddress === v.address &&
@@ -282,8 +310,14 @@ const cosmos: AppSpec<Transaction> = {
             // we round last digit
             amount: "~" + v.amount.div(10).integerValue().times(10).toString(),
           }).toMatchObject({
-            address: d.validatorDstAddress,
-            amount: "~" + d.amount.div(10).integerValue().times(10).toString(),
+            address: (d as CosmosRedelegation).validatorDstAddress,
+            amount:
+              "~" +
+              (d as CosmosRedelegation).amount
+                .div(10)
+                .integerValue()
+                .times(10)
+                .toString(),
           });
         });
       },
@@ -295,7 +329,7 @@ const cosmos: AppSpec<Transaction> = {
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         const delegation = sample(
-          cosmosResources.delegations.filter(
+          (cosmosResources as CosmosResources).delegations.filter(
             (d) => canClaimRewards(account, d) && d.pendingRewards.gt(2000)
           )
         );
@@ -308,7 +342,7 @@ const cosmos: AppSpec<Transaction> = {
               memo: "LedgerLiveBot",
               validators: [
                 {
-                  address: delegation.validatorAddress,
+                  address: (delegation as CosmosDelegation).validatorAddress,
                   // TODO: the test should be
                   // amount: delegation.pendingRewards,
                   // but it won't work until COIN-665 is fixed until then,
@@ -325,12 +359,12 @@ const cosmos: AppSpec<Transaction> = {
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         transaction.validators.forEach((v) => {
-          const d = cosmosResources.delegations.find(
+          const d = (cosmosResources as CosmosResources).delegations.find(
             (d) => d.validatorAddress === v.address
           );
           invariant(d, "delegation %s must be found in account", v.address);
           invariant(
-            !canClaimRewards(account, d),
+            !canClaimRewards(account, d as CosmosDelegation),
             "reward no longer be claimable"
           );
         });

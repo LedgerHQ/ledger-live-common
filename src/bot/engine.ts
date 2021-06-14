@@ -1,4 +1,3 @@
-// @flow
 import expect from "expect";
 import invariant from "invariant";
 import now from "performance-now";
@@ -52,39 +51,34 @@ import type {
   TransactionRes,
 } from "./types";
 import { makeBridgeCacheSystem } from "../bridge/cache";
-
 let appCandidates;
-
-let localCache = {};
+const localCache = {};
 const cache = makeBridgeCacheSystem({
   saveData(c, d) {
     localCache[c.id] = d;
     return Promise.resolve();
   },
+
   getData(c) {
     return Promise.resolve(localCache[c.id]);
   },
 });
-
-export async function runWithAppSpec<T: Transaction>(
+export async function runWithAppSpec<T extends Transaction>(
   spec: AppSpec<T>,
-  reportLog: (string) => void
+  reportLog: (arg0: string) => void
 ): Promise<SpecReport<T>> {
   log("engine", `spec ${spec.name}`);
-
   const seed = getEnv("SEED");
   invariant(seed, "SEED is not set");
-
   const coinapps = getEnv("COINAPPS");
   invariant(coinapps, "COINAPPS is not set");
 
   if (!appCandidates) {
     appCandidates = await listAppCandidates(coinapps);
   }
+
   const mutationReports: MutationReport<T>[] = [];
-
   const { appQuery, currency, dependency } = spec;
-
   const appCandidate = findAppCandidate(appCandidates, appQuery);
   invariant(
     appCandidate,
@@ -92,7 +86,6 @@ export async function runWithAppSpec<T: Transaction>(
     spec.name,
     coinapps
   );
-
   log(
     "engine",
     `spec ${spec.name} will use ${formatAppCandidate(appCandidate)}`
@@ -105,26 +98,29 @@ export async function runWithAppSpec<T: Transaction>(
     coinapps,
   };
   let device;
-
-  const appReport: SpecReport<T> = { spec };
+  const appReport: SpecReport<T> = {
+    spec,
+  };
 
   try {
     device = await createSpeculosDevice(deviceParams);
-
     const bridge = getCurrencyBridge(currency);
-    const syncConfig = { paginationConfig: {} };
-
+    const syncConfig = {
+      paginationConfig: {},
+    };
     let t = now();
-
     const preloadedData = await cache.prepareCurrency(currency);
     const preloadTime = now() - t;
-
     // Scan all existing accounts
     t = now();
     let scanTime = 0;
     const firstSyncDurations = {};
     let accounts = await bridge
-      .scanAccounts({ currency, deviceId: device.id, syncConfig })
+      .scanAccounts({
+        currency,
+        deviceId: device.id,
+        syncConfig,
+      })
       .pipe(
         filter((e) => e.type === "discovered"),
         map((e) => e.account),
@@ -134,7 +130,7 @@ export async function runWithAppSpec<T: Transaction>(
           t = now();
           scanTime += dt;
         }),
-        reduce<Account>((all, a) => all.concat(a), []),
+        reduce<Account, Account[]>((all, a) => all.concat(a), []),
         timeoutWith(
           getEnv("BOT_TIMEOUT_SCAN_ACCOUNTS"),
           throwError(
@@ -143,15 +139,12 @@ export async function runWithAppSpec<T: Transaction>(
         )
       )
       .toPromise();
-
     appReport.scanTime = scanTime;
     appReport.accountsBefore = accounts;
-
     invariant(
       accounts.length > 0,
       "unexpected empty accounts for " + currency.name
     );
-
     const preloadStats =
       preloadTime > 10 ? ` (preload: ${formatTime(preloadTime)})` : "";
     reportLog(
@@ -185,6 +178,7 @@ export async function runWithAppSpec<T: Transaction>(
     const mutationsCount = {};
     // we sequentially iterate on the initial account set to perform mutations
     const length = accounts.length;
+
     for (let i = 0; i < length; i++) {
       log("engine", `spec ${spec.name} sync all accounts`);
       // resync all accounts (necessary between mutations)
@@ -221,8 +215,8 @@ export async function runWithAppSpec<T: Transaction>(
         device = await createSpeculosDevice(deviceParams);
       }
     }
-    accounts = await promiseAllBatched(5, accounts, syncAccount);
 
+    accounts = await promiseAllBatched(5, accounts, syncAccount);
     appReport.mutations = mutationReports;
     appReport.accountsAfter = accounts;
   } catch (e) {
@@ -235,8 +229,7 @@ export async function runWithAppSpec<T: Transaction>(
 
   return appReport;
 }
-
-export async function runOnAccount<T: Transaction>({
+export async function runOnAccount<T extends Transaction>({
   appCandidate,
   spec,
   device,
@@ -246,27 +239,31 @@ export async function runOnAccount<T: Transaction>({
   syncAllAccountsTime,
   preloadedData,
 }: {
-  appCandidate: *,
-  spec: AppSpec<T>,
-  device: *,
-  account: *,
-  accounts: *,
-  mutationsCount: { [_: string]: number },
-  syncAllAccountsTime: number,
-  preloadedData: *,
+  appCandidate: any;
+  spec: AppSpec<T>;
+  device: any;
+  account: any;
+  accounts: any;
+  mutationsCount: Record<string, number>;
+  syncAllAccountsTime: number;
+  preloadedData: any;
 }): Promise<MutationReport<T>> {
   const { mutations } = spec;
-
   let latestSignOperationEvent;
-  let report: MutationReport<T> = { spec, appCandidate, syncAllAccountsTime };
+  const report: MutationReport<T> = {
+    spec,
+    appCandidate,
+    syncAllAccountsTime,
+  };
+
   try {
     const accountBridge = getAccountBridge(account);
     const accountBeforeTransaction = account;
     report.account = account;
-
     log("engine", `spec ${spec.name}/${account.name}`);
-
-    const maxSpendable = await accountBridge.estimateMaxSpendable({ account });
+    const maxSpendable = await accountBridge.estimateMaxSpendable({
+      account,
+    });
     report.maxSpendable = maxSpendable;
     log(
       "engine",
@@ -274,13 +271,15 @@ export async function runOnAccount<T: Transaction>({
         account.name
       } maxSpendable=${maxSpendable.toString()}`
     );
-
     const candidates: Array<{
-      mutation: MutationSpec<T>,
-      tx: T,
-      updates: Array<?$Shape<T>>,
+      mutation: MutationSpec<T>;
+      tx: T;
+      updates: Array<Partial<T> | null | undefined>;
     }> = [];
-    const unavailableMutationReasons = [];
+    const unavailableMutationReasons: Array<{
+      mutation: MutationSpec<T>;
+      error: Error;
+    }> = [];
 
     for (const mutation of mutations) {
       try {
@@ -307,7 +306,10 @@ export async function runOnAccount<T: Transaction>({
           updates: r.updates,
         });
       } catch (error) {
-        unavailableMutationReasons.push({ mutation, error });
+        unavailableMutationReasons.push({
+          mutation,
+          error,
+        });
       }
     }
 
@@ -323,16 +325,15 @@ export async function runOnAccount<T: Transaction>({
     const { tx, mutation, updates } = candidate;
     report.mutation = mutation;
     report.mutationTime = now();
-
     // prepare the transaction and ensure it's valid
     let status;
     let errors = [];
-
     let transaction: T = await accountBridge.prepareTransaction(account, tx);
 
     for (const patch of updates) {
       if (patch) {
         await accountBridge.getTransactionStatus(account, transaction); // result is unused but that would happen in normal flow
+
         report.transaction = transaction;
         transaction = await accountBridge.updateTransaction(transaction, patch);
         report.transaction = transaction;
@@ -350,7 +351,6 @@ export async function runOnAccount<T: Transaction>({
     status = await accountBridge.getTransactionStatus(account, transaction);
     report.status = status;
     report.statusTime = now();
-
     errors = Object.values(status.errors);
     const warnings = Object.values(status.warnings);
 
@@ -365,7 +365,10 @@ export async function runOnAccount<T: Transaction>({
         });
 
         if (recovered && recovered !== transaction) {
-          report.recoveredFromTransactionStatus = { transaction, status };
+          report.recoveredFromTransactionStatus = {
+            transaction,
+            status,
+          };
           report.transaction = transaction = recovered;
           status = await accountBridge.getTransactionStatus(
             account,
@@ -383,12 +386,14 @@ export async function runOnAccount<T: Transaction>({
     }
 
     mutationsCount[mutation.name] = (mutationsCount[mutation.name] || 0) + 1;
-
     // sign the transaction with speculos
-
     log("engine", `spec ${spec.name}/${account.name} signing`);
     const signedOperation = await accountBridge
-      .signOperation({ account, transaction, deviceId: device.id })
+      .signOperation({
+        account,
+        transaction,
+        deviceId: device.id,
+      })
       .pipe(
         tap((e) => {
           latestSignOperationEvent = e;
@@ -403,7 +408,7 @@ export async function runOnAccount<T: Transaction>({
           transaction,
           status,
         }),
-        first((e) => e.type === "signed"),
+        first((e: any) => e.type === "signed"),
         map(
           (e) => (
             invariant(e.type === "signed", "signed operation"),
@@ -414,7 +419,6 @@ export async function runOnAccount<T: Transaction>({
       .toPromise();
     report.signedOperation = signedOperation;
     report.signedTime = now();
-
     // broadcast the transaction
     const optimisticOperation = getEnv("DISABLE_TRANSACTION_BROADCAST")
       ? signedOperation.operation
@@ -428,7 +432,6 @@ export async function runOnAccount<T: Transaction>({
       "engine",
       `spec ${spec.name}/${account.name}/${optimisticOperation.hash} broadcasted`
     );
-
     // wait the condition are good (operation confirmed)
     const testBefore = now();
 
@@ -436,7 +439,6 @@ export async function runOnAccount<T: Transaction>({
       const timedOut =
         now() - testBefore >
         (mutation.testTimeout || spec.testTimeout || 30 * 1000);
-
       const operation = account.operations.find(
         (o) => o.id === optimisticOperation.id
       );
@@ -467,6 +469,7 @@ export async function runOnAccount<T: Transaction>({
             report.testDuration = now() - testBefore;
             throw e;
           }
+
           // We will try again
           return;
         }
@@ -477,8 +480,6 @@ export async function runOnAccount<T: Transaction>({
 
     const result = await awaitAccountOperation({
       account,
-      accountBridge,
-      optimisticOperation,
       step,
     });
     report.finalAccount = result.account;
@@ -492,15 +493,18 @@ export async function runOnAccount<T: Transaction>({
     log("mutation-error", spec.name + ": " + String(error));
     report.error = error;
   }
+
   report.latestSignOperationEvent = latestSignOperationEvent;
   return report;
 }
 
 async function syncAccount(initialAccount: Account): Promise<Account> {
   const acc = await getAccountBridge(initialAccount)
-    .sync(initialAccount, { paginationConfig: {} })
+    .sync(initialAccount, {
+      paginationConfig: {},
+    })
     .pipe(
-      reduce((a, f: (Account) => Account) => f(a), initialAccount),
+      reduce((a, f: (arg0: Account) => Account) => f(a), initialAccount),
       timeoutWith(
         10 * 60 * 1000,
         throwError(new Error("account sync timeout for " + initialAccount.name))
@@ -510,7 +514,7 @@ async function syncAccount(initialAccount: Account): Promise<Account> {
   return acc;
 }
 
-export function autoSignTransaction<T: Transaction>({
+export function autoSignTransaction<T extends Transaction>({
   transport,
   deviceAction,
   appCandidate,
@@ -518,89 +522,83 @@ export function autoSignTransaction<T: Transaction>({
   transaction,
   status,
 }: {
-  transport: *,
-  deviceAction: DeviceAction<T, *>,
-  appCandidate: AppCandidate,
-  account: Account,
-  transaction: T,
-  status: TransactionStatus,
+  transport: any;
+  deviceAction: DeviceAction<T, any>;
+  appCandidate: AppCandidate;
+  account: Account;
+  transaction: T;
+  status: TransactionStatus;
 }) {
   let sub;
   let observer;
   let state;
-  const recentEvents = [];
+  const recentEvents: SignOperationEvent[] = [];
+  return mergeMap<SignOperationEvent, Observable<SignOperationEvent>>((e) => {
+    if (e.type === "device-signature-requested") {
+      return new Observable((o) => {
+        if (observer) {
+          o.error(
+            new Error("device-signature-requested should not be called twice!")
+          );
+          return;
+        }
 
-  return mergeMap<SignOperationEvent, SignOperationEvent, SignOperationEvent>(
-    (e) => {
-      if (e.type === "device-signature-requested") {
-        return Observable.create((o) => {
-          if (observer) {
-            o.error(
-              new Error(
-                "device-signature-requested should not be called twice!"
-              )
-            );
-            return;
-          }
-          observer = o;
-          o.next(e);
+        observer = o;
+        o.next(e);
+        const timeout = setTimeout(() => {
+          o.error(
+            new Error(
+              "device action timeout. Recent events was:\n" +
+                recentEvents.map((e) => JSON.stringify(e)).join("\n")
+            )
+          );
+        }, 20 * 1000);
+        sub = transport.automationEvents.subscribe({
+          next: (event) => {
+            recentEvents.push(event);
 
-          const timeout = setTimeout(() => {
-            o.error(
-              new Error(
-                "device action timeout. Recent events was:\n" +
-                  recentEvents.map((e) => JSON.stringify(e)).join("\n")
-              )
-            );
-          }, 20 * 1000);
+            if (recentEvents.length > 5) {
+              recentEvents.shift();
+            }
 
-          sub = transport.automationEvents.subscribe({
-            next: (event) => {
-              recentEvents.push(event);
-              if (recentEvents.length > 5) {
-                recentEvents.shift();
-              }
-              try {
-                state = deviceAction({
-                  appCandidate,
-                  account,
-                  transaction,
-                  event,
-                  transport,
-                  state,
-                  status,
-                });
-              } catch (e) {
-                o.error(e);
-              }
-            },
-            complete: () => {
-              o.complete();
-            },
-            error: (e) => {
+            try {
+              state = deviceAction({
+                appCandidate,
+                account,
+                transaction,
+                event,
+                transport,
+                state,
+                status,
+              });
+            } catch (e) {
               o.error(e);
-            },
-          });
-
-          return () => {
-            clearTimeout(timeout);
-            sub.unsubscribe();
-          };
+            }
+          },
+          complete: () => {
+            o.complete();
+          },
+          error: (e) => {
+            o.error(e);
+          },
         });
-      } else if (observer) {
-        observer.complete();
-        observer = null;
-      }
-
-      if (sub) {
-        sub.unsubscribe();
-      }
-
-      return of(e);
+        return () => {
+          clearTimeout(timeout);
+          sub.unsubscribe();
+        };
+      });
+    } else if (observer) {
+      observer.complete();
+      observer = null;
     }
-  );
-}
 
+    if (sub) {
+      sub.unsubscribe();
+    }
+
+    return of<SignOperationEvent>(e);
+  });
+}
 export function getImplicitDeviceAction(currency: CryptoCurrency) {
   const actions = deviceActions[currency.family];
   const accept = actions && actions.acceptTransaction;
@@ -616,9 +614,12 @@ function awaitAccountOperation({
   account,
   step,
 }: {
-  account: Account,
-  step: (Account) => ?Operation,
-}): Promise<{ account: Account, operation: Operation }> {
+  account: Account;
+  step: (arg0: Account) => Operation | null | undefined;
+}): Promise<{
+  account: Account;
+  operation: Operation;
+}> {
   log("engine", "awaitAccountOperation on " + account.name);
   let syncCounter = 0;
   let acc = account;
@@ -628,13 +629,15 @@ function awaitAccountOperation({
 
     if (operation) {
       log("engine", "found " + operation.id);
-      return { account: acc, operation };
+      return {
+        account: acc,
+        operation,
+      };
     }
 
     await delay(5000);
     log("engine", "sync #" + syncCounter++ + " on " + account.name);
     acc = await syncAccount(acc);
-
     const r = await loop();
     return r;
   }
@@ -649,11 +652,13 @@ function transactionTest<T>({
   account,
 }: TransactionTestInput<T>) {
   const timingThreshold = 30 * 60 * 1000;
-  const dt = Date.now() - operation.date;
+  // FIXME: .valueOf to do arithmetic operations on date with typescript
+  const dt = Date.now().valueOf() - operation.date.valueOf();
   invariant(dt > 0, "operation.date must not be in in future");
   expect(dt).toBeLessThan(timingThreshold);
   invariant(!operation.hasFailed, "operation must be hasFailed");
   const { blockAvgTime } = account.currency;
+
   if (blockAvgTime && account.blockHeight) {
     const expected = getOperationConfirmationNumber(operation, account);
     const expectedMax = Math.ceil(timingThreshold / blockAvgTime);
@@ -664,6 +669,7 @@ function transactionTest<T>({
       expectedMax
     );
   }
+
   invariant(
     !optimisticOperation.value.isNaN(),
     "optimisticOperation.value must not be NaN"

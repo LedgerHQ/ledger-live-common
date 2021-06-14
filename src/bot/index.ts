@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-// @flow
 import { BigNumber } from "bignumber.js";
 import groupBy from "lodash/groupBy";
 import { log } from "@ledgerhq/logs";
@@ -27,37 +26,34 @@ import {
   inferTrackingPairForAccounts,
 } from "../countervalues/logic";
 import { getPortfolio } from "../portfolio";
-
-type Arg = $Shape<{
-  currency: string,
-  mutation: string,
+type Arg = Partial<{
+  currency: string;
+  mutation: string;
 }>;
-
 const usd = getFiatCurrencyByTicker("USD");
-
 export async function bot({ currency, mutation }: Arg = {}) {
   const SEED = getEnv("SEED");
   invariant(SEED, "SEED required");
-
   const libcoreVersion = await withLibcore((core) =>
     core.LedgerCore.getStringVersion()
   );
   log("libcoreVersion", "libcore version " + libcoreVersion);
-
-  const specs = [];
-  const specsLogs = [];
-
+  const specs: any[] = [];
+  const specsLogs: string[][] = [];
   const maybeCurrency = currency
     ? findCryptoCurrencyByKeyword(currency)
     : undefined;
 
   for (const family in allSpecs) {
     const familySpecs = allSpecs[family];
+
     for (const key in familySpecs) {
       let spec = familySpecs[key];
+
       if (!isCurrencySupported(spec.currency) || spec.disabled) {
         continue;
       }
+
       if (!maybeCurrency || maybeCurrency === spec.currency) {
         if (mutation) {
           spec = {
@@ -67,6 +63,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
             ),
           };
         }
+
         specs.push(spec);
       }
     }
@@ -76,7 +73,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
     6,
     specs,
     (spec) => {
-      const logs = [];
+      const logs: string[] = [];
       specsLogs.push(logs);
       return runWithAppSpec(spec, (message) => {
         log("bot", message);
@@ -91,9 +88,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
       }));
     }
   );
-
   const allAccountsAfter = flatMap(results, (r) => r.accountsAfter || []);
-
   let countervaluesError;
   const countervaluesState = await loadCountervalues(initialState, {
     trackingPairs: inferTrackingPairForAccounts(allAccountsAfter, usd),
@@ -103,11 +98,11 @@ export async function bot({ currency, mutation }: Arg = {}) {
     countervaluesError = e;
     return null;
   });
-
   const period = "month";
+
   const calc = (c, v, date) =>
     countervaluesState
-      ? BigNumber(
+      ? new BigNumber(
           calculate(countervaluesState, {
             date,
             value: v.toNumber(),
@@ -115,28 +110,25 @@ export async function bot({ currency, mutation }: Arg = {}) {
             to: usd,
           }) || 0
         )
-      : BigNumber(0);
-  const portfolio = getPortfolio(allAccountsAfter, period, calc);
+      : new BigNumber(0);
 
+  const portfolio = getPortfolio(allAccountsAfter, period, calc);
   const totalUSD = countervaluesState
     ? formatCurrencyUnit(
         usd.units[0],
         portfolio.balanceHistory[portfolio.balanceHistory.length - 1].value,
-        { showCode: true }
+        {
+          showCode: true,
+        }
       )
     : "";
-
   const allMutationReports = flatMap(results, (r) => r.mutations || []);
-
   const mutationReports = allMutationReports.filter(
     (r) => r.mutation || r.error
   );
   const errorCases = allMutationReports.filter((r) => r.error);
-
   const specFatals = results.filter((r) => r.fatalError);
-
   const botHaveFailed = specFatals.length > 0 || errorCases.length > 0;
-
   const specsWithUncoveredMutations = results
     .map((r) => ({
       spec: r.spec,
@@ -148,6 +140,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
           ) {
             return;
           }
+
           const errors = (r.mutations || [])
             .map((mr) =>
               !mr.mutation && mr.unavailableMutationReasons
@@ -157,13 +150,15 @@ export async function bot({ currency, mutation }: Arg = {}) {
                 : null
             )
             .filter(Boolean)
-            .map(({ error }) => error);
-          return { mutation, errors };
+            .map(({ error }: any) => error);
+          return {
+            mutation,
+            errors,
+          };
         })
         .filter(Boolean),
     }))
     .filter((r) => r.unavailableMutations.length > 0);
-
   const uncoveredMutations = flatMap(
     specsWithUncoveredMutations,
     (s) => s.unavailableMutations
@@ -188,6 +183,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
       `/!\\ ${errorCases.length} failures out of ${mutationReports.length} mutations. Check above!\n`
     );
   }
+
   const withoutFunds = results
     .filter(
       (s) =>
@@ -196,13 +192,13 @@ export async function bot({ currency, mutation }: Arg = {}) {
           (s.mutations && s.mutations.every((r) => !r.mutation)))
     )
     .map((s) => s.spec.name);
-
   const {
     GITHUB_SHA,
     GITHUB_TOKEN,
     GITHUB_RUN_ID,
     GITHUB_WORKFLOW,
   } = process.env;
+
   if (GITHUB_TOKEN && GITHUB_SHA) {
     log("github", "will send a report to " + GITHUB_SHA);
     let body = "";
@@ -210,17 +206,20 @@ export async function bot({ currency, mutation }: Arg = {}) {
     const runURL = `https://github.com/LedgerHQ/ledger-live-common/actions/runs/${String(
       GITHUB_RUN_ID
     )}`;
-
     const success = mutationReports.length - errorCases.length;
+
     if (success > 0) {
       title += `✅ ${success} txs `;
     }
+
     if (errorCases.length) {
       title += `❌ ${errorCases.length} txs `;
     }
+
     if (specFatals.length) {
       title += ` ⚠️ ${specFatals.length} specs`;
     }
+
     if (countervaluesError) {
       title += `❌ countervalues`;
     } else {
@@ -234,14 +233,13 @@ export async function bot({ currency, mutation }: Arg = {}) {
     }
 
     let slackBody = "";
-
     body += `## ${title}`;
 
     if (GITHUB_RUN_ID && GITHUB_WORKFLOW) {
       body += ` for [**${GITHUB_WORKFLOW}**](${runURL})\n\n`;
     }
-    body += "\n\n";
 
+    body += "\n\n";
     body += subtitle;
 
     if (uncoveredMutations.length) {
@@ -252,15 +250,12 @@ export async function bot({ currency, mutation }: Arg = {}) {
 
     if (specFatals.length) {
       body += "<details>\n";
-
       body += `<summary>${specFatals.length} critical spec errors</summary>\n\n`;
-
       specFatals.forEach(({ spec, fatalError }) => {
         body += `**Spec ${spec.name} failed!**\n`;
         body += "```\n" + String(fatalError) + "\n```\n\n";
         slackBody += `❌ *Spec ${spec.name}*: \`${String(fatalError)}\`\n`;
       });
-
       body += "</details>\n\n";
     }
 
@@ -282,9 +277,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
 
     if (errorCases.length) {
       body += "<details>\n";
-
       body += `<summary>${errorCases.length} mutation errors</summary>\n\n`;
-
       errorCases.forEach((c) => {
         body +=
           "```\n" +
@@ -293,7 +286,6 @@ export async function bot({ currency, mutation }: Arg = {}) {
           String(c.error) +
           "\n```\n\n";
       });
-
       body += "</details>\n\n";
     }
 
@@ -307,6 +299,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
       })\n`;
       body += "\n```\n";
       body += logs.join("\n");
+
       if (r.mutations) {
         r.mutations.forEach((m) => {
           if (m.error || m.mutation) {
@@ -314,6 +307,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
           }
         });
       }
+
       body += "\n```\n";
     });
     body += "</details>\n\n";
@@ -324,6 +318,8 @@ export async function bot({ currency, mutation }: Arg = {}) {
       specsWithUncoveredMutations.forEach(({ spec, unavailableMutations }) => {
         body += `#### Spec ${spec.name} (${unavailableMutations.length})\n`;
         unavailableMutations.forEach((m) => {
+          // FIXME: we definitely got to stop using Maybe types or | undefined | null
+          if (!m) return;
           const msgs = groupBy(m.errors.map((e) => e.message));
           body +=
             "- **" +
@@ -355,12 +351,12 @@ export async function bot({ currency, mutation }: Arg = {}) {
         if (!all || all.length === 0) return;
         return all.reduce(
           (sum, a) => sum.plus(a.spendableBalance),
-          BigNumber(0)
+          new BigNumber(0)
         );
       }
+
       const accountsBeforeBalance = sumAccounts(r.accountsBefore);
       const accountsAfterBalance = sumAccounts(r.accountsAfter);
-
       let balance = !accountsBeforeBalance
         ? "🤷‍♂️"
         : "**" +
@@ -368,9 +364,9 @@ export async function bot({ currency, mutation }: Arg = {}) {
             showCode: true,
           }) +
           "**";
-
       let etaTxs =
         r.mutations && r.mutations.every((m) => !m.mutation) ? "❌" : "???";
+
       if (
         accountsBeforeBalance &&
         accountsAfterBalance &&
@@ -388,11 +384,12 @@ export async function bot({ currency, mutation }: Arg = {}) {
 
       if (countervaluesState && r.accountsAfter) {
         const portfolio = getPortfolio(r.accountsAfter, period, calc);
-
         const totalUSD = formatCurrencyUnit(
           usd.units[0],
           portfolio.balanceHistory[portfolio.balanceHistory.length - 1].value,
-          { showCode: true }
+          {
+            showCode: true,
+          }
         );
         balance += " (" + totalUSD + ")";
       }
@@ -401,10 +398,10 @@ export async function bot({ currency, mutation }: Arg = {}) {
         if (!all) return 0;
         return all.reduce((sum, a) => sum + a.operations.length, 0);
       }
+
       const beforeOps = countOps(r.accountsBefore);
       const afterOps = countOps(r.accountsAfter);
       const firstAccount = (r.accountsAfter || r.accountsBefore || [])[0];
-
       body += `| ${r.spec.name} (${
         (r.accountsBefore || []).filter((a) => a.used).length
       }) `;
@@ -417,21 +414,21 @@ export async function bot({ currency, mutation }: Arg = {}) {
       } `;
       body += "|\n";
     });
-
     body += "\n</details>\n\n";
-
     const { data: githubComment } = await network({
       url: `https://api.github.com/repos/LedgerHQ/ledger-live-common/commits/${GITHUB_SHA}/comments`,
       method: "POST",
       headers: {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
       },
-      data: { body },
+      data: {
+        body,
+      },
     });
-
     const { SLACK_API_TOKEN } = process.env;
+
     if (SLACK_API_TOKEN && githubComment) {
-      let text = `${String(GITHUB_WORKFLOW)}: ${title} (<${
+      const text = `${String(GITHUB_WORKFLOW)}: ${title} (<${
         githubComment.html_url
       }|details> – <${runURL}|logs>)\n${subtitle}${slackBody}`;
       await network({
@@ -461,7 +458,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
     specFatals.forEach(({ spec, fatalError }) => {
       txt += `${spec.name} got ${String(fatalError)}\n`;
     });
-    errorCases.forEach((c: MutationReport<*>) => {
+    errorCases.forEach((c: MutationReport<any>) => {
       txt += `in ${c.spec.name}`;
       if (c.account) txt += `/${c.account.name}`;
       if (c.mutation) txt += `/${c.mutation.name}`;

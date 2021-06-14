@@ -3,7 +3,10 @@ import invariant from "invariant";
 import sampleSize from "lodash/sampleSize";
 import { BigNumber } from "bignumber.js";
 import { getCurrentPolkadotPreloadData } from "../../families/polkadot/preload";
-import type { Transaction } from "../../families/polkadot/types";
+import type {
+  PolkadotResources,
+  Transaction,
+} from "../../families/polkadot/types";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
@@ -15,6 +18,8 @@ import {
   isFirstBond,
   getMinimalLockedBalance,
 } from "../../families/polkadot/logic";
+import { DeviceModelId } from "@ledgerhq/devices";
+
 const currency = getCryptoCurrencyById("polkadot");
 const POLKADOT_MIN_SAFE = parseCurrencyUnit(currency.units[0], "0.05");
 const EXISTENTIAL_DEPOSIT = parseCurrencyUnit(currency.units[0], "1.0");
@@ -23,7 +28,7 @@ const polkadot: AppSpec<Transaction> = {
   name: "Polkadot",
   currency: getCryptoCurrencyById("polkadot"),
   appQuery: {
-    model: "nanoS",
+    model: DeviceModelId.nanoS,
     appName: "Polkadot",
   },
   testTimeout: 2 * 60 * 1000,
@@ -135,8 +140,8 @@ const polkadot: AppSpec<Transaction> = {
           account.spendableBalance.gt(POLKADOT_MIN_SAFE),
           "cant cover fee"
         );
-        const amount = polkadotResources.lockedBalance
-          .minus(polkadotResources.unlockingBalance)
+        const amount = (polkadotResources as PolkadotResources).lockedBalance
+          .minus((polkadotResources as PolkadotResources).unlockingBalance)
           .times(0.2);
         return {
           transaction: bridge.createTransaction(account),
@@ -168,7 +173,7 @@ const polkadot: AppSpec<Transaction> = {
           "cant cover fee"
         );
         const amount = BigNumber.maximum(
-          polkadotResources.unlockingBalance.times(0.2),
+          (polkadotResources as PolkadotResources).unlockingBalance.times(0.2),
           MIN_LOCKED_BALANCE_REQ
         );
         return {

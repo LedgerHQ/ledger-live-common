@@ -10,6 +10,7 @@ import type { Account } from "../../types";
 import sample from "lodash/sample";
 import { listTokensForCryptoCurrency } from "../../currencies";
 import { extractTokenId } from "./tokens";
+import { DeviceModelId } from "@ledgerhq/devices";
 const currency = getCryptoCurrencyById("algorand");
 // Minimum fees
 const minFees = parseCurrencyUnit(currency.units[0], "0.001");
@@ -77,7 +78,7 @@ const algorand: AppSpec<Transaction> = {
   name: "Algorand",
   currency,
   appQuery: {
-    model: "nanoS",
+    model: DeviceModelId.nanoS,
     appName: "Algorand",
   },
   mutations: [
@@ -160,7 +161,7 @@ const algorand: AppSpec<Transaction> = {
         const amount = subAccount.balance
           .div(1.9 + 0.2 * Math.random())
           .integerValue();
-        const updates = [
+        const updates: Array<Partial<Transaction>> = [
           {
             mode,
             subAccountId: subAccount.id,
@@ -202,10 +203,10 @@ const algorand: AppSpec<Transaction> = {
         const mode = "optIn";
         const assetId = getRandomAssetId(account);
         const subAccount = account.subAccounts
-          ? account.subAccounts.find((a) => a.id.includes(assetId))
+          ? account.subAccounts.find((a) => a.id.includes(assetId as string))
           : null;
         invariant(!subAccount, "already opt-in");
-        const updates = [
+        const updates: Array<Partial<Transaction>> = [
           {
             mode,
           },
@@ -221,7 +222,7 @@ const algorand: AppSpec<Transaction> = {
       // eslint-disable-next-line no-unused-vars
       test: ({ account, transaction }) => {
         invariant(transaction.assetId, "should have an assetId");
-        const assetId = extractTokenId(transaction.assetId);
+        const assetId = extractTokenId(transaction.assetId as string);
         expect({
           haveSubAccountWithAssetId:
             account.subAccounts &&
@@ -242,7 +243,7 @@ const algorand: AppSpec<Transaction> = {
         invariant(maxSpendable.gt(minFees), "Spendable balance is too low");
         const transaction = bridge.createTransaction(account);
         const mode = "claimReward";
-        const updates = [
+        const updates: Array<Partial<Transaction>> = [
           {
             mode,
           },
