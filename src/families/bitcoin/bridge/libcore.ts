@@ -229,7 +229,7 @@ const prepareTransaction = async (
   let networkInfo = t.networkInfo;
 
   if (!networkInfo) {
-    networkInfo = await getAccountNetworkInfo(a);
+    networkInfo = <NetworkInfo>await getAccountNetworkInfo(a);
     invariant(
       networkInfo && networkInfo.family === "bitcoin",
       "bitcoin networkInfo expected"

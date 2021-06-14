@@ -299,7 +299,7 @@ const cmd = ({
                 e instanceof DisconnectedDeviceDuringOperation ||
                 e instanceof DisconnectedDevice
               ) {
-                return of({
+                return of(<ConnectAppEvent>{
                   type: "disconnected",
                 });
               }
@@ -331,7 +331,6 @@ const cmd = ({
         const sub = innerSub({
           appName,
           dependencies,
-          // @ts-expect-error I have no idea how to fix this
         }).subscribe(o);
 
         return () => {

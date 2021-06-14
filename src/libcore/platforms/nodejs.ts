@@ -1,22 +1,20 @@
-// @flow
-/* eslint-disable no-for-in */
-/* eslint-disable no-params-reassign */
 /* eslint-disable new-cap */
-
 import invariant from "invariant";
 import { log } from "@ledgerhq/logs";
 import { NotEnoughBalance } from "@ledgerhq/errors";
 import { deserializeError, serializeError } from "@ledgerhq/errors";
-import { reflect } from "../types";
+import { CoreWalletPool, reflect } from "../types";
 import type { Core, CoreStatics } from "../types";
 import { setLoadCoreImplementation } from "../access";
 import { setRemapLibcoreErrorsImplementation } from "../errors";
 import { getEnv } from "../../env";
 import network from "../../network";
 
-const crypto = require("crypto");
-const path = require("path");
-const fs = require("fs");
+import crypto from "crypto";
+
+import path from "path";
+
+import fs from "fs";
 
 const prefixHex0x = (str) => (str.startsWith("0x") ? str : "0x" + str);
 
@@ -26,26 +24,29 @@ const hexToBytes = (str) => Array.from(Buffer.from(unprefixHex0x(str), "hex"));
 
 const bytesToHex = (buf) => Buffer.from(buf).toString("hex");
 
-const bytesArrayToString = (bytesArray = []) =>
+const bytesArrayToString = (bytesArray: string[] = []) =>
   Buffer.from(bytesArray).toString();
 
 const stringToBytesArray = (str) => Array.from(Buffer.from(str));
 
 export default (arg: {
   // the actual @ledgerhq/ledger-core lib or a function that returns it
-  lib: any,
-  dbPath: string,
-  dbPassword?: string,
-}) => {
+  lib: any;
+  dbPath: string;
+  dbPassword?: string;
+}): void => {
   let lib;
+
   const lazyLoad = () => {
     if (lib) return;
+
     if (typeof arg.lib === "function") {
       lib = arg.lib();
     } else {
       lib = arg.lib;
     }
   };
+
   const { dbPath } = arg;
   const dbPassword =
     typeof arg.dbPassword === "undefined"
@@ -54,30 +55,25 @@ export default (arg: {
 
   const loadCore = (): Promise<Core> => {
     lazyLoad();
-
     // feature detect if the bindings uses hex or array bytes
     const isUsingArrayOfBytes =
       "object" === typeof new lib.NJSDynamicArray().serialize();
-
     log("libcore", "using array of bytes = " + String(isUsingArrayOfBytes));
-
     const wrappers = {
       hex: isUsingArrayOfBytes ? hexToBytes : prefixHex0x,
     };
     const unwrappers = {
       hex: isUsingArrayOfBytes ? bytesToHex : unprefixHex0x,
     };
-
     const MAX_RANDOM = 2684869021;
-
     const lcore = new lib.NJSLedgerCore();
     const stringVersion = lcore.getStringVersion();
     const sqlitePrefix = `v${stringVersion.split(".")[0]}`;
-
     const NJSExecutionContextImpl = {
       execute: (runnable) => {
         try {
           const runFunction = () => runnable.run();
+
           setImmediate(runFunction);
         } catch (e) {
           log("libcore-Error", String(e));
@@ -85,15 +81,16 @@ export default (arg: {
       },
       delay: (runnable, ms) => setTimeout(() => runnable.run(), ms),
     };
-
     const ThreadContexts = {};
 
     const getSerialExecutionContext = (name) => {
       let currentContext = ThreadContexts[name];
+
       if (!currentContext) {
         currentContext = new lib.NJSExecutionContext(NJSExecutionContextImpl);
         ThreadContexts[name] = currentContext;
       }
+
       return currentContext;
     };
 
@@ -111,13 +108,13 @@ export default (arg: {
         );
       },
     });
-
     NJSThreadDispatcher.getMainExecutionContext = getMainExecutionContext;
 
     function createHttpConnection(res, libcoreError) {
       if (!res) {
         return null;
       }
+
       const headersMap = new Map();
       Object.keys(res.headers).forEach((key) => {
         if (typeof res.headers[key] === "string") {
@@ -147,12 +144,13 @@ export default (arg: {
           headers[k] = v;
         });
         let res;
-        const param: Object = {
+        const param: Record<string, any> = {
           method: lib.METHODS[method],
           url,
           headers,
-          validateStatus: (status) =>
-            // FIXME in future, everything should passthrough libcore
+          validateStatus: (
+            status // FIXME in future, everything should passthrough libcore
+          ) =>
             // for now as we need to have the server error we will only pass-in 2xx and 404
             // FIXME for the FIXME: Stargate nodes return 500 when an account has no delegations
             // or no unbondings or no redelegations. So for cosmos, status 500 need to go to libcore for proper handling
@@ -168,6 +166,7 @@ export default (arg: {
           // the default would parse the request, we want to preserve the string
           transformResponse: (data) => data,
         };
+
         if (isUsingArrayOfBytes) {
           if (Array.isArray(data)) {
             if (data.length === 0) {
@@ -190,10 +189,12 @@ export default (arg: {
 
         if (data) {
           param.data = data;
+
           if (!headers["Content-Type"]) {
             headers["Content-Type"] = "application/json";
           }
         }
+
         try {
           // $FlowFixMe not sure what's wrong
           res = await network(param);
@@ -215,7 +216,6 @@ export default (arg: {
         }
       },
     });
-
     const NJSWebSocketClient = new lib.NJSWebSocketClient({
       connect: (url, connection) => {
         connection.OnConnect();
@@ -227,7 +227,6 @@ export default (arg: {
         connection.OnClose();
       },
     });
-
     const NJSLogPrinter = new lib.NJSLogPrinter({
       context: {},
       printError: (message) => log("libcore-Error", message),
@@ -238,28 +237,26 @@ export default (arg: {
       printCriticalError: (message) => log("libcore-CriticalError", message),
       getContext: () => new lib.NJSExecutionContext(NJSExecutionContextImpl),
     });
-
     const NJSRandomNumberGenerator = new lib.NJSRandomNumberGenerator({
       getRandomBytes: isUsingArrayOfBytes
-        ? (size) => Array.from(Buffer.from(crypto.randomBytes(size), "hex"))
+        ? (size) =>
+            // @ts-expect-error Buffer lib ts definition missmatch
+            Array.from(Buffer.from(crypto.randomBytes(size), "hex"))
         : (size) => "0x" + crypto.randomBytes(size).toString("hex"),
       getRandomInt: () => Math.random() * MAX_RANDOM,
       getRandomLong: () => Math.random() * MAX_RANDOM * MAX_RANDOM,
     });
-
     const NJSDatabaseBackend = new lib.NJSDatabaseBackend();
     const config = new lib.NJSDynamicObject();
-
     // We handle logs ourself with the logger
     // still overridable by env
     config.putBoolean(
       "ENABLE_INTERNAL_LOGGING",
       !!process.env.LIBCORE_ENABLE_INTERNAL_LOGGING
     );
+    let walletPoolInstance: CoreWalletPool | null = null;
 
-    let walletPoolInstance = null;
-
-    const instanciateWalletPool = () => {
+    const instanciateWalletPool = (): CoreWalletPool => {
       try {
         fs.mkdirSync(dbPath);
       } catch (err) {
@@ -282,7 +279,6 @@ export default (arg: {
           return path.resolve(dbPath, `./database_${sqlitePrefix}_${hash}`);
         },
       });
-
       walletPoolInstance = new lib.NJSWalletPool(
         "ledgerlive",
         dbPassword,
@@ -295,19 +291,19 @@ export default (arg: {
         NJSDatabaseBackend,
         config
       );
-
-      return walletPoolInstance;
+      return <CoreWalletPool>walletPoolInstance;
     };
 
-    const getPoolInstance = () => {
+    const getPoolInstance = (): CoreWalletPool => {
       if (!walletPoolInstance) {
         instanciateWalletPool();
       }
+
       invariant(walletPoolInstance, "can't initialize walletPoolInstance");
-      return walletPoolInstance;
+      return <CoreWalletPool>walletPoolInstance;
     };
 
-    const mappings = {};
+    const mappings: Record<string, any> | CoreStatics = {};
     Object.keys(lib).forEach((k) => {
       if (k.startsWith("NJS")) {
         mappings[k.slice(3)] = lib[k];
@@ -316,44 +312,55 @@ export default (arg: {
 
     function wrapResult(id, value) {
       if (!value || !id) return value;
+
       if (Array.isArray(id)) {
         const [actualId] = id;
         return value.map((a) => wrapResult(actualId, a));
       }
+
       if (id in unwrappers) {
         return unwrappers[id](value);
       }
+
       const Clz = mappings[id];
+
       if (!Clz) {
         return value;
       }
+
       if (value instanceof Clz) return value;
       return new Clz(value);
     }
 
     function unwrapArg(id, value) {
       if (!value || !id) return value;
+
       if (Array.isArray(id)) {
         const [actualId] = id;
         return value.map((v) => unwrapArg(actualId, v));
       }
+
       if (id in wrappers) {
         return wrappers[id](value);
       }
+
       return value;
     }
 
     reflect((id, spec) => {
       const { methods, statics } = spec;
       let m;
+
       if (spec.njsUsesPlainObject) {
         // In that case we need to create a class and abstract out the methods
         m = function constructor(data) {
           Object.assign(this, data);
         };
+
         mappings[id] = m;
       } else {
         m = mappings[id];
+
         if (!m) {
           return;
         }
@@ -367,26 +374,36 @@ export default (arg: {
             params,
             returns,
           } = statics[method];
+
           if (njsInstanciateClass) {
             m[method] = function met(...vargs) {
               if (process.env.VERBOSE) {
                 log("libcore-call", id + "." + method, vargs);
               }
+
               const args = njsInstanciateClass.map((arg) => {
                 if (typeof arg === "object") {
                   const o = {};
+
                   for (const k in arg) {
                     const index = arg[k];
                     o[k] = unwrapArg(params && params[index], vargs[index]);
                   }
+
                   return o;
                 }
+
                 return arg;
               });
+              // @ts-expect-error ts must target es5 or higher
               const value = new m(...args);
+
               if (process.env.VERBOSE) {
-                log("libcore-result", id + "." + method, { value });
+                log("libcore-result", id + "." + method, {
+                  value,
+                });
               }
+
               return value;
             };
           } else if (njsBuggyMethodIsNotStatic) {
@@ -395,24 +412,33 @@ export default (arg: {
               if (process.env.VERBOSE) {
                 log("libcore-call", id + "." + method, args);
               }
+
               let value;
+
               if (params) {
                 // it's seems statics method until now doesn't need to be unwrap
                 const hexArgs = unwrapArg(params, args);
+                // @ts-expect-error ts must target es5 or higher
                 value = new m(...hexArgs)[method](...hexArgs);
               } else {
                 const constructorArgs =
                   typeof njsBuggyMethodIsNotStatic === "function"
                     ? njsBuggyMethodIsNotStatic(args)
                     : args;
+                // @ts-expect-error ts must target es5 or higher
                 value = new m(...constructorArgs)[method](...args);
               }
+
               if (process.env.VERBOSE) {
-                log("libcore-result", id + "." + method, { value });
+                log("libcore-result", id + "." + method, {
+                  value,
+                });
               }
+
               if (returns) {
                 return wrapResult(returns, value);
               }
+
               return value;
             };
           }
@@ -425,52 +451,66 @@ export default (arg: {
             method
           ];
           if (nodejsNotAvailable) return;
+
           if (njsField) {
             m.prototype[method] = function met() {
               if (process.env.VERBOSE) {
                 log("libcore-call", id + "#" + method);
               }
+
               const value = this[njsField];
+
               if (process.env.VERBOSE) {
-                log("libcore-result", id + "#" + method, { value });
+                log("libcore-result", id + "#" + method, {
+                  value,
+                });
               }
+
               const Cls =
                 typeof returns === "string" && returns in mappings
                   ? mappings[returns]
                   : null;
+
               if (Cls && !(value instanceof Cls)) {
                 const inst = new Cls(value);
                 return inst;
               }
+
               return wrapResult(returns, value);
             };
           } else {
             const f = m.prototype[method];
+
             if (!f) {
               console.warn(`no such method '${method}' in ${id}`);
               return;
             }
+
             m.prototype[method] = async function met(...a) {
               if (process.env.VERBOSE) {
                 log("libcore-call", id + "#" + method, a);
               }
+
               const args = params
                 ? a.map((value, i) => unwrapArg(params[i], value))
                 : a;
               const value = await f.apply(this, args);
+
               if (process.env.VERBOSE) {
-                log("libcore-result", id + "#" + method, { value });
+                log("libcore-result", id + "#" + method, {
+                  value,
+                });
               }
+
               return wrapResult(returns, value);
             };
           }
         });
       }
     });
-
     // other NodeJS bindings specific code
-
     const eventBusSubscribe = mappings.EventBus.prototype.subscribe;
+
     mappings.EventBus.prototype.subscribe = function subscribe(
       executionContext,
       receiver_
@@ -487,6 +527,7 @@ export default (arg: {
       const receiver = new mappings.EventReceiver({
         onEvent: (e) => {
           const code = e.getCode();
+
           if (
             code === lib.EVENT_CODE.UNDEFINED ||
             code === lib.EVENT_CODE.SYNCHRONIZATION_FAILED
@@ -496,13 +537,16 @@ export default (arg: {
               (payload && payload.getString("EV_SYNC_ERROR_MESSAGE")) ||
               "Sync failed"
             ).replace(" (EC_PRIV_KEY_INVALID_FORMAT)", "");
+
             try {
               receiver._reject(deserializeError(JSON.parse(message)));
             } catch (_e) {
               receiver._reject(message);
             }
+
             return;
           }
+
           if (
             code === lib.EVENT_CODE.SYNCHRONIZATION_SUCCEED ||
             code ===
@@ -515,23 +559,23 @@ export default (arg: {
       return receiver;
     };
 
-    // $FlowFixMe
-    const cs: CoreStatics = mappings;
-    // $FlowFixMe
+    const cs: CoreStatics = <CoreStatics>mappings;
+    // @ts-expect-error i tried...
     const core: Core = {
       ...cs,
       flush: () => Promise.resolve(),
       getPoolInstance,
       getThreadDispatcher: () => NJSThreadDispatcher,
     };
-
     return Promise.resolve(core);
   };
 
   function parseError(error: string): Error {
     const m = error.match(/[^{]*({.*}).*/);
+
     if (m) {
       const json = JSON.parse(m[1]);
+
       if (json.name) {
         return deserializeError(json);
       }
@@ -540,8 +584,9 @@ export default (arg: {
     return new Error(String(error));
   }
 
-  const remapLibcoreErrors = (e: mixed): Error => {
+  const remapLibcoreErrors = (e: unknown): Error => {
     lazyLoad();
+
     if (typeof e === "string") {
       try {
         return parseError(e);
@@ -552,16 +597,18 @@ export default (arg: {
 
     if (e && typeof e === "object") {
       if (
-        typeof e.code === "number" &&
-        e.code === lib.ERROR_CODE.NOT_ENOUGH_FUNDS
+        typeof (<{ code?: number }>e).code === "number" &&
+        (<{ code: number }>e).code === lib.ERROR_CODE.NOT_ENOUGH_FUNDS
       ) {
         return new NotEnoughBalance();
       } else {
         // re-deserialize error if it was a serialized error
-        if (e.message === "string") {
+        if ((<{ message?: string }>e).message === "string") {
           try {
-            return parseError(e.message);
-          } catch (_e2) {}
+            return parseError((<{ message: string }>e).message);
+          } catch (_e2) {
+            console.error(_e2);
+          }
         }
       }
     }
@@ -570,8 +617,8 @@ export default (arg: {
       return e;
     }
 
-    if (e && typeof e.message === "string") {
-      return new Error(e.message);
+    if (e && typeof (<{ message?: string }>e).message === "string") {
+      return new Error((<{ message: string }>e).message);
     }
 
     return new Error(String(e));

@@ -1,5 +1,3 @@
-// @flow
-
 import { Observable } from "rxjs";
 import Transport from "@ledgerhq/hw-transport";
 import { log } from "@ledgerhq/logs";
@@ -37,22 +35,21 @@ import nativeSegwitAppsVersionsMap from "./nativeSegwitAppsVersionsMap";
 import type { Core, CoreWallet } from "./types";
 
 async function scanNextAccount(props: {
-  core: Core,
-  wallet: CoreWallet,
-  transport: Transport<*>,
-  currency: CryptoCurrency,
-  accountIndex: number,
-  onAccountScanned: (Account) => *,
-  seedIdentifier: string,
-  derivationMode: DerivationMode,
-  showNewAccount: boolean,
-  isUnsubscribed: () => boolean,
-  emptyCount?: number,
-  syncConfig: SyncConfig,
-  derivationsCache: DerivationsCache,
+  core: Core;
+  wallet: CoreWallet;
+  transport: Transport;
+  currency: CryptoCurrency;
+  accountIndex: number;
+  onAccountScanned: (arg0: Account) => any;
+  seedIdentifier: string;
+  derivationMode: DerivationMode;
+  showNewAccount: boolean;
+  isUnsubscribed: () => boolean;
+  emptyCount?: number;
+  syncConfig: SyncConfig;
+  derivationsCache: DerivationsCache;
 }) {
   const logId = newSyncLogId();
-
   const {
     core,
     wallet,
@@ -67,19 +64,19 @@ async function scanNextAccount(props: {
     syncConfig,
     derivationsCache,
   } = props;
-
   log(
     "libcore",
     `sync(${logId}) scanNextAccount started. ${currency.id}|${derivationMode}|${accountIndex}`
   );
-
   let coreAccount;
+
   try {
     coreAccount = await wallet.getAccount(accountIndex);
   } catch (err) {
     if (!isNonExistingAccountError(err)) {
       throw err;
     }
+
     if (isUnsubscribed()) return;
     coreAccount = await createAccountFromDevice({
       core,
@@ -94,7 +91,6 @@ async function scanNextAccount(props: {
   }
 
   if (isUnsubscribed() || !coreAccount) return;
-
   const account = await syncCoreAccount({
     core,
     coreWallet: wallet,
@@ -106,14 +102,11 @@ async function scanNextAccount(props: {
     logId,
     syncConfig,
   });
-
   if (isUnsubscribed()) return;
-
   const shouldSkip =
     accountIndex < getDerivationModeStartsAt(derivationMode) ||
     (!account.used && !showNewAccount) ||
     !derivationModeSupportsIndex(derivationMode, accountIndex);
-
   log(
     "libcore",
     `scanning ${currency.id} ${
@@ -151,35 +144,39 @@ export const scanAccounts = ({
   scheme,
   syncConfig,
 }: {
-  currency: CryptoCurrency,
-  deviceId: string,
-  scheme?: ?DerivationMode,
-  syncConfig: SyncConfig,
+  currency: CryptoCurrency;
+  deviceId: string;
+  scheme?: DerivationMode | null | undefined;
+  syncConfig: SyncConfig;
 }): Observable<ScanAccountEvent> =>
   withDevice(deviceId)((transport) =>
     Observable.create((o) => {
       let finished = false;
+
       const unsubscribe = () => {
         finished = true;
       };
+
       const isUnsubscribed = () => finished;
 
       const main = withLibcoreF((core) => async () => {
         try {
           let derivationModes = getDerivationModesForCurrency(currency);
+
           if (scheme !== undefined) {
             derivationModes = derivationModes.filter((mode) => mode === scheme);
           }
+
           for (let i = 0; i < derivationModes.length; i++) {
             const derivationMode = derivationModes[i];
             const path = getSeedIdentifierDerivation(currency, derivationMode);
-
             let result;
 
             if (derivationMode === "native_segwit") {
               if (nativeSegwitAppsVersionsMap[currency.managerAppName]) {
                 try {
                   const { version } = await getAppAndVersion(transport);
+
                   if (
                     !semver.gte(
                       version,
@@ -190,14 +187,15 @@ export const scanAccounts = ({
                   }
                 } catch (e) {
                   // in case the apdu is not even supported, we assume to not do native_segwit
-
                   if (
                     (e instanceof TransportStatusError &&
+                      // @ts-expect-error TransportStatusError to be typed on ledgerjs
                       e.statusCode === 0x6d00) ||
                     e instanceof GetAppAndVersionUnsupportedFormat
                   ) {
                     continue;
                   }
+
                   throw e;
                 }
               }
@@ -221,17 +219,13 @@ export const scanAccounts = ({
             }
 
             if (!result) continue;
-
             const seedIdentifier = result.publicKey;
-
             if (isUnsubscribed()) return;
-
             const walletName = getWalletName({
               seedIdentifier,
               currency,
               derivationMode,
             });
-
             const wallet = await getOrCreateWallet({
               core,
               walletName,
@@ -241,7 +235,10 @@ export const scanAccounts = ({
             if (isUnsubscribed()) return;
 
             const onAccountScanned = (account) =>
-              o.next({ type: "discovered", account });
+              o.next({
+                type: "discovered",
+                account,
+              });
 
             // recursively scan all accounts on device on the given app
             // new accounts will be created in sqlite, existing ones will be updated
@@ -260,14 +257,13 @@ export const scanAccounts = ({
               derivationsCache: new DerivationsCache(),
             });
           }
+
           o.complete();
         } catch (e) {
           o.error(remapLibcoreErrors(e));
         }
       });
-
       main();
-
       return unsubscribe;
     })
   );

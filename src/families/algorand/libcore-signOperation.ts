@@ -6,13 +6,7 @@ import type { Operation } from "../../types";
 import { BigNumber } from "bignumber.js";
 
 async function signTransaction({
-  account: {
-    freshAddressPath,
-    spendableBalance,
-    id,
-    freshAddress,
-    subAccounts,
-  },
+  account,
   transport,
   transaction,
   coreTransaction,
@@ -20,6 +14,13 @@ async function signTransaction({
   onDeviceSignatureGranted,
   onDeviceSignatureRequested,
 }) {
+  const {
+    freshAddressPath,
+    spendableBalance,
+    id,
+    freshAddress,
+    subAccounts,
+  } = account;
   const hwApp = new Algorand(transport);
   const serialized = await coreTransaction.serialize();
   onDeviceSignatureRequested();

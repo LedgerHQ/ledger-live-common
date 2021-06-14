@@ -6,7 +6,7 @@ import { libcoreAmountToBigNumber } from "../../libcore/buildBigNumber";
 import buildTransaction from "./libcore-buildTransaction";
 
 async function signTransaction({
-  account: { freshAddressPath, balance, id, subAccounts },
+  account,
   transport,
   transaction,
   coreTransaction,
@@ -14,6 +14,7 @@ async function signTransaction({
   onDeviceSignatureGranted,
   onDeviceSignatureRequested,
 }) {
+  const { freshAddressPath, balance, id, subAccounts } = account;
   // Sign with the device
   const hwApp = new Xtz(transport);
   const serialized = await coreTransaction.serialize();

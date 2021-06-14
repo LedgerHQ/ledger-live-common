@@ -1,4 +1,3 @@
-// @flow
 import invariant from "invariant";
 import { log } from "@ledgerhq/logs";
 import type { Account } from "../types";
@@ -7,11 +6,12 @@ import type { Core, CoreWallet, CoreAccount } from "./types";
 import { isNonExistingAccountError } from "./errors";
 
 type Param = {
-  core: Core,
-  coreWallet: CoreWallet,
-  account: Account,
+  core: Core;
+  coreWallet: CoreWallet;
+  account: Account;
 };
-type F = (Param) => Promise<CoreAccount>;
+
+type F = (arg0: Param) => Promise<CoreAccount>;
 
 const restoreWithAccountCreationInfo = {
   tezos: true,
@@ -21,16 +21,23 @@ const restoreWithAccountCreationInfo = {
 
 export const getOrCreateAccount: F = atomicQueue(
   async ({ core, coreWallet, account: { xpub, index, currency } }) => {
-    log("libcore", "getOrCreateAccount", { xpub, index });
+    log("libcore", "getOrCreateAccount", {
+      xpub,
+      index,
+    });
     let coreAccount;
+
     try {
       coreAccount = await coreWallet.getAccount(index);
     } catch (err) {
       if (!isNonExistingAccountError(err)) {
         throw err;
       }
+
       log("libcore", "no account existed. restoring...");
       invariant(xpub, "xpub is missing. Please reimport the account.");
+
+      if (!xpub) return;
 
       if (restoreWithAccountCreationInfo[currency.id]) {
         const accountCreationInfos = await coreWallet.getAccountCreationInfo(
@@ -80,6 +87,7 @@ export const getOrCreateAccount: F = atomicQueue(
         return account;
       }
     }
+
     return coreAccount;
   },
   ({ account }) => account.id || ""
