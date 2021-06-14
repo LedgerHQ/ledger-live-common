@@ -86,7 +86,7 @@ declare class CoreBitcoinLikeTransactionBuilder {
   wipeToAddress(address: string): Promise<void>;
   sendToAddress(amount: CoreAmount, recipient: string): Promise<void>;
   excludeUtxo(transactionHash: string, outputIndex: number): Promise<void>;
-  pickInputs(number, number): Promise<void>;
+  pickInputs(number, number, ?number): Promise<void>;
   setFeesPerByte(feesPerByte: CoreAmount): Promise<void>;
   build(): Promise<CoreBitcoinLikeTransaction>;
 }
