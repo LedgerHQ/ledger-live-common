@@ -31,6 +31,7 @@ export const messageHash = (message: TypedMessage) => {
 
 const resolver: EthResolver = async (
   transport,
+  //$FlowFixMe
   { path, message, rawMessage }
 ) => {
   const eth = new Eth(transport);
