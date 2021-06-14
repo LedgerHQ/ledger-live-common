@@ -32,7 +32,7 @@ export const serviceStatusMachine = Machine({
         src: "fetchData",
         onDone: {
           target: "idle",
-          actions: assign((_context, { data }) => {
+          actions: assign((_context: any, { data }: any) => {
             const { incidents, updateTime } = data;
             return {
               incidents,
@@ -44,7 +44,7 @@ export const serviceStatusMachine = Machine({
         },
         onError: {
           target: "idle",
-          actions: assign((_, { data }) => ({
+          actions: assign((_: any, { data }: any) => ({
             error: data,
           })),
         },

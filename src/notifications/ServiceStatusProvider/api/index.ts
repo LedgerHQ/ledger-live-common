@@ -1,5 +1,3 @@
-// @flow
-
 import { getEnv } from "../../../env";
 import type { ServiceStatusApi } from "../types";
 import prodApi from "./api";

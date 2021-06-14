@@ -1,32 +1,28 @@
-// @flow
-
-import React, { useState, useMemo, useContext } from "react";
+import React, { useState, useMemo, useContext, ReactElement } from "react";
 import type { ToastData } from "./types";
-
 type Props = {
-  children: React$Node,
+  children: React.ReactNode;
 };
-
 type ToastContextApi = {
-  dismissToast: (string) => void,
-  pushToast: (ToastData) => void,
+  dismissToast: (arg0: string) => void;
+  pushToast: (arg0: ToastData) => void;
 };
-
 type ToastContextState = {
-  toasts: ToastData[],
+  toasts: ToastData[];
 };
-
 type ToastContextType = ToastContextApi & ToastContextState;
-
-const ToastContext = React.createContext<ToastContextType>({});
+const ToastContext = React.createContext<ToastContextType>({
+  dismissToast: () => {},
+  pushToast: () => {},
+  toasts: [],
+});
 
 export function useToasts(): ToastContextType {
   return useContext(ToastContext);
 }
 
-export function ToastProvider({ children }: Props) {
-  const [toasts, setToasts] = useState([]);
-
+export function ToastProvider({ children }: Props): ReactElement {
+  const [toasts, setToasts] = useState<ToastData[]>([]);
   const api = useMemo(
     () => ({
       dismissToast: (id: string) => {
@@ -42,7 +38,6 @@ export function ToastProvider({ children }: Props) {
     }),
     []
   );
-
   const value = {
     toasts,
     ...api,
