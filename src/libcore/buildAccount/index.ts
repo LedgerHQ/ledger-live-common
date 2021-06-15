@@ -1,5 +1,3 @@
-// @flow
-
 import { log } from "@ledgerhq/logs";
 import last from "lodash/last";
 import {
@@ -26,13 +24,14 @@ import getAccountBalanceHistory from "../getAccountBalanceHistory";
 import { getRanges } from "../../portfolio";
 import mergeOperationsByFamily from "../../generated/libcore-mergeOperations";
 import byFamily from "../../generated/libcore-postBuildAccount";
-
 // FIXME how to get that
 const OperationOrderKey = {
   date: 0,
 };
-
-type F = ({ account: Account, coreAccount: CoreAccount }) => Promise<Account>;
+type F = (arg0: {
+  account: Account;
+  coreAccount: CoreAccount;
+}) => Promise<Account>;
 
 async function queryOps(coreAccount) {
   const query = await coreAccount.queryOperations();
@@ -52,21 +51,19 @@ export async function buildAccount({
   logId,
   syncConfig,
 }: {
-  core: Core,
-  coreWallet: CoreWallet,
-  coreAccount: CoreAccount,
-  currency: CryptoCurrency,
-  accountIndex: number,
-  derivationMode: DerivationMode,
-  seedIdentifier: string,
-  existingAccount: ?Account,
-  logId: number,
-  syncConfig: SyncConfig,
+  core: Core;
+  coreWallet: CoreWallet;
+  coreAccount: CoreAccount;
+  currency: CryptoCurrency;
+  accountIndex: number;
+  derivationMode: DerivationMode;
+  seedIdentifier: string;
+  existingAccount: Account | null | undefined;
+  logId: number;
+  syncConfig: SyncConfig;
 }): Promise<Account> {
   log("libcore", `sync(${logId}) start buildAccount`);
-
   const restoreKey = await coreAccount.getRestoreKey();
-
   const accountId = encodeAccountId({
     type: "libcore",
     version: "1",
@@ -74,50 +71,43 @@ export async function buildAccount({
     xpubOrAddress: restoreKey,
     derivationMode,
   });
-
   const query = await queryOps(coreAccount);
   await query.partial();
   const partialOperations = await query.execute();
-
   const operationsPageSize = getOperationsPageSize(accountId, syncConfig);
   const paginatedPartialOperations = isFinite(operationsPageSize)
     ? partialOperations.slice(partialOperations.length - operationsPageSize)
     : partialOperations;
-
   log("libcore", `sync(${logId}) DONE partial query ops`);
-
   const nativeBalance = await coreAccount.getBalance();
   const balance = await libcoreAmountToBigNumber(nativeBalance);
   log("libcore", `sync(${logId}) DONE balance`);
-
   const coreAccountCreationInfo = await coreWallet.getAccountCreationInfo(
     accountIndex
   );
-
   const derivations = await coreAccountCreationInfo.getDerivations();
-  const accountPath = last(derivations);
-
+  const accountPath: string = <string>last(derivations);
   const coreBlock = await coreAccount.getLastBlock();
   const blockHeight = await coreBlock.getHeight();
-
   const coreFreshAddresses = await coreAccount.getFreshPublicAddresses();
   if (coreFreshAddresses.length === 0)
     throw new Error("expected at least one fresh address");
-
   const freshAddresses = await Promise.all(
     coreFreshAddresses.map(async (item) => {
       const [address, path] = await Promise.all([
         item.toString(),
         item.getDerivationPath(),
       ]);
-
-      const derivationPath = path ? `${accountPath}/${path}` : accountPath;
-
-      return { address, derivationPath };
+      const derivationPath: string = path
+        ? `${accountPath}/${path}`
+        : accountPath;
+      return {
+        address,
+        derivationPath,
+      };
     })
   );
   log("libcore", `sync(${logId}) DONE coreAccount addresses`);
-
   const name =
     partialOperations.length === 0
       ? getNewAccountPlaceholderName({
@@ -130,7 +120,6 @@ export async function buildAccount({
           index: accountIndex,
           derivationMode,
         });
-
   const subAccounts = await buildSubAccounts({
     core,
     currency,
@@ -187,7 +176,6 @@ export async function buildAccount({
   }
 
   log("libcore", `sync(${logId}) DONE operations`);
-
   const balanceHistory = {};
 
   if (!libcoreNoGoBalanceHistory().includes(currency.id)) {
@@ -198,17 +186,18 @@ export async function buildAccount({
         // compare the last data point {value} with `balance`, re-calc if differ
         // also compare the last data point {date} with current date to force a re-calc every X hours.
         const h = await getAccountBalanceHistory(coreAccount, range);
+
         if (!h[h.length - 1].value.isEqualTo(balance)) {
           log("libcore", "last data point DOES NOT match the balance!");
           return;
         }
+
         balanceHistory[range] = h;
       })
     );
   }
 
   log("libcore", `sync(${logId}) DONE balanceHistory`);
-
   let creationDate = new Date();
 
   if (lastOperation) {
@@ -222,9 +211,9 @@ export async function buildAccount({
       }
     });
   }
-  const swapHistory = existingAccount?.swapHistory || [];
 
-  const account: $Exact<Account> = {
+  const swapHistory = existingAccount?.swapHistory || [];
+  const account: Account = {
     type: "Account",
     id: accountId,
     seedIdentifier,
@@ -239,7 +228,8 @@ export async function buildAccount({
     used: false,
     balance,
     balanceHistory,
-    spendableBalance: balance, // FIXME need libcore concept
+    spendableBalance: balance,
+    // FIXME need libcore concept
     blockHeight,
     currency,
     unit: currency.units[0],
@@ -257,10 +247,13 @@ export async function buildAccount({
   }
 
   account.used = !isAccountEmpty(account);
-
   const f: F = byFamily[currency.family];
+
   if (f) {
-    return await f({ account, coreAccount });
+    return await f({
+      account,
+      coreAccount,
+    });
   }
 
   return account;

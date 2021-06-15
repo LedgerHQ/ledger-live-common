@@ -14,7 +14,8 @@
     "downlevelIteration": true,
     "outDir": "lib",
     "resolveJsonModule": true,
-    "jsx": "react"
+    "jsx": "react",
+    "lib": ["es2019", "dom"]
   },
   "include": ["src/**/*"]
 }
