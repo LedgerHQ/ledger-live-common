@@ -8,6 +8,10 @@ import ethereum from "../families/ethereum/test-dataset";
 
 import polkadot from "../families/polkadot/test-dataset";
 
+import ripple from "../families/ripple/test-dataset";
+
+import stellar from "../families/stellar/test-dataset";
+
 import tezos from "../families/tezos/test-dataset";
 
 import tron from "../families/tron/test-dataset";
@@ -19,6 +23,8 @@ export default {
   cosmos,
   ethereum,
   polkadot,
+  ripple,
+  stellar,
   tezos,
   tron,
 };

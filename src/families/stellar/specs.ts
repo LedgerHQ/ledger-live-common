@@ -1,23 +1,19 @@
-// @flow
 import expect from "expect";
 import invariant from "invariant";
 import type { Transaction } from "./types";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
-
-const currency = getCryptoCurrencyById("ripple");
-
+import { DeviceModelId } from "@ledgerhq/devices";
+const currency = getCryptoCurrencyById("stellar");
 const minAmountCutoff = parseCurrencyUnit(currency.units[0], "0.1");
-
-const reserve = parseCurrencyUnit(currency.units[0], "20");
-
-const ripple: AppSpec<Transaction> = {
-  name: "XRP",
+const reserve = parseCurrencyUnit(currency.units[0], "1");
+const stellar: AppSpec<Transaction> = {
+  name: "Stellar",
   currency,
   appQuery: {
-    model: "nanoS",
-    appName: "XRP",
+    model: DeviceModelId.nanoS,
+    appName: "Stellar",
   },
   mutations: [
     {
@@ -25,10 +21,11 @@ const ripple: AppSpec<Transaction> = {
       maxRun: 2,
       transaction: ({ account, siblings, bridge, maxSpendable }) => {
         invariant(maxSpendable.gt(minAmountCutoff), "balance is too low");
-        let transaction = bridge.createTransaction(account);
-        const sibling = pickSiblings(siblings, 3);
+        const transaction = bridge.createTransaction(account);
+        const sibling = pickSiblings(siblings, 4);
         const recipient = sibling.freshAddress;
         let amount = maxSpendable.div(1.9 + 0.2 * Math.random()).integerValue();
+
         if (!sibling.used && amount.lt(reserve)) {
           invariant(
             maxSpendable.gt(reserve.plus(minAmountCutoff)),
@@ -36,26 +33,42 @@ const ripple: AppSpec<Transaction> = {
           );
           amount = reserve;
         }
+
+        const updates: Array<Partial<Transaction>> = [
+          {
+            amount,
+          },
+          {
+            recipient,
+          },
+        ];
+
+        if (Math.random() < 0.5) {
+          updates.push({
+            memoType: "MEMO_TEXT",
+            memoValue: "Ledger Live",
+          });
+        }
+
         return {
           transaction,
-          updates: [
-            { amount },
-            { recipient },
-            Math.random() > 0.5 ? { tag: 123 } : null,
-          ],
+          updates,
         };
       },
-      test: ({ account, transaction, accountBeforeTransaction, operation }) => {
-        if (transaction.tag) {
-          expect(operation.extra).toMatchObject({ tag: transaction.tag });
-        }
-        // can be generalized!
+      test: ({ account, accountBeforeTransaction, operation, transaction }) => {
         expect(account.balance.toString()).toBe(
           accountBeforeTransaction.balance.minus(operation.value).toString()
         );
+
+        if (transaction.memoValue) {
+          expect(operation.extra).toEqual({
+            memo: transaction.memoValue,
+          });
+        }
       },
     },
   ],
 };
-
-export default { ripple };
+export default {
+  stellar,
+};

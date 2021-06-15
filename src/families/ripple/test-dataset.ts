@@ -1,4 +1,3 @@
-// @flow
 // import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { BigNumber } from "bignumber.js";
 import type { DatasetTest } from "../../types";
@@ -11,9 +10,7 @@ import { fromTransactionRaw } from "./transaction";
 import type { Transaction } from "./types";
 import { addNotCreatedRippleMockAddress } from "./bridge/mock";
 // import { formatCurrencyUnit } from "../../currencies";
-
 const newAddress1 = "rZvBc5e2YR1A9otS3r9DyGh3NDP8XLLp4";
-
 addNotCreatedRippleMockAddress(newAddress1);
 // const rippleUnit = getCryptoCurrencyById("ripple").units[0];
 const dataset: DatasetTest<Transaction> = {
@@ -23,7 +20,8 @@ const dataset: DatasetTest<Transaction> = {
       scanAccounts: [
         {
           name: "ripple seed 1",
-          unstableAccounts: true, // our account is getting spammed...
+          unstableAccounts: true,
+          // our account is getting spammed...
           apdus: `
           => e002004015058000002c80000090800000000000000000000000
           <= 2103d1adcff3e0cf1232b1416a75cd6f23b49dd6a25c69bc291a1f6783ec6825ec062272616765584842365134566276765764547a4b414e776a65435434485846434b58379000
@@ -38,63 +36,65 @@ const dataset: DatasetTest<Transaction> = {
         {
           transactions: [
             // FIXME
+
             /*
-            {
-              name: "not enough spendable balance with base reserve",
-              transaction: fromTransactionRaw({
-                family: "ripple",
-                recipient: "rB6pwovsyrFWhPYUsjj9V3CHck985QjiXi",
-                amount: "15000000",
-                tag: null,
-                fee: "1",
-                feeCustomUnit: null,
-                networkInfo: null,
+        {
+          name: "not enough spendable balance with base reserve",
+          transaction: fromTransactionRaw({
+            family: "ripple",
+            recipient: "rB6pwovsyrFWhPYUsjj9V3CHck985QjiXi",
+            amount: "15000000",
+            tag: null,
+            fee: "1",
+            feeCustomUnit: null,
+            networkInfo: null,
+          }),
+          expectedStatus: {
+            amount: BigNumber("15000000"),
+            estimatedFees: BigNumber("1"),
+            errors: {
+              amount: new NotEnoughSpendableBalance(null, {
+                minimumAmount: formatCurrencyUnit(
+                  rippleUnit,
+                  BigNumber("20"),
+                  {
+                    disableRounding: true,
+                    useGrouping: false,
+                    showCode: true,
+                  }
+                ),
               }),
-              expectedStatus: {
-                amount: BigNumber("15000000"),
-                estimatedFees: BigNumber("1"),
-                errors: {
-                  amount: new NotEnoughSpendableBalance(null, {
-                    minimumAmount: formatCurrencyUnit(
-                      rippleUnit,
-                      BigNumber("20"),
-                      {
-                        disableRounding: true,
-                        useGrouping: false,
-                        showCode: true,
-                      }
-                    ),
-                  }),
-                },
-                warnings: {},
-                totalSpent: BigNumber("15000001"),
-              },
             },
-            */
+            warnings: {},
+            totalSpent: BigNumber("15000001"),
+          },
+        },
+        */
             // FIXME
+
             /*
-            {
-              name: "operation amount to low to create the recipient account",
-              transaction: fromTransactionRaw({
-                family: "ripple",
-                recipient: newAddress1,
-                amount: "10000000",
-                tag: null,
-                fee: "1",
-                feeCustomUnit: null,
-                networkInfo: null
-              }),
-              expectedStatus: {
-                amount: BigNumber("10000000"),
-                estimatedFees: BigNumber("1"),
-                errors: {
-                  amount: new NotEnoughBalanceBecauseDestinationNotCreated()
-                },
-                warnings: {},
-                totalSpent: BigNumber("10000001")
-              }
+        {
+          name: "operation amount to low to create the recipient account",
+          transaction: fromTransactionRaw({
+            family: "ripple",
+            recipient: newAddress1,
+            amount: "10000000",
+            tag: null,
+            fee: "1",
+            feeCustomUnit: null,
+            networkInfo: null
+          }),
+          expectedStatus: {
+            amount: BigNumber("10000000"),
+            estimatedFees: BigNumber("1"),
+            errors: {
+              amount: new NotEnoughBalanceBecauseDestinationNotCreated()
             },
-            */
+            warnings: {},
+            totalSpent: BigNumber("10000001")
+          }
+        },
+        */
             {
               name: "recipient and sender must not be the same",
               transaction: fromTransactionRaw({
@@ -107,13 +107,13 @@ const dataset: DatasetTest<Transaction> = {
                 networkInfo: null,
               }),
               expectedStatus: {
-                amount: BigNumber("10000000"),
-                estimatedFees: BigNumber("1"),
+                amount: new BigNumber("10000000"),
+                estimatedFees: new BigNumber("1"),
                 errors: {
                   recipient: new InvalidAddressBecauseDestinationIsAlsoSource(),
                 },
                 warnings: {},
-                totalSpent: BigNumber("10000001"),
+                totalSpent: new BigNumber("10000001"),
               },
             },
             {
@@ -128,11 +128,11 @@ const dataset: DatasetTest<Transaction> = {
                 networkInfo: null,
               }),
               expectedStatus: {
-                amount: BigNumber("10000000"),
-                estimatedFees: BigNumber("1"),
+                amount: new BigNumber("10000000"),
+                estimatedFees: new BigNumber("1"),
                 errors: {},
                 warnings: {},
-                totalSpent: BigNumber("10000001"),
+                totalSpent: new BigNumber("10000001"),
               },
             },
           ],
@@ -158,5 +158,4 @@ const dataset: DatasetTest<Transaction> = {
     },
   },
 };
-
 export default dataset;

@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import type { Transaction, TransactionRaw } from "./types";
 import {
@@ -8,30 +7,27 @@ import {
 import type { Account } from "../../types";
 import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
-
 export const formatTransaction = (
   { amount, recipient, fee, tag, useAllAmount }: Transaction,
   account: Account
-): string =>
-  `
+): string => `
 SEND ${
-    useAllAmount
-      ? "MAX"
-      : formatCurrencyUnit(getAccountUnit(account), amount, {
-          showCode: true,
-          disableRounding: true,
-        })
-  }
+  useAllAmount
+    ? "MAX"
+    : formatCurrencyUnit(getAccountUnit(account), amount, {
+        showCode: true,
+        disableRounding: true,
+      })
+}
 TO ${recipient}
 with fee=${
-    !fee
-      ? "?"
-      : formatCurrencyUnit(getAccountUnit(account), fee, {
-          showCode: true,
-          disableRounding: true,
-        })
-  }${tag ? "\n  tag=" + tag : ""}`;
-
+  !fee
+    ? "?"
+    : formatCurrencyUnit(getAccountUnit(account), fee, {
+        showCode: true,
+        disableRounding: true,
+      })
+}${tag ? "\n  tag=" + tag : ""}`;
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
   const { networkInfo } = tr;
@@ -39,16 +35,16 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     ...common,
     family: tr.family,
     tag: tr.tag,
-    fee: tr.fee ? BigNumber(tr.fee) : null,
-    feeCustomUnit: tr.feeCustomUnit, // FIXME remove this field. this is not good.. we're dereferencing here. we should instead store an index (to lookup in currency.units on UI)
+    fee: tr.fee ? new BigNumber(tr.fee) : null,
+    feeCustomUnit: tr.feeCustomUnit,
+    // FIXME remove this field. this is not good.. we're dereferencing here. we should instead store an index (to lookup in currency.units on UI)
     networkInfo: networkInfo && {
       family: networkInfo.family,
-      serverFee: BigNumber(networkInfo.serverFee),
-      baseReserve: BigNumber(networkInfo.baseReserve),
+      serverFee: new BigNumber(networkInfo.serverFee),
+      baseReserve: new BigNumber(networkInfo.baseReserve),
     },
   };
 };
-
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
   const { networkInfo } = t;
@@ -57,7 +53,8 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
     family: t.family,
     tag: t.tag,
     fee: t.fee ? t.fee.toString() : null,
-    feeCustomUnit: t.feeCustomUnit, // FIXME remove this field. this is not good.. we're dereferencing here. we should instead store an index (to lookup in currency.units on UI)
+    feeCustomUnit: t.feeCustomUnit,
+    // FIXME remove this field. this is not good.. we're dereferencing here. we should instead store an index (to lookup in currency.units on UI)
     networkInfo: networkInfo && {
       family: networkInfo.family,
       serverFee: networkInfo.serverFee.toString(),
@@ -65,5 +62,8 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
     },
   };
 };
-
-export default { formatTransaction, fromTransactionRaw, toTransactionRaw };
+export default {
+  formatTransaction,
+  fromTransactionRaw,
+  toTransactionRaw,
+};

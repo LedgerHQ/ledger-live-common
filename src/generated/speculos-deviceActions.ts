@@ -8,6 +8,8 @@ import ethereum from "../families/ethereum/speculos-deviceActions";
 
 import polkadot from "../families/polkadot/speculos-deviceActions";
 
+import ripple from "../families/ripple/speculos-deviceActions";
+
 import stellar from "../families/stellar/speculos-deviceActions";
 
 import tron from "../families/tron/speculos-deviceActions";
@@ -19,6 +21,7 @@ export default {
   cosmos,
   ethereum,
   polkadot,
+  ripple,
   stellar,
   tron,
 };

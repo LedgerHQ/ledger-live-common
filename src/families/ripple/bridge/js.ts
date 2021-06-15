@@ -1,6 +1,4 @@
-// @flow
 /* eslint-disable no-param-reassign */
-
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import { Observable } from "rxjs";
@@ -17,7 +15,7 @@ import {
   FeeRequired,
   RecipientRequired,
 } from "@ledgerhq/errors";
-import type { Account, Operation } from "../../../types";
+import type { Account, Operation, SignOperationEvent } from "../../../types";
 import {
   getDerivationModesForCurrency,
   getDerivationScheme,
@@ -60,17 +58,19 @@ const receive = makeAccountBridgeReceive();
 
 const getSequenceNumber = async (account) => {
   const lastOp = account.operations.find((op) => op.type === "OUT");
+
   if (lastOp && lastOp.transactionSequenceNumber) {
     return (
       lastOp.transactionSequenceNumber + account.pendingOperations.length + 1
     );
   }
-  const info = await getAccountInfo(account.freshAddress);
 
+  const info = await getAccountInfo(account.freshAddress);
   return info.sequence + account.pendingOperations.length;
 };
 
-const uint32maxPlus1 = BigNumber(2).pow(32);
+const uint32maxPlus1 = new BigNumber(2).pow(32);
+
 const validateTag = (tag) => {
   return (
     !tag.isNaN() &&
@@ -81,8 +81,12 @@ const validateTag = (tag) => {
   );
 };
 
-const signOperation = ({ account, transaction, deviceId }) =>
-  Observable.create((o) => {
+const signOperation = ({
+  account,
+  transaction,
+  deviceId,
+}): Observable<SignOperationEvent> =>
+  new Observable((o) => {
     delete cacheRecipientsNew[transaction.recipient];
     const { fee } = transaction;
     if (!fee) throw new FeeNotLoaded();
@@ -106,38 +110,40 @@ const signOperation = ({ account, transaction, deviceId }) =>
           fee: formatAPICurrencyXRP(fee).value,
           maxLedgerVersionOffset: 12,
         };
-
         if (tag)
           invariant(
-            validateTag(BigNumber(tag)),
+            validateTag(new BigNumber(tag)),
             `tag is set but is not in a valid format, should be between [0 - ${uint32maxPlus1
               .minus(1)
               .toString()}]`
           );
-
         const prepared = await preparePayment(
           account.freshAddress,
           payment,
           instruction
         );
-
         let signature;
         const transport = await open(deviceId);
+
         try {
-          o.next({ type: "device-signature-requested" });
+          o.next({
+            type: "device-signature-requested",
+          });
           signature = await signTransaction(
             account.currency,
             transport,
             account.freshAddressPath,
             JSON.parse(prepared.txJSON)
           );
-          o.next({ type: "device-signature-granted" });
+          o.next({
+            type: "device-signature-granted",
+          });
         } finally {
           close(transport, deviceId);
         }
 
         const hash = "";
-        const operation = {
+        const operation: Operation = {
           id: `${account.id}-${hash}-OUT`,
           hash,
           accountId: account.id,
@@ -151,7 +157,7 @@ const signOperation = ({ account, transaction, deviceId }) =>
           date: new Date(),
           // we probably can't get it so it's a predictive value
           transactionSequenceNumber: await getSequenceNumber(account),
-          extra: {},
+          extra: {} as any,
         };
 
         if (transaction.tag) {
@@ -170,6 +176,7 @@ const signOperation = ({ account, transaction, deviceId }) =>
         if (e && e.name === "RippledError" && e.data.resultMessage) {
           throw new Error(e.data.resultMessage);
         }
+
         throw e;
       }
     }
@@ -182,6 +189,7 @@ const signOperation = ({ account, transaction, deviceId }) =>
 
 const broadcast = async ({ signedOperation: { signature, operation } }) => {
   const submittedPayment = await submit(signature);
+
   if (
     submittedPayment.engine_result !== "tesSUCCESS" &&
     submittedPayment.engine_result !== "terQUEUED"
@@ -190,7 +198,6 @@ const broadcast = async ({ signedOperation: { signature, operation } }) => {
   }
 
   const { hash } = submittedPayment.tx_json;
-
   return patchOperationWithHash(operation, hash);
 };
 
@@ -204,64 +211,66 @@ function isRecipientValid(recipient) {
 }
 
 type Tx = {
-  type: string,
-  address: string,
-  sequence: number,
-  id: string,
+  type: string;
+  address: string;
+  sequence: number;
+  id: string;
   specification: {
     source: {
-      address: string,
+      address: string;
       maxAmount: {
-        currency: string,
-        value: string,
-      },
-    },
+        currency: string;
+        value: string;
+      };
+    };
     destination: {
-      address: string,
+      address: string;
       amount: {
-        currency: string,
-        value: string,
-      },
-      tag?: string,
-    },
-    paths: string,
-  },
+        currency: string;
+        value: string;
+      };
+      tag?: string;
+    };
+    paths: string;
+  };
   outcome: {
-    result: string,
-    fee: string,
-    timestamp: string,
+    result: string;
+    fee: string;
+    timestamp: string;
     deliveredAmount?: {
-      currency: string,
-      value: string,
-      counterparty: string,
-    },
-    balanceChanges: {
-      [addr: string]: Array<{
-        counterparty: string,
-        currency: string,
-        value: string,
-      }>,
-    },
-    orderbookChanges: {
-      [addr: string]: Array<{
-        direction: string,
+      currency: string;
+      value: string;
+      counterparty: string;
+    };
+    balanceChanges: Record<
+      string,
+      Array<{
+        counterparty: string;
+        currency: string;
+        value: string;
+      }>
+    >;
+    orderbookChanges: Record<
+      string,
+      Array<{
+        direction: string;
         quantity: {
-          currency: string,
-          value: string,
-        },
+          currency: string;
+          value: string;
+        };
         totalPrice: {
-          currency: string,
-          counterparty: string,
-          value: string,
-        },
-        makeExchangeRate: string,
-        sequence: number,
-        status: string,
-      }>,
-    },
-    ledgerVersion: number,
-    indexInLedger: number,
-  },
+          currency: string;
+          counterparty: string;
+          value: string;
+        };
+        makeExchangeRate: string;
+        sequence: number;
+        status: string;
+      }>
+    >;
+    ledgerVersion: number;
+    indexInLedger: number;
+  };
 };
 
 const txToOperation = (account: Account) => ({
@@ -269,19 +278,20 @@ const txToOperation = (account: Account) => ({
   sequence,
   outcome: { fee, deliveredAmount, ledgerVersion, timestamp },
   specification: { source, destination },
-}: Tx): ?Operation => {
+}: Tx): Operation | null | undefined => {
   const type = source.address === account.freshAddress ? "OUT" : "IN";
   let value = deliveredAmount
     ? parseAPICurrencyObject(deliveredAmount)
-    : BigNumber(0);
+    : new BigNumber(0);
   const feeValue = parseAPIValue(fee);
+
   if (type === "OUT") {
     if (!Number.isNaN(feeValue)) {
       value = value.plus(feeValue);
     }
   }
 
-  const op: $Exact<Operation> = {
+  const op: Operation = {
     id: `${account.id}-${id}-${type}`,
     hash: id,
     accountId: account.id,
@@ -296,14 +306,17 @@ const txToOperation = (account: Account) => ({
     transactionSequenceNumber: sequence,
     extra: {},
   };
+
   if (destination.tag) {
     op.extra.tag = destination.tag;
   }
+
   return op;
 };
 
 const recipientIsNew = async (endpointConfig, recipient) => {
   if (!isRecipientValid(recipient)) return false;
+
   try {
     await getAccountInfo(recipient, endpointConfig);
     return false;
@@ -311,6 +324,7 @@ const recipientIsNew = async (endpointConfig, recipient) => {
     if (checkAccountNotFound(e)) {
       throw e;
     }
+
     return true;
   }
 };
@@ -330,6 +344,7 @@ const remapError = (error) => {
 };
 
 const cacheRecipientsNew = {};
+
 const cachedRecipientIsNew = (endpointConfig, recipient) => {
   if (recipient in cacheRecipientsNew) return cacheRecipientsNew[recipient];
   cacheRecipientsNew[recipient] = recipientIsNew(endpointConfig, recipient);
@@ -337,31 +352,34 @@ const cachedRecipientIsNew = (endpointConfig, recipient) => {
 };
 
 const currencyBridge: CurrencyBridge = {
-  preload: () => Promise.resolve(),
+  preload: () => Promise.resolve({}),
   hydrate: () => {},
   scanAccounts: ({ currency, deviceId }) =>
-    Observable.create((o) => {
+    new Observable((o) => {
       let finished = false;
+
       const unsubscribe = () => {
         finished = true;
       };
 
       async function main() {
         let transport;
+
         try {
           transport = await open(deviceId);
           const serverInfo = await getServerInfo();
           const ledgers = serverInfo.completeLedgers.split("-");
           const minLedgerVersion = Number(ledgers[0]);
           const maxLedgerVersion = Number(ledgers[1]);
-
           const derivationModes = getDerivationModesForCurrency(currency);
+
           for (const derivationMode of derivationModes) {
             const derivationScheme = getDerivationScheme({
               derivationMode,
               currency,
             });
             const stopAt = isIterableDerivationMode(derivationMode) ? 255 : 1;
+
             for (let index = 0; index < stopAt; index++) {
               if (!derivationModeSupportsIndex(derivationMode, index)) continue;
               const freshAddressPath = runDerivationScheme(
@@ -371,18 +389,15 @@ const currencyBridge: CurrencyBridge = {
                   account: index,
                 }
               );
-
               const { address } = await getAddress(transport, {
                 currency,
                 path: freshAddressPath,
                 derivationMode,
               });
-
               if (finished) return;
-
               const accountId = `ripplejs:2:${currency.id}:${address}:${derivationMode}`;
-
               let info;
+
               try {
                 info = await getAccountInfo(address);
               } catch (e) {
@@ -420,8 +435,8 @@ const currencyBridge: CurrencyBridge = {
                           derivationPath: freshAddressPath,
                         },
                       ],
-                      balance: BigNumber(0),
-                      spendableBalance: BigNumber(0),
+                      balance: new BigNumber(0),
+                      spendableBalance: new BigNumber(0),
                       blockHeight: maxLedgerVersion,
                       index,
                       currency,
@@ -429,6 +444,7 @@ const currencyBridge: CurrencyBridge = {
                       operations: [],
                       pendingOperations: [],
                       unit: currency.units[0],
+                      // @ts-expect-error archived does not exists on type Account
                       archived: false,
                       lastSyncDate: new Date(),
                       creationDate: new Date(),
@@ -437,6 +453,7 @@ const currencyBridge: CurrencyBridge = {
                     },
                   });
                 }
+
                 break;
               }
 
@@ -446,15 +463,13 @@ const currencyBridge: CurrencyBridge = {
                 !balance.isNaN() && balance.isFinite(),
                 `Ripple: invalid balance=${balance.toString()} for address ${address}`
               );
-
               const transactions = await getTransactions(address, {
                 minLedgerVersion,
                 maxLedgerVersion,
                 types: ["payment"],
               });
               if (finished) return;
-
-              const account: $Exact<Account> = {
+              const account: Account = {
                 type: "Account",
                 id: accountId,
                 seedIdentifier: freshAddress,
@@ -475,7 +490,8 @@ const currencyBridge: CurrencyBridge = {
                   },
                 ],
                 balance,
-                spendableBalance: balance, // TODO calc with base reserve
+                spendableBalance: balance,
+                // TODO calc with base reserve
                 blockHeight: maxLedgerVersion,
                 index,
                 currency,
@@ -492,13 +508,19 @@ const currencyBridge: CurrencyBridge = {
                 .map(txToOperation(account))
                 .filter(Boolean);
               account.operationsCount = account.operations.length;
+
               if (account.operations.length > 0) {
                 account.creationDate =
                   account.operations[account.operations.length - 1].date;
               }
-              o.next({ type: "discovered", account });
+
+              o.next({
+                type: "discovered",
+                account,
+              });
             }
           }
+
           o.complete();
         } catch (e) {
           o.error(e);
@@ -510,19 +532,22 @@ const currencyBridge: CurrencyBridge = {
       }
 
       main();
-
       return unsubscribe;
     }),
 };
 
-const sync = ({
-  endpointConfig,
-  freshAddress,
-  blockHeight,
-  operations: { length: currentOpsLength },
-}) =>
-  Observable.create((o) => {
+const sync = (
+  _account: Account,
+  {
+    endpointConfig,
+    freshAddress,
+    blockHeight,
+    operations: { length: currentOpsLength },
+  }: any
+): Observable<(arg0: Account) => Account> =>
+  new Observable((o) => {
     let finished = false;
+
     const unsubscribe = () => {
       finished = true;
     };
@@ -535,8 +560,8 @@ const sync = ({
         const ledgers = serverInfo.completeLedgers.split("-");
         const minLedgerVersion = Number(ledgers[0]);
         const maxLedgerVersion = Number(ledgers[1]);
-
         let info;
+
         try {
           info = await getAccountInfo(freshAddress);
         } catch (e) {
@@ -544,14 +569,12 @@ const sync = ({
             throw e;
           }
         }
+
         if (finished) return;
 
         if (!info) {
           // account does not exist, we have nothing to sync but to update the last sync date
-          o.next((a) => ({
-            ...a,
-            lastSyncDate: new Date(),
-          }));
+          o.next((a) => ({ ...a, lastSyncDate: new Date() }));
           o.complete();
           return;
         }
@@ -561,7 +584,6 @@ const sync = ({
           !balance.isNaN() && balance.isFinite(),
           `Ripple: invalid balance=${balance.toString()} for address ${freshAddress}`
         );
-
         const transactions = await getTransactions(freshAddress, {
           minLedgerVersion: Math.max(
             currentOpsLength === 0 ? 0 : blockHeight, // if there is no ops, it might be after a clear and we prefer to pull from the oldest possible history
@@ -570,9 +592,7 @@ const sync = ({
           maxLedgerVersion,
           types: ["payment"],
         });
-
         if (finished) return;
-
         o.next((a) => {
           const newOps = transactions.map(txToOperation(a));
           const operations = mergeOps(a.operations, newOps);
@@ -588,14 +608,14 @@ const sync = ({
           return {
             ...a,
             balance,
-            spendableBalance: balance, // TODO use reserve
+            spendableBalance: balance,
+            // TODO use reserve
             operations,
             pendingOperations,
             blockHeight: maxLedgerVersion,
             lastSyncDate: new Date(),
           };
         });
-
         o.complete();
       } catch (e) {
         o.error(remapError(e));
@@ -603,13 +623,12 @@ const sync = ({
     }
 
     main();
-
     return unsubscribe;
   });
 
-const createTransaction = () => ({
+const createTransaction = (): Transaction => ({
   family: "ripple",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   recipient: "",
   fee: null,
   tag: undefined,
@@ -620,7 +639,8 @@ const createTransaction = () => ({
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
 const prepareTransaction = async (a: Account, t: Transaction) => {
-  let networkInfo: ?NetworkInfo = t.networkInfo;
+  let networkInfo: NetworkInfo | null | undefined = t.networkInfo;
+
   if (!networkInfo) {
     try {
       const info = await getServerInfo(a.endpointConfig);
@@ -628,7 +648,7 @@ const prepareTransaction = async (a: Account, t: Transaction) => {
       networkInfo = {
         family: "ripple",
         serverFee,
-        baseReserve: BigNumber(0), // NOT USED. will refactor later.
+        baseReserve: new BigNumber(0), // NOT USED. will refactor later.
       };
     } catch (e) {
       throw remapError(e);
@@ -638,27 +658,26 @@ const prepareTransaction = async (a: Account, t: Transaction) => {
   const fee = t.fee || networkInfo.serverFee;
 
   if (t.networkInfo !== networkInfo || t.fee !== fee) {
-    return {
-      ...t,
-      networkInfo,
-      fee,
-    };
+    return { ...t, networkInfo, fee };
   }
 
   return t;
 };
 
 const getTransactionStatus = async (a, t) => {
-  const errors = {};
-  const warnings = {};
+  const errors: {
+    fee?: Error;
+    amount?: Error;
+    recipient?: Error;
+  } = {};
+  const warnings: {
+    feeTooHigh?: Error;
+  } = {};
   const r = await getServerInfo(a.endpointConfig);
   const reserveBaseXRP = parseAPIValue(r.validatedLedger.reserveBaseXRP);
-
-  const estimatedFees = BigNumber(t.fee || 0);
-
-  const totalSpent = BigNumber(t.amount).plus(estimatedFees);
-
-  const amount = BigNumber(t.amount);
+  const estimatedFees = new BigNumber(t.fee || 0);
+  const totalSpent = new BigNumber(t.amount).plus(estimatedFees);
+  const amount = new BigNumber(t.amount);
 
   if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
     warnings.feeTooHigh = new FeeTooHigh();
@@ -669,7 +688,7 @@ const getTransactionStatus = async (a, t) => {
   } else if (t.fee.eq(0)) {
     errors.fee = new FeeRequired();
   } else if (totalSpent.gt(a.balance.minus(reserveBaseXRP))) {
-    errors.amount = new NotEnoughSpendableBalance(null, {
+    errors.amount = new NotEnoughSpendableBalance("", {
       minimumAmount: formatCurrencyUnit(a.currency.units[0], reserveBaseXRP, {
         disableRounding: true,
         useGrouping: false,
@@ -683,7 +702,7 @@ const getTransactionStatus = async (a, t) => {
   ) {
     const f = formatAPICurrencyXRP(reserveBaseXRP);
     errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {
-      minimalAmount: `${f.currency} ${BigNumber(f.value).toFixed()}`,
+      minimalAmount: `${f.currency} ${new BigNumber(f.value).toFixed()}`,
     });
   }
 
@@ -725,8 +744,9 @@ const estimateMaxSpendable = async ({
   const t = await prepareTransaction(mainAccount, {
     ...createTransaction(),
     ...transaction,
-    recipient: transaction?.recipient || "rHsMGQEkVNJmpGWs8XUBoTBiAAbwxZN5v3", // public testing seed abandonx11,about
-    amount: BigNumber(0),
+    recipient: transaction?.recipient || "rHsMGQEkVNJmpGWs8XUBoTBiAAbwxZN5v3",
+    // public testing seed abandonx11,about
+    amount: new BigNumber(0),
   });
   const s = await getTransactionStatus(mainAccount, t);
   return BigNumber.max(
@@ -746,5 +766,7 @@ const accountBridge: AccountBridge<Transaction> = {
   signOperation,
   broadcast,
 };
-
-export default { currencyBridge, accountBridge };
+export default {
+  currencyBridge,
+  accountBridge,
+};

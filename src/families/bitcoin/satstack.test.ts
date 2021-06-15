@@ -1,4 +1,3 @@
-// @flow
 import {
   isValidHost,
   checkRPCNodeConfig,
@@ -11,14 +10,14 @@ import {
   fetchSatStackStatus,
   statusObservable,
   requiresSatStackReady,
+  SatStackConfig,
+  SatStackStatus,
 } from "./satstack";
 import dataset from "./datasets/bitcoin";
 import { inferDescriptorFromAccount } from "./descriptor";
 import { setEnv } from "../../env";
 import { fromAccountRaw } from "../../account";
-
 jest.setTimeout(10000);
-
 describe("validateRPCNodeConfig", () => {
   test("valid cases", () => {
     expect(
@@ -52,7 +51,6 @@ describe("validateRPCNodeConfig", () => {
       })
     ).toEqual([]);
   });
-
   test("invalid cases", () => {
     const errors = validateRPCNodeConfig({
       host: "",
@@ -68,7 +66,6 @@ describe("validateRPCNodeConfig", () => {
     expect(errors.every((e) => e.error instanceof Error)).toBe(true);
   });
 });
-
 describe("isValidHost", () => {
   test("invalid", () => {
     expect(isValidHost("")).toBe(false);
@@ -87,13 +84,11 @@ describe("isValidHost", () => {
     expect(isValidHost("ledger:8888")).toBe(true);
   });
 });
-
 const mockConfig = {
   host: "localhost",
   username: "user",
   password: "pass",
 };
-
 describe("checkRPCNodeConfig", () => {
   beforeAll(() => {
     setEnv("MOCK", "1");
@@ -105,17 +100,21 @@ describe("checkRPCNodeConfig", () => {
     await checkRPCNodeConfig(mockConfig);
   });
   test("disconnected case", async () => {
-    setMockStatus({ type: "node-disconnected" });
+    setMockStatus({
+      type: "node-disconnected",
+    });
+
     try {
       await expect(async () => {
         await checkRPCNodeConfig(mockConfig);
       }).rejects.toThrow();
     } finally {
-      setMockStatus({ type: "ready" });
+      setMockStatus({
+        type: "ready",
+      });
     }
   });
 });
-
 describe("parseSatStackConfig", () => {
   test("parse a config with descriptors", () => {
     expect(
@@ -173,7 +172,6 @@ describe("parseSatStackConfig", () => {
       },
     });
   });
-
   test("invalid values", () => {
     expect(() => parseSatStackConfig("")).toThrow();
     expect(parseSatStackConfig("{}")).toBeUndefined();
@@ -193,17 +191,24 @@ describe("parseSatStackConfig", () => {
     ).toBeUndefined();
   });
 });
-
 describe("stringifySatStackConfig", () => {
   test("stringify config with accounts", () => {
     expect(
       stringifySatStackConfig({
         node: mockConfig,
-        extra: { foo: "bar" },
+        extra: {
+          foo: "bar",
+        },
+        // @ts-expect-error not sure what to fix here
         accounts: (dataset.accounts || [])
           .map((a) => inferDescriptorFromAccount(fromAccountRaw(a.raw)))
           .filter(Boolean)
-          .map((descriptor, i) => ({ descriptor, extra: { i } })),
+          .map((descriptor, i) => ({
+            descriptor,
+            extra: {
+              i,
+            },
+          })),
       })
     ).toEqual(`{
   "accounts": [
@@ -226,50 +231,67 @@ describe("stringifySatStackConfig", () => {
 }`);
   });
 });
-
 describe("editSatStackConfig", () => {
   const config = {
     node: { ...mockConfig, tls: false },
-    extra: { foo: "bar" },
+    extra: {
+      foo: "bar",
+    },
     accounts: (dataset.accounts || [])
       .map((a) => inferDescriptorFromAccount(fromAccountRaw(a.raw)))
       .filter(Boolean)
-      .map((descriptor, i) => ({ descriptor, extra: { i } })),
+      .map((descriptor, i) => ({
+        descriptor,
+        extra: {
+          i,
+        },
+      })),
   };
   test("restore identity", () => {
-    expect(parseSatStackConfig(stringifySatStackConfig(config))).toEqual(
-      config
-    );
+    expect(
+      parseSatStackConfig(stringifySatStackConfig(config as SatStackConfig))
+    ).toEqual(config);
   });
   test("update node config", () => {
     expect(
       editSatStackConfig(
         {
           ...config,
-          node: { ...config.node, host: "ledger.com", password: "update" },
-        },
-        { node: config.node }
+          node: {
+            ...config.node,
+            host: "ledger.com",
+            password: "update",
+          },
+        } as SatStackConfig,
+        {
+          node: config.node,
+        }
       )
     ).toEqual(config);
   });
   test("append accounts", () => {
     expect(
       editSatStackConfig(
+        // @ts-expect-error accounts not working
         { ...config, accounts: config.accounts.slice(0, 1) },
-        { accounts: config.accounts.slice(1) }
+        {
+          accounts: config.accounts.slice(1),
+        }
       )
     ).toEqual(config);
   });
   test("dedup accounts", () => {
     expect(
       editSatStackConfig(
+        // @ts-expect-error accounts not working
         { ...config, accounts: config.accounts.slice(0, 1) },
-        { accounts: config.accounts }
+        {
+          accounts: config.accounts,
+        }
       )
     ).toEqual(config);
   });
 });
-
 describe("isSatStackEnabled", () => {
   afterEach(() => {
     setEnv("SATSTACK", false);
@@ -282,16 +304,19 @@ describe("isSatStackEnabled", () => {
     expect(isSatStackEnabled()).toBe(false);
   });
 });
-
 describe("fetchSatStackStatus", () => {
   beforeEach(() => {
     setEnv("MOCK", "1");
-    setMockStatus({ type: "ready" });
+    setMockStatus({
+      type: "ready",
+    });
   });
   afterEach(() => {
     setEnv("SATSTACK", false);
     setEnv("MOCK", "");
-    setMockStatus({ type: "ready" });
+    setMockStatus({
+      type: "ready",
+    });
   });
   test("disconnected", async () => {
     await expect(fetchSatStackStatus()).resolves.toEqual({
@@ -300,7 +325,10 @@ describe("fetchSatStackStatus", () => {
   });
   test("scanning", async () => {
     setEnv("SATSTACK", true);
-    setMockStatus({ type: "scanning", progress: 0.42 });
+    setMockStatus({
+      type: "scanning",
+      progress: 0.42,
+    });
     await expect(fetchSatStackStatus()).resolves.toEqual({
       type: "scanning",
       progress: 0.42,
@@ -313,63 +341,83 @@ describe("fetchSatStackStatus", () => {
     });
   });
 });
-
 describe("statusObservable", () => {
   beforeEach(() => {
     setEnv("MOCK", "1");
-    setMockStatus({ type: "ready" });
+    setMockStatus({
+      type: "ready",
+    });
   });
   afterEach(() => {
     setEnv("SATSTACK", false);
     setEnv("MOCK", "");
-    setMockStatus({ type: "ready" });
+    setMockStatus({
+      type: "ready",
+    });
   });
   test("events", async () => {
     setEnv("SATSTACK", true);
     const stack = [
-      { type: "ready" },
-      { type: "node-disconnected" },
-      { type: "node-disconnected" },
-      { type: "satstack-disconnected" },
-      { type: "ready" },
+      {
+        type: "ready",
+      },
+      {
+        type: "node-disconnected",
+      },
+      {
+        type: "node-disconnected",
+      },
+      {
+        type: "satstack-disconnected",
+      },
+      {
+        type: "ready",
+      },
     ];
     let success;
     const p = new Promise((s) => {
       success = s;
     });
-    let last = { type: "ready" };
+    let last = {
+      type: "ready",
+    };
     const u = statusObservable.subscribe((e) => {
       if (stack.length === 0) {
         u.unsubscribe();
         success();
       } else {
         expect(e).toEqual(last);
-        setMockStatus((last = stack.splice(0, 1)[0]));
+        setMockStatus((last = stack.splice(0, 1)[0]) as SatStackStatus);
       }
     });
     await p;
   });
 });
-
 describe("requiresSatStackReady", () => {
   beforeEach(() => {
     setEnv("MOCK", "1");
   });
   afterEach(() => {
-    setMockStatus({ type: "ready" });
+    setMockStatus({
+      type: "ready",
+    });
     setEnv("SATSTACK", false);
     setEnv("MOCK", "");
   });
   test("without satstack", async () => {
+    // @ts-expect-error the expected value is void
     await expect(requiresSatStackReady()).resolves.toBe();
   });
   test("with satstack", async () => {
     setEnv("SATSTACK", true);
+    // @ts-expect-error the expected value is void
     await expect(requiresSatStackReady()).resolves.toBe();
   });
   test("with satstack not ready", async () => {
     setEnv("SATSTACK", true);
-    setMockStatus({ type: "node-disconnected" });
+    setMockStatus({
+      type: "node-disconnected",
+    });
     await expect(requiresSatStackReady()).rejects.toThrow();
   });
 });

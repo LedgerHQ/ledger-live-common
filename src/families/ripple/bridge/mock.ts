@@ -1,4 +1,3 @@
-// @flow
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { BigNumber } from "bignumber.js";
 import {
@@ -21,22 +20,19 @@ import {
 } from "../../../bridge/mockHelpers";
 import { formatCurrencyUnit } from "../../../currencies";
 import { makeAccountBridgeReceive } from "../../../bridge/mockHelpers";
-
 const receive = makeAccountBridgeReceive();
-
-const notCreatedAddresses = [];
-
+const notCreatedAddresses: string[] = [];
 export function addNotCreatedRippleMockAddress(addr: string) {
   notCreatedAddresses.push(addr);
 }
 
-const defaultGetFees = (a: Account, t: *) => t.fee || BigNumber(0);
+const defaultGetFees = (a: Account, t: any) => t.fee || new BigNumber(0);
 
 const createTransaction = (): Transaction => ({
   family: "ripple",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   recipient: "",
-  fee: BigNumber(10),
+  fee: new BigNumber(10),
   feeCustomUnit: getCryptoCurrencyById("ripple").units[1],
   tag: undefined,
   networkInfo: null,
@@ -49,7 +45,7 @@ const estimateMaxSpendable = ({ account, parentAccount, transaction }) => {
   const mainAccount = getMainAccount(account, parentAccount);
   const estimatedFees = transaction
     ? defaultGetFees(mainAccount, transaction)
-    : BigNumber(10);
+    : new BigNumber(10);
   return Promise.resolve(
     BigNumber.max(0, account.balance.minus(estimatedFees))
   );
@@ -57,30 +53,31 @@ const estimateMaxSpendable = ({ account, parentAccount, transaction }) => {
 
 const getTransactionStatus = (a, t) => {
   const minimalBaseAmount = 10 ** a.currency.units[0].magnitude * 20;
-  const errors = {};
-  const warnings = {};
-
+  const errors: {
+    amount?: Error;
+    recipient?: Error;
+  } = {};
+  const warnings: {
+    feeTooHigh?: Error;
+  } = {};
   const useAllAmount = !!t.useAllAmount;
-
   const estimatedFees = defaultGetFees(a, t);
-
   const totalSpent = useAllAmount
     ? a.balance
-    : BigNumber(t.amount).plus(estimatedFees);
-
+    : new BigNumber(t.amount).plus(estimatedFees);
   const amount = useAllAmount
     ? a.balance.minus(estimatedFees)
-    : BigNumber(t.amount);
+    : new BigNumber(t.amount);
 
   if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
     warnings.feeTooHigh = new FeeTooHigh();
   }
 
   if (totalSpent.gt(a.balance)) {
-    errors.amount = new NotEnoughSpendableBalance(null, {
+    errors.amount = new NotEnoughSpendableBalance("", {
       minimumAmount: formatCurrencyUnit(
         a.currency.units[0],
-        BigNumber(minimalBaseAmount),
+        new BigNumber(minimalBaseAmount),
         {
           disableRounding: true,
           useGrouping: false,
@@ -92,10 +89,10 @@ const getTransactionStatus = (a, t) => {
     minimalBaseAmount &&
     a.balance.minus(totalSpent).lt(minimalBaseAmount)
   ) {
-    errors.amount = new NotEnoughSpendableBalance(null, {
+    errors.amount = new NotEnoughSpendableBalance("", {
       minimumAmount: formatCurrencyUnit(
         a.currency.units[0],
-        BigNumber(minimalBaseAmount),
+        new BigNumber(minimalBaseAmount),
         {
           disableRounding: true,
           useGrouping: false,
@@ -110,7 +107,7 @@ const getTransactionStatus = (a, t) => {
     amount.lt(minimalBaseAmount)
   ) {
     // mimic XRP base minimal for new addresses
-    errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated(null, {
+    errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {
       minimalAmount: `XRP Minimum reserve`,
     });
   }
@@ -139,11 +136,12 @@ const prepareTransaction = async (a, t) => {
       ...t,
       networkInfo: {
         family: "ripple",
-        serverFee: BigNumber(10),
-        baseReserve: BigNumber(20),
+        serverFee: new BigNumber(10),
+        baseReserve: new BigNumber(20),
       },
     };
   }
+
   return t;
 };
 
@@ -158,11 +156,12 @@ const accountBridge: AccountBridge<Transaction> = {
   signOperation,
   broadcast,
 };
-
 const currencyBridge: CurrencyBridge = {
-  preload: () => Promise.resolve(),
+  preload: () => Promise.resolve({}),
   hydrate: () => {},
   scanAccounts,
 };
-
-export default { currencyBridge, accountBridge };
+export default {
+  currencyBridge,
+  accountBridge,
+};

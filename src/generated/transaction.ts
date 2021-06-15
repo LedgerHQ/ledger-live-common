@@ -10,6 +10,8 @@ import neo from "../families/neo/transaction";
 
 import polkadot from "../families/polkadot/transaction";
 
+import ripple from "../families/ripple/transaction";
+
 import stellar from "../families/stellar/transaction";
 
 import tezos from "../families/tezos/transaction";
@@ -24,6 +26,7 @@ export default {
   ethereum,
   neo,
   polkadot,
+  ripple,
   stellar,
   tezos,
   tron,

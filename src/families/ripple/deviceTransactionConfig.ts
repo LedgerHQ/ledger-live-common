@@ -1,5 +1,3 @@
-// @flow
-
 import type { AccountLike, Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
 import type { DeviceTransactionField } from "../../transaction";
@@ -8,12 +6,12 @@ function getDeviceTransactionConfig({
   transaction: { tag },
   status: { amount, estimatedFees },
 }: {
-  account: AccountLike,
-  parentAccount: ?Account,
-  transaction: Transaction,
-  status: TransactionStatus,
+  account: AccountLike;
+  parentAccount: Account | null | undefined;
+  transaction: Transaction;
+  status: TransactionStatus;
 }): Array<DeviceTransactionField> {
-  const fields = [];
+  const fields: Array<DeviceTransactionField> = [];
 
   if (!amount.isZero()) {
     fields.push({

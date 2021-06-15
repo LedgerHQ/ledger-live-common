@@ -1,4 +1,3 @@
-// @flow
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import {
@@ -17,9 +16,7 @@ import type { Transaction } from "../types";
 import { getMainAccount } from "../../../account";
 import { formatCurrencyUnit } from "../../../currencies";
 import { makeAccountBridgeReceive } from "../../../bridge/mockHelpers";
-
 const receive = makeAccountBridgeReceive();
-
 import {
   scanAccounts,
   signOperation,
@@ -27,10 +24,8 @@ import {
   sync,
   isInvalidRecipient,
 } from "../../../bridge/mockHelpers";
-
-const notCreatedAddresses = [];
-const multiSignAddresses = [];
-
+const notCreatedAddresses: string[] = [];
+const multiSignAddresses: string[] = [];
 export function addNotCreatedStellarMockAddresses(addr: string) {
   notCreatedAddresses.push(addr);
 }
@@ -38,9 +33,9 @@ export function addMultisignStellarMockAddresses(addr: string) {
   multiSignAddresses.push(addr);
 }
 
-const createTransaction = () => ({
+const createTransaction = (): Transaction => ({
   family: "stellar",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   baseReserve: null,
   networkInfo: null,
   fees: null,
@@ -54,6 +49,7 @@ const updateTransaction = (t, patch) => {
   if ("recipient" in patch && patch.recipient !== t.recipient) {
     return { ...t, ...patch, memoType: null };
   }
+
   return { ...t, ...patch };
 };
 
@@ -63,12 +59,14 @@ const isMemoValid = (memoType: string, memoValue: string): boolean => {
       if (memoValue.length > 28) {
         return false;
       }
+
       break;
 
     case "MEMO_ID":
-      if (BigNumber(memoValue.toString()).isNaN()) {
+      if (new BigNumber(memoValue.toString()).isNaN()) {
         return false;
       }
+
       break;
 
     case "MEMO_HASH":
@@ -76,13 +74,20 @@ const isMemoValid = (memoType: string, memoValue: string): boolean => {
       if (!memoValue.length || memoValue.length !== 32) {
         return false;
       }
+
       break;
   }
+
   return true;
 };
 
 const getTransactionStatus = async (a, t) => {
-  const errors = {};
+  const errors: {
+    recipient?: Error;
+    fees?: Error;
+    amount?: Error;
+    transaction?: Error;
+  } = {};
   const warnings = {};
   const useAllAmount = !!t.useAllAmount;
 
@@ -106,9 +111,8 @@ const getTransactionStatus = async (a, t) => {
     errors.fees = new FeeNotLoaded();
   }
 
-  let estimatedFees = !t.fees ? BigNumber(0) : t.fees;
-  let baseReserve = !t.baseReserve ? BigNumber(0) : t.baseReserve;
-
+  const estimatedFees = !t.fees ? new BigNumber(0) : t.fees;
+  const baseReserve = !t.baseReserve ? new BigNumber(0) : t.baseReserve;
   let amount = !useAllAmount
     ? t.amount
     : a.balance.minus(baseReserve).minus(estimatedFees);
@@ -117,7 +121,7 @@ const getTransactionStatus = async (a, t) => {
     : a.balance.minus(baseReserve);
 
   if (totalSpent.gt(a.balance.minus(baseReserve))) {
-    errors.amount = new NotEnoughSpendableBalance(null, {
+    errors.amount = new NotEnoughSpendableBalance("", {
       minimumAmount: formatCurrencyUnit(a.currency.units[0], baseReserve, {
         disableRounding: true,
         useGrouping: false,
@@ -139,8 +143,8 @@ const getTransactionStatus = async (a, t) => {
     (amount.lt(0) || totalSpent.gt(a.balance))
   ) {
     errors.amount = new NotEnoughBalance();
-    totalSpent = BigNumber(0);
-    amount = BigNumber(0);
+    totalSpent = new BigNumber(0);
+    amount = new BigNumber(0);
   }
 
   if (!errors.amount && amount.eq(0)) {
@@ -174,11 +178,10 @@ const getTransactionStatus = async (a, t) => {
 const prepareTransaction = async (a, t) => {
   const networkInfo = t.networkInfo || {
     family: "stellar",
-    fees: BigNumber("100"),
-    baseReserve: BigNumber("100000"),
+    fees: new BigNumber("100"),
+    baseReserve: new BigNumber("100000"),
   };
   invariant(networkInfo.family === "stellar", "stellar networkInfo expected");
-
   const fees = t.fees || networkInfo.fees;
   const baseReserve = t.baseReserve || networkInfo.baseReserve;
 
@@ -187,12 +190,7 @@ const prepareTransaction = async (a, t) => {
     t.fees !== fees ||
     t.baseReserve !== baseReserve
   ) {
-    return {
-      ...t,
-      networkInfo,
-      fees,
-      baseReserve,
-    };
+    return { ...t, networkInfo, fees, baseReserve };
   }
 
   return t;
@@ -206,7 +204,8 @@ const estimateMaxSpendable = async ({
   const mainAccount = getMainAccount(account, parentAccount);
   const t = await prepareTransaction(mainAccount, {
     ...createTransaction(),
-    recipient: notCreatedAddresses[0], // not used address
+    recipient: notCreatedAddresses[0],
+    // not used address
     ...transaction,
     useAllAmount: true,
   });
@@ -214,7 +213,7 @@ const estimateMaxSpendable = async ({
   return s.amount;
 };
 
-const preload = async () => {};
+const preload = async () => ({});
 
 const hydrate = () => {};
 
@@ -223,7 +222,6 @@ const currencyBridge: CurrencyBridge = {
   hydrate,
   scanAccounts,
 };
-
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   updateTransaction,
@@ -235,5 +233,7 @@ const accountBridge: AccountBridge<Transaction> = {
   broadcast,
   estimateMaxSpendable,
 };
-
-export default { currencyBridge, accountBridge };
+export default {
+  currencyBridge,
+  accountBridge,
+};

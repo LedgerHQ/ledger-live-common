@@ -1,12 +1,8 @@
-// @flow
 import { fromAccountRaw } from "../../account/serialization";
-
+import { BalanceHistoryRawMap } from "../../types";
 export const __NEXT_REWARD_DATE__ = new Date(Date.now() - 6 * 60 * 60 * 1000);
-
 export const __LAST_VOTING_DATE__ = new Date(Date.now() - 6 * 60 * 60 * 1000);
-
 export const mockAccount = fromAccountRaw({
-  type: "Account",
   id: "js:2:tron:TRON_ID:",
   starred: true,
   seedIdentifier: "TRON_ID",
@@ -23,7 +19,7 @@ export const mockAccount = fromAccountRaw({
   name: "Tron 1",
   blockHeight: 0,
   balance: "375978130",
-  balanceHistory: {},
+  balanceHistory: {} as BalanceHistoryRawMap,
   spendableBalance: "978130",
   operations: [
     {
@@ -55,7 +51,10 @@ export const mockAccount = fromAccountRaw({
       date: "2020-03-17T11:23:12.000Z",
       value: "0",
       fee: "0",
-      extra: { frozenAmount: "1000000", resource: "BANDWIDTH" },
+      extra: {
+        frozenAmount: "1000000",
+        resource: "BANDWIDTH",
+      },
       subOperations: [],
     },
     {
@@ -105,8 +104,14 @@ export const mockAccount = fromAccountRaw({
       fee: "0",
       extra: {
         votes: [
-          { address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH", count: 281 },
-          { address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U", count: 55 },
+          {
+            address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH",
+            count: 281,
+          },
+          {
+            address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U",
+            count: 55,
+          },
         ],
       },
       subOperations: [],
@@ -142,8 +147,14 @@ export const mockAccount = fromAccountRaw({
       fee: "0",
       extra: {
         votes: [
-          { address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH", count: 300 },
-          { address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U", count: 74 },
+          {
+            address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH",
+            count: 300,
+          },
+          {
+            address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U",
+            count: 74,
+          },
         ],
       },
       subOperations: [],
@@ -161,7 +172,10 @@ export const mockAccount = fromAccountRaw({
       date: "2020-02-18T17:13:03.000Z",
       value: "0",
       fee: "0",
-      extra: { frozenAmount: "374000000", resource: "BANDWIDTH" },
+      extra: {
+        frozenAmount: "374000000",
+        resource: "BANDWIDTH",
+      },
       subOperations: [],
     },
     {
@@ -231,7 +245,12 @@ export const mockAccount = fromAccountRaw({
   ],
   operationsCount: 12,
   pendingOperations: [],
-  unit: { name: "TRX", code: "TRX", magnitude: 6 },
+  // @ts-expect-error wat
+  unit: {
+    name: "TRX",
+    code: "TRX",
+    magnitude: 6,
+  },
   currencyId: "tron",
   unitMagnitude: 6,
   lastSyncDate: "2020-03-18T09:22:46.747Z",
@@ -244,10 +263,19 @@ export const mockAccount = fromAccountRaw({
       },
       energy: null,
     },
-    delegatedFrozen: { bandwidth: null, energy: null },
+    delegatedFrozen: {
+      bandwidth: null,
+      energy: null,
+    },
     votes: [
-      { address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH", voteCount: 281 },
-      { address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U", voteCount: 55 },
+      {
+        address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH",
+        voteCount: 281,
+      },
+      {
+        address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U",
+        voteCount: 55,
+      },
     ],
     tronPower: 375,
     energy: "0",
@@ -262,9 +290,7 @@ export const mockAccount = fromAccountRaw({
     lastVotedDate: __LAST_VOTING_DATE__.toISOString(),
   },
 });
-
 export const mockAccountNoReward = fromAccountRaw({
-  type: "Account",
   id: "js:2:tron:TRON_ID:",
   starred: true,
   seedIdentifier: "TRON_ID",
@@ -281,7 +307,7 @@ export const mockAccountNoReward = fromAccountRaw({
   name: "Tron 1",
   blockHeight: 0,
   balance: "375978130",
-  balanceHistory: {},
+  balanceHistory: {} as BalanceHistoryRawMap,
   spendableBalance: "978130",
   operations: [
     {
@@ -297,7 +323,10 @@ export const mockAccountNoReward = fromAccountRaw({
       date: "2020-03-17T11:23:12.000Z",
       value: "0",
       fee: "0",
-      extra: { frozenAmount: "1000000", resource: "BANDWIDTH" },
+      extra: {
+        frozenAmount: "1000000",
+        resource: "BANDWIDTH",
+      },
       subOperations: [],
     },
     {
@@ -315,8 +344,14 @@ export const mockAccountNoReward = fromAccountRaw({
       fee: "0",
       extra: {
         votes: [
-          { address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH", count: 281 },
-          { address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U", count: 55 },
+          {
+            address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH",
+            count: 281,
+          },
+          {
+            address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U",
+            count: 55,
+          },
         ],
       },
       subOperations: [],
@@ -352,8 +387,14 @@ export const mockAccountNoReward = fromAccountRaw({
       fee: "0",
       extra: {
         votes: [
-          { address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH", count: 300 },
-          { address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U", count: 74 },
+          {
+            address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH",
+            count: 300,
+          },
+          {
+            address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U",
+            count: 74,
+          },
         ],
       },
       subOperations: [],
@@ -371,7 +412,10 @@ export const mockAccountNoReward = fromAccountRaw({
       date: "2020-02-18T17:13:03.000Z",
       value: "0",
       fee: "0",
-      extra: { frozenAmount: "374000000", resource: "BANDWIDTH" },
+      extra: {
+        frozenAmount: "374000000",
+        resource: "BANDWIDTH",
+      },
       subOperations: [],
     },
     {
@@ -441,7 +485,12 @@ export const mockAccountNoReward = fromAccountRaw({
   ],
   operationsCount: 12,
   pendingOperations: [],
-  unit: { name: "TRX", code: "TRX", magnitude: 6 },
+  // @ts-expect-error wat
+  unit: {
+    name: "TRX",
+    code: "TRX",
+    magnitude: 6,
+  },
   currencyId: "tron",
   unitMagnitude: 6,
   lastSyncDate: "2020-03-18T09:22:46.747Z",
@@ -454,10 +503,19 @@ export const mockAccountNoReward = fromAccountRaw({
       },
       energy: null,
     },
-    delegatedFrozen: { bandwidth: null, energy: null },
+    delegatedFrozen: {
+      bandwidth: null,
+      energy: null,
+    },
     votes: [
-      { address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH", voteCount: 281 },
-      { address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U", voteCount: 55 },
+      {
+        address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH",
+        voteCount: 281,
+      },
+      {
+        address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U",
+        voteCount: 55,
+      },
     ],
     tronPower: 375,
     energy: "0",
@@ -472,9 +530,7 @@ export const mockAccountNoReward = fromAccountRaw({
     lastVotedDate: "2020-03-09T08:44:39.000Z",
   },
 });
-
 export const mockAccountNoVote = fromAccountRaw({
-  type: "Account",
   id: "js:2:tron:TRON_ID:",
   starred: true,
   seedIdentifier: "TRON_ID",
@@ -491,7 +547,7 @@ export const mockAccountNoVote = fromAccountRaw({
   name: "Tron 1",
   blockHeight: 0,
   balance: "375978130",
-  balanceHistory: {},
+  balanceHistory: {} as BalanceHistoryRawMap,
   spendableBalance: "978130",
   operations: [
     {
@@ -507,7 +563,10 @@ export const mockAccountNoVote = fromAccountRaw({
       date: "2020-03-17T11:23:12.000Z",
       value: "0",
       fee: "0",
-      extra: { frozenAmount: "1000000", resource: "BANDWIDTH" },
+      extra: {
+        frozenAmount: "1000000",
+        resource: "BANDWIDTH",
+      },
       subOperations: [],
     },
     {
@@ -539,7 +598,10 @@ export const mockAccountNoVote = fromAccountRaw({
       date: "2020-02-18T17:13:03.000Z",
       value: "0",
       fee: "0",
-      extra: { frozenAmount: "374000000", resource: "BANDWIDTH" },
+      extra: {
+        frozenAmount: "374000000",
+        resource: "BANDWIDTH",
+      },
       subOperations: [],
     },
     {
@@ -609,7 +671,12 @@ export const mockAccountNoVote = fromAccountRaw({
   ],
   operationsCount: 12,
   pendingOperations: [],
-  unit: { name: "TRX", code: "TRX", magnitude: 6 },
+  // @ts-expect-error wat
+  unit: {
+    name: "TRX",
+    code: "TRX",
+    magnitude: 6,
+  },
   currencyId: "tron",
   unitMagnitude: 6,
   lastSyncDate: "2020-03-18T09:22:46.747Z",
@@ -622,10 +689,19 @@ export const mockAccountNoVote = fromAccountRaw({
       },
       energy: null,
     },
-    delegatedFrozen: { bandwidth: null, energy: null },
+    delegatedFrozen: {
+      bandwidth: null,
+      energy: null,
+    },
     votes: [
-      { address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH", voteCount: 281 },
-      { address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U", voteCount: 55 },
+      {
+        address: "TLyqzVGLV1srkB7dToTAEqgDSfPtXRJZYH",
+        voteCount: 281,
+      },
+      {
+        address: "TGj1Ej1qRzL9feLTLhjwgxXF4Ct6GTWg2U",
+        voteCount: 55,
+      },
     ],
     tronPower: 375,
     energy: "0",

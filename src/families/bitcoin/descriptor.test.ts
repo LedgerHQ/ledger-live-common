@@ -1,4 +1,3 @@
-// @flow
 import invariant from "invariant";
 import { getCryptoCurrencyById } from "../../currencies";
 import {
@@ -7,14 +6,12 @@ import {
 } from "./descriptor";
 import { fromAccountRaw } from "../../account";
 import bitcoinDatasets from "./datasets/bitcoin";
-
 describe("inferDescriptorFromAccount", () => {
   invariant(bitcoinDatasets.accounts, "bitcoin datasets have accounts");
-
-  const [bitcoin1, bitcoin2] = bitcoinDatasets.accounts.map((a) =>
+  // FIXME: migrate away from invariant for more type guard
+  const [bitcoin1, bitcoin2] = (bitcoinDatasets.accounts as any).map((a) =>
     fromAccountRaw(a.raw)
   );
-
   it("should work on bitcoin account 1", () => {
     expect(inferDescriptorFromAccount(bitcoin1)).toEqual({
       external:
@@ -23,7 +20,6 @@ describe("inferDescriptorFromAccount", () => {
         "pkh([224b6226/44'/0'/0']xpub6BuPWhjLqutPV8SF4RMrrn8c3t7uBZbz4CBbThpbg9GYjqRMncra9mjgSfWSK7uMDz37hhzJ8wvkbDDQQJt6VgwLoszvmPiSBtLA1bPLLSn/1/*)",
     });
   });
-
   it("should work on bitcoin account 2", () => {
     expect(inferDescriptorFromAccount(bitcoin2)).toEqual({
       external:
@@ -33,7 +29,6 @@ describe("inferDescriptorFromAccount", () => {
     });
   });
 });
-
 describe("inferDescriptorFromDeviceInfo", () => {
   it("should work on a first Bitcoin legacy derivation", () => {
     const descriptor = inferDescriptorFromDeviceInfo({

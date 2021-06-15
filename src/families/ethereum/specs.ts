@@ -1,4 +1,3 @@
-// @flow
 import expect from "expect";
 import { BigNumber } from "bignumber.js";
 import invariant from "invariant";
@@ -17,6 +16,9 @@ import { getSupplyMax } from "./modules/compound";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
 import { getGasLimit } from "./transaction";
+import { DeviceModelId } from "@ledgerhq/devices";
+import { TokenCurrency } from "@ledgerhq/cryptoassets";
+import { CompoundAccountSummary } from "../../compound/types";
 
 const ethereumBasicMutations = ({ maxAccount }) => [
   {
@@ -28,7 +30,12 @@ const ethereumBasicMutations = ({ maxAccount }) => [
       const amount = account.balance.div(2).integerValue();
       return {
         transaction: bridge.createTransaction(account),
-        updates: [{ recipient, amount }],
+        updates: [
+          {
+            recipient,
+            amount,
+          },
+        ],
       };
     },
     test: ({ account, accountBeforeTransaction, operation, transaction }) => {
@@ -50,7 +57,7 @@ const ethereumBasicMutations = ({ maxAccount }) => [
   },
 ];
 
-function findCompoundAccount(account, f: Function) {
+function findCompoundAccount(account, f: (...args: Array<any>) => any) {
   return sample(
     (account.subAccounts || []).filter((a) => {
       if (
@@ -61,6 +68,7 @@ function findCompoundAccount(account, f: Function) {
         const c = getAccountCapabilities(a);
         return c && f(c, a);
       }
+
       return false;
     })
   );
@@ -83,7 +91,6 @@ function getCompoundResult({ account, transaction, accountBeforeTransaction }) {
   );
   const capabilities = getAccountCapabilities(a);
   const summary = makeCompoundSummaryForAccount(a, account);
-
   const capabilitiesBefore = getAccountCapabilities(aBefore);
   const summaryBefore = makeCompoundSummaryForAccount(
     aBefore,
@@ -98,7 +105,10 @@ function getCompoundResult({ account, transaction, accountBeforeTransaction }) {
     a,
     capabilities,
     summary,
-    previous: { summary: summaryBefore, capabilities: capabilitiesBefore },
+    previous: {
+      summary: summaryBefore,
+      capabilities: capabilitiesBefore,
+    },
   };
 }
 
@@ -106,7 +116,7 @@ const ethereum: AppSpec<Transaction> = {
   name: "Ethereum",
   currency: getCryptoCurrencyById("ethereum"),
   appQuery: {
-    model: "nanoS",
+    model: DeviceModelId.nanoS,
     appName: "Ethereum",
     appVersion: "1.5.0-rc3",
   },
@@ -119,7 +129,10 @@ const ethereum: AppSpec<Transaction> = {
       "balance is too low"
     );
   },
-  mutations: ethereumBasicMutations({ maxAccount: 3 }).concat([
+  // @ts-expect-error seriously we have to do somehting
+  mutations: ethereumBasicMutations({
+    maxAccount: 3,
+  }).concat([
     {
       name: "allow MAX a compound token",
       maxRun: 1,
@@ -130,23 +143,24 @@ const ethereum: AppSpec<Transaction> = {
         const ctoken = findCompoundToken(a.token);
         invariant(ctoken, "ctoken found");
         return {
-          transaction: bridge.createTransaction(account),
+          transaction: bridge.createTransaction(account) as Transaction,
           updates: [
             {
               mode: "erc20.approve",
               subAccountId: a.id,
-              recipient: ctoken.contractAddress,
+              recipient: (ctoken as TokenCurrency).contractAddress,
             },
-            { useAllAmount: true },
-          ],
+            {
+              useAllAmount: true,
+            },
+          ] as Partial<Transaction>[],
         };
       },
       test: (arg) => {
         const { capabilities } = getCompoundResult(arg);
-        expect(capabilities.enabledAmountIsUnlimited).toBe(true);
+        expect((capabilities as any).enabledAmountIsUnlimited).toBe(true);
       },
     },
-
     {
       name: "supply some compound token",
       maxRun: 1,
@@ -178,8 +192,8 @@ const ethereum: AppSpec<Transaction> = {
           transaction.subAccountId
         );
         expect(
-          summary.totalSupplied.gt(
-            previous.summary?.totalSupplied || BigNumber(0)
+          (summary as CompoundAccountSummary).totalSupplied.gt(
+            previous.summary?.totalSupplied || new BigNumber(0)
           )
         ).toBe(true);
       },
@@ -192,8 +206,7 @@ const ethereum: AppSpec<Transaction> = {
           account,
           (c, a) =>
             c.canWithdraw &&
-            a.operations.length > 0 &&
-            // 7 days has passed since last operation
+            a.operations.length > 0 && // 7 days has passed since last operation
             Date.now() - a.operations[0].date > 7 * 24 * 60 * 60 * 1000
         );
         invariant(a, "no compound account to withdraw");
@@ -203,9 +216,14 @@ const ethereum: AppSpec<Transaction> = {
         return {
           transaction: bridge.createTransaction(account),
           updates: [
-            { mode: "compound.withdraw", subAccountId: a.id },
+            {
+              mode: "compound.withdraw",
+              subAccountId: a.id,
+            },
             Math.random() < 0.5
-              ? { useAllAmount: true }
+              ? {
+                  useAllAmount: true,
+                }
               : {
                   amount: nonSpendableBalance
                     .times(Math.random())
@@ -227,12 +245,16 @@ const ethereum: AppSpec<Transaction> = {
           "could not find a previous compound summary for account %s",
           transaction.subAccountId
         );
+
         if (arg.transaction.useAllAmount) {
-          expect(summary.totalSupplied.eq(0)).toBe(true);
+          expect((summary as CompoundAccountSummary).totalSupplied.eq(0)).toBe(
+            true
+          );
         } else {
           expect(
-            summary.totalSupplied.lt(
-              previous.summary.totalSupplied || BigNumber(0)
+            (summary as CompoundAccountSummary).totalSupplied.lt(
+              (previous.summary as CompoundAccountSummary).totalSupplied ||
+                new BigNumber(0)
             )
           ).toBe(true);
         }
@@ -258,15 +280,17 @@ const ethereum: AppSpec<Transaction> = {
             {
               mode: "erc20.approve",
               subAccountId: a.id,
-              recipient: ctoken.contractAddress,
+              recipient: (ctoken as TokenCurrency).contractAddress,
             },
-            { amount: BigNumber(0) },
+            {
+              amount: new BigNumber(0),
+            },
           ],
         };
       },
       test: (arg) => {
         const { capabilities } = getCompoundResult(arg);
-        expect(capabilities.enabledAmount.eq(0)).toBe(true);
+        expect((capabilities as any).enabledAmount.eq(0)).toBe(true);
       },
     },
     {
@@ -282,9 +306,14 @@ const ethereum: AppSpec<Transaction> = {
         return {
           transaction: bridge.createTransaction(account),
           updates: [
-            { recipient, subAccountId: erc20Account.id },
+            {
+              recipient,
+              subAccountId: erc20Account.id,
+            },
             Math.random() < 0.5
-              ? { useAllAmount: true }
+              ? {
+                  useAllAmount: true,
+                }
               : {
                   amount: erc20Account.balance
                     .times(Math.random())
@@ -309,6 +338,7 @@ const ethereum: AppSpec<Transaction> = {
           (s) => s.id === transaction.subAccountId
         );
         invariant(erc20account, "erc20 acc is still here");
+
         if (transaction.useAllAmount) {
           expect(erc20account.balance.toString()).toBe("0");
         } else {
@@ -320,12 +350,11 @@ const ethereum: AppSpec<Transaction> = {
     },
   ]),
 };
-
 const ethereumClassic: AppSpec<Transaction> = {
   name: "Ethereum Classic",
   currency: getCryptoCurrencyById("ethereum_classic"),
   appQuery: {
-    model: "nanoS",
+    model: DeviceModelId.nanoS,
     appName: "Ethereum Classic",
   },
   dependency: "Ethereum",
@@ -341,14 +370,15 @@ const ethereumClassic: AppSpec<Transaction> = {
       "balance is too low"
     );
   },
-  mutations: ethereumBasicMutations({ maxAccount: 4 }),
+  mutations: ethereumBasicMutations({
+    maxAccount: 4,
+  }),
 };
-
 const ethereumRopsten: AppSpec<Transaction> = {
   name: "Ethereum Ropsten",
   currency: getCryptoCurrencyById("ethereum_ropsten"),
   appQuery: {
-    model: "nanoS",
+    model: DeviceModelId.nanoS,
     appName: "Ethereum",
     appVersion: "1.5.0-rc3",
   },
@@ -364,9 +394,10 @@ const ethereumRopsten: AppSpec<Transaction> = {
       "balance is too low"
     );
   },
-  mutations: ethereumBasicMutations({ maxAccount: 8 }),
+  mutations: ethereumBasicMutations({
+    maxAccount: 8,
+  }),
 };
-
 export default {
   ethereum,
   ethereumClassic,

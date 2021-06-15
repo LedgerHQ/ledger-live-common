@@ -6,15 +6,16 @@ import type { Account, Transaction, TransactionRaw } from "../types";
 import transactionModulePerFamily from "../generated/transaction";
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const TM = transactionModulePerFamily[tr.family];
-  // $FlowFixMe i don't know how to prove this to flow
-  return TM.fromTransactionRaw(tr);
+  // FIXME: something is wrong with TM.fromTransactionRaw expecting a (arg: never) => for some reasons
+  return TM.fromTransactionRaw(tr as any);
 };
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const TM = transactionModulePerFamily[t.family];
-  // $FlowFixMe i don't know how to prove this to flow
-  return TM.toTransactionRaw(t);
+  // FIXME: something is wrong with TM.toTransactionRaw expecting a (arg: never) => for some reasons
+  return TM.toTransactionRaw(t as any);
 };
 export const formatTransaction = (t: Transaction, a: Account): string => {
   const TM = transactionModulePerFamily[t.family];
-  return TM.formatTransaction ? TM.formatTransaction(t, a) : "";
+  // FIXME: something is wrong with TM.formatTransaction expecting a (arg: never) => for some reasons
+  return TM.formatTransaction ? TM.formatTransaction(t as any, a) : "";
 };

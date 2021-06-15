@@ -1,5 +1,3 @@
-// @flow
-
 import { BigNumber } from "bignumber.js";
 import type { DatasetTest } from "../../types";
 import {
@@ -14,15 +12,12 @@ import {
   addNotCreatedStellarMockAddresses,
   addMultisignStellarMockAddresses,
 } from "./bridge/mock";
-
 export const notCreatedStellarMockAddress =
   "GAW46JE3SHIAYLNNNQCAZFQ437WB5ZH7LDRDWR5LVDWHCTHCKYB6RCCH";
 export const multisignStellarMockAddress =
   "GCDDN6T2LJN3T7SPWJQV6BCCL5KNY5GBN7X4CMSZLDEXDHXAH32TOAHS";
-
 addNotCreatedStellarMockAddresses(notCreatedStellarMockAddress);
 addMultisignStellarMockAddresses(multisignStellarMockAddress);
-
 const dataset: DatasetTest<Transaction> = {
   implementations: ["js"],
   currencies: {
@@ -70,7 +65,12 @@ const dataset: DatasetTest<Transaction> = {
                 derivationPath: "44'/148'/0'",
               },
             ],
-            unit: { name: "Lumen", code: "XLM", magnitude: 7 },
+            // @ts-expect-error wat
+            unit: {
+              name: "Lumen",
+              code: "XLM",
+              magnitude: 7,
+            },
             blockHeight: 28884793,
             operations: [],
             pendingOperations: [],
@@ -85,7 +85,7 @@ const dataset: DatasetTest<Transaction> = {
               name: "Same as Recipient",
               transaction: (t) => ({
                 ...t,
-                amount: BigNumber(100),
+                amount: new BigNumber(100),
                 recipient:
                   "GAT4LBXYJGJJJRSNK74NPFLO55CDDXSYVMQODSEAAH3M6EY4S7LPH5GV",
               }),
@@ -130,7 +130,9 @@ const dataset: DatasetTest<Transaction> = {
                   "GAIXIJBMYPTSF2CDVQ35WOTULCLZIE4W2SDEK3RQGAA3A22BPWY7R53Z",
               }),
               expectedStatus: {
-                errors: { amount: new NotEnoughSpendableBalance() },
+                errors: {
+                  amount: new NotEnoughSpendableBalance(),
+                },
                 warnings: {},
               },
             },
@@ -143,7 +145,9 @@ const dataset: DatasetTest<Transaction> = {
                   "GAIXIJBMYPTSF2CDVQ35WOTULCLZIE4W2SDEK3RQGAA3A22BPWY7R53Z",
               }),
               expectedStatus: {
-                errors: { amount: new NotEnoughSpendableBalance() },
+                errors: {
+                  amount: new NotEnoughSpendableBalance(),
+                },
                 warnings: {},
               },
             },
@@ -168,7 +172,7 @@ const dataset: DatasetTest<Transaction> = {
               expectedStatus: (account) => ({
                 errors: {},
                 warnings: {},
-                estimatedFees: BigNumber("100"),
+                estimatedFees: new BigNumber("100"),
                 amount: account.balance.minus("1500000").minus("100"),
                 totalSpent: account.balance.minus("1500000"),
               }),
@@ -177,7 +181,7 @@ const dataset: DatasetTest<Transaction> = {
               name: "memo text - success",
               transaction: (t) => ({
                 ...t,
-                amount: BigNumber(100),
+                amount: new BigNumber(100),
                 recipient:
                   "GAIXIJBMYPTSF2CDVQ35WOTULCLZIE4W2SDEK3RQGAA3A22BPWY7R53Z",
                 memoType: "MEMO_TEXT",
@@ -192,14 +196,16 @@ const dataset: DatasetTest<Transaction> = {
               name: "memo text - error",
               transaction: (t) => ({
                 ...t,
-                amount: BigNumber(100),
+                amount: new BigNumber(100),
                 recipient:
                   "GAIXIJBMYPTSF2CDVQ35WOTULCLZIE4W2SDEK3RQGAA3A22BPWY7R53Z",
                 memoType: "MEMO_TEXT",
                 memoValue: "0123456789012345678901234567890123456789",
               }),
               expectedStatus: {
-                errors: { transaction: new StellarWrongMemoFormat() },
+                errors: {
+                  transaction: new StellarWrongMemoFormat(),
+                },
                 warnings: {},
               },
             },
@@ -207,7 +213,7 @@ const dataset: DatasetTest<Transaction> = {
               name: "memo id - success",
               transaction: (t) => ({
                 ...t,
-                amount: BigNumber(100),
+                amount: new BigNumber(100),
                 recipient:
                   "GAIXIJBMYPTSF2CDVQ35WOTULCLZIE4W2SDEK3RQGAA3A22BPWY7R53Z",
                 memoType: "MEMO_ID",
@@ -222,14 +228,16 @@ const dataset: DatasetTest<Transaction> = {
               name: "memo id - error",
               transaction: (t) => ({
                 ...t,
-                amount: BigNumber(100),
+                amount: new BigNumber(100),
                 recipient:
                   "GAIXIJBMYPTSF2CDVQ35WOTULCLZIE4W2SDEK3RQGAA3A22BPWY7R53Z",
                 memoType: "MEMO_ID",
                 memoValue: "btest2",
               }),
               expectedStatus: {
-                errors: { transaction: new StellarWrongMemoFormat() },
+                errors: {
+                  transaction: new StellarWrongMemoFormat(),
+                },
                 warnings: {},
               },
             },
@@ -237,14 +245,16 @@ const dataset: DatasetTest<Transaction> = {
               name: "memo hash - error",
               transaction: (t) => ({
                 ...t,
-                amount: BigNumber(100),
+                amount: new BigNumber(100),
                 recipient:
                   "GAIXIJBMYPTSF2CDVQ35WOTULCLZIE4W2SDEK3RQGAA3A22BPWY7R53Z",
                 memoType: "MEMO_HASH",
                 memoValue: "dsadsdasdsasseeee",
               }),
               expectedStatus: {
-                errors: { transaction: new StellarWrongMemoFormat() },
+                errors: {
+                  transaction: new StellarWrongMemoFormat(),
+                },
                 warnings: {},
               },
             },
@@ -252,8 +262,7 @@ const dataset: DatasetTest<Transaction> = {
         },
         {
           FIXME_tests: [
-            "balance is sum of ops",
-            // We prevent user to do anything if we detect that he is a multisign user
+            "balance is sum of ops", // We prevent user to do anything if we detect that he is a multisign user
             // SourceHasMultiSign will be launch first
             "Default empty recipient have a recipientError",
             "invalid recipient have a recipientError",
@@ -277,7 +286,12 @@ const dataset: DatasetTest<Transaction> = {
               },
             ],
             name: "Stellar 3",
-            unit: { name: "Lumen", code: "XLM", magnitude: 7 },
+            // @ts-expect-error wat
+            unit: {
+              name: "Lumen",
+              code: "XLM",
+              magnitude: 7,
+            },
             blockHeight: 28884848,
             operations: [],
             pendingOperations: [],
@@ -292,14 +306,16 @@ const dataset: DatasetTest<Transaction> = {
               name: "Multisign - error",
               transaction: (t) => ({
                 ...t,
-                amount: BigNumber(100),
+                amount: new BigNumber(100),
                 recipient:
                   "GAIXIJBMYPTSF2CDVQ35WOTULCLZIE4W2SDEK3RQGAA3A22BPWY7R53Z",
                 memoType: "MEMO_HASH",
                 memoValue: "dsadsdasdsasseeee",
               }),
               expectedStatus: {
-                errors: { transaction: new StellarWrongMemoFormat() },
+                errors: {
+                  transaction: new StellarWrongMemoFormat(),
+                },
                 warnings: {},
               },
             },
@@ -334,5 +350,4 @@ const dataset: DatasetTest<Transaction> = {
     },
   },
 };
-
 export default dataset;

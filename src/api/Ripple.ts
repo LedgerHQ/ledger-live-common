@@ -182,7 +182,7 @@ export const submit = async (signature: string): Promise<any> =>
 export const getAccountInfo = async (
   recipient: string,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  endpointConfig: string | null | undefined
+  endpointConfig?: string | null | undefined
 ): Promise<any> =>
   withApi(async (api: typeof RippleAPI) => {
     // @ts-expect-error getAccountInfo not in RippleAPI type definition maybe a bug?
@@ -190,7 +190,7 @@ export const getAccountInfo = async (
   });
 export const getServerInfo = async (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  endpointConfig: string | null | undefined
+  endpointConfig?: string | null | undefined
 ): Promise<any> =>
   withApi(async (api: typeof RippleAPI) => {
     // @ts-expect-error getServerInfo not in RippleAPI type definition maybe a bug?
