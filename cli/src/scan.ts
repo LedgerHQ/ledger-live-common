@@ -1,5 +1,3 @@
-// @flow
-
 import { BigNumber } from "bignumber.js";
 import { Observable, from, defer, of, throwError, concat } from "rxjs";
 import {
@@ -39,7 +37,6 @@ import { delay } from "@ledgerhq/live-common/lib/promise";
 import { jsonFromFile } from "./stream";
 import { shortAddressPreview } from "@ledgerhq/live-common/lib/account/helpers";
 import fs from "fs";
-
 export const deviceOpt = {
   name: "device",
   alias: "d",
@@ -47,7 +44,6 @@ export const deviceOpt = {
   descOpt: "usb path",
   desc: "provide a specific HID path of a device",
 };
-
 export const currencyOpt = {
   name: "currency",
   alias: "c",
@@ -55,31 +51,29 @@ export const currencyOpt = {
   desc:
     "Currency name or ticker. If not provided, it will be inferred from the device.",
 };
-
-let localCache = {};
+const localCache = {};
 const cache = makeBridgeCacheSystem({
   saveData(c, d) {
     localCache[c.id] = d;
     return Promise.resolve();
   },
+
   getData(c) {
     return Promise.resolve(localCache[c.id]);
   },
 });
-
-export type ScanCommonOpts = $Shape<{
-  device: string,
-  id: string[],
-  xpub: string[],
-  file: string,
-  appjsonFile: string,
-  currency: string,
-  scheme: string,
-  index: number,
-  length: number,
-  paginateOperations: number,
+export type ScanCommonOpts = Partial<{
+  device: string;
+  id: string[];
+  xpub: string[];
+  file: string;
+  appjsonFile: string;
+  currency: string;
+  scheme: string;
+  index: number;
+  length: number;
+  paginateOperations: number;
 }>;
-
 export const scanCommonOpts = [
   deviceOpt,
   {
@@ -136,7 +130,6 @@ export const scanCommonOpts = [
     desc: "if defined, will paginate operations",
   },
 ];
-
 export const inferManagerApp = (keyword: string): string => {
   try {
     const currency = findCryptoCurrencyByKeyword(keyword);
@@ -146,27 +139,24 @@ export const inferManagerApp = (keyword: string): string => {
     return keyword;
   }
 };
-
 const implTypePerFamily = {
   tron: "js",
   ripple: "js",
   ethereum: "js",
   polkadot: "js",
 };
-
 const possibleImpls = {
   js: 1,
   libcore: 1,
   mock: 1,
 };
-
 export const inferCurrency = <
-  T: {
-    device: string,
-    currency: string,
-    file: string,
-    xpub: string[],
-    id: string[],
+  T extends {
+    device: string;
+    currency: string;
+    file: string;
+    xpub: string[];
+    id: string[];
   }
 >({
   device,
@@ -174,13 +164,15 @@ export const inferCurrency = <
   file,
   xpub,
   id,
-}: $Shape<T>) => {
+}: Partial<T>) => {
   if (currency) {
     return defer(() => of(findCryptoCurrencyByKeyword(currency)));
   }
+
   if (file || xpub || id) {
     return of(undefined);
   }
+
   return withDevice(device || "")((t) =>
     from(
       getAppAndVersion(t)
@@ -220,8 +212,11 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
     length,
     paginateOperations,
   } = arg;
-
-  const syncConfig = { paginationConfig: {} };
+  const syncConfig = {
+    paginationConfig: {
+      operations: {},
+    },
+  };
 
   if (typeof paginateOperations === "number") {
     syncConfig.paginationConfig.operations = paginateOperations;
@@ -230,13 +225,18 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
   if (typeof appjsonFile === "string") {
     const appjsondata = appjsonFile
       ? JSON.parse(fs.readFileSync(appjsonFile, "utf-8"))
-      : { data: { accounts: [] } };
+      : {
+          data: {
+            accounts: [],
+          },
+        };
 
     if (typeof appjsondata.data.accounts === "string") {
       return throwError(
         new Error("encrypted ledger live data is not supported")
       );
     }
+
     return from(
       appjsondata.data.accounts.map((a) => fromAccountRaw(a.data))
     ).pipe(
@@ -252,13 +252,13 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
       concatMap((account) =>
         getAccountBridge(account, null)
           .sync(account, syncConfig)
-          .pipe(reduce((a, f) => f(a), account))
+          .pipe(reduce((a, f: (arg: any) => any) => f(a), account))
       )
     );
   }
 
   return inferCurrency(arg).pipe(
-    mergeMap((cur: ?CryptoCurrency) => {
+    mergeMap((cur: CryptoCurrency | null | undefined) => {
       let ids = idArray;
 
       if (xpubArray) {
@@ -268,7 +268,6 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
 
       // TODO this should be a "inferAccountId" that needs to look at available impl and do same logic as in bridge.. + we should accept full id as param
       // we kill the --xpub to something else too (--id)
-
       // Restore from ids
       if (ids) {
         // Infer the full ids
@@ -279,22 +278,25 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
             return id;
           } catch (e) {
             const splitted = id.split(":");
+
             const findAndEat = (predicate) => {
               const res = splitted.find(predicate);
+
               if (typeof res === "string") {
                 splitted.splice(splitted.indexOf(res), 1);
                 return res;
               }
             };
-            let currencyId =
+
+            const currencyId =
               findAndEat((s) => findCryptoCurrencyById(s)) ||
               requiredCurrency(cur).id;
             const currency = getCryptoCurrencyById(currencyId);
-            let type =
+            const type =
               findAndEat((s) => possibleImpls[s]) ||
               implTypePerFamily[currency.family] ||
               "libcore";
-            let version = findAndEat((s) => s.match(/^\d+$/)) || "1";
+            const version = findAndEat((s) => s.match(/^\d+$/)) || "1";
             const derivationMode = asDerivationMode(
               findAndEat((s) => {
                 try {
@@ -306,11 +308,13 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
                 scheme ??
                 ""
             );
+
             if (splitted.length === 0) {
               throw new Error(
                 "invalid id='" + id + "': missing xpub or address part"
               );
             }
+
             if (splitted.length > 1) {
               throw new Error(
                 "invalid id='" +
@@ -319,8 +323,8 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
                   splitted.join(" | ")
               );
             }
-            let xpubOrAddress = splitted[0];
 
+            const xpubOrAddress = splitted[0];
             return encodeAccountId({
               type,
               version,
@@ -330,7 +334,6 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
             });
           }
         });
-
         return from(
           fullIds.map((id) => {
             const {
@@ -349,7 +352,7 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
               node: 0,
               address: 0,
             });
-            const account: $Exact<Account> = {
+            const account: Account = {
               type: "Account",
               name:
                 currency.name +
@@ -378,7 +381,6 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
               operationsCount: 0,
               operations: [],
               pendingOperations: [],
-              swapHistory: [],
               balanceHistoryCache: emptyHistoryCache,
             };
             return account;
@@ -388,7 +390,7 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
           concatMap((account) =>
             getAccountBridge(account, null)
               .sync(account, syncConfig)
-              .pipe(reduce((a: Account, f: *) => f(a), account))
+              .pipe(reduce((a: Account, f: any) => f(a), account))
           )
         );
       }
@@ -404,7 +406,7 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
           syncConfig,
         })
       ).pipe(
-        filter((e) => e.type === "discovered"),
+        filter((e: any) => e.type === "discovered"),
         map((e) => e.account)
       );
     }),
