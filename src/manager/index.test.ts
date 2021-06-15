@@ -1,7 +1,5 @@
-// @flow
 import manager from ".";
 import { lenseDevices } from "../__tests__/test-helpers/deviceInfos";
-
 test("firmwareUpdateNeedsLegacyBlueResetInstructions", () => {
   lenseDevices([
     "Blue211",
@@ -18,7 +16,6 @@ test("firmwareUpdateNeedsLegacyBlueResetInstructions", () => {
     ).toBe(false);
   });
 });
-
 test("firmwareUpdateWillUninstallApps", () => {
   lenseDevices([
     "Blue211",
@@ -32,7 +29,6 @@ test("firmwareUpdateWillUninstallApps", () => {
     );
   });
 });
-
 test("firmwareUpdateRequiresUserToUninstallApps", () => {
   lenseDevices(["Blue211", "NanoS155", "NanoX1242rc5"]).forEach(
     ({ deviceInfo, modelId }) => {
@@ -47,7 +43,6 @@ test("firmwareUpdateRequiresUserToUninstallApps", () => {
     ).toBe(true);
   });
 });
-
 test("firmwareUnsupported", () => {
   lenseDevices(["Blue211", "NanoS142", "NanoS155", "NanoX1242rc5"]).forEach(
     ({ deviceInfo, modelId }) => {

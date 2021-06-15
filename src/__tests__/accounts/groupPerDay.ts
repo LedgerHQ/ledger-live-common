@@ -1,7 +1,5 @@
-// @flow
 import flatMap from "lodash/flatMap";
 import { fromAccountRaw, groupAccountOperationsByDay } from "../../account";
-
 const account = fromAccountRaw({
   id: "libcore:1:tezos:A:tezbox",
   seedIdentifier: "B",
@@ -183,15 +181,16 @@ const account = fromAccountRaw({
   xpub: "A",
   subAccounts: [],
 });
-
 test("pending operation are in order", () => {
-  const byDay = groupAccountOperationsByDay(account, { count: 100 });
+  const byDay = groupAccountOperationsByDay(account, {
+    count: 100,
+  });
   expect(byDay.completed).toBe(true);
-
   const dates = flatMap(byDay.sections, (s) => s.data.map((o) => o.date));
-  const sortedByDates = dates.slice(0).sort((a, b) => b - a);
+  const sortedByDates = dates
+    .slice(0)
+    .sort((a, b) => b.valueOf() - a.valueOf());
   expect(dates).toMatchObject(sortedByDates);
-
   expect(byDay.sections.map((s) => s.data.map((o) => o.id))).toMatchObject([
     [
       "libcore:1:tezos:A:tezbox-seven-OUT",

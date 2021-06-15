@@ -81,7 +81,7 @@ export const getBalanceHistoryJS: GetBalanceHistory = memoize(
 );
 export const getBalanceHistory: GetBalanceHistory = (account, r) => {
   // try to find it in the account object
-  const { balanceHistory } = account;
+  const balanceHistory = account.balanceHistory || {};
 
   if (balanceHistory && balanceHistory[r] && balanceHistory[r].length > 1) {
     return balanceHistory[r];

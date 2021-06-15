@@ -1,6 +1,6 @@
-// @flow
 import implementLibcore from "../../../libcore/platforms/react-native";
-// $FlowFixMe
+// @ts-expect-error react native specific platform import
 import { getNativeModule } from "./specific";
-
-implementLibcore({ getNativeModule });
+implementLibcore({
+  getNativeModule,
+});

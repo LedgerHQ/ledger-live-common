@@ -1,5 +1,3 @@
-// @flow
-
 import toPairs from "lodash/toPairs";
 import flatMap from "lodash/flatMap";
 import groupBy from "lodash/groupBy";
@@ -9,9 +7,8 @@ import { getAccountBridge, getCurrencyBridge } from "../bridge";
 import { setEnv } from "../env";
 import { getCryptoCurrencyById } from "../currencies";
 import { toAccountRaw, flattenAccounts } from "../account";
-
+import { Account } from "../types";
 jest.setTimeout(120000);
-
 const mockedCoins = [
   "bitcoin",
   "zcash",
@@ -22,7 +19,6 @@ const mockedCoins = [
   "stellar",
   "cosmos",
 ];
-
 mockedCoins.map(getCryptoCurrencyById).forEach((currency) => {
   describe("mock " + currency.id, () => {
     setEnv("MOCK", true);
@@ -33,33 +29,32 @@ mockedCoins.map(getCryptoCurrencyById).forEach((currency) => {
         .scanAccounts({
           currency,
           deviceId: "",
-          syncConfig: { paginationConfig: {} },
+          syncConfig: {
+            paginationConfig: {},
+          },
         })
         .pipe(
           filter((e) => e.type === "discovered"),
           map((e) => e.account),
-          reduce((all, a) => all.concat(a), [])
+          reduce((all, a) => all.concat(a), <Account[]>[])
         )
         .toPromise();
-
       expect(accounts.length).toBeGreaterThan(0);
-
       const allOps = flatMap(flattenAccounts(accounts), (a) => a.operations);
-
       const operationIdCollisions = toPairs(groupBy(allOps, "id"))
         .filter(([_, coll]) => coll.length > 1)
         .map(([id]) => id);
-
       expect(operationIdCollisions).toEqual([]);
-
       const [first, second] = await Promise.all(
         accounts.map(async (a) => {
           const bridge = getAccountBridge(a, null);
           const synced = await bridge
-            .sync(a, { paginationConfig: {} })
+            .sync(a, {
+              paginationConfig: {},
+            })
             .pipe(reduce((a, f) => f(a), a))
             .toPromise();
-          const m: Object = toAccountRaw(a);
+          const m: Record<string, any> = toAccountRaw(a);
           delete m.lastSyncDate;
           delete m.blockHeight;
           expect(toAccountRaw(synced)).toMatchObject(m);
@@ -90,24 +85,21 @@ mockedCoins.map(getCryptoCurrencyById).forEach((currency) => {
           })
           .pipe(
             filter((e) => e.type === "signed"),
-            map((e) => e.signedOperation)
+            map((e: any) => e.signedOperation)
           )
           .toPromise();
-
         expect(signedOperation.operation).toBeDefined();
-
         const operation = await bridge.broadcast({
           account: first,
           signedOperation,
         });
-
         expect(operation.hash).toBeTruthy();
-
         const firstResynced = await bridge
-          .sync(first, { paginationConfig: {} })
+          .sync(first, {
+            paginationConfig: {},
+          })
           .pipe(reduce((a, f) => f(a), first))
           .toPromise();
-
         expect(firstResynced.operations.length).toBeGreaterThan(
           first.operations.length
         );

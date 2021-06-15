@@ -1,11 +1,8 @@
-// @flow
 import timemachine from "timemachine";
 import { groupAnnouncements } from "../../notifications/AnnouncementProvider/helpers";
-
 timemachine.config({
   dateString: "February 22, 2021 13:12:59",
 });
-
 const cache = {
   "announcement-id-a": {
     uuid: "announcement-id-a",
@@ -64,14 +61,12 @@ const cache = {
     currencies: ["bitcoin"],
   },
 };
-
 let announcements;
 describe("groupAnnouncements", () => {
   beforeAll(() => {
     const allIds = Object.keys(cache);
     announcements = groupAnnouncements(allIds.map((uuid) => cache[uuid]));
   });
-
   it("should group the announcements by date and priority", () => {
     const expected = [
       {
@@ -146,7 +141,6 @@ describe("groupAnnouncements", () => {
         ],
       },
     ];
-
     expect(announcements).toStrictEqual(expected);
   });
 });

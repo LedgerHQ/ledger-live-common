@@ -1,5 +1,3 @@
-// @flow
-
 /*
 import { from } from "rxjs";
 import { mergeAll } from "rxjs/operators";
@@ -14,26 +12,21 @@ import dataset from "../generated/test-dataset";
 import specifics from "../generated/test-specifics";
 import type { DatasetTest } from "../types";
 import { disconnectAll } from "../api";
-
 // Disconnect all api clients that could be open.
 afterAll(async () => {
   await disconnectAll();
 });
-
 setup("libcore");
-
 test("libcore version", async () => {
   const v = await withLibcore((core) => core.LedgerCore.getStringVersion());
   expect(typeof v).toBe("string");
   log("libcoreVersion", v);
 });
-
 const families = Object.keys(dataset);
 const maybeFamilyToOnlyRun =
   process.env.BRANCH && process.env.BRANCH.split("/")[0];
 const shouldExcludeFamilies =
   maybeFamilyToOnlyRun && families.includes(maybeFamilyToOnlyRun);
-
 // covers all bridges through many different accounts
 // to test the common shared properties of bridges.
 // const all =
@@ -45,19 +38,17 @@ families
     return testBridge(family, data);
   })
   .filter(Boolean);
-
 // FIXME overkill atm but could help perf
+
 /*
 const MAX_CONCURRENT = 2;
 from(flatMap(all, r => r.preloadObservables))
   .pipe(mergeAll(MAX_CONCURRENT))
   .subscribe();
 */
-
-Object.values(specifics).forEach((specific: Function) => {
+Object.values(specifics).forEach((specific: (...args: Array<any>) => any) => {
   specific();
 });
-
 describe("libcore access", () => {
   test("withLibcore", async () => {
     const res = await withLibcore(async (core) => {
@@ -67,25 +58,19 @@ describe("libcore access", () => {
     });
     expect(res).toBe(42);
   });
-
   test("afterLibcoreGC", async () => {
     let count = 0;
     let gcjob = 0;
-
     withLibcore(async () => {
       await delay(100);
       ++count;
     });
-
     withLibcore(async () => {
       await delay(100);
       ++count;
     });
-
     let p3;
-
     await delay(20);
-
     await afterLibcoreGC(async () => {
       expect(count).toBe(2);
       await delay(100);
@@ -98,9 +83,7 @@ describe("libcore access", () => {
       expect(count).toBe(2);
       gcjob++;
     });
-
     await p3;
-
     expect(count).toBe(3);
     expect(gcjob).toBe(1);
   });

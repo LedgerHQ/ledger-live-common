@@ -1,4 +1,3 @@
-// @flow
 import "../__tests__/test-helpers/staticTime";
 import { initialState, loadCountervalues, calculate } from "./logic";
 import CountervaluesAPI from "./api";
@@ -13,13 +12,10 @@ import {
   formatCounterValueHour,
   parseFormattedDate,
 } from "./helpers";
-
 setEnv("MOCK", "1");
-
 test("helpers", () => {
   expect(formatCounterValueDay(new Date())).toBe("2018-03-14");
   expect(formatCounterValueHour(new Date())).toBe("2018-03-14T17");
-
   expect(formatCounterValueDay(parseFormattedDate("2018-03-14"))).toBe(
     "2018-03-14"
   );
@@ -27,7 +23,6 @@ test("helpers", () => {
     "2018-03-14T17"
   );
 });
-
 test("mock load with nothing to track", async () => {
   const state = await loadCountervalues(initialState, {
     trackingPairs: [],
@@ -42,11 +37,9 @@ test("mock load with nothing to track", async () => {
     })
   ).toBeUndefined();
 });
-
 test("mock fetchMarketcapTickers", async () => {
   expect(await CountervaluesAPI.fetchMarketcapTickers()).toBeDefined();
 });
-
 test("mock load with btc-usd to track", async () => {
   const state = await loadCountervalues(initialState, {
     trackingPairs: [
@@ -89,7 +82,6 @@ test("mock load with btc-usd to track", async () => {
     })
   ).toBeUndefined();
 });
-
 test("DAI EUR latest price", async () => {
   const state = await loadCountervalues(initialState, {
     trackingPairs: [
@@ -109,7 +101,6 @@ test("DAI EUR latest price", async () => {
     })
   ).toBeUndefined();
 });
-
 test("calculate(now()) is calculate(null)", async () => {
   const state = await loadCountervalues(initialState, {
     trackingPairs: [
@@ -136,7 +127,6 @@ test("calculate(now()) is calculate(null)", async () => {
     })
   );
 });
-
 test("missing rate in mock", async () => {
   const state = await loadCountervalues(initialState, {
     trackingPairs: [
@@ -158,7 +148,6 @@ test("missing rate in mock", async () => {
     })
   ).toBeUndefined();
 });
-
 test("missing rate in mock is filled by autofillGaps", async () => {
   const state = await loadCountervalues(initialState, {
     trackingPairs: [
@@ -187,6 +176,4 @@ test("missing rate in mock is filled by autofillGaps", async () => {
       date: new Date("2018-01-06T19:00"),
     })
   );
-});
-
-// TODO test the incremental aspect of loadCountervalues
+}); // TODO test the incremental aspect of loadCountervalues

@@ -1,13 +1,13 @@
 import { genAccount } from "../mock/account";
 import { getDerivationModesForCurrency } from "../derivation";
 import { listCryptoCurrencies } from "../currencies";
+import type { Account } from "../types";
 import {
   accountDataToAccount,
   accountToAccountData,
   encode,
   decode,
 } from "../cross";
-
 test("accountDataToAccount / accountToAccountData", () => {
   listCryptoCurrencies().forEach((currency) => {
     getDerivationModesForCurrency(currency).forEach((derivationMode) => {
@@ -21,10 +21,9 @@ test("accountDataToAccount / accountToAccountData", () => {
     });
   });
 });
-
 test("encode/decode", () => {
   const accounts = listCryptoCurrencies().reduce(
-    (acc, currency) =>
+    (acc: Account[], currency) =>
       acc.concat(
         getDerivationModesForCurrency(currency).map((derivationMode) => {
           const account = genAccount(`${currency.id}_${derivationMode}`, {
@@ -33,9 +32,8 @@ test("encode/decode", () => {
           return account;
         })
       ),
-    []
+    <Account[]>[]
   );
-
   const data = {
     accounts,
     settings: {
@@ -50,7 +48,6 @@ test("encode/decode", () => {
   expect(exp.accounts.length).toEqual(data.accounts.length);
   expect(exp.accounts).toMatchObject(data.accounts.map(accountToAccountData));
 });
-
 test("encode/decode", () => {
   const accounts = Array(3)
     .fill(null)

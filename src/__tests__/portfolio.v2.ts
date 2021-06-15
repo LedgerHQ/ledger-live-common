@@ -1,4 +1,3 @@
-// @flow
 import "./test-helpers/staticTime";
 import {
   getFiatCurrencyByTicker,
@@ -27,9 +26,7 @@ import type { AccountLike, Account } from "../types";
 import { setEnv } from "../env";
 import { genAccount } from "../mock/account";
 import { getAccountCurrency } from "../account";
-
 setEnv("MOCK", "1");
-
 describe("Portfolio", () => {
   const rangeCount: [PortfolioRange, number][] = [
     ["all", 52],
@@ -38,11 +35,10 @@ describe("Portfolio", () => {
     ["week", 168],
     ["day", 24],
   ];
-
   describe("getPortfolioCount", () => {
-    const accounts: AccountLike[] = Array.from({ length: 100 }).map((_, j) =>
-      genAccount("portfolio_" + j)
-    );
+    const accounts: AccountLike[] = Array.from({
+      length: 100,
+    }).map((_, j) => genAccount("portfolio_" + j));
     describe("default count", () => {
       rangeCount.forEach(([range, count]) => {
         it(`shoud return default count (${range})`, () => {
@@ -51,7 +47,6 @@ describe("Portfolio", () => {
         });
       });
     });
-
     describe("all time", () => {
       const range = "all";
       it("should return calculated count", () => {
@@ -64,7 +59,6 @@ describe("Portfolio", () => {
         const res = getPortfolioCount(accounts, range);
         expect(res).toBe(491);
       });
-
       it("should return at least a year", () => {
         const res = getPortfolioCount(accounts, range);
         const count = getPortfolioRangeConfig("year").count;
@@ -72,10 +66,8 @@ describe("Portfolio", () => {
       });
     });
   });
-
   describe("getBalanceHistory", () => {
     const account = genAccount("account_1");
-
     describe("snapshots", () => {
       rangeCount.forEach(([range, count]) => {
         it("should match its prev snapshot", () => {
@@ -84,14 +76,12 @@ describe("Portfolio", () => {
         });
       });
     });
-
     it("should return history with length specified with count arg", () => {
       const [[range, count]] = rangeCount;
       const history = getBalanceHistory(account, range, count);
       expect(history).toBeInstanceOf(Array);
       expect(history.length).toBe(count);
     });
-
     it("should have dates matche getDates", () => {
       const [, [range, count]] = rangeCount;
       const history = getBalanceHistory(account, range, count);
@@ -99,11 +89,9 @@ describe("Portfolio", () => {
       expect(history.map((p) => p.date)).toMatchObject(dates);
     });
   });
-
   describe("getBalanceHistoryWithCountervalue", () => {
     const account = genAccountBitcoin();
     const [range, count] = rangeCount[1];
-
     test("coutnervalueAvailable should be false when the latest countervalue does NOT exists", async () => {
       const { to } = await loadCV(account);
       const state = { ...initialState, data: {} };
@@ -116,7 +104,6 @@ describe("Portfolio", () => {
       );
       expect(cv.countervalueAvailable).toBe(false);
     });
-
     it("should return same value as history", async () => {
       const { state, to } = await loadCV(account);
       const cv = getBalanceHistoryWithCountervalue(
@@ -129,10 +116,12 @@ describe("Portfolio", () => {
       const history = getBalanceHistory(account, range, count);
       expect(cv.countervalueAvailable).toBe(true);
       expect(
-        cv.history.map((p) => ({ date: p.date, value: p.value }))
+        cv.history.map((p) => ({
+          date: p.date,
+          value: p.value,
+        }))
       ).toMatchObject(history);
     });
-
     test("snapshot", async () => {
       const { state, to } = await loadCV(account);
       const cv = getBalanceHistoryWithCountervalue(
@@ -145,18 +134,15 @@ describe("Portfolio", () => {
       expect(cv).toMatchSnapshot();
     });
   });
-
   describe("getPortfolio", () => {
     const account = genAccountBitcoin();
     const [range, count] = rangeCount[3];
-
     it("should return account as avilableAccounts when balanceAvailable is ture", async () => {
       const { state, to } = await loadCV(account);
       const portfolio = getPortfolio([account], range, state, to);
       expect(portfolio.balanceAvailable).toBe(true);
       expect(portfolio.availableAccounts).toMatchObject([account]);
     });
-
     test("balanceAvailable should be false and return as unavilableCurrenccies when the latest countervalue does NOT exists", async () => {
       const { to } = await loadCV(account);
       const state = { ...initialState, data: {} };
@@ -166,7 +152,6 @@ describe("Portfolio", () => {
       ]);
       expect(portfolio.balanceAvailable).toBe(false);
     });
-
     it("should have history identical to the account history", async () => {
       const account2 = genAccountBitcoin("bitcoin_2");
       const { state, to } = await loadCV(account);
@@ -187,7 +172,6 @@ describe("Portfolio", () => {
       );
       expect(portfolio.histories).toMatchObject([history, history2]);
     });
-
     it("should recompose partial cache", async () => {
       const account = genAccountBitcoin("bitcoin_whatever");
       const { state, to } = await loadCV(account);
@@ -212,7 +196,6 @@ describe("Portfolio", () => {
       );
       expect(history).toMatchObject(history2);
     });
-
     it("should double the amounts with twice the same account", async () => {
       const { state, to } = await loadCV(account);
       const portfolio = getPortfolio([account, account], range, state, to);
@@ -223,37 +206,31 @@ describe("Portfolio", () => {
         state,
         to
       );
-
       portfolio.balanceHistory.forEach((h, i) => {
         expect(h.value).toBe((history[i].countervalue ?? 0) * 2);
       });
     });
-
     it("snapshot", async () => {
       const { state, to } = await loadCV(account);
       const portfolio = getPortfolio([account], range, state, to);
       expect(portfolio).toMatchSnapshot();
     });
   });
-
   describe("getCurrencyPortfolio", () => {
     const account = genAccountBitcoin();
     const [range, count] = rangeCount[3];
-
     it("should return accounts when balanceAvailable is ture", async () => {
       const { state, to } = await loadCV(account);
       const portfolio = getCurrencyPortfolio([account], range, state, to);
       expect(portfolio.countervalueAvailable).toBe(true);
       expect(portfolio.accounts).toMatchObject([account]);
     });
-
     test("countervalueAvailable should be false when the latest countervalue does NOT exists", async () => {
       const { to } = await loadCV(account);
       const state = { ...initialState, data: {} };
       const portfolio = getCurrencyPortfolio([account], range, state, to);
       expect(portfolio.countervalueAvailable).toBe(false);
     });
-
     it("should have history identical to the account history", async () => {
       const account2 = genAccountBitcoin("bitcoin_2");
       const { state, to } = await loadCV(account);
@@ -279,7 +256,6 @@ describe("Portfolio", () => {
       );
       expect(portfolio.histories).toMatchObject([history, history2]);
     });
-
     it("should double the amounts with twice the same account", async () => {
       const { state, to } = await loadCV(account);
       const portfolio = getCurrencyPortfolio(
@@ -295,19 +271,16 @@ describe("Portfolio", () => {
         state,
         to
       );
-
       portfolio.history.forEach((h, i) => {
         expect(h.countervalue).toBe((history[i].countervalue ?? 0) * 2);
       });
     });
-
     it("snapshot", async () => {
       const { state, to } = await loadCV(account);
       const portfolio = getCurrencyPortfolio([account], range, state, to);
       expect(portfolio).toMatchSnapshot();
     });
   });
-
   describe("getAssetsDistribution", () => {
     it("snapshot", async () => {
       const account = genAccountBitcoin();
@@ -316,7 +289,6 @@ describe("Portfolio", () => {
       expect(assets).toMatchSnapshot();
     });
   });
-
   describe("range module", () => {
     test("getRanges", () => {
       const ranges = ["all", "year", "month", "week", "day"];
@@ -329,16 +301,21 @@ describe("Portfolio", () => {
   });
 });
 
-function genAccountBitcoin(id: string = "bitcoin_1") {
-  return genAccount(id, { currency: getCryptoCurrencyById("bitcoin") });
+function genAccountBitcoin(id = "bitcoin_1") {
+  return genAccount(id, {
+    currency: getCryptoCurrencyById("bitcoin"),
+  });
 }
 
-async function loadCV(a: Account | Account[], cvTicker: string = "USD") {
+async function loadCV(a: Account | Account[], cvTicker = "USD") {
   const to = getFiatCurrencyByTicker(cvTicker);
   const accounts = Array.isArray(a) ? a : [a];
   const state = await loadCountervalues(initialState, {
     trackingPairs: inferTrackingPairForAccounts(accounts, to),
     autofillGaps: true,
   });
-  return { state, to };
+  return {
+    state,
+    to,
+  };
 }

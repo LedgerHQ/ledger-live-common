@@ -1,4 +1,3 @@
-// @flow
 import {
   createTransportReplayer,
   RecordStore,
@@ -6,7 +5,6 @@ import {
 import getDeviceInfo from "../../hw/getDeviceInfo";
 import manager from "../../manager";
 import { fetchNextFirmware } from "../../hw/installFinalFirmware";
-
 jest.setTimeout(20000);
 
 /*
@@ -27,7 +25,6 @@ test("1.2.0", async () => {
   expect(res).toMatchObject({ final: {}, osu: {} });
 });
 */
-
 test("1.3.1", async () => {
   const deviceInfo = {
     version: "1.3.1",
@@ -41,9 +38,11 @@ test("1.3.1", async () => {
     pinValidated: true,
   };
   const res = await manager.getLatestFirmwareForDevice(deviceInfo);
-  expect(res).toMatchObject({ final: {}, osu: {} });
+  expect(res).toMatchObject({
+    final: {},
+    osu: {},
+  });
 });
-
 test("1.4.2", async () => {
   const deviceInfo = {
     version: "1.4.2",
@@ -57,7 +56,10 @@ test("1.4.2", async () => {
     targetId: 823132163,
   };
   const res = await manager.getLatestFirmwareForDevice(deviceInfo);
-  expect(res).toMatchObject({ final: {}, osu: {} });
+  expect(res).toMatchObject({
+    final: {},
+    osu: {},
+  });
 });
 
 /*
@@ -77,7 +79,6 @@ test("1.5.5", async () => {
   expect(res).toMatchObject({ final: {}, osu: {} });
 });
 */
-
 test("nano x 1.1.6", async () => {
   const deviceInfo = {
     version: "1.1.6",
@@ -93,8 +94,8 @@ test("nano x 1.1.6", async () => {
   const res = await manager.getLatestFirmwareForDevice(deviceInfo);
   expect(res).toBe(null);
 });
-
 // TODO waiting it to be stable
+
 /*
 test("nano x 1.2.4-1", async () => {
   const deviceInfo = {
@@ -112,7 +113,6 @@ test("nano x 1.2.4-1", async () => {
   expect(res).toBe(null);
 });
 */
-
 test("nanoS das", async () => {
   const deviceInfo = {
     isBootloader: false,
@@ -128,7 +128,6 @@ test("nanoS das", async () => {
   const res = await manager.getLatestFirmwareForDevice(deviceInfo);
   expect(res).toBe(null);
 });
-
 test("OSU 1.4.2", async () => {
   const Transport = createTransportReplayer(
     RecordStore.fromString(`
@@ -138,13 +137,13 @@ test("OSU 1.4.2", async () => {
     <= 3110000309312e342e322d6f7375042000000004312e37002000000000000000000000000000000000000000000000000000000000000000009000
     `)
   );
+  // @ts-expect-error ledgerjs createTransportReplayer type issue
   const t = await Transport.create();
   const deviceInfo = await getDeviceInfo(t);
   const next = await fetchNextFirmware(deviceInfo).toPromise();
   expect(next).toBeDefined();
   expect(next.firmware).toBeTruthy();
 });
-
 test("OSU 1.5.5", async () => {
   const Transport = createTransportReplayer(
     RecordStore.fromString(`
@@ -154,6 +153,7 @@ test("OSU 1.5.5", async () => {
     <= 3110000409312e352e352d6f7375042400000004312e35002000000000000000000000000000000000000000000000000000000000000000009000
     `)
   );
+  // @ts-expect-error ledgerjs createTransportReplayer type issue
   const t = await Transport.create();
   const deviceInfo = await getDeviceInfo(t);
   const next = await fetchNextFirmware(deviceInfo).toPromise();

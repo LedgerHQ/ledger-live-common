@@ -1,26 +1,21 @@
-// @flow
 import timemachine from "timemachine";
 import {
   filterAnnouncements,
   localizeAnnouncements,
 } from "../../notifications/AnnouncementProvider/logic";
 import api from "../../notifications/AnnouncementProvider/api/api.mock";
-
 timemachine.config({
   dateString: "February 22, 2021 13:12:59",
 });
-
 let rawAnnouncements;
 let announcements;
 describe("filterAnnouncements", () => {
   beforeEach(async () => {
     rawAnnouncements = await api.fetchAnnouncements();
   });
-
   afterAll(() => {
     timemachine.reset();
   });
-
   describe("language filters", () => {
     describe("with context.language = 'en'", () => {
       const context = {
@@ -28,13 +23,11 @@ describe("filterAnnouncements", () => {
         currencies: ["bitcoin", "cosmos"],
         getDate: () => new Date(),
       };
-
       beforeEach(() => {
         announcements = localizeAnnouncements(rawAnnouncements, context);
       });
       it("should return all anouncements for english only and all the non-scoped one", async () => {
         const filtered = filterAnnouncements(announcements, context);
-
         expect(filtered).toStrictEqual(announcements);
       });
     });
@@ -44,11 +37,9 @@ describe("filterAnnouncements", () => {
         currencies: ["bitcoin", "cosmos"],
         getDate: () => new Date(),
       };
-
       beforeEach(() => {
         announcements = localizeAnnouncements(rawAnnouncements, context);
       });
-
       it("should return all anouncements for french only and all the non-scoped one", async () => {
         const filtered = filterAnnouncements(announcements, context);
         const expected = [
@@ -91,12 +82,10 @@ describe("filterAnnouncements", () => {
             currencies: ["bitcoin"],
           },
         ];
-
         expect(filtered).toStrictEqual(expected);
       });
     });
   });
-
   describe("currencies filters", () => {
     describe("with context.currencies = ['bitcoin']", () => {
       const context = {
@@ -104,11 +93,9 @@ describe("filterAnnouncements", () => {
         currencies: ["bitcoin"],
         getDate: () => new Date(),
       };
-
       beforeEach(() => {
         announcements = localizeAnnouncements(rawAnnouncements, context);
       });
-
       it("should return only the announcements scoped to bitcoin", () => {
         const filtered = filterAnnouncements(announcements, context);
         const expected = [
@@ -150,7 +137,6 @@ describe("filterAnnouncements", () => {
             currencies: ["bitcoin"],
           },
         ];
-
         expect(filtered).toStrictEqual(expected);
       });
     });
@@ -160,11 +146,9 @@ describe("filterAnnouncements", () => {
         currencies: ["cosmos"],
         getDate: () => new Date(),
       };
-
       beforeEach(() => {
         announcements = localizeAnnouncements(rawAnnouncements, context);
       });
-
       it("should return only the announcements scoped to cosmos", () => {
         const filtered = filterAnnouncements(announcements, context);
         const expected = [
@@ -206,7 +190,6 @@ describe("filterAnnouncements", () => {
             expired_at: "2021-04-06T00:00:00.000Z",
           },
         ];
-
         expect(filtered).toStrictEqual(expected);
       });
     });
@@ -216,11 +199,9 @@ describe("filterAnnouncements", () => {
         currencies: ["bitcoin", "cosmos"],
         getDate: () => new Date(),
       };
-
       beforeEach(() => {
         announcements = localizeAnnouncements(rawAnnouncements, context);
       });
-
       it("should return only the announcements scoped to cosmos and bitcoin", () => {
         const filtered = filterAnnouncements(announcements, context);
         const expected = [
@@ -281,7 +262,6 @@ describe("filterAnnouncements", () => {
             currencies: ["bitcoin"],
           },
         ];
-
         expect(filtered).toStrictEqual(expected);
       });
     });
@@ -291,11 +271,9 @@ describe("filterAnnouncements", () => {
         currencies: [],
         getDate: () => new Date(),
       };
-
       beforeEach(() => {
         announcements = localizeAnnouncements(rawAnnouncements, context);
       });
-
       it("should return only the announcements not scoped to any currency", () => {
         const filtered = filterAnnouncements(announcements, context);
         const expected = [
@@ -318,33 +296,27 @@ describe("filterAnnouncements", () => {
             expired_at: "2021-04-06T00:00:00.000Z",
           },
         ];
-
         expect(filtered).toStrictEqual(expected);
       });
     });
   });
-
   describe("published_at filters", () => {
     beforeAll(() => {
       timemachine.config({
         dateString: "February 22, 2021 13:12:59",
       });
     });
-
     const context = {
       language: "en",
       currencies: ["bitcoin", "cosmos"],
       getDate: () => new Date(),
     };
-
     beforeEach(() => {
       announcements = localizeAnnouncements(rawAnnouncements, context);
     });
-
     afterEach(() => {
       timemachine.reset();
     });
-
     describe("with current date higher than publish date", () => {
       it(`should return all the article posted before `, () => {
         const filtered = filterAnnouncements(announcements, context);
@@ -406,18 +378,15 @@ describe("filterAnnouncements", () => {
             currencies: ["bitcoin"],
           },
         ];
-
         expect(filtered).toStrictEqual(expected);
       });
     });
-
     describe("with current date lower than publish date", () => {
       beforeEach(() => {
         timemachine.config({
           dateString: "October 10, 2019 13:12:59",
         });
       });
-
       it("should return only the article posted before", () => {
         const filtered = filterAnnouncements(announcements, context);
         const expected = [
@@ -441,41 +410,34 @@ describe("filterAnnouncements", () => {
             currencies: ["cosmos"],
           },
         ];
-
         expect(filtered).toStrictEqual(expected);
       });
     });
-
     afterAll(() => {
       timemachine.config({
         dateString: "February 22, 2021 13:12:59",
       });
     });
   });
-
   describe("expired_at filters", () => {
     beforeAll(() => {
       timemachine.config({
         dateString: "February 22, 2021 13:12:59",
       });
     });
-
     afterAll(() => {
       timemachine.config({
         dateString: "February 22, 2021 13:12:59",
       });
     });
-
     const context = {
       language: "en",
       currencies: ["bitcoin", "cosmos"],
       getDate: () => new Date(),
     };
-
     beforeEach(() => {
       announcements = localizeAnnouncements(rawAnnouncements, context);
     });
-
     describe("with current date lower than expiration date", () => {
       it("should return all non-expired announcements", () => {
         const filtered = filterAnnouncements(announcements, context);
@@ -537,7 +499,6 @@ describe("filterAnnouncements", () => {
             currencies: ["bitcoin"],
           },
         ];
-
         expect(filtered).toStrictEqual(expected);
       });
     });
@@ -546,7 +507,6 @@ describe("filterAnnouncements", () => {
         timemachine.config({
           dateString: "April 22, 2021 13:12:59",
         });
-
         it("should return only non-expired announcements", () => {
           const filtered = filterAnnouncements(announcements, context);
           const expected = [
@@ -570,7 +530,6 @@ describe("filterAnnouncements", () => {
               currencies: ["bitcoin"],
             },
           ];
-
           expect(filtered).toStrictEqual(expected);
         });
       });

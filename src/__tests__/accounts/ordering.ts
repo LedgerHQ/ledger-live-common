@@ -1,8 +1,7 @@
-// @flow
 import { fromAccountRaw, sortAccountsComparatorFromOrder } from "../../account";
-
+import { AccountRaw } from "../../types";
 const accounts = [
-  {
+  <AccountRaw>{
     id: "ethereumjs:2:ethereum:0x01:",
     seedIdentifier: "0x01",
     name: "A",
@@ -19,7 +18,7 @@ const accounts = [
     lastSyncDate: "2019-07-17T15:13:30.318Z",
     balance: "1000000000000000000",
   },
-  {
+  <AccountRaw>{
     id: "ethereumjs:2:ethereum:0x02:",
     seedIdentifier: "0x02",
     name: "B",
@@ -36,7 +35,7 @@ const accounts = [
     lastSyncDate: "2019-07-17T15:13:29.306Z",
     balance: "2000000000000000000",
   },
-  {
+  <AccountRaw>{
     id: "libcore:1:ethereum:xpub3:",
     seedIdentifier: "seed",
     name: "C",
@@ -53,7 +52,7 @@ const accounts = [
     lastSyncDate: "2019-07-17T15:13:29.306Z",
     balance: "3000000000000000000",
   },
-  {
+  <AccountRaw>{
     id: "libcore:1:ethereum:xpub3B:",
     seedIdentifier: "seed",
     name: "CA",
@@ -70,7 +69,7 @@ const accounts = [
     lastSyncDate: "2019-07-17T15:13:29.306Z",
     balance: "3000000000000000000",
   },
-  {
+  <AccountRaw>{
     id: "libcore:1:ethereum:xpub1B:",
     seedIdentifier: "seed",
     name: "AA",
@@ -105,7 +104,6 @@ test("Accounts ordering | name asc", () => {
     "CA",
   ]);
 });
-
 test("Accounts ordering | name desc", () => {
   const compareFn = sortAccountsComparatorFromOrder(
     "name|desc",
@@ -120,7 +118,6 @@ test("Accounts ordering | name desc", () => {
     "A",
   ]);
 });
-
 test("Accounts ordering | balance asc", () => {
   const compareFn = sortAccountsComparatorFromOrder(
     "balance|asc",
@@ -135,7 +132,6 @@ test("Accounts ordering | balance asc", () => {
     "AA",
   ]);
 });
-
 test("Accounts ordering | balance desc", () => {
   const compareFn = sortAccountsComparatorFromOrder(
     "balance|desc",

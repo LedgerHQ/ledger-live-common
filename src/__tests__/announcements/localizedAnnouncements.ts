@@ -1,17 +1,14 @@
-// @flow
 import timemachine from "timemachine";
 import { localizeAnnouncements } from "../../notifications/AnnouncementProvider/logic";
 import api from "../../notifications/AnnouncementProvider/api/api.mock";
 timemachine.config({
   dateString: "February 22, 2021 13:12:59",
 });
-
 let announcements;
 describe("localizeAnnouncements", () => {
   beforeEach(async () => {
     announcements = await api.fetchAnnouncements();
   });
-
   describe("with context.language = 'en'", () => {
     const context = {
       language: "en",
@@ -20,7 +17,6 @@ describe("localizeAnnouncements", () => {
     };
     it("it should return a formatted array of announcements with user lang", async () => {
       const result = localizeAnnouncements(announcements, context);
-
       const expected = [
         {
           uuid: "announcement-id-a",
@@ -79,11 +75,9 @@ describe("localizeAnnouncements", () => {
           currencies: ["bitcoin"],
         },
       ];
-
       expect(result).toStrictEqual(expected);
     });
   });
-
   describe("with context.language = 'fr'", () => {
     const context = {
       language: "fr",
@@ -92,7 +86,6 @@ describe("localizeAnnouncements", () => {
     };
     it("should return the french announcement if found, and fallback to english otherwise", async () => {
       const result = localizeAnnouncements(announcements, context);
-
       const expected = [
         {
           uuid: "announcement-id-a",
@@ -151,21 +144,17 @@ describe("localizeAnnouncements", () => {
           currencies: ["bitcoin"],
         },
       ];
-
       expect(result).toStrictEqual(expected);
     });
   });
-
   describe("with no context.language", () => {
     const context = {
       language: "",
       currencies: [],
       getDate: () => new Date(),
     };
-
     it("should default to english announcements", async () => {
       const result = localizeAnnouncements(announcements, context);
-
       const expected = [
         {
           uuid: "announcement-id-a",
@@ -224,7 +213,6 @@ describe("localizeAnnouncements", () => {
           currencies: ["bitcoin"],
         },
       ];
-
       expect(result).toStrictEqual(expected);
     });
   });
