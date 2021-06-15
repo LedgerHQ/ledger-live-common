@@ -285,7 +285,7 @@ export const preload = async (): Promise<
   }
 };
 
-export const hydrate = (maybeConfig: Record<string, any>): void => {
+export const hydrate = (maybeConfig?: Record<string, any>): void => {
   if (!maybeConfig) return;
   let safe;
 

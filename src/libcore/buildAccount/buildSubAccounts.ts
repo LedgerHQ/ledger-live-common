@@ -13,6 +13,7 @@ export async function buildSubAccounts(arg: {
   accountId: string;
   existingAccount: Account | null | undefined;
   syncConfig: SyncConfig;
+  logId?: number;
 }): Promise<SubAccount[] | null | undefined> {
   const f = byFamily[arg.currency.family];
 

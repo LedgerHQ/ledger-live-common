@@ -26,7 +26,7 @@ import type {
 } from "./portfolio";
 import type { SwapOperation, SwapOperationRaw } from "../exchange/swap/types";
 // This is the old cache and now DEPRECATED (pre v2 portfoli)
-export type BalanceHistoryMap = Record<PortfolioRange, BalanceHistory>;
+export type BalanceHistoryMap = Partial<Record<PortfolioRange, BalanceHistory>>;
 export type BalanceHistoryRawMap = Record<PortfolioRange, BalanceHistoryRaw>;
 export type GranularityId = "HOUR" | "DAY" | "WEEK";
 // the cache is maintained for as many granularity as we need on Live.

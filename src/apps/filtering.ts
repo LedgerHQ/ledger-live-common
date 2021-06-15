@@ -4,8 +4,8 @@ import { getCryptoCurrencyById, isCurrencySupported } from "../currencies";
 import { useMemo } from "react";
 
 export type SortOptions = {
-  type: "name" | "marketcap" | "default";
-  order: "asc" | "desc";
+  type?: "name" | "marketcap" | "default";
+  order?: "asc" | "desc";
 };
 
 export type AppType =
