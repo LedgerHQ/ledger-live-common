@@ -1,6 +1,5 @@
-// @flow
-
 import "lodash.product";
+// @ts-expect-error we imported lodash.product but not recognized by TS in lodash
 import { product } from "lodash";
 import uniqBy from "lodash/uniqBy";
 import shuffle from "lodash/shuffle";
@@ -20,29 +19,33 @@ import { parseCurrencyUnit } from "@ledgerhq/live-common/lib/currencies";
 const inferAmount = (account: AccountLike, str: string): BigNumber => {
   const currency = getAccountCurrency(account);
   const { units } = currency;
+
   if (str.endsWith("%")) {
     return account.balance.times(0.01 * parseFloat(str.replace("%", "")));
   }
+
   const lowerCase = str.toLowerCase();
+
   for (let i = 0; i < units.length; i++) {
     const unit = units[i];
     const code = unit.code.toLowerCase();
+
     if (lowerCase.includes(code)) {
       return parseCurrencyUnit(unit, lowerCase.replace(code, ""));
     }
   }
+
   return parseCurrencyUnit(units[0], str);
 };
 
-export type InferTransactionsOpts = $Shape<{
-  "self-transaction": boolean,
-  "use-all-amount": boolean,
-  recipient: string[],
-  amount: string,
-  shuffle: boolean,
-  "fees-strategy": string,
+export type InferTransactionsOpts = Partial<{
+  "self-transaction": boolean;
+  "use-all-amount": boolean;
+  recipient: string[];
+  amount: string;
+  shuffle: boolean;
+  "fees-strategy": string;
 }>;
-
 export const inferTransactionsOpts = uniqBy(
   [
     {
@@ -71,16 +74,16 @@ export const inferTransactionsOpts = uniqBy(
       type: Boolean,
       desc: "if using multiple token or recipient, order will be randomized",
     },
-  ].concat(flatMap(Object.values(perFamily), (m) => (m && m.options) || [])),
+  ].concat(
+    flatMap(Object.values(perFamily), (m: any) => (m && m.options) || [])
+  ),
   "name"
 );
-
 export async function inferTransactions(
   mainAccount: Account,
   opts: InferTransactionsOpts
 ): Promise<[Transaction, TransactionStatus][]> {
   const bridge = getAccountBridge(mainAccount, null);
-
   const specific = perFamily[mainAccount.currency.family];
 
   const inferAccounts =
@@ -90,24 +93,24 @@ export async function inferTransactions(
     (specific && specific.inferTransactions) ||
     ((transactions, _opts, _r) => transactions);
 
-  let all = await Promise.all(
+  let all: any[] = await Promise.all(
     product(
       inferAccounts(mainAccount, opts),
       opts.recipient || [
         opts["self-transaction"] ? mainAccount.freshAddress : "",
       ]
     ).map(async ([account, recipient]) => {
-      let transaction = bridge.createTransaction(mainAccount);
-
+      const transaction = bridge.createTransaction(mainAccount);
       transaction.recipient = recipient;
-
       transaction.useAllAmount = !!opts["use-all-amount"];
-
       transaction.amount = transaction.useAllAmount
-        ? BigNumber(0)
+        ? new BigNumber(0)
         : inferAmount(account, opts.amount || "0");
-
-      return { account, transaction, mainAccount };
+      return {
+        account,
+        transaction,
+        mainAccount,
+      };
     })
   );
 
@@ -115,17 +118,20 @@ export async function inferTransactions(
     all = shuffle(all);
   }
 
-  const transactions = await Promise.all(
-    inferTransactions(all, opts, { inferAmount }).map(async (transaction) => {
+  const transactions: Transaction[] = await Promise.all(
+    inferTransactions(all, opts, {
+      inferAmount,
+    }).map(async (transaction) => {
       const tx = await bridge.prepareTransaction(mainAccount, transaction);
       const status = await bridge.getTransactionStatus(mainAccount, tx);
       const errorKeys = Object.keys(status.errors);
+
       if (errorKeys.length) {
         throw status.errors[errorKeys[0]];
       }
+
       return [tx, status];
     })
   );
-
   return transactions;
 }

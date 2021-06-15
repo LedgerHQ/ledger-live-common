@@ -1,11 +1,22 @@
 {
   "compilerOptions": {
-    "esModuleInterop": true,
-    "module": "CommonJS",
-    "outDir": "lib",
-    "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
     "strict": true,
-    "target": "ES2015",
+    "noImplicitAny": false,
+    "noImplicitThis": false,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "downlevelIteration": true,
+    "outDir": "lib",
+    "resolveJsonModule": true,
+    "jsx": "react",
+    "lib": ["es2019", "dom"]
   },
-  "include": ["src"]
+  "include": ["src/**/*"],
+  "exclude": ["**/__tests__/**"]
 }
