@@ -58,7 +58,7 @@ const initialExplorerConfig: FullConfig = {
     id: "dcr",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
   },
   digibyte: {
@@ -188,18 +188,20 @@ const initialExplorerConfig: FullConfig = {
       base: "EXPLORER",
       version: "v2",
     },
-    /*
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
-    */
   },
   zcash: {
     id: "zec",
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
     },
   },
   zencash: {
