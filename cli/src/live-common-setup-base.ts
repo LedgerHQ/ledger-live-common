@@ -1,4 +1,3 @@
-// @flow
 /* eslint-disable no-console */
 import winston from "winston";
 import { setEnvUnsafe } from "@ledgerhq/live-common/lib/env";
@@ -6,7 +5,6 @@ import simple from "@ledgerhq/live-common/lib/logs/simple";
 import { listen } from "@ledgerhq/logs";
 import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
 import { setSupportedCurrencies } from "@ledgerhq/live-common/lib/currencies";
-
 setSupportedCurrencies([
   "bitcoin",
   "ethereum",
@@ -44,22 +42,18 @@ setSupportedCurrencies([
 for (const k in process.env) setEnvUnsafe(k, process.env[k]);
 
 const { VERBOSE, VERBOSE_FILE } = process.env;
-
 const logger = winston.createLogger({
   level: "debug",
   transports: [],
 });
-
 const { format } = winston;
 const { combine, json } = format;
 const winstonFormatJSON = json();
 const winstonFormatConsole = combine(
-  // eslint-disable-next-line no-unused-vars
-  format(({ type, id, date, ...rest }) => rest)(),
+  format(({ type: _type, id: _id, date: _date, ...rest }) => rest)(),
   format.colorize(),
   simple()
 );
-
 const levels = {
   error: 0,
   warn: 1,
@@ -69,7 +63,6 @@ const levels = {
   debug: 5,
   silly: 6,
 };
-
 const level = VERBOSE && VERBOSE in levels ? VERBOSE : "debug";
 
 if (VERBOSE_FILE) {
@@ -86,7 +79,8 @@ if (VERBOSE && VERBOSE !== "json") {
   logger.add(
     new winston.transports.Console({
       format: winstonFormatConsole,
-      colorize: true,
+      // FIXME: this option is not recognzed by winston API
+      //   colorize: true,
       level,
     })
   );
@@ -103,6 +97,7 @@ if (VERBOSE && VERBOSE !== "json") {
 listen((log) => {
   const { type } = log;
   let level = "info";
+
   if (type === "libcore-call" || type === "libcore-result") {
     level = "silly";
   } else if (
@@ -120,10 +115,11 @@ listen((log) => {
   } else if (type.includes("error")) {
     level = "error";
   }
+
   logger.log(level, log);
 });
-
 implementLibcore({
-  lib: () => require("@ledgerhq/ledger-core"), // eslint-disable-line global-require
+  lib: () => require("@ledgerhq/ledger-core"),
+  // eslint-disable-line global-require
   dbPath: process.env.LIBCORE_DB_PATH || "./dbdata",
 });
