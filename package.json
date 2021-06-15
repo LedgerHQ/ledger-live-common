@@ -10,9 +10,8 @@
   "types": "lib/index.d.ts",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "./scripts/build.sh",
-    "build-ts": "./scripts/build-ts.sh",
-    "prepare": "yarn build-ts",
+    "build": "./scripts/build-ts.sh",
+    "prepare": "yarn build",
     "watch": "./scripts/watch-ts.sh",
     "updateAppSupportsQuitApp": "node scripts/updateAppSupportsQuitApp.js",
     "prettier": "prettier --write 'src/**/*.?s' 'cli/src/**/*.?s'",
