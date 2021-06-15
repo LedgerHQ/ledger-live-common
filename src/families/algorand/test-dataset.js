@@ -15,8 +15,7 @@ import type { Transaction } from "./types";
 
 const dataset: DatasetTest<Transaction> = {
   implementations: ["libcore"],
-  currencies: {
-    /*
+  currencies: {} || { // test disabled. FIXME ctx LL-5485
     algorand: {
       FIXME_ignoreAccountFields: [
         "algorandResources.rewards", // We cant keep track of this since it's always move
@@ -288,7 +287,6 @@ const dataset: DatasetTest<Transaction> = {
         },
       ],
     },
-    */
   },
 };
 
