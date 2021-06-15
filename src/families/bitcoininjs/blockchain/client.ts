@@ -51,7 +51,7 @@ class Client extends events.EventEmitter implements IClient {
       address
     );
 
-    // handle eventual reorg case using lastBlock
+    // TODO handle eventual reorg case using lastBlock
 
     let txs = await this.explorer.getAddressTransactionsSinceBlock(
       address,
