@@ -1,7 +1,7 @@
 // @flow
 
 import React, { createContext, useContext, useMemo, useCallback } from "react";
-import type { State } from "./types";
+import type { State, ServiceStatusUserSettings, Incident } from "./types";
 import networkApi from "./api";
 import { useMachine } from "@xstate/react";
 import { serviceStatusMachine } from "./machine";
@@ -9,6 +9,7 @@ import { serviceStatusMachine } from "./machine";
 type Props = {
   children: React$Node,
   autoUpdateDelay: number,
+  context: ServiceStatusUserSettings,
 };
 
 type API = {
@@ -23,7 +24,38 @@ export function useServiceStatus(): StatusContextType {
   return useContext(ServiceStatusContext);
 }
 
-export const ServiceStatusProvider = ({ children, autoUpdateDelay }: Props) => {
+export function filterServiceStatusIncidents(
+  incidents: Incident[],
+  currencies: string[] = []
+): Incident[] {
+  if (!currencies || currencies.length === 0) return [];
+
+  const currenciesRegex = new RegExp(currencies.join("|"), "i");
+  return incidents.filter((inc) => currenciesRegex.test(inc.name));
+}
+
+// filter out service status incidents by given currencies or fallback on context currencies
+export function useFilteredServiceStatus(
+  filters: ServiceStatusUserSettings = {}
+): StatusContextType {
+  const stateData = useContext(ServiceStatusContext);
+  const { incidents, context } = stateData;
+
+  const filteredIncidents = useMemo(() => {
+    return filterServiceStatusIncidents(
+      incidents,
+      filters.currencies || context.currencies
+    );
+  }, [incidents, context, filters.currencies]);
+
+  return { ...stateData, incidents: filteredIncidents };
+}
+
+export const ServiceStatusProvider = ({
+  children,
+  autoUpdateDelay,
+  context,
+}: Props) => {
   const fetchData = useCallback(async () => {
     const serviceStatusSummary = await networkApi.fetchStatusSummary();
 
@@ -54,6 +86,7 @@ export const ServiceStatusProvider = ({ children, autoUpdateDelay }: Props) => {
   const value = {
     ...state.context,
     ...api,
+    context,
   };
 
   return (

@@ -29,6 +29,7 @@ export type State = {
   isLoading: boolean,
   lastUpdateTime: ?number,
   error: ?Error,
+  context: ServiceStatusUserSettings,
 };
 
 export type ServiceStatusSummary = {
@@ -37,4 +38,8 @@ export type ServiceStatusSummary = {
 
 export type ServiceStatusApi = {
   fetchStatusSummary: () => Promise<ServiceStatusSummary>,
+};
+
+export type ServiceStatusUserSettings = {
+  currencies: string[],
 };
