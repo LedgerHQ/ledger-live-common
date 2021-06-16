@@ -3,7 +3,6 @@ import Explorer from "../explorer/ledger.v3.2.4";
 import Derivation from "../derivation/bitcoin";
 import Wallet from "../wallet";
 import path from "path";
-import fs from "fs";
 import coininfo from "coininfo";
 import { toMatchFile } from "jest-file-snapshot";
 
