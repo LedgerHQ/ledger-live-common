@@ -44,7 +44,7 @@ class Client extends events.EventEmitter implements IClient {
     this.emit("address-syncing", data);
 
     // can be undefined
-    let lastBlock = this.storage.getAddressLastBlock(
+    let lastBlock = await this.storage.getAddressLastBlock(
       derivationMode,
       account,
       index,
@@ -82,7 +82,8 @@ class Client extends events.EventEmitter implements IClient {
     this.emit("account-syncing", { derivationMode, account });
 
     // can be undefined
-    let index = this.storage.getAccountLastIndex(derivationMode, account) || 0;
+    let index =
+      (await this.storage.getAccountLastIndex(derivationMode, account)) || 0;
 
     const checkAddressesBlock = async (index) => {
       let addressesResults = await Promise.all(
@@ -109,7 +110,7 @@ class Client extends events.EventEmitter implements IClient {
 
     let account =
       // can be undefined
-      this.storage.getDerivationModeLastAccount(derivationMode) || 0;
+      (await this.storage.getDerivationModeLastAccount(derivationMode)) || 0;
 
     while (await this.syncAccount(derivationMode, account)) {
       account++;
@@ -125,11 +126,7 @@ class Client extends events.EventEmitter implements IClient {
   // TODO handle fail case
   async sync() {
     if (this.syncing) {
-      return new Promise((resolve) => {
-        this._whenSynced(({ accounts }) => {
-          resolve(accounts);
-        });
-      });
+      return this._whenSynced();
     }
 
     this.syncing = true;
@@ -137,7 +134,7 @@ class Client extends events.EventEmitter implements IClient {
     this.emit("syncing");
 
     // explore derivation modes in parallel
-    const accounts = await Promise.all(
+    await Promise.all(
       Object.values(derivation.DerivationMode).map((derivationMode) =>
         this.syncDerivationMode(derivationMode)
       )
@@ -145,15 +142,17 @@ class Client extends events.EventEmitter implements IClient {
 
     this.syncing = false;
 
-    this.emit("synced", { accounts });
+    this.emit("synced");
   }
 
-  _whenSynced(fn) {
-    if (!this.syncing) {
-      return fn();
-    }
+  _whenSynced() {
+    return new Promise<void>((resolve) => {
+      if (!this.syncing) {
+        return resolve();
+      }
 
-    this.once("synced", fn);
+      this.once("synced", resolve);
+    });
   }
 
   // TODO handle returning the Wallet balance from locally stored blockchain data
