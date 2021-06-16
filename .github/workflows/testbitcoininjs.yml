@@ -1,8 +1,8 @@
-name: Tests
+name: Tests BitcoinInJS
 on: [push, pull_request]
 
 jobs:
-  jest:
+  jest-bitcoininjs:
     strategy:
       fail-fast: false
       matrix:
