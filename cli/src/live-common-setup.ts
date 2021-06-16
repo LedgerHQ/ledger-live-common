@@ -144,7 +144,7 @@ async function init() {
               cacheBle[query].id
             )
           : Promise.resolve()
-        : null,
+        : undefined,
   });
 
   const { default: TransportNodeHid } = await import(

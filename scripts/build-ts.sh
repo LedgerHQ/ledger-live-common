@@ -8,7 +8,9 @@ bash ./scripts/sync-families-dispatch.sh
 node scripts/buildReactIcons.js
 
 export NODE_ENV=production
-tsc --build src
+cd src
+tsc
+cd -
 
 # (
 #     cd ../../flow-support

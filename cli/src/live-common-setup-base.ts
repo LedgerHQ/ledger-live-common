@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import winston from "winston";
-import { setEnvUnsafe } from "@ledgerhq/live-common/lib/env";
+import { EnvName, setEnvUnsafe } from "@ledgerhq/live-common/lib/env";
 import simple from "@ledgerhq/live-common/lib/logs/simple";
 import { listen } from "@ledgerhq/logs";
 import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
@@ -39,7 +39,7 @@ setSupportedCurrencies([
   "cosmos_testnet",
 ]);
 
-for (const k in process.env) setEnvUnsafe(k, process.env[k]);
+for (const k in process.env) setEnvUnsafe(k as EnvName, process.env[k]);
 
 const { VERBOSE, VERBOSE_FILE } = process.env;
 const logger = winston.createLogger({
@@ -80,7 +80,7 @@ if (VERBOSE && VERBOSE !== "json") {
     new winston.transports.Console({
       format: winstonFormatConsole,
       // FIXME: this option is not recognzed by winston API
-      //   colorize: true,
+      // colorize: true,
       level,
     })
   );

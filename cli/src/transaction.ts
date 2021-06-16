@@ -118,7 +118,7 @@ export async function inferTransactions(
     all = shuffle(all);
   }
 
-  const transactions: Transaction[] = await Promise.all(
+  const transactions: [Transaction, TransactionStatus][] = await Promise.all(
     inferTransactions(all, opts, {
       inferAmount,
     }).map(async (transaction) => {
@@ -133,5 +133,6 @@ export async function inferTransactions(
       return [tx, status];
     })
   );
+
   return transactions;
 }

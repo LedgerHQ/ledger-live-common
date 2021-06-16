@@ -9,7 +9,11 @@ import {
   filter,
   concatMap,
 } from "rxjs/operators";
-import type { Account, CryptoCurrency } from "@ledgerhq/live-common/lib/types";
+import type {
+  Account,
+  CryptoCurrency,
+  SyncConfig,
+} from "@ledgerhq/live-common/lib/types";
 import {
   fromAccountRaw,
   encodeAccountId,
@@ -212,9 +216,9 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
     length,
     paginateOperations,
   } = arg;
-  const syncConfig = {
+  const syncConfig: SyncConfig = {
     paginationConfig: {
-      operations: {},
+      operations: undefined,
     },
   };
 
@@ -240,7 +244,7 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
     return from(
       appjsondata.data.accounts.map((a) => fromAccountRaw(a.data))
     ).pipe(
-      skip(index || 0),
+      skip(index || 0) as any,
       take(length === undefined ? (index !== undefined ? 1 : Infinity) : length)
     );
   }
@@ -249,12 +253,12 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
     return jsonFromFile(file).pipe(
       map(fromAccountRaw),
       prepareCurrency((a) => a.currency),
-      concatMap((account) =>
+      concatMap((account: Account) =>
         getAccountBridge(account, null)
           .sync(account, syncConfig)
           .pipe(reduce((a, f: (arg: any) => any) => f(a), account))
       )
-    );
+    ) as Observable<Account>;
   }
 
   return inferCurrency(arg).pipe(
@@ -386,8 +390,8 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
             return account;
           })
         ).pipe(
-          prepareCurrency((a) => a.currency),
-          concatMap((account) =>
+          prepareCurrency((a: Account) => a.currency),
+          concatMap((account: Account) =>
             getAccountBridge(account, null)
               .sync(account, syncConfig)
               .pipe(reduce((a: Account, f: any) => f(a), account))
