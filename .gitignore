@@ -3,6 +3,7 @@ libcoredb/
 
 dbdata
 tmp
+src/families/bitcoininjs/blockchain/__tests__/data/temp
 
 .yalc
 yalc.lock

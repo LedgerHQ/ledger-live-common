@@ -1,9 +1,10 @@
 import { IStorage } from "./storage/types";
-import events from "events";
+import EventEmitter from "./utils/eventemitter";
+import { range, findLastIndex } from "lodash";
 import { IExplorer } from "./explorer/types";
 import { IDerivation } from "./derivation/types";
 
-declare interface IClient {
+declare interface IWallet {
   on(event: "address-syncing", listener: () => void): this;
   on(event: "address-synced", listener: () => void): this;
   on(event: "account-syncing", listener: () => void): this;
@@ -14,13 +15,14 @@ declare interface IClient {
   on(event: "synced", listener: () => void): this;
 }
 
-class Client extends events.EventEmitter implements IClient {
+class Wallet extends EventEmitter implements IWallet {
   storage: IStorage;
   explorer: IExplorer;
   derivation: IDerivation;
   xpub: string;
   GAP: number = 20;
   syncing: boolean = false;
+  // need to be bigger than the number of tx from the same address that can be in the same block
   txsSyncArraySize: number = 1000;
 
   constructor({ storage, explorer, derivation, xpub }) {
@@ -45,19 +47,23 @@ class Client extends events.EventEmitter implements IClient {
 
     // TODO handle eventual reorg case using lastBlock
 
-    const fetchAndStore = async (lastBlock) => {
+    const fetchHydrateAndStore = async (lastBlock) => {
       let txs = await this.explorer.getNAddressTransactionsSinceBlockExcludingBlock(
         this.txsSyncArraySize,
         address,
         lastBlock
       );
-      await this.storage.appendAddressTxs(
-        derivationMode,
-        account,
-        index,
-        address,
-        txs
-      );
+      // mutate to hydrate faster
+      txs.forEach((tx) => {
+        tx.derivationMode = derivationMode;
+        tx.account = account;
+        tx.index = index;
+        tx.address = address;
+        // we calculate it from storage instead of having to update continually
+        // as new block are mined
+        delete tx.confirmations;
+      });
+      await this.storage.appendAddressTxs(txs);
       return txs.length;
     };
 
@@ -65,16 +71,14 @@ class Client extends events.EventEmitter implements IClient {
     let lastBlock = await this.storage.getAddressLastBlock(
       derivationMode,
       account,
-      index,
-      address
+      index
     );
 
-    while (await fetchAndStore(lastBlock)) {
+    while (await fetchHydrateAndStore(lastBlock)) {
       lastBlock = await this.storage.getAddressLastBlock(
         derivationMode,
         account,
-        index,
-        address
+        index
       );
     }
 
@@ -93,11 +97,13 @@ class Client extends events.EventEmitter implements IClient {
 
     const checkAddressesBlock = async (index) => {
       let addressesResults = await Promise.all(
-        new Array(this.GAP).map((_, key) =>
+        range(this.GAP).map((_, key) =>
           this.syncAddress(derivationMode, account, index + key)
         )
       );
-      return addressesResults.filter((lastBlockHash) => !!lastBlockHash).length;
+      return (
+        findLastIndex(addressesResults, (lastBlockHash) => !!lastBlockHash) + 1
+      );
     };
 
     let nb;
@@ -203,4 +209,4 @@ class Client extends events.EventEmitter implements IClient {
   broadcastTx() {}
 }
 
-export default Client;
+export default Wallet;
