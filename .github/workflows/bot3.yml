@@ -51,6 +51,9 @@ jobs:
           VERBOSE_LIBCORE: "1"
         run: COINAPPS=$PWD/coin-apps yarn ci-test-bot
         timeout-minutes: 120
+      - name: Run coverage
+        if: failure() || success()
+        run: CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }} npx codecov
       - name: upload logs
         if: failure() || success()
         uses: actions/upload-artifact@v1
