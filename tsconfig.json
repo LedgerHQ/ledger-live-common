@@ -1,21 +1,12 @@
 {
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "strict": true,
-    "noImplicitAny": false,
-    "noImplicitThis": false,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "downlevelIteration": true,
-    "outDir": "lib",
+    "rootDir": ".",
+    "outDir": "lib", // if out path for a file is same as its src path, nothing will be emitted
     "resolveJsonModule": true,
-    "jsx": "react",
-    "lib": ["es2019", "dom"]
+    "composite": true // required on the dependency project for references to work
   },
-  "include": ["src/**/*"]
+  "files": [
+    // by whitelisting the files to include, TS won't automatically
+    "package.json" // include all source below root, which is the default.
+  ]
 }
