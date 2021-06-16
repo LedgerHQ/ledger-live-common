@@ -25,6 +25,11 @@ export interface IStorage {
   getDerivationModeLastAccount(
     derivationMode: string
   ): Promise<number | undefined>;
+  getUniquesAddresses(addressesFilter: {
+    derivationMode?: string,
+    account?: number,
+  }): Promise<string[]>;
+  getDerivationModeUniqueAccounts(derivationMode: string): Promise<number[]>;
   dump(file: string): Promise<void>;
   load(file: string): Promise<void>;
 }

@@ -195,17 +195,45 @@ class Wallet extends EventEmitter implements IWallet {
     */
   }
 
-  // handle returning the next account available from locally stored blockchain data
+  // handle returning the Wallet addresse from locally stored blockchain data
+  // wait for sync to finish if sync is ongoing
+  async getWalletAddresses() {
+    await this._whenSynced();
+    return this.storage.getUniquesAddresses({});
+  }
+
+  // handle returning the derivation mode adresses from locally stored blockchain data
+  // wait for sync to finish if sync is ongoing
+  async getDerivationModeAddresses(derivationMode: string) {
+    await this._whenSynced();
+    return this.storage.getUniquesAddresses({ derivationMode });
+  }
+
+  // handle returning the derivation mode adresses from locally stored blockchain data
+  // wait for sync to finish if sync is ongoing
+  async getDerivationModeAccounts(derivationMode: string) {
+    await this._whenSynced();
+    return this.storage.getDerivationModeUniqueAccounts(derivationMode);
+  }
+
+  // handle returning the account addresses from locally stored blockchain data
+  // wait for sync to finish if sync is ongoing
+  async getAccountAddresses(derivationMode: string, account: number) {
+    await this._whenSynced();
+    return this.storage.getUniquesAddresses({ derivationMode, account });
+  }
+
+  // TODO handle returning the next account available from locally stored blockchain data
   // wait for sync to finish if sync is ongoing
   getNextAccount(derivationMode: string) {
     // { derivationMode, account }
   }
 
-  // handle building a tx from locally stored blockchain data
+  // TODO handle building a tx from locally stored blockchain data
   // wait for sync to finish if sync is ongoing
   buildTx() {}
 
-  // handle broadcasting a tx, inserting the pending transaction in the storage
+  // TODO handle broadcasting a tx, inserting the pending transaction in storage ?
   broadcastTx() {}
 }
 

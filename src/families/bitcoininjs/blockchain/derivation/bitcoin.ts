@@ -2,8 +2,6 @@
 
 import * as bjs from "bitcoinjs-lib";
 import * as bip32 from "bip32";
-import * as bch from "bitcore-lib-cash"; // TODO deprecated, to replace
-import bchaddr from "bchaddrjs";
 import { IDerivation, DerivationMode } from "./types";
 
 // a mock explorer class that just use js objects
@@ -13,7 +11,6 @@ class Bitcoin implements IDerivation {
     LEGACY: "Legacy",
     NATIVE: "Native SegWit",
     SEGWIT: "SegWit",
-    BCH: "Bitcoin Cash",
   };
 
   constructor({ network }) {
@@ -57,25 +54,6 @@ class Bitcoin implements IDerivation {
     return String(address);
   }
 
-  // Based on https://github.com/go-faast/bitcoin-cash-payments/blob/54397eb97c7a9bf08b32e10bef23d5f27aa5ab01/index.js#L63-L73
-  getLegacyBitcoinCashAddress(
-    xpub: string,
-    account: number,
-    index: number,
-  ): string {
-    const CASH_ADDR_FORMAT = bch.Address.CashAddrFormat;
-
-    const node = new bch.HDPublicKey(xpub);
-    const child = node.derive(account).derive(index);
-    const address = new bch.Address(child.publicKey, bch.Networks.livenet);
-    const addrstr = address.toString(CASH_ADDR_FORMAT).split(":");
-    if (addrstr.length === 2) {
-      return bchaddr.toLegacyAddress(addrstr[1]);
-    } else {
-      throw new Error("Unable to derive cash address for " + address);
-    }
-  }
-
   // get address given an address type
   getAddress(
     derivationMode: string,
@@ -90,8 +68,6 @@ class Bitcoin implements IDerivation {
         return this.getSegWitAddress(xpub, account, index);
       case this.DerivationMode.NATIVE:
         return this.getNativeSegWitAddress(xpub, account, index);
-      case this.DerivationMode.BCH:
-        return this.getLegacyBitcoinCashAddress(xpub, account, index);
     }
 
     throw new Error("Should not be reachable");

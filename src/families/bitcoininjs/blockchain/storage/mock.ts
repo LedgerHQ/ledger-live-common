@@ -1,5 +1,5 @@
 import { IStorage, TX, Block } from "./types";
-import { findLast, sortBy } from "lodash";
+import { findLast, sortBy, filter, uniq } from "lodash";
 import fs from "fs";
 
 // a mock storage class that just use js objects
@@ -24,6 +24,14 @@ class Mock implements IStorage {
 
   async appendAddressTxs(txs: TX[]) {
     this.txs = this.txs.concat(txs);
+  }
+
+  async getUniquesAddresses(addressesFilter) {
+    return uniq(filter(this.txs, addressesFilter).map((tx) => tx.address));
+  }
+
+  async getDerivationModeUniqueAccounts(derivationMode: string) {
+    return uniq(filter(this.txs, { derivationMode }).map((tx) => tx.account));
   }
 
   async dump(file: string) {
