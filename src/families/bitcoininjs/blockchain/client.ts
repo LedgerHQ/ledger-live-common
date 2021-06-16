@@ -1,7 +1,7 @@
 import { IStorage } from "./storage/types";
 import events from "events";
-import * as derivation from "./derivation";
 import { IExplorer } from "./explorer/types";
+import { IDerivation } from "./derivation/types";
 
 declare interface IClient {
   on(event: "address-syncing", listener: () => void): this;
@@ -17,27 +17,26 @@ declare interface IClient {
 class Client extends events.EventEmitter implements IClient {
   storage: IStorage;
   explorer: IExplorer;
+  derivation: IDerivation;
   xpub: string;
-  network: string;
   GAP: number = 20;
   syncing: boolean = false;
 
-  constructor({ storage, explorer, xpub, network }) {
+  constructor({ storage, explorer, derivation, xpub }) {
     super();
     this.storage = storage;
     this.explorer = explorer;
+    this.derivation = derivation;
     this.xpub = xpub;
-    this.network = network;
   }
 
   // sync address and store data
   async syncAddress(derivationMode: string, account: number, index: number) {
-    const address = derivation.getAddress(
+    const address = this.derivation.getAddress(
       derivationMode,
       this.xpub,
       account,
-      index,
-      this.network
+      index
     );
     const data = { derivationMode, account, index, address };
 
@@ -135,7 +134,7 @@ class Client extends events.EventEmitter implements IClient {
 
     // explore derivation modes in parallel
     await Promise.all(
-      Object.values(derivation.DerivationMode).map((derivationMode) =>
+      Object.values(this.derivation.DerivationMode).map((derivationMode) =>
         this.syncDerivationMode(derivationMode)
       )
     );
@@ -194,11 +193,7 @@ class Client extends events.EventEmitter implements IClient {
   buildTx() {}
 
   // handle broadcasting a tx, inserting the pending transaction in the storage
-  broadcastTx() {
-    // just to trigger a sync so that listeners get to update their state with the new pending transaction
-    this.sync();
-  }
+  broadcastTx() {}
 }
 
-export type { IClient };
 export default Client;
