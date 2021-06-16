@@ -1,7 +1,4 @@
-// @flow
-
 export * from "./live-common-setup-base";
-
 import React from "react";
 import { connect } from "react-redux";
 import Transport from "@ledgerhq/hw-transport";
@@ -10,7 +7,9 @@ import { log } from "@ledgerhq/logs";
 import { Observable } from "rxjs";
 import { map, first, switchMap } from "rxjs/operators";
 import createTransportHttp from "@ledgerhq/hw-transport-http";
-import SpeculosTransport from "@ledgerhq/hw-transport-node-speculos";
+import SpeculosTransport, {
+  SpeculosTransportOpts,
+} from "@ledgerhq/hw-transport-node-speculos";
 import {
   registerTransportModule,
   disconnect,
@@ -27,10 +26,11 @@ checkLibs({
   Transport,
   connect,
 });
-
 import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
+import BluetoothTransport from "@ledgerhq/hw-transport-node-ble";
 implementLibcore({
-  lib: () => require("@ledgerhq/ledger-core"), // eslint-disable-line global-require
+  lib: () => require("@ledgerhq/ledger-core"),
+  // eslint-disable-line global-require
   dbPath: process.env.LIBCORE_DB_PATH || "./dbdata",
 });
 
@@ -39,26 +39,32 @@ if (process.env.DEVICE_PROXY_URL) {
   registerTransportModule({
     id: "http",
     open: () =>
-      retry(() => Tr.create(3000, 5000), { context: "open-http-proxy" }),
+      retry(() => (Tr.constructor as typeof Transport).create(3000, 5000), {
+        context: "open-http-proxy",
+      }),
     disconnect: () => Promise.resolve(),
   });
 }
 
 const { SPECULOS_APDU_PORT, SPECULOS_BUTTON_PORT, SPECULOS_HOST } = process.env;
+
 if (SPECULOS_APDU_PORT) {
-  const req: Object = {
+  const req: Record<string, any> = {
     apduPort: parseInt(SPECULOS_APDU_PORT, 10),
   };
+
   if (SPECULOS_BUTTON_PORT) {
     req.buttonPort = parseInt(SPECULOS_BUTTON_PORT, 10);
   }
+
   if (SPECULOS_HOST) {
     req.host = SPECULOS_HOST;
   }
+
   registerTransportModule({
     id: "tcp",
     open: () =>
-      retry(() => SpeculosTransport.open(req), {
+      retry(() => SpeculosTransport.open(req as SpeculosTransportOpts), {
         context: "open-tcp-speculos",
       }),
     disconnect: () => Promise.resolve(),
@@ -67,14 +73,16 @@ if (SPECULOS_APDU_PORT) {
 
 const cacheBle = {};
 
-if (!process.env.CI) {
+async function init() {
   let TransportNodeBle;
-  const getTransport = () => {
+
+  const getTransport = async (): Promise<BluetoothTransport> => {
     if (!TransportNodeBle) {
-      // $FlowFixMe
-      TransportNodeBle = require("@ledgerhq/hw-transport-node-ble").default;
+      const { default: mod } = await import("@ledgerhq/hw-transport-node-ble");
+      TransportNodeBle = mod;
     }
-    return TransportNodeBle;
+
+    return TransportNodeBle as BluetoothTransport;
   };
 
   const openBleByQuery = async (query) => {
@@ -83,11 +91,15 @@ if (!process.env.CI) {
     const [, q] = m;
     if (cacheBle[query]) return cacheBle[query];
     const t = await (!q
-      ? getTransport().create()
-      : Observable.create(getTransport().listen)
+      ? ((await getTransport()
+          .constructor) as typeof BluetoothTransport).create()
+      : new Observable(
+          ((await getTransport()
+            .constructor) as typeof BluetoothTransport).listen
+        )
           .pipe(
             first(
-              (e) =>
+              (e: any) =>
                 (e.device.name || "").toLowerCase().includes(q.toLowerCase()) ||
                 e.device.id.toLowerCase() === q.toLowerCase()
             ),
@@ -95,11 +107,12 @@ if (!process.env.CI) {
           )
           .toPromise());
     cacheBle[query] = t;
-    t.on("disconnect", () => {
+    (t as Transport).on("disconnect", () => {
       delete cacheBle[query];
     });
     return t;
   };
+
   registerTransportModule({
     id: "ble",
     open: (query) => {
@@ -107,36 +120,45 @@ if (!process.env.CI) {
         return openBleByQuery(query);
       }
     },
-    discovery: Observable.create((o) => {
-      const s = getTransport().listen(o);
-      return () => s.unsubscribe();
+    discovery: new Observable((o) => {
+      let s: any;
+
+      getTransport().then((module) => {
+        (module.constructor as typeof BluetoothTransport).listen(o);
+        s = module;
+      });
+
+      return () => s && s.unsubscribe();
     }).pipe(
-      map((e) => ({
+      map((e: any) => ({
         type: e.type,
         id: "ble:" + e.device.id,
         name: e.device.name || "",
       }))
     ),
-    disconnect: (query) =>
+    disconnect: async (query) =>
       query.startsWith("ble")
         ? cacheBle[query]
-          ? getTransport().disconnect(cacheBle[query].id)
+          ? ((await getTransport()
+              .constructor) as typeof BluetoothTransport).disconnect(
+              cacheBle[query].id
+            )
           : Promise.resolve()
         : null,
   });
 
-  const {
-    default: TransportNodeHid,
-    // eslint-disable-next-line global-require
-  } = require("@ledgerhq/hw-transport-node-hid");
+  const { default: TransportNodeHid } = await import(
+    "@ledgerhq/hw-transport-node-hid"
+  );
+
   registerTransportModule({
     id: "hid",
     open: (devicePath) =>
       retry(() => TransportNodeHid.open(devicePath), {
         context: "open-hid",
       }),
-    discovery: Observable.create(TransportNodeHid.listen).pipe(
-      map((e) => ({
+    discovery: new Observable(TransportNodeHid.listen).pipe(
+      map((e: any) => ({
         type: e.type,
         id: e.device.path,
         name: e.device.deviceName || "",
@@ -144,6 +166,10 @@ if (!process.env.CI) {
     ),
     disconnect: () => Promise.resolve(),
   });
+}
+
+if (!process.env.CI) {
+  init();
 }
 
 export function closeAllDevices() {

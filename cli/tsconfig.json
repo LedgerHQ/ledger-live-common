@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "target": "ESNext",
+    "module": "esnext",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -14,8 +16,8 @@
     "downlevelIteration": true,
     "outDir": "lib",
     "resolveJsonModule": true,
-    "jsx": "react",
-    "lib": ["es2019", "dom"]
+    "lib": ["esNext", "dom"],
+    "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": ["**/__tests__/**"]
