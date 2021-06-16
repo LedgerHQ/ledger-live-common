@@ -1,6 +1,7 @@
-import { IStorage, TX, Block } from "./types";
+import { IStorage, TX } from "./types";
 import { findLast, sortBy, filter, uniq } from "lodash";
 import fs from "fs";
+import mkdirp from "mkdirp";
 
 // a mock storage class that just use js objects
 class Mock implements IStorage {
@@ -35,7 +36,7 @@ class Mock implements IStorage {
   }
 
   async dump(file: string) {
-    //
+    await mkdirp(file);
     fs.writeFileSync(
       file,
       JSON.stringify(
