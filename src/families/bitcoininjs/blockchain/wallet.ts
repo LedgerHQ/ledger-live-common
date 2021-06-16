@@ -167,32 +167,90 @@ class Wallet extends EventEmitter implements IWallet {
     });
   }
 
-  // TODO handle returning the Wallet balance from locally stored blockchain data
+  // handle returning the derivation mode adresses from locally stored blockchain data
   // wait for sync to finish if sync is ongoing
-  getWalletBalance() {}
+  async getDerivationModeAccounts(derivationMode: string) {
+    await this._whenSynced();
+    return this.storage.getDerivationModeUniqueAccounts(derivationMode);
+  }
 
-  // TODO handle returning the derivation mode balance from locally stored blockchain data
-  // wait for sync to finish if sync is ongoing
-  getDerivationModeBalance(derivationMode: string) {}
+  _computeBalance(inputs, outputs) {
+    // TODO : is this dumb implem enough really ?
+    const positif = outputs.reduce((total, output) => total + output.value, 0);
+    const negatif = inputs.reduce((total, output) => total + output.value, 0);
+    return positif - negatif;
+  }
 
-  // TODO handle returning the account balance from locally stored blockchain data
+  // handle returning the Wallet balance from locally stored blockchain data
   // wait for sync to finish if sync is ongoing
-  getAccountBalance(derivationMode: string, account: number) {}
+  async getWalletBalance() {
+    await this._whenSynced();
 
-  // TODO handle returning the address balance from locally stored blockchain data
+    const outputs = await this.storage.getOutputsToInternalWalletAddresses({});
+    const inputs = await this.storage.getInputsFromInternalWalletAddresses({});
+
+    return this._computeBalance(inputs, outputs);
+  }
+
+  // handle returning the derivation mode balance from locally stored blockchain data
   // wait for sync to finish if sync is ongoing
-  getAddressBalance(derivationMode: string, account: number, index: number) {}
+  async getDerivationModeBalance(derivationMode: string) {
+    await this._whenSynced();
+
+    const outputs = await this.storage.getOutputsToInternalWalletAddresses({
+      derivationMode,
+    });
+    const inputs = await this.storage.getInputsFromInternalWalletAddresses({
+      derivationMode,
+    });
+
+    return this._computeBalance(inputs, outputs);
+  }
+
+  // handle returning the account balance from locally stored blockchain data
+  // wait for sync to finish if sync is ongoing
+  async getAccountBalance(derivationMode: string, account: number) {
+    await this._whenSynced();
+
+    const outputs = await this.storage.getOutputsToInternalWalletAddresses({
+      derivationMode,
+      account,
+    });
+    const inputs = await this.storage.getInputsFromInternalWalletAddresses({
+      derivationMode,
+      account,
+    });
+
+    return this._computeBalance(inputs, outputs);
+  }
+
+  // handle returning the address balance from locally stored blockchain data
+  // wait for sync to finish if sync is ongoing
+  async getAddressBalance(
+    derivationMode: string,
+    account: number,
+    index: number
+  ) {
+    await this._whenSynced();
+
+    const outputs = await this.storage.getOutputsToInternalWalletAddresses({
+      derivationMode,
+      account,
+      index,
+    });
+    const inputs = await this.storage.getInputsFromInternalWalletAddresses({
+      derivationMode,
+      account,
+      index,
+    });
+
+    return this._computeBalance(inputs, outputs);
+  }
 
   // TODO fetch address details from storage
   // wait for sync to finish if sync is ongoing
   getAddressDetailsFromAddress(address: string) {
-    /*
-    return {
-      derivationMode: "",
-      account: 0,
-      index: 0,
-    };
-    */
+    return this.storage.getAddressDetails(address);
   }
 
   // handle returning the Wallet addresse from locally stored blockchain data
@@ -207,13 +265,6 @@ class Wallet extends EventEmitter implements IWallet {
   async getDerivationModeAddresses(derivationMode: string) {
     await this._whenSynced();
     return this.storage.getUniquesAddresses({ derivationMode });
-  }
-
-  // handle returning the derivation mode adresses from locally stored blockchain data
-  // wait for sync to finish if sync is ongoing
-  async getDerivationModeAccounts(derivationMode: string) {
-    await this._whenSynced();
-    return this.storage.getDerivationModeUniqueAccounts(derivationMode);
   }
 
   // handle returning the account addresses from locally stored blockchain data
