@@ -1,10 +1,10 @@
 /* eslint-disable global-require */
-import { from, of, concat } from "rxjs";
+import { from, of, concat, Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { withLibcore } from "@ledgerhq/live-common/lib/libcore/access";
 export default {
   args: [],
-  job: async () =>
+  job: async (): Promise<Observable<string>> =>
     concat(
       of("ledger-live cli: " + (await import("../../package.json")).version),
       of(
