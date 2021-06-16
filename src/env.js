@@ -457,6 +457,16 @@ const envDefinitions = {
     parser: intParser,
     desc: "version used for ledger status api",
   },
+  PLATFORM_DEBUG: {
+    def: false,
+    parser: boolParser,
+    desc: "enable visibility of debug apps and tools in Platform Catalog",
+  },
+  PLATFORM_MANIFEST_PATH: {
+    def: "",
+    parser: stringParser,
+    desc: "file path for the platform catalog manifest",
+  },
 };
 
 const getDefinition = (name: string): ?EnvDef<any> => envDefinitions[name];
