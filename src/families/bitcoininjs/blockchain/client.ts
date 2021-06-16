@@ -21,6 +21,7 @@ class Client extends events.EventEmitter implements IClient {
   xpub: string;
   GAP: number = 20;
   syncing: boolean = false;
+  txsSyncArraySize: number = 1000;
 
   constructor({ storage, explorer, derivation, xpub }) {
     super();
@@ -42,6 +43,24 @@ class Client extends events.EventEmitter implements IClient {
 
     this.emit("address-syncing", data);
 
+    // TODO handle eventual reorg case using lastBlock
+
+    const fetchAndStore = async (lastBlock) => {
+      let txs = await this.explorer.getNAddressTransactionsSinceBlockExcludingBlock(
+        this.txsSyncArraySize,
+        address,
+        lastBlock
+      );
+      await this.storage.appendAddressTxs(
+        derivationMode,
+        account,
+        index,
+        address,
+        txs
+      );
+      return txs.length;
+    };
+
     // can be undefined
     let lastBlock = await this.storage.getAddressLastBlock(
       derivationMode,
@@ -50,30 +69,18 @@ class Client extends events.EventEmitter implements IClient {
       address
     );
 
-    // TODO handle eventual reorg case using lastBlock
+    while (await fetchAndStore(lastBlock)) {
+      lastBlock = await this.storage.getAddressLastBlock(
+        derivationMode,
+        account,
+        index,
+        address
+      );
+    }
 
-    let txs = await this.explorer.getAddressTransactionsSinceBlock(
-      address,
-      lastBlock
-    );
+    this.emit("address-synced", { ...data, lastBlock });
 
-    await this.storage.appendAddressTxs(
-      derivationMode,
-      account,
-      index,
-      address,
-      txs
-    );
-
-    this.emit("address-synced", data);
-
-    const addressLastBlock = await this.storage.getAddressLastBlock(
-      derivationMode,
-      account,
-      index,
-      address
-    );
-    return addressLastBlock;
+    return lastBlock;
   }
 
   // sync account
