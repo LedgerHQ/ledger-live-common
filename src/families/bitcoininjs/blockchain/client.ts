@@ -151,8 +151,8 @@ class Client extends events.EventEmitter implements IClient {
     this.emit("synced");
   }
 
-  _whenSynced() {
-    return new Promise<void>((resolve) => {
+  _whenSynced(): Promise<void> {
+    return new Promise((resolve) => {
       if (!this.syncing) {
         return resolve();
       }

@@ -2,7 +2,7 @@
 
 import * as bjs from "bitcoinjs-lib";
 import * as bip32 from "bip32";
-import * as bch from "bitcoincashjs"; // TODO deprecated, to replace
+import * as bch from "bitcore-lib-cash"; // TODO deprecated, to replace
 import bchaddr from "bchaddrjs";
 import { IDerivation, DerivationMode } from "./types";
 
