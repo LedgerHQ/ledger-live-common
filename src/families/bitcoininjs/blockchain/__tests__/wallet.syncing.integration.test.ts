@@ -49,11 +49,9 @@ describe("integration sync bitcoin mainnet / ledger explorer / mock storage", ()
       async () => {
         await wallet.sync();
 
-        const tempDump = path.join(__dirname, "data", "temp", `${xpub}.json`);
         const truthDump = path.join(__dirname, "data", "sync", `${xpub}.json`);
-        await storage.dump(tempDump);
 
-        expect(fs.readFileSync(tempDump).toString()).toMatchFile(truthDump);
+        expect(await storage.toString()).toMatchFile(truthDump);
       },
       // 5 min
       5 * 60 * 1000

@@ -30,6 +30,6 @@ export interface IStorage {
     account?: number,
   }): Promise<string[]>;
   getDerivationModeUniqueAccounts(derivationMode: string): Promise<number[]>;
-  dump(file: string): Promise<void>;
+  toString(): Promise<string>;
   load(file: string): Promise<void>;
 }

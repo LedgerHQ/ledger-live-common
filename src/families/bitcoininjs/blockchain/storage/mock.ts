@@ -1,7 +1,6 @@
 import { IStorage, TX } from "./types";
 import { findLast, sortBy, filter, uniq } from "lodash";
 import fs from "fs";
-import mkdirp from "mkdirp";
 
 // a mock storage class that just use js objects
 class Mock implements IStorage {
@@ -35,20 +34,11 @@ class Mock implements IStorage {
     return uniq(filter(this.txs, { derivationMode }).map((tx) => tx.account));
   }
 
-  async dump(file: string) {
-    await mkdirp(file);
-    fs.writeFileSync(
-      file,
-      JSON.stringify(
-        sortBy(this.txs, [
-          "derivationMode",
-          "account",
-          "index",
-          "block.height",
-        ]),
-        null,
-        2
-      )
+  async toString() {
+    return JSON.stringify(
+      sortBy(this.txs, ["derivationMode", "account", "index", "block.height"]),
+      null,
+      2
     );
   }
   async load(file: string) {
