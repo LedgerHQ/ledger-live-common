@@ -71,6 +71,9 @@ class Wallet extends EventEmitter implements IWallet {
         lastBalance = lastBalance + positif - negatif;
         // could be already returned by the explorer
         tx.balance = lastBalance;
+
+        // TODO : maintain on the fly an array of UTXO that are unspent and ready for use
+        // when creating a transaction
       });
       await this.storage.appendAddressTxs(txs);
       return txs.length;
