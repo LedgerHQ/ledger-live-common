@@ -44,6 +44,6 @@ export interface IStorage {
     index?: number,
   }): Promise<Address[]>;
   getDerivationModeUniqueAccounts(derivationMode: string): Promise<number[]>;
-  toString(): Promise<string>;
+  toString(sort?: (txs: TX[]) => TX[]): Promise<string>;
   load(file: string): Promise<void>;
 }

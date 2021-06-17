@@ -33,19 +33,8 @@ class Mock implements IStorage {
     return uniq(filter(this.txs, { derivationMode }).map((tx) => tx.account));
   }
 
-  async toString() {
-    // sorting so that it always output the same
-    return JSON.stringify(
-      orderBy(this.txs, [
-        "derivationMode",
-        "account",
-        "index",
-        "block.height",
-        "id",
-      ]),
-      null,
-      2
-    );
+  async toString(sort = (txs) => txs) {
+    return JSON.stringify(sort(this.txs), null, 2);
   }
   async load(file: string) {
     //

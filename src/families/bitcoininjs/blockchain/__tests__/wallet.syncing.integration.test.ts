@@ -5,6 +5,7 @@ import Wallet from "../wallet";
 import path from "path";
 import coininfo from "coininfo";
 import { toMatchFile } from "jest-file-snapshot";
+import { orderBy } from "lodash";
 
 const startLogging = (emitters) => {
   emitters.forEach((emitter) =>
@@ -80,7 +81,17 @@ describe("integration sync bitcoin mainnet / ledger explorer / mock storage", ()
             `${xpub.xpub}.json`
           );
 
-          expect(await storage.toString()).toMatchFile(truthDump);
+          expect(
+            await storage.toString((txs) =>
+              orderBy(txs, [
+                "derivationMode",
+                "account",
+                "index",
+                "block.height",
+                "id",
+              ])
+            )
+          ).toMatchFile(truthDump);
           expect(await wallet.getWalletBalance()).toEqual(xpub.balance);
           const addresses = await wallet.getWalletAddresses();
           expect(addresses.length).toEqual(xpub.addresses);
