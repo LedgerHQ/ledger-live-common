@@ -52,8 +52,8 @@ describe("integration sync bitcoin mainnet / ledger explorer / mock storage", ()
 
         expect(await storage.toString()).toMatchFile(truthDump);
       },
-      // 5 min
-      5 * 60 * 1000
+      // 1 min but should take less than 5s
+      60 * 1000
     );
   });
 });

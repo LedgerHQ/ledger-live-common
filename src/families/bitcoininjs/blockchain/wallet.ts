@@ -1,19 +1,9 @@
 import { Address, IStorage } from "./storage/types";
 import EventEmitter from "./utils/eventemitter";
-import { range, findLastIndex, add } from "lodash";
+import { range, findLastIndex } from "lodash";
 import { IExplorer } from "./explorer/types";
 import { IDerivation } from "./derivation/types";
-
-declare interface IWallet {
-  on(event: "address-syncing", listener: () => void): this;
-  on(event: "address-synced", listener: () => void): this;
-  on(event: "account-syncing", listener: () => void): this;
-  on(event: "account-synced", listener: () => void): this;
-  on(event: "derivationMode-syncing", listener: () => void): this;
-  on(event: "derivationMode-synced", listener: () => void): this;
-  on(event: "syncing", listener: () => void): this;
-  on(event: "synced", listener: () => void): this;
-}
+import { IWallet } from "./types";
 
 class Wallet extends EventEmitter implements IWallet {
   storage: IStorage;
@@ -33,7 +23,6 @@ class Wallet extends EventEmitter implements IWallet {
     this.xpub = xpub;
   }
 
-  // sync address and store data
   async syncAddress(derivationMode: string, account: number, index: number) {
     const address = this.derivation.getAddress(
       derivationMode,
@@ -71,6 +60,8 @@ class Wallet extends EventEmitter implements IWallet {
         delete tx.confirmations;
 
         // we calculate the balance based on last balance
+        // TODO : is balance calc that simple ?
+        // TODO : need to remove the fees in which case ??
         const positif = tx.outputs
           .filter((output) => output.address === address)
           .reduce((total, output) => total + output.value, 0);
@@ -108,11 +99,9 @@ class Wallet extends EventEmitter implements IWallet {
     return lastBlock;
   }
 
-  // sync account
   async syncAccount(derivationMode: string, account: number) {
     this.emit("account-syncing", { derivationMode, account });
 
-    // can be undefined
     let index = (
       (await this.storage.getLastTx({
         derivationMode,
@@ -141,7 +130,6 @@ class Wallet extends EventEmitter implements IWallet {
     return index;
   }
 
-  // sync derivation mode
   async syncDerivationMode(derivationMode: string) {
     this.emit("derivationMode-syncing", { derivationMode });
 
@@ -160,8 +148,6 @@ class Wallet extends EventEmitter implements IWallet {
     return account;
   }
 
-  // sync everything, from discovery to syncing
-  // does incremental update based on what is stored in the db
   // TODO handle fail case
   async sync() {
     if (this.syncing) {
@@ -194,14 +180,11 @@ class Wallet extends EventEmitter implements IWallet {
     });
   }
 
-  // handle returning the derivation mode adresses from locally stored blockchain data
-  // wait for sync to finish if sync is ongoing
   async getDerivationModeAccounts(derivationMode: string) {
     await this._whenSynced();
     return this.storage.getDerivationModeUniqueAccounts(derivationMode);
   }
-  // handle returning the Wallet balance from locally stored blockchain data
-  // wait for sync to finish if sync is ongoing
+
   async getWalletBalance() {
     await this._whenSynced();
 
@@ -210,8 +193,6 @@ class Wallet extends EventEmitter implements IWallet {
     return this.getAddressesBalance(addresses);
   }
 
-  // handle returning the derivation mode balance from locally stored blockchain data
-  // wait for sync to finish if sync is ongoing
   async getDerivationModeBalance(derivationMode: string) {
     await this._whenSynced();
 
@@ -220,8 +201,6 @@ class Wallet extends EventEmitter implements IWallet {
     return this.getAddressesBalance(addresses);
   }
 
-  // handle returning the account balance from locally stored blockchain data
-  // wait for sync to finish if sync is ongoing
   async getAccountBalance(derivationMode: string, account: number) {
     await this._whenSynced();
 
@@ -241,8 +220,6 @@ class Wallet extends EventEmitter implements IWallet {
     );
   }
 
-  // handle returning the address balance from locally stored blockchain data
-  // wait for sync to finish if sync is ongoing
   async getAddressBalance(address: Address) {
     await this._whenSynced();
 
@@ -258,39 +235,20 @@ class Wallet extends EventEmitter implements IWallet {
     ).balance;
   }
 
-  // handle returning the Wallet addresse from locally stored blockchain data
-  // wait for sync to finish if sync is ongoing
   async getWalletAddresses() {
     await this._whenSynced();
     return this.storage.getUniquesAddresses({});
   }
 
-  // handle returning the derivation mode adresses from locally stored blockchain data
-  // wait for sync to finish if sync is ongoing
   async getDerivationModeAddresses(derivationMode: string) {
     await this._whenSynced();
     return this.storage.getUniquesAddresses({ derivationMode });
   }
 
-  // handle returning the account addresses from locally stored blockchain data
-  // wait for sync to finish if sync is ongoing
   async getAccountAddresses(derivationMode: string, account: number) {
     await this._whenSynced();
     return this.storage.getUniquesAddresses({ derivationMode, account });
   }
-
-  // TODO handle returning the next account available from locally stored blockchain data
-  // wait for sync to finish if sync is ongoing
-  getNextAccount(derivationMode: string) {
-    // { derivationMode, account }
-  }
-
-  // TODO handle building a tx from locally stored blockchain data
-  // wait for sync to finish if sync is ongoing
-  buildTx() {}
-
-  // TODO handle broadcasting a tx, inserting the pending transaction in storage ?
-  broadcastTx() {}
 }
 
 export default Wallet;
