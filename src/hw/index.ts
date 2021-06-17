@@ -33,10 +33,7 @@ export const registerTransportModule = (module: TransportModule) => {
 };
 export const discoverDevices = (
   accept: (module: TransportModule) => boolean = () => true
-): Observable<{
-  id: string;
-  name: string;
-}> => {
+): Discovery => {
   const all: Discovery[] = [];
 
   for (let i = 0; i < modules.length; i++) {
