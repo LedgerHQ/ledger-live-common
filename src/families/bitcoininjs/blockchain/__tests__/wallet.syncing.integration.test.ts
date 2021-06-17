@@ -85,8 +85,8 @@ describe("integration sync bitcoin mainnet / ledger explorer / mock storage", ()
           const addresses = await wallet.getWalletAddresses();
           expect(addresses.length).toEqual(xpub.addresses);
         },
-        // 1 min but should take less than 5s
-        5 * 60 * 1000
+        // github so slow
+        15 * 60 * 1000
       );
     })
   );
