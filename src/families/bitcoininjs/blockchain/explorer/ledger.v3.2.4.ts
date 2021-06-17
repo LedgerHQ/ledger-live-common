@@ -47,6 +47,8 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
     ).data;
 
     // ledger live explorer include the transaction of the paginating block_hash used
+    // TODO: review the use of batchSize for the pagination.
+    // maybe use more request and change this method to getAllAddressTransactionForFollowingBlock
     const txs = block
       ? res.txs.slice(
           findLastIndex(res.txs, (tx) => tx.block.hash === block.hash) + 1,
