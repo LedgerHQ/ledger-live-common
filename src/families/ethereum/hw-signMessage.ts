@@ -8,9 +8,6 @@ type EthResolver = (
   arg0: Transport,
   arg1: MessageData | TypedMessageData
 ) => Promise<Result>;
-export const stringHash = (message: string) => {
-  return Buffer.from(message).toString("hex");
-};
 export const domainHash = (message: TypedMessage) => {
   return TypedDataUtils.hashStruct(
     "EIP712Domain",
@@ -28,12 +25,16 @@ export const messageHash = (message: TypedMessage) => {
   );
 };
 
-const resolver: EthResolver = async (transport, { path, message }) => {
+const resolver: EthResolver = async (
+  transport,
+  // @ts-expect-error only available on MessageData
+  { path, message, rawMessage }
+) => {
   const eth = new Eth(transport);
   let result;
 
   if (typeof message === "string") {
-    result = await eth.signPersonalMessage(path, stringHash(message));
+    result = await eth.signPersonalMessage(path, rawMessage.slice(2));
   } else {
     result = await eth.signEIP712HashedMessage(
       path,

@@ -339,7 +339,7 @@ scenarios.forEach((scenario) => {
       if (action.expectInstalled) {
         expect(prettyInstalled(state.installed)).toBe(action.expectInstalled);
       }
-
+      state.currentProgressSubject = null;
       expect(state).toEqual(optimisticState);
       expect(prettyActionPlan(getActionPlan(state))).toBe("");
       const d: any = distribute(state);
