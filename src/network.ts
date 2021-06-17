@@ -1,5 +1,5 @@
 import invariant from "invariant";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import type { AxiosError, AxiosRequestConfig } from "axios";
 import { log } from "@ledgerhq/logs";
 import { NetworkDown, LedgerAPI5xx, LedgerAPI4xx } from "@ledgerhq/errors";
@@ -27,10 +27,10 @@ export const requestInterceptor = (
 export const responseInterceptor = (
   response: {
     config: ExtendedXHRConfig;
-  } & $<any>
+  } & AxiosResponse<any>
 ) => {
-  const { url, method = "", metadata = {} } = response.config;
-  const { startTime = 0 } = metadata;
+  const { url, method = "", metadata } = response.config;
+  const { startTime = 0 } = metadata || {};
 
   log(
     "network-success",
