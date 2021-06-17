@@ -7,7 +7,6 @@ import coininfo from "coininfo";
 import { zipObject } from "lodash";
 
 describe("synced wallet utilites functions", () => {
-  let storage = new Storage();
   let explorer = new Explorer();
   let derivation = new Derivation({
     network: coininfo.bitcoin.main.toBitcoinJS(),
@@ -17,6 +16,7 @@ describe("synced wallet utilites functions", () => {
     let xpub =
       "xpub6CUGRUonZSQ4TWtTMmzXdrXDtypWKiKrhko4egpiMZbpiaQL2jkwSB1icqYh2cfDfVxdx4df189oLKnC5fSwqPfgyP3hooxujYzAu3fDVmz";
     let truthDump = path.join(__dirname, "data", "sync", `${xpub}.json`);
+    let storage = new Storage();
     let wallet = new Wallet({
       storage,
       explorer,
