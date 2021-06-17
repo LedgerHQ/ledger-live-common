@@ -1,5 +1,12 @@
 import { IStorage, TX } from "./types";
-import { findLast, filter, uniq, sortedIndexBy, uniqBy } from "lodash";
+import {
+  findLast,
+  filter,
+  uniq,
+  sortedIndexBy,
+  uniqBy,
+  sortedLastIndexBy,
+} from "lodash";
 import fs from "fs";
 
 // a mock storage class that just use js objects
@@ -16,19 +23,31 @@ class Mock implements IStorage {
     if (!txs.length) {
       return;
     }
-    const sorting = ["derivationMode", "account", "index", "block.height"];
+    const sorting = ["derivationMode", "account", "index"];
     // sortIndexBy does not support multiple column sorting
-    const insertIndex = sorting.reduce(
-      (acc, column) => {
-        const firstColumnIndex = sortedIndexBy(acc.txsSlice, txs[0], column);
+    const { addressStartIndex, addressPreviousTxs } = sorting.reduce(
+      (acc, sort) => {
+        const firstColumnIndex = sortedIndexBy(
+          acc.addressPreviousTxs,
+          txs[0],
+          sort
+        );
+        const lastColumnIndex = sortedLastIndexBy(
+          acc.addressPreviousTxs,
+          txs[0],
+          sort
+        );
         return {
-          txsSlice: acc.txsSlice.slice(firstColumnIndex),
-          insertIndex: acc.insertIndex + firstColumnIndex,
+          addressPreviousTxs: acc.addressPreviousTxs.slice(
+            firstColumnIndex,
+            lastColumnIndex
+          ),
+          addressStartIndex: acc.addressStartIndex + firstColumnIndex,
         };
       },
-      { txsSlice: this.txs, insertIndex: 0 }
-    ).insertIndex;
-    this.txs.splice(insertIndex, 0, ...txs);
+      { addressPreviousTxs: this.txs, addressStartIndex: 0 }
+    );
+    this.txs.splice(addressStartIndex + addressPreviousTxs.length, 0, ...txs);
   }
 
   // todo perfs: take advantage of the ordered txs
