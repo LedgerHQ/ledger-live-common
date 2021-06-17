@@ -1,21 +1,39 @@
 import { IStorage, TX } from "./types";
-import { findLast, sortBy, filter, uniq, flatten, find } from "lodash";
+import { findLast, filter, uniq, flatten, find, sortedIndexBy } from "lodash";
 import fs from "fs";
 
 // a mock storage class that just use js objects
 class Mock implements IStorage {
   txs: TX[] = [];
 
+  // TODO perfs: take advantag of the ordered txs using sortedIndexBy/sortedLastIndexBy
   async getLastTx(txFilter) {
     return findLast(this.txs, txFilter);
   }
 
+  // insert in the ordered list
   async appendAddressTxs(txs: TX[]) {
-    this.txs = this.txs.concat(txs);
+    if (!txs.length) {
+      return;
+    }
+    const sorting = ["derivationMode", "account", "index", "block.height"];
+    // sortIndexBy does not support multiple column sorting
+    const insertIndex = sorting.reduce(
+      (acc, column) => {
+        const firstColumnIndex = sortedIndexBy(acc.txsSlice, txs[0], column);
+        return {
+          txsSlice: acc.txsSlice.slice(firstColumnIndex),
+          insertIndex: acc.insertIndex + firstColumnIndex,
+        };
+      },
+      { txsSlice: this.txs, insertIndex: 0 }
+    ).insertIndex;
+    this.txs.splice(insertIndex, 0, ...txs);
   }
 
   async getAddressDetails(address) {
-    const oneTx = find(this.txs, { address });
+    // todo perfs: take advantage of the ordered txs
+    const oneTx = await find(this.txs, { address });
 
     if (oneTx) {
       return {
@@ -28,6 +46,7 @@ class Mock implements IStorage {
     throw "Address unknown";
   }
 
+  // todo perfs: take advantage of the ordered txs
   async getUniquesAddresses(addressesFilter) {
     return uniq(filter(this.txs, addressesFilter).map((tx) => tx.address));
   }
@@ -65,11 +84,7 @@ class Mock implements IStorage {
   }
 
   async toString() {
-    return JSON.stringify(
-      sortBy(this.txs, ["derivationMode", "account", "index", "block.height"]),
-      null,
-      2
-    );
+    return JSON.stringify(this.txs, null, 2);
   }
   async load(file: string) {
     //
