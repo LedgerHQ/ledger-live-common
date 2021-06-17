@@ -1,22 +1,25 @@
 import { IExplorer } from "./types";
 import EventEmitter from "../utils/eventemitter";
 import { Block, TX } from "../storage/types";
-import axios from "axios";
+import axios, { AxiosInstance } from "axios";
+import axiosRetry from "axios-retry";
 import https from "https";
 import { findLastIndex } from "lodash";
 
 // an Live explorer V3 class
 class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
-  explorerURI: string;
-  syncAddressesParallelAddresses: number = 5;
-  syncAddressesParallelRequests: number = 5;
-  syncAddressesBatchSize: number = 50;
-  // uses max 20 keep alive request in parallel
-  httpsAgent: any = new https.Agent({ keepAlive: true, maxSockets: 20 });
+  client: AxiosInstance;
 
   constructor({ explorerURI }) {
     super();
-    this.explorerURI = explorerURI;
+
+    this.client = axios.create({
+      baseURL: explorerURI,
+      // uses max 20 keep alive request in parallel
+      httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 20 }),
+    });
+    // 3 retries per request
+    axiosRetry(this.client, { retries: 3 });
   }
 
   async getNAddressTransactionsSinceBlockExcludingBlock(
@@ -32,15 +35,14 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
       params["block_hash"] = block.hash;
     }
 
-    const url = `${this.explorerURI}/addresses/${address}/transactions`;
+    const url = `/addresses/${address}/transactions`;
 
     this.emit("fetching-address-transaction", { url, params });
 
-    // TODO handle retries
+    // TODO add a test for failure (at the sync level)
     const res: { txs: TX[] } = (
-      await axios.get(url, {
+      await this.client.get(url, {
         params,
-        httpsAgent: this.httpsAgent,
       })
     ).data;
 
