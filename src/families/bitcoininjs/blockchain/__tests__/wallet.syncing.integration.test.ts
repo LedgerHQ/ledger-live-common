@@ -29,18 +29,33 @@ describe("integration sync bitcoin mainnet / ledger explorer / mock storage", ()
   });
 
   const xpubs = [
-    "xpub6CUGRUonZSQ4TWtTMmzXdrXDtypWKiKrhko4egpiMZbpiaQL2jkwSB1icqYh2cfDfVxdx4df189oLKnC5fSwqPfgyP3hooxujYzAu3fDVmz", // 3000ms
-    "xpub6D4waFVPfPCpRvPkQd9A6n65z3hTp6TvkjnBHG5j2MCKytMuadKgfTUHqwRH77GQqCKTTsUXSZzGYxMGpWpJBdYAYVH75x7yMnwJvra1BUJ", // 5400ms
-    "xpub6CThYZbX4PTeA7KRYZ8YXP3F6HwT2eVKPQap3Avieds3p1eos35UzSsJtTbJ3vQ8d3fjRwk4bCEz4m4H6mkFW49q29ZZ6gS8tvahs4WCZ9X", // 138sec
+    {
+      xpub:
+        "xpub6CUGRUonZSQ4TWtTMmzXdrXDtypWKiKrhko4egpiMZbpiaQL2jkwSB1icqYh2cfDfVxdx4df189oLKnC5fSwqPfgyP3hooxujYzAu3fDVmz", // 3000ms
+      addresses: 15,
+      balance: 12678243,
+    },
+    {
+      xpub:
+        "xpub6D4waFVPfPCpRvPkQd9A6n65z3hTp6TvkjnBHG5j2MCKytMuadKgfTUHqwRH77GQqCKTTsUXSZzGYxMGpWpJBdYAYVH75x7yMnwJvra1BUJ", // 5400ms
+      addresses: 430,
+      balance: 179183365,
+    },
+    {
+      xpub:
+        "xpub6CThYZbX4PTeA7KRYZ8YXP3F6HwT2eVKPQap3Avieds3p1eos35UzSsJtTbJ3vQ8d3fjRwk4bCEz4m4H6mkFW49q29ZZ6gS8tvahs4WCZ9X", // 138sec,
+      addresses: 9884,
+      balance: 179183365,
+    },
   ];
 
   xpubs.forEach((xpub) =>
-    describe(`xpub ${xpub}`, () => {
+    describe(`xpub ${xpub.xpub}`, () => {
       let wallet = new Wallet({
         storage,
         explorer,
         derivation,
-        xpub,
+        xpub: xpub.xpub,
       });
 
       beforeAll(() => {
@@ -62,10 +77,13 @@ describe("integration sync bitcoin mainnet / ledger explorer / mock storage", ()
             __dirname,
             "data",
             "sync",
-            `${xpub}.json`
+            `${xpub.xpub}.json`
           );
 
           expect(await storage.toString()).toMatchFile(truthDump);
+          expect(await wallet.getWalletBalance()).toEqual(xpub.balance);
+          const addresses = await wallet.getWalletAddresses();
+          expect(addresses.length).toEqual(xpub.addresses);
         },
         // 1 min but should take less than 5s
         5 * 60 * 1000

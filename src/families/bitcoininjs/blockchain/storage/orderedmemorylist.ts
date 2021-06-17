@@ -1,12 +1,5 @@
 import { IStorage, TX } from "./types";
-import {
-  findLast,
-  filter,
-  uniq,
-  sortedIndexBy,
-  uniqBy,
-  sortedLastIndexBy,
-} from "lodash";
+import { findLast, filter, uniq, orderBy, uniqBy } from "lodash";
 import fs from "fs";
 
 // a mock storage class that just use js objects
@@ -23,6 +16,9 @@ class Mock implements IStorage {
     if (!txs.length) {
       return;
     }
+    // TODO: insert in the right place directly
+    // this thing almost work correctly I think
+    /*
     const sorting = ["derivationMode", "account", "index"];
     // sortIndexBy does not support multiple column sorting
     const { addressStartIndex, addressPreviousTxs } = sorting.reduce(
@@ -48,6 +44,9 @@ class Mock implements IStorage {
       { addressPreviousTxs: this.txs, addressStartIndex: 0 }
     );
     this.txs.splice(addressStartIndex + addressPreviousTxs.length, 0, ...txs);
+    */
+
+    this.txs.splice(this.txs.length, 0, ...txs);
   }
 
   // todo perfs: take advantage of the ordered txs
@@ -69,7 +68,20 @@ class Mock implements IStorage {
   }
 
   async toString() {
-    return JSON.stringify(this.txs, null, 2);
+    // TODO: no sorting if the list is already ordered
+    // return JSON.stringify(this.txs, null, 2);
+
+    return JSON.stringify(
+      orderBy(this.txs, [
+        "derivationMode",
+        "account",
+        "index",
+        "block.height",
+        "id",
+      ]),
+      null,
+      2
+    );
   }
   async load(file: string) {
     //
