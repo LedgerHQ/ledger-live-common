@@ -38,8 +38,8 @@ describe("integration sync bitcoin mainnet / ledger explorer / mock storage", ()
     {
       xpub:
         "xpub6D4waFVPfPCpRvPkQd9A6n65z3hTp6TvkjnBHG5j2MCKytMuadKgfTUHqwRH77GQqCKTTsUXSZzGYxMGpWpJBdYAYVH75x7yMnwJvra1BUJ", // 5400ms
-      addresses: 430,
-      balance: 179183365,
+      addresses: 506,
+      balance: 166505122,
     },
     {
       xpub:
