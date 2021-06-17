@@ -1,5 +1,5 @@
 import { IStorage } from "./storage/types";
-import { IClient as BlockchainIClient } from "../blockchain/client";
+import { IWallet } from "../blockchain/types";
 import events from "events";
 
 declare interface IClient {
@@ -9,20 +9,20 @@ declare interface IClient {
 
 class Client extends events.EventEmitter implements IClient {
   storage: IStorage;
-  blockchainClient: BlockchainIClient;
+  wallet: IWallet;
   hwAppBTCClient: any;
 
-  constructor({ storage, client, hwAppBTCClient }) {
+  constructor({ storage, wallet, hwAppBTCClient }) {
     super();
     this.storage = storage;
-    this.blockchainClient = client;
+    this.wallet = wallet;
     this.hwAppBTCClient = hwAppBTCClient;
 
-    // eventually listen to blockchainClient events
+    // eventually listen to this.wallet events
   }
 
   // implements ledger live specific functions by leveraging
-  // this.blockchainClient and this.hwAppBTCClient
+  // this.wallet and this.hwAppBTCClient
   // can also use its own storage
 
   // ....
