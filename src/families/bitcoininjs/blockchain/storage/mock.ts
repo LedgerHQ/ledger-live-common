@@ -6,20 +6,8 @@ import fs from "fs";
 class Mock implements IStorage {
   txs: TX[] = [];
 
-  async getDerivationModeLastAccount(derivationMode: string) {
-    return (findLast(this.txs, { derivationMode }) || {}).account;
-  }
-
-  async getAccountLastIndex(derivationMode: string, account: number) {
-    return (findLast(this.txs, { derivationMode, account }) || {}).index;
-  }
-
-  async getAddressLastBlock(
-    derivationMode: string,
-    account: number,
-    index: number
-  ) {
-    return (findLast(this.txs, { derivationMode, account, index }) || {}).block;
+  async getLastTx(txFilter) {
+    return findLast(this.txs, txFilter);
   }
 
   async appendAddressTxs(txs: TX[]) {

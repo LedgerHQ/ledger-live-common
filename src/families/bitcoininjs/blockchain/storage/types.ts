@@ -31,18 +31,11 @@ export interface Details {
 
 export interface IStorage {
   appendAddressTxs(txs: TX[]): Promise<void>;
-  getAddressLastBlock(
-    derivationMode: string,
-    account: number,
-    index: number
-  ): Promise<Block | undefined>;
-  getAccountLastIndex(
-    derivationMode: string,
-    account: number
-  ): Promise<number | undefined>;
-  getDerivationModeLastAccount(
-    derivationMode: string
-  ): Promise<number | undefined>;
+  getLastTx(txFilter: {
+    derivationMode?: string,
+    account?: number,
+    index?: number,
+  }): Promise<TX | undefined>;
   getUniquesAddresses(addressesFilter: {
     derivationMode?: string,
     account?: number,

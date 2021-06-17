@@ -67,19 +67,22 @@ class Wallet extends EventEmitter implements IWallet {
       return txs.length;
     };
 
-    // can be undefined
-    let lastBlock = await this.storage.getAddressLastBlock(
-      derivationMode,
-      account,
-      index
-    );
-
-    while (await fetchHydrateAndStore(lastBlock)) {
-      lastBlock = await this.storage.getAddressLastBlock(
+    let lastBlock = (
+      (await this.storage.getLastTx({
         derivationMode,
         account,
-        index
-      );
+        index,
+      })) || {}
+    ).block;
+
+    while (await fetchHydrateAndStore(lastBlock)) {
+      lastBlock = (
+        (await this.storage.getLastTx({
+          derivationMode,
+          account,
+          index,
+        })) || {}
+      ).block;
     }
 
     this.emit("address-synced", { ...data, lastBlock });
@@ -92,8 +95,12 @@ class Wallet extends EventEmitter implements IWallet {
     this.emit("account-syncing", { derivationMode, account });
 
     // can be undefined
-    let index =
-      (await this.storage.getAccountLastIndex(derivationMode, account)) || 0;
+    let index = (
+      (await this.storage.getLastTx({
+        derivationMode,
+        account,
+      })) || { index: 0 }
+    ).index;
 
     const checkAddressesBlock = async (index) => {
       let addressesResults = await Promise.all(
@@ -120,9 +127,11 @@ class Wallet extends EventEmitter implements IWallet {
   async syncDerivationMode(derivationMode: string) {
     this.emit("derivationMode-syncing", { derivationMode });
 
-    let account =
-      // can be undefined
-      (await this.storage.getDerivationModeLastAccount(derivationMode)) || 0;
+    let account = (
+      (await this.storage.getLastTx({
+        derivationMode,
+      })) || { account: 0 }
+    ).account;
 
     while (await this.syncAccount(derivationMode, account)) {
       account++;
