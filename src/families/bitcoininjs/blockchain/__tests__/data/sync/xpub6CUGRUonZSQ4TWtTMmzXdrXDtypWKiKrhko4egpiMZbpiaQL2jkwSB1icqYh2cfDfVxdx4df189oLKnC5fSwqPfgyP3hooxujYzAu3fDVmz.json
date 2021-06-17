@@ -39,7 +39,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 0,
-    "address": "1EfgV2Hr5CDjXPavHDpDMjmU33BA2veHy6"
+    "address": "1EfgV2Hr5CDjXPavHDpDMjmU33BA2veHy6",
+    "balance": 100000
   },
   {
     "id": "4fbbbdf97d77f27cf39572a21a996e938b88f76ac173a0806f60e94f23995016",
@@ -81,7 +82,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 0,
-    "address": "1EfgV2Hr5CDjXPavHDpDMjmU33BA2veHy6"
+    "address": "1EfgV2Hr5CDjXPavHDpDMjmU33BA2veHy6",
+    "balance": 0
   },
   {
     "id": "6624d78e14ebae02be652c1b155cc8cd1cd9fd7b8531df16cdcfcbe36b8ab272",
@@ -123,7 +125,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 1,
-    "address": "12iNxzdF6KFZ14UyRTYCRuptxkKSSVHzqF"
+    "address": "12iNxzdF6KFZ14UyRTYCRuptxkKSSVHzqF",
+    "balance": 120000
   },
   {
     "id": "d339e4ffd23586e9f75c44aa5c60cc8775980ccd09a431cc0b56dac863d7f6f2",
@@ -165,7 +168,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 1,
-    "address": "12iNxzdF6KFZ14UyRTYCRuptxkKSSVHzqF"
+    "address": "12iNxzdF6KFZ14UyRTYCRuptxkKSSVHzqF",
+    "balance": 0
   },
   {
     "id": "d398308c6b1123d53f0c669146ad9772164dacdf4df4c79d26e657264f20250f",
@@ -207,7 +211,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 2,
-    "address": "1CcEugXu9Yf9Qw5cpB8gHUK4X9683WyghM"
+    "address": "1CcEugXu9Yf9Qw5cpB8gHUK4X9683WyghM",
+    "balance": 8747
   },
   {
     "id": "9922f59186cb133769bee41876bd8c0186dee21a005823d4e28ddaf6e324805c",
@@ -269,7 +274,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 3,
-    "address": "15xANZb5vJv5RGL263NFuh8UGgHT7noXeZ"
+    "address": "15xANZb5vJv5RGL263NFuh8UGgHT7noXeZ",
+    "balance": 100000
   },
   {
     "id": "0b290c3d0f27ce20a91d3054ab2d6e43700b86b2d290bdb1a5686c453a1687b7",
@@ -311,7 +317,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 4,
-    "address": "1PJMBXKBYEBMRDmpAoBRbDff26gHJrawSp"
+    "address": "1PJMBXKBYEBMRDmpAoBRbDff26gHJrawSp",
+    "balance": 100000
   },
   {
     "id": "31cd8e45a007482c61c8721f7e6e799f2f40c89b3485a8f1991a0195e8a19b83",
@@ -353,7 +360,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 5,
-    "address": "16ZBYSHkLkRFHAuZvyzosXYgU1UDJxRV1R"
+    "address": "16ZBYSHkLkRFHAuZvyzosXYgU1UDJxRV1R",
+    "balance": 100000
   },
   {
     "id": "b302f204738c02a3427d3867ed53a85cf6234157ba306ac05dc8d7d85d8b09f4",
@@ -405,7 +413,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 6,
-    "address": "1EHeVKfjjq6FJpix86G2yzFeRbZ6RNg2Zm"
+    "address": "1EHeVKfjjq6FJpix86G2yzFeRbZ6RNg2Zm",
+    "balance": 100000
   },
   {
     "id": "89ba68e39862a36a71065bc13f0896213e9ee0240a41800c252802e2edc1b817",
@@ -447,7 +456,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 8,
-    "address": "1HqsYkwczwvkMXCobk5WPZmhj2S2TK613Z"
+    "address": "1HqsYkwczwvkMXCobk5WPZmhj2S2TK613Z",
+    "balance": 40161
   },
   {
     "id": "e63f7eaf79c6fefe21fe0c8fa5d3cae5a00fc45bcfaf5088f894d673e388c62c",
@@ -489,7 +499,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 9,
-    "address": "1687EJf5YEmeEtcscnuJPiV5b8HkM1o98q"
+    "address": "1687EJf5YEmeEtcscnuJPiV5b8HkM1o98q",
+    "balance": 40160
   },
   {
     "id": "0c9a0219a8f3ef4a7d00483a755a9a18a674340c547bdf573481c1c613898746",
@@ -531,7 +542,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 10,
-    "address": "1MS6eGqD4iUGyJPbEsjqmoNaRhApgtmF8J"
+    "address": "1MS6eGqD4iUGyJPbEsjqmoNaRhApgtmF8J",
+    "balance": 1800
   },
   {
     "id": "a24445474a9a7c0698e8db221ad2cae06792a899e9bc7f5a590687c3c810c480",
@@ -576,7 +588,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 29,
-    "address": "1LDPJCMZhYZjTvTGYahdhMXLuMfjfi6Kua"
+    "address": "1LDPJCMZhYZjTvTGYahdhMXLuMfjfi6Kua",
+    "balance": 1000
   },
   {
     "id": "f1cafc81288d38091bf3dbd970fc0a0f596bea90883947bfcb91eb41067caed9",
@@ -621,7 +634,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 48,
-    "address": "15NvG6YpVh2aUc3DroVttEcWa1Z99qhACP"
+    "address": "15NvG6YpVh2aUc3DroVttEcWa1Z99qhACP",
+    "balance": 1000
   },
   {
     "id": "7247020e42abe2cc3730f277f7f14579db63f0b3c68dfbaf4626d4d4c11704e8",
@@ -663,7 +677,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 63,
-    "address": "1KhVznhEQHumfmMQWnkgXLT4BmvtNpwLN9"
+    "address": "1KhVznhEQHumfmMQWnkgXLT4BmvtNpwLN9",
+    "balance": 12183719
   },
   {
     "id": "425c049f76a676dfd00ab9b16688207b9d510c7d8c4d2a70165993fd76c9ffdd",
@@ -708,7 +723,8 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 82,
-    "address": "1Ahipz531XtbzGC1bEKbhHZXmyfWKPNy32"
+    "address": "1Ahipz531XtbzGC1bEKbhHZXmyfWKPNy32",
+    "balance": 1000
   },
   {
     "id": "8abe6eecdd8e68689c84e6d07f8469d041533c53728bf515372ea75d2a4ca828",
@@ -750,6 +766,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 90,
-    "address": "16HH35ASv5rL8ZaaqdzvrJKTAKTucdKKNP"
+    "address": "16HH35ASv5rL8ZaaqdzvrJKTAKTucdKKNP",
+    "balance": 656
   }
 ]

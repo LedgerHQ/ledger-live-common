@@ -1,5 +1,5 @@
 import { IStorage, TX } from "./types";
-import { findLast, filter, uniq, flatten, find, sortedIndexBy } from "lodash";
+import { findLast, filter, uniq, sortedIndexBy, uniqBy } from "lodash";
 import fs from "fs";
 
 // a mock storage class that just use js objects
@@ -31,56 +31,22 @@ class Mock implements IStorage {
     this.txs.splice(insertIndex, 0, ...txs);
   }
 
-  async getAddressDetails(address) {
-    // todo perfs: take advantage of the ordered txs
-    const oneTx = await find(this.txs, { address });
-
-    if (oneTx) {
-      return {
-        derivationMode: oneTx.derivationMode,
-        account: oneTx.account,
-        index: oneTx.index,
-      };
-    }
-
-    throw "Address unknown";
+  // todo perfs: take advantage of the ordered txs
+  async getUniquesAddresses(addressesFilter) {
+    return uniqBy(
+      filter(this.txs, addressesFilter).map((tx) => ({
+        address: tx.address,
+        derivationMode: tx.derivationMode,
+        account: tx.account,
+        index: tx.index,
+      })),
+      "address"
+    );
   }
 
   // todo perfs: take advantage of the ordered txs
-  async getUniquesAddresses(addressesFilter) {
-    return uniq(filter(this.txs, addressesFilter).map((tx) => tx.address));
-  }
-
-  async getUniquesAddresssesMap(addressesFilter) {
-    return (await this.getUniquesAddresses(addressesFilter)).reduce(
-      (map, address) => {
-        map[address] = true;
-        return map;
-      },
-      {}
-    );
-  }
-
   async getDerivationModeUniqueAccounts(derivationMode: string) {
     return uniq(filter(this.txs, { derivationMode }).map((tx) => tx.account));
-  }
-
-  async getOutputsToInternalWalletAddresses(outputsFilter) {
-    const ownAddresses = await this.getUniquesAddresssesMap({});
-
-    return filter(
-      flatten(filter(this.txs, outputsFilter).map((tx) => tx.outputs)),
-      (output) => !!ownAddresses[output.address]
-    );
-  }
-
-  async getInputsFromInternalWalletAddresses(inputsFilter) {
-    const ownAddresses = await this.getUniquesAddresssesMap({});
-
-    return filter(
-      flatten(filter(this.txs, inputsFilter).map((tx) => tx.inputs)),
-      (input) => !!ownAddresses[input.address]
-    );
   }
 
   async toString() {

@@ -54,18 +54,14 @@ describe("synced wallet utilites functions", () => {
       expect(await wallet.getDerivationModeBalance("Legacy")).toEqual(12678243);
       expect(await wallet.getAccountBalance("Legacy", 0)).toEqual(12678243);
       const addressesBalances = await Promise.all(
-        addresses.map((address) =>
-          (async () => {
-            const details = await wallet.getAddressDetailsFromAddress(address);
-            return wallet.getAddressBalance(
-              details.derivationMode,
-              details.account,
-              details.index
-            );
-          })()
-        )
+        addresses.map((address) => wallet.getAddressBalance(address))
       );
-      expect(zipObject(addresses, addressesBalances)).toEqual({
+      expect(
+        zipObject(
+          addresses.map((address) => address.address),
+          addressesBalances
+        )
+      ).toEqual({
         "12iNxzdF6KFZ14UyRTYCRuptxkKSSVHzqF": 0,
         "15NvG6YpVh2aUc3DroVttEcWa1Z99qhACP": 1000,
         "15xANZb5vJv5RGL263NFuh8UGgHT7noXeZ": 100000,

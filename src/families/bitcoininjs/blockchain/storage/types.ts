@@ -4,8 +4,9 @@ export interface TX {
   block: Block;
   address: string;
   derivationMode: string;
-  inputs: Input[],
-  outputs: Output[],
+  inputs: Input[];
+  outputs: Output[];
+  balance: number;
 }
 
 export interface Input {
@@ -23,10 +24,11 @@ export interface Block {
   hash: string;
 }
 
-export interface Details {
+export interface Address {
   derivationMode: string,
   account: number,
   index: number,
+  address: string,
 }
 
 export interface IStorage {
@@ -40,23 +42,7 @@ export interface IStorage {
     derivationMode?: string,
     account?: number,
     index?: number,
-  }): Promise<string[]>;
-  getUniquesAddressesMap(addressesFilter: {
-    derivationMode?: string,
-    account?: number,
-    index?: number,
-  }): Promise<boolean[]>;
-  getAddressDetails(address:string): Promise<Details>;
-  getOutputsToInternalWalletAddresses(outputsFilter: {
-    derivationMode?: string,
-    account?: number,
-    index?: number,
-  }): Promise<Output[]>;
-  getInputsFromInternalWalletAddresses(inputsFilter: {
-    derivationMode?: string,
-    account?: number,
-    index?: number
-  }): Promise<Input[]>;
+  }): Promise<Address[]>;
   getDerivationModeUniqueAccounts(derivationMode: string): Promise<number[]>;
   toString(): Promise<string>;
   load(file: string): Promise<void>;
