@@ -1,4 +1,4 @@
-import Storage from "../storage/mock";
+import Storage from "../storage/orderedmemorylist";
 import Explorer from "../explorer/mock";
 import Derivation from "../derivation/bitcoin";
 import Wallet from "../wallet";

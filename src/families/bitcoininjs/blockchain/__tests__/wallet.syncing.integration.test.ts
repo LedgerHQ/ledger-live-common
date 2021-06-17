@@ -1,4 +1,4 @@
-import Storage from "../storage/mock";
+import Storage from "../storage/orderedmemorylist";
 import Explorer from "../explorer/ledger.v3.2.4";
 import Derivation from "../derivation/bitcoin";
 import Wallet from "../wallet";
