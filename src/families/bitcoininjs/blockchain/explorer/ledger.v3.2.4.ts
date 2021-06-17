@@ -46,15 +46,17 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
       })
     ).data;
 
-    this.emit("fetched-address-transaction", { url, params, res });
-
     // ledger live explorer include the transaction of the paginating block_hash used
-    return block
+    const txs = block
       ? res.txs.slice(
-          0,
-          findLastIndex(res.txs, (tx) => tx.block.hash !== block.hash)
+          findLastIndex(res.txs, (tx) => tx.block.hash === block.hash) + 1,
+          res.txs.length
         )
       : res.txs;
+
+    this.emit("fetched-address-transaction", { url, params, txs });
+
+    return txs;
   }
 }
 

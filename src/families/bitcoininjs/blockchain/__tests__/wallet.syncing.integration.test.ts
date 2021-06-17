@@ -8,7 +8,9 @@ import { toMatchFile } from "jest-file-snapshot";
 
 const startLogging = (emitters) => {
   emitters.forEach((emitter) =>
-    emitter.on("*", (...args) => console.log(JSON.stringify(args, null, 2)))
+    emitter.emitter.on(emitter.event, (...args) =>
+      console.log(JSON.stringify(args, null, 2))
+    )
   );
 };
 const stopLogging = (emitters) => {
@@ -26,34 +28,47 @@ describe("integration sync bitcoin mainnet / ledger explorer / mock storage", ()
     network: coininfo.bitcoin.main.toBitcoinJS(),
   });
 
-  describe("xpub xpub6CUGRUonZSQ4TWtTMmzXdrXDtypWKiKrhko4egpiMZbpiaQL2jkwSB1icqYh2cfDfVxdx4df189oLKnC5fSwqPfgyP3hooxujYzAu3fDVmz", () => {
-    let xpub =
-      "xpub6CUGRUonZSQ4TWtTMmzXdrXDtypWKiKrhko4egpiMZbpiaQL2jkwSB1icqYh2cfDfVxdx4df189oLKnC5fSwqPfgyP3hooxujYzAu3fDVmz";
-    let wallet = new Wallet({
-      storage,
-      explorer,
-      derivation,
-      xpub,
-    });
+  const xpubs = [
+    "xpub6CUGRUonZSQ4TWtTMmzXdrXDtypWKiKrhko4egpiMZbpiaQL2jkwSB1icqYh2cfDfVxdx4df189oLKnC5fSwqPfgyP3hooxujYzAu3fDVmz", // 5sec
+    "xpub6D4waFVPfPCpRvPkQd9A6n65z3hTp6TvkjnBHG5j2MCKytMuadKgfTUHqwRH77GQqCKTTsUXSZzGYxMGpWpJBdYAYVH75x7yMnwJvra1BUJ",
+  ];
 
-    beforeAll(() => {
-      startLogging([wallet, explorer]);
-    });
-    afterAll(() => {
-      stopLogging([wallet, explorer]);
-    });
+  xpubs.forEach((xpub) =>
+    describe(`xpub ${xpub}`, () => {
+      let wallet = new Wallet({
+        storage,
+        explorer,
+        derivation,
+        xpub,
+      });
 
-    it(
-      "should sync from zero correctly",
-      async () => {
-        await wallet.sync();
+      beforeAll(() => {
+        startLogging([
+          { emitter: wallet, event: "address-syncing" },
+          { emitter: explorer, event: null },
+        ]);
+      });
+      afterAll(() => {
+        stopLogging([wallet, explorer]);
+      });
 
-        const truthDump = path.join(__dirname, "data", "sync", `${xpub}.json`);
+      it(
+        "should sync from zero correctly",
+        async () => {
+          await wallet.sync();
 
-        expect(await storage.toString()).toMatchFile(truthDump);
-      },
-      // 1 min but should take less than 5s
-      60 * 1000
-    );
-  });
+          const truthDump = path.join(
+            __dirname,
+            "data",
+            "sync",
+            `${xpub}.json`
+          );
+
+          expect(await storage.toString()).toMatchFile(truthDump);
+        },
+        // 1 min but should take less than 5s
+        5 * 60 * 1000
+      );
+    })
+  );
 });
