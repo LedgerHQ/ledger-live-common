@@ -125,7 +125,7 @@ class Wallet extends EventEmitter implements IWallet {
 
     let nb;
     while (/*nb = */ await checkAddressesBlock(index)) {
-      index += this.GAP; // + nb would feel more logic (since you want a gap of not check every block of 20 to find an empty block)
+      index += this.GAP; // + nb would feel more logic (since you want a gap and not check every consecutive block of 20 to find an empty block)
     }
 
     this.emit("account-synced", { derivationMode, account, index });

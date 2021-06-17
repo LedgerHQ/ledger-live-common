@@ -20,7 +20,6 @@ const stopLogging = (emitters) => {
 expect.extend({ toMatchFile });
 
 describe("integration sync bitcoin mainnet / ledger explorer / mock storage", () => {
-  let storage = new Storage();
   let explorer = new Explorer({
     explorerURI: "https://explorers.api.vault.ledger.com/blockchain/v3/btc",
   });
@@ -44,13 +43,14 @@ describe("integration sync bitcoin mainnet / ledger explorer / mock storage", ()
     {
       xpub:
         "xpub6CThYZbX4PTeA7KRYZ8YXP3F6HwT2eVKPQap3Avieds3p1eos35UzSsJtTbJ3vQ8d3fjRwk4bCEz4m4H6mkFW49q29ZZ6gS8tvahs4WCZ9X", // 138sec,
-      addresses: 9884,
-      balance: 179183365,
+      addresses: 9741,
+      balance: 0,
     },
   ];
 
   xpubs.forEach((xpub) =>
     describe(`xpub ${xpub.xpub}`, () => {
+      let storage = new Storage();
       let wallet = new Wallet({
         storage,
         explorer,
