@@ -131,7 +131,9 @@ const getExtra = (type: OperationType, extrinsic: any): Record<string, any> => {
  */
 const getValue = (extrinsic, type: OperationType): BigNumber => {
   if (!extrinsic.isSuccess) {
-    return type === "IN" ? new BigNumber(0) : new BigNumber(extrinsic.partialFee || 0);
+    return type === "IN"
+      ? new BigNumber(0)
+      : new BigNumber(extrinsic.partialFee || 0);
   }
 
   switch (type) {

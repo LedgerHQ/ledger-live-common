@@ -89,7 +89,8 @@ function formatAccountSpecifics(account: Account): string {
   }
 
   if ((polkadotResources as PolkadotResources).controller) {
-    str += "\ncontroller : " + (polkadotResources as PolkadotResources).controller;
+    str +=
+      "\ncontroller : " + (polkadotResources as PolkadotResources).controller;
   }
 
   if ((polkadotResources as PolkadotResources).nominations?.length) {
