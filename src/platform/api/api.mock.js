@@ -1,5 +1,5 @@
 // @flow
-import type { AppManifest } from "./types";
+import type { AppManifest, PlatformApi } from "../types";
 
 const manifest: AppManifest[] = [
   {
@@ -206,4 +206,12 @@ const manifest: AppManifest[] = [
   },
 ];
 
-export default manifest;
+async function fetchManifest(): Promise<AppManifest[]> {
+  return Promise.resolve(manifest);
+}
+
+const api: PlatformApi = {
+  fetchManifest,
+};
+
+export default api;

@@ -462,6 +462,16 @@ const envDefinitions = {
     parser: boolParser,
     desc: "enable visibility of debug apps and tools in Platform Catalog",
   },
+  PLATFORM_API_URL: {
+    def: "",
+    parser: stringParser,
+    desc: "url used to fetch platform catalog",
+  },
+  PLATFORM_API_VERSION: {
+    def: 1,
+    parser: intParser,
+    desc: "version used for the platform api",
+  },
 };
 
 const getDefinition = (name: string): ?EnvDef<any> => envDefinitions[name];

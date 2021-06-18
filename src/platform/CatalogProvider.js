@@ -4,7 +4,7 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 
 import type { AppManifest, AppBranch } from "./types";
 
-import manifest from "./manifest";
+import api from "./api";
 
 type State = {
   apps: AppManifest[],
@@ -24,7 +24,7 @@ const PlatformCatalogProvider = ({ children }: Props) => {
   const [state, setState] = useState(initialState);
 
   useEffect(() => {
-    setState({ apps: manifest });
+    api.fetchManifest().then((manifest) => setState({ apps: manifest }));
   }, []);
 
   return (
