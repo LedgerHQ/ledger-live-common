@@ -89,7 +89,6 @@ class Wallet extends EventEmitter implements IWallet {
 
     this.emit("address-synced", { ...data, total });
 
-    // TODO : return if this address has a (fix needed for incremental sync)
     const lastTx = await this.storage.getLastTx({
       derivationMode,
       account,
