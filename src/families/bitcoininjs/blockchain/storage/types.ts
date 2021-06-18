@@ -38,7 +38,7 @@ export interface Address {
 }
 
 export interface IStorage {
-  appendAddressTxs(txs: TX[]): Promise<void>;
+  appendAddressTxs(txs: TX[]): Promise<number>;
   getLastTx(txFilter: {
     derivationMode?: string,
     account?: number,

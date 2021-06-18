@@ -11,10 +11,14 @@ class Mock implements IStorage {
   }
 
   async appendAddressTxs(txs: TX[]) {
-    if (!txs.length) {
-      return;
-    }
-    this.txs.splice(this.txs.length, 0, ...txs);
+    const lastLength = this.txs.length;
+
+    this.txs = uniqBy(
+      this.txs.concat(txs),
+      (tx) => `${tx.derivationMode}-${tx.account}-${tx.index}-${tx.id}`
+    );
+
+    return this.txs.length - lastLength;
   }
 
   async getUniquesAddresses(addressesFilter) {

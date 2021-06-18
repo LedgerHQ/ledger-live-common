@@ -4,7 +4,7 @@ import { TX } from "../storage/types";
 import axios, { AxiosInstance } from "axios";
 import axiosRetry from "axios-retry";
 import https from "https";
-import { findLastIndex } from "lodash";
+import { findIndex } from "lodash";
 
 // an Live explorer V3 class
 class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
@@ -22,7 +22,7 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
     axiosRetry(this.client, { retries: 3 });
   }
 
-  async getAddressTxsSinceLastTx(batchSize, address, lastTx) {
+  async getAddressTxsSinceLastTxBlock(batchSize, address, lastTx) {
     const params = {
       no_token: "true",
       batch_size: batchSize,
@@ -42,14 +42,11 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
       })
     ).data;
 
-    // ledger live explorer include the transaction of the paginating block_hash used
-    // TODO: check if we can use tx_hash as a pagination cursor instead of block_hash
-    const txs = lastTx
-      ? res.txs.slice(
-          findLastIndex(res.txs, (tx) => tx.id === lastTx.id) + 1,
-          res.txs.length
-        )
-      : res.txs;
+    // explorer returns pending tx without block at the beginning of any request
+    // we get rid of them
+    const firstNonPendingIndex = findIndex(res.txs, (tx) => !!tx.block);
+
+    const txs = res.txs.slice(firstNonPendingIndex, res.txs.length);
 
     this.emit("fetched-address-transaction", { url, params, txs });
 

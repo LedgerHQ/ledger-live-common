@@ -5,7 +5,7 @@ export interface IExplorer {
   on(event: "fetching-address-transaction", listener: () => void): this;
   on(event: "fetched-address-transaction", listener: () => void): this;
 
-  getAddressTxsSinceLastTx(
+  getAddressTxsSinceLastTxBlock(
     batchSize: number,
     address: string,
     lastTx: TX | undefined,

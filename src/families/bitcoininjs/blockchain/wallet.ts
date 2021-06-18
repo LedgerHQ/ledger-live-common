@@ -1,6 +1,6 @@
 import { Address, TX, IStorage, Input } from "./storage/types";
 import EventEmitter from "./utils/eventemitter";
-import { range, some, maxBy, random, find, findIndex } from "lodash";
+import { range, some, findIndex } from "lodash";
 import { IExplorer } from "./explorer/types";
 import { ICrypto } from "./crypto/types";
 import { IWallet } from "./types";
@@ -29,12 +29,13 @@ class Wallet extends EventEmitter implements IWallet {
     account: number,
     index: number
   ) {
-    let lastTx = await this.storage.getLastTx({
+    const lastTx = await this.storage.getLastTx({
       derivationMode,
       account,
       index,
     });
-    let txs = await this.explorer.getAddressTxsSinceLastTx(
+
+    let txs = await this.explorer.getAddressTxsSinceLastTxBlock(
       this.txsSyncArraySize,
       address,
       lastTx
@@ -44,8 +45,7 @@ class Wallet extends EventEmitter implements IWallet {
       .unspentUtxos;
     let lastSpentUtxos: Input[] = (lastTx || { spentUtxos: [] }).spentUtxos;
     txs.forEach((rawTx) => {
-      // we calculate it from storage instead of having to update continually
-      // as new block are mined
+      // no need to keep that as it changes
       delete rawTx.confirmations;
 
       const tx: TX = rawTx;
@@ -54,7 +54,7 @@ class Wallet extends EventEmitter implements IWallet {
       tx.index = index;
       tx.address = address;
 
-      // we update unspentUtxos
+      // we update unspentUtxos/spentUtxos
       const newUnspentUtxos = tx.outputs.filter(
         (output) => output.address === address
       );
@@ -81,12 +81,11 @@ class Wallet extends EventEmitter implements IWallet {
         return true;
       });
 
-      // could actually be already returned by the explorer
       tx.unspentUtxos = lastUnspentUtxos;
       tx.spentUtxos = lastSpentUtxos;
     });
-    await this.storage.appendAddressTxs(txs);
-    return txs.length;
+    const inserted = await this.storage.appendAddressTxs(txs);
+    return inserted;
   }
 
   async syncAddress(derivationMode: string, account: number, index: number) {
@@ -117,7 +116,14 @@ class Wallet extends EventEmitter implements IWallet {
 
     this.emit("address-synced", { ...data, total });
 
-    return total;
+    // TODO : return if this address has a (fix needed for incremental sync)
+    const lastTx = await this.storage.getLastTx({
+      derivationMode,
+      account,
+      index,
+    });
+
+    return !!lastTx;
   }
 
   async checkAddressesBlock(
@@ -130,18 +136,13 @@ class Wallet extends EventEmitter implements IWallet {
         this.syncAddress(derivationMode, account, index + key)
       )
     );
-    return some(addressesResults, (totalAdded) => totalAdded > 0);
+    return some(addressesResults, (lastTx) => !!lastTx);
   }
 
   async syncAccount(derivationMode: string, account: number) {
     this.emit("account-syncing", { derivationMode, account });
 
-    let index = (
-      (await this.storage.getLastTx({
-        derivationMode,
-        account,
-      })) || { index: 0 }
-    ).index;
+    let index = 0;
 
     while (await this.checkAddressesBlock(derivationMode, account, index)) {
       index += this.GAP;
@@ -155,11 +156,7 @@ class Wallet extends EventEmitter implements IWallet {
   async syncDerivationMode(derivationMode: string) {
     this.emit("derivationMode-syncing", { derivationMode });
 
-    let account = (
-      (await this.storage.getLastTx({
-        derivationMode,
-      })) || { account: 0 }
-    ).account;
+    let account = 0;
 
     while (await this.syncAccount(derivationMode, account)) {
       account++;
@@ -170,7 +167,7 @@ class Wallet extends EventEmitter implements IWallet {
     return account;
   }
 
-  // TODO handle fail case
+  // TODO : test fail case + incremental
   async sync() {
     if (this.syncing) {
       return this._whenSynced();
@@ -242,8 +239,14 @@ class Wallet extends EventEmitter implements IWallet {
     );
   }
 
+  // TODO
+  // getAddressLastBlockState
+  // that merge unspentUTXOs and spentUTXOs
+
   async getAddressBalance(address: Address) {
     await this._whenSynced();
+
+    // TODO SHOULD actually use getAddressLastBlockState
 
     // TODO: throw if inavalid address ?
     const unspentUtxos = (
