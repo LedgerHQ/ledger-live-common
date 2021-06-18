@@ -244,6 +244,8 @@ class Wallet extends EventEmitter implements IWallet {
     account: number,
     randomGapToUse: number
   ) {
+    await this._whenSynced();
+
     const accountAddresses = await this.getAccountAddresses(
       derivationMode,
       account
