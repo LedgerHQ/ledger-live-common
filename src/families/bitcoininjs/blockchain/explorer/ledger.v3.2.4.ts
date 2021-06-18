@@ -1,6 +1,6 @@
 import { IExplorer } from "./types";
 import EventEmitter from "../utils/eventemitter";
-import { Block, TX } from "../storage/types";
+import { TX } from "../storage/types";
 import axios, { AxiosInstance } from "axios";
 import axiosRetry from "axios-retry";
 import https from "https";
@@ -22,17 +22,13 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
     axiosRetry(this.client, { retries: 3 });
   }
 
-  async getNAddressTransactionsSinceBlockExcludingBlock(
-    batchSize: number,
-    address: string,
-    block: Block | undefined
-  ) {
+  async getAddressTxsSinceLastTx(batchSize, address, lastTx) {
     const params = {
       no_token: "true",
       batch_size: batchSize,
     };
-    if (block) {
-      params["block_hash"] = block.hash;
+    if (lastTx) {
+      params["block_hash"] = lastTx.block.hash;
     }
 
     const url = `/addresses/${address}/transactions`;
@@ -47,11 +43,10 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
     ).data;
 
     // ledger live explorer include the transaction of the paginating block_hash used
-    // TODO: review the use of batchSize for the pagination.
-    // maybe use more request and change this method to getAllAddressTransactionForFollowingBlock
-    const txs = block
+    // TODO: check if we can use tx_hash as a pagination cursor instead of block_hash
+    const txs = lastTx
       ? res.txs.slice(
-          findLastIndex(res.txs, (tx) => tx.block.hash === block.hash) + 1,
+          findLastIndex(res.txs, (tx) => tx.id === lastTx.id) + 1,
           res.txs.length
         )
       : res.txs;

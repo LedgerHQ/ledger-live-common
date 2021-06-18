@@ -1,4 +1,5 @@
 export interface TX {
+  id: string,
   account: number;
   index: number;
   block: Block;

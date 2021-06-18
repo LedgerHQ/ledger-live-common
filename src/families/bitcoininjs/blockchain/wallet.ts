@@ -1,6 +1,6 @@
 import { Address, IStorage } from "./storage/types";
 import EventEmitter from "./utils/eventemitter";
-import { range, findLastIndex } from "lodash";
+import { range, findLastIndex, some } from "lodash";
 import { IExplorer } from "./explorer/types";
 import { IDerivation } from "./derivation/types";
 import { IWallet } from "./types";
@@ -23,6 +23,53 @@ class Wallet extends EventEmitter implements IWallet {
     this.xpub = xpub;
   }
 
+  async fetchHydrateAndStoreNewTxs(
+    address: string,
+    derivationMode: string,
+    account: number,
+    index: number
+  ) {
+    let lastTx = await this.storage.getLastTx({
+      derivationMode,
+      account,
+      index,
+    });
+    let txs = await this.explorer.getAddressTxsSinceLastTx(
+      this.txsSyncArraySize,
+      address,
+      lastTx
+    );
+    // mutate to hydrate faster
+    let lastBalance = (lastTx || { balance: 0 }).balance;
+    txs.forEach((tx) => {
+      tx.derivationMode = derivationMode;
+      tx.account = account;
+      tx.index = index;
+      tx.address = address;
+      // we calculate it from storage instead of having to update continually
+      // as new block are mined
+      delete tx.confirmations;
+
+      // we calculate the balance based on last balance
+      // TODO : is balance calc that simple ?
+      // TODO : need to remove the fees in which case ??
+      const positif = tx.outputs
+        .filter((output) => output.address === address)
+        .reduce((total, output) => total + output.value, 0);
+      const negatif = tx.inputs
+        .filter((input) => input.address === address)
+        .reduce((total, input) => total + input.value, 0);
+      lastBalance = lastBalance + positif - negatif;
+      // could be already returned by the explorer
+      tx.balance = lastBalance;
+
+      // TODO : maintain on the fly an array of UTXO that are unspent and ready for use
+      // when creating a transaction
+    });
+    await this.storage.appendAddressTxs(txs);
+    return txs.length;
+  }
+
   async syncAddress(derivationMode: string, account: number, index: number) {
     const address = this.derivation.getAddress(
       derivationMode,
@@ -36,70 +83,35 @@ class Wallet extends EventEmitter implements IWallet {
 
     // TODO handle eventual reorg case using lastBlock
 
-    const fetchHydrateAndStore = async (lastBlock) => {
-      let txs = await this.explorer.getNAddressTransactionsSinceBlockExcludingBlock(
-        this.txsSyncArraySize,
+    let added = 0;
+    let total = 0;
+    while (
+      (added = await this.fetchHydrateAndStoreNewTxs(
         address,
-        lastBlock
-      );
-      // mutate to hydrate faster
-      let lastBalance = (
-        (await this.storage.getLastTx({
-          derivationMode,
-          account,
-          index,
-        })) || { balance: 0 }
-      ).balance;
-      txs.forEach((tx) => {
-        tx.derivationMode = derivationMode;
-        tx.account = account;
-        tx.index = index;
-        tx.address = address;
-        // we calculate it from storage instead of having to update continually
-        // as new block are mined
-        delete tx.confirmations;
-
-        // we calculate the balance based on last balance
-        // TODO : is balance calc that simple ?
-        // TODO : need to remove the fees in which case ??
-        const positif = tx.outputs
-          .filter((output) => output.address === address)
-          .reduce((total, output) => total + output.value, 0);
-        const negatif = tx.inputs
-          .filter((input) => input.address === address)
-          .reduce((total, input) => total + input.value, 0);
-        lastBalance = lastBalance + positif - negatif;
-        // could be already returned by the explorer
-        tx.balance = lastBalance;
-
-        // TODO : maintain on the fly an array of UTXO that are unspent and ready for use
-        // when creating a transaction
-      });
-      await this.storage.appendAddressTxs(txs);
-      return txs.length;
-    };
-
-    let lastBlock = (
-      (await this.storage.getLastTx({
         derivationMode,
         account,
-        index,
-      })) || {}
-    ).block;
-
-    while (await fetchHydrateAndStore(lastBlock)) {
-      lastBlock = (
-        (await this.storage.getLastTx({
-          derivationMode,
-          account,
-          index,
-        })) || {}
-      ).block;
+        index
+      ))
+    ) {
+      total += added;
     }
 
-    this.emit("address-synced", { ...data, lastBlock });
+    this.emit("address-synced", { ...data, total });
 
-    return lastBlock;
+    return total;
+  }
+
+  async checkAddressesBlock(
+    derivationMode: string,
+    account: number,
+    index: number
+  ) {
+    let addressesResults = await Promise.all(
+      range(this.GAP).map((_, key) =>
+        this.syncAddress(derivationMode, account, index + key)
+      )
+    );
+    return some(addressesResults, (totalAdded) => totalAdded > 0);
   }
 
   async syncAccount(derivationMode: string, account: number) {
@@ -112,20 +124,8 @@ class Wallet extends EventEmitter implements IWallet {
       })) || { index: 0 }
     ).index;
 
-    const checkAddressesBlock = async (index) => {
-      let addressesResults = await Promise.all(
-        range(this.GAP).map((_, key) =>
-          this.syncAddress(derivationMode, account, index + key)
-        )
-      );
-      return (
-        findLastIndex(addressesResults, (lastBlockHash) => !!lastBlockHash) + 1
-      );
-    };
-
-    let nb;
-    while (/*nb = */ await checkAddressesBlock(index)) {
-      index += this.GAP; // + nb would feel more logic (since you want a gap and not check every consecutive block of 20 to find an empty block)
+    while (await this.checkAddressesBlock(derivationMode, account, index)) {
+      index += this.GAP;
     }
 
     this.emit("account-synced", { derivationMode, account, index });

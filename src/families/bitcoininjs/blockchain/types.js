@@ -17,7 +17,7 @@ export interface IWallet {
     derivationMode: string,
     account: number,
     index: number
-  ): Promise<Block | undefined>;
+  ): Promise<number>;
   syncAccount(derivationMode: string, account: number): Promise<number>;
   syncDerivationMode(derivationMode: string): Promise<number>;
 
