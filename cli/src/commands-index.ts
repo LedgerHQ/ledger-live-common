@@ -47,6 +47,7 @@ import testGetTrustedInputFromTxHash from "./commands/testGetTrustedInputFromTxH
 import validRecipient from "./commands/validRecipient";
 import version from "./commands/version";
 import walletconnect from "./commands/walletconnect";
+
 export default {
   app,
   appUninstallAll,

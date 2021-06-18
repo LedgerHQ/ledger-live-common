@@ -25,7 +25,7 @@ const hexToBytes = (str) => Array.from(Buffer.from(unprefixHex0x(str), "hex"));
 const bytesToHex = (buf) => Buffer.from(buf).toString("hex");
 
 const bytesArrayToString = (bytesArray: string[] = []) =>
-  Buffer.from(bytesArray).toString();
+  Buffer.from(bytesArray as any).toString();
 
 const stringToBytesArray = (str) => Array.from(Buffer.from(str));
 
