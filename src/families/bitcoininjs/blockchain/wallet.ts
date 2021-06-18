@@ -267,6 +267,8 @@ class Wallet extends EventEmitter implements IWallet {
     amount: number,
     fee: number
   ) {
+    await this._whenSynced();
+
     const psbt = this.crypto.getPsbt();
 
     // get the utxos to use as input
