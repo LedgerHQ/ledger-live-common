@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "prepare": "./scripts/gen.sh && yarn build",
-    "build": "tsc",
+    "build": "tsc --project src/tsconfig.json",
     "prepublishOnly": "rm -rf lib && tsc",
     "watch": "tsc --watch",
     "test-e2e": "./scripts/tests.sh",
