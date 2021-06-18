@@ -40,7 +40,7 @@ export const createDeviceSocket = (
 
     let inBulk = false; // bulk is a mode where we have many apdu to run on device and no longer need the connection
 
-    let timeoutForAllowManager: NodeJS.Timeout | null = null; // track if there is an ongoing allow manager step
+    let timeoutForAllowManager: NodeJS.Timeout | null | number = null; // track if there is an ongoing allow manager step
 
     const ws = new WS(url);
 
@@ -108,7 +108,7 @@ export const createDeviceSocket = (
 
             if (timeoutForAllowManager) {
               // if the exchange is faster than the timeout, we pass through because it's not "awaiting" user action
-              clearTimeout(timeoutForAllowManager);
+              clearTimeout(timeoutForAllowManager as number);
               timeoutForAllowManager = null;
             }
 
