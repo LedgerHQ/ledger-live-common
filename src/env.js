@@ -462,11 +462,6 @@ const envDefinitions = {
     parser: boolParser,
     desc: "enable visibility of debug apps and tools in Platform Catalog",
   },
-  PLATFORM_MANIFEST_PATH: {
-    def: "",
-    parser: stringParser,
-    desc: "file path for the platform catalog manifest",
-  },
 };
 
 const getDefinition = (name: string): ?EnvDef<any> => envDefinitions[name];

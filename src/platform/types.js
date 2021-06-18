@@ -5,6 +5,7 @@ import type { BigNumber } from "bignumber.js";
 import type { SignedOperation } from "../types";
 
 export type TranslatableString = {
+  en: string,
   [locale: string]: string,
 };
 
@@ -17,7 +18,7 @@ export type AppBranch = "stable" | "experimental" | "debug";
 
 export type AppPermission = {
   method: string,
-  params?: Object,
+  params?: any,
 };
 
 export type AppManifest = {
@@ -30,7 +31,7 @@ export type AppManifest = {
   platform: AppPlatform,
   apiVersion: string,
   branch: AppBranch,
-  params: string[],
+  params?: string[],
   categories: string[],
   currencies: string[] | "*",
   content: {
@@ -39,6 +40,10 @@ export type AppManifest = {
   },
   permissions: AppPermission[],
   domains: string[],
+};
+
+export type PlatformApi = {
+  fetchManifest: () => Promise<AppManifest[]>,
 };
 
 export type PlatformAccount = {

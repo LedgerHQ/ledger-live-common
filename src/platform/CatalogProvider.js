@@ -1,33 +1,10 @@
 // @flow
 
-import fs from "fs";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { log } from "@ledgerhq/logs";
 
 import type { AppManifest, AppBranch } from "./types";
 
-import defaultManifest from "./manifest";
-
-import { getEnv } from "../env";
-
-// TODO: implement remote manifest
-function getManifest(): AppManifest[] {
-  const filepath = getEnv("PLATFORM_MANIFEST_PATH");
-
-  if (filepath) {
-    try {
-      const data = fs.readFileSync(filepath).toString();
-      return JSON.parse(data);
-    } catch (error) {
-      log(
-        "platform/catalog",
-        `Cannot load manifest (${filepath}): ${error.message}`
-      );
-    }
-  }
-
-  return defaultManifest;
-}
+import manifest from "./manifest";
 
 type State = {
   apps: AppManifest[],
@@ -47,7 +24,7 @@ const PlatformCatalogProvider = ({ children }: Props) => {
   const [state, setState] = useState(initialState);
 
   useEffect(() => {
-    setState({ apps: getManifest() });
+    setState({ apps: manifest });
   }, []);
 
   return (
