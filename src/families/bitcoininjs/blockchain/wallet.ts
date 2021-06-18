@@ -41,11 +41,10 @@ class Wallet extends EventEmitter implements IWallet {
       lastTx
     );
     // mutate to hydrate faster
-    txs.forEach((rawTx) => {
+    txs.forEach((tx) => {
       // no need to keep that as it changes
-      delete rawTx.confirmations;
+      delete tx.confirmations;
 
-      const tx: TX = rawTx;
       tx.derivationMode = derivationMode;
       tx.account = account;
       tx.index = index;
