@@ -84,7 +84,7 @@ class Wallet extends EventEmitter implements IWallet {
       tx.unspentUtxos = lastUnspentUtxos;
       tx.spentUtxos = lastSpentUtxos;
     });
-    const inserted = await this.storage.appendAddressTxs(txs);
+    const inserted = await this.storage.appendTxs(txs);
     return inserted;
   }
 

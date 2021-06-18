@@ -5,18 +5,23 @@ import fs from "fs";
 // a mock storage class that just use js objects
 class Mock implements IStorage {
   txs: TX[] = [];
+  primaryIndex: {[string]: TX} = {};
 
   async getLastTx(txFilter) {
     return findLast(this.txs, txFilter);
   }
 
-  async appendAddressTxs(txs: TX[]) {
+  async appendTxs(txs: TX[]) {
     const lastLength = this.txs.length;
 
-    this.txs = uniqBy(
-      this.txs.concat(txs),
-      (tx) => `${tx.derivationMode}-${tx.account}-${tx.index}-${tx.id}`
-    );
+    txs.forEach((tx) => {
+      const index = `${tx.derivationMode}-${tx.account}-${tx.index}-${tx.id}`;
+      if (this.primaryIndex[index]) {
+        return;
+      }
+      this.primaryIndex[index] = tx;
+      this.txs.push(tx);
+    });
 
     return this.txs.length - lastLength;
   }
@@ -42,7 +47,8 @@ class Mock implements IStorage {
   }
   async load(file: string) {
     //
-    this.txs = JSON.parse(fs.readFileSync(file).toString());
+    const txs = JSON.parse(fs.readFileSync(file).toString());
+    await this.appendTxs(txs);
   }
 }
 
