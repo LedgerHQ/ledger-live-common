@@ -40,17 +40,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 0,
-    "address": "1EfgV2Hr5CDjXPavHDpDMjmU33BA2veHy6",
-    "unspentUtxos": [
-      {
-        "output_index": 0,
-        "value": 100000,
-        "address": "1EfgV2Hr5CDjXPavHDpDMjmU33BA2veHy6",
-        "script_hex": "76a91495ea668e0322bd99dac54ffdc9089d68e56c3aa188ac",
-        "output_hash": "6faca777767c3130722c1ed3cea8537099ca3d4db475ad6be1c2f93fbce571c3"
-      }
-    ],
-    "spentUtxos": []
+    "address": "1EfgV2Hr5CDjXPavHDpDMjmU33BA2veHy6"
   },
   {
     "id": "4fbbbdf97d77f27cf39572a21a996e938b88f76ac173a0806f60e94f23995016",
@@ -92,9 +82,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 0,
-    "address": "1EfgV2Hr5CDjXPavHDpDMjmU33BA2veHy6",
-    "unspentUtxos": [],
-    "spentUtxos": []
+    "address": "1EfgV2Hr5CDjXPavHDpDMjmU33BA2veHy6"
   },
   {
     "id": "6624d78e14ebae02be652c1b155cc8cd1cd9fd7b8531df16cdcfcbe36b8ab272",
@@ -137,17 +125,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 1,
-    "address": "12iNxzdF6KFZ14UyRTYCRuptxkKSSVHzqF",
-    "unspentUtxos": [
-      {
-        "output_index": 0,
-        "value": 120000,
-        "address": "12iNxzdF6KFZ14UyRTYCRuptxkKSSVHzqF",
-        "script_hex": "76a91412cb841986033f5ec9a4a1babe3a47339beac81c88ac",
-        "output_hash": "6624d78e14ebae02be652c1b155cc8cd1cd9fd7b8531df16cdcfcbe36b8ab272"
-      }
-    ],
-    "spentUtxos": []
+    "address": "12iNxzdF6KFZ14UyRTYCRuptxkKSSVHzqF"
   },
   {
     "id": "d339e4ffd23586e9f75c44aa5c60cc8775980ccd09a431cc0b56dac863d7f6f2",
@@ -189,9 +167,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 1,
-    "address": "12iNxzdF6KFZ14UyRTYCRuptxkKSSVHzqF",
-    "unspentUtxos": [],
-    "spentUtxos": []
+    "address": "12iNxzdF6KFZ14UyRTYCRuptxkKSSVHzqF"
   },
   {
     "id": "d398308c6b1123d53f0c669146ad9772164dacdf4df4c79d26e657264f20250f",
@@ -234,17 +210,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 2,
-    "address": "1CcEugXu9Yf9Qw5cpB8gHUK4X9683WyghM",
-    "unspentUtxos": [
-      {
-        "output_index": 0,
-        "value": 8747,
-        "address": "1CcEugXu9Yf9Qw5cpB8gHUK4X9683WyghM",
-        "script_hex": "76a9147f538d66e3745866949f1b98c72c00638f16c7a088ac",
-        "output_hash": "d398308c6b1123d53f0c669146ad9772164dacdf4df4c79d26e657264f20250f"
-      }
-    ],
-    "spentUtxos": []
+    "address": "1CcEugXu9Yf9Qw5cpB8gHUK4X9683WyghM"
   },
   {
     "id": "9922f59186cb133769bee41876bd8c0186dee21a005823d4e28ddaf6e324805c",
@@ -307,17 +273,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 3,
-    "address": "15xANZb5vJv5RGL263NFuh8UGgHT7noXeZ",
-    "unspentUtxos": [
-      {
-        "output_index": 1,
-        "value": 100000,
-        "address": "15xANZb5vJv5RGL263NFuh8UGgHT7noXeZ",
-        "script_hex": "76a914364f34453e722af26f5f861aafbb7105176edcee88ac",
-        "output_hash": "9922f59186cb133769bee41876bd8c0186dee21a005823d4e28ddaf6e324805c"
-      }
-    ],
-    "spentUtxos": []
+    "address": "15xANZb5vJv5RGL263NFuh8UGgHT7noXeZ"
   },
   {
     "id": "0b290c3d0f27ce20a91d3054ab2d6e43700b86b2d290bdb1a5686c453a1687b7",
@@ -360,17 +316,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 4,
-    "address": "1PJMBXKBYEBMRDmpAoBRbDff26gHJrawSp",
-    "unspentUtxos": [
-      {
-        "output_index": 0,
-        "value": 100000,
-        "address": "1PJMBXKBYEBMRDmpAoBRbDff26gHJrawSp",
-        "script_hex": "76a914f49aaf692e1aca7d9de273d5b5538ad69677c74d88ac",
-        "output_hash": "0b290c3d0f27ce20a91d3054ab2d6e43700b86b2d290bdb1a5686c453a1687b7"
-      }
-    ],
-    "spentUtxos": []
+    "address": "1PJMBXKBYEBMRDmpAoBRbDff26gHJrawSp"
   },
   {
     "id": "31cd8e45a007482c61c8721f7e6e799f2f40c89b3485a8f1991a0195e8a19b83",
@@ -413,17 +359,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 5,
-    "address": "16ZBYSHkLkRFHAuZvyzosXYgU1UDJxRV1R",
-    "unspentUtxos": [
-      {
-        "output_index": 0,
-        "value": 100000,
-        "address": "16ZBYSHkLkRFHAuZvyzosXYgU1UDJxRV1R",
-        "script_hex": "76a9143ceebd5df25f739b5025d61fa4be2346fada97fd88ac",
-        "output_hash": "31cd8e45a007482c61c8721f7e6e799f2f40c89b3485a8f1991a0195e8a19b83"
-      }
-    ],
-    "spentUtxos": []
+    "address": "16ZBYSHkLkRFHAuZvyzosXYgU1UDJxRV1R"
   },
   {
     "id": "b302f204738c02a3427d3867ed53a85cf6234157ba306ac05dc8d7d85d8b09f4",
@@ -476,17 +412,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 6,
-    "address": "1EHeVKfjjq6FJpix86G2yzFeRbZ6RNg2Zm",
-    "unspentUtxos": [
-      {
-        "output_index": 1,
-        "value": 100000,
-        "address": "1EHeVKfjjq6FJpix86G2yzFeRbZ6RNg2Zm",
-        "script_hex": "76a91491bf9590d5cf0412d5b3fec1284d7164b161c65088ac",
-        "output_hash": "b302f204738c02a3427d3867ed53a85cf6234157ba306ac05dc8d7d85d8b09f4"
-      }
-    ],
-    "spentUtxos": []
+    "address": "1EHeVKfjjq6FJpix86G2yzFeRbZ6RNg2Zm"
   },
   {
     "id": "89ba68e39862a36a71065bc13f0896213e9ee0240a41800c252802e2edc1b817",
@@ -529,17 +455,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 8,
-    "address": "1HqsYkwczwvkMXCobk5WPZmhj2S2TK613Z",
-    "unspentUtxos": [
-      {
-        "output_index": 1,
-        "value": 40161,
-        "address": "1HqsYkwczwvkMXCobk5WPZmhj2S2TK613Z",
-        "script_hex": "76a914b8c02c75c59f6320b729af2b0a5e0bff7efab95388ac",
-        "output_hash": "89ba68e39862a36a71065bc13f0896213e9ee0240a41800c252802e2edc1b817"
-      }
-    ],
-    "spentUtxos": []
+    "address": "1HqsYkwczwvkMXCobk5WPZmhj2S2TK613Z"
   },
   {
     "id": "e63f7eaf79c6fefe21fe0c8fa5d3cae5a00fc45bcfaf5088f894d673e388c62c",
@@ -582,17 +498,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 9,
-    "address": "1687EJf5YEmeEtcscnuJPiV5b8HkM1o98q",
-    "unspentUtxos": [
-      {
-        "output_index": 0,
-        "value": 40160,
-        "address": "1687EJf5YEmeEtcscnuJPiV5b8HkM1o98q",
-        "script_hex": "76a9143830bd9d4d16ecbfc7456c2668a5dfa2954ab64088ac",
-        "output_hash": "e63f7eaf79c6fefe21fe0c8fa5d3cae5a00fc45bcfaf5088f894d673e388c62c"
-      }
-    ],
-    "spentUtxos": []
+    "address": "1687EJf5YEmeEtcscnuJPiV5b8HkM1o98q"
   },
   {
     "id": "0c9a0219a8f3ef4a7d00483a755a9a18a674340c547bdf573481c1c613898746",
@@ -635,17 +541,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 10,
-    "address": "1MS6eGqD4iUGyJPbEsjqmoNaRhApgtmF8J",
-    "unspentUtxos": [
-      {
-        "output_index": 0,
-        "value": 1800,
-        "address": "1MS6eGqD4iUGyJPbEsjqmoNaRhApgtmF8J",
-        "script_hex": "76a914e0219ffd268cf0a459d69c85557c68261b21026488ac",
-        "output_hash": "0c9a0219a8f3ef4a7d00483a755a9a18a674340c547bdf573481c1c613898746"
-      }
-    ],
-    "spentUtxos": []
+    "address": "1MS6eGqD4iUGyJPbEsjqmoNaRhApgtmF8J"
   },
   {
     "id": "a24445474a9a7c0698e8db221ad2cae06792a899e9bc7f5a590687c3c810c480",
@@ -691,17 +587,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 29,
-    "address": "1LDPJCMZhYZjTvTGYahdhMXLuMfjfi6Kua",
-    "unspentUtxos": [
-      {
-        "output_index": 0,
-        "value": 1000,
-        "address": "1LDPJCMZhYZjTvTGYahdhMXLuMfjfi6Kua",
-        "script_hex": "76a914d2c1fe5c55a1e9d818149750f2662ba57748247088ac",
-        "output_hash": "a24445474a9a7c0698e8db221ad2cae06792a899e9bc7f5a590687c3c810c480"
-      }
-    ],
-    "spentUtxos": []
+    "address": "1LDPJCMZhYZjTvTGYahdhMXLuMfjfi6Kua"
   },
   {
     "id": "f1cafc81288d38091bf3dbd970fc0a0f596bea90883947bfcb91eb41067caed9",
@@ -747,17 +633,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 48,
-    "address": "15NvG6YpVh2aUc3DroVttEcWa1Z99qhACP",
-    "unspentUtxos": [
-      {
-        "output_index": 1,
-        "value": 1000,
-        "address": "15NvG6YpVh2aUc3DroVttEcWa1Z99qhACP",
-        "script_hex": "76a9143005b2a0df05d135d9e530fc2c07035c3351305a88ac",
-        "output_hash": "f1cafc81288d38091bf3dbd970fc0a0f596bea90883947bfcb91eb41067caed9"
-      }
-    ],
-    "spentUtxos": []
+    "address": "15NvG6YpVh2aUc3DroVttEcWa1Z99qhACP"
   },
   {
     "id": "7247020e42abe2cc3730f277f7f14579db63f0b3c68dfbaf4626d4d4c11704e8",
@@ -800,17 +676,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 63,
-    "address": "1KhVznhEQHumfmMQWnkgXLT4BmvtNpwLN9",
-    "unspentUtxos": [
-      {
-        "output_index": 0,
-        "value": 12183719,
-        "address": "1KhVznhEQHumfmMQWnkgXLT4BmvtNpwLN9",
-        "script_hex": "76a914cd1b1b858f3fb9a878e32779cc5a269018a09b1f88ac",
-        "output_hash": "7247020e42abe2cc3730f277f7f14579db63f0b3c68dfbaf4626d4d4c11704e8"
-      }
-    ],
-    "spentUtxos": []
+    "address": "1KhVznhEQHumfmMQWnkgXLT4BmvtNpwLN9"
   },
   {
     "id": "425c049f76a676dfd00ab9b16688207b9d510c7d8c4d2a70165993fd76c9ffdd",
@@ -856,17 +722,7 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 82,
-    "address": "1Ahipz531XtbzGC1bEKbhHZXmyfWKPNy32",
-    "unspentUtxos": [
-      {
-        "output_index": 1,
-        "value": 1000,
-        "address": "1Ahipz531XtbzGC1bEKbhHZXmyfWKPNy32",
-        "script_hex": "76a9146a6cafab2685f4159ccea5076ee20a76a6daf15a88ac",
-        "output_hash": "425c049f76a676dfd00ab9b16688207b9d510c7d8c4d2a70165993fd76c9ffdd"
-      }
-    ],
-    "spentUtxos": []
+    "address": "1Ahipz531XtbzGC1bEKbhHZXmyfWKPNy32"
   },
   {
     "id": "8abe6eecdd8e68689c84e6d07f8469d041533c53728bf515372ea75d2a4ca828",
@@ -909,16 +765,6 @@
     "derivationMode": "Legacy",
     "account": 0,
     "index": 90,
-    "address": "16HH35ASv5rL8ZaaqdzvrJKTAKTucdKKNP",
-    "unspentUtxos": [
-      {
-        "output_index": 0,
-        "value": 656,
-        "address": "16HH35ASv5rL8ZaaqdzvrJKTAKTucdKKNP",
-        "script_hex": "76a91439ecab95ada04b8aea16e1ea6c21ca5e0c6d82ab88ac",
-        "output_hash": "8abe6eecdd8e68689c84e6d07f8469d041533c53728bf515372ea75d2a4ca828"
-      }
-    ],
-    "spentUtxos": []
+    "address": "16HH35ASv5rL8ZaaqdzvrJKTAKTucdKKNP"
   }
 ]

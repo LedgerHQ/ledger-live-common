@@ -7,8 +7,6 @@ export interface TX {
   derivationMode: string;
   inputs: Input[];
   outputs: Output[];
-  unspentUtxos: Output[];
-  spentUtxos: Input[];
 }
 
 export interface Input {
@@ -39,6 +37,7 @@ export interface Address {
 
 export interface IStorage {
   appendTxs(txs: TX[]): Promise<number>;
+  getAddressUtxos(address: Address): Promise<{ unspentUtxos: Output[], spentUtxos: Input[] }>;
   getLastTx(txFilter: {
     derivationMode?: string,
     account?: number,

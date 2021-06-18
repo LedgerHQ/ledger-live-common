@@ -1,6 +1,6 @@
-import { Address, TX, IStorage, Input } from "./storage/types";
+import { Address, TX, IStorage } from "./storage/types";
 import EventEmitter from "./utils/eventemitter";
-import { range, some, findIndex } from "lodash";
+import { range, some } from "lodash";
 import { IExplorer } from "./explorer/types";
 import { ICrypto } from "./crypto/types";
 import { IWallet } from "./types";
@@ -41,9 +41,6 @@ class Wallet extends EventEmitter implements IWallet {
       lastTx
     );
     // mutate to hydrate faster
-    let lastUnspentUtxos: Output[] = (lastTx || { unspentUtxos: [] })
-      .unspentUtxos;
-    let lastSpentUtxos: Input[] = (lastTx || { spentUtxos: [] }).spentUtxos;
     txs.forEach((rawTx) => {
       // no need to keep that as it changes
       delete rawTx.confirmations;
@@ -54,35 +51,11 @@ class Wallet extends EventEmitter implements IWallet {
       tx.index = index;
       tx.address = address;
 
-      // we update unspentUtxos/spentUtxos
-      const newUnspentUtxos = tx.outputs.filter(
-        (output) => output.address === address
-      );
-      lastUnspentUtxos = lastUnspentUtxos.concat(newUnspentUtxos);
-      newUnspentUtxos.forEach((output) => {
-        output.output_hash = tx.id;
-      });
-      const newSpentUtxos = tx.inputs.filter(
-        (input) => input.address === address
-      );
-      lastSpentUtxos = lastSpentUtxos.concat(newSpentUtxos);
-
-      lastUnspentUtxos = lastUnspentUtxos.filter((output) => {
-        const matchIndex = findIndex(
-          lastSpentUtxos,
-          (input) =>
-            input.output_hash === output.output_hash &&
-            input.output_index === output.output_index
-        );
-        if (matchIndex > -1) {
-          lastSpentUtxos.splice(matchIndex, 1);
-          return false;
+      tx.outputs.forEach((output) => {
+        if (output.address === address) {
+          output.output_hash = tx.id;
         }
-        return true;
       });
-
-      tx.unspentUtxos = lastUnspentUtxos;
-      tx.spentUtxos = lastSpentUtxos;
     });
     const inserted = await this.storage.appendTxs(txs);
     return inserted;
@@ -239,25 +212,18 @@ class Wallet extends EventEmitter implements IWallet {
     );
   }
 
-  // TODO
-  // getAddressLastBlockState
-  // that merge unspentUTXOs and spentUTXOs
-
   async getAddressBalance(address: Address) {
     await this._whenSynced();
 
     // TODO SHOULD actually use getAddressLastBlockState
+    const { unspentUtxos, spentUtxos } = await this.storage.getAddressUtxos(
+      address
+    );
 
-    // TODO: throw if inavalid address ?
-    const unspentUtxos = (
-      (await this.storage.getLastTx({
-        derivationMode: address.derivationMode,
-        account: address.account,
-        index: address.index,
-      })) || {}
-    ).unspentUtxos;
-
-    return unspentUtxos?.reduce((total, { value }) => total + value, 0);
+    return (
+      unspentUtxos.reduce((total, { value }) => total + value, 0) -
+      spentUtxos.reduce((total, { value }) => total + value, 0)
+    );
   }
 
   async getWalletAddresses() {
