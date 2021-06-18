@@ -1,6 +1,6 @@
 import { Address, TX, IStorage, Output } from "./storage/types";
 import EventEmitter from "./utils/eventemitter";
-import { maxBy, random, range, some, takeWhile } from "lodash";
+import { maxBy, random, range, some, sortBy, takeWhile } from "lodash";
 import { IExplorer } from "./explorer/types";
 import { ICrypto } from "./crypto/types";
 import { IWallet } from "./types";
@@ -283,13 +283,12 @@ class Wallet extends EventEmitter implements IWallet {
       addresses.map((address) => this.storage.getAddressUtxos(address))
     );
 
-    let unspentUtxos = utxos
-      .reduce(
-        (unspentUtxosAcc: Output[], { unspentUtxos }) =>
-          unspentUtxosAcc.concat(unspentUtxos),
-        []
-      )
-      .sort((utxo) => utxo.value); // we try to regroup small utxos when spending
+    let unspentUtxos = utxos.reduce(
+      (unspentUtxosAcc: Output[], { unspentUtxos }) =>
+        unspentUtxosAcc.concat(unspentUtxos),
+      []
+    );
+    unspentUtxos = sortBy(unspentUtxos, "value");
 
     // now we select only the output needed to cover the amount + fee
     let total = 0;

@@ -97,7 +97,7 @@ describe("synced wallet utilites functions", () => {
       );
 
       expect(tx).toEqual(
-        "cHNidP8BAHcCAAAAAQ8lIE8mV+Ymncf0Td+sTRZyl61GkWYMP9UjEWuMMJjTAAAAAAD/////AugDAAAAAAAAGXapFJm8eLpXepWhHxo0TU0q5V8vhXuYiKxPHAAAAAAAABl2qRQYbO1h80alkmtJtcQ3Fk500LowbYisAAAAAAAAAAA="
+        "cHNidP8BAKACAAAAAiioTCpdpy43FfWLclM8U0HQaYR/0OaEnGhojt3sbr6KAAAAAAD/////gMQQyMOHBllaf7zpmaiSZ+DK0hoi2+iYBnyaSkdFRKIAAAAAAP////8C6AMAAAAAAAAZdqkUmbx4uld6laEfGjRNTSrlXy+Fe5iIrJwAAAAAAAAAGXapFBhs7WHzRqWSa0m1xDcWTnTQujBtiKwAAAAAAAAAAAA="
       );
     });
   });
