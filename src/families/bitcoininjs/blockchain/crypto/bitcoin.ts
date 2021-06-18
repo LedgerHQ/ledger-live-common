@@ -2,10 +2,10 @@
 
 import * as bjs from "bitcoinjs-lib";
 import * as bip32 from "bip32";
-import { IDerivation, DerivationMode } from "./types";
+import { ICrypto, DerivationMode } from "./types";
 
 // a mock explorer class that just use js objects
-class Bitcoin implements IDerivation {
+class Bitcoin implements ICrypto {
   network: any;
   DerivationMode: DerivationMode = {
     LEGACY: "Legacy",
@@ -90,6 +90,10 @@ class Bitcoin implements IDerivation {
         "INVALID ADDRESS: ".concat(address).concat(" is not a valid address"),
       );
     }
+  }
+
+  getPsbt() {
+    return new bjs.Psbt({ network: this.network });
   }
 }
 

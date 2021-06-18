@@ -7,17 +7,22 @@ export interface TX {
   derivationMode: string;
   inputs: Input[];
   outputs: Output[];
-  balance: number;
+  unspentUtxos: Output[];
+  spentUtxos: Input[];
 }
 
 export interface Input {
   value: number;
   address: string;
+  output_hash: string;
+  output_index: number;
 }
 
 export interface Output {
   value: number;
   address: string;
+  output_hash: string,
+  output_index: number;
 }
 
 export interface Block {

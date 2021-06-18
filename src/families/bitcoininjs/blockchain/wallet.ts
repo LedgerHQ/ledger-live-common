@@ -1,25 +1,25 @@
-import { Address, IStorage } from "./storage/types";
+import { Address, TX, IStorage, Input } from "./storage/types";
 import EventEmitter from "./utils/eventemitter";
-import { range, findLastIndex, some } from "lodash";
+import { range, some, maxBy, random, find, findIndex } from "lodash";
 import { IExplorer } from "./explorer/types";
-import { IDerivation } from "./derivation/types";
+import { ICrypto } from "./crypto/types";
 import { IWallet } from "./types";
 
 class Wallet extends EventEmitter implements IWallet {
   storage: IStorage;
   explorer: IExplorer;
-  derivation: IDerivation;
+  crypto: ICrypto;
   xpub: string;
   GAP: number = 20;
   syncing: boolean = false;
   // need to be bigger than the number of tx from the same address that can be in the same block
   txsSyncArraySize: number = 1000;
 
-  constructor({ storage, explorer, derivation, xpub }) {
+  constructor({ storage, explorer, crypto, xpub }) {
     super();
     this.storage = storage;
     this.explorer = explorer;
-    this.derivation = derivation;
+    this.crypto = crypto;
     this.xpub = xpub;
   }
 
@@ -40,38 +40,57 @@ class Wallet extends EventEmitter implements IWallet {
       lastTx
     );
     // mutate to hydrate faster
-    let lastBalance = (lastTx || { balance: 0 }).balance;
-    txs.forEach((tx) => {
+    let lastUnspentUtxos: Output[] = (lastTx || { unspentUtxos: [] })
+      .unspentUtxos;
+    let lastSpentUtxos: Input[] = (lastTx || { spentUtxos: [] }).spentUtxos;
+    txs.forEach((rawTx) => {
+      // we calculate it from storage instead of having to update continually
+      // as new block are mined
+      delete rawTx.confirmations;
+
+      const tx: TX = rawTx;
       tx.derivationMode = derivationMode;
       tx.account = account;
       tx.index = index;
       tx.address = address;
-      // we calculate it from storage instead of having to update continually
-      // as new block are mined
-      delete tx.confirmations;
 
-      // we calculate the balance based on last balance
-      // TODO : is balance calc that simple ?
-      // TODO : need to remove the fees in which case ??
-      const positif = tx.outputs
-        .filter((output) => output.address === address)
-        .reduce((total, output) => total + output.value, 0);
-      const negatif = tx.inputs
-        .filter((input) => input.address === address)
-        .reduce((total, input) => total + input.value, 0);
-      lastBalance = lastBalance + positif - negatif;
-      // could be already returned by the explorer
-      tx.balance = lastBalance;
+      // we update unspentUtxos
+      const newUnspentUtxos = tx.outputs.filter(
+        (output) => output.address === address
+      );
+      lastUnspentUtxos = lastUnspentUtxos.concat(newUnspentUtxos);
+      newUnspentUtxos.forEach((output) => {
+        output.output_hash = tx.id;
+      });
+      const newSpentUtxos = tx.inputs.filter(
+        (input) => input.address === address
+      );
+      lastSpentUtxos = lastSpentUtxos.concat(newSpentUtxos);
 
-      // TODO : maintain on the fly an array of UTXO that are unspent and ready for use
-      // when creating a transaction
+      lastUnspentUtxos = lastUnspentUtxos.filter((output) => {
+        const matchIndex = findIndex(
+          lastSpentUtxos,
+          (input) =>
+            input.output_hash === output.output_hash &&
+            input.output_index === output.output_index
+        );
+        if (matchIndex > -1) {
+          lastSpentUtxos.splice(matchIndex, 1);
+          return false;
+        }
+        return true;
+      });
+
+      // could actually be already returned by the explorer
+      tx.unspentUtxos = lastUnspentUtxos;
+      tx.spentUtxos = lastSpentUtxos;
     });
     await this.storage.appendAddressTxs(txs);
     return txs.length;
   }
 
   async syncAddress(derivationMode: string, account: number, index: number) {
-    const address = this.derivation.getAddress(
+    const address = this.crypto.getAddress(
       derivationMode,
       this.xpub,
       account,
@@ -163,7 +182,7 @@ class Wallet extends EventEmitter implements IWallet {
 
     // explore derivation modes in parallel
     await Promise.all(
-      Object.values(this.derivation.DerivationMode).map((derivationMode) =>
+      Object.values(this.crypto.DerivationMode).map((derivationMode) =>
         this.syncDerivationMode(derivationMode)
       )
     );
@@ -227,15 +246,15 @@ class Wallet extends EventEmitter implements IWallet {
     await this._whenSynced();
 
     // TODO: throw if inavalid address ?
-    return (
+    const unspentUtxos = (
       (await this.storage.getLastTx({
         derivationMode: address.derivationMode,
         account: address.account,
         index: address.index,
-      })) || {
-        balance: null,
-      }
-    ).balance;
+      })) || {}
+    ).unspentUtxos;
+
+    return unspentUtxos?.reduce((total, { value }) => total + value, 0);
   }
 
   async getWalletAddresses() {
@@ -252,6 +271,74 @@ class Wallet extends EventEmitter implements IWallet {
     await this._whenSynced();
     return this.storage.getUniquesAddresses({ derivationMode, account });
   }
+
+  /*
+  async getNewAccountChangeAddress(derivationMode: string, account: number) {
+    const accountAddresses = await this.getAccountAddresses(
+      derivationMode,
+      account
+    );
+    const lastIndex = (maxBy(accountAddresses, "index") || { index: -1 }).index;
+    let index: number;
+    if (lastIndex === -1) {
+      index = 0;
+    } else {
+      index = lastIndex + random(this.GAP);
+    }
+    return this.crypto.getAddress(derivationMode, this.xpub, account, index);
+  }
+
+  async buildTx(
+    from: { derivationMode: string; account: number },
+    change: string | { derivationMode: string; account: number },
+    destAddress: string,
+    amount: number,
+    fee: number
+  ) {
+    const psbt = this.crypto.getPsbt();
+
+    // get the utxos to use as input
+    // from all addresses of the account
+    const outputs: Output[] = [];
+
+    // calculate
+    let changeAddress: string;
+    if (typeof change === "string") {
+      changeAddress = change;
+    } else {
+      changeAddress = await this.getNewAccountChangeAddress(
+        change.derivationMode,
+        change.account
+      );
+    }
+
+    let totalOutputsValue = 0;
+
+    outputs.forEach((output) => {
+      totalOutputsValue += output.value;
+
+      //
+      psbt.addInput({
+        hash: output.output_hash,
+        index: output.output_index,
+      });
+
+      // Todo add the segwit / redeem / witness stuff
+    });
+
+    psbt
+      .addOutput({
+        address: destAddress,
+        value: amount,
+      })
+      .addOutput({
+        address: changeAddress,
+        value: totalOutputsValue - amount - fee,
+      });
+
+    return psbt.toBase64();
+  }
+  */
 }
 
 export default Wallet;

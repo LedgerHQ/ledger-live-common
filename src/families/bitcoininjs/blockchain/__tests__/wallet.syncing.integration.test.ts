@@ -1,6 +1,6 @@
 import Storage from "../storage/mock";
 import Explorer from "../explorer/ledger.v3.2.4";
-import Derivation from "../derivation/bitcoin";
+import Crypto from "../crypto/bitcoin";
 import Wallet from "../wallet";
 import path from "path";
 import coininfo from "coininfo";
@@ -24,7 +24,7 @@ describe("integration sync bitcoin mainnet / ledger explorer / mock storage", ()
   let explorer = new Explorer({
     explorerURI: "https://explorers.api.vault.ledger.com/blockchain/v3/btc",
   });
-  let derivation = new Derivation({
+  let crypto = new Crypto({
     network: coininfo.bitcoin.main.toBitcoinJS(),
   });
 
@@ -55,7 +55,7 @@ describe("integration sync bitcoin mainnet / ledger explorer / mock storage", ()
       let wallet = new Wallet({
         storage,
         explorer,
-        derivation,
+        crypto,
         xpub: xpub.xpub,
       });
 

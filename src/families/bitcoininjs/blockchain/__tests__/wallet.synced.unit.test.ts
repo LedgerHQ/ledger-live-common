@@ -1,6 +1,6 @@
 import Storage from "../storage/mock";
 import Explorer from "../explorer/mock";
-import Derivation from "../derivation/bitcoin";
+import Crypto from "../crypto/bitcoin";
 import Wallet from "../wallet";
 import path from "path";
 import coininfo from "coininfo";
@@ -8,7 +8,7 @@ import { zipObject } from "lodash";
 
 describe("synced wallet utilites functions", () => {
   let explorer = new Explorer();
-  let derivation = new Derivation({
+  let crypto = new Crypto({
     network: coininfo.bitcoin.main.toBitcoinJS(),
   });
 
@@ -20,7 +20,7 @@ describe("synced wallet utilites functions", () => {
     let wallet = new Wallet({
       storage,
       explorer,
-      derivation,
+      crypto,
       xpub,
     });
 

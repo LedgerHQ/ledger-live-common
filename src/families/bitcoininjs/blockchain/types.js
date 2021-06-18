@@ -1,4 +1,4 @@
-import { Address, Block } from "./storage/types";
+import { Address } from "./storage/types";
 
 export interface IWallet {
   on(event: "address-syncing", listener: () => void): this;
@@ -35,6 +35,7 @@ export interface IWallet {
     derivationMode: string,
     account: number
   ): Promise<Address[]>;
+  getNewAccountChangeAddress(derivationMode: string, account: number): Promise<string>;
 
   // TODO handle returning the next account available from locally stored blockchain data
   // wait for sync to finish if sync is ongoing
