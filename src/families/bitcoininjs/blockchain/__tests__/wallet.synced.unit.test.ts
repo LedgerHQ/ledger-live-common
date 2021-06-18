@@ -79,5 +79,26 @@ describe("synced wallet utilites functions", () => {
         "1PJMBXKBYEBMRDmpAoBRbDff26gHJrawSp": 100000,
       });
     });
+
+    it("should build a tx", async () => {
+      const tx = await wallet.buildTx(
+        {
+          derivationMode: "Legacy",
+          account: 0,
+        },
+        {
+          derivationMode: "Legacy",
+          account: 0,
+          randomGapToUse: 3,
+        },
+        "1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX",
+        1000,
+        500
+      );
+
+      expect(tx).toEqual(
+        "cHNidP8BAHcCAAAAAQ8lIE8mV+Ymncf0Td+sTRZyl61GkWYMP9UjEWuMMJjTAAAAAAD/////AugDAAAAAAAAGXapFJm8eLpXepWhHxo0TU0q5V8vhXuYiKxPHAAAAAAAABl2qRQYbO1h80alkmtJtcQ3Fk500LowbYisAAAAAAAAAAA="
+      );
+    });
   });
 });

@@ -1,6 +1,6 @@
-import { Address, TX, IStorage } from "./storage/types";
+import { Address, TX, IStorage, Output } from "./storage/types";
 import EventEmitter from "./utils/eventemitter";
-import { range, some } from "lodash";
+import { maxBy, random, range, some, takeWhile } from "lodash";
 import { IExplorer } from "./explorer/types";
 import { ICrypto } from "./crypto/types";
 import { IWallet } from "./types";
@@ -240,8 +240,11 @@ class Wallet extends EventEmitter implements IWallet {
     return this.storage.getUniquesAddresses({ derivationMode, account });
   }
 
-  /*
-  async getNewAccountChangeAddress(derivationMode: string, account: number) {
+  async getNewAccountChangeAddress(
+    derivationMode: string,
+    account: number,
+    randomGapToUse: number
+  ) {
     const accountAddresses = await this.getAccountAddresses(
       derivationMode,
       account
@@ -251,14 +254,16 @@ class Wallet extends EventEmitter implements IWallet {
     if (lastIndex === -1) {
       index = 0;
     } else {
-      index = lastIndex + random(this.GAP);
+      index = lastIndex + randomGapToUse;
     }
     return this.crypto.getAddress(derivationMode, this.xpub, account, index);
   }
 
   async buildTx(
     from: { derivationMode: string; account: number },
-    change: string | { derivationMode: string; account: number },
+    change:
+      | string
+      | { derivationMode: string; account: number; randomGapToUse?: number },
     destAddress: string,
     amount: number,
     fee: number
@@ -267,28 +272,50 @@ class Wallet extends EventEmitter implements IWallet {
 
     // get the utxos to use as input
     // from all addresses of the account
-    const outputs: Output[] = [];
+    const addresses = await this.getAccountAddresses(
+      from.derivationMode,
+      from.account
+    );
+    const utxos = await Promise.all(
+      addresses.map((address) => this.storage.getAddressUtxos(address))
+    );
 
-    // calculate
+    let unspentUtxos = utxos
+      .reduce(
+        (unspentUtxosAcc: Output[], { unspentUtxos }) =>
+          unspentUtxosAcc.concat(unspentUtxos),
+        []
+      )
+      .sort((utxo) => utxo.value); // we try to regroup small utxos when spending
+
+    // now we select only the output needed to cover the amount + fee
+    let total = 0;
+    let i = 0;
+    const unspentUtxoSelected: Output[] = [];
+    while (total < amount + fee) {
+      total += unspentUtxos[i].value;
+      unspentUtxoSelected.push(unspentUtxos[i]);
+      i += 1;
+    }
+
+    // calculate change address
     let changeAddress: string;
     if (typeof change === "string") {
       changeAddress = change;
     } else {
       changeAddress = await this.getNewAccountChangeAddress(
         change.derivationMode,
-        change.account
+        change.account,
+        change.randomGapToUse || random(this.GAP)
       );
     }
 
-    let totalOutputsValue = 0;
-
-    outputs.forEach((output) => {
-      totalOutputsValue += output.value;
-
+    unspentUtxoSelected.forEach((output) => {
       //
       psbt.addInput({
         hash: output.output_hash,
         index: output.output_index,
+        address: output.address,
       });
 
       // Todo add the segwit / redeem / witness stuff
@@ -301,12 +328,11 @@ class Wallet extends EventEmitter implements IWallet {
       })
       .addOutput({
         address: changeAddress,
-        value: totalOutputsValue - amount - fee,
+        value: total - amount - fee,
       });
 
     return psbt.toBase64();
   }
-  */
 }
 
 export default Wallet;
