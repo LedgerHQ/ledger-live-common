@@ -15,7 +15,7 @@ libcore-postBuildAccount.ts \
 libcore-getAccountNetworkInfo.ts \
 libcore-mergeOperations.ts \
 transaction.ts \
-bridge/ts.ts \
+bridge/js.ts \
 bridge/libcore.ts \
 bridge/mock.ts \
 cli-transaction.ts \

@@ -18,10 +18,10 @@ const remap = (pair: Pair): Pair =>
 const mapRate = (pair: Pair, rate: number): number =>
   pair.from === BTC && pair.to === ETH ? 1 / rate : rate;
 
-const module: Module = {
+const mod: Module = {
   aliasPair: remap,
   resolveTrackingPair: remap,
   mapRate,
 };
 
-export default module;
+export default mod;

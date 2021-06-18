@@ -18,7 +18,7 @@ import {
 import { isCurrencySupported } from "../currencies";
 import { getMainAccount } from "../account";
 import { getAccountBridge } from "../bridge";
-import jsBridges from "../generated/bridge/ts";
+import jsBridges from "../generated/bridge/js";
 const experimentalIntegrations: string[] = [];
 export function shouldUseJS(currency: CryptoCurrency) {
   const jsBridge = jsBridges[currency.family];

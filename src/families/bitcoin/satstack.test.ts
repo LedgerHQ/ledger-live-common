@@ -272,10 +272,9 @@ describe("editSatStackConfig", () => {
   test("append accounts", () => {
     expect(
       editSatStackConfig(
-        // @ts-expect-error accounts not working
-        { ...config, accounts: config.accounts.slice(0, 1) },
+        { ...config, accounts: config.accounts.slice(0, 1) } as any,
         {
-          accounts: config.accounts.slice(1),
+          accounts: config.accounts.slice(1) as any,
         }
       )
     ).toEqual(config);
@@ -283,11 +282,10 @@ describe("editSatStackConfig", () => {
   test("dedup accounts", () => {
     expect(
       editSatStackConfig(
-        // @ts-expect-error accounts not working
-        { ...config, accounts: config.accounts.slice(0, 1) },
+        { ...config, accounts: config.accounts.slice(0, 1) } as any,
         {
           accounts: config.accounts,
-        }
+        } as any
       )
     ).toEqual(config);
   });

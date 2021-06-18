@@ -16,8 +16,8 @@ const remap = (pair) => {
   return pair;
 };
 
-const module: Module = {
+const mod: Module = {
   aliasPair: remap,
   resolveTrackingPair: remap,
 };
-export default module;
+export default mod;

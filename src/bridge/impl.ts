@@ -9,7 +9,7 @@ import type {
 import { decodeAccountId, getMainAccount } from "../account";
 import { getEnv } from "../env";
 import { checkAccountSupported, shouldUseJS } from "../account/support";
-import jsBridges from "../generated/bridge/ts";
+import jsBridges from "../generated/bridge/js";
 import mockBridges from "../generated/bridge/mock";
 import libcoreBridges from "../generated/bridge/libcore";
 export const getCurrencyBridge = (currency: CryptoCurrency): CurrencyBridge => {

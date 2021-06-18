@@ -8,7 +8,7 @@ let core: Core | null | undefined;
 let corePromise: Promise<Core> | null | undefined;
 let libcoreJobsCounter = 0;
 let lastFlush: Promise<void> = Promise.resolve();
-let flushTimeout: NodeJS.Timeout | null = null;
+let flushTimeout: NodeJS.Timeout | null | number = null;
 const libcoreJobsCounterSubject: Subject<number> = new Subject();
 export const libcoreJobBusy: Observable<boolean> = libcoreJobsCounterSubject.pipe(
   map((v) => v > 0),
@@ -53,7 +53,7 @@ export async function afterLibcoreGC<R>(
     if (libcoreJobsCounter === 0) {
       log("libcore/access", "after gc job exec now");
       if (flushTimeout) {
-        clearTimeout(flushTimeout);
+        clearTimeout(flushTimeout as number);
       }
       flushTimeout = setTimeout(flush.bind(null, core), GC_DELAY);
     }
@@ -69,7 +69,7 @@ export async function withLibcore<R>(
   try {
     if (flushTimeout) {
       // there is a new job so we must not do the GC yet.
-      clearTimeout(flushTimeout);
+      clearTimeout(flushTimeout as number);
       flushTimeout = null;
     }
 
