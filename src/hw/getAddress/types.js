@@ -21,7 +21,7 @@ export type GetAddressOptions = {
 };
 
 export type Resolver = (
-  Transport<*>,
+  Transport,
   {
     currency: CryptoCurrency,
     path: string,

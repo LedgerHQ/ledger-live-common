@@ -10,7 +10,7 @@ import tron from "./tron";
 
 type Resolver = (
   currency: CryptoCurrency,
-  transport: Transport<*>,
+  transport: Transport,
   path: string,
   transaction: *
 ) => Promise<string>;

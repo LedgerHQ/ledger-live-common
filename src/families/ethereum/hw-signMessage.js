@@ -8,7 +8,7 @@ import type { MessageData, Result } from "../../hw/signMessage/types";
 import type { TypedMessageData, TypedMessage } from "./types";
 
 type EthResolver = (
-  Transport<*>,
+  Transport,
   MessageData | TypedMessageData
 ) => Promise<Result>;
 

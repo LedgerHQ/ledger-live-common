@@ -30,7 +30,7 @@ import {
 import { runAllWithProgress } from "../apps/runner";
 import type { ConnectAppEvent } from "../hw/connectApp";
 
-export const execWithTransport = (transport: Transport<*>): Exec => (
+export const execWithTransport = (transport: Transport): Exec => (
   appOp: AppOp,
   targetId: string | number,
   app: App
@@ -56,7 +56,7 @@ export const streamAppInstall = ({
   appNames,
   onSuccessObs,
 }: {
-  transport: Transport<*>,
+  transport: Transport,
   appNames: string[],
   onSuccessObs?: () => Observable<*>,
 }): Observable<StreamAppInstallEvent | ConnectAppEvent> =>
@@ -112,7 +112,7 @@ export const streamAppInstall = ({
   );
 
 export const listApps = (
-  transport: Transport<*>,
+  transport: Transport,
   deviceInfo: DeviceInfo
 ): Observable<ListAppsEvent> => {
   if (deviceInfo.isOSU || deviceInfo.isBootloader) {

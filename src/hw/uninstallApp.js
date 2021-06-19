@@ -7,7 +7,7 @@ import type { App, ApplicationVersion } from "../types/manager";
 import ManagerAPI from "../api/Manager";
 
 export default function uninstallApp(
-  transport: Transport<*>,
+  transport: Transport,
   targetId: string | number,
   app: ApplicationVersion | App
 ): Observable<*> {

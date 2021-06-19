@@ -32,7 +32,7 @@ export type DeviceActionArg<T, S> = {
   account: Account,
   transaction: T,
   status: TransactionStatus,
-  transport: Transport<*> & { button: (string) => void },
+  transport: Transport & { button: (string) => void },
   event: DeviceActionEvent,
   state: S,
 };

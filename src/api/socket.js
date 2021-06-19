@@ -26,7 +26,7 @@ const ALLOW_MANAGER_DELAY = 500;
  * Returns an Observable of the final result
  */
 export const createDeviceSocket = (
-  transport: Transport<*>,
+  transport: Transport,
   {
     url,
     unresponsiveExpectedDuringBulk,

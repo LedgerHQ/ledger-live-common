@@ -30,7 +30,7 @@ export const fetchNextFirmware = (
     )
   );
 
-export default (transport: Transport<*>): Observable<*> =>
+export default (transport: Transport): Observable<*> =>
   from(getDeviceInfo(transport)).pipe(
     mergeMap((deviceInfo) =>
       fetchNextFirmware(deviceInfo).pipe(

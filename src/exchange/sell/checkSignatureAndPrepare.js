@@ -28,7 +28,7 @@ type SellInput = {
 };
 
 export default async (
-  transport: Transport<*>,
+  transport: Transport,
   input: SellInput
 ): Promise<SellRequestEvent> => {
   const {

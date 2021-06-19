@@ -36,7 +36,7 @@ export type Arg<T, CT> = {
   signTransaction: ({
     account: Account,
     subAccountId: ?string,
-    transport: Transport<*>,
+    transport: Transport,
     currency: CryptoCurrency,
     derivationMode: DerivationMode,
     coreCurrency: CoreCurrency,

@@ -21,4 +21,4 @@ export type MessageData = {
   rawMessage: string,
 };
 
-export type Resolver = (Transport<*>, MessageData) => Promise<Result>;
+export type Resolver = (Transport, MessageData) => Promise<Result>;

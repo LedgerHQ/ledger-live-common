@@ -8,7 +8,7 @@ import ManagerAPI from "../api/Manager";
 import { getDependencies } from "../apps/polyfill";
 
 export default function installApp(
-  transport: Transport<*>,
+  transport: Transport,
   targetId: string | number,
   app: ApplicationVersion | App
 ): Observable<{ progress: number }> {

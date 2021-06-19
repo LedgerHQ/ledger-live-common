@@ -5,7 +5,7 @@ import type { OsuFirmware } from "../types/manager";
 import ManagerAPI from "../api/Manager";
 
 export default (
-  transport: Transport<*>,
+  transport: Transport,
   targetId: string | number,
   firmware: OsuFirmware
 ): Observable<*> => {

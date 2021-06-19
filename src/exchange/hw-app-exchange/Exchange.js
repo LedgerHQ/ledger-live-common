@@ -34,7 +34,7 @@ const maybeThrowProtocolError = (result: Buffer): void => {
 };
 
 export default class Exchange {
-  transport: Transport<*>;
+  transport: Transport;
   transactionType: TransactionType;
   transactionRate: TransactionRate;
   allowedStatuses: Array<number> = [
@@ -51,7 +51,7 @@ export default class Exchange {
   ];
 
   constructor(
-    transport: Transport<*>,
+    transport: Transport,
     transactionType: TransactionType,
     transactionRate?: TransactionRate
   ) {

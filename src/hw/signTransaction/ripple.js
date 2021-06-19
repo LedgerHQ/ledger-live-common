@@ -6,7 +6,7 @@ import type { CryptoCurrency } from "../../types";
 
 export default async (
   currency: CryptoCurrency,
-  transport: Transport<*>,
+  transport: Transport,
   path: string,
   txArg: Object
 ) => {

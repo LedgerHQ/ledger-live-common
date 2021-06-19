@@ -17,7 +17,7 @@ const ManagerAllowedFlag = 0x08;
 const PinValidatedFlag = 0x80;
 
 export default async function getDeviceInfo(
-  transport: Transport<*>
+  transport: Transport
 ): Promise<DeviceInfo> {
   const probablyOnDashboard = await getAppAndVersion(transport)
     .then(({ name }) => isDashboardName(name))

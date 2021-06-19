@@ -18,7 +18,7 @@ const filterMCUForDeviceInfo = (deviceInfo) => {
 };
 
 export default (finalFirmware: FinalFirmware) => (
-  transport: Transport<*>
+  transport: Transport
 ): Observable<*> =>
   from(getDeviceInfo(transport)).pipe(
     mergeMap((deviceInfo: DeviceInfo) =>

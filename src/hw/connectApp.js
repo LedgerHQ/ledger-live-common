@@ -64,7 +64,7 @@ export type ConnectAppEvent =
   | { type: "display-upgrade-warning", displayUpgradeWarning: boolean };
 
 export const openAppFromDashboard = (
-  transport: Transport<*>,
+  transport: Transport,
   appName: string
 ): Observable<ConnectAppEvent> =>
   concat(
