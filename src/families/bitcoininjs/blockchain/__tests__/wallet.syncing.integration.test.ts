@@ -9,9 +9,11 @@ import { orderBy } from "lodash";
 
 const startLogging = (emitters) => {
   emitters.forEach((emitter) =>
-    emitter.emitter.on(emitter.event, (...args) =>
-      console.log(JSON.stringify(args, null, 2))
-    )
+    emitter.emitter.on(emitter.event, (data) => {
+      if (data.type === emitter.type) {
+        console.log(emitter.event, JSON.stringify(data, null, 2));
+      }
+    })
   );
 };
 const stopLogging = (emitters) => {
@@ -61,7 +63,7 @@ describe("integration sync bitcoin mainnet / ledger explorer / mock storage", ()
 
       beforeAll(() => {
         startLogging([
-          { emitter: wallet, event: "address-syncing" },
+          { emitter: wallet, event: "syncing", type: "address" },
           { emitter: explorer, event: null },
         ]);
       });
