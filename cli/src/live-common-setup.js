@@ -126,7 +126,7 @@ if (!process.env.CI) {
   });
 
   const {
-    default: TransportNodeHid,
+    default: typeof TransportNodeHid,
     // eslint-disable-next-line global-require
   } = require("@ledgerhq/hw-transport-node-hid");
   registerTransportModule({

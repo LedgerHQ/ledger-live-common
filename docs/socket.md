@@ -12,7 +12,7 @@ Here is the gist of executing a genuine check:
 import { createDeviceSocket } from "@ledgerhq/live-common/lib/api/socket";
 
 const genuineCheck = (
-  transport: Transport,
+  transport: typeof Transport,
   { targetId, perso }: { targetId: number, perso: string } // these info are returned in getDeviceInfo
 ): Observable<boolean> =>
   createDeviceSocket(transport, {
