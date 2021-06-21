@@ -1,6 +1,6 @@
 import { IExplorer } from "./types";
 import EventEmitter from "../utils/eventemitter";
-import { TX } from "../storage/types";
+import { Address, TX } from "../storage/types";
 import axios, { AxiosInstance } from "axios";
 import axiosRetry from "axios-retry";
 import https from "https";
@@ -22,7 +22,11 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
     axiosRetry(this.client, { retries: 3 });
   }
 
-  async getAddressTxsSinceLastTxBlock(batchSize, address, lastTx) {
+  async getAddressTxsSinceLastTxBlock(
+    batchSize: number,
+    address: Address,
+    lastTx: TX | undefined
+  ) {
     const params = {
       no_token: "true",
       batch_size: batchSize,
@@ -31,7 +35,7 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
       params["block_hash"] = lastTx.block.hash;
     }
 
-    const url = `/addresses/${address}/transactions`;
+    const url = `/addresses/${address.address}/transactions`;
 
     this.emit("fetching-address-transaction", { url, params });
 
@@ -47,6 +51,20 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
     const firstNonPendingIndex = findIndex(res.txs, (tx) => !!tx.block);
 
     const txs = res.txs.slice(firstNonPendingIndex, res.txs.length);
+
+    txs.forEach((tx) => {
+      // no need to keep that as it changes
+      delete tx["confirmations"];
+
+      tx.derivationMode = address.derivationMode;
+      tx.account = address.account;
+      tx.index = address.index;
+      tx.address = address.address;
+
+      tx.outputs.forEach((output) => {
+        output.output_hash = tx.id;
+      });
+    });
 
     this.emit("fetched-address-transaction", { url, params, txs });
 

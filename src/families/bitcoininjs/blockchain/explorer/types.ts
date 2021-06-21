@@ -1,4 +1,4 @@
-import { TX } from "../storage/types";
+import { TX, Address } from "../storage/types";
 
 // abstract explorer api used, abstract batching logic, pagination, and retries
 export interface IExplorer {
@@ -7,7 +7,7 @@ export interface IExplorer {
 
   getAddressTxsSinceLastTxBlock(
     batchSize: number,
-    address: string,
+    address: Address,
     lastTx: TX | undefined,
-  ): Array;
+  ): Promise<TX[]>;
 };

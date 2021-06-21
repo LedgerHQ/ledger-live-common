@@ -1,6 +1,6 @@
-import { Address, TX, IStorage, Output } from "./storage/types";
+import { Address, IStorage, Output } from "./storage/types";
 import EventEmitter from "./utils/eventemitter";
-import { maxBy, random, range, some, sortBy, takeWhile } from "lodash";
+import { flatten, maxBy, random, range, some, sortBy } from "lodash";
 import { IExplorer } from "./explorer/types";
 import { ICrypto } from "./crypto/types";
 import { IWallet } from "./types";
@@ -37,25 +37,9 @@ class Wallet extends EventEmitter implements IWallet {
 
     let txs = await this.explorer.getAddressTxsSinceLastTxBlock(
       this.txsSyncArraySize,
-      address,
+      { address, derivationMode, account, index },
       lastTx
     );
-    // mutate to hydrate faster
-    txs.forEach((tx) => {
-      // no need to keep that as it changes
-      delete tx.confirmations;
-
-      tx.derivationMode = derivationMode;
-      tx.account = account;
-      tx.index = index;
-      tx.address = address;
-
-      tx.outputs.forEach((output) => {
-        if (output.address === address) {
-          output.output_hash = tx.id;
-        }
-      });
-    });
     const inserted = await this.storage.appendTxs(txs);
     return inserted;
   }
@@ -213,15 +197,9 @@ class Wallet extends EventEmitter implements IWallet {
   async getAddressBalance(address: Address) {
     await this._whenSynced();
 
-    // TODO SHOULD actually use getAddressLastBlockState
-    const { unspentUtxos, spentUtxos } = await this.storage.getAddressUtxos(
-      address
-    );
+    const unspentUtxos = await this.storage.getAddressUnspentUtxos(address);
 
-    return (
-      unspentUtxos.reduce((total, { value }) => total + value, 0) -
-      spentUtxos.reduce((total, { value }) => total + value, 0)
-    );
+    return unspentUtxos.reduce((total, { value }) => total + value, 0);
   }
 
   async getWalletAddresses() {
@@ -279,14 +257,10 @@ class Wallet extends EventEmitter implements IWallet {
       from.derivationMode,
       from.account
     );
-    const utxos = await Promise.all(
-      addresses.map((address) => this.storage.getAddressUtxos(address))
-    );
-
-    let unspentUtxos = utxos.reduce(
-      (unspentUtxosAcc: Output[], { unspentUtxos }) =>
-        unspentUtxosAcc.concat(unspentUtxos),
-      []
+    let unspentUtxos = flatten(
+      await Promise.all(
+        addresses.map((address) => this.storage.getAddressUnspentUtxos(address))
+      )
     );
     unspentUtxos = sortBy(unspentUtxos, "value");
 
@@ -317,7 +291,8 @@ class Wallet extends EventEmitter implements IWallet {
       psbt.addInput({
         hash: output.output_hash,
         index: output.output_index,
-        address: output.address,
+        // address: output.address, // TODO : if we can not pass address, can we
+        // really use utxo from the whole account ?
       });
 
       // Todo add the segwit / redeem / witness stuff

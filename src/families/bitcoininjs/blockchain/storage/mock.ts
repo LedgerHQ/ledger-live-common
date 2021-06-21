@@ -8,19 +8,21 @@ class Mock implements IStorage {
   txs: TX[] = [];
   // indexes
   primaryIndex: { [string]: TX } = {};
-  spentUtxos: { [string]: Input[] } = {};
+  // accounting
   unspentUtxos: { [string]: Output[] } = {};
+  // only needed to handle the case when the input
+  // is seen before the output (typically explorer
+  // returning unordered tx within the same block)
+  spentUtxos: { [string]: Input[] } = {};
 
   async getLastTx(txFilter) {
     return findLast(this.txs, txFilter);
   }
 
-  async getAddressUtxos(address: Address) {
+  // TODO: only expose unspentUtxos
+  async getAddressUnspentUtxos(address: Address) {
     const indexAddress = address.address;
-    return {
-      unspentUtxos: this.unspentUtxos[indexAddress],
-      spentUtxos: this.spentUtxos[indexAddress],
-    };
+    return this.unspentUtxos[indexAddress];
   }
 
   async appendTxs(txs: TX[]) {
@@ -72,6 +74,7 @@ class Mock implements IStorage {
   }
 
   async getUniquesAddresses(addressesFilter) {
+    // TODO: to speed up, create more useful indexes in appendTxs
     return uniqBy(
       filter(this.txs, addressesFilter).map((tx) => ({
         address: tx.address,
