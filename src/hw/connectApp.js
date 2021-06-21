@@ -24,7 +24,7 @@ import getAddress from "./getAddress";
 import openApp from "./openApp";
 import quitApp from "./quitApp";
 import { mustUpgrade } from "../apps";
-import { getEnv } from "../env";
+
 export type RequiresDerivation = {|
   currencyId: string,
   path: string,
