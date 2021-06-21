@@ -4,7 +4,7 @@ import {
   filterAnnouncements,
   localizeAnnouncements,
 } from "../../notifications/AnnouncementProvider/logic";
-import api from "../../notifications/AnnouncementProvider/api/api.mock";
+import api from "../mocks/announements.mock";
 
 timemachine.config({
   dateString: "February 22, 2021 13:12:59",
