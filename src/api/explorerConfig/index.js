@@ -9,10 +9,6 @@ const initialExplorerConfig: FullConfig = {
     id: "btc",
     stable: {
       base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
-      base: "EXPLORER",
       version: "v3",
     },
   },
@@ -33,11 +29,7 @@ const initialExplorerConfig: FullConfig = {
     id: "btg",
     stable: {
       base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
-      base: "EXPLORER",
-      version: "v3",
+      version: "3",
     },
   },
   clubcoin: {
@@ -77,10 +69,6 @@ const initialExplorerConfig: FullConfig = {
   dogecoin: {
     id: "doge",
     stable: {
-      base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
       base: "EXPLORER",
       version: "v3",
     },
@@ -186,20 +174,12 @@ const initialExplorerConfig: FullConfig = {
     id: "via",
     stable: {
       base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
-      base: "EXPLORER",
       version: "v3",
     },
   },
   zcash: {
     id: "zec",
     stable: {
-      base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
       base: "EXPLORER",
       version: "v3",
     },
