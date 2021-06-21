@@ -250,6 +250,12 @@ class Wallet extends EventEmitter implements IWallet {
       i += 1;
     }
 
+    const txHexs = await Promise.all(
+      unspentUtxoSelected.map((unspentUtxo) =>
+        this.explorer.getTxHex(unspentUtxo.output_hash)
+      )
+    );
+
     // calculate change address
     let changeAddress: string;
     if (typeof change === "string") {
@@ -262,13 +268,15 @@ class Wallet extends EventEmitter implements IWallet {
       );
     }
 
-    unspentUtxoSelected.forEach((output) => {
+    unspentUtxoSelected.forEach((output, i) => {
       //
       psbt.addInput({
         hash: output.output_hash,
         index: output.output_index,
         // address: output.address, // TODO : if we can not pass address, can we
         // really use utxo from the whole account ?
+
+        nonWitnessUtxo: Buffer.from(txHexs[i], "hex"),
       });
 
       // Todo add the segwit / redeem / witness stuff
@@ -284,7 +292,7 @@ class Wallet extends EventEmitter implements IWallet {
         value: total - amount - fee,
       });
 
-    return psbt.toBase64();
+    return psbt.toHex();
   }
 
   // internal

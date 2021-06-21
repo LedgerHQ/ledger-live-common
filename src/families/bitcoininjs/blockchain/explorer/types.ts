@@ -5,6 +5,7 @@ export interface IExplorer {
   on(event: "fetching-address-transaction", listener: () => void): this;
   on(event: "fetched-address-transaction", listener: () => void): this;
 
+  getTxHex(txId: string): Promise<string>;
   getAddressTxsSinceLastTxBlock(
     batchSize: number,
     address: Address,

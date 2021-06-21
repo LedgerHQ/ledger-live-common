@@ -22,6 +22,17 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
     axiosRetry(this.client, { retries: 3 });
   }
 
+  async getTxHex(txId: string) {
+    const url = `/transactions/${txId}/hex`;
+
+    this.emit("fetching-transaction-tx", { url, txId });
+
+    // TODO add a test for failure (at the sync level)
+    const res = (await this.client.get(url)).data;
+
+    return res[0].hex;
+  }
+
   async getAddressTxsSinceLastTxBlock(
     batchSize: number,
     address: Address,
