@@ -8,6 +8,7 @@ const initialState: State = {
   error: null,
   lastUpdateTime: null,
   isLoading: false,
+  context: { currencies: [] },
 };
 
 export const serviceStatusMachine = Machine({
