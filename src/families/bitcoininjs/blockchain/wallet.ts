@@ -292,7 +292,7 @@ class Wallet extends EventEmitter implements IWallet {
         value: total - amount - fee,
       });
 
-    return psbt.toHex();
+    return psbt;
   }
 
   // internal
