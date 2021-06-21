@@ -14,7 +14,7 @@ export type AppPlatform =
   | "mobile" // == android || ios
   | "all";
 
-export type AppBranch = "stable" | "experimental" | "debug";
+export type AppBranch = "stable" | "experimental" | "soon" | "debug";
 
 export type AppPermission = {
   method: string,
