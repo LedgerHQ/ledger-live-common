@@ -55,7 +55,8 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
         // we need to start the flow again.
         const deviceTransactionId = await swap.startNewTransaction();
         if (unsubscribed) return;
-        const { provider, rateId } = exchangeRate;
+
+        const { provider, rateId, payoutNetworkFees } = exchangeRate;
         const {
           fromParentAccount,
           fromAccount,
@@ -244,12 +245,15 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
         } = getCurrencyExchangeConfig(refundCurrency);
         if (unsubscribed) return;
         // NB Floating rates may change the original amountTo so we can pass an override
-        // to properly render the amount on the device confirmation steps.
+        // to properly render the amount on the device confirmation steps. Although changelly
+        // made the calculation inside the binary payload, we still have to deal with it here
+        // to not break their other clients.
         let amountExpectedTo;
 
         if (swapResult?.amountExpectedTo) {
           amountExpectedTo = new BigNumber(swapResult.amountExpectedTo)
             .times(new BigNumber(10).pow(unitTo.magnitude))
+            .minus(new BigNumber(payoutNetworkFees || 0))
             .toString();
         }
 
