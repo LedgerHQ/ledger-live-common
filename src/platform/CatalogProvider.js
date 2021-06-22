@@ -2,7 +2,7 @@
 
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
-import type { AppManifest, AppBranch } from "./types";
+import type { AppManifest, AppBranch, AppPlatform } from "./types";
 import { isSupported, matchPlatform, matchBranches } from "./logic";
 
 import api from "./api";
@@ -36,7 +36,7 @@ const PlatformCatalogProvider = ({ children }: Props) => {
 };
 
 export const useCatalog = (
-  platform = "all",
+  platform: AppPlatform = "all",
   branches: AppBranch[] = ["stable"]
 ) => {
   const context = useContext(PlatformCatalogContext);

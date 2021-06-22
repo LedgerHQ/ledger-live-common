@@ -2,10 +2,10 @@
 
 import semver from "semver";
 
-import type { AppPlatform, AppBranch } from "./types";
+import type { AppManifest, AppPlatform, AppBranch } from "./types";
 import { PLATFORM_VERSION } from "./constants";
 
-export function translateContent(content, locale = "en") {
+export function translateContent(content: any, locale: string = "en") {
   if (!content || typeof content !== "object") return content;
 
   return content[locale] || content.en;
