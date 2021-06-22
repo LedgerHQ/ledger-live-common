@@ -18,7 +18,9 @@ import api from "./api/tzkt";
 import type { APIOperation } from "./api/tzkt";
 
 function bettercalldevToNFT(asset: any): ?NFT {
-  if (!asset.token_id) return null;
+  if (!asset.token_id) return;
+  const quantity = parseInt(asset.balance, 10);
+  if (quantity === 0) return;
   let image = asset.display_uri;
   image = image.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
   const nft: $Exact<NFT> = {
@@ -27,9 +29,9 @@ function bettercalldevToNFT(asset: any): ?NFT {
     description: asset.description,
     image,
     imageThumbnail: image,
-    quantity: parseInt(asset.balance, 10),
+    quantity,
     permalink: "https://www.hicetnunc.xyz/objkt/" + asset.token_id,
-    lastActivityDate: String(asset.token_id || ""), // HACK to have some sort of sort...
+    lastActivityDate: new Date(asset.token_id || "").toISOString(), // HACK to have some sort of sort...
     lastSale: null,
     schema: asset.symbol,
     platform: null,
@@ -58,6 +60,7 @@ async function fetchAllNFTs(address: string) {
     offset += pageSize;
     nfts = nfts.concat(
       data.balances
+        .filter((a) => a.token_id)
         .map((asset) => {
           try {
             const res = bettercalldevToNFT(asset);
