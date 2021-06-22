@@ -10,7 +10,7 @@ const getAccountShape: GetAccountShape = async (info) => {
   const oldOperations = initialAccount?.operations || [];
 
   // Needed for incremental synchronisation
-  const startAt = oldOperations.length
+  const startAt = oldOperations.length && oldOperations[0].blockHeight
     ? (new Date(oldOperations[0].date).getTime() / 1000 || 0) + 1
     : 0;
 
