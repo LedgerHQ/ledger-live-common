@@ -63,23 +63,33 @@ function convertASN1toBase64(signature) {
   let rLen = signature[3];
   const sLen = signature[4 + rLen + 1]; // skip over following 0x02 type prefix for s
   let sOffset = signature.length - sLen;
-  // we can safely ignore the first byte in the 33 bytes cases
-  if (rLen === 33) {
-    rOffset++; // chop off 0x00 padding
-    rLen--;
-  }
-  if (sLen === 33) {
-    sOffset++;
-  } // as above
+
   const sigR = signature.slice(rOffset, rOffset + rLen); // skip e.g. 3045022100 and pad
   const sigS = signature.slice(sOffset);
+  const newSigR = padZero(sigR, 32);
+  const newSigS = padZero(sigS, 32);
 
-  const signatureFormatted = Buffer.concat([sigR, sigS]);
+  const signatureFormatted = Buffer.concat([newSigR, newSigS]);
   if (signatureFormatted.length !== 64) {
     throw new CryptoOrgSignatureSize();
   }
 
   return signatureFormatted;
+}
+
+function padZero(original_array: Uint8Array, wanted_length: number) {
+  const new_array = new Uint8Array(wanted_length);
+  for (let i = wanted_length - 1; i >= 0; i--) {
+    const j = wanted_length - 1 - i;
+    const new_i = original_array.length - 1 - j;
+    if (new_i >= 0 && new_i < original_array.length) {
+      new_array[i] = original_array[new_i];
+    } else {
+      new_array[i] = 0;
+    }
+  }
+
+  return new_array;
 }
 
 /**
