@@ -1,11 +1,11 @@
 // @flow
-import "./__tests__/test-helpers/setup";
+import "../__tests__/test-helpers/setup";
 import { reduce } from "rxjs/operators";
-import { fromAccountRaw } from "./account";
-import type { Account } from "./types";
-import { getAccountBridge } from "./bridge";
-import { makeBridgeCacheSystem } from "./bridge/cache";
-import { aggregateNFTs, sortFilterNFTs } from "./nft";
+import { fromAccountRaw } from "../account";
+import type { Account } from "../types";
+import { getAccountBridge } from "../bridge";
+import { makeBridgeCacheSystem } from "../bridge/cache";
+import { aggregateNFTs, sortFilterNFTs } from ".";
 
 describe("G4SP4RD account", () => {
   const account = fromAccountRaw({

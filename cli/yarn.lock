@@ -1481,8 +1481,10 @@
     node-pre-gyp "^0.17.0"
     node-pre-gyp-github "^1.4.3"
 
-"@ledgerhq/live-common@file:.yalc/@ledgerhq/live-common":
-  version "19.11.3"
+"@ledgerhq/live-common@19.11.3-nft.2":
+  version "19.11.3-nft.2"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/live-common/-/live-common-19.11.3-nft.2.tgz#ac55ab986fc5b0d3da0bff322d08c2bad49e133e"
+  integrity sha512-URji7jPv7bNU74R0Ud/NSz6wW1k6EtKF/csjeVSJrQMkNRbF45288/sVoPWLqNoptzAui1ep9CD2EcIVynVVNQ==
   dependencies:
     "@ledgerhq/compressjs" "1.3.2"
     "@ledgerhq/cryptoassets" "5"
