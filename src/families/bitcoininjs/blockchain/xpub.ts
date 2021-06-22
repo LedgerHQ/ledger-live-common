@@ -212,10 +212,7 @@ class Xpub extends EventEmitter {
     );
 
     // calculate change address
-    const changeAddress = await this.getNewAddress(
-      change.account,
-      change.gap
-    );
+    const changeAddress = await this.getNewAddress(change.account, change.gap);
 
     unspentUtxoSelected.forEach((output, i) => {
       //
