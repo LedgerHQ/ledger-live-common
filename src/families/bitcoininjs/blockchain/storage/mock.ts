@@ -1,5 +1,5 @@
 import { Input, IStorage, Output, TX } from "./types";
-import { findLast, filter, uniq, uniqBy, findIndex } from "lodash";
+import { findLast, filter, uniqBy, findIndex } from "lodash";
 import fs from "fs";
 
 // a mock storage class that just use js objects
@@ -78,16 +78,11 @@ class Mock implements IStorage {
     return uniqBy(
       filter(this.txs, addressesFilter).map((tx) => ({
         address: tx.address,
-        derivationMode: tx.derivationMode,
         account: tx.account,
         index: tx.index,
       })),
       "address"
     );
-  }
-
-  async getDerivationModeUniqueAccounts(derivationMode: string) {
-    return uniq(filter(this.txs, { derivationMode }).map((tx) => tx.account));
   }
 
   async toString(sort = (txs) => txs) {

@@ -67,7 +67,6 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
       // no need to keep that as it changes
       delete tx["confirmations"];
 
-      tx.derivationMode = address.derivationMode;
       tx.account = address.account;
       tx.index = address.index;
       tx.address = address.address;

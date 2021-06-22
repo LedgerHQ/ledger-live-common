@@ -38,7 +38,6 @@
       "height": 335392,
       "time": "2014-12-22T17:42:10Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 0,
     "address": "1EfgV2Hr5CDjXPavHDpDMjmU33BA2veHy6"
@@ -82,7 +81,6 @@
       "height": 335556,
       "time": "2014-12-23T17:26:21Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 0,
     "address": "1EfgV2Hr5CDjXPavHDpDMjmU33BA2veHy6"
@@ -126,7 +124,6 @@
       "height": 335392,
       "time": "2014-12-22T17:42:10Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 1,
     "address": "12iNxzdF6KFZ14UyRTYCRuptxkKSSVHzqF"
@@ -170,7 +167,6 @@
       "height": 335428,
       "time": "2014-12-22T21:32:22Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 1,
     "address": "12iNxzdF6KFZ14UyRTYCRuptxkKSSVHzqF"
@@ -214,7 +210,6 @@
       "height": 425673,
       "time": "2016-08-18T04:07:11Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 2,
     "address": "1CcEugXu9Yf9Qw5cpB8gHUK4X9683WyghM"
@@ -278,7 +273,6 @@
       "height": 472199,
       "time": "2017-06-21T03:01:22Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 3,
     "address": "15xANZb5vJv5RGL263NFuh8UGgHT7noXeZ"
@@ -322,7 +316,6 @@
       "height": 473887,
       "time": "2017-07-02T17:12:03Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 4,
     "address": "1PJMBXKBYEBMRDmpAoBRbDff26gHJrawSp"
@@ -366,7 +359,6 @@
       "height": 473890,
       "time": "2017-07-02T17:26:49Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 5,
     "address": "16ZBYSHkLkRFHAuZvyzosXYgU1UDJxRV1R"
@@ -420,7 +412,6 @@
       "height": 473895,
       "time": "2017-07-02T18:11:17Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 6,
     "address": "1EHeVKfjjq6FJpix86G2yzFeRbZ6RNg2Zm"
@@ -464,7 +455,6 @@
       "height": 544826,
       "time": "2018-10-08T00:43:16Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 8,
     "address": "1HqsYkwczwvkMXCobk5WPZmhj2S2TK613Z"
@@ -508,7 +498,6 @@
       "height": 544826,
       "time": "2018-10-08T00:43:16Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 9,
     "address": "1687EJf5YEmeEtcscnuJPiV5b8HkM1o98q"
@@ -552,7 +541,6 @@
       "height": 549163,
       "time": "2018-11-07T17:26:45Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 10,
     "address": "1MS6eGqD4iUGyJPbEsjqmoNaRhApgtmF8J"
@@ -599,7 +587,6 @@
       "height": 596536,
       "time": "2019-09-25T16:12:10Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 29,
     "address": "1LDPJCMZhYZjTvTGYahdhMXLuMfjfi6Kua"
@@ -646,7 +633,6 @@
       "height": 616059,
       "time": "2020-02-05T08:42:17Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 48,
     "address": "15NvG6YpVh2aUc3DroVttEcWa1Z99qhACP"
@@ -690,7 +676,6 @@
       "height": 555303,
       "time": "2018-12-24T19:17:06Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 63,
     "address": "1KhVznhEQHumfmMQWnkgXLT4BmvtNpwLN9"
@@ -737,7 +722,6 @@
       "height": 616059,
       "time": "2020-02-05T08:42:17Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 82,
     "address": "1Ahipz531XtbzGC1bEKbhHZXmyfWKPNy32"
@@ -781,7 +765,6 @@
       "height": 631427,
       "time": "2020-05-23T15:05:52Z"
     },
-    "derivationMode": "Legacy",
     "account": 0,
     "index": 90,
     "address": "16HH35ASv5rL8ZaaqdzvrJKTAKTucdKKNP"

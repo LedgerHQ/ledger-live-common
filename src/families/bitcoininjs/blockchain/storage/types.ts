@@ -4,7 +4,6 @@ export interface TX {
   index: number;
   block: Block;
   address: string;
-  derivationMode: string;
   inputs: Input[];
   outputs: Output[];
 }
@@ -29,7 +28,6 @@ export interface Block {
 }
 
 export interface Address {
-  derivationMode: string,
   account: number,
   index: number,
   address: string,
@@ -39,16 +37,13 @@ export interface IStorage {
   appendTxs(txs: TX[]): Promise<number>;
   getAddressUnspentUtxos(address: Address): Promise<Output[]>;
   getLastTx(txFilter: {
-    derivationMode?: string,
     account?: number,
     index?: number,
   }): Promise<TX | undefined>;
   getUniquesAddresses(addressesFilter: {
-    derivationMode?: string,
     account?: number,
     index?: number,
   }): Promise<Address[]>;
-  getDerivationModeUniqueAccounts(derivationMode: string): Promise<number[]>;
   toString(sort?: (txs: TX[]) => TX[]): Promise<string>;
   load(file: string): Promise<void>;
 }
