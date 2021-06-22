@@ -119,6 +119,36 @@ export type Address = {|
   derivationPath: string,
 |};
 
+export type NFT = {
+  id: string,
+  name: string,
+  description: string,
+  imagePreview: string, // medium size
+  imageThumbnail: string, // low pixels
+  quantity: number,
+  permalink: string,
+  lastSale: ?{
+    value: BigNumber,
+    currency: CryptoCurrency,
+  },
+  // collection ?
+  // creator ?
+};
+
+export type NFTRaw = {
+  id: string,
+  name: string,
+  description: string,
+  imagePreview: string,
+  imageThumbnail: string,
+  quantity: number,
+  permalink: string,
+  lastSale: ?{
+    value: string,
+    currencyId: string,
+  },
+};
+
 export type Account = {
   type: "Account",
   // unique account identifier
@@ -221,6 +251,8 @@ export type Account = {
   // "parentAccount", if available, is the contextual account. It is a `?Account`.
   subAccounts?: SubAccount[],
 
+  nfts?: NFT[],
+
   // balance history represented the balance evolution throughout time, used by chart.
   // This is to be refreshed when necessary (typically in a sync)
   // this is a map PER granularity to allow a fast feedback when user switch them
@@ -320,6 +352,7 @@ export type AccountRaw = {
   lastSyncDate: string,
   endpointConfig?: ?string,
   subAccounts?: SubAccountRaw[],
+  nfts?: NFTRaw[],
   balanceHistory?: BalanceHistoryRawMap,
   balanceHistoryCache?: BalanceHistoryCache,
   bitcoinResources?: BitcoinResourcesRaw,

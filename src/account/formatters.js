@@ -80,6 +80,7 @@ const cliFormat = (account, level) => {
     index,
     xpub,
     operations,
+    nfts,
   } = account;
 
   const balance = formatCurrencyUnit(account.unit, account.balance, {
@@ -128,6 +129,28 @@ const cliFormat = (account, level) => {
     .join("\n");
 
   if (level === "basic") return str;
+
+  if (nfts) {
+    str += "\nNFTS (" + nfts.length + ")";
+    str += nfts
+      .map(
+        (nft) =>
+          `${nft.quantity}x ${nft.name} ${nft.permalink} ${
+            nft.lastSale
+              ? "(" +
+                formatCurrencyUnit(
+                  nft.lastSale.currency.units[0],
+                  nft.lastSale.value,
+                  {
+                    showCode: true,
+                  }
+                ) +
+                ")"
+              : ""
+          }`
+      )
+      .join("\n");
+  }
 
   str += "\nOPERATIONS (" + operations.length + ")";
   str += operations

@@ -17,11 +17,51 @@ import {
 import {
   findTokenByAddress,
   listTokensForCryptoCurrency,
+  getCryptoCurrencyById,
 } from "../../currencies";
 import type { Operation, TokenAccount, Account } from "../../types";
 import { apiForCurrency } from "../../api/Ethereum";
+import network from "../../network";
 import type { Tx } from "../../api/Ethereum";
 import { digestTokenAccounts, prepareTokenAccounts } from "./modules";
+
+async function fetchAllNFTs(address: string) {
+  const pageSize = 100;
+  let nfts = [];
+  let maxIteration = 20; // strong limit for now.
+  let offset = 0;
+  do {
+    const { data } = await network({
+      url: `https://api.opensea.io/api/v1/assets?order_direction=desc&offset=${offset}&limit=${pageSize}&owner=${address}`,
+    });
+    if (data.assets.length === 0) return nfts;
+    offset += pageSize;
+    nfts = nfts.concat(
+      data.assets.map((asset) => {
+        let lastSale;
+        const { last_sale } = asset;
+        if (last_sale && last_sale.payment_token.symbol === "ETH") {
+          lastSale = {
+            value: BigNumber(asset.last_sale.total_price),
+            currency: getCryptoCurrencyById("ethereum"),
+          };
+        }
+        const nft = {
+          id: String(asset.id), // FIXME find a better id in future
+          name: asset.name,
+          description: asset.description,
+          imagePreview: asset.image_preview_url,
+          imageThumbnail: asset.image_thumbnail_url,
+          quantity: 1, // ? asset.num_sales, // FIXME
+          permalink: asset.permalink,
+          lastSale,
+        };
+        return nft;
+      })
+    );
+  } while (--maxIteration);
+  return nfts;
+}
 
 export const getAccountShape: GetAccountShape = async (
   infoInput,
@@ -72,6 +112,8 @@ export const getAccountShape: GetAccountShape = async (
   }
 
   const balance = await balanceP;
+  const nftsP = fetchAllNFTs(address);
+  const nfts = await nftsP;
 
   // transform transactions into operations
   let newOps = flatMap(txs, txToOps(info));
@@ -169,6 +211,7 @@ export const getAccountShape: GetAccountShape = async (
     operations,
     balance,
     subAccounts,
+    nfts,
     spendableBalance: balance,
     blockHeight,
     lastSyncDate: new Date(),

@@ -17,6 +17,8 @@ import type {
   OperationRaw,
   SubAccount,
   SubAccountRaw,
+  NFT,
+  NFTRaw,
 } from "../types";
 import type { TronResources, TronResourcesRaw } from "../families/tron/types";
 import {
@@ -619,6 +621,18 @@ export function toAccountLikeRaw(accountLike: AccountLike): AccountRawLike {
   }
 }
 
+export function fromNFTRaw({ lastSale, ...raw }: NFTRaw): NFT {
+  return {
+    ...raw,
+    lastSale: lastSale
+      ? {
+          value: BigNumber(lastSale.value),
+          currency: getCryptoCurrencyById(lastSale.currencyId),
+        }
+      : null,
+  };
+}
+
 export function fromAccountRaw(rawAccount: AccountRaw): Account {
   const {
     id,
@@ -646,6 +660,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     balanceHistoryCache,
     spendableBalance,
     subAccounts: subAccountsRaw,
+    nfts: nftsRaw,
     tronResources,
     cosmosResources,
     bitcoinResources,
@@ -668,6 +683,8 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
         }
       })
       .filter(Boolean);
+
+  const nfts = nftsRaw && nftsRaw.map(fromNFTRaw);
 
   const currency = getCryptoCurrencyById(currencyId);
 
@@ -730,6 +747,10 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     res.subAccounts = subAccounts;
   }
 
+  if (nfts) {
+    res.nfts = nfts;
+  }
+
   if (tronResources) {
     res.tronResources = fromTronResourcesRaw(tronResources);
   }
@@ -754,6 +775,18 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
   }
 
   return res;
+}
+
+export function toNFTRaw({ lastSale, ...raw }: NFT): NFTRaw {
+  return {
+    ...raw,
+    lastSale: lastSale
+      ? {
+          value: lastSale.value.toString(10),
+          currencyId: lastSale.currency.id,
+        }
+      : null,
+  };
 }
 
 export function toAccountRaw({
@@ -781,6 +814,7 @@ export function toAccountRaw({
   balanceHistoryCache,
   spendableBalance,
   subAccounts,
+  nfts,
   endpointConfig,
   tronResources,
   cosmosResources,
@@ -827,6 +861,9 @@ export function toAccountRaw({
   }
   if (subAccounts) {
     res.subAccounts = subAccounts.map(toSubAccountRaw);
+  }
+  if (nfts) {
+    res.nfts = nfts.map(toNFTRaw);
   }
   if (tronResources) {
     res.tronResources = toTronResourcesRaw(tronResources);
