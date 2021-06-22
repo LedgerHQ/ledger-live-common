@@ -18,16 +18,18 @@ export function aggregateNFTs(accounts: Account[]): NFTList {
   return nfts;
 }
 
+export type NFTSortFilterCriterias = {
+  sortBy: "oldest" | "newest",
+  searchQuery: string,
+  filterByAccountId: ?string,
+  filterByCurrencyId: ?string,
+  filterByPlatformId: ?string,
+  filterByCollectionSlug: ?string,
+};
+
 export function sortFilterNFTs(
   list: NFTList,
-  opts: {
-    sortBy: "oldest" | "newest",
-    searchQuery: string,
-    filterByAccountId: ?string,
-    filterByCurrencyId: ?string,
-    filterByPlatformId: ?string,
-    filterByCollectionSlug: ?string,
-  }
+  opts: NFTSortFilterCriterias
 ): NFTList {
   let search = opts.searchQuery.toLowerCase();
   const nfts = [...list].filter(({ nft, account }) => {
