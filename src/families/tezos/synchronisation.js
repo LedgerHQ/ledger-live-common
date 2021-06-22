@@ -19,7 +19,7 @@ import type { APIOperation } from "./api/tzkt";
 
 function bettercalldevToNFT(asset: any): ?NFT {
   if (!asset.token_id) return null;
-  let image = asset.thumbnail_uri;
+  let image = asset.display_uri;
   image = image.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
   const nft: $Exact<NFT> = {
     id: "tezos:" + String(asset.token_id),
