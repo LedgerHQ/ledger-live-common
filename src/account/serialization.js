@@ -45,6 +45,7 @@ import {
   getCryptoCurrencyById,
   getTokenById,
   findTokenById,
+  findCurrencyByTicker,
 } from "../currencies";
 import { inferFamilyFromAccountId } from "./accountId";
 import accountByFamily from "../generated/account";
@@ -54,6 +55,7 @@ import {
   emptyHistoryCache,
   generateHistoryFromOperations,
 } from "./balanceHistoryCache";
+import { findCryptoCurrency } from "@ledgerhq/cryptoassets/lib/currencies";
 
 export { toCosmosResourcesRaw, fromCosmosResourcesRaw };
 export { toAlgorandResourcesRaw, fromAlgorandResourcesRaw };
@@ -622,14 +624,16 @@ export function toAccountLikeRaw(accountLike: AccountLike): AccountRawLike {
 }
 
 export function fromNFTRaw({ lastSale, ...raw }: NFTRaw): NFT {
+  const currency = lastSale ? findCurrencyByTicker(lastSale.ticker) : null;
   return {
     ...raw,
-    lastSale: lastSale
-      ? {
-          value: BigNumber(lastSale.value),
-          currency: getCryptoCurrencyById(lastSale.currencyId),
-        }
-      : null,
+    lastSale:
+      lastSale && currency
+        ? {
+            value: BigNumber(lastSale.value),
+            currency,
+          }
+        : null,
   };
 }
 
@@ -783,7 +787,7 @@ export function toNFTRaw({ lastSale, ...raw }: NFT): NFTRaw {
     lastSale: lastSale
       ? {
           value: lastSale.value.toString(10),
-          currencyId: lastSale.currency.id,
+          ticker: lastSale.currency.ticker,
         }
       : null,
   };

@@ -146,7 +146,7 @@ export type NFT = {
     name: string,
   },
   creator: {
-    address: string,
+    address: ?string,
     name: ?string,
   },
   lastActivityDate: string,
@@ -162,7 +162,7 @@ export type NFTRaw = {
   permalink: string,
   lastSale: ?{
     value: string,
-    currencyId: string,
+    ticker: string,
   },
   schema: string, // ERC721, ...
   platform: ?{
@@ -174,7 +174,7 @@ export type NFTRaw = {
     name: string,
   },
   creator: {
-    address: string,
+    address: ?string,
     name: ?string,
   },
   lastActivityDate: string,

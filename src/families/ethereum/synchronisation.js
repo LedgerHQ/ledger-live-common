@@ -58,8 +58,8 @@ function openseaAssetToNFT(asset: any): NFT {
       name: asset.collection.name,
     },
     creator: {
-      address: asset.creator.address,
-      name: asset.creator.user?.username,
+      address: asset.creator?.address,
+      name: asset.creator?.user?.username,
     },
   };
   return nft;
