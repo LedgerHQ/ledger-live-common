@@ -3,6 +3,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
 import type { AppManifest, AppBranch } from "./types";
+import { isSupported, matchPlatform, matchBranches } from "./logic";
 
 import api from "./api";
 
@@ -34,7 +35,10 @@ const PlatformCatalogProvider = ({ children }: Props) => {
   );
 };
 
-export const useCatalog = (branches: AppBranch[] = ["stable"]) => {
+export const useCatalog = (
+  platform = "all",
+  branches: AppBranch[] = ["stable"]
+) => {
   const context = useContext(PlatformCatalogContext);
   if (context === undefined) {
     throw new Error("useCatalog must be used within a PlatformCatalogContext");
@@ -42,8 +46,13 @@ export const useCatalog = (branches: AppBranch[] = ["stable"]) => {
 
   const apps = useMemo(
     (): AppManifest[] =>
-      context.apps.filter((app) => branches.indexOf(app.branch) > -1),
-    [context.apps, branches]
+      context.apps.filter(
+        (manifest) =>
+          matchPlatform(manifest, platform) &&
+          matchBranches(manifest, branches) &&
+          isSupported(manifest)
+      ),
+    [context.apps, branches, platform]
   );
 
   return {
