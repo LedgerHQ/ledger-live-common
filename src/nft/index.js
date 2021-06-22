@@ -8,6 +8,10 @@ export type NFTItem = {
 
 export type NFTList = NFTItem[];
 
+export function canSendNFT(nft: NFT) {
+  return nft.schema === "ERC721";
+}
+
 export function aggregateNFTs(accounts: Account[]): NFTList {
   const nfts = [];
   accounts.forEach((account) => {

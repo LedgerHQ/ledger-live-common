@@ -5,6 +5,7 @@ import { log } from "@ledgerhq/logs";
 import { mergeOps } from "../../bridge/jsHelpers";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { encodeOperationId } from "../../operation";
+import network from "../../network";
 import {
   encodeTokenAccountId,
   decodeTokenAccountId,
@@ -12,9 +13,61 @@ import {
   inferSubOperations,
   emptyHistoryCache,
 } from "../../account";
-import type { Operation, Account } from "../../types";
+import type { Operation, Account, NFT } from "../../types";
 import api from "./api/tzkt";
 import type { APIOperation } from "./api/tzkt";
+
+function bettercalldevToNFT(asset: any): ?NFT {
+  if (!asset.token_id) return null;
+  const nft: $Exact<NFT> = {
+    id: String(asset.token_id),
+    name: asset.name,
+    description: asset.description,
+    image: asset.thumbnail_uri,
+    imageThumbnail: asset.thumbnail_uri,
+    quantity: parseInt(asset.balance, 10),
+    permalink: "https://www.hicetnunc.xyz/objkt/" + asset.token_id,
+    lastActivityDate: "",
+    lastSale: null,
+    schema: asset.symbol,
+    platform: null,
+    collection: null,
+    creator: {
+      address: asset.creator?.[0] || "",
+      name: "",
+    },
+  };
+  return nft;
+}
+
+async function fetchAllNFTs(address: string) {
+  const pageSize = 10;
+  let nfts = [];
+  let maxIteration = 50; // strong limit for now.
+  let offset = 0;
+  do {
+    const { data } = await network({
+      url: `https://api.better-call.dev/v1/account/mainnet/${address}/token_balances?sort_by=balance&size=${pageSize}&offset=${offset}`,
+    });
+    if (typeof data.balances !== "object" || !Array.isArray(data.balances))
+      return nfts;
+    if (data.balances.length === 0) return nfts;
+    offset += pageSize;
+    nfts = nfts.concat(
+      data.balances
+        .map((asset) => {
+          try {
+            return bettercalldevToNFT(asset);
+          } catch (e) {
+            console.warn("could not parse nft.", e);
+            return null;
+          }
+        })
+        .filter(Boolean)
+    );
+  } while (--maxIteration);
+  return nfts;
+}
 
 export const getAccountShape: GetAccountShape = async (infoInput) => {
   let { address, initialAccount } = infoInput;
@@ -55,7 +108,9 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
 
   // TODO paginate with lastId
 
+  const nftsP = fetchAllNFTs(address);
   const apiOperations = await fetchAllTransactions(address, lastId);
+  const nfts = await nftsP;
 
   const { revealed, publicKey, counter } = apiAccount;
 
@@ -80,6 +135,7 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
     blockHeight,
     lastSyncDate: new Date(),
     tezosResources,
+    nfts,
   };
 
   return accountShape;
