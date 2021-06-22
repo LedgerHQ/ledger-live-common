@@ -15,15 +15,55 @@ import {
   emptyHistoryCache,
 } from "../../account";
 import {
+  findCurrencyByTicker,
   findTokenByAddress,
   listTokensForCryptoCurrency,
-  getCryptoCurrencyById,
 } from "../../currencies";
-import type { Operation, TokenAccount, Account } from "../../types";
+import type { NFT, Operation, TokenAccount, Account } from "../../types";
 import { apiForCurrency } from "../../api/Ethereum";
 import network from "../../network";
 import type { Tx } from "../../api/Ethereum";
 import { digestTokenAccounts, prepareTokenAccounts } from "./modules";
+
+function openseaAssetToNFT(asset: any): NFT {
+  let lastSale;
+  const { last_sale } = asset;
+  if (last_sale) {
+    const currency = findCurrencyByTicker(last_sale.payment_token.symbol);
+    if (currency) {
+      lastSale = {
+        value: BigNumber(asset.last_sale.total_price),
+        currency,
+      };
+    }
+  }
+  const lastActivityDate = last_sale?.created_date || "";
+  const nft: $Exact<NFT> = {
+    id: String(asset.id), // FIXME find a better id in future
+    name: asset.name,
+    description: asset.description,
+    image: asset.image_url,
+    imageThumbnail: asset.image_thumbnail_url,
+    quantity: 1, // ? asset.num_sales, // FIXME
+    permalink: asset.permalink,
+    lastActivityDate,
+    lastSale,
+    schema: asset.asset_contract.schema_name,
+    platform: {
+      id: asset.asset_contract.address,
+      name: asset.asset_contract.name,
+    },
+    collection: {
+      slug: asset.collection.slug,
+      name: asset.collection.name,
+    },
+    creator: {
+      address: asset.creator.address,
+      name: asset.creator.user?.username,
+    },
+  };
+  return nft;
+}
 
 async function fetchAllNFTs(address: string) {
   const pageSize = 100;
@@ -34,30 +74,21 @@ async function fetchAllNFTs(address: string) {
     const { data } = await network({
       url: `https://api.opensea.io/api/v1/assets?order_direction=desc&offset=${offset}&limit=${pageSize}&owner=${address}`,
     });
+    if (typeof data.assets !== "object" || !Array.isArray(data.assets))
+      return nfts;
     if (data.assets.length === 0) return nfts;
     offset += pageSize;
     nfts = nfts.concat(
-      data.assets.map((asset) => {
-        let lastSale;
-        const { last_sale } = asset;
-        if (last_sale && last_sale.payment_token.symbol === "ETH") {
-          lastSale = {
-            value: BigNumber(asset.last_sale.total_price),
-            currency: getCryptoCurrencyById("ethereum"),
-          };
-        }
-        const nft = {
-          id: String(asset.id), // FIXME find a better id in future
-          name: asset.name,
-          description: asset.description,
-          image: asset.image_url,
-          imageThumbnail: asset.image_thumbnail_url,
-          quantity: 1, // ? asset.num_sales, // FIXME
-          permalink: asset.permalink,
-          lastSale,
-        };
-        return nft;
-      })
+      data.assets
+        .map((asset) => {
+          try {
+            return openseaAssetToNFT(asset);
+          } catch (e) {
+            console.warn("could not parse nft.", e);
+            return null;
+          }
+        })
+        .filter(Boolean)
     );
   } while (--maxIteration);
   return nfts;

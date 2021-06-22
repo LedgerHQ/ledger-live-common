@@ -1,7 +1,12 @@
 // @flow
 
 import type { BigNumber } from "bignumber.js";
-import type { CryptoCurrency, TokenCurrency, Unit } from "./currencies";
+import type {
+  Currency,
+  CryptoCurrency,
+  TokenCurrency,
+  Unit,
+} from "./currencies";
 import type { OperationRaw, Operation } from "./operation";
 import type { DerivationMode } from "../derivation";
 import type {
@@ -129,10 +134,22 @@ export type NFT = {
   permalink: string,
   lastSale: ?{
     value: BigNumber,
-    currency: CryptoCurrency,
+    currency: Currency,
   },
-  // collection ?
-  // creator ?
+  schema: string, // ERC721, ...
+  platform: ?{
+    id: string,
+    name: string,
+  },
+  collection: ?{
+    slug: string,
+    name: string,
+  },
+  creator: {
+    address: string,
+    name: ?string,
+  },
+  lastActivityDate: string,
 };
 
 export type NFTRaw = {
@@ -147,6 +164,20 @@ export type NFTRaw = {
     value: string,
     currencyId: string,
   },
+  schema: string, // ERC721, ...
+  platform: ?{
+    id: string,
+    name: string,
+  },
+  collection: ?{
+    slug: string,
+    name: string,
+  },
+  creator: {
+    address: string,
+    name: ?string,
+  },
+  lastActivityDate: string,
 };
 
 export type Account = {
