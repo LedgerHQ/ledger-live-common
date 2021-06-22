@@ -5,7 +5,7 @@
     "type": "git",
     "url": "https://github.com/LedgerHQ/ledger-live-common"
   },
-  "version": "19.11.3",
+  "version": "19.11.3-nft.0",
   "main": "lib/index.js",
   "license": "Apache-2.0",
   "scripts": {
