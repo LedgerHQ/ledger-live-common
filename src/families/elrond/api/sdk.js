@@ -106,9 +106,10 @@ function transactionToOperation(
  */
 export const getOperations = async (
   accountId: string,
-  addr: string
+  addr: string,
+  startAt: Number
 ): Promise<Operation[]> => {
-  const rawTransactions = await api.getHistory(addr);
+  const rawTransactions = await api.getHistory(addr, startAt);
 
   if (!rawTransactions) return rawTransactions;
 

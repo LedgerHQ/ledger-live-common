@@ -101,10 +101,10 @@ export default class ElrondApi {
     return { hash };
   }
 
-  async getHistory(addr: string) {
+  async getHistory(addr: string, startAt: Number) {
     const { data: transactions } = await network({
       method: "GET",
-      url: `${this.API_URL}/transactions?condition=should&sender=${addr}&receiver=${addr}`,
+      url: `${this.API_URL}/transactions?condition=should&sender=${addr}&receiver=${addr}&after=${startAt}`,
     });
 
     if (!transactions.length) return transactions; //Account does not have any transactions
@@ -132,6 +132,7 @@ export default class ElrondApi {
       const confirmedTransaction = await this.getConfirmedTransaction(
         transactions[index].txHash
       );
+
       blockHeight = confirmedTransaction.blockHeight;
 
       index++;
