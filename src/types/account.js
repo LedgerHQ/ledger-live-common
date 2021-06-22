@@ -123,7 +123,7 @@ export type NFT = {
   id: string,
   name: string,
   description: string,
-  imagePreview: string, // medium size
+  image: string,
   imageThumbnail: string, // low pixels
   quantity: number,
   permalink: string,
@@ -139,7 +139,7 @@ export type NFTRaw = {
   id: string,
   name: string,
   description: string,
-  imagePreview: string,
+  image: string,
   imageThumbnail: string,
   quantity: number,
   permalink: string,

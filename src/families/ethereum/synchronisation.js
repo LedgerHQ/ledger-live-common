@@ -50,7 +50,7 @@ async function fetchAllNFTs(address: string) {
           id: String(asset.id), // FIXME find a better id in future
           name: asset.name,
           description: asset.description,
-          imagePreview: asset.image_preview_url,
+          image: asset.image_url,
           imageThumbnail: asset.image_thumbnail_url,
           quantity: 1, // ? asset.num_sales, // FIXME
           permalink: asset.permalink,
