@@ -19,15 +19,17 @@ import type { APIOperation } from "./api/tzkt";
 
 function bettercalldevToNFT(asset: any): ?NFT {
   if (!asset.token_id) return null;
+  let image = asset.thumbnail_uri;
+  image = image.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
   const nft: $Exact<NFT> = {
-    id: String(asset.token_id),
+    id: "tezos:" + String(asset.token_id),
     name: asset.name,
     description: asset.description,
-    image: asset.thumbnail_uri,
-    imageThumbnail: asset.thumbnail_uri,
+    image,
+    imageThumbnail: image,
     quantity: parseInt(asset.balance, 10),
     permalink: "https://www.hicetnunc.xyz/objkt/" + asset.token_id,
-    lastActivityDate: "",
+    lastActivityDate: String(asset.token_id || ""), // HACK to have some sort of sort...
     lastSale: null,
     schema: asset.symbol,
     platform: null,
@@ -45,6 +47,7 @@ async function fetchAllNFTs(address: string) {
   let nfts = [];
   let maxIteration = 50; // strong limit for now.
   let offset = 0;
+  const seen = {};
   do {
     const { data } = await network({
       url: `https://api.better-call.dev/v1/account/mainnet/${address}/token_balances?sort_by=balance&size=${pageSize}&offset=${offset}`,
@@ -57,7 +60,10 @@ async function fetchAllNFTs(address: string) {
       data.balances
         .map((asset) => {
           try {
-            return bettercalldevToNFT(asset);
+            const res = bettercalldevToNFT(asset);
+            if (!res || seen[res.id]) return;
+            seen[res.id] = true;
+            return res;
           } catch (e) {
             console.warn("could not parse nft.", e);
             return null;

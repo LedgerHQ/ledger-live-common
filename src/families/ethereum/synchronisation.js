@@ -39,7 +39,7 @@ function openseaAssetToNFT(asset: any): NFT {
   }
   const lastActivityDate = last_sale?.created_date || "";
   const nft: $Exact<NFT> = {
-    id: String(asset.id), // FIXME find a better id in future
+    id: "opensea:" + String(asset.id), // FIXME find a better id in future
     name: asset.name,
     description: asset.description,
     image: asset.image_url,
