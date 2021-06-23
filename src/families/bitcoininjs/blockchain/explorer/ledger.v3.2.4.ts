@@ -5,12 +5,14 @@ import axios, { AxiosInstance } from "axios";
 import axiosRetry from "axios-retry";
 import https from "https";
 import { findIndex } from "lodash";
+import { batch } from "react-redux";
 
 // an Live explorer V3 class
 class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
   client: AxiosInstance;
+  disableBatchSize: boolean = false;
 
-  constructor({ explorerURI }) {
+  constructor({ explorerURI, disableBatchSize }) {
     super();
 
     this.client = axios.create({
@@ -20,6 +22,8 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
     });
     // 3 retries per request
     axiosRetry(this.client, { retries: 3 });
+
+    this.disableBatchSize = disableBatchSize;
   }
 
   async getTxHex(txId: string) {
@@ -40,8 +44,10 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
   ) {
     const params = {
       no_token: "true",
-      batch_size: batchSize,
     };
+    if (!this.disableBatchSize) {
+      params["batch_size"] = batchSize;
+    }
     if (lastTx) {
       params["block_hash"] = lastTx.block.hash;
     }

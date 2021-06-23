@@ -9,27 +9,33 @@ import axios from "axios";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-describe.skip("testing legacy transactions", () => {
+describe("testing legacy transactions", () => {
+  const network = coininfo.bitcoin.test.toBitcoinJS();
+
   let explorer = new Explorer({
     explorerURI: "http://localhost:20000/blockchain/v3",
+    disableBatchSize: true, // https://ledgerhq.atlassian.net/browse/BACK-2191
   });
   let crypto = new Crypto({
-    network: coininfo.bitcoin.main.toBitcoinJS(),
+    network,
   });
-  let storage = new Storage();
+
+  let storage1 = new Storage();
   const seed1 = bip39.mnemonicToSeedSync("test test test");
-  const node1 = bip32.fromSeed(seed1);
+  const node1 = bip32.fromSeed(seed1, network);
   let xpub1 = new Xpub({
-    storage,
+    storage: storage1,
     explorer,
     crypto,
     xpub: node1.neutered().toBase58(),
     derivationMode: "Legacy",
   });
+
+  let storage2 = new Storage();
   const seed2 = bip39.mnemonicToSeedSync("test2 test2 test2");
-  const node2 = bip32.fromSeed(seed2);
+  const node2 = bip32.fromSeed(seed2, network);
   let xpub2 = new Xpub({
-    storage,
+    storage: storage2,
     explorer,
     crypto,
     xpub: node2.neutered().toBase58(),
@@ -60,6 +66,6 @@ describe.skip("testing legacy transactions", () => {
   it("should be setup correctly", async () => {
     const balance1 = await xpub1.getXpubBalance();
 
-    expect(balance1).toEqual(57);
+    expect(balance1).toEqual(5700000000);
   });
 });
