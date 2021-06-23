@@ -64,9 +64,8 @@ export default class ElrondApi {
       senders: [sender],
       recipients: [receiver],
       value,
+      transactionSequenceNumber: nonce,
     } = operation;
-
-    const { nonce } = await this.getAccountDetails(sender);
 
     const {
       data: {
