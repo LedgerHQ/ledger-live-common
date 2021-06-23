@@ -33,7 +33,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v2
         with:
-          repository: git@github.com:LedgerHQ/blockchain-explorer.git
+          repository: LedgerHQ/blockchain-explorer
           path: blockchain
       - name: Launch BTC environment
         run: docker-compose -f blockchain/environments/explorer-praline-btc.yml up -d
