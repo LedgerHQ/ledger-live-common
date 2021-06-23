@@ -35,6 +35,7 @@ jobs:
         with:
           repository: LedgerHQ/blockchain-explorer
           path: blockchain
+          ref: master
       - name: Launch BTC environment
         run: docker-compose -f blockchain/environments/explorer-praline-btc.yml up -d
         env:
