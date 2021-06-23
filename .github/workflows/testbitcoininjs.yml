@@ -31,13 +31,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/checkout@v2
-        with:
-          repository: LedgerHQ/blockchain-explorer
-          path: blockchain
-          ref: master
       - name: Launch BTC environment
-        run: docker-compose -f blockchain/environments/explorer-praline-btc.yml up -d
+        run: docker-compose -f src/families/bitcoininjs/blockchain/__tests__/explorer-praline-btc.yml up -d
         env:
           TICKER: btc
           LOG_LEVEL: debug

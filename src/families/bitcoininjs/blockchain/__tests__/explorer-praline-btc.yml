@@ -1,0 +1,57 @@
+version: "3.8"
+services:
+  explorer:
+    image: ghcr.io/ledgerhq/blockchain-explorer/explorer-btc:${TAG}
+    environment:
+      JAVA_OPTS: -Xmx2G
+      EXPLORER_TICKER: ${TICKER}
+      EXPLORER_NAME: E2E BTC like explorer
+      EXPLORER_CASSANDRA_KEYSPACE: btc_like
+      EXPLORER_CASSANDRA_CONTACT_POINTS: cassandra
+      EXPLORER_CASSANDRA_PORT: 9042
+      EXPLORER_RPC_URI: http://praline:28443/rpc
+      EXPLORER_RPC_BASIC_AUTH: none
+    ports:
+      - 20000:20000
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  indexer:
+    image: ghcr.io/ledgerhq/blockchain-explorer/indexer-btc:${TAG}
+    environment:
+      JAVA_OPTS: -Xmx2G
+      INDEXER_TICKER: ${TICKER}
+      INDEXER_NAME: E2E BTC like indexer
+      INDEXER_CASSANDRA_KEYSPACE: btc_like
+      INDEXER_CASSANDRA_CONTACT_POINTS: cassandra
+      INDEXER_CASSANDRA_PORT: 9042
+      INDEXER_RPC_URI: http://praline:28443/rpc
+      INDEXER_RPC_BASIC_AUTH: none
+      INDEXER_MAXIMUM_DELAY_ALLOWED: 1000000000000000
+      INDEXER_MAXIMUM_GAP_ALLOWED: 10000000000
+    ports:
+      - 11000:11000
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  cassandra:
+    image: bitnami/cassandra:3.11.8
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+      BITNAMI_DEBUG: "true"
+    ports:
+      - 9042:9042
+    volumes:
+      - ./btc_schema.cql:/docker-entrypoint-initdb.d/btc_schema.cql
+
+  praline:
+    extends:
+      file: praline.yml
+      service: praline
+
+  btcliked:
+    extends:
+      file: praline.yml
+      service: btcliked
