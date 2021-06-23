@@ -126,9 +126,9 @@ export const getFees = async (unsigned): Promise<BigNumber> => {
 /**
  * Broadcast blob to blockchain
  */
-export const submit = async (blob: string) => {
-  const { hash, fees } = await api.submit(blob);
+export const submitTransaction = async (blob: string) => {
+  const { hash } = await api.submit(blob);
 
   // Transaction hash is likely to be returned
-  return { hash, fees: BigNumber(fees) };
+  return { hash };
 };

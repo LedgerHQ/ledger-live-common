@@ -4,5 +4,5 @@ export {
   getValidators,
   getOperations,
   getFees,
-  submit,
+  submitTransaction,
 } from "./sdk";
