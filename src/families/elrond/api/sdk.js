@@ -15,8 +15,7 @@ let api = new ElrondApi(ELROND_API_ENDPOINT());
  * Get account balances and nonce
  */
 export const getAccount = async (addr: string) => {
-  const balance = await api.getBalance(addr);
-  const nonce = await api.getNonce(addr);
+  const { balance, nonce } = await api.getAccountDetails(addr);
   const blockHeight = await api.getBlockchainBlockHeight();
 
   return {
@@ -32,14 +31,7 @@ export const getValidators = async () => {
 };
 
 export const getNetworkConfig = async () => {
-  const {
-    chainId,
-    gasPrice,
-    gasLimit,
-    denomination,
-  } = await api.getNetworkConfig();
-
-  return { chainId, gasPrice, gasLimit, denomination };
+  return await api.getNetworkConfig();
 };
 
 /**
@@ -122,13 +114,13 @@ export const getOperations = async (
  * Obtain fees from blockchain
  */
 export const getFees = async (unsigned): Promise<BigNumber> => {
-  const { data, gasLimit } = unsigned;
+  const { data } = unsigned;
+  const { gasLimit, gasPerByte, gasPrice } = await api.getNetworkConfig();
 
   if (!data) {
-    return BigNumber(gasLimit * 1000000000);
-  } else {
-    return BigNumber((gasLimit + 1500 * data.length) * 1000000000);
+    return BigNumber(gasLimit * gasPrice);
   }
+  return BigNumber((gasLimit + gasPerByte * data.length) * gasPrice);
 };
 
 /**
