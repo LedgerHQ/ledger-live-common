@@ -22,9 +22,8 @@ const getEstimatedFees = async ({
   t: Transaction,
 }): Promise<BigNumber> => {
   const unsigned = await buildTransaction(a, t, signUsingHash);
-  const fees = await getFees(JSON.parse(unsigned));
 
-  return fees;
+  return await getFees(JSON.parse(unsigned));
 };
 
 export default getEstimatedFees;
