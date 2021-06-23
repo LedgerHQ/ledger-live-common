@@ -60,12 +60,5 @@ export const getNonce = (a: Account): number => {
 };
 
 export const getNetworkConfigs = async () => {
-  const {
-    chainId,
-    gasPrice,
-    gasLimit,
-    denomination,
-  } = await getNetworkConfig();
-
-  return { chainId, gasPrice, gasLimit, denomination };
+  return await getNetworkConfig();
 };
