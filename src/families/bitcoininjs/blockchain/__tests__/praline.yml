@@ -9,5 +9,5 @@ services:
 
   btcliked:
     extends:
-      file: btcliked/${TICKER}.yml
+      file: ${TICKER}.yml
       service: btcliked

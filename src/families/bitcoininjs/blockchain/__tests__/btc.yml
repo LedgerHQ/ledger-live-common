@@ -1,0 +1,7 @@
+version: "3.8"
+services:
+  btcliked:
+    image: ruimarinho/bitcoin-core:0.19.1
+    command: -regtest=1 -rpcallowip=0.0.0.0/0 -rpcbind=0.0.0.0 -rpcuser=user -rpcpassword=pass -fallbackfee=0.001 -txindex
+    ports:
+      - 18443:18443
