@@ -29,8 +29,8 @@ jobs:
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
-          username: ledgerlive
-          password: ${{ secrets.CI_GHCR_ACCESS }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CI_BOT_TOKEN }}
       - name: Launch BTC environment
         run: docker-compose -f src/families/bitcoininjs/blockchain/__tests__/explorer-praline-btc.yml up -d
         env:
