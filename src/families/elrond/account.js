@@ -1,6 +1,5 @@
 // @flow
 import invariant from "invariant";
-import { BigNumber } from "bignumber.js";
 import type { Account, Operation, Unit } from "../../types";
 import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
