@@ -30,7 +30,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.CI_GHCR_ACCESS }}
       - name: Launch BTC environment
         run: docker-compose -f src/families/bitcoininjs/blockchain/__tests__/explorer-praline-btc.yml up -d
         env:
