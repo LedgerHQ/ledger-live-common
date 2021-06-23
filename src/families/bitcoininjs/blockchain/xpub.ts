@@ -49,10 +49,16 @@ class Xpub extends EventEmitter {
 
     let added = 0;
     let total = 0;
-    while (
-      (added = await this.fetchHydrateAndStoreNewTxs(address, account, index))
-    ) {
-      total += added;
+
+    try {
+      while (
+        (added = await this.fetchHydrateAndStoreNewTxs(address, account, index))
+      ) {
+        total += added;
+      }
+    } catch (e) {
+      this.emitSyncedFailed(data);
+      throw e;
     }
 
     this.emitSynced({ ...data, total });
@@ -83,8 +89,17 @@ class Xpub extends EventEmitter {
 
     let index = 0;
 
-    while (await this.checkAddressesBlock(account, index)) {
-      index += this.GAP;
+    try {
+      while (await this.checkAddressesBlock(account, index)) {
+        index += this.GAP;
+      }
+    } catch (e) {
+      this.emitSyncedFailed({
+        type: "account",
+        key: account,
+        account,
+      });
+      throw e;
     }
 
     this.emitSynced({
@@ -105,8 +120,13 @@ class Xpub extends EventEmitter {
 
     let account = 0;
 
-    while (await this.syncAccount(account)) {
-      account++;
+    try {
+      while (await this.syncAccount(account)) {
+        account++;
+      }
+    } catch (e) {
+      this.emitSyncedFailed({ type: "all" });
+      throw e;
     }
 
     this.emitSynced({ type: "all", account });
@@ -260,6 +280,10 @@ class Xpub extends EventEmitter {
   emitSynced(data: any) {
     this.syncing[`${data.type}-${data.key}`] = false;
     this.emit("synced", data);
+  }
+  emitSyncedFailed(data: any) {
+    this.syncing[`${data.type}-${data.key}`] = false;
+    this.emit("syncfail", data);
   }
   _whenSynced(type: string, key?: string): Promise<void> {
     return new Promise((resolve) => {
