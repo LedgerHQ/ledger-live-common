@@ -6,26 +6,15 @@ export default class ElrondApi {
     this.API_URL = API_URL;
   }
 
-  async getBalance(addr: String) {
+  async getAccountDetails(addr: String) {
     const {
-      data: { balance },
+      data: { balance, nonce },
     } = await network({
       method: "GET",
       url: `${this.API_URL}/accounts/${addr}`,
     });
 
-    return balance;
-  }
-
-  async getNonce(addr: String) {
-    const {
-      data: { nonce },
-    } = await network({
-      method: "GET",
-      url: `${this.API_URL}/accounts/${addr}`,
-    });
-
-    return nonce;
+    return { balance, nonce };
   }
 
   async getValidators() {
@@ -54,6 +43,7 @@ export default class ElrondApi {
             erd_denomination: denomination,
             erd_min_gas_limit: gasLimit,
             erd_min_gas_price: gasPrice,
+            erd_gas_per_data_byte: gasPerByte,
           },
         },
       },
@@ -62,7 +52,7 @@ export default class ElrondApi {
       url: `${this.API_URL}/network/config`,
     });
 
-    return { chainId, denomination, gasLimit, gasPrice };
+    return { chainId, denomination, gasLimit, gasPrice, gasPerByte };
   }
 
   async submit({ operation, signature, signUsingHash }) {
@@ -76,7 +66,7 @@ export default class ElrondApi {
       value,
     } = operation;
 
-    const nonce = await this.getNonce(sender);
+    const { nonce } = await this.getAccountDetails(sender);
 
     const {
       data: {
@@ -121,22 +111,12 @@ export default class ElrondApi {
   }
 
   async getBlockchainBlockHeight() {
-    const { data: transactions } = await network({
+    const {
+      data: [{ nonce: blockHeight }],
+    } = await network({
       method: "GET",
-      url: `${this.API_URL}/transactions`,
+      url: `${this.API_URL}/blocks?shard=4294967295&fields=nonce`,
     });
-
-    let blockHeight;
-    let index = 0;
-    while (!blockHeight) {
-      const confirmedTransaction = await this.getConfirmedTransaction(
-        transactions[index].txHash
-      );
-
-      blockHeight = confirmedTransaction.blockHeight;
-
-      index++;
-    }
 
     return blockHeight;
   }
