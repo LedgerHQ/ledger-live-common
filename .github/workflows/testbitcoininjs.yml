@@ -30,11 +30,12 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.CI_BOT_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Launch BTC environment
         run: docker-compose -f src/families/bitcoininjs/blockchain/__tests__/explorer-praline-btc.yml up -d
         env:
           TICKER: btc
+          TAG: latest
           LOG_LEVEL: debug
       - name: Run tests
         run: yarn test bitcoininjs --silent
