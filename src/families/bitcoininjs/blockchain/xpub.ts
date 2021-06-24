@@ -236,16 +236,22 @@ class Xpub extends EventEmitter {
 
     unspentUtxoSelected.forEach((output, i) => {
       //
+
+      const nonWitnessUtxo = Buffer.from(txHexs[i], "hex");
+      // for segwit inputs, you only need the output script and value as an object.
+      const witnessUtxo = {
+        value: output.value,
+        script: Buffer.from(output.script_hex, "hex"),
+      };
+      const mixin =
+        this.derivationMode !== "Legacy" ? { witnessUtxo } : { nonWitnessUtxo };
+
       psbt.addInput({
         hash: output.output_hash,
         index: output.output_index,
-        // address: output.address, // TODO : if we can not pass address, can we
-        // really use utxo from the whole account ?
 
-        nonWitnessUtxo: Buffer.from(txHexs[i], "hex"),
+        ...mixin,
       });
-
-      // Todo add the segwit / redeem / witness stuff
     });
 
     psbt

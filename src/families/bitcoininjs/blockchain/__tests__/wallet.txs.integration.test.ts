@@ -24,7 +24,7 @@ describe("testing legacy transactions", () => {
   let storage1 = new Storage();
   const seed1 = bip39.mnemonicToSeedSync("test test test");
   const node1 = bip32.fromSeed(seed1, network);
-  const pk1 = bitcoin.ECPair.fromPrivateKey(node1.privateKey, { network });
+  const pk1 = bitcoin.ECPair.fromWIF(node1.toWIF(), network);
   let xpub1 = new Xpub({
     storage: storage1,
     explorer,
@@ -36,7 +36,7 @@ describe("testing legacy transactions", () => {
   let storage2 = new Storage();
   const seed2 = bip39.mnemonicToSeedSync("test2 test2 test2");
   const node2 = bip32.fromSeed(seed2, network);
-  const pk2 = bitcoin.ECPair.fromPrivateKey(node2.privateKey, { network });
+  const pk2 = bitcoin.ECPair.fromWIF(node2.toWIF(), network);
   let xpub2 = new Xpub({
     storage: storage2,
     explorer,

@@ -20,6 +20,7 @@ export interface Output {
   address: string;
   output_hash: string,
   output_index: number;
+  script_hex: string;
 }
 
 export interface Block {
