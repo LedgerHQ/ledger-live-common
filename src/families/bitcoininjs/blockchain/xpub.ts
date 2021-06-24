@@ -3,6 +3,7 @@ import EventEmitter from "./utils/eventemitter";
 import { flatten, maxBy, range, some, sortBy } from "lodash";
 import { IExplorer } from "./explorer/types";
 import { ICrypto } from "./crypto/types";
+import { Psbt, Signer } from "bitcoinjs-lib";
 
 // names inside this class and discovery logic respect BIP32 standard
 class Xpub extends EventEmitter {
@@ -188,6 +189,7 @@ class Xpub extends EventEmitter {
   }
 
   async buildTx(
+    signer: (account: number, index: number) => Signer,
     from: { account: number },
     change: { account: number; gap: number },
     destAddress: string,
@@ -264,7 +266,22 @@ class Xpub extends EventEmitter {
         value: total - amount - fee,
       });
 
+    unspentUtxoSelected.forEach((output) => {
+      const outputAddress = addresses.find(
+        (address) => address.address === output.address
+      ) || { account: 0, index: 0 };
+
+      psbt.signInput(0, signer(outputAddress.account, outputAddress.index));
+      psbt.validateSignaturesOfInput(0);
+    });
+
+    psbt.finalizeAllInputs();
+
     return psbt;
+  }
+
+  async broadcastTx(psbt: Psbt) {
+    return this.explorer.broadcast(psbt.extractTransaction().toHex());
   }
 
   // internal

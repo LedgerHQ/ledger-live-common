@@ -26,6 +26,11 @@ class LedgerV3Dot2Dot4 extends EventEmitter implements IExplorer {
     this.disableBatchSize = disableBatchSize;
   }
 
+  async broadcast(tx: string) {
+    const url = "/transactions/send";
+    return this.client.post(url, { tx });
+  }
+
   async getTxHex(txId: string) {
     const url = `/transactions/${txId}/hex`;
 
