@@ -171,10 +171,12 @@ const manifest: AppManifest[] = [
     currencies: ["ethereum"],
     content: {
       shortDescription: {
-        en: "Trade through a self-custody decentralized exchange on Ethereum layer-2.",
+        en:
+          "Trade through a self-custody decentralized exchange on Ethereum layer-2.",
       },
       description: {
-        en: "Trade through a self-custody decentralized exchange on Ethereum layer-2.",
+        en:
+          "Trade through a self-custody decentralized exchange on Ethereum layer-2.",
       },
     },
     permissions: [],
