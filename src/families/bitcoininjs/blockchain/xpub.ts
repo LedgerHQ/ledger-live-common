@@ -189,7 +189,6 @@ class Xpub extends EventEmitter {
   }
 
   async buildTx(
-    signer: (account: number, index: number) => Signer,
     from: { account: number },
     change: { account: number; gap: number },
     destAddress: string,
@@ -236,6 +235,8 @@ class Xpub extends EventEmitter {
     // calculate change address
     const changeAddress = await this.getNewAddress(change.account, change.gap);
 
+    const inputsAddresses: Address[] = [];
+
     unspentUtxoSelected.forEach((output, i) => {
       //
 
@@ -254,6 +255,12 @@ class Xpub extends EventEmitter {
 
         ...mixin,
       });
+
+      const outputAddress = addresses.find(
+        (address) => address.address === output.address
+      ) || { account: 0, index: 0, address: output.address };
+
+      inputsAddresses.push(outputAddress);
     });
 
     psbt
@@ -266,22 +273,11 @@ class Xpub extends EventEmitter {
         value: total - amount - fee,
       });
 
-    unspentUtxoSelected.forEach((output) => {
-      const outputAddress = addresses.find(
-        (address) => address.address === output.address
-      ) || { account: 0, index: 0 };
-
-      psbt.signInput(0, signer(outputAddress.account, outputAddress.index));
-      psbt.validateSignaturesOfInput(0);
-    });
-
-    psbt.finalizeAllInputs();
-
-    return psbt;
+    return { psbt, inputsAddresses };
   }
 
-  async broadcastTx(psbt: Psbt) {
-    return this.explorer.broadcast(psbt.extractTransaction().toHex());
+  async broadcastTx(rawTxHex: string) {
+    return this.explorer.broadcast(rawTxHex);
   }
 
   // internal

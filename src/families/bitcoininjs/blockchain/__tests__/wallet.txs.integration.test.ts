@@ -66,7 +66,7 @@ describe("testing legacy transactions", () => {
     } catch (e) {
       console.log("praline explorer setup error", e);
     }
-  }, 25000);
+  }, 30000);
 
   it("should be setup correctly", async () => {
     const balance1 = await xpubs[0].xpub.getXpubBalance();
@@ -78,7 +78,6 @@ describe("testing legacy transactions", () => {
     const address = await xpubs[1].xpub.getNewAddress(0, 0);
 
     const psbt = await xpubs[0].xpub.buildTx(
-      xpubs[0].signer,
       {
         account: 0,
       },
@@ -91,8 +90,23 @@ describe("testing legacy transactions", () => {
       500
     );
 
+    // this part is the signature to tx hex part that is supposedly handled by the device
+    psbt.psbt.txInputs.forEach((input, i) => {
+      psbt.psbt.signInput(
+        i,
+        xpubs[0].signer(
+          psbt.inputsAddresses[i].account,
+          psbt.inputsAddresses[i].index
+        )
+      );
+      psbt.psbt.validateSignaturesOfInput(i);
+    });
+    psbt.psbt.finalizeAllInputs();
+    const rawTxHex = psbt.psbt.extractTransaction().toHex();
+    //
+
     try {
-      await xpubs[0].xpub.broadcastTx(psbt);
+      await xpubs[0].xpub.broadcastTx(rawTxHex);
     } catch (e) {
       console.log("broadcast error", e);
     }
