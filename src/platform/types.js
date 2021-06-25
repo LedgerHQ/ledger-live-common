@@ -22,8 +22,8 @@ export type AppPermission = {
 };
 
 export type AppManifest = {
-  id: string,                   // platform app ID, should never change
-  name: string,                 // platform app name,
+  id: string,
+  name: string,
   url: string,
   homepageUrl: string,
   supportUrl?: string,
