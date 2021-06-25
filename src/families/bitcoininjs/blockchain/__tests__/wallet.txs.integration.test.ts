@@ -79,9 +79,6 @@ describe("testing legacy transactions", () => {
 
     const psbt = await xpubs[0].xpub.buildTx(
       {
-        account: 0,
-      },
-      {
         account: 1,
         gap: 1,
       },

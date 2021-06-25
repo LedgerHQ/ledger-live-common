@@ -189,7 +189,6 @@ class Xpub extends EventEmitter {
   }
 
   async buildTx(
-    from: { account: number },
     change: { account: number; gap: number },
     destAddress: string,
     amount: number,
@@ -199,10 +198,7 @@ class Xpub extends EventEmitter {
       throw "not supported yet";
     }
 
-    await Promise.all([
-      this._whenSynced("account", from.account.toString()),
-      this._whenSynced("account", change.account.toString()),
-    ]);
+    await this._whenSynced("all");
 
     const psbt = this.crypto.getPsbt();
 
