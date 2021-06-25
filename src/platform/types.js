@@ -22,14 +22,15 @@ export type AppPermission = {
 };
 
 export type AppManifest = {
-  id: string,
-  name: string,
+  id: string,                   // platform app ID, should never change
+  name: string,                 // platform app name,
   url: string,
   homepageUrl: string,
   supportUrl?: string,
   icon?: string | null,
   platform: AppPlatform,
   apiVersion: string,
+  manifestVersion: string,
   branch: AppBranch,
   params?: string[],
   categories: string[],

@@ -35,9 +35,20 @@ const PlatformCatalogProvider = ({ children }: Props) => {
   );
 };
 
+export const usePlatformManifests = () => {
+  const context = useContext(PlatformCatalogContext);
+  if (context === undefined) {
+    throw new Error(
+      "usePlatformManifests must be used within a PlatformCatalogContext"
+    );
+  }
+
+  return context;
+};
+
 export const useCatalog = (
   platform: AppPlatform = "all",
-  branches: AppBranch[] = ["stable"]
+  branches?: AppBranch[] = ["stable"]
 ) => {
   const context = useContext(PlatformCatalogContext);
   if (context === undefined) {
@@ -49,7 +60,7 @@ export const useCatalog = (
       context.apps.filter(
         (manifest) =>
           matchPlatform(manifest, platform) &&
-          matchBranches(manifest, branches) &&
+          (!branches || matchBranches(manifest, branches)) &&
           isSupported(manifest)
       ),
     [context.apps, branches, platform]
