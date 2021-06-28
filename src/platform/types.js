@@ -23,6 +23,7 @@ export type AppPermission = {
 
 export type AppManifest = {
   id: string,
+  private?: boolean,
   name: string,
   url: string,
   homepageUrl: string,

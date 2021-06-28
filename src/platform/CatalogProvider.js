@@ -61,7 +61,8 @@ export const useCatalog = (
         (manifest) =>
           matchPlatform(manifest, platform) &&
           (!branches || matchBranches(manifest, branches)) &&
-          isSupported(manifest)
+          isSupported(manifest) &&
+          !manifest.private
       ),
     [context.apps, branches, platform]
   );
