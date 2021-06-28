@@ -2,7 +2,8 @@ import type {
   ServiceStatusApi,
   ServiceStatusSummary,
   Incident,
-} from "../types";
+} from "../../notifications/ServiceStatusProvider/types";
+
 const statuses = {
   page: {
     id: "767c5rcj7z12",

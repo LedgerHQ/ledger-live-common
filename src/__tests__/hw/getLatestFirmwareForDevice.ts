@@ -1,5 +1,5 @@
 import {
-  createTransportReplayer,
+  openTransportReplayer,
   RecordStore,
 } from "@ledgerhq/hw-transport-mocker";
 import getDeviceInfo from "../../hw/getDeviceInfo";
@@ -129,7 +129,7 @@ test("nanoS das", async () => {
   expect(res).toBe(null);
 });
 test("OSU 1.4.2", async () => {
-  const Transport = createTransportReplayer(
+  const t = await openTransportReplayer(
     RecordStore.fromString(`
     => b001000000
     <= 0105424f4c4f5305312e362e3001029000
@@ -137,15 +137,13 @@ test("OSU 1.4.2", async () => {
     <= 3110000309312e342e322d6f7375042000000004312e37002000000000000000000000000000000000000000000000000000000000000000009000
     `)
   );
-  // @ts-expect-error ledgerjs createTransportReplayer type issue
-  const t = await Transport.create();
   const deviceInfo = await getDeviceInfo(t);
   const next = await fetchNextFirmware(deviceInfo).toPromise();
   expect(next).toBeDefined();
   expect(next.firmware).toBeTruthy();
 });
 test("OSU 1.5.5", async () => {
-  const Transport = createTransportReplayer(
+  const t = await openTransportReplayer(
     RecordStore.fromString(`
     => b001000000
     <= 0105424f4c4f5305312e362e3001029000
@@ -153,8 +151,6 @@ test("OSU 1.5.5", async () => {
     <= 3110000409312e352e352d6f7375042400000004312e35002000000000000000000000000000000000000000000000000000000000000000009000
     `)
   );
-  // @ts-expect-error ledgerjs createTransportReplayer type issue
-  const t = await Transport.create();
   const deviceInfo = await getDeviceInfo(t);
   const next = await fetchNextFirmware(deviceInfo).toPromise();
   expect(next).toBeDefined();

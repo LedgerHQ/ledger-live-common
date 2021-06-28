@@ -1,7 +1,7 @@
 import { EMPTY, merge } from "rxjs";
 import type { Observable } from "rxjs";
 import { catchError } from "rxjs/operators";
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 type Discovery = Observable<{
   type: "add" | "remove";
   id: string;

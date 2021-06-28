@@ -1,4 +1,4 @@
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 
 // Returns null if getBitcoinLikeInfo is not supported. there are breaking changes in the version after firmware 1.2
 const getBitcoinLikeInfo = (

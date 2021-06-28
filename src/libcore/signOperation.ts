@@ -1,6 +1,6 @@
 import { Observable, from } from "rxjs";
 import { tap } from "rxjs/operators";
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import { StatusCodes } from "@ledgerhq/hw-transport";
 import { UpdateYourApp } from "@ledgerhq/errors";
 import { log } from "@ledgerhq/logs";

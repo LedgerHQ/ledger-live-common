@@ -1,4 +1,4 @@
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import BIPPath from "bip32-path";
 import { getAddressFromScriptHash, getScriptHashFromPublicKey } from "./crypto";
 /**

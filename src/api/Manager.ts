@@ -13,7 +13,7 @@ import {
   FirmwareNotRecognized,
   TransportStatusError,
 } from "@ledgerhq/errors";
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import { throwError, Observable } from "rxjs";
 import { catchError, map } from "rxjs/operators";
 import { version as livecommonversion } from "../../package.json";

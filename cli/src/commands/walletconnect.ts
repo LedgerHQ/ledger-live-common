@@ -33,9 +33,7 @@ const start = async (opts: Opts) => {
   if (!account) {
     throw new Error("No account");
   }
-  // FIXME:why do we give an account object to a function that accepts only a string ?????
-  // @ts-expect-error log() takes a string as 2nd argument, we're giving a whole account object
-  log("walletconnect", account);
+  log("walletconnect", "account", account);
   const connector = new WalletConnect(
     opts.walletConnectSession
       ? {
@@ -63,8 +61,7 @@ const start = async (opts: Opts) => {
         message,
       },
     };
-    log("walletconnect", "rejected");
-    log("walletconnect", rejection as any);
+    log("walletconnect", "rejected", rejection);
     connector.rejectRequest(rejection);
   };
 
@@ -73,14 +70,12 @@ const start = async (opts: Opts) => {
       id,
       result,
     };
-    log("walletconnect", "approved");
-    log("walletconnect", approval as any);
+    log("walletconnect", "approved", approval);
     connector.approveRequest(approval);
   };
 
   const handleCallRequest = async (payload: WCPayload) => {
-    log("walletconnect", "call_request");
-    log("walletconnect", payload as any);
+    log("walletconnect", "call_request", payload);
     const wcCallRequest: WCCallRequest = await parseCallRequest(
       account,
       payload
@@ -91,20 +86,17 @@ const start = async (opts: Opts) => {
     if (wcCallRequest.type === "broadcast") {
       const api = apiForCurrency(account.currency);
       result = await api.broadcastTransaction(wcCallRequest.data);
-      log("walletconnect", "hash");
-      log("walletconnect", result);
+      log("walletconnect", "hash", result);
       return result;
     }
 
     if (wcCallRequest.type === "message") {
-      log("walletconnect", "message to sign");
-      log("walletconnect", wcCallRequest.data as any);
+      log("walletconnect", "message to sign", wcCallRequest.data);
       result = await withDevice(opts.device || "")((t) =>
         from(signMessage(t, wcCallRequest.data as MessageData))
       ).toPromise();
       result = result.signature;
-      log("walletconnect", "message signature");
-      log("walletconnect", result);
+      log("walletconnect", "message signature", result);
       return result;
     }
 
@@ -125,10 +117,7 @@ const start = async (opts: Opts) => {
           })
         )
         .toPromise();
-      log("walletconnect", "operation");
-      // FIXME: same here, we're giving object to string expected argument
-      // @ts-expect-error operation is not a string
-      log("walletconnect", operation);
+      log("walletconnect", "operation", operation);
 
       if (wcCallRequest.method === "sign") {
         return (operation as SignedOperation).signature;
@@ -138,8 +127,7 @@ const start = async (opts: Opts) => {
         account,
         signedOperation: operation as SignedOperation,
       });
-      log("walletconnect", "operation broadcasted");
-      log("walletconnect", operation as any);
+      log("walletconnect", "operation broadcasted", operation);
       return operation.hash;
     }
 
@@ -151,8 +139,7 @@ const start = async (opts: Opts) => {
       throw error;
     }
 
-    log("walletconnect", "session_request");
-    log("walletconnect", payload);
+    log("walletconnect", "session_request", payload);
     connector.approveSession({
       accounts: [account.freshAddress],
       chainId: (account.currency.ethereumLikeInfo as any).chainId,
@@ -175,9 +162,9 @@ const start = async (opts: Opts) => {
       throw error;
     }
 
-    log("walletconnect", "connected");
     log(
       "walletconnect",
+      "connected",
       JSON.stringify(connector.session).replace(/"/g, `\\"`)
     );
   });

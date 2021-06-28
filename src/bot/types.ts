@@ -1,5 +1,5 @@
 import { BigNumber } from "bignumber.js";
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import type {
   Account,
   AccountBridge,

@@ -1,4 +1,4 @@
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import type { CryptoCurrency } from "../../types";
 import ripple from "./ripple";
 import tron from "./tron";

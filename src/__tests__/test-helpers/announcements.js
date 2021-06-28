@@ -1,6 +1,9 @@
 import Prando from "prando";
-import { getEnv } from "../../../env";
-import type { AnnouncementsApi, RawAnnouncement } from "../types";
+import { getEnv } from "../../env";
+import type {
+  AnnouncementsApi,
+  RawAnnouncement,
+} from "../../notifications/AnnouncementProvider/types";
 
 const announcementsPool: RawAnnouncement[] = [
   {

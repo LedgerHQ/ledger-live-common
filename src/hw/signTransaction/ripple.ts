@@ -1,6 +1,6 @@
 import BinaryCodec from "ripple-binary-codec";
 import Xrp from "@ledgerhq/hw-app-xrp";
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import type { CryptoCurrency } from "../../types";
 export default async (
   currency: CryptoCurrency,

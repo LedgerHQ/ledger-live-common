@@ -1,5 +1,5 @@
 import { log } from "@ledgerhq/logs";
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import { Observable, from, of, concat, empty } from "rxjs";
 import { mergeMap } from "rxjs/operators";
 import ManagerAPI from "../api/Manager";

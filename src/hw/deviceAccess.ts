@@ -1,6 +1,6 @@
 import { Observable, throwError, timer } from "rxjs";
 import { retryWhen, mergeMap, catchError } from "rxjs/operators";
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import {
   WrongDeviceForAccount,
   WrongAppForCurrency,

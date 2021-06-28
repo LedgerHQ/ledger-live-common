@@ -1,6 +1,6 @@
 import timemachine from "timemachine";
 import { localizeAnnouncements } from "../../notifications/AnnouncementProvider/logic";
-import api from "../../notifications/AnnouncementProvider/api/api.mock";
+import api from "../test-helpers/announcements";
 timemachine.config({
   dateString: "February 22, 2021 13:12:59",
 });

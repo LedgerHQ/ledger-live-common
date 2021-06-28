@@ -4,7 +4,7 @@ import {
   TransportStatusError,
 } from "@ledgerhq/errors";
 import { log } from "@ledgerhq/logs";
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import getVersion from "./getVersion";
 import getAppAndVersion from "./getAppAndVersion";
 import type { DeviceInfo } from "../types/manager";

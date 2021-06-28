@@ -1,4 +1,4 @@
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import type { DeviceInfo, FinalFirmware } from "../types/manager";
 import { Observable, from, concat, of } from "rxjs";
 import { mergeMap } from "rxjs/operators";

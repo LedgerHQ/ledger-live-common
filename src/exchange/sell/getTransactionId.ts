@@ -1,4 +1,4 @@
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import Exchange from "../hw-app-exchange/Exchange";
 import type { SellRequestEvent } from "./types";
 import { TRANSACTION_TYPES } from "../hw-app-exchange/Exchange";

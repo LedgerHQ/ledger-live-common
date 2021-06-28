@@ -7,9 +7,14 @@ import React, {
 } from "react";
 import differenceBy from "lodash/differenceBy";
 import { useMachine } from "@xstate/react";
-import type { Announcement, AnnouncementsUserSettings, State } from "./types";
+import type {
+  Announcement,
+  AnnouncementsUserSettings,
+  State,
+  AnnouncementsApi,
+} from "./types";
 import { localizeAnnouncements, filterAnnouncements } from "./logic";
-import fetchApi from "./api";
+import defaultFetchApi from "./api";
 import { announcementMachine } from "./machine";
 type Props = {
   children: React.ReactNode;
@@ -27,6 +32,7 @@ type Props = {
   autoUpdateDelay: number;
   onNewAnnouncement?: (arg0: Announcement) => void;
   onAnnouncementRead?: (arg0: Announcement) => void;
+  fetchApi?: AnnouncementsApi;
 };
 type API = {
   updateCache: () => Promise<void>;
@@ -54,6 +60,7 @@ export const AnnouncementProvider = ({
   autoUpdateDelay,
   onNewAnnouncement,
   onAnnouncementRead,
+  fetchApi = defaultFetchApi,
 }: Props): ReactElement => {
   const fetchData = useCallback(
     async ({ allIds, cache }) => {
