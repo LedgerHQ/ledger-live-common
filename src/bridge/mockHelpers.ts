@@ -15,7 +15,7 @@ const MOCK_DATA_SEED = getEnv("MOCK") || "MOCK";
 const broadcasted: Record<string, Operation[]> = {};
 const syncTimeouts = {};
 export const sync: AccountBridge<any>["sync"] = (initialAccount) =>
-  Observable.create((o) => {
+  new Observable((o) => {
     const accountId = initialAccount.id;
 
     const sync = () => {
@@ -62,7 +62,7 @@ export const signOperation: AccountBridge<any>["signOperation"] = ({
   account,
   transaction,
 }) =>
-  Observable.create((o) => {
+  new Observable((o) => {
     let cancelled = false;
 
     async function main() {
@@ -125,7 +125,7 @@ const subtractOneYear = (date) =>
   new Date(new Date(date).setFullYear(new Date(date).getFullYear() - 1));
 
 export const scanAccounts: CurrencyBridge["scanAccounts"] = ({ currency }) =>
-  Observable.create((o) => {
+  new Observable((o) => {
     let unsubscribed = false;
 
     async function job() {
