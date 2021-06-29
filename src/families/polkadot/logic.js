@@ -6,7 +6,7 @@ import type { Account, OperationType } from "../../types";
 import type { Transaction } from "./types";
 
 export const EXISTENTIAL_DEPOSIT = BigNumber(10000000000);
-export const MINIMUM_BOND_AMOUNT = BigNumber(10000000000);
+export const MINIMUM_BOND_AMOUNT = BigNumber(200000000000);
 export const MAX_NOMINATIONS = 16;
 export const MAX_UNLOCKINGS = 32;
 export const PRELOAD_MAX_AGE = 60 * 1000;
