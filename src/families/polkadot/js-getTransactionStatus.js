@@ -41,12 +41,7 @@ import {
   getMinimumBalance,
 } from "./logic";
 import { getCurrentPolkadotPreloadData } from "./preload";
-import {
-  isControllerAddress,
-  isNewAccount,
-  isElectionClosed,
-  getMinimumBondBalance,
-} from "./cache";
+import { isControllerAddress, isNewAccount, isElectionClosed } from "./cache";
 
 // Should try to refacto
 const getSendTransactionStatus = async (
@@ -84,7 +79,13 @@ const getSendTransactionStatus = async (
     leftover.lt(minimumBalanceExistential) &&
     leftover.gt(0)
   ) {
-    errors.amount = new PolkadotDoMaxSendInstead();
+    errors.amount = new PolkadotDoMaxSendInstead("", {
+      minimumBalance: formatCurrencyUnit(
+        a.currency.units[0],
+        EXISTENTIAL_DEPOSIT,
+        { showCode: true }
+      ),
+    });
   } else if (totalSpent.gt(a.spendableBalance)) {
     errors.amount = new NotEnoughBalance();
   }
@@ -124,7 +125,11 @@ const getSendTransactionStatus = async (
 const getTransactionStatus = async (a: Account, t: Transaction) => {
   const errors = {};
   const warnings = {};
-  const { staking, validators } = getCurrentPolkadotPreloadData();
+  const {
+    staking,
+    validators,
+    minimumBondBalance,
+  } = getCurrentPolkadotPreloadData();
 
   if (t.mode === "send") {
     return await getSendTransactionStatus(a, t);
@@ -147,14 +152,13 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
   const currentBonded =
     a.polkadotResources?.lockedBalance.minus(unlockingBalance) || BigNumber(0);
 
-  const minimumBondBalance = await getMinimumBondBalance();
   const minimumAmountToBond = getMinimumAmountToBond(a, minimumBondBalance);
 
   switch (t.mode) {
     case "bond":
       if (amount.lt(minimumAmountToBond)) {
         errors.amount = new PolkadotBondMinimumAmount("", {
-          minimalAmount: formatCurrencyUnit(
+          minimumBondAmount: formatCurrencyUnit(
             a.currency.units[0],
             minimumAmountToBond,
             { showCode: true }

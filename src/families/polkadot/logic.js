@@ -4,7 +4,6 @@ import { decodeAddress } from "@polkadot/util-crypto";
 import type { Account, OperationType } from "../../types";
 
 import type { Transaction } from "./types";
-import { getMinimumBondBalance } from "./cache";
 
 export const EXISTENTIAL_DEPOSIT = BigNumber(10000000000);
 export const MAX_NOMINATIONS = 16;
@@ -92,11 +91,11 @@ export const canBond = (a: Account): boolean => {
  */
 export const getMinimumAmountToBond = (
   a: Account,
-  minimumBondBalance: BigNumber
+  minimumBondBalance: ?BigNumber
 ): BigNumber => {
   const currentlyBondedBalance = calculateMaxUnbond(a);
 
-  if (currentlyBondedBalance.lt(minimumBondBalance)) {
+  if (minimumBondBalance && currentlyBondedBalance.lt(minimumBondBalance)) {
     return minimumBondBalance.minus(currentlyBondedBalance);
   }
   return BigNumber(0);
