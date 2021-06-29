@@ -175,14 +175,14 @@ const fetchActiveEra = async (): Promise<SidecarPalletStorageItem> => {
 };
 
 /**
- * Fetch the minimum amount allowed to bond
+ * Fetch the minimum value allowed for a bond
  *
  * @async
  * @param {string} addr
  *
  * @returns {string}
  */
-const fetchMinimumBondAmount = async (): Promise<BigNumber> => {
+export const getMinimumBondBalance = async (): Promise<BigNumber> => {
   const { data }: { data: SidecarPalletStorageItem } = await network({
     method: "GET",
     url: getSidecarUrl(`/pallets/staking/storage/minNominatorBond`),
@@ -683,22 +683,6 @@ export const getConstants: CacheRes<Array<void>, Object> = makeLRUCache(
   () => "polkadot",
   {
     max: 1, // Store only one constants object since we only have polkadot.
-    maxAge: 60 * 60 * 1000, // 1 hour
-  }
-);
-
-/**
- * Cache the fetchMinimumBondAmount to avoid too many calls
- *
- * @async
- *
- * @returns {Promise<Object>} consts
- */
-export const getMinimumBondAmount: CacheRes<Array<void>, Object> = makeLRUCache(
-  async (): Promise<Object> => fetchMinimumBondAmount(),
-  () => "polkadot",
-  {
-    max: 1, // Store only one object since we only have polkadot.
     maxAge: 60 * 60 * 1000, // 1 hour
   }
 );

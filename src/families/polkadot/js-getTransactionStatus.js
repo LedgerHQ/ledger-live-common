@@ -30,7 +30,6 @@ import {
 import { verifyValidatorAddresses } from "./api";
 import {
   EXISTENTIAL_DEPOSIT,
-  MINIMUM_BOND_AMOUNT,
   FEES_SAFETY_BUFFER,
   isValidAddress,
   isFirstBond,
@@ -38,11 +37,16 @@ import {
   hasLockedBalance,
   hasMaxUnlockings,
   calculateAmount,
-  getMinimalLockedBalance,
+  getMinimumAmountToBond,
   getMinimumBalance,
 } from "./logic";
 import { getCurrentPolkadotPreloadData } from "./preload";
-import { isControllerAddress, isNewAccount, isElectionClosed } from "./cache";
+import {
+  isControllerAddress,
+  isNewAccount,
+  isElectionClosed,
+  getMinimumBondBalance,
+} from "./cache";
 
 // Should try to refacto
 const getSendTransactionStatus = async (
@@ -143,8 +147,21 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
   const currentBonded =
     a.polkadotResources?.lockedBalance.minus(unlockingBalance) || BigNumber(0);
 
+  const minimumBondBalance = await getMinimumBondBalance();
+  const minimumAmountToBond = getMinimumAmountToBond(a, minimumBondBalance);
+
   switch (t.mode) {
     case "bond":
+      if (amount.lt(minimumAmountToBond)) {
+        errors.amount = new PolkadotBondMinimumAmount("", {
+          minimalAmount: formatCurrencyUnit(
+            a.currency.units[0],
+            minimumAmountToBond,
+            { showCode: true }
+          ),
+        });
+      }
+
       if (isFirstBond(a)) {
         // Not a stash yet -> bond method sets the controller
         if (!t.recipient) {
@@ -156,25 +173,6 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
             "Recipient is already a controller"
           );
         }
-
-        // If not a stash yet, first bond must respect minimum amount of 1 DOT
-        if (amount.lt(MINIMUM_BOND_AMOUNT)) {
-          errors.amount = new PolkadotBondMinimumAmount("", {
-            minimalAmount: formatCurrencyUnit(
-              a.currency.units[0],
-              MINIMUM_BOND_AMOUNT,
-              { showCode: true }
-            ),
-          });
-        }
-      } else if (amount.lt(getMinimalLockedBalance(a))) {
-        errors.amount = new PolkadotBondMinimumAmount("", {
-          minimalAmount: formatCurrencyUnit(
-            a.currency.units[0],
-            getMinimalLockedBalance(a),
-            { showCode: true }
-          ),
-        });
       }
 
       break;
@@ -191,7 +189,7 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
       if (amount.lte(0)) {
         errors.amount = new AmountRequired();
       } else if (
-        amount.gt(currentBonded.minus(MINIMUM_BOND_AMOUNT)) &&
+        amount.gt(currentBonded.minus(minimumBondBalance)) &&
         amount.lt(currentBonded)
       ) {
         warnings.amount = new PolkadotLowBondedBalance();
@@ -209,11 +207,11 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
         errors.amount = new AmountRequired();
       } else if (amount.gt(unlockingBalance)) {
         errors.amount = new NotEnoughBalance();
-      } else if (amount.lt(getMinimalLockedBalance(a))) {
+      } else if (amount.lt(minimumAmountToBond)) {
         errors.amount = new PolkadotBondMinimumAmount("", {
           minimalAmount: formatCurrencyUnit(
             a.currency.units[0],
-            getMinimalLockedBalance(a),
+            minimumAmountToBond,
             { showCode: true }
           ),
         });
