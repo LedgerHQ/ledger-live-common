@@ -7,9 +7,7 @@ import mockApi from "./api.mock";
 
 const api: PlatformApi = {
   fetchManifest: () =>
-    getEnv("MOCK") || !getEnv("PLATFORM_API_URL")
-      ? mockApi.fetchManifest()
-      : prodApi.fetchManifest(),
+    getEnv("MOCK") ? mockApi.fetchManifest() : prodApi.fetchManifest(),
 };
 
 export default api;

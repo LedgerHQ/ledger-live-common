@@ -135,15 +135,16 @@ const manifest: AppManifest[] = [
     domains: [],
   },
   {
-    id: "rainbow",
+    id: "rainbowme",
     name: "Rainbow.me",
-    url: "",
+    url:
+      "https://ledger-live-platform-apps-git-fork-ledger-coin-9c6d6f-ledgerhq.vercel.app/app/web-browser?url=https%3A%2F%2Frainbow.me%2F%7Baccount.address%7D&currencies=ethereum&webAppName=rainbow.me",
     homepageUrl: "https://rainbow.me",
     icon: "https://cdn.live.ledger.com/icons/platform/rainbow.png",
     platform: "all",
     apiVersion: "0.0.1",
     manifestVersion: "1",
-    branch: "soon",
+    branch: "stable",
     categories: ["nft"],
     currencies: ["ethereum"],
     content: {
