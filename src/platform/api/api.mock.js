@@ -144,7 +144,7 @@ const manifest: AppManifest[] = [
     platform: "all",
     apiVersion: "0.0.1",
     manifestVersion: "1",
-    branch: "stable",
+    branch: "soon",
     categories: ["nft"],
     currencies: ["ethereum"],
     content: {
