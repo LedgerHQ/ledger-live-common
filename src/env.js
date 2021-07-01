@@ -229,11 +229,6 @@ const envDefinitions = {
     desc:
       "enable an experimental version of the portfolio percentage calculation",
   },
-  EXPERIMENTAL_INLINE_INSTALL: {
-    def: false,
-    parser: boolParser,
-    desc: "enable an experimental inline app installation flow",
-  },
   EXPERIMENTAL_SEND_MAX: {
     def: false,
     parser: boolParser,
@@ -461,6 +456,21 @@ const envDefinitions = {
     def: false,
     parser: boolParser,
     desc: "log the libcore calls",
+  },
+  PLATFORM_DEBUG: {
+    def: false,
+    parser: boolParser,
+    desc: "enable visibility of debug apps and tools in Platform Catalog",
+  },
+  PLATFORM_API_URL: {
+    def: "",
+    parser: stringParser,
+    desc: "url used to fetch platform catalog",
+  },
+  PLATFORM_API_VERSION: {
+    def: 1,
+    parser: intParser,
+    desc: "version used for the platform api",
   },
 };
 
