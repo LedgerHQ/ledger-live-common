@@ -4,6 +4,7 @@ import { decodeAddress } from "@polkadot/util-crypto";
 import type { Account, OperationType } from "../../types";
 
 import type { Transaction } from "./types";
+import { getCurrentPolkadotPreloadData } from "./preload";
 
 export const EXISTENTIAL_DEPOSIT = BigNumber(10000000000);
 export const MAX_NOMINATIONS = 16;
@@ -99,6 +100,19 @@ export const getMinimumAmountToBond = (
     return minimumBondBalance.minus(currentlyBondedBalance);
   }
   return BigNumber(0);
+};
+
+/**
+ * Return true if the account has at least the current minimum bonded balance required by the network
+ *
+ * @param {Account} a
+ */
+export const hasMinimumBondBalance = (a: Account): boolean => {
+  const { minimumBondBalance } = getCurrentPolkadotPreloadData();
+  return (
+    !a.polkadotResources ||
+    a.polkadotResources.lockedBalance.gte(minimumBondBalance)
+  );
 };
 
 /**
