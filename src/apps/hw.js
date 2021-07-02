@@ -1,6 +1,7 @@
 // @flow
 
 import Transport from "@ledgerhq/hw-transport";
+// $FlowExpectedError Caused by TS migration, flow def support stopped at v5.
 import { getDeviceModel, identifyTargetId } from "@ledgerhq/devices";
 import { UnexpectedBootloader } from "@ledgerhq/errors";
 import { concat, of, empty, from, Observable, throwError, defer } from "rxjs";
