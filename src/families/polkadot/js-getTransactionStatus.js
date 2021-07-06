@@ -191,7 +191,7 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
       if (amount.lte(0)) {
         errors.amount = new AmountRequired();
       } else if (
-        amount.gt(currentBonded.minus(minimumBondBalance)) &&
+        amount.gt(currentBonded.minus(EXISTENTIAL_DEPOSIT)) &&
         amount.lt(currentBonded)
       ) {
         warnings.amount = new PolkadotLowBondedBalance();
