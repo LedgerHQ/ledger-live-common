@@ -125,11 +125,9 @@ const getSendTransactionStatus = async (
 const getTransactionStatus = async (a: Account, t: Transaction) => {
   const errors = {};
   const warnings = {};
-  const {
-    staking,
-    validators,
-    minimumBondBalance,
-  } = getCurrentPolkadotPreloadData();
+  const preloaded = getCurrentPolkadotPreloadData();
+  const { staking, validators } = preloaded;
+  const minimumBondBalance = BigNumber(preloaded.minimumBondBalance);
 
   if (t.mode === "send") {
     return await getSendTransactionStatus(a, t);

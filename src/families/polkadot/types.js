@@ -113,7 +113,7 @@ export type PolkadotStakingProgress = {|
 export type PolkadotPreloadData = {|
   validators: PolkadotValidator[],
   staking: PolkadotStakingProgress | null,
-  minimumBondBalance: BigNumber,
+  minimumBondBalance: string,
 |};
 
 export type PolkadotSearchFilter = (

@@ -85,7 +85,7 @@ const polkadot: AppSpec<Transaction> = {
         const { minimumBondBalance } = getCurrentPolkadotPreloadData();
         invariant(
           BigNumber(100000).gt(
-            getMinimumAmountToBond(account, minimumBondBalance)
+            getMinimumAmountToBond(account, BigNumber(minimumBondBalance))
           ),
           "can't bond because too much unbond"
         );

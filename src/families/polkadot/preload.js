@@ -12,7 +12,7 @@ import { getStakingProgress, getValidators } from "./validators";
 let currentPolkadotPreloadedData: PolkadotPreloadData = {
   validators: [],
   staking: null,
-  minimumBondBalance: BigNumber(0),
+  minimumBondBalance: "0",
 };
 
 function fromHydrateValidator(validatorRaw: Object): PolkadotValidator {
@@ -35,7 +35,7 @@ function fromHydrateValidator(validatorRaw: Object): PolkadotValidator {
 function fromHydratePreloadData(data: mixed): PolkadotPreloadData {
   let validators = [];
   let staking = null;
-  let minimumBondBalance = BigNumber(0);
+  let minimumBondBalance = "0";
 
   if (typeof data === "object" && data) {
     if (Array.isArray(data.validators)) {
@@ -59,8 +59,12 @@ function fromHydratePreloadData(data: mixed): PolkadotPreloadData {
       };
     }
 
-    // $FlowFixMe
-    minimumBondBalance = BigNumber(data.minimumBondBalance);
+    if (
+      data.minimumBondBalance !== null &&
+      typeof data.minimumBondBalance === "string"
+    ) {
+      minimumBondBalance = data.minimumBondBalance || "0";
+    }
   }
 
   return {
@@ -103,6 +107,7 @@ export const preload = async (): Promise<PolkadotPreloadData> => {
   await getRegistry(); // ensure registry is already in cache.
   const currentStakingProgress = await getStakingProgress();
   const minimumBondBalance = await getMinimumBondBalance();
+  const minimumBondBalanceStr = minimumBondBalance.toString();
 
   const {
     validators: previousValidators,
@@ -127,7 +132,7 @@ export const preload = async (): Promise<PolkadotPreloadData> => {
   return {
     validators,
     staking: currentStakingProgress,
-    minimumBondBalance,
+    minimumBondBalance: minimumBondBalanceStr,
   };
 };
 
