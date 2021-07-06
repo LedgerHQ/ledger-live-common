@@ -1,5 +1,6 @@
 // @flow
 import invariant from "invariant";
+import type { Observable } from "rxjs";
 import { BigNumber } from "bignumber.js";
 import {
   AmountRequired,
@@ -13,7 +14,12 @@ import {
   RecommendSubAccountsToEmpty,
   RecommendUndelegation,
 } from "@ledgerhq/errors";
-import type { CurrencyBridge, AccountBridge } from "../../../types";
+import type {
+  CurrencyBridge,
+  AccountBridge,
+  SignOperationEvent,
+  Account,
+} from "../../../types";
 import {
   makeSync,
   makeScanAccounts,
@@ -29,6 +35,7 @@ import { validateRecipient } from "../../../bridge/shared";
 import { makeLRUCache } from "../../../cache";
 import { fetchAllBakers, hydrateBakers, isAccountDelegating } from "../bakers";
 import { getEnv } from "../../../env";
+import { signOperation } from "../signOperation";
 
 const receive = makeAccountBridgeReceive();
 
@@ -47,11 +54,23 @@ const createTransaction = () => ({
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
 const getTransactionStatus = async (a, t) => {
-  throw new Error("not implemented");
+  // FIXME
+  const estimatedFees = BigNumber(0);
+  const errors = {};
+  const warnings = {};
+  const result = {
+    errors,
+    warnings,
+    estimatedFees,
+    amount: BigNumber(0),
+    totalSpent: BigNumber(0),
+  };
+  return Promise.resolve(result);
 };
 
 const prepareTransaction = async (a, t) => {
-  throw new Error("not implemented");
+  // FIXME
+  return Promise.resolve(t);
 };
 
 const estimateMaxSpendable = async ({
@@ -76,10 +95,6 @@ const broadcast = async ({
   account,
   signedOperation: { operation, signature },
 }) => {
-  throw new Error("not implemented");
-};
-
-const signOperation = () => {
   throw new Error("not implemented");
 };
 
