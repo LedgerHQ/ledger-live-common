@@ -25,6 +25,7 @@ import type {
   TezosResources,
   TezosResourcesRaw,
 } from "../families/tezos/types";
+import type {
   CryptoOrgResources,
   CryptoOrgResourcesRaw,
 } from "../families/crypto_org/types";

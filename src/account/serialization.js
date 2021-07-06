@@ -39,6 +39,7 @@ import {
   toTezosResourcesRaw,
   fromTezosResourcesRaw,
 } from "../families/tezos/serialization";
+import {
   toCryptoOrgResourcesRaw,
   fromCryptoOrgResourcesRaw,
 } from "../families/crypto_org/serialization";
