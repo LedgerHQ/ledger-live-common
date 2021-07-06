@@ -1,20 +1,17 @@
 // @flow
 
 import Eth from "@ledgerhq/hw-app-eth";
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import { TypedDataUtils } from "eth-sig-util";
 import { bufferToHex } from "ethereumjs-util";
 import type { MessageData, Result } from "../../hw/signMessage/types";
 import type { TypedMessageData, TypedMessage } from "./types";
 
 type EthResolver = (
-  Transport<*>,
+  typeof Transport,
   MessageData | TypedMessageData
 ) => Promise<Result>;
 
-export const stringHash = (message: string) => {
-  return Buffer.from(message).toString("hex");
-};
 export const domainHash = (message: TypedMessage) => {
   return TypedDataUtils.hashStruct(
     "EIP712Domain",
@@ -32,13 +29,17 @@ export const messageHash = (message: TypedMessage) => {
   );
 };
 
-const resolver: EthResolver = async (transport, { path, message }) => {
+const resolver: EthResolver = async (
+  transport,
+  //$FlowFixMe
+  { path, message, rawMessage }
+) => {
   const eth = new Eth(transport);
 
   let result;
 
   if (typeof message === "string") {
-    result = await eth.signPersonalMessage(path, stringHash(message));
+    result = await eth.signPersonalMessage(path, rawMessage.slice(2));
   } else {
     result = await eth.signEIP712HashedMessage(
       path,

@@ -1,7 +1,8 @@
 // @flow
 
 import Transport from "@ledgerhq/hw-transport";
-import { getDeviceModel } from "@ledgerhq/devices";
+// $FlowExpectedError Caused by TS migration, flow def support stopped at v5.
+import { getDeviceModel, identifyTargetId } from "@ledgerhq/devices";
 import { UnexpectedBootloader } from "@ledgerhq/errors";
 import { concat, of, empty, from, Observable, throwError, defer } from "rxjs";
 import { mergeMap, map } from "rxjs/operators";
@@ -30,7 +31,7 @@ import {
 import { runAllWithProgress } from "../apps/runner";
 import type { ConnectAppEvent } from "../hw/connectApp";
 
-export const execWithTransport = (transport: Transport<*>): Exec => (
+export const execWithTransport = (transport: typeof Transport): Exec => (
   appOp: AppOp,
   targetId: string | number,
   app: App
@@ -56,7 +57,7 @@ export const streamAppInstall = ({
   appNames,
   onSuccessObs,
 }: {
-  transport: Transport<*>,
+  transport: typeof Transport,
   appNames: string[],
   onSuccessObs?: () => Observable<*>,
 }): Observable<StreamAppInstallEvent | ConnectAppEvent> =>
@@ -84,10 +85,7 @@ export const streamAppInstall = ({
             return defer(onSuccessObs || empty);
           }
 
-          if (
-            isOutOfMemoryState(predictOptimisticState(state)) ||
-            !getEnv("EXPERIMENTAL_INLINE_INSTALL")
-          ) {
+          if (isOutOfMemoryState(predictOptimisticState(state))) {
             // In this case we can't install either by lack of storage, or permissions,
             // we fallback to the error case listing the missing apps.
             const missingAppNames: string[] = state.installQueue;
@@ -112,7 +110,7 @@ export const streamAppInstall = ({
   );
 
 export const listApps = (
-  transport: Transport<*>,
+  transport: typeof Transport,
   deviceInfo: DeviceInfo
 ): Observable<ListAppsEvent> => {
   if (deviceInfo.isOSU || deviceInfo.isBootloader) {
@@ -121,7 +119,9 @@ export const listApps = (
 
   const deviceModelId =
     // $FlowFixMe
-    (transport.deviceModel && transport.deviceModel.id) || "nanoS";
+    (transport.deviceModel && transport.deviceModel.id) ||
+    (deviceInfo && identifyTargetId(deviceInfo.targetId))?.id ||
+    getEnv("DEVICE_PROXY_MODEL");
 
   return Observable.create((o) => {
     let sub;

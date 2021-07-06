@@ -1,5 +1,5 @@
 // @flow
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import type { CryptoCurrency } from "../../types";
 import type { DerivationMode } from "../../derivation";
 
@@ -18,6 +18,7 @@ export type MessageData = {
   verify?: boolean,
   derivationMode: DerivationMode,
   message: string,
+  rawMessage: string,
 };
 
-export type Resolver = (Transport<*>, MessageData) => Promise<Result>;
+export type Resolver = (typeof Transport, MessageData) => Promise<Result>;

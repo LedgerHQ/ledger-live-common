@@ -39,6 +39,9 @@ import {
   toTezosResourcesRaw,
   fromTezosResourcesRaw,
 } from "../families/tezos/serialization";
+  toCryptoOrgResourcesRaw,
+  fromCryptoOrgResourcesRaw,
+} from "../families/crypto_org/serialization";
 import {
   getCryptoCurrencyById,
   getTokenById,
@@ -58,6 +61,7 @@ export { toAlgorandResourcesRaw, fromAlgorandResourcesRaw };
 export { toBitcoinResourcesRaw, fromBitcoinResourcesRaw };
 export { toPolkadotResourcesRaw, fromPolkadotResourcesRaw };
 export { toTezosResourcesRaw, fromTezosResourcesRaw };
+export { toCryptoOrgResourcesRaw, fromCryptoOrgResourcesRaw };
 
 export function toBalanceHistoryRaw(b: BalanceHistory): BalanceHistoryRaw {
   return b.map(({ date, value }) => [date.toISOString(), value.toString()]);
@@ -653,6 +657,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     algorandResources,
     syncHash,
     polkadotResources,
+    cryptoOrgResources,
   } = rawAccount;
 
   const subAccounts =
@@ -753,6 +758,10 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     res.polkadotResources = fromPolkadotResourcesRaw(polkadotResources);
   }
 
+  if (cryptoOrgResources) {
+    res.cryptoOrgResources = fromCryptoOrgResourcesRaw(cryptoOrgResources);
+  }
+
   return res;
 }
 
@@ -789,6 +798,7 @@ export function toAccountRaw({
   algorandResources,
   syncHash,
   polkadotResources,
+  cryptoOrgResources,
 }: Account): AccountRaw {
   const res: $Exact<AccountRaw> = {
     id,
@@ -845,6 +855,9 @@ export function toAccountRaw({
   }
   if (polkadotResources) {
     res.polkadotResources = toPolkadotResourcesRaw(polkadotResources);
+  }
+  if (cryptoOrgResources) {
+    res.cryptoOrgResources = toCryptoOrgResourcesRaw(cryptoOrgResources);
   }
   return res;
 }

@@ -27,6 +27,7 @@ import {
   fromAlgorandResourcesRaw,
   fromPolkadotResourcesRaw,
   fromTezosResourcesRaw,
+  fromCryptoOrgResourcesRaw,
 } from "./account";
 import consoleWarnExpectToEqual from "./consoleWarnExpectToEqual";
 
@@ -345,6 +346,16 @@ export function patchAccount(
     account.tezosResources !== updatedRaw.tezosResources
   ) {
     next.tezosResources = fromTezosResourcesRaw(updatedRaw.tezosResources);
+    changed = true;
+  }
+
+  if (
+    updatedRaw.cryptoOrgResources &&
+    account.cryptoOrgResources !== updatedRaw.cryptoOrgResources
+  ) {
+    next.cryptoOrgResources = fromCryptoOrgResourcesRaw(
+      updatedRaw.cryptoOrgResources
+    );
     changed = true;
   }
 

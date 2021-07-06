@@ -25,6 +25,9 @@ import type {
   TezosResources,
   TezosResourcesRaw,
 } from "../families/tezos/types";
+  CryptoOrgResources,
+  CryptoOrgResourcesRaw,
+} from "../families/crypto_org/types";
 import type {
   BalanceHistory,
   BalanceHistoryRaw,
@@ -239,6 +242,7 @@ export type Account = {
   algorandResources?: AlgorandResources,
   polkadotResources?: PolkadotResources,
   tezosResources?: TezosResources,
+  cryptoOrgResources?: CryptoOrgResources,
 
   // Swap operations linked to this account
   swapHistory: SwapOperation[],
@@ -328,6 +332,7 @@ export type AccountRaw = {
   algorandResources?: AlgorandResourcesRaw,
   polkadotResources?: PolkadotResourcesRaw,
   tezosResources?: TezosResourcesRaw,
+  cryptoOrgResources?: CryptoOrgResourcesRaw,
   swapHistory?: SwapOperationRaw[],
   syncHash?: string,
 };
