@@ -32,18 +32,31 @@ type SwapJobOpts = ScanCommonOpts & {
   amount: string;
   useAllAmount: boolean;
   useFloat: boolean;
+  wyreUserId?: string;
   _unknown: any;
   deviceId: string;
   tokenId: string;
 };
 
 const exec = async (opts: SwapJobOpts) => {
-  const { amount, useAllAmount, tokenId, useFloat, deviceId = "" } = opts;
+  const {
+    amount,
+    useAllAmount,
+    tokenId,
+    useFloat,
+    wyreUserId = "",
+    deviceId = "",
+  } = opts;
   invariant(
     amount || useAllAmount,
     `✖ amount in satoshis is needed or --useAllAmount `
   );
   invariant(opts._unknown, `✖ second account information is missing`);
+  invariant(
+    !wyreUserId || wyreUserId.length === 14,
+    "Provider wyre user id is not valid"
+  );
+
   //Remove suffix from arguments before passing them to sync.
   // @ts-expect-error i don't understand what's wrong
   const secondAccountOpts: ScanCommonOpts & {
@@ -197,10 +210,25 @@ const exec = async (opts: SwapJobOpts) => {
     toAccount,
     toParentAccount,
   };
-  const exchangeRates = await getExchangeRates(exchange, transaction);
-  const exchangeRate = exchangeRates.find(
-    (er) => er.tradeMethod === (useFloat ? "float" : "fixed")
+
+  const exchangeRates = await getExchangeRates(
+    exchange,
+    transaction,
+    wyreUserId
   );
+
+  console.log({ exchangeRates });
+
+  const exchangeRate = exchangeRates.find((er) => {
+    if (
+      er.tradeMethod === (useFloat ? "float" : "fixed") &&
+      (!wyreUserId || er.provider === "wyre")
+    ) {
+      return true;
+    }
+    return false;
+  });
+
   invariant(exchangeRate, `✖ No valid rate available`);
   console.log(
     `Using first ${useFloat ? "float" : "fixed"} rate:\n`,
@@ -217,9 +245,10 @@ const exec = async (opts: SwapJobOpts) => {
     exchangeRate: exchangeRate as ExchangeRate,
     transaction,
     deviceId,
+    userId: wyreUserId,
   })
     .pipe(
-      tap((e) => {
+      tap((e: any) => {
         switch (e.type) {
           case "init-swap-requested":
             console.log("• Confirm swap operation on your device");
@@ -238,8 +267,8 @@ const exec = async (opts: SwapJobOpts) => {
         if (e.type === "init-swap-requested")
           console.log("• Confirm swap operation on your device");
       }),
-      filter((e) => e.type === "init-swap-result"),
-      map((e) => {
+      filter((e: any) => e.type === "init-swap-result"),
+      map((e: any) => {
         if (e.type === "init-swap-result") {
           return e.initSwapResult;
         }
@@ -258,8 +287,8 @@ const exec = async (opts: SwapJobOpts) => {
     })
     .pipe(
       tap((e) => console.log(e)),
-      first((e) => e.type === "signed"),
-      map((e) => {
+      first((e: any) => e.type === "signed"),
+      map((e: any) => {
         if (e.type === "signed") {
           return e.signedOperation;
         }
@@ -297,6 +326,12 @@ export default {
       alias: "u",
       type: Boolean,
       desc: "Attempt to send all using the emulated max amount calculation",
+    },
+    {
+      name: "wyreUserId",
+      alias: "w",
+      type: String,
+      desc: "If provided, will attempt to use Wyre provider with given userId",
     },
     {
       name: "tokenId",

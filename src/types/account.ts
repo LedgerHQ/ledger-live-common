@@ -20,6 +20,10 @@ import type {
   PolkadotResourcesRaw,
 } from "../families/polkadot/types";
 import type {
+  CryptoOrgResources,
+  CryptoOrgResourcesRaw,
+} from "../families/crypto_org/types";
+import type {
   BalanceHistory,
   BalanceHistoryRaw,
   PortfolioRange,
@@ -195,6 +199,7 @@ export type Account = {
   cosmosResources?: CosmosResources;
   algorandResources?: AlgorandResources;
   polkadotResources?: PolkadotResources;
+  cryptoOrgResources?: CryptoOrgResources;
   // Swap operations linked to this account
   swapHistory: SwapOperation[];
   // Hash used to discard tx history on sync
@@ -281,6 +286,7 @@ export type AccountRaw = {
   polkadotResources?: PolkadotResourcesRaw;
   swapHistory?: SwapOperationRaw[];
   syncHash?: string;
+  cryptoOrgResources?: CryptoOrgResourcesRaw;
 };
 export type SubAccountRaw = TokenAccountRaw | ChildAccountRaw;
 export type AccountRawLike = AccountRaw | SubAccountRaw;

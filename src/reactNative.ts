@@ -1,4 +1,5 @@
 import * as icons from "./data/icons/reactNative";
+import * as flags from "./data/flags/reactNative";
 import type { CryptoCurrency, TokenCurrency } from "./types";
 type Icon = React.ComponentType<{
   size: number;
@@ -21,4 +22,7 @@ export function getTokenCurrencyIcon(
   token: TokenCurrency
 ): Icon | null | undefined {
   return icons[getIconId(token)];
+}
+export function getFlag(countryCode: string): Icon | undefined {
+  return flags[`${countryCode.toLowerCase()}Flag`];
 }

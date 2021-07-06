@@ -5,6 +5,8 @@ import { encodeOperationId } from "../../../operation";
 import { getEnv } from "../../../env";
 import { getOperationType } from "./common";
 import type { OperationType, Operation } from "../../../types";
+import { isValidAddress } from "../logic";
+
 const LIMIT = 200;
 
 /**
@@ -44,6 +46,11 @@ const getWithdrawUnbondedAmount = (extrinsic) => {
         : new BigNumber(0);
     }, new BigNumber(0)) || new BigNumber(0)
   );
+};
+
+const getController = (_extrinsic) => {
+  // TODO: ask BisonTrails to provide the info
+  return "";
 };
 
 /**
@@ -95,6 +102,13 @@ const getExtra = (type: OperationType, extrinsic: any): Record<string, any> => {
       extra = {
         ...extra,
         withdrawUnbondedAmount: getWithdrawUnbondedAmount(extrinsic),
+      };
+      break;
+
+    case "SET_CONTROLLER":
+      extra = {
+        ...extra,
+        controller: getController(extrinsic),
       };
       break;
 
@@ -190,9 +204,9 @@ const extrinsicToOperation = (
     date: new Date(extrinsic.timestamp),
     extra: getExtra(type, extrinsic),
     senders: [extrinsic.signer],
-    recipients: [extrinsic.affectedAddress1, extrinsic.affectedAddress2].filter(
-      Boolean
-    ),
+    recipients: [extrinsic.affectedAddress1, extrinsic.affectedAddress2]
+      .filter(Boolean)
+      .filter(isValidAddress),
     transactionSequenceNumber:
       extrinsic.signer === addr ? extrinsic.nonce : undefined,
     hasFailed: !extrinsic.isSuccess,

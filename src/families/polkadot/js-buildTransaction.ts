@@ -83,6 +83,14 @@ const getExtrinsicParams = (a: Account, t: Transaction) => {
         },
       };
 
+    case "setController":
+      // Set the current account as its own controller
+      return {
+        pallet: "staking",
+        name: "setController",
+        args: { controller: a.freshAddress },
+      };
+
     case "nominate":
       // Construct a transaction to nominate validators.
       // Must be signed by the controller, and can be only called when `EraElectionStatus` is `Closed`.

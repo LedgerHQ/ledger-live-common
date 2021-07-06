@@ -36,9 +36,9 @@ const withDevicePromise = (deviceId, fn) =>
 // you get at the end a final Transaction to be done (it's not yet signed, nor broadcasted!) and a swapId
 const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
   let { transaction } = input;
-  const { exchange, exchangeRate, deviceId } = input;
+  const { exchange, exchangeRate, deviceId, userId } = input;
   if (getEnv("MOCK")) return mockInitSwap(exchange, exchangeRate, transaction);
-  return Observable.create((o) => {
+  return new Observable((o) => {
     let unsubscribed = false;
 
     const confirmSwap = async () => {
@@ -83,6 +83,7 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
             url: `${getSwapAPIBaseURL()}/swap`,
             headers: {
               EquipmentId: getEnv("USER_ID"),
+              ...(userId ? { userId } : {}),
             },
             data: {
               provider,

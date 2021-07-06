@@ -1,7 +1,11 @@
 import Transport from "@ledgerhq/hw-transport";
-import { DeviceModelId, getDeviceModel } from "@ledgerhq/devices";
+import {
+  DeviceModelId,
+  getDeviceModel,
+  identifyTargetId,
+} from "@ledgerhq/devices";
 import { UnexpectedBootloader } from "@ledgerhq/errors";
-import { concat, of, empty, from, Observable, throwError, defer } from "rxjs";
+import { concat, of, EMPTY, from, Observable, throwError, defer } from "rxjs";
 import { mergeMap, map } from "rxjs/operators";
 import type { Exec, AppOp, ListAppsEvent, ListAppsResult } from "./types";
 import type { App, DeviceInfo } from "../types/manager";
@@ -97,8 +101,8 @@ export const streamAppInstall = ({
           );
 
           if (!state.installQueue.length) {
-            // NB nothing to do
-            return defer(onSuccessObs || empty);
+            // @ts-expect-error still don't understand
+            return defer(onSuccessObs || EMPTY);
           }
 
           if (isOutOfMemoryState(predictOptimisticState(state))) {
@@ -120,11 +124,12 @@ export const streamAppInstall = ({
                 progress,
               }))
             ),
-            defer(onSuccessObs || empty)
+            // @ts-expect-error cannot understand the types right now
+            defer(onSuccessObs || EMPTY)
           );
         }
 
-        return empty();
+        return EMPTY;
       })
     )
   );
@@ -137,9 +142,10 @@ export const listApps = (
     return throwError(new UnexpectedBootloader(""));
   }
 
-  const deviceModelId: DeviceModelId = // $FlowFixMe
+  const deviceModelId =
     (transport.deviceModel && transport.deviceModel.id) ||
-    <DeviceModelId>"nanoS";
+    (deviceInfo && identifyTargetId(deviceInfo.targetId))?.id ||
+    getEnv("DEVICE_PROXY_MODEL");
 
   return new Observable((o) => {
     let sub;

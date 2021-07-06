@@ -27,6 +27,7 @@ type InitSwapRequest = {
   exchange: Exchange;
   exchangeRate: ExchangeRate;
   transaction: SwapTransaction;
+  userId?: string;
 };
 type Result =
   | {
@@ -110,7 +111,8 @@ export const createAction = (
       reduxDevice,
       state.freezeReduxDevice
     );
-    const { exchange, exchangeRate, transaction } = initSwapRequest;
+
+    const { exchange, exchangeRate, transaction, userId } = initSwapRequest;
     const {
       fromAccount,
       fromParentAccount,
@@ -150,6 +152,7 @@ export const createAction = (
           exchangeRate,
           transaction,
           deviceId: device.deviceId,
+          userId,
         })
       )
         .pipe(
@@ -168,8 +171,12 @@ export const createAction = (
       return () => {
         sub.unsubscribe();
       };
-    }, [exchange, exchangeRate, transaction, device, opened, hasError]);
-    return { ...appState, ...state } as InitSwapState;
+    }, [exchange, exchangeRate, transaction, device, opened, hasError, userId]);
+
+    return {
+      ...appState,
+      ...state,
+    } as InitSwapState;
   };
 
   return {

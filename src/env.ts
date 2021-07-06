@@ -143,6 +143,26 @@ const envDefinitions = {
     desc:
       "gasLimit * gasPrice to determine the fees price. A too low GAS_PRICE will get rejected before the transaction is broadcast",
   },
+  CRYPTO_ORG_INDEXER: {
+    def: "https://crypto.org/explorer",
+    parser: stringParser,
+    desc: "location of the crypto.org indexer API",
+  },
+  CRYPTO_ORG_TESTNET_INDEXER: {
+    def: "https://crypto.org/explorer/croeseid3",
+    parser: stringParser,
+    desc: "location of the crypto.org indexer testnet API",
+  },
+  CRYPTO_ORG_RPC_URL: {
+    def: "",
+    parser: stringParser,
+    desc: "location of the crypto.org indexer API",
+  },
+  CRYPTO_ORG_TESTNET_RPC_URL: {
+    def: "https://testnet-croeseid-3.crypto.org:26657",
+    parser: stringParser,
+    desc: "location of the crypto.org chain testnet node",
+  },
   DEBUG_UTXO_DISPLAY: {
     def: 4,
     parser: intParser,
@@ -163,6 +183,11 @@ const envDefinitions = {
     def: "",
     parser: stringParser,
     desc: "enable a proxy to use instead of a physical device",
+  },
+  DEVICE_PROXY_MODEL: {
+    def: "nanoS",
+    parser: stringParser,
+    desc: "allow to override the default model of a proxied device",
   },
   DISABLE_TRANSACTION_BROADCAST: {
     def: false,

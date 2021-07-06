@@ -53,7 +53,8 @@ const hashTransactionParams = (
 
     case "chill":
       return `${prefix}`;
-
+    case "setController":
+      return `${prefix}`;
     case "claimReward":
       return `${prefix}_${t.era || "0"}`;
 

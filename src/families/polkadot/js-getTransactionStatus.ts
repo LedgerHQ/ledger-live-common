@@ -32,6 +32,7 @@ import {
   isValidAddress,
   isFirstBond,
   isController,
+  isStash,
   hasLockedBalance,
   hasMaxUnlockings,
   calculateAmount,
@@ -284,6 +285,12 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
         errors.staking = new PolkadotNoNominations();
       }
 
+      break;
+
+    case "setController":
+      if (!isStash(a)) {
+        errors.staking = new PolkadotUnauthorizedOperation();
+      }
       break;
   }
 

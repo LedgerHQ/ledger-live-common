@@ -35,6 +35,10 @@ import {
   fromPolkadotResourcesRaw,
 } from "../families/polkadot/serialization";
 import {
+  toCryptoOrgResourcesRaw,
+  fromCryptoOrgResourcesRaw,
+} from "../families/crypto_org/serialization";
+import {
   getCryptoCurrencyById,
   getTokenById,
   findTokenById,
@@ -51,6 +55,8 @@ export { toCosmosResourcesRaw, fromCosmosResourcesRaw };
 export { toAlgorandResourcesRaw, fromAlgorandResourcesRaw };
 export { toBitcoinResourcesRaw, fromBitcoinResourcesRaw };
 export { toPolkadotResourcesRaw, fromPolkadotResourcesRaw };
+export { toCryptoOrgResourcesRaw, fromCryptoOrgResourcesRaw };
+
 export function toBalanceHistoryRaw(b: BalanceHistory): BalanceHistoryRaw {
   return b.map(({ date, value }) => [date.toISOString(), value.toString()]);
 }
@@ -662,6 +668,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     algorandResources,
     syncHash,
     polkadotResources,
+    cryptoOrgResources,
   } = rawAccount;
   const subAccounts =
     subAccountsRaw &&
@@ -765,6 +772,10 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     res.polkadotResources = fromPolkadotResourcesRaw(polkadotResources);
   }
 
+  if (cryptoOrgResources) {
+    res.cryptoOrgResources = fromCryptoOrgResourcesRaw(cryptoOrgResources);
+  }
+
   return res;
 }
 export function toAccountRaw({
@@ -800,6 +811,7 @@ export function toAccountRaw({
   algorandResources,
   syncHash,
   polkadotResources,
+  cryptoOrgResources,
 }: Account): AccountRaw {
   const res: AccountRaw = {
     id,
@@ -868,6 +880,8 @@ export function toAccountRaw({
   if (polkadotResources) {
     res.polkadotResources = toPolkadotResourcesRaw(polkadotResources);
   }
-
+  if (cryptoOrgResources) {
+    res.cryptoOrgResources = toCryptoOrgResourcesRaw(cryptoOrgResources);
+  }
   return res;
 }

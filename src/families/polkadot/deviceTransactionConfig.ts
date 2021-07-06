@@ -164,6 +164,19 @@ function getDeviceTransactionConfig({
       });
       break;
 
+    case "setController":
+      fields.push({
+        type: "text",
+        label: "Staking",
+        value: "Set controller",
+      });
+      fields.push({
+        type: "text",
+        label: "Controller",
+        value: account.freshAddress,
+      });
+      break;
+
     case "claimReward":
       fields.push({
         type: "text",
