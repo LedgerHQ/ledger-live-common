@@ -33,7 +33,7 @@ export const sync: AccountBridge<any>["sync"] = (initialAccount) =>
         );
         const nextAcc = {
           ...acc,
-          blockHeight: acc.blockHeight + 1,
+          blockHeight: acc.blockHeight + 1000, // make a sync move a lot by blockHeight to avoid flawky tests issue on op confirm.
           lastSyncDate: new Date(),
           operations: ops.concat(acc.operations.slice(0)),
           pendingOperations: [],
@@ -49,7 +49,8 @@ export const sync: AccountBridge<any>["sync"] = (initialAccount) =>
       o.complete();
     };
 
-    syncTimeouts[accountId] = setTimeout(sync, 2000);
+    syncTimeouts[accountId] = setTimeout(sync, 500);
+
     return () => {
       clearTimeout(syncTimeouts[accountId]);
       syncTimeouts[accountId] = null;
