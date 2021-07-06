@@ -4,6 +4,8 @@ import bitcoin from "../families/bitcoin/hw-getAddress";
 
 import cosmos from "../families/cosmos/hw-getAddress";
 
+import crypto_org from "../families/crypto_org/hw-getAddress";
+
 import ethereum from "../families/ethereum/hw-getAddress";
 
 import neo from "../families/neo/hw-getAddress";
@@ -23,6 +25,7 @@ export default {
   algorand,
   bitcoin,
   cosmos,
+  crypto_org,
   ethereum,
   neo,
   polkadot,

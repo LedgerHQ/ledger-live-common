@@ -1,8 +1,8 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
 import getEstimatedFees from "./js-getFeesForTransaction";
+
 const sameFees = (a, b) => (!a || !b ? a === b : a.eq(b));
 
 /**
@@ -13,10 +13,10 @@ const sameFees = (a, b) => (!a || !b ? a === b : a.eq(b));
 export const createTransaction = (): Transaction => ({
   family: "crypto_org",
   mode: "send",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   recipient: "",
   useAllAmount: false,
-  fees: null,
+  fees: new BigNumber(0),
 });
 
 /**
@@ -27,7 +27,7 @@ export const createTransaction = (): Transaction => ({
  */
 export const updateTransaction = (
   t: Transaction,
-  patch: $Shape<Transaction>
+  patch: Partial<Transaction>
 ) => ({ ...t, ...patch });
 
 /**
@@ -38,7 +38,6 @@ export const updateTransaction = (
  */
 export const prepareTransaction = async (a: Account, t: Transaction) => {
   let fees = t.fees;
-
   fees = await getEstimatedFees();
 
   if (!sameFees(t.fees, fees)) {

@@ -350,6 +350,7 @@ export function patchAccount(
 
   if (
     updatedRaw.cryptoOrgResources &&
+    // @ts-expect-error types don't overlap ¯\_(ツ)_/¯
     account.cryptoOrgResources !== updatedRaw.cryptoOrgResources
   ) {
     next.cryptoOrgResources = fromCryptoOrgResourcesRaw(

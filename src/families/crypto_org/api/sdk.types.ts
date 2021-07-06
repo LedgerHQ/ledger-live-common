@@ -1,13 +1,9 @@
-// @flow
-
 export const CryptoOrgAccountTransactionTypeEnum = {
   MsgSend: "MsgSend",
   MgsMultiSend: "MsgMultiSend",
 };
-
 export const CryptoOrgCurrency = "basecro";
 export const CryptoOrgTestnetCurrency = "basetcro";
-
 export interface CryptoOrgAccountTransaction {
   account: string;
   blockHeight: number;
@@ -27,12 +23,10 @@ export interface CryptoOrgAccountTransaction {
   timeoutHeight: number;
   messages: any[];
 }
-
 export interface CryptoOrgAmount {
   denom: string;
   amount: number;
 }
-
 export interface CryptoOrgMsgSendContent {
   amount: CryptoOrgAmount[];
   height: number;
@@ -45,7 +39,6 @@ export interface CryptoOrgMsgSendContent {
   toAddress: string;
   fromAddress: string;
 }
-
 export interface CryptoOrgMsgSend {
   type: string;
   content: CryptoOrgMsgSendContent;

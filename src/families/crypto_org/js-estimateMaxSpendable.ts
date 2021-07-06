@@ -1,11 +1,7 @@
-// @flow
 import { BigNumber } from "bignumber.js";
-
 import type { AccountLike, Account } from "../../types";
 import { getMainAccount } from "../../account";
-
 import type { Transaction } from "./types";
-
 import getEstimatedFees from "./js-getFeesForTransaction";
 
 /**
@@ -17,9 +13,9 @@ const estimateMaxSpendable = async ({
   account,
   parentAccount,
 }: {
-  account: AccountLike,
-  parentAccount: ?Account,
-  transaction: ?Transaction,
+  account: AccountLike;
+  parentAccount: Account | null | undefined;
+  transaction: Transaction | null | undefined;
 }): Promise<BigNumber> => {
   const a = getMainAccount(account, parentAccount);
   const fees = await getEstimatedFees();

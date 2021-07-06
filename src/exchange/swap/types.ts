@@ -81,7 +81,8 @@ export type AvailableProviderV3 = {
 export type AvailableProvider = AvailableProviderV2 | AvailableProviderV3;
 export type GetExchangeRates = (
   arg0: Exchange,
-  arg1: Transaction
+  arg1: Transaction,
+  wyreUserId?: string
 ) => Promise<ExchangeRate[]>;
 export type GetProviders = () => Promise<AvailableProvider[]>;
 export type InitSwapResult = {

@@ -173,7 +173,12 @@ function getDeviceTransactionConfig({
       fields.push({
         type: "text",
         label: "Controller",
-        value: account.freshAddress,
+        value:
+          // NOTE: I added this here as TokenAccount and ChildAccount
+          // both don't have freshAddress
+          account.type === "Account"
+            ? account.freshAddress
+            : mainAccount.freshAddress,
       });
       break;
 

@@ -20,7 +20,7 @@ setup("libcore");
 test("libcore version", async () => {
   const v = await withLibcore((core) => core.LedgerCore.getStringVersion());
   expect(typeof v).toBe("string");
-  log("libcoreVersion", v);
+  log("libcoreVersion", v as string);
 });
 const families = Object.keys(dataset);
 const maybeFamilyToOnlyRun =

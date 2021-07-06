@@ -1,4 +1,3 @@
-// @flow
 import invariant from "invariant";
 import type { Account } from "../../types";
 import { getAccountUnit } from "../../account";
@@ -7,15 +6,14 @@ import { formatCurrencyUnit } from "../../currencies";
 function formatAccountSpecifics(account: Account): string {
   const { cryptoOrgResources } = account;
   invariant(cryptoOrgResources, "Crypto.org account expected");
+  if (!cryptoOrgResources) throw new Error("Crypto.org account expected");
   const unit = getAccountUnit(account);
   const formatConfig = {
     disableRounding: true,
     alwaysShowSign: false,
     showCode: true,
   };
-
   let str = " ";
-
   str +=
     formatCurrencyUnit(unit, account.spendableBalance, formatConfig) +
     " spendable. ";

@@ -1,8 +1,6 @@
-//@flow
 import type { Account } from "../../types";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { makeSync, makeScanAccounts, mergeOps } from "../../bridge/jsHelpers";
-
 import { getAccount, getOperations } from "./api";
 
 const getAccountShape: GetAccountShape = async (info) => {
@@ -16,12 +14,12 @@ const getAccountShape: GetAccountShape = async (info) => {
     unbondingBalance,
     commissions,
   } = await getAccount(address, currency.id);
-
   // Merge new operations with the previously synced ones
   let startAt = 0;
   let maxIteration = 20;
   let operations = oldOperations;
   let newOperations = await getOperations(id, address, startAt++, currency.id);
+
   do {
     operations = mergeOps(operations, newOperations);
     newOperations = await getOperations(id, address, startAt++, currency.id);
@@ -40,12 +38,10 @@ const getAccountShape: GetAccountShape = async (info) => {
       commissions,
     },
   };
-
   return { ...shape, operations };
 };
 
 const postSync = (initial: Account, parent: Account) => parent;
 
 export const scanAccounts = makeScanAccounts(getAccountShape);
-
 export const sync = makeSync(getAccountShape, postSync);

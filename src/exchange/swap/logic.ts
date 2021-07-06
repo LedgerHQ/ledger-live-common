@@ -111,10 +111,13 @@ export const getSupportedCurrencies = ({
   fromCurrency?: CryptoCurrency | TokenCurrency;
 }): Array<CryptoCurrency | TokenCurrency> => {
   const providerData = providers.find((p) => p.provider === provider);
-  invariant(provider, `No provider matching ${provider} was found`);
+  invariant(providerData, `No provider matching ${provider} was found`);
+  if (!providerData) {
+    throw new Error(`No provider matching ${provider} was found`);
+  }
 
   const { pairs } = providerData;
-  const ids = uniq(
+  const ids: string[] = uniq(
     pairs.map(({ from, to, tradeMethods }) => {
       const isTo = fromCurrency;
       if (
@@ -129,16 +132,17 @@ export const getSupportedCurrencies = ({
   const tokenCurrencies = ids
     .map(findTokenById)
     .filter(Boolean)
-    .filter((t) => !t.delisted);
+    .filter((t: any) => !t.delisted);
 
   const cryptoCurrencies = ids
     .map(findCryptoCurrencyById)
     .filter(Boolean)
-    .filter(isCurrencySupported);
+    .filter((t: any) => isCurrencySupported(t));
 
-  return [...cryptoCurrencies, ...tokenCurrencies].filter(
-    isCurrencyExchangeSupported
-  );
+  return ([
+    ...cryptoCurrencies,
+    ...tokenCurrencies,
+  ] as CryptoCurrency[]).filter((c) => isCurrencyExchangeSupported(c));
 };
 
 export const getEnabledTradingMethods = ({

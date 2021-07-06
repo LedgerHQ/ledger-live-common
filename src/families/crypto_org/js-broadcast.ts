@@ -1,7 +1,5 @@
-// @flow
 import type { Operation, SignedOperation, Account } from "../../types";
 import { patchOperationWithHash } from "../../operation";
-
 import { broadcastTransaction } from "./api";
 import { CryptoOrgErrorBroadcasting } from "./errors";
 
@@ -16,8 +14,8 @@ const broadcast = async ({
   account,
   signedOperation: { signature, operation },
 }: {
-  account: Account,
-  signedOperation: SignedOperation,
+  account: Account;
+  signedOperation: SignedOperation;
 }): Promise<Operation> => {
   const broadcastResponse = await broadcastTransaction(
     signature,

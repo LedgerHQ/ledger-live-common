@@ -1,4 +1,3 @@
-// @flow
 import type { Transaction, TransactionRaw } from "./types";
 import { BigNumber } from "bignumber.js";
 import {
@@ -8,42 +7,41 @@ import {
 import type { Account } from "../../types";
 import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
-
 export const formatTransaction = (
   { mode, amount, recipient, useAllAmount }: Transaction,
   account: Account
-): string =>
-  `
+): string => `
 ${mode.toUpperCase()} ${
-    useAllAmount
-      ? "MAX"
-      : amount.isZero()
-      ? ""
-      : " " +
-        formatCurrencyUnit(getAccountUnit(account), amount, {
-          showCode: true,
-          disableRounding: true,
-        })
-  }${recipient ? `\nTO ${recipient}` : ""}`;
-
+  useAllAmount
+    ? "MAX"
+    : amount.isZero()
+    ? ""
+    : " " +
+      formatCurrencyUnit(getAccountUnit(account), amount, {
+        showCode: true,
+        disableRounding: true,
+      })
+}${recipient ? `\nTO ${recipient}` : ""}`;
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
   return {
     ...common,
     family: tr.family,
     mode: tr.mode,
-    fees: tr.fees ? BigNumber(tr.fees) : null,
+    fees: tr.fees ? new BigNumber(tr.fees) : new BigNumber(0),
   };
 };
-
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
   return {
     ...common,
     family: t.family,
     mode: t.mode,
-    fees: t.fees?.toString() || null,
+    fees: t.fees?.toString() || "",
   };
 };
-
-export default { formatTransaction, fromTransactionRaw, toTransactionRaw };
+export default {
+  formatTransaction,
+  fromTransactionRaw,
+  toTransactionRaw,
+};

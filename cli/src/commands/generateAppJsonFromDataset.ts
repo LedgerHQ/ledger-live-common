@@ -1,4 +1,3 @@
-// @flow
 /* eslint-disable no-console */
 import invariant from "invariant";
 import { reduce, filter, map } from "rxjs/operators";
@@ -9,8 +8,8 @@ import {
   setSupportedCurrencies,
 } from "@ledgerhq/live-common/lib/currencies";
 import datasets from "@ledgerhq/live-common/lib/generated/test-dataset";
+import { Account } from "@ledgerhq/live-common/lib/types";
 import { mockDeviceWithAPDUs, releaseMockDevice } from "../live-common-setup";
-
 setSupportedCurrencies([
   "bitcoin",
   "ethereum",
@@ -43,12 +42,10 @@ setSupportedCurrencies([
   "algorand",
   "polkadot",
 ]);
-
 const defaultSyncConfig = {
   paginationConfig: {},
   blacklistedTokenIds: ["ethereum/erc20/ampleforth"],
 };
-
 const excluded = [
   "algorand",
   "bitcoin",
@@ -76,7 +73,60 @@ const excluded = [
   "zencash",
 ];
 
-const appJsonTemplate = {
+type JsonTemplate = {
+  data: {
+    SPECTRON_RUN: {
+      localStorage: {
+        acceptedTermsVersion: string;
+      };
+    };
+    settings: {
+      hasCompletedOnboarding: boolean;
+      counterValue: string;
+      language: string;
+      theme: string;
+      region: any;
+      orderAccounts: string;
+      countervalueFirst: boolean;
+      autoLockTimeout: number;
+      selectedTimeRange: string;
+      marketIndicator: string;
+      currenciesSettings: Record<string, any>;
+      pairExchanges: Record<string, any>;
+      developerMode: boolean;
+      loaded: boolean;
+      shareAnalytics: boolean;
+      sentryLogs: boolean;
+      lastUsedVersion: string;
+      dismissedBanners: any[];
+      accountsViewMode: string;
+      showAccountsHelperBanner: boolean;
+      hideEmptyTokenAccounts: boolean;
+      sidebarCollapsed: boolean;
+      discreetMode: boolean;
+      preferredDeviceModel: string;
+      hasInstalledApps: boolean;
+      carouselVisibility: number;
+      hasAcceptedSwapKYC: boolean;
+      lastSeenDevice: any;
+      blacklistedTokenIds: any[];
+      swapAcceptedProviderIds: any[];
+      deepLinkUrl: any;
+      firstTimeLend: boolean;
+      swapProviders: any[];
+      showClearCacheBanner: boolean;
+      starredAccountIds: any[];
+      hasPassword: boolean;
+    };
+    user: {
+      id: string;
+    };
+    countervalues: Record<string, any>;
+    accounts: Account[];
+  };
+};
+
+const appJsonTemplate: JsonTemplate = {
   data: {
     SPECTRON_RUN: {
       localStorage: {
@@ -130,8 +180,10 @@ const appJsonTemplate = {
 };
 
 const extraCurrenciesData = () => {
-  const data = [];
-
+  const data: Array<{
+    currencyName: string;
+    apdus: string;
+  }> = [];
   Object.keys(datasets).forEach((key) => {
     const { currencies } = datasets[key];
     Object.keys(currencies).forEach((k) => {
@@ -139,14 +191,17 @@ const extraCurrenciesData = () => {
       if (excluded.includes(k)) {
         return;
       }
+
       const currency = currencies[k];
       if (!currency.scanAccounts?.length) return;
       currency.scanAccounts?.forEach((sa) => {
-        data.push({ currencyName: k, apdus: sa.apdus });
+        data.push({
+          currencyName: k,
+          apdus: sa.apdus,
+        });
       });
     });
   });
-
   return data;
 };
 
@@ -155,6 +210,7 @@ const syncAccount = async (data) => {
   const bridge = getCurrencyBridge(currency);
   const deviceId = mockDeviceWithAPDUs(data.apdus);
   invariant(currency, `could not find currency for ${data.currencyName}`);
+
   try {
     const accounts = await bridge
       .scanAccounts({
@@ -165,7 +221,7 @@ const syncAccount = async (data) => {
       .pipe(
         filter((e) => e.type === "discovered"),
         map((e) => e.account),
-        reduce((all, a) => all.concat(a), [])
+        reduce<Account, Account[]>((all, a) => all.concat(a), [])
       )
       .toPromise();
     return implicitMigration(accounts);

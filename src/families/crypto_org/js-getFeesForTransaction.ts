@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import { FIXED_GAS_PRICE, FIXED_DEFAULT_GAS_LIMIT } from "./logic";
 

@@ -1,7 +1,5 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import type { CryptoOrgResourcesRaw, CryptoOrgResources } from "./types";
-
 export function toCryptoOrgResourcesRaw(
   r: CryptoOrgResources
 ): CryptoOrgResourcesRaw {
@@ -18,7 +16,6 @@ export function toCryptoOrgResourcesRaw(
     commissions: commissions.toString(),
   };
 }
-
 export function fromCryptoOrgResourcesRaw(
   r: CryptoOrgResourcesRaw
 ): CryptoOrgResources {
@@ -29,9 +26,9 @@ export function fromCryptoOrgResourcesRaw(
     commissions,
   } = r;
   return {
-    bondedBalance: BigNumber(bondedBalance),
-    redelegatingBalance: BigNumber(redelegatingBalance),
-    unbondingBalance: BigNumber(unbondingBalance),
-    commissions: BigNumber(commissions),
+    bondedBalance: new BigNumber(bondedBalance),
+    redelegatingBalance: new BigNumber(redelegatingBalance),
+    unbondingBalance: new BigNumber(unbondingBalance),
+    commissions: new BigNumber(commissions),
   };
 }

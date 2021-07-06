@@ -1,8 +1,6 @@
-// @flow
 import invariant from "invariant";
 import flatMap from "lodash/flatMap";
 import type { Transaction, AccountLike } from "../../types";
-
 const options = [
   {
     name: "mode",
@@ -12,21 +10,24 @@ const options = [
 ];
 
 function inferTransactions(
-  transactions: Array<{ account: AccountLike, transaction: Transaction }>,
-  opts: Object
+  transactions: Array<{
+    account: AccountLike;
+    transaction: Transaction;
+  }>,
+  opts: Record<string, any>
 ): Transaction[] {
   return flatMap(transactions, ({ transaction, account }) => {
     invariant(transaction.family === "crypto_org", "crypto_org family");
+    if (transaction.family !== "crypto_org") {
+      throw new Error("crypto_org family");
+    }
 
     if (account.type === "Account") {
       invariant(account.cryptoOrgResources, "unactivated account");
+      if (!account.cryptoOrgResources) throw new Error("unactivated account");
     }
 
-    return {
-      ...transaction,
-      family: "crypto_org",
-      mode: opts.mode || "send",
-    };
+    return { ...transaction, family: "crypto_org", mode: opts.mode || "send" };
   });
 }
 

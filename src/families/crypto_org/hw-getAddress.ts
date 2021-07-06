@@ -1,5 +1,3 @@
-// @flow
-
 import Cosmos from "@ledgerhq/hw-app-cosmos";
 import type { Resolver } from "../../hw/getAddress/types";
 import { isTestNet } from "./logic";

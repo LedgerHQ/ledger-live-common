@@ -144,7 +144,7 @@ export const listApps = (
 
   const deviceModelId =
     (transport.deviceModel && transport.deviceModel.id) ||
-    (deviceInfo && identifyTargetId(deviceInfo.targetId))?.id ||
+    (deviceInfo && identifyTargetId(deviceInfo.targetId as number))?.id ||
     getEnv("DEVICE_PROXY_MODEL");
 
   return new Observable((o) => {

@@ -1,4 +1,3 @@
-// @flow
 import { utils } from "@crypto-com/chain-jslib";
 import {
   CryptoOrgAccountTransaction,
@@ -11,14 +10,12 @@ import {
 import { BigNumber } from "bignumber.js";
 import network from "../../../network";
 import { getCroSdk, isTestNet } from "../logic";
-
 import type { Operation, OperationType } from "../../../types";
 import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";
-
 const PAGINATION_LIMIT = 200;
-
 const instances = {};
+
 /**
  * Get CroClient
  */
@@ -26,6 +23,7 @@ export async function getClient(currencyId) {
   if (instances[currencyId]) {
     return instances[currencyId];
   }
+
   const crypto_org_rpc_url = isTestNet(currencyId)
     ? getEnv("CRYPTO_ORG_TESTNET_RPC_URL")
     : getEnv("CRYPTO_ORG_RPC_URL");
@@ -48,9 +46,9 @@ export const getCroAmount = (
   return amounts.reduce(
     (result, current) =>
       current.denom === cryptoOrgCurrency
-        ? result.plus(BigNumber(current.amount))
+        ? result.plus(new BigNumber(current.amount))
         : result,
-    BigNumber(0)
+    new BigNumber(0)
   );
 };
 
@@ -60,17 +58,16 @@ export const getCroAmount = (
 export const getAccount = async (addr: string, currencyId: string) => {
   const client = await getClient(currencyId);
   const { header } = await client.getBlock();
-
   const crypto_org_indexer = isTestNet(currencyId)
     ? getEnv("CRYPTO_ORG_TESTNET_INDEXER")
     : getEnv("CRYPTO_ORG_INDEXER");
-
-  let balance = 0;
-  let bondedBalance = 0;
-  let redelegatingBalance = 0;
-  let unbondingBalance = 0;
-  let commissions = 0;
+  let balance = new BigNumber(0);
+  let bondedBalance = new BigNumber(0);
+  let redelegatingBalance = new BigNumber(0);
+  let unbondingBalance = new BigNumber(0);
+  let commissions = new BigNumber(0);
   let data;
+
   try {
     const response = await network({
       method: "GET",
@@ -93,13 +90,14 @@ export const getAccount = async (addr: string, currencyId: string) => {
     unbondingBalance = getCroAmount(data.result.unbondingBalance, currencyId);
     commissions = getCroAmount(data.result.commissions, currencyId);
   }
+
   return {
     blockHeight: header.height,
-    balance: BigNumber(balance),
-    bondedBalance: BigNumber(bondedBalance),
-    redelegatingBalance: BigNumber(redelegatingBalance),
-    unbondingBalance: BigNumber(unbondingBalance),
-    commissions: BigNumber(commissions),
+    balance: new BigNumber(balance),
+    bondedBalance: new BigNumber(bondedBalance),
+    redelegatingBalance: new BigNumber(redelegatingBalance),
+    unbondingBalance: new BigNumber(unbondingBalance),
+    commissions: new BigNumber(commissions),
   };
 };
 
@@ -109,7 +107,6 @@ export const getAccount = async (addr: string, currencyId: string) => {
 export const getAccountParams = async (addr: string, currencyId: string) => {
   const client = await getClient(currencyId);
   const { accountNumber, sequence } = await client.getAccount(addr);
-
   return {
     accountNumber: accountNumber ?? 0,
     sequence: sequence ?? 0,
@@ -154,11 +151,10 @@ function convertSendTransactionToOperation(
   currencyId: string
 ): Operation {
   const type = getOperationType(messageSendContent, addr);
-
   return {
     id: encodeOperationId(accountId, messageSendContent.txHash, type),
     accountId,
-    fee: BigNumber(transaction.fee.amount),
+    fee: new BigNumber(transaction.fee.amount),
     value: getOperationValue(messageSendContent, currencyId),
     type,
     hash: messageSendContent.txHash,
@@ -168,7 +164,7 @@ function convertSendTransactionToOperation(
     senders: [messageSendContent.fromAddress],
     recipients: [messageSendContent.toAddress],
     hasFailed: !transaction.success,
-    extra: undefined,
+    extra: {},
   };
 }
 
@@ -182,11 +178,9 @@ export const getOperations = async (
   currencyId: string
 ): Promise<Operation[]> => {
   let rawTransactions: Operation[] = [];
-
   const crypto_org_indexer = isTestNet(currencyId)
     ? getEnv("CRYPTO_ORG_TESTNET_INDEXER")
     : getEnv("CRYPTO_ORG_INDEXER");
-
   const { data } = await network({
     method: "GET",
     url: `${crypto_org_indexer}/api/v1/accounts/${addr}/transactions?pagination=offset&page=${
@@ -194,8 +188,10 @@ export const getOperations = async (
     }&limit=${PAGINATION_LIMIT}`,
   });
   const accountTransactions: CryptoOrgAccountTransaction[] = data.result;
+
   for (let i = 0; i < accountTransactions.length; i++) {
     const msgs = accountTransactions[i].messages;
+
     for (let j = 0; j < msgs.length; j++) {
       switch (msgs[j].type) {
         case CryptoOrgAccountTransactionTypeEnum.MsgSend: {
@@ -211,6 +207,7 @@ export const getOperations = async (
           );
           break;
         }
+
         default:
       }
     }

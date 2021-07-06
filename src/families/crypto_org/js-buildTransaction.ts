@@ -1,4 +1,3 @@
-// @flow
 import type { Transaction } from "./types";
 import type { Account } from "../../types";
 import { Units, utils } from "@crypto-com/chain-jslib";
@@ -7,6 +6,7 @@ import { getCroSdk } from "./logic";
 
 const getTransactionAmount = (a: Account, t: Transaction) => {
   const croSdk = getCroSdk(a.currency.id);
+
   switch (t.mode) {
     case "send":
       if (t.useAllAmount) {
@@ -15,6 +15,7 @@ const getTransactionAmount = (a: Account, t: Transaction) => {
       } else {
         return new croSdk.Coin(t.amount.toString(), Units.BASE);
       }
+
     default:
       throw new Error("Unknown mode in transaction");
   }
@@ -38,13 +39,11 @@ export const buildTransaction = async (
   );
   const rawTx = new croSdk.RawTransaction();
   rawTx.setFee(new croSdk.Coin(t.fees.toString(), Units.BASE));
-
   const msgSend = new croSdk.bank.MsgSend({
     fromAddress: address,
     toAddress: t.recipient,
     amount: getTransactionAmount(a, t),
   });
-
   const signableTx = rawTx
     .appendMessage(msgSend)
     .addSigner({
@@ -54,6 +53,5 @@ export const buildTransaction = async (
       signMode: 0,
     })
     .toSignable();
-
   return signableTx;
 };

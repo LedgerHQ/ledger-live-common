@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import {
   NotEnoughBalance,
@@ -15,7 +14,11 @@ const getTransactionStatus = async (
   a: Account,
   t: Transaction
 ): Promise<TransactionStatus> => {
-  const errors = {};
+  const errors: {
+    fees?: Error;
+    amount?: Error;
+    recipient?: Error;
+  } = {};
   const warnings = {};
   const useAllAmount = !!t.useAllAmount;
 
@@ -23,15 +26,13 @@ const getTransactionStatus = async (
     errors.fees = new FeeNotLoaded();
   }
 
-  const estimatedFees = t.fees || BigNumber(0);
-
+  const estimatedFees = t.fees || new BigNumber(0);
   const totalSpent = useAllAmount
     ? a.balance
-    : BigNumber(t.amount).plus(estimatedFees);
-
+    : new BigNumber(t.amount).plus(estimatedFees);
   const amount = useAllAmount
     ? a.balance.minus(estimatedFees)
-    : BigNumber(t.amount);
+    : new BigNumber(t.amount);
 
   if (totalSpent.gt(a.balance)) {
     errors.amount = new NotEnoughBalance();

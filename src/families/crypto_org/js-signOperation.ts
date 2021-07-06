@@ -1,4 +1,3 @@
-// @flow
 import { BigNumber } from "bignumber.js";
 import { Observable } from "rxjs";
 import { FeeNotLoaded } from "@ledgerhq/errors";
@@ -8,12 +7,10 @@ import {
 } from "./errors";
 import type { Transaction } from "./types";
 import type { Account, Operation, SignOperationEvent } from "../../types";
-
 import { open, close } from "../../hw";
 import { encodeOperationId } from "../../operation";
 import CryptoOrgApp from "@ledgerhq/hw-app-cosmos";
 import { utils } from "@crypto-com/chain-jslib";
-
 import { buildTransaction } from "./js-buildTransaction";
 import { isTestNet } from "./logic";
 
@@ -23,10 +20,8 @@ const buildOptimisticOperation = (
   fee: BigNumber
 ): Operation => {
   const type = "OUT";
-
-  const value = BigNumber(transaction.amount).plus(fee);
-
-  const operation: $Exact<Operation> = {
+  const value = new BigNumber(transaction.amount).plus(fee);
+  const operation: Operation = {
     id: encodeOperationId(account.id, "", type),
     hash: "",
     type,
@@ -38,9 +33,10 @@ const buildOptimisticOperation = (
     recipients: [transaction.recipient].filter(Boolean),
     accountId: account.id,
     date: new Date(),
-    extra: { additionalField: transaction.amount },
+    extra: {
+      additionalField: transaction.amount,
+    },
   };
-
   return operation;
 };
 
@@ -62,14 +58,15 @@ function convertASN1toBase64(signature) {
   let rOffset = 4;
   let rLen = signature[3];
   const sLen = signature[4 + rLen + 1]; // skip over following 0x02 type prefix for s
-  let sOffset = signature.length - sLen;
 
+  let sOffset = signature.length - sLen;
   const sigR = signature.slice(rOffset, rOffset + rLen); // skip e.g. 3045022100 and pad
+
   const sigS = signature.slice(sOffset);
   const newSigR = padZero(sigR, 32);
   const newSigS = padZero(sigS, 32);
-
   const signatureFormatted = Buffer.concat([newSigR, newSigS]);
+
   if (signatureFormatted.length !== 64) {
     throw new CryptoOrgSignatureSize();
   }
@@ -79,9 +76,11 @@ function convertASN1toBase64(signature) {
 
 function padZero(original_array: Uint8Array, wanted_length: number) {
   const new_array = new Uint8Array(wanted_length);
+
   for (let i = wanted_length - 1; i >= 0; i--) {
     const j = wanted_length - 1 - i;
     const new_i = original_array.length - 1 - j;
+
     if (new_i >= 0 && new_i < original_array.length) {
       new_array[i] = original_array[new_i];
     } else {
@@ -100,15 +99,18 @@ const signOperation = ({
   deviceId,
   transaction,
 }: {
-  account: Account,
-  deviceId: *,
-  transaction: Transaction,
+  account: Account;
+  deviceId: any;
+  transaction: Transaction;
 }): Observable<SignOperationEvent> =>
   Observable.create((o) => {
     async function main() {
       const transport = await open(deviceId);
+
       try {
-        o.next({ type: "device-signature-requested" });
+        o.next({
+          type: "device-signature-requested",
+        });
 
         if (!transaction.fees) {
           throw new FeeNotLoaded();
@@ -123,13 +125,11 @@ const signOperation = ({
           cointype,
           false
         );
-
         const unsigned = await buildTransaction(
           account,
           transaction,
           publicKey
         );
-
         // Sign by device
         const { signature } = await hwApp.sign(
           address.derivationPath,
@@ -147,15 +147,14 @@ const signOperation = ({
             )
             .toSigned()
             .getHexEncoded();
-
-          o.next({ type: "device-signature-granted" });
-
+          o.next({
+            type: "device-signature-granted",
+          });
           const operation = buildOptimisticOperation(
             account,
             transaction,
-            transaction.fees ?? BigNumber(0)
+            transaction.fees ?? new BigNumber(0)
           );
-
           o.next({
             type: "signed",
             signedOperation: {
@@ -169,6 +168,7 @@ const signOperation = ({
         close(transport, deviceId);
       }
     }
+
     main().then(
       () => o.complete(),
       (e) => o.error(e)

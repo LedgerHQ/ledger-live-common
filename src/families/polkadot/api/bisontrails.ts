@@ -71,6 +71,7 @@ const getExtra = (type: OperationType, extrinsic: any): Record<string, any> => {
     withdrawUnbondedAmount?: any;
     validatorStash?: any;
     validators?: any;
+    controller?: any;
   } = {
     palletMethod: `${extrinsic.section}.${extrinsic.method}`,
   };
