@@ -1,4 +1,4 @@
-module.exports = api => {
+module.exports = (api) => {
   const presets = [];
   if (api.env("test") || api.env("cjs")) {
     presets.push([
@@ -19,7 +19,7 @@ module.exports = api => {
     "@babel/plugin-proposal-export-namespace-from",
     "@babel/plugin-syntax-dynamic-import",
     "@babel/plugin-syntax-import-meta",
-    ["@babel/plugin-proposal-class-properties", { loose: true }]
+    ["@babel/plugin-proposal-class-properties", { loose: false }]
   ];
 
   return {
