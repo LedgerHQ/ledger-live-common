@@ -6,7 +6,7 @@ const manifest: AppManifest[] = [
     id: "paraswap",
     name: "ParaSwap",
     url:
-      "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?url=https%3A%2F%2Fparaswap.io%2F%3Fembed%3Dtrue%26referrer%3Dledger2&nanoApp=Paraswap&dappName=paraswap",
+      "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?url=https%3A%2F%2Fparaswap.io%2F%3Fembed%3Dtrue%26referrer%3Dledger2&nanoApp=Paraswap&dappName=ParaSwap",
     homepageUrl: "https://paraswap.io",
     supportUrl: "https://paraswap.io",
     icon: "https://cdn.live.ledger.com/icons/platform/paraswap.png",
@@ -88,7 +88,7 @@ const manifest: AppManifest[] = [
     id: "zerion",
     name: "Zerion",
     url:
-      "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?dappName=zerion&url=https%3A%2F%2Ffeature-ledger-dapp-browser-2605-mzkrvfnv6a-ue.a.run.app%3Fembed%3Dledgerdappbrowser",
+      "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?dappName=Zerion&url=https%3A%2F%2Ffeature-ledger-dapp-browser-2605-mzkrvfnv6a-ue.a.run.app%3Fembed%3Dledgerdappbrowser",
     homepageUrl: "https://zerion.io/",
     icon: "https://cdn.live.ledger.com/icons/platform/zerion.png",
     platform: "all",
@@ -111,7 +111,7 @@ const manifest: AppManifest[] = [
   {
     id: "rainbow",
     name: "Rainbow.me",
-    url: "https://ledger-live-platform-apps.vercel.app/app/web-browser?url=https%3A%2F%2Frainbow.me%2F%7Baccount.address%7D&currencies=ethereum&webAppName=rainbow.me",
+    url: "https://ledger-live-platform-apps.vercel.app/app/web-browser?url=https%3A%2F%2Frainbow.me%2F%7Baccount.address%7D&currencies=ethereum&webAppName=Rainbow.me",
     homepageUrl: "https://rainbow.me",
     icon: "https://cdn.live.ledger.com/icons/platform/rainbow.png",
     platform: "all",
