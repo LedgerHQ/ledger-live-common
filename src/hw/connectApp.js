@@ -230,7 +230,11 @@ const cmd = ({
             }
 
             // in order to check the fw version, install deps, we need dashboard
-            if (dependencies?.length || appAndVersion.name !== appName) {
+            if (
+              dependencies?.length ||
+              requireLatestFirmware ||
+              appAndVersion.name !== appName
+            ) {
               return attemptToQuitApp(transport, appAndVersion);
             }
 
