@@ -91,7 +91,8 @@ export type PolkadotStakingProgress = {
 };
 export type PolkadotPreloadData = {
   validators: PolkadotValidator[];
-  staking: PolkadotStakingProgress | null;
+  staking: PolkadotStakingProgress | undefined;
+  minimumBondBalance: string;
 };
 export type PolkadotSearchFilter = (
   query: string

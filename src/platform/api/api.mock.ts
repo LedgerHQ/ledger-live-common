@@ -4,7 +4,7 @@ const manifest: AppManifest[] = [
     id: "paraswap",
     name: "ParaSwap",
     url:
-      "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?url=https%3A%2F%2Fparaswap.io%2F%3Fembed%3Dtrue%26referrer%3Dledger2&nanoApp=Paraswap&dappName=paraswap",
+      "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?url=https%3A%2F%2Fparaswap.io%2F%3Fembed%3Dtrue%26referrer%3Dledger2&nanoApp=Paraswap&dappName=ParaSwap",
     homepageUrl: "https://paraswap.io",
     supportUrl: "https://paraswap.io",
     icon: "https://cdn.live.ledger.com/icons/platform/paraswap.png",
@@ -83,6 +83,53 @@ const manifest: AppManifest[] = [
     domains: ["https://*"],
   },
   {
+    id: "zerion",
+    name: "Zerion",
+    url:
+      "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?dappName=Zerion&url=https%3A%2F%2Ffeature-ledger-dapp-browser-2605-mzkrvfnv6a-ue.a.run.app%3Fembed%3Dledgerdappbrowser",
+    homepageUrl: "https://zerion.io/",
+    icon: "https://cdn.live.ledger.com/icons/platform/zerion.png",
+    platform: "all",
+    apiVersion: "0.0.1",
+    manifestVersion: "1",
+    branch: "stable",
+    categories: ["portfolio", "defi"],
+    currencies: ["ethereum"],
+    content: {
+      shortDescription: {
+        en: "Manage your entire Ethereum DeFi portfolio from one place.",
+      },
+      description: {
+        en: "Manage your entire Ethereum DeFi portfolio from one place.",
+      },
+    },
+    permissions: [],
+    domains: [],
+  },
+  {
+    id: "rainbow",
+    name: "Rainbow.me",
+    url: "https://ledger-live-platform-apps.vercel.app/app/web-browser?url=https%3A%2F%2Frainbow.me%2F%7Baccount.address%7D&currencies=ethereum&webAppName=Rainbow.me",
+    homepageUrl: "https://rainbow.me",
+    icon: "https://cdn.live.ledger.com/icons/platform/rainbow.png",
+    platform: "all",
+    apiVersion: "0.0.1",
+    manifestVersion: "1",
+    branch: "stable",
+    categories: ["nft"],
+    currencies: ["ethereum"],
+    content: {
+      shortDescription: {
+        en: "An easy way to visualize the NFT secured by your hardware wallet.",
+      },
+      description: {
+        en: "An easy way to visualize the NFT secured by your hardware wallet.",
+      },
+    },
+    permissions: [],
+    domains: [],
+  },
+  {
     id: "aave",
     name: "Aave",
     url: "",
@@ -127,29 +174,6 @@ const manifest: AppManifest[] = [
       description: {
         en:
           "Lend or Borrow your crypto via a completely decentralized and open-source protocol.",
-      },
-    },
-    permissions: [],
-    domains: [],
-  },
-  {
-    id: "rainbow",
-    name: "Rainbow.me",
-    url: "",
-    homepageUrl: "https://rainbow.me",
-    icon: "https://cdn.live.ledger.com/icons/platform/rainbow.png",
-    platform: "all",
-    apiVersion: "0.0.1",
-    manifestVersion: "1",
-    branch: "soon",
-    categories: ["nft"],
-    currencies: ["ethereum"],
-    content: {
-      shortDescription: {
-        en: "An easy way to visualize the NFT secured by your hardware wallet.",
-      },
-      description: {
-        en: "An easy way to visualize the NFT secured by your hardware wallet.",
       },
     },
     permissions: [],
@@ -221,29 +245,6 @@ const manifest: AppManifest[] = [
       },
       description: {
         en: "Stake any amount of Eth to Eth2 and earn daily staking rewards.",
-      },
-    },
-    permissions: [],
-    domains: [],
-  },
-  {
-    id: "zerion",
-    name: "Zerion",
-    url: "",
-    homepageUrl: "https://zerion.io/",
-    icon: "https://cdn.live.ledger.com/icons/platform/zerion.png",
-    platform: "all",
-    apiVersion: "0.0.1",
-    manifestVersion: "1",
-    branch: "soon",
-    categories: ["portfolio", "defi"],
-    currencies: ["ethereum"],
-    content: {
-      shortDescription: {
-        en: "Manage your entire Ethereum DeFi portfolio from one place.",
-      },
-      description: {
-        en: "Manage your entire Ethereum DeFi portfolio from one place.",
       },
     },
     permissions: [],

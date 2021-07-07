@@ -3,12 +3,13 @@ import { BigNumber } from "bignumber.js";
 import { Observable, Subject } from "rxjs";
 import { log } from "@ledgerhq/logs";
 import { PRELOAD_MAX_AGE } from "./logic";
-import { getRegistry } from "./cache";
+import { getRegistry, getMinimumBondBalance } from "./cache";
 import type { PolkadotPreloadData, PolkadotValidator } from "./types";
 import { getStakingProgress, getValidators } from "./validators";
 let currentPolkadotPreloadedData: PolkadotPreloadData = {
   validators: [],
-  staking: null,
+  staking: undefined,
+  minimumBondBalance: "0",
 };
 
 function fromHydrateValidator(
@@ -31,13 +32,16 @@ function fromHydrateValidator(
 }
 
 function fromHydratePreloadData(data: any): PolkadotPreloadData {
-  let validators: PolkadotValidator[] = [];
-  let staking: {
-    electionClosed: boolean;
-    activeEra: number;
-    maxNominatorRewardedPerValidator: number;
-    bondingDuration: number;
-  } | null = null;
+  let validators = [];
+  let staking:
+    | {
+        electionClosed: boolean;
+        activeEra: number;
+        maxNominatorRewardedPerValidator: number;
+        bondingDuration: number;
+      }
+    | undefined = undefined;
+  let minimumBondBalance = "0";
 
   if (typeof data === "object" && data) {
     if (Array.isArray(data.validators)) {
@@ -59,11 +63,19 @@ function fromHydratePreloadData(data: any): PolkadotPreloadData {
         bondingDuration: Number(bondingDuration) || 28,
       };
     }
+
+    if (
+      data.minimumBondBalance !== null &&
+      typeof data.minimumBondBalance === "string"
+    ) {
+      minimumBondBalance = data.minimumBondBalance || "0";
+    }
   }
 
   return {
     validators,
     staking,
+    minimumBondBalance,
   };
 }
 
@@ -95,6 +107,8 @@ const shouldRefreshValidators = (previousState, currentState) => {
 
 export const preload = async (): Promise<PolkadotPreloadData> => {
   await getRegistry(); // ensure registry is already in cache.
+  const minimumBondBalance = await getMinimumBondBalance();
+  const minimumBondBalanceStr = minimumBondBalance.toString();
 
   const currentStakingProgress = await getStakingProgress();
   const {
@@ -122,6 +136,7 @@ export const preload = async (): Promise<PolkadotPreloadData> => {
   return {
     validators,
     staking: currentStakingProgress,
+    minimumBondBalance: minimumBondBalanceStr,
   };
 };
 export const hydrate = (data: unknown) => {

@@ -195,6 +195,23 @@ const fetchActiveEra = async (): Promise<SidecarPalletStorageItem> => {
 };
 
 /**
+ * Fetch the minimum value allowed for a bond
+ *
+ * @async
+ * @param {string} addr
+ *
+ * @returns {string}
+ */
+export const getMinimumBondBalance = async (): Promise<BigNumber> => {
+  const { data }: { data: SidecarPalletStorageItem } = await network({
+    method: "GET",
+    url: getSidecarUrl(`/pallets/staking/storage/minNominatorBond`),
+  });
+
+  return (data.value && new BigNumber(data.value)) || new BigNumber(0);
+};
+
+/**
  * Fetch a list of validators with some info and indentity.
  * It fetches the list providing a status (all, elected, waiting) and/or a list of
  * addresses (comma-separated or as multiple query params).
@@ -691,8 +708,7 @@ export const getConstants: CacheRes<
   async (): Promise<Record<string, any>> => fetchConstants(),
   () => "polkadot",
   {
-    max: 1,
-    // Store only one constnats object since we only have polkadot.
+    max: 1, // Store only one constants object since we only have polkadot.
     maxAge: 60 * 60 * 1000, // 1 hour
   }
 );

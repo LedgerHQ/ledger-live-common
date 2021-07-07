@@ -28,6 +28,7 @@ export {
   verifyValidatorAddresses,
   getAccount,
   getTransactionParams,
+  getMinimumBondBalance,
   submitExtrinsic,
   paymentInfo,
   getValidators,

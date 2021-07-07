@@ -16,7 +16,7 @@ import {
   canUnbond,
   canNominate,
   isFirstBond,
-  getMinimalLockedBalance,
+  getMinimumAmountToBond,
 } from "../../families/polkadot/logic";
 import { DeviceModelId } from "@ledgerhq/devices";
 
@@ -84,8 +84,11 @@ const polkadot: AppSpec<Transaction> = {
       maxRun: 2,
       transaction: ({ account, bridge }) => {
         invariant(canBond(account), "can't bond");
+        const { minimumBondBalance } = getCurrentPolkadotPreloadData();
         invariant(
-          new BigNumber(100000).gt(getMinimalLockedBalance(account)),
+          new BigNumber(100000).gt(
+            getMinimumAmountToBond(account, new BigNumber(minimumBondBalance))
+          ),
           "can't bond because too much unbond"
         );
         const { polkadotResources } = account;
