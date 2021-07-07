@@ -192,7 +192,7 @@ const cmd = ({
                     from(manager.getLatestFirmwareForDevice(deviceInfo)).pipe(
                       mergeMap((latest: ?FirmwareUpdateContext) => {
                         if (
-                          !latest || // Fixme is it safe to let it pass here?
+                          !latest ||
                           semver.eq(deviceInfo.version, latest.final.version)
                         ) {
                           o.next({ type: "latest-firmware-resolved" });
