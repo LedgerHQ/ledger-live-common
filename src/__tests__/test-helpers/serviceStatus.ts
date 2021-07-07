@@ -1,4 +1,4 @@
-import type {
+import {
   ServiceStatusApi,
   ServiceStatusSummary,
   Incident,
@@ -586,6 +586,7 @@ const mockedIncidents: Incident[] = [
     updated_at: "2021-02-22T17:58:18.792+02:00",
   },
 ];
+
 export function toggleMockIncident(): void {
   statuses.incidents = statuses.incidents.length > 0 ? [] : mockedIncidents;
 }

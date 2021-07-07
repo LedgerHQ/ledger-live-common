@@ -4,7 +4,6 @@ import type {
   AnnouncementsApi,
   RawAnnouncement,
 } from "../../notifications/AnnouncementProvider/types";
-
 const announcementsPool: RawAnnouncement[] = [
   {
     uuid: "announcement-id-a",
@@ -78,10 +77,8 @@ const announcementsPool: RawAnnouncement[] = [
     currencies: ["bitcoin"],
   },
 ];
-
 const announcements: RawAnnouncement[] = [...announcementsPool];
 const rng = new Prando(getEnv("MOCK"));
-
 export const addMockAnnouncement = (params?: RawAnnouncement): void => {
   const now = new Date();
   const expiryDate = new Date(now.getTime() + 2 * 60 * 1000);
