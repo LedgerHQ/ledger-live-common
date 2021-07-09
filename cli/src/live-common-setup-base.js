@@ -6,6 +6,9 @@ import simple from "@ledgerhq/live-common/lib/logs/simple";
 import { listen } from "@ledgerhq/logs";
 import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
 import { setSupportedCurrencies } from "@ledgerhq/live-common/lib/currencies";
+import { setPlatformVersion } from "@ledgerhq/live-common/lib/platform/version";
+
+setPlatformVersion("0.0.1");
 
 setSupportedCurrencies([
   "bitcoin",
@@ -39,6 +42,8 @@ setSupportedCurrencies([
   "algorand",
   "polkadot",
   "cosmos_testnet",
+  "crypto_org",
+  "crypto_org_croeseid",
 ]);
 
 for (const k in process.env) setEnvUnsafe(k, process.env[k]);
