@@ -1,5 +1,10 @@
 import { setSupportedCurrencies } from "../../currencies";
+import { setPlatformVersion } from "../../platform/version";
+
 jest.setTimeout(180000);
+
+setPlatformVersion("0.0.1");
+
 setSupportedCurrencies([
   "bitcoin",
   "ethereum",

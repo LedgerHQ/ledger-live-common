@@ -86,7 +86,7 @@ const manifest: AppManifest[] = [
     id: "zerion",
     name: "Zerion",
     url:
-      "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?dappName=Zerion&url=https%3A%2F%2Ffeature-ledger-dapp-browser-2605-mzkrvfnv6a-ue.a.run.app%3Fembed%3Dledgerdappbrowser",
+      "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?dappName=Zerion&nanoApp=Paraswap&url=https%3A%2F%2Fapp.zerion.io%2F%3Fembed%3Dledgerdappbrowser",
     homepageUrl: "https://zerion.io/",
     icon: "https://cdn.live.ledger.com/icons/platform/zerion.png",
     platform: "all",
@@ -97,10 +97,10 @@ const manifest: AppManifest[] = [
     currencies: ["ethereum"],
     content: {
       shortDescription: {
-        en: "Manage your entire Ethereum DeFi portfolio from one place.",
+        en: "The smart way to manage your DeFi portfolio.",
       },
       description: {
-        en: "Manage your entire Ethereum DeFi portfolio from one place.",
+        en: "The smart way to manage your DeFi portfolio.",
       },
     },
     permissions: [],
@@ -109,7 +109,8 @@ const manifest: AppManifest[] = [
   {
     id: "rainbow",
     name: "Rainbow.me",
-    url: "https://ledger-live-platform-apps.vercel.app/app/web-browser?url=https%3A%2F%2Frainbow.me%2F%7Baccount.address%7D&currencies=ethereum&webAppName=Rainbow.me",
+    url:
+      "https://ledger-live-platform-apps.vercel.app/app/web-browser?url=https%3A%2F%2Frainbow.me%2F%7Baccount.address%7D&currencies=ethereum&webAppName=Rainbow.me",
     homepageUrl: "https://rainbow.me",
     icon: "https://cdn.live.ledger.com/icons/platform/rainbow.png",
     platform: "all",

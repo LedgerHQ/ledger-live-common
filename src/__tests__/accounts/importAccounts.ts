@@ -5,6 +5,10 @@ import {
 } from "../../account";
 import { setSupportedCurrencies } from "../../currencies";
 import { AccountRaw } from "../../types";
+import { setPlatformVersion } from "../../platform/version";
+
+setPlatformVersion("0.0.1");
+
 setSupportedCurrencies(["ethereum"]);
 describe("importAccountsMakeItems", () => {
   // TODO we need to change the dataset as we no longer are migrating away from JS to Libcore but kinda the reverse

@@ -37,7 +37,10 @@ export const sortAccountsComparatorFromOrder = (
 
   if (order === "name") {
     return (a, b) =>
-      ascValue * sortNameLense(a).localeCompare(sortNameLense(b));
+      ascValue *
+      sortNameLense(a).localeCompare(sortNameLense(b), undefined, {
+        numeric: true,
+      });
   }
 
   const cvCaches = {};

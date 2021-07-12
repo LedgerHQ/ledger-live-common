@@ -65,6 +65,7 @@ function convertASN1toBase64(signature) {
   const sigS = signature.slice(sOffset);
   const newSigR = padZero(sigR, 32);
   const newSigS = padZero(sigS, 32);
+
   const signatureFormatted = Buffer.concat([newSigR, newSigS]);
 
   if (signatureFormatted.length !== 64) {
