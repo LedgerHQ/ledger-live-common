@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import type { PlatformAppContextType, Props, State } from "./types";
 import api from "./api";
+import { mergeManigestLists } from "./helpers";
 
 //$FlowFixMe
 const PlatformAppContext = createContext<PlatformAppContextType>({});
@@ -42,7 +43,9 @@ export function PlatformAppProvider({
         isLoading: true,
       }));
       const manifests = await api.fetchManifest();
-      const allManifests = [...extraManifests, ...manifests];
+      const allManifests = extraManifests
+        ? mergeManigestLists(manifests, extraManifests)
+        : manifests;
       setState((previousState) => ({
         ...previousState,
         manifests: allManifests,

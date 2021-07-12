@@ -233,14 +233,13 @@ const manifest: AppManifest[] = [
   {
     id: "lido",
     name: "Lido",
-    url:
-      "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?dappName=Lido&nanoApp=Lido&url=https%3A%2F%2Fledger-hq-test.vercel.app%2F",
+    url: "",
     homepageUrl: "https://lido.fi/",
     icon: "https://cdn.live.ledger.com/icons/platform/lido.png",
     platform: "all",
     apiVersion: "0.0.1",
     manifestVersion: "1",
-    branch: "stable",
+    branch: "soon",
     categories: ["staking", "defi"],
     currencies: ["ethereum"],
     content: {
