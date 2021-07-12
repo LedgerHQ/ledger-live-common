@@ -1,6 +1,7 @@
 import { BigNumber } from "bignumber.js";
 import querystring from "querystring";
 import { TypeRegistry } from "@polkadot/types";
+import { Registry } from "@polkadot/types/types";
 import { getSpecTypes } from "@polkadot/types-known";
 import { Metadata } from "@polkadot/metadata";
 import { expandMetadata } from "@polkadot/metadata/decorate";
@@ -662,7 +663,7 @@ export const getRegistry = async (): Promise<{
     fetchTransactionMaterial(true),
     fetchChainSpec(),
   ]);
-  const registry = new TypeRegistry();
+  const registry: any = new TypeRegistry();
   const metadata = new Metadata(registry, material.metadata);
   // Register types specific to chain/runtimeVersion
   registry.register(
@@ -671,7 +672,7 @@ export const getRegistry = async (): Promise<{
       material.chainName,
       material.specName,
       Number(material.specVersion)
-    )
+    ) as any
   );
   // Register the chain properties for this registry
   registry.setChainProperties(
