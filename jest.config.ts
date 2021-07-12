@@ -20,5 +20,14 @@ export default {
     "cli/",
     "test-helpers/",
   ],
+  moduleNameMapper: {
+    "^@polkadot/util$": "@polkadot/util/index.cjs",
+    "^@polkadot/util-crypto$": "@polkadot/util-crypto/index.cjs",
+    "^@polkadot/wasm-crypto$": "@polkadot/wasm-crypto/index.cjs",
+    "^@polkadot/x-textdecoder/node$": "@polkadot/x-textdecoder/node.cjs",
+  },
+  transformIgnorePatterns: [
+    "/node_modules/(?!@polkadot|@babel/runtime/helpers/esm/)",
+  ],
   moduleDirectories: ["node_modules", "cli/node_modules"],
 };
