@@ -1,5 +1,10 @@
 export default {
   preset: "ts-jest",
+  globals: {
+    "ts-jest": {
+      isolatedModules: true,
+    },
+  },
   testEnvironment: "node",
   coverageDirectory: "./coverage/",
   coverageReporters: ["json", "lcov", "clover"],
@@ -9,7 +14,6 @@ export default {
     "<rootDir>/benchmark/.*",
     "<rootDir>/cli/.yalc/.*",
   ],
-  testRegex: ".test.ts$",
   testPathIgnorePatterns: [
     "benchmark/",
     "tools/",
@@ -24,7 +28,7 @@ export default {
     "^@polkadot/util$": "@polkadot/util/index.cjs",
     "^@polkadot/util-crypto$": "@polkadot/util-crypto/index.cjs",
     "^@polkadot/wasm-crypto$": "@polkadot/wasm-crypto/index.cjs",
-    "^@polkadot/x-textdecoder/node$": "@polkadot/x-textdecoder/node.cjs",
+    "^@polkadot/x-textdecoder/node$": "@polkadot/x-textdecoder/node.cjs", // WHY ARE U NOT WORKING !!!???
   },
   transformIgnorePatterns: [
     "/node_modules/(?!@polkadot|@babel/runtime/helpers/esm/)",

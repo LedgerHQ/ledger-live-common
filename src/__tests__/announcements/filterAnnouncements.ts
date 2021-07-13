@@ -302,23 +302,27 @@ describe("filterAnnouncements", () => {
     });
   });
   describe("published_at filters", () => {
-    beforeAll(() => {
-      timemachine.config({
-        dateString: "February 22, 2021 13:12:59",
-      });
-    });
     const context = {
       language: "en",
       currencies: ["bitcoin", "cosmos"],
       getDate: () => new Date(),
     };
-    beforeEach(() => {
-      announcements = localizeAnnouncements(rawAnnouncements, context);
-    });
-    afterEach(() => {
-      timemachine.reset();
-    });
+
     describe("with current date higher than publish date", () => {
+      beforeAll(() => {
+        timemachine.config({
+          dateString: "February 22, 2021 13:12:59",
+        });
+      });
+
+      beforeEach(() => {
+        announcements = localizeAnnouncements(rawAnnouncements, context);
+      });
+
+      afterEach(() => {
+        timemachine.reset();
+      });
+
       it(`should return all the article posted before `, () => {
         const filtered = filterAnnouncements(announcements, context);
         const expected = [
@@ -382,12 +386,14 @@ describe("filterAnnouncements", () => {
         expect(filtered).toStrictEqual(expected);
       });
     });
+
     describe("with current date lower than publish date", () => {
       beforeEach(() => {
         timemachine.config({
           dateString: "October 10, 2019 13:12:59",
         });
       });
+
       it("should return only the article posted before", () => {
         const filtered = filterAnnouncements(announcements, context);
         const expected = [
@@ -426,19 +432,23 @@ describe("filterAnnouncements", () => {
         dateString: "February 22, 2021 13:12:59",
       });
     });
+
     afterAll(() => {
       timemachine.config({
         dateString: "February 22, 2021 13:12:59",
       });
     });
+
     const context = {
       language: "en",
       currencies: ["bitcoin", "cosmos"],
       getDate: () => new Date(),
     };
+
     beforeEach(() => {
       announcements = localizeAnnouncements(rawAnnouncements, context);
     });
+
     describe("with current date lower than expiration date", () => {
       it("should return all non-expired announcements", () => {
         const filtered = filterAnnouncements(announcements, context);
@@ -508,31 +518,32 @@ describe("filterAnnouncements", () => {
         timemachine.config({
           dateString: "April 22, 2021 13:12:59",
         });
-        it("should return only non-expired announcements", () => {
-          const filtered = filterAnnouncements(announcements, context);
-          const expected = [
-            {
-              uuid: "announcement-id-c",
-              level: "warning",
-              icon: "warning",
-              content: {
-                title: "Incoming bitcoin fork",
-                text:
-                  "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
-                link: {
-                  href: "https://ledger.com/there-is/an/incoming-cosmos-fork",
-                  label: "Click here for more information on upcoming fork",
-                },
+      });
+
+      it("should return only non-expired announcements", () => {
+        const filtered = filterAnnouncements(announcements, context);
+        const expected = [
+          {
+            uuid: "announcement-id-c",
+            level: "warning",
+            icon: "warning",
+            content: {
+              title: "Incoming bitcoin fork",
+              text:
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
+              link: {
+                href: "https://ledger.com/there-is/an/incoming-cosmos-fork",
+                label: "Click here for more information on upcoming fork",
               },
-              priority: 1,
-              contextual: ["send"],
-              published_at: "2019-10-31T00:00:00.000Z",
-              expired_at: "2021-05-06T00:00:00.000Z",
-              currencies: ["bitcoin"],
             },
-          ];
-          expect(filtered).toStrictEqual(expected);
-        });
+            priority: 1,
+            contextual: ["send"],
+            published_at: "2019-10-31T00:00:00.000Z",
+            expired_at: "2021-05-06T00:00:00.000Z",
+            currencies: ["bitcoin"],
+          },
+        ];
+        expect(filtered).toStrictEqual(expected);
       });
     });
   });
