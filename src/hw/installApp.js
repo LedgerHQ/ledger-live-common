@@ -2,13 +2,13 @@
 import { Observable, throwError } from "rxjs";
 import { throttleTime, filter, map, catchError } from "rxjs/operators";
 import { ManagerAppDepInstallRequired } from "@ledgerhq/errors";
-import type Transport from "@ledgerhq/hw-transport";
+import Transport from "@ledgerhq/hw-transport";
 import type { ApplicationVersion, App } from "../types/manager";
 import ManagerAPI from "../api/Manager";
 import { getDependencies } from "../apps/polyfill";
 
 export default function installApp(
-  transport: Transport<*>,
+  transport: typeof Transport,
   targetId: string | number,
   app: ApplicationVersion | App
 ): Observable<{ progress: number }> {
@@ -26,7 +26,7 @@ export default function installApp(
     catchError((e: Error) => {
       if (!e || !e.message) return throwError(e);
       const status = e.message.slice(e.message.length - 4);
-      if (status === "6a83") {
+      if (status === "6a83" || status === "6811") {
         const dependencies = getDependencies(app.name);
         return throwError(
           new ManagerAppDepInstallRequired("", {

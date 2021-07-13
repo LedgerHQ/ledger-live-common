@@ -37,7 +37,7 @@ brew cask install docker
 (2) You need to grab latest 'speculos' image
 
 ```
-docker pull ledgerhq/speculos
+docker pull ghcr.io/ledgerhq/speculos
 ```
 
 (3) generate a SEED (for instance with https://iancoleman.io/bip39/) and put it in your environment (or `.env` file)
@@ -192,7 +192,7 @@ function deviceActionAcceptBitcoin({
   transport,
   event,
 }: {
-  transport: Transport<*> & { button: (string) => void },
+  transport: typeof Transport & { button: (string) => void },
   event: { type: string, text: string },
 }) {
   if (event.text.startsWith("Accept")) {

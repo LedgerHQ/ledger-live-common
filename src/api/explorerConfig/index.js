@@ -35,12 +35,10 @@ const initialExplorerConfig: FullConfig = {
       base: "EXPLORER",
       version: "v2",
     },
-    /*
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
-    */
   },
   clubcoin: {
     id: "club",
@@ -100,10 +98,12 @@ const initialExplorerConfig: FullConfig = {
       base: "EXPLORER",
       version: "v2",
     },
+    /*
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
+    */
   },
   litecoin: {
     id: "ltc",
@@ -190,18 +190,20 @@ const initialExplorerConfig: FullConfig = {
       base: "EXPLORER",
       version: "v2",
     },
-    /*
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
-    */
   },
   zcash: {
     id: "zec",
     stable: {
       base: "EXPLORER",
       version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
     },
   },
   zencash: {
