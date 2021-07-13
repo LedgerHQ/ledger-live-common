@@ -167,17 +167,22 @@ function getEthereumjsTxCommon(currency) {
   );
   if (ethereumLikeInfo.chainId === 1) {
     return new Common(
+      // $FlowFixMe
       ethereumLikeInfo.baseChain || "mainnet",
+      // $FlowFixMe
       ethereumLikeInfo.hardfork || "petersburg"
     );
   }
   return Common.forCustomChain(
+    // $FlowFixMe
     ethereumLikeInfo.baseChain || "mainnet",
     {
       name: currency.ticker,
       chainId: ethereumLikeInfo.chainId,
+      // $FlowFixMe
       networkId: ethereumLikeInfo.networkId || ethereumLikeInfo.chainId,
     },
+    // $FlowFixMe
     ethereumLikeInfo.hardfork || "petersburg"
   );
 }
