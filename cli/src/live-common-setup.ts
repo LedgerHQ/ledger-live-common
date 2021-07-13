@@ -3,7 +3,7 @@ import React from "react";
 import { connect } from "react-redux";
 import invariant from "invariant";
 import {
-  createTransportReplayer,
+  openTransportReplayer,
   RecordStore,
 } from "@ledgerhq/hw-transport-mocker";
 import Transport from "@ledgerhq/hw-transport";
@@ -51,11 +51,11 @@ export function releaseMockDevice(id: string) {
   delete mockTransports[id];
 }
 
-export function mockDeviceWithAPDUs(apdus: string) {
+export async function mockDeviceWithAPDUs(apdus: string) {
   const id = `mock:${++idCounter}`;
   const store = RecordStore.fromString(apdus);
   recordStores[id] = store;
-  mockTransports[id] = createTransportReplayer(store);
+  mockTransports[id] = await openTransportReplayer(store);
   return id;
 }
 

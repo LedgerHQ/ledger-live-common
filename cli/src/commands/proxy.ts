@@ -2,7 +2,7 @@
 import {
   RecordStore,
   createTransportRecorder,
-  createTransportReplayer,
+  openTransportReplayer,
 } from "@ledgerhq/hw-transport-mocker";
 import { log, listen } from "@ledgerhq/logs";
 import { open } from "@ledgerhq/live-common/lib/hw";
@@ -109,7 +109,7 @@ const job = ({
           "proxy",
           `${recordStore.queue.length} mocked APDUs will be replayed from ${file}`
         );
-        Transport = createTransportReplayer(recordStore);
+        Transport = openTransportReplayer(recordStore);
       }
     } else {
       Transport = getTransportLike();
