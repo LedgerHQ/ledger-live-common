@@ -55,6 +55,7 @@
     "@ledgerhq/hw-app-xrp": "6.1.0",
     "@ledgerhq/hw-transport": "6.1.0",
     "@ledgerhq/hw-transport-mocker": "6.1.0",
+    "@ledgerhq/hw-transport-node-ble": "^6.1.0",
     "@ledgerhq/hw-transport-node-speculos": "6.1.0",
     "@ledgerhq/logs": "6.0.2",
     "@polkadot/metadata": "^4.17.1",
