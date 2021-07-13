@@ -125,7 +125,7 @@ export function testBridge<T extends Transaction>(
     const bridge = getCurrencyBridge(currency);
 
     const scanAccounts = async (apdus) => {
-      const deviceId = mockDeviceWithAPDUs(apdus);
+      const deviceId = await mockDeviceWithAPDUs(apdus);
 
       try {
         const accounts = await bridge
@@ -735,7 +735,7 @@ export function testBridge<T extends Transaction>(
                 }
 
                 if (apdus && impl !== "mock") {
-                  const deviceId = mockDeviceWithAPDUs(apdus);
+                  const deviceId = await mockDeviceWithAPDUs(apdus);
 
                   try {
                     const signedOperation = await bridge

@@ -1,6 +1,6 @@
 import invariant from "invariant";
 import {
-  createTransportReplayer,
+  openTransportReplayer,
   RecordStore,
 } from "@ledgerhq/hw-transport-mocker";
 import { registerTransportModule } from "../../hw";
@@ -14,11 +14,11 @@ export function releaseMockDevice(id: string) {
   delete recordStores[id];
   delete transports[id];
 }
-export function mockDeviceWithAPDUs(apdus: string) {
+export async function mockDeviceWithAPDUs(apdus: string) {
   const id = `mock:${++idCounter}`;
   const store = RecordStore.fromString(apdus);
   recordStores[id] = store;
-  transports[id] = createTransportReplayer(store);
+  transports[id] = await openTransportReplayer(store);
   return id;
 }
 registerTransportModule({
