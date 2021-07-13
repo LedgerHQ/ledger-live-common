@@ -228,7 +228,7 @@ const initialExplorerConfig: FullConfig = {
       version: "v3",
     },
   },
-  bnb: {
+  bsc: {
     id: "bnb",
     stable: {
       base: "EXPLORER",
