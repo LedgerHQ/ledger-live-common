@@ -1,7 +1,7 @@
 // @flow
 import type { Account } from "../../types";
-
 import { getNetworkConfig } from "./api";
+import type { Transaction } from "./types";
 
 export const compareVersions = (versionA: string, versionB: string): number => {
   let i, diff;
@@ -39,6 +39,10 @@ export const isValidAddress = (address: string): boolean => {
   if (address.length !== 62) return false;
 
   return true;
+};
+
+export const isSelfTransaction = (a: Account, t: Transaction): boolean => {
+  return t.recipient === a.freshAddress;
 };
 
 /**

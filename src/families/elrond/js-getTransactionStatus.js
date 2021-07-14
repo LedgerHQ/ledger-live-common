@@ -8,8 +8,8 @@ import {
 } from "@ledgerhq/errors";
 import type { Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
-
-import { isValidAddress } from "./logic";
+import { isValidAddress, isSelfTransaction } from "./logic";
+import { ElrondSelfTransactionError } from "./errors";
 
 const getTransactionStatus = async (
   a: Account,
@@ -21,6 +21,12 @@ const getTransactionStatus = async (
 
   if (!t.recipient) {
     errors.recipient = new RecipientRequired();
+  }
+
+  if (isSelfTransaction(a, t)) {
+    errors.recipient = new ElrondSelfTransactionError(
+      "Recipient address is the same as the sender!"
+    );
   }
 
   if (!isValidAddress(t.recipient)) {
