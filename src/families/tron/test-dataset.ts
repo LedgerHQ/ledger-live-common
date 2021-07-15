@@ -728,14 +728,14 @@ const dataset: DatasetTest<Transaction> = {
             },
           ],
           FIXME_tests: [
-            /** 
+            /**
           Error:
             - Expected
             + Received
             - "26003017"
             + "26000197"
            The live-common ignore all unsupported tokens (by the nano app) transactions.
-          
+
           Difference of 2820 (0.00282 TRX) is due to an unsupported tr10 transaction which have fee:
           https://tronscan.org/#/transaction/6fe0b288e0cce30396afe40b365ee57642be44146acc847672fe3d328309d2b0
            To re-enable when the support will be done.

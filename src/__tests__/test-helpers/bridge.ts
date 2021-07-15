@@ -659,7 +659,7 @@ export function testBridge<T extends Transaction>(
               makeTest("transaction " + name, async () => {
                 const account: Account = await getSynced();
                 let t =
-                  typeof transaction === "function" // $FlowFixMe
+                  typeof transaction === "function"
                     ? transaction(
                         bridge.createTransaction(account),
                         account,
