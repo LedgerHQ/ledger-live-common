@@ -18,7 +18,6 @@ import {
   PolkadotUnauthorizedOperation,
   PolkadotElectionClosed,
   PolkadotNotValidator,
-  PolkadotLowBondedBalance,
   PolkadotNoUnlockedBalance,
   PolkadotNoNominations,
   PolkadotAllFundsWarning,
@@ -193,10 +192,16 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
       if (amount.lte(0)) {
         errors.amount = new AmountRequired();
       } else if (
-        amount.gt(currentBonded.minus(EXISTENTIAL_DEPOSIT)) &&
+        amount.gt(currentBonded.minus(minimumBondBalance)) &&
         amount.lt(currentBonded)
       ) {
-        warnings.amount = new PolkadotLowBondedBalance();
+        warnings.amount = new PolkadotBondMinimumAmountWarning("", {
+          minimumBondBalance: formatCurrencyUnit(
+            a.currency.units[0],
+            minimumBondBalance,
+            { showCode: true }
+          ),
+        });
       } else if (amount.gt(currentBonded)) {
         errors.amount = new NotEnoughBalance();
       }
