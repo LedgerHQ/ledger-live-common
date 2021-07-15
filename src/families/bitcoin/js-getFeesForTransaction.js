@@ -51,11 +51,11 @@ const getFeesForTransaction = async ({
     if (syncReplaceAddress) {
       txInputs = txInputs.map((i) => ({
         ...i,
-        address: syncReplaceAddress(account, i.address),
+        address: syncReplaceAddress(i.address),
       }));
       txOutputs = txOutputs.map((o) => ({
         ...o,
-        address: o.address && syncReplaceAddress(account, o.address),
+        address: o.address && syncReplaceAddress(o.address),
       }));
     }
   }

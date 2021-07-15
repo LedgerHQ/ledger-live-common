@@ -64,10 +64,10 @@ export const isValidRecipient = async ({
   return Promise.resolve(null);
 };
 
-export const getUTXOCount = (account: Account) => {
+export const getUTXOCount = (account: Account): BigNumber => {
   // TODO
 
-  return 0;
+  return BigNumber(0);
 };
 
 type UTXOStatus =
@@ -117,10 +117,10 @@ type CoinLogic = {
   hasExtraData?: boolean,
   hasExpiryHeight?: boolean,
   getAdditionals?: ({ transaction: Transaction }) => string[],
-  asLibcoreTransactionRecipient?: (string) => string,
+  asExplicitTransactionRecipient?: (string) => string,
   onScreenTransactionRecipient?: (string) => string,
   postBuildBitcoinResources?: (Account, BitcoinResources) => BitcoinResources,
-  syncReplaceAddress?: (existingAccount: ?Account, addr: string) => string,
+  syncReplaceAddress?: (addr: string) => string,
   injectGetAddressParams?: (Account) => any,
 };
 
@@ -156,8 +156,9 @@ export const perCoinLogic: { [_: CryptoCurrencyIds]: ?CoinLogic } = {
       return additionals;
     },
 
-    // due to libcore minimal support, we need to return the explicit format of bitcoincash:.. if it's a P2PKH
-    asLibcoreTransactionRecipient: bchExplicit,
+    // Due to minimal support, we need to return the explicit format of bitcoincash:.. if it's a P2PKH
+    // FIXME Adapted from libcore - is it still necessary?
+    asExplicitTransactionRecipient: bchExplicit,
 
     // to represent what happens on the device, which do not display the bitcoincash: prefix
     onScreenTransactionRecipient: (str: string): string => {
@@ -165,8 +166,7 @@ export const perCoinLogic: { [_: CryptoCurrencyIds]: ?CoinLogic } = {
       return str.startsWith(prefix) ? str.slice(prefix.length) : str;
     },
 
-    syncReplaceAddress: (existingAccount, addr) =>
-      bchToCashaddrAddressWithoutPrefix(addr),
+    syncReplaceAddress: (addr) => bchToCashaddrAddressWithoutPrefix(addr),
 
     injectGetAddressParams: () => ({ forceFormat: "cashaddr" }),
   },

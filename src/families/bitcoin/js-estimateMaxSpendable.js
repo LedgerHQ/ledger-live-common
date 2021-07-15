@@ -31,7 +31,7 @@ const estimateMaxSpendable = async ({
     ...createTransaction(),
     ...transaction,
     recipient:
-      transaction?.recipient || getAbandonSeedAddress(mainAccount.currency.id), // FIXME Why this abandon seed fallback? Is it safe?
+      transaction?.recipient || getAbandonSeedAddress(mainAccount.currency.id),
     useAllAmount: true,
   });
   const s = await getTransactionStatus(mainAccount, t);
