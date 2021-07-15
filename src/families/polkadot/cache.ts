@@ -1,4 +1,4 @@
-import { Extrinsics } from "@polkadot/metadata/decorate/types";
+import { Extrinsics } from "@polkadot/types/metadata/decorate/types";
 import { BigNumber } from "bignumber.js";
 
 import { TypeRegistry } from "@polkadot/types";
