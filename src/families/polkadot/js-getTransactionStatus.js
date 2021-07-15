@@ -23,6 +23,7 @@ import {
   PolkadotNoNominations,
   PolkadotAllFundsWarning,
   PolkadotBondMinimumAmount,
+  PolkadotBondMinimumAmountWarning,
   PolkadotMaxUnbonding,
   PolkadotValidatorsRequired,
   PolkadotDoMaxSendInstead,
@@ -211,10 +212,10 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
       } else if (amount.gt(unlockingBalance)) {
         errors.amount = new NotEnoughBalance();
       } else if (amount.lt(minimumAmountToBond)) {
-        errors.amount = new PolkadotBondMinimumAmount("", {
-          minimalAmount: formatCurrencyUnit(
+        warnings.amount = new PolkadotBondMinimumAmountWarning("", {
+          minimumBondBalance: formatCurrencyUnit(
             a.currency.units[0],
-            minimumAmountToBond,
+            minimumBondBalance,
             { showCode: true }
           ),
         });
