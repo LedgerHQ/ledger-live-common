@@ -53,8 +53,8 @@ const currencyBridge: CurrencyBridge = {
 const accountBridge: AccountBridge<Transaction> = {
   estimateMaxSpendable,
   createTransaction,
-  updateTransaction,
   prepareTransaction,
+  updateTransaction,
   getTransactionStatus,
   receive,
   sync,

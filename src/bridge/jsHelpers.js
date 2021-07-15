@@ -119,14 +119,27 @@ export const makeSync = (
 ): Observable<AccountUpdater> =>
   Observable.create((o) => {
     async function main() {
+      console.log("XXX - SYNC - XXX");
+
       const accountId = `js:2:${initial.currency.id}:${initial.freshAddress}:${initial.derivationMode}`;
       const needClear = initial.id !== accountId;
       try {
+        // FIXME Test this?
+        const path2 = getSeedIdentifierDerivation(
+          initial.currency,
+          initial.derivationMode
+        );
+
         const shape = await getAccountShape(
           {
             currency: initial.currency,
             id: accountId,
+            deviceId: initial.seedIdentifier,
+            index: initial.index,
             address: initial.freshAddress,
+            //derivationPath: freshAddressPath,
+            derivationPath: path2,
+            derivationMode: initial.derivationMode,
             initialAccount: needClear ? clearAccount(initial) : initial,
           },
           syncConfig
@@ -185,16 +198,29 @@ export const makeScanAccounts = (
       index,
       { address, path: freshAddressPath },
       derivationMode,
-      seedIdentifier
+      seedIdentifier,
+      transport
     ): Promise<?Account> {
+      console.log("XXX - scan 1 account - XXX");
+
       if (finished) return;
+
+      // FIXME Test this?
+      const path2 = getSeedIdentifierDerivation(currency, derivationMode);
 
       const accountId = `js:2:${currency.id}:${address}:${derivationMode}`;
       const accountShape: Account = await getAccountShape(
         {
+          transport,
           currency,
           id: accountId,
+          //deviceId: seedIdentifier,
+          deviceId,
+          index,
           address,
+          //derivationPath: freshAddressPath,
+          derivationPath: path2,
+          derivationMode,
         },
         syncConfig
       );
@@ -261,6 +287,8 @@ export const makeScanAccounts = (
     }
 
     async function main() {
+      console.log("XXX - SCAN ACCOUNTS - XXX");
+
       // TODO switch to withDevice
       let transport;
       try {
@@ -325,7 +353,8 @@ export const makeScanAccounts = (
               index,
               res,
               derivationMode,
-              seedIdentifier
+              seedIdentifier,
+              transport
             );
 
             log(

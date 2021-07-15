@@ -17,8 +17,8 @@ export type CoreCurrencySpecifics = {};
 export type BitcoinInput = {
   address: ?string,
   value: ?BigNumber,
-  previousTxHash: ?string,
-  previousOutputIndex: number,
+  previousTxHash: ?string, // FIXME Probably useless
+  previousOutputIndex: number, // FIXME Probably useless
 };
 
 export type BitcoinInputRaw = [?string, ?string, ?string, number];
