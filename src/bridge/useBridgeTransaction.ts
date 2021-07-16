@@ -46,32 +46,33 @@ const initial: State = {
   errorStatus: null,
 };
 
-const makeInit =
-  (optionalInit: (() => Partial<State>) | null | undefined) => (): State => {
-    let s = initial;
+const makeInit = (
+  optionalInit: (() => Partial<State>) | null | undefined
+) => (): State => {
+  let s = initial;
 
-    if (optionalInit) {
-      const patch = optionalInit();
-      const { account, parentAccount, transaction } = patch;
+  if (optionalInit) {
+    const patch = optionalInit();
+    const { account, parentAccount, transaction } = patch;
 
-      if (account) {
-        s = reducer(s, {
-          type: "setAccount",
-          account,
-          parentAccount,
-        });
-      }
-
-      if (transaction) {
-        s = reducer(s, {
-          type: "setTransaction",
-          transaction,
-        });
-      }
+    if (account) {
+      s = reducer(s, {
+        type: "setAccount",
+        account,
+        parentAccount,
+      });
     }
 
-    return s;
-  };
+    if (transaction) {
+      s = reducer(s, {
+        type: "setTransaction",
+        transaction,
+      });
+    }
+  }
+
+  return s;
+};
 
 const reducer = (s: State, a): State => {
   switch (a.type) {

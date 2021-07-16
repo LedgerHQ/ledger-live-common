@@ -7,7 +7,9 @@ export type DataModel<R, M> = {
   // import a given version of rawData back into model
   decode(rawModel: { data: R; version: number }): M;
   // export data into a serializable object (can be saved to a JSON file)
-  encode(model: M): {
+  encode(
+    model: M
+  ): {
     data: R;
     version: number;
   };

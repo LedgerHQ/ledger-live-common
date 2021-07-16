@@ -15,56 +15,54 @@ const neoAsset =
   "c56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
 const neoUnit = getCryptoCurrencyById("neo").units[0];
 
-const txToOps =
-  ({ id, address }) =>
-  (tx: Record<string, any>): Operation[] => {
-    const ops: Operation[] = [];
-    if (tx.asset !== neoAsset) return ops;
-    const hash = tx.txid;
-    const date = new Date(tx.time * 1000);
-    const value = parseCurrencyUnit(neoUnit, tx.amount);
-    const from = tx.address_from;
-    const to = tx.address_to;
-    const sending = address === from;
-    const receiving = address === to;
-    const fee = new BigNumber(0);
+const txToOps = ({ id, address }) => (tx: Record<string, any>): Operation[] => {
+  const ops: Operation[] = [];
+  if (tx.asset !== neoAsset) return ops;
+  const hash = tx.txid;
+  const date = new Date(tx.time * 1000);
+  const value = parseCurrencyUnit(neoUnit, tx.amount);
+  const from = tx.address_from;
+  const to = tx.address_to;
+  const sending = address === from;
+  const receiving = address === to;
+  const fee = new BigNumber(0);
 
-    if (sending) {
-      ops.push({
-        id: `${id}-${hash}-OUT`,
-        hash,
-        type: "OUT",
-        value: value.plus(fee),
-        fee,
-        blockHeight: tx.block_height,
-        blockHash: null,
-        accountId: id,
-        senders: [from],
-        recipients: [to],
-        date,
-        extra: {},
-      });
-    }
+  if (sending) {
+    ops.push({
+      id: `${id}-${hash}-OUT`,
+      hash,
+      type: "OUT",
+      value: value.plus(fee),
+      fee,
+      blockHeight: tx.block_height,
+      blockHash: null,
+      accountId: id,
+      senders: [from],
+      recipients: [to],
+      date,
+      extra: {},
+    });
+  }
 
-    if (receiving) {
-      ops.push({
-        id: `${id}-${hash}-IN`,
-        hash,
-        type: "IN",
-        value,
-        fee,
-        blockHeight: tx.block_height,
-        blockHash: null,
-        accountId: id,
-        senders: [from],
-        recipients: [to],
-        date,
-        extra: {},
-      });
-    }
+  if (receiving) {
+    ops.push({
+      id: `${id}-${hash}-IN`,
+      hash,
+      type: "IN",
+      value,
+      fee,
+      blockHeight: tx.block_height,
+      blockHash: null,
+      accountId: id,
+      senders: [from],
+      recipients: [to],
+      date,
+      extra: {},
+    });
+  }
 
-    return ops;
-  };
+  return ops;
+};
 
 const root = "https://api.neoscan.io";
 

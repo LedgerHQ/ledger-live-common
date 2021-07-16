@@ -40,6 +40,7 @@ import type { Device, Action } from "./types";
 import { shouldUpgrade } from "../../apps";
 import { ConnectAppTimeout } from "../../errors";
 import perFamilyAccount from "../../generated/account";
+
 type State = {
   isLoading: boolean;
   requestQuitApp: boolean;
@@ -71,6 +72,7 @@ type State = {
   progress?: number;
   listingApps?: boolean;
 };
+
 export type AppState = State & {
   onRetry: () => void;
   passWarning: () => void;
@@ -81,6 +83,7 @@ export type AppState = State & {
     | null
     | undefined;
 };
+
 export type AppRequest = {
   appName?: string;
   currency?: CryptoCurrency;
@@ -89,6 +92,7 @@ export type AppRequest = {
   dependencies?: AppRequest[];
   requireLatestFirmware?: boolean;
 };
+
 export type AppResult = {
   device: Device;
   appAndVersion: AppAndVersion | null | undefined;
@@ -99,7 +103,9 @@ export type AppResult = {
   dependencies?: AppRequest[];
   requireLatestFirmware?: boolean;
 };
+
 type AppAction = Action<AppRequest, AppState, AppResult>;
+
 type Event =
   | {
       type: "error";
@@ -434,9 +440,8 @@ const implementations = {
           .pipe(
             timeout(DEVICE_POLLING_TIMEOUT),
             catchError((err) => {
-              const productName = getDeviceModel(
-                pollingOnDevice.modelId
-              ).productName;
+              const productName = getDeviceModel(pollingOnDevice.modelId)
+                .productName;
               return err instanceof TimeoutError
                 ? of({
                     type: "error",
@@ -505,10 +510,13 @@ const implementations = {
       };
     }).pipe(distinctUntilChanged(isEqual)),
 };
+
 export let currentMode: keyof typeof implementations = "event";
+
 export function setDeviceMode(mode: keyof typeof implementations) {
   currentMode = mode;
 }
+
 export const createAction = (
   connectAppExec: (arg0: ConnectAppInput) => Observable<ConnectAppEvent>
 ): AppAction => {

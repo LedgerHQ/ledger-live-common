@@ -14,6 +14,7 @@ import type {
   InitSwapResult,
   SwapRequestEvent,
 } from "../../exchange/swap/types";
+
 type State = {
   initSwapResult: InitSwapResult | null | undefined;
   initSwapRequested: boolean;
@@ -22,7 +23,9 @@ type State = {
   isLoading: boolean;
   freezeReduxDevice: boolean;
 };
+
 type InitSwapState = AppState & State;
+
 type InitSwapRequest = {
   exchange: Exchange;
   exchangeRate: ExchangeRate;
@@ -30,6 +33,7 @@ type InitSwapRequest = {
   userId?: string;
   requireLatestFirmware?: boolean;
 };
+
 type Result =
   | {
       initSwapResult: InitSwapResult;
@@ -37,6 +41,7 @@ type Result =
   | {
       initSwapError: Error;
     };
+
 type InitSwapAction = Action<InitSwapRequest, InitSwapState, Result>;
 
 const mapResult = ({
@@ -121,8 +126,12 @@ export const createAction = (
       requireLatestFirmware,
     } = initSwapRequest;
 
-    const { fromAccount, fromParentAccount, toAccount, toParentAccount } =
-      exchange;
+    const {
+      fromAccount,
+      fromParentAccount,
+      toAccount,
+      toParentAccount,
+    } = exchange;
     const mainFromAccount = getMainAccount(fromAccount, fromParentAccount);
     const maintoAccount = getMainAccount(toAccount, toParentAccount);
     const appState = createAppAction(connectAppExec).useHook(

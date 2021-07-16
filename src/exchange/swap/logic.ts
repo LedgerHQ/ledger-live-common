@@ -139,9 +139,10 @@ export const getSupportedCurrencies = ({
     .filter(Boolean)
     .filter((t: any) => isCurrencySupported(t));
 
-  return ([...cryptoCurrencies, ...tokenCurrencies] as CryptoCurrency[]).filter(
-    (c) => isCurrencyExchangeSupported(c)
-  );
+  return ([
+    ...cryptoCurrencies,
+    ...tokenCurrencies,
+  ] as CryptoCurrency[]).filter((c) => isCurrencyExchangeSupported(c));
 };
 
 export const getEnabledTradingMethods = ({

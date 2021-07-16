@@ -1381,7 +1381,8 @@ export default [
   {
     address: "TMXamLGmArfCEFoVXbrvbyXpzMT2Tq1FBy",
     voteCount: 2453,
-    url: 'Change Your Vote From This SR Position, To Our New SR Position: "DEXExchange-DEXCOIN"',
+    url:
+      'Change Your Vote From This SR Position, To Our New SR Position: "DEXExchange-DEXCOIN"',
     name: "DEXExchange-DEXCOIN-XDEX",
     brokerage: 100,
     isJobs: false,

@@ -10,8 +10,7 @@ type Input = {
 type Output = NetworkInfo;
 
 async function tezos({ coreAccount }: Input): Promise<Output> {
-  const tezosLikeAccount: CoreTezosLikeAccount =
-    await coreAccount.asTezosLikeAccount();
+  const tezosLikeAccount: CoreTezosLikeAccount = await coreAccount.asTezosLikeAccount();
   const bigInt = await tezosLikeAccount.getFees();
   const networkFees = await libcoreBigIntToBigNumber(bigInt);
   // workaround of a bug on server side. set some boundaries.

@@ -29,7 +29,9 @@ import { getCoreAccount } from "../../../libcore/getCoreAccount";
 import { fetchAllBakers, hydrateBakers, isAccountDelegating } from "../bakers";
 import { getEnv } from "../../../env";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
+
 const receive = makeAccountBridgeReceive();
+
 type EstimateGasLimitAndStorage = (
   arg0: Account,
   arg1: string
@@ -37,30 +39,30 @@ type EstimateGasLimitAndStorage = (
   gasLimit: BigNumber;
   storage: BigNumber;
 }>;
-export const estimateGasLimitAndStorage: EstimateGasLimitAndStorage =
-  makeLRUCache(
-    (account, addr) =>
-      withLibcore(async (core) => {
-        const { coreAccount } = await getCoreAccount(core, account);
-        const tezosLikeAccount = await coreAccount.asTezosLikeAccount();
-        const gasLimit = await libcoreBigIntToBigNumber(
-          await tezosLikeAccount.getEstimatedGasLimit(addr)
-        );
-        // for babylon network 257 is the current cost of sending to new account.
-        const storage = new BigNumber(257);
 
-        /*
+export const estimateGasLimitAndStorage: EstimateGasLimitAndStorage = makeLRUCache(
+  (account, addr) =>
+    withLibcore(async (core) => {
+      const { coreAccount } = await getCoreAccount(core, account);
+      const tezosLikeAccount = await coreAccount.asTezosLikeAccount();
+      const gasLimit = await libcoreBigIntToBigNumber(
+        await tezosLikeAccount.getEstimatedGasLimit(addr)
+      );
+      // for babylon network 257 is the current cost of sending to new account.
+      const storage = new BigNumber(257);
+
+      /*
   const storage = await libcoreBigIntToBigNumber(
     await tezosLikeAccount.getStorage(addr)
   );
   */
-        return {
-          gasLimit,
-          storage,
-        };
-      }),
-    (a, addr) => a.id + "|" + addr
-  );
+      return {
+        gasLimit,
+        storage,
+      };
+    }),
+  (a, addr) => a.id + "|" + addr
+);
 const calculateFees = makeLRUCache(
   async (a, t) => {
     return getFeesForTransaction({
@@ -288,6 +290,7 @@ const currencyBridge: CurrencyBridge = {
   hydrate,
   scanAccounts,
 };
+
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   updateTransaction,
@@ -299,6 +302,7 @@ const accountBridge: AccountBridge<Transaction> = {
   signOperation,
   broadcast,
 };
+
 export default {
   currencyBridge,
   accountBridge,

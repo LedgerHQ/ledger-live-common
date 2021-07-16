@@ -67,8 +67,9 @@ export const getOrCreateAccount: F = atomicQueue(
         );
         return account;
       } else {
-        const extendedInfos =
-          await coreWallet.getExtendedKeyAccountCreationInfo(index);
+        const extendedInfos = await coreWallet.getExtendedKeyAccountCreationInfo(
+          index
+        );
         const infosIndex = await extendedInfos.getIndex();
         const extendedKeys = await extendedInfos.getExtendedKeys();
         const owners = await extendedInfos.getOwners();

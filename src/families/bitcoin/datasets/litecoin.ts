@@ -102,7 +102,8 @@ const dataset: CurrenciesData<Transaction> = {
         },
       ],
       raw: {
-        id: "libcore:1:litecoin:Ltub2ZDyeYFtDj5kHy4w5WaXBDE9217rNDYfmv7u5NV8dk8vKdmkqAfPdwRma5rkPcj5daMU8JiiLXQYPX9rtqEzrK1YrmkofcpADTV7s5FgzLF:native_segwit",
+        id:
+          "libcore:1:litecoin:Ltub2ZDyeYFtDj5kHy4w5WaXBDE9217rNDYfmv7u5NV8dk8vKdmkqAfPdwRma5rkPcj5daMU8JiiLXQYPX9rtqEzrK1YrmkofcpADTV7s5FgzLF:native_segwit",
         seedIdentifier:
           "046fc19d6536e34ada42efa9e41aa2e6c316ce2844b57feb82155c2f4fdbbd5fddf2e03996787af3d982648f7ea2243bd60885d34658bd55b8470e6809a4c04fc3",
         name: "Litecoin 1 (native segwit)",
@@ -123,12 +124,14 @@ const dataset: CurrenciesData<Transaction> = {
         unitMagnitude: 8,
         lastSyncDate: "",
         balance: "2183515",
-        xpub: "Ltub2ZDyeYFtDj5kHy4w5WaXBDE9217rNDYfmv7u5NV8dk8vKdmkqAfPdwRma5rkPcj5daMU8JiiLXQYPX9rtqEzrK1YrmkofcpADTV7s5FgzLF",
+        xpub:
+          "Ltub2ZDyeYFtDj5kHy4w5WaXBDE9217rNDYfmv7u5NV8dk8vKdmkqAfPdwRma5rkPcj5daMU8JiiLXQYPX9rtqEzrK1YrmkofcpADTV7s5FgzLF",
       },
     },
     {
       raw: {
-        id: "libcore:1:litecoin:Ltub2Yz97oUCaVDo1Ak6FJ1Fvg2EscNzrWvLYxnXeY7rrArUPpdfgUAEWM49MrjVBNrdjwgFnMbqKGh8XkUdQFx3h8y1SDcak4vGSbqKM5PR8Rr:segwit",
+        id:
+          "libcore:1:litecoin:Ltub2Yz97oUCaVDo1Ak6FJ1Fvg2EscNzrWvLYxnXeY7rrArUPpdfgUAEWM49MrjVBNrdjwgFnMbqKGh8XkUdQFx3h8y1SDcak4vGSbqKM5PR8Rr:segwit",
         seedIdentifier:
           "04d7d329aa21c8425cf58ebf7f3c27afe3967c44bd23d3caccfa6beff04110c249418a6a98a1145b0ea1bf489ea84ebe3e66e46f4bd376130b16823a2805ba6ec9",
         name: "Litecoin 3 (segwit)",
@@ -149,7 +152,8 @@ const dataset: CurrenciesData<Transaction> = {
         unitMagnitude: 8,
         lastSyncDate: "",
         balance: "0",
-        xpub: "Ltub2Yz97oUCaVDo1Ak6FJ1Fvg2EscNzrWvLYxnXeY7rrArUPpdfgUAEWM49MrjVBNrdjwgFnMbqKGh8XkUdQFx3h8y1SDcak4vGSbqKM5PR8Rr",
+        xpub:
+          "Ltub2Yz97oUCaVDo1Ak6FJ1Fvg2EscNzrWvLYxnXeY7rrArUPpdfgUAEWM49MrjVBNrdjwgFnMbqKGh8XkUdQFx3h8y1SDcak4vGSbqKM5PR8Rr",
       },
     },
   ],

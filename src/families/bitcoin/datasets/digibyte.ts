@@ -102,7 +102,8 @@ const dataset: CurrenciesData<Transaction> = {
         },
       ],
       raw: {
-        id: "libcore:1:digibyte:xpub6CV98T6ompjUmKuMaULsw4UP8yfnVCg6831rWdcPjScn6RaGWrt3b7uvTpt9hcq6tLtS1dGNzeJ9x4NpVGzLq7CFscxCdoPZ6zxkqGymx98:native_segwit",
+        id:
+          "libcore:1:digibyte:xpub6CV98T6ompjUmKuMaULsw4UP8yfnVCg6831rWdcPjScn6RaGWrt3b7uvTpt9hcq6tLtS1dGNzeJ9x4NpVGzLq7CFscxCdoPZ6zxkqGymx98:native_segwit",
         seedIdentifier:
           "04840767650708aa9bfb14ff87409b36ee7054d635b686536d6b0c36557709dd42dbf69ae9e2e37e151140a95a400ddd2440505eb70190bb057a32f3a21766baa3",
         name: "DigiByte 1 (native segwit)",
@@ -123,12 +124,14 @@ const dataset: CurrenciesData<Transaction> = {
         unitMagnitude: 8,
         lastSyncDate: "",
         balance: "2302647120",
-        xpub: "xpub6CV98T6ompjUmKuMaULsw4UP8yfnVCg6831rWdcPjScn6RaGWrt3b7uvTpt9hcq6tLtS1dGNzeJ9x4NpVGzLq7CFscxCdoPZ6zxkqGymx98",
+        xpub:
+          "xpub6CV98T6ompjUmKuMaULsw4UP8yfnVCg6831rWdcPjScn6RaGWrt3b7uvTpt9hcq6tLtS1dGNzeJ9x4NpVGzLq7CFscxCdoPZ6zxkqGymx98",
       },
     },
     {
       raw: {
-        id: "libcore:1:digibyte:xpub6CsavyNsoieEiR5QNsHZ3VQt7UzRcnKcFNXkadn1kaxsysqa2L79m3iNw6bFyJ1Vz8xYNu9ivECVvFTxydqMp4C3njLGA5PFxBid81Jinkh:segwit",
+        id:
+          "libcore:1:digibyte:xpub6CsavyNsoieEiR5QNsHZ3VQt7UzRcnKcFNXkadn1kaxsysqa2L79m3iNw6bFyJ1Vz8xYNu9ivECVvFTxydqMp4C3njLGA5PFxBid81Jinkh:segwit",
         seedIdentifier:
           "0465c9588be7d647beab52586495e2ad2dfba7bcfb9e61426cf5529016daaca48b079e38af109d588f161767318453fdcbd8e17b1f069fce4386c5147615cd41a8",
         name: "DigiByte 3 (segwit)",
@@ -149,7 +152,8 @@ const dataset: CurrenciesData<Transaction> = {
         unitMagnitude: 8,
         lastSyncDate: "",
         balance: "0",
-        xpub: "xpub6CsavyNsoieEiR5QNsHZ3VQt7UzRcnKcFNXkadn1kaxsysqa2L79m3iNw6bFyJ1Vz8xYNu9ivECVvFTxydqMp4C3njLGA5PFxBid81Jinkh",
+        xpub:
+          "xpub6CsavyNsoieEiR5QNsHZ3VQt7UzRcnKcFNXkadn1kaxsysqa2L79m3iNw6bFyJ1Vz8xYNu9ivECVvFTxydqMp4C3njLGA5PFxBid81Jinkh",
       },
     },
   ],

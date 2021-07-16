@@ -329,8 +329,9 @@ function genTokenAccount(
     tokenAccount.operations.length > 0
       ? tokenAccount.operations[tokenAccount.operations.length - 1].date
       : new Date();
-  tokenAccount.balanceHistoryCache =
-    generateHistoryFromOperations(tokenAccount);
+  tokenAccount.balanceHistoryCache = generateHistoryFromOperations(
+    tokenAccount
+  );
   return tokenAccount;
 }
 

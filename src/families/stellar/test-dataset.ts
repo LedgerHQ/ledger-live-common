@@ -12,12 +12,16 @@ import {
   addNotCreatedStellarMockAddresses,
   addMultisignStellarMockAddresses,
 } from "./bridge/mock";
+
 export const notCreatedStellarMockAddress =
   "GAW46JE3SHIAYLNNNQCAZFQ437WB5ZH7LDRDWR5LVDWHCTHCKYB6RCCH";
+
 export const multisignStellarMockAddress =
   "GCDDN6T2LJN3T7SPWJQV6BCCL5KNY5GBN7X4CMSZLDEXDHXAH32TOAHS";
+
 addNotCreatedStellarMockAddresses(notCreatedStellarMockAddress);
 addMultisignStellarMockAddresses(multisignStellarMockAddress);
+
 const dataset: DatasetTest<Transaction> = {
   implementations: ["js"],
   currencies: {
@@ -47,7 +51,8 @@ const dataset: DatasetTest<Transaction> = {
         {
           FIXME_tests: ["balance is sum of ops"],
           raw: {
-            id: "libcore:1:stellar:GAT4LBXYJGJJJRSNK74NPFLO55CDDXSYVMQODSEAAH3M6EY4S7LPH5GV:sep5",
+            id:
+              "libcore:1:stellar:GAT4LBXYJGJJJRSNK74NPFLO55CDDXSYVMQODSEAAH3M6EY4S7LPH5GV:sep5",
             seedIdentifier:
               "3544cee0d67187d277cd9c7e26a2bf70425b1bee8e92003f45d150c5513d531a",
             name: "Stellar 1",
@@ -267,7 +272,8 @@ const dataset: DatasetTest<Transaction> = {
             "invalid recipient have a recipientError",
           ],
           raw: {
-            id: "libcore:2:stellar:GCDDN6T2LJN3T7SPWJQV6BCCL5KNY5GBN7X4CMSZLDEXDHXAH32TOAHS:sep5",
+            id:
+              "libcore:2:stellar:GCDDN6T2LJN3T7SPWJQV6BCCL5KNY5GBN7X4CMSZLDEXDHXAH32TOAHS:sep5",
             seedIdentifier:
               "3544cee0d67187d277cd9c7e26a2bf70425b1bee8e92003f45d150c5513d531a",
             xpub: "GCDDN6T2LJN3T7SPWJQV6BCCL5KNY5GBN7X4CMSZLDEXDHXAH32TOAHS",
@@ -324,10 +330,12 @@ const dataset: DatasetTest<Transaction> = {
             "balance is sum of ops", // https://github.com/LedgerHQ/lib-ledger-core/pull/580
           ],
           raw: {
-            id: "libcore:1:stellar:f30b743cb3a8bc8c3ea8fe8455c6a52221cc6cf867f7f1f5861dd52aba1d0b8a:sep5",
+            id:
+              "libcore:1:stellar:f30b743cb3a8bc8c3ea8fe8455c6a52221cc6cf867f7f1f5861dd52aba1d0b8a:sep5",
             seedIdentifier: "gre",
             name: "GRE's Stellar 2",
-            xpub: "f30b743cb3a8bc8c3ea8fe8455c6a52221cc6cf867f7f1f5861dd52aba1d0b8a",
+            xpub:
+              "f30b743cb3a8bc8c3ea8fe8455c6a52221cc6cf867f7f1f5861dd52aba1d0b8a",
             derivationMode: "sep5",
             index: 1,
             freshAddress: "",
@@ -346,4 +354,5 @@ const dataset: DatasetTest<Transaction> = {
     },
   },
 };
+
 export default dataset;

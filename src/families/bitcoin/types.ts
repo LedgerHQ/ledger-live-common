@@ -161,8 +161,7 @@ export const bitcoinPickingStrategy = {
   OPTIMIZE_SIZE: 1,
   MERGE_OUTPUTS: 2,
 };
-export type BitcoinPickingStrategy =
-  typeof bitcoinPickingStrategy[keyof typeof bitcoinPickingStrategy];
+export type BitcoinPickingStrategy = typeof bitcoinPickingStrategy[keyof typeof bitcoinPickingStrategy];
 // FIXME the UtxoStrategy level should be flattened back in Transaction
 export type UtxoStrategy = {
   strategy: BitcoinPickingStrategy;

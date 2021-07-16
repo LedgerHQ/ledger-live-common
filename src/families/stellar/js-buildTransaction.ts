@@ -20,8 +20,14 @@ export const buildTransaction = async (
   account: Account,
   transaction: Transaction
 ): Promise<any> => {
-  const { recipient, useAllAmount, networkInfo, fees, memoType, memoValue } =
-    transaction;
+  const {
+    recipient,
+    useAllAmount,
+    networkInfo,
+    fees,
+    memoType,
+    memoValue,
+  } = transaction;
 
   if (!fees) {
     throw new FeeNotLoaded();

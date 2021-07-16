@@ -74,8 +74,9 @@ async function buildOriginatedAccount({
     swapHistory,
     balanceHistoryCache: {} as BalanceHistoryCache,
   };
-  originatedAccount.balanceHistoryCache =
-    generateHistoryFromOperations(originatedAccount);
+  originatedAccount.balanceHistoryCache = generateHistoryFromOperations(
+    originatedAccount
+  );
   return originatedAccount;
 }
 
@@ -93,10 +94,8 @@ async function tezosBuildOriginatedAccount({
   existingAccount: Account | null | undefined;
 }): Promise<ChildAccount[] | null | undefined> {
   const originatedAccounts: ChildAccount[] = [];
-  const xtzAccount: CoreTezosLikeAccount =
-    await coreAccount.asTezosLikeAccount();
-  const coreOAS: CoreTezosLikeOriginatedAccount[] =
-    await xtzAccount.getOriginatedAccounts();
+  const xtzAccount: CoreTezosLikeAccount = await coreAccount.asTezosLikeAccount();
+  const coreOAS: CoreTezosLikeOriginatedAccount[] = await xtzAccount.getOriginatedAccounts();
   const existingAccountByAddress = {};
   const existingAccountAddresses: string[] = [];
 

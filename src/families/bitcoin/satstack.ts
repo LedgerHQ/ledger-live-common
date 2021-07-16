@@ -42,7 +42,9 @@ export function isValidHost(host: string): boolean {
   return Boolean(url.domainToASCII(splits[0]));
 }
 // we would call this only during the user validation of the rpc node configuration
-export function validateRPCNodeConfig(config: RPCNodeConfig): Array<{
+export function validateRPCNodeConfig(
+  config: RPCNodeConfig
+): Array<{
   field: string;
   error: Error;
 }> {

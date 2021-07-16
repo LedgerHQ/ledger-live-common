@@ -78,13 +78,17 @@ const deviceInfos: Record<
     },
   },
 };
-export function lenseDevice(id: keyof typeof deviceInfos): {
+export function lenseDevice(
+  id: keyof typeof deviceInfos
+): {
   deviceInfo: DeviceInfo;
   modelId: DeviceModelId;
 } {
   return deviceInfos[id];
 }
-export function lenseDevices(ids: Array<keyof typeof deviceInfos>): Array<{
+export function lenseDevices(
+  ids: Array<keyof typeof deviceInfos>
+): Array<{
   deviceInfo: DeviceInfo;
   modelId: DeviceModelId;
 }> {

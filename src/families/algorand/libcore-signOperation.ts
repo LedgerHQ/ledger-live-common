@@ -14,8 +14,13 @@ async function signTransaction({
   onDeviceSignatureGranted,
   onDeviceSignatureRequested,
 }) {
-  const { freshAddressPath, spendableBalance, id, freshAddress, subAccounts } =
-    account;
+  const {
+    freshAddressPath,
+    spendableBalance,
+    id,
+    freshAddress,
+    subAccounts,
+  } = account;
   const hwApp = new Algorand(transport);
   const serialized = await coreTransaction.serialize();
   onDeviceSignatureRequested();

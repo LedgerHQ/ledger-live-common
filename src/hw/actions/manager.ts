@@ -36,6 +36,7 @@ import {
   DisconnectedDeviceDuringOperation,
 } from "@ledgerhq/errors";
 import { getDeviceModel } from "@ledgerhq/devices";
+
 type State = {
   isLoading: boolean;
   requestQuitApp: boolean;
@@ -47,6 +48,7 @@ type State = {
   result: ListAppsResult | null | undefined;
   error: Error | null | undefined;
 };
+
 type ManagerState = State & {
   repairModalOpened:
     | {
@@ -59,18 +61,22 @@ type ManagerState = State & {
   onRepairModal: (arg0: boolean) => void;
   closeRepairModal: () => void;
 };
+
 export type ManagerRequest =
   | {
       autoQuitAppDisabled?: boolean;
     }
   | null
   | undefined;
+
 type Result = {
   device: Device;
   deviceInfo: DeviceInfo;
   result: ListAppsResult | null | undefined;
 };
+
 type ManagerAction = Action<ManagerRequest, ManagerState, Result>;
+
 type Event =
   | ConnectManagerEvent
   | {
@@ -217,9 +223,8 @@ const implementations = {
           .pipe(
             timeout(DEVICE_POLLING_TIMEOUT),
             catchError((err) => {
-              const productName = getDeviceModel(
-                pollingOnDevice.modelId
-              ).productName;
+              const productName = getDeviceModel(pollingOnDevice.modelId)
+                .productName;
               return err instanceof TimeoutError
                 ? of({
                     type: "error",

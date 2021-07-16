@@ -254,18 +254,19 @@ const fetchValidators = async (
  *
  * @returns {SidecarPalletStakingProgress}
  */
-const fetchStakingProgress =
-  async (): Promise<SidecarPalletStakingProgress> => {
-    const {
-      data,
-    }: {
-      data: SidecarPalletStakingProgress;
-    } = await network({
-      method: "GET",
-      url: getSidecarUrl("/pallets/staking/progress"),
-    });
-    return data;
-  };
+const fetchStakingProgress = async (): Promise<
+  SidecarPalletStakingProgress
+> => {
+  const {
+    data,
+  }: {
+    data: SidecarPalletStakingProgress;
+  } = await network({
+    method: "GET",
+    url: getSidecarUrl("/pallets/staking/progress"),
+  });
+  return data;
+};
 
 /**
  * Fetch the transaction params needed to sign a transaction
@@ -615,35 +616,36 @@ export const getValidators = async (
  *
  * @returns {PolkadotStakingProgress}
  */
-export const getStakingProgress =
-  async (): Promise<PolkadotStakingProgress> => {
-    const [progress, consts] = await Promise.all([
-      fetchStakingProgress(),
-      getConstants(),
-    ]);
-    const activeEra = Number(progress.activeEra);
-    const currentBlock = Number(progress.at.height);
-    const toggleEstimate = Number(progress.electionStatus?.toggleEstimate);
-    const electionClosed = !progress.electionStatus?.status?.Open;
-    // Consider election open if in the THERSHOLD blocks before the real expected change
-    // It disables staking flows that are subject to fail or block because of election status
-    // update while user is signing
-    const optimisticElectionClosed =
-      electionClosed &&
-      activeEra &&
-      currentBlock &&
-      toggleEstimate &&
-      currentBlock >= toggleEstimate - ELECTION_STATUS_OPTIMISTIC_THRESHOLD
-        ? false
-        : electionClosed;
-    return {
-      activeEra,
-      electionClosed: optimisticElectionClosed,
-      maxNominatorRewardedPerValidator:
-        Number(consts.staking.maxNominatorRewardedPerValidator) || 128,
-      bondingDuration: Number(consts.staking.bondingDuration) || 28,
-    };
+export const getStakingProgress = async (): Promise<
+  PolkadotStakingProgress
+> => {
+  const [progress, consts] = await Promise.all([
+    fetchStakingProgress(),
+    getConstants(),
+  ]);
+  const activeEra = Number(progress.activeEra);
+  const currentBlock = Number(progress.at.height);
+  const toggleEstimate = Number(progress.electionStatus?.toggleEstimate);
+  const electionClosed = !progress.electionStatus?.status?.Open;
+  // Consider election open if in the THERSHOLD blocks before the real expected change
+  // It disables staking flows that are subject to fail or block because of election status
+  // update while user is signing
+  const optimisticElectionClosed =
+    electionClosed &&
+    activeEra &&
+    currentBlock &&
+    toggleEstimate &&
+    currentBlock >= toggleEstimate - ELECTION_STATUS_OPTIMISTIC_THRESHOLD
+      ? false
+      : electionClosed;
+  return {
+    activeEra,
+    electionClosed: optimisticElectionClosed,
+    maxNominatorRewardedPerValidator:
+      Number(consts.staking.maxNominatorRewardedPerValidator) || 128,
+    bondingDuration: Number(consts.staking.bondingDuration) || 28,
   };
+};
 
 /**
  * Create a new Registry for creating Polkadot.JS types (or any Substrate)

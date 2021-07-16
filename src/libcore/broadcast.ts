@@ -20,15 +20,16 @@ export type Arg = {
 
 type Broadcast = AccountBridge<Transaction>["broadcast"];
 
-export const makeBroadcast =
-  ({ broadcast }: Arg): Broadcast =>
-  ({ account, signedOperation }) =>
-    withLibcore(async (core) => {
-      const { coreAccount } = await getCoreAccount(core, account);
-      const res = await broadcast({
-        account,
-        coreAccount,
-        signedOperation,
-      });
-      return res;
-    }).catch((e) => Promise.reject(remapLibcoreErrors(e)));
+export const makeBroadcast = ({ broadcast }: Arg): Broadcast => ({
+  account,
+  signedOperation,
+}) =>
+  withLibcore(async (core) => {
+    const { coreAccount } = await getCoreAccount(core, account);
+    const res = await broadcast({
+      account,
+      coreAccount,
+      signedOperation,
+    });
+    return res;
+  }).catch((e) => Promise.reject(remapLibcoreErrors(e)));

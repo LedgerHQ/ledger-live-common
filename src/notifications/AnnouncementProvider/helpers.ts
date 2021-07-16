@@ -13,14 +13,16 @@ export const groupAnnouncements = (
   data: Announcement[];
 }[] => {
   // first group by published_at or if theres a priority set
-  const announcementsByDayOrPriority: Record<string, Announcement[]> =
-    announcements.reduce((sum, announcement: Announcement) => {
-      // group by publication date or if priority set in a group 0
-      const k = isNaN(announcement.priority as number)
-        ? startOfDayTime(announcement.published_at)
-        : 0;
-      return { ...sum, [`${k}`]: [...(sum[k] || []), announcement] };
-    }, {});
+  const announcementsByDayOrPriority: Record<
+    string,
+    Announcement[]
+  > = announcements.reduce((sum, announcement: Announcement) => {
+    // group by publication date or if priority set in a group 0
+    const k = isNaN(announcement.priority as number)
+      ? startOfDayTime(announcement.published_at)
+      : 0;
+    return { ...sum, [`${k}`]: [...(sum[k] || []), announcement] };
+  }, {});
   // map over the keyed groups and sort them by priority and date
   return Object.keys(announcementsByDayOrPriority)
     .filter(

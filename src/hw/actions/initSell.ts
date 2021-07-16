@@ -16,6 +16,7 @@ import type {
   InitSellResult,
   SellRequestEvent,
 } from "../../exchange/sell/types";
+
 type State = {
   initSellResult: InitSellResult | null | undefined;
   initSellRequested: boolean;
@@ -23,11 +24,14 @@ type State = {
   isLoading: boolean;
   freezeReduxDevice: boolean;
 };
+
 type InitSellState = AppState & State;
+
 type InitSellRequest = {
   account: AccountLike;
   parentAccount: Account | null | undefined;
 };
+
 type Result =
   | {
       initSellResult: InitSellResult;
@@ -35,6 +39,7 @@ type Result =
   | {
       initSellError: Error;
     };
+
 type InitSellAction = Action<InitSellRequest, InitSellState, Result>;
 
 const mapResult = ({
@@ -167,8 +172,12 @@ export const createAction = (
     }, [device, opened, account, parentAccount]);
     useEffect(() => {
       if (!coinifyContext || !device) return;
-      const { binaryPayload, payloadSignature, transaction, status } =
-        coinifyContext;
+      const {
+        binaryPayload,
+        payloadSignature,
+        transaction,
+        status,
+      } = coinifyContext;
       const sub = checkSignatureAndPrepare({
         deviceId: device.deviceId,
         binaryPayload,

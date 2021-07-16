@@ -20,7 +20,9 @@ import { getOperationAmountNumberWithInternals } from "../operation";
 import { flattenAccounts, getAccountCurrency } from "../account/helpers";
 import { getEnv } from "../env";
 import { getPortfolioRangeConfig, getDates } from "./range";
+
 export * from "./range";
+
 type GetBalanceHistory = (
   account: AccountLike,
   r: PortfolioRange
@@ -129,80 +131,84 @@ const meaningfulPercentage = (
   }
 };
 
-export const getBalanceHistoryWithCountervalue: GetBalanceHistoryWithCountervalue =
-  (account, r, calc, useEffectiveFrom = true) => {
-    const history = getBalanceHistory(account, r);
-    const cur = getAccountCurrency(account);
-    // a high enough value so we can compare if something changes
-    const cacheReferenceValue = new BigNumber("10").pow(
-      3 + cur.units[0].magnitude
-    );
-    // pick a stable countervalue point in time to hash for the cache
-    const cvRef = calc(cur, cacheReferenceValue, history[0].date);
+export const getBalanceHistoryWithCountervalue: GetBalanceHistoryWithCountervalue = (
+  account,
+  r,
+  calc,
+  useEffectiveFrom = true
+) => {
+  const history = getBalanceHistory(account, r);
+  const cur = getAccountCurrency(account);
+  // a high enough value so we can compare if something changes
+  const cacheReferenceValue = new BigNumber("10").pow(
+    3 + cur.units[0].magnitude
+  );
+  // pick a stable countervalue point in time to hash for the cache
+  const cvRef = calc(cur, cacheReferenceValue, history[0].date);
 
-    const mapFn = (p) => ({
-      ...p,
-      countervalue: (cvRef && calc(cur, p.value, p.date)) || ZERO,
-    });
+  const mapFn = (p) => ({
+    ...p,
+    countervalue: (cvRef && calc(cur, p.value, p.date)) || ZERO,
+  });
 
-    const stableHash = accountRateHashCVStable(
-      account,
-      r,
-      cvRef,
-      useEffectiveFrom
-    );
-    let stable = accountCVstableCache[stableHash];
-    const lastPoint = mapFn(history[history.length - 1]);
+  const stableHash = accountRateHashCVStable(
+    account,
+    r,
+    cvRef,
+    useEffectiveFrom
+  );
+  let stable = accountCVstableCache[stableHash];
+  const lastPoint = mapFn(history[history.length - 1]);
 
-    const calcChanges = (h: BalanceHistoryWithCountervalue) => {
-      // previous existing implementation here
-      const from = h[0];
-      const to = h[h.length - 1];
-      const fromEffective = useEffectiveFrom
-        ? find(h, (record) => record.value.isGreaterThan(0)) || from
-        : from;
-      return {
-        countervalueReceiveSum: new BigNumber(0),
-        // not available here
-        countervalueSendSum: new BigNumber(0),
-        cryptoChange: {
-          value: to.value.minus(fromEffective.value),
-          percentage: null,
-        },
-        countervalueChange: {
-          value: (to.countervalue || ZERO).minus(
-            fromEffective.countervalue || ZERO
-          ),
-          percentage: meaningfulPercentage(
-            (to.countervalue || ZERO).minus(fromEffective.countervalue || ZERO),
-            fromEffective.countervalue
-          ),
-        },
-      };
+  const calcChanges = (h: BalanceHistoryWithCountervalue) => {
+    // previous existing implementation here
+    const from = h[0];
+    const to = h[h.length - 1];
+    const fromEffective = useEffectiveFrom
+      ? find(h, (record) => record.value.isGreaterThan(0)) || from
+      : from;
+    return {
+      countervalueReceiveSum: new BigNumber(0),
+      // not available here
+      countervalueSendSum: new BigNumber(0),
+      cryptoChange: {
+        value: to.value.minus(fromEffective.value),
+        percentage: null,
+      },
+      countervalueChange: {
+        value: (to.countervalue || ZERO).minus(
+          fromEffective.countervalue || ZERO
+        ),
+        percentage: meaningfulPercentage(
+          (to.countervalue || ZERO).minus(fromEffective.countervalue || ZERO),
+          fromEffective.countervalue
+        ),
+      },
     };
-
-    if (!stable) {
-      const h = history.map(mapFn);
-      stable = {
-        history: h,
-        countervalueAvailable: !!cvRef,
-        ...calcChanges(h),
-      };
-      accountCVstableCache[stableHash] = stable;
-      return stable;
-    }
-
-    const lastStable: any = last(stable.history);
-
-    if (lastPoint.countervalue.eq(lastStable.countervalue)) {
-      return stable;
-    }
-
-    const h = stable.history.slice(0, -1).concat(lastPoint);
-    const copy = { ...stable, history: h, ...calcChanges(h) };
-    accountCVstableCache[stableHash] = copy;
-    return copy;
   };
+
+  if (!stable) {
+    const h = history.map(mapFn);
+    stable = {
+      history: h,
+      countervalueAvailable: !!cvRef,
+      ...calcChanges(h),
+    };
+    accountCVstableCache[stableHash] = stable;
+    return stable;
+  }
+
+  const lastStable: any = last(stable.history);
+
+  if (lastPoint.countervalue.eq(lastStable.countervalue)) {
+    return stable;
+  }
+
+  const h = stable.history.slice(0, -1).concat(lastPoint);
+  const copy = { ...stable, history: h, ...calcChanges(h) };
+  accountCVstableCache[stableHash] = copy;
+  return copy;
+};
 
 /**
  * calculate the total balance history for all accounts in a reference fiat unit

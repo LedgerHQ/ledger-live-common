@@ -192,8 +192,12 @@ export async function bot({ currency, mutation }: Arg = {}) {
           (s.mutations && s.mutations.every((r) => !r.mutation)))
     )
     .map((s) => s.spec.name);
-  const { GITHUB_SHA, GITHUB_TOKEN, GITHUB_RUN_ID, GITHUB_WORKFLOW } =
-    process.env;
+  const {
+    GITHUB_SHA,
+    GITHUB_TOKEN,
+    GITHUB_RUN_ID,
+    GITHUB_WORKFLOW,
+  } = process.env;
 
   if (GITHUB_TOKEN && GITHUB_SHA) {
     log("github", "will send a report to " + GITHUB_SHA);

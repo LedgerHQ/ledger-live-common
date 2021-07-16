@@ -1,5 +1,6 @@
 import { BigNumber } from "bignumber.js";
 import type { Account, AccountLike, Operation } from "./types";
+
 export function findOperationInAccount(
   { operations, pendingOperations }: AccountLike,
   operationId: string
@@ -25,6 +26,7 @@ export function findOperationInAccount(
 
   return null;
 }
+
 export function encodeOperationId(
   accountId: string,
   hash: string,
@@ -32,7 +34,10 @@ export function encodeOperationId(
 ): string {
   return `${accountId}-${hash}-${type}`;
 }
-export function decodeOperationId(id: string): {
+
+export function decodeOperationId(
+  id: string
+): {
   accountId: string;
   hash: string;
   type: string;
@@ -44,6 +49,7 @@ export function decodeOperationId(id: string): {
     type,
   };
 }
+
 export function patchOperationWithHash(
   operation: Operation,
   hash: string
@@ -61,6 +67,7 @@ export function patchOperationWithHash(
       })),
   };
 }
+
 export function flattenOperationWithInternals(op: Operation): Operation[] {
   let ops: Operation[] = [];
 
@@ -76,6 +83,7 @@ export function flattenOperationWithInternals(op: Operation): Operation[] {
 
   return ops;
 }
+
 export function getOperationAmountNumber(op: Operation): BigNumber {
   switch (op.type) {
     case "IN":
@@ -112,6 +120,7 @@ export function getOperationAmountNumber(op: Operation): BigNumber {
       return new BigNumber(0);
   }
 }
+
 export function getOperationAmountNumberWithInternals(
   op: Operation
 ): BigNumber {
@@ -120,11 +129,13 @@ export function getOperationAmountNumberWithInternals(
     new BigNumber(0)
   );
 }
+
 export const getOperationConfirmationNumber = (
   operation: Operation,
   account: Account
 ): number =>
   operation.blockHeight ? account.blockHeight - operation.blockHeight + 1 : 0;
+
 export const getOperationConfirmationDisplayableNumber = (
   operation: Operation,
   account: Account
@@ -132,6 +143,7 @@ export const getOperationConfirmationDisplayableNumber = (
   account.blockHeight && operation.blockHeight && account.currency.blockAvgTime
     ? String(account.blockHeight - operation.blockHeight + 1)
     : "";
+
 export const isConfirmedOperation = (
   operation: Operation,
   account: Account,

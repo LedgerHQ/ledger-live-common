@@ -119,14 +119,10 @@ export const formatValue = (value: BigNumber, unit: Unit): number =>
     .dividedBy(10 ** unit.magnitude)
     .integerValue(BigNumber.ROUND_FLOOR)
     .toNumber();
-export const searchFilter: CosmosSearchFilter =
-  (query) =>
-  ({ validator }) => {
-    const terms = `${validator?.name ?? ""} ${
-      validator?.validatorAddress ?? ""
-    }`;
-    return terms.toLowerCase().includes(query.toLowerCase().trim());
-  };
+export const searchFilter: CosmosSearchFilter = (query) => ({ validator }) => {
+  const terms = `${validator?.name ?? ""} ${validator?.validatorAddress ?? ""}`;
+  return terms.toLowerCase().includes(query.toLowerCase().trim());
+};
 export function getMaxDelegationAvailable(
   account: Account,
   validatorsLength: number

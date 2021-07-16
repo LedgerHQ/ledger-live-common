@@ -135,8 +135,9 @@ const tron: AppSpec<Transaction> = {
       transaction: ({ account, bridge }) => {
         const TP = new BigNumber(get(account, "tronResources.tronPower", "0"));
         invariant(TP.gt(0), "no frozen assets");
-        const { canUnfreezeBandwidth, canUnfreezeEnergy } =
-          getUnfreezeData(account);
+        const { canUnfreezeBandwidth, canUnfreezeEnergy } = getUnfreezeData(
+          account
+        );
         invariant(
           canUnfreezeBandwidth || canUnfreezeEnergy,
           "freeze period not expired yet"
@@ -262,9 +263,9 @@ const tron: AppSpec<Transaction> = {
       },
       test: ({ accountBeforeTransaction, account, transaction }) => {
         invariant(accountBeforeTransaction.subAccounts, "sub accounts before");
-        const trc10accountBefore = (
-          accountBeforeTransaction.subAccounts as SubAccount[]
-        ).find((s) => s.id === transaction.subAccountId);
+        const trc10accountBefore = (accountBeforeTransaction.subAccounts as SubAccount[]).find(
+          (s) => s.id === transaction.subAccountId
+        );
         invariant(trc10accountBefore, "trc10 acc was here before");
         if (!trc10accountBefore) throw new Error("no trc10before account");
 
@@ -323,9 +324,9 @@ const tron: AppSpec<Transaction> = {
       },
       test: ({ accountBeforeTransaction, account, transaction }) => {
         invariant(accountBeforeTransaction.subAccounts, "sub accounts before");
-        const trc20accountBefore = (
-          accountBeforeTransaction.subAccounts as SubAccount[]
-        ).find((s) => s.id === transaction.subAccountId);
+        const trc20accountBefore = (accountBeforeTransaction.subAccounts as SubAccount[]).find(
+          (s) => s.id === transaction.subAccountId
+        );
         invariant(trc20accountBefore, "trc20 acc was here before");
         if (!trc20accountBefore) throw new Error("no trc20 before account");
         invariant(account.subAccounts, "sub accounts");

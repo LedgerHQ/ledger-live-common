@@ -16,6 +16,7 @@ import type {
 } from "./types";
 import { tezosOperationTag } from "./types";
 import { upperModulo } from "../../modulo";
+
 export async function tezosBuildTransaction({
   account,
   core,
@@ -93,9 +94,7 @@ export async function tezosBuildTransaction({
   if (isCancelled()) return;
   const storageBigInt = await bigNumberToLibcoreBigInt(core, storageLimit);
   if (isCancelled()) return;
-  const transactionBuilder = await (
-    tezosAccount as CoreTezosLikeAccount
-  ).buildTransaction();
+  const transactionBuilder = await (tezosAccount as CoreTezosLikeAccount).buildTransaction();
   if (isCancelled()) return;
   let type;
 
@@ -149,4 +148,5 @@ export async function tezosBuildTransaction({
   if (isCancelled()) return;
   return builded;
 }
+
 export default tezosBuildTransaction;

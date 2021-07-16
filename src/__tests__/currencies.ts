@@ -46,10 +46,12 @@ test("sort by marketcap", () => {
   const tokens = listTokens().filter(
     (t) => t.ticker === "XST" || t.ticker === "ZRX" || t.ticker === "HOT"
   );
-  const currencies: (CryptoCurrency | TokenCurrency)[] =
-    listCryptoCurrencies().filter(
-      (c) => c.ticker === "BTC" || c.ticker === "XST" || c.ticker === "ETH"
-    );
+  const currencies: (
+    | CryptoCurrency
+    | TokenCurrency
+  )[] = listCryptoCurrencies().filter(
+    (c) => c.ticker === "BTC" || c.ticker === "XST" || c.ticker === "ETH"
+  );
   expect(
     sortByMarketcap(currencies.concat(tokens), [
       "BTC",

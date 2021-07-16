@@ -9,6 +9,7 @@ import type {
   TransactionCommon,
   TransactionCommonRaw,
 } from "../../types/transaction";
+
 export const tezosOperationTag = {
   OPERATION_TAG_NONE: 0,
   OPERATION_TAG_NONE1: 1,
@@ -22,9 +23,10 @@ export const tezosOperationTag = {
   OPERATION_TAG_ORIGINATION: 9,
   OPERATION_TAG_DELEGATION: 10,
 };
+
 export type TezosOperationMode = "send" | "delegate" | "undelegate";
-export type TezosOperationTag =
-  typeof tezosOperationTag[keyof typeof tezosOperationTag];
+
+export type TezosOperationTag = typeof tezosOperationTag[keyof typeof tezosOperationTag];
 
 declare class CoreTezosLikeAddress {
   toBase58(): Promise<string>;

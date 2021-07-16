@@ -291,28 +291,27 @@ const getCurrentFirmware: (input: {
   },
   (a) => `${a.version}_${a.deviceId}_${a.provider}`
 );
-const getFinalFirmwareById: (id: number) => Promise<FinalFirmware> =
-  makeLRUCache(
-    async (id) => {
-      const {
-        data,
-      }: {
-        data: FinalFirmware;
-      } = await network({
-        method: "GET",
-        url: URL.format({
-          pathname: `${getEnv(
-            "MANAGER_API_BASE"
-          )}/firmware_final_versions/${id}`,
-          query: {
-            livecommonversion,
-          },
-        }),
-      });
-      return data;
-    },
-    (id) => String(id)
-  );
+const getFinalFirmwareById: (
+  id: number
+) => Promise<FinalFirmware> = makeLRUCache(
+  async (id) => {
+    const {
+      data,
+    }: {
+      data: FinalFirmware;
+    } = await network({
+      method: "GET",
+      url: URL.format({
+        pathname: `${getEnv("MANAGER_API_BASE")}/firmware_final_versions/${id}`,
+        query: {
+          livecommonversion,
+        },
+      }),
+    });
+    return data;
+  },
+  (id) => String(id)
+);
 const getDeviceVersion: (
   targetId: string | number,
   provider: number

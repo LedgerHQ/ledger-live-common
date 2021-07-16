@@ -63,7 +63,8 @@ const envDefinitions = {
   API_COSMOS_TESTNET_NODE: {
     def: "STARGATE_NODE",
     parser: stringParser,
-    desc: "Node API to use for cosmos_testnet (COSMOS_NODE or STARGATE_NODE are known)",
+    desc:
+      "Node API to use for cosmos_testnet (COSMOS_NODE or STARGATE_NODE are known)",
   },
   API_RIPPLE_WS: {
     parser: stringParser,
@@ -123,7 +124,8 @@ const envDefinitions = {
   COINAPPS: {
     def: "",
     parser: stringParser,
-    desc: "(dev feature) defines the folder for speculos mode that contains Nano apps binaries (.elf) in a specific structure: <device>/<firmware>/<appName>/app_<appVersion>.elf",
+    desc:
+      "(dev feature) defines the folder for speculos mode that contains Nano apps binaries (.elf) in a specific structure: <device>/<firmware>/<appName>/app_<appVersion>.elf",
   },
   COMPOUND_API: {
     def: "https://api.compound.finance",
@@ -138,7 +140,8 @@ const envDefinitions = {
   COSMOS_GAS_PRICE: {
     def: 0.025,
     parser: floatParser,
-    desc: "gasLimit * gasPrice to determine the fees price. A too low GAS_PRICE will get rejected before the transaction is broadcast",
+    desc:
+      "gasLimit * gasPrice to determine the fees price. A too low GAS_PRICE will get rejected before the transaction is broadcast",
   },
   CRYPTO_ORG_INDEXER: {
     def: "https://crypto.org/explorer",
@@ -173,7 +176,8 @@ const envDefinitions = {
   DEVICE_CANCEL_APDU_FLUSH_MECHANISM: {
     def: true,
     parser: boolParser,
-    desc: "enable a mechanism that send a 0x00 apdu to force device to awake from its 'Processing' UI state",
+    desc:
+      "enable a mechanism that send a 0x00 apdu to force device to awake from its 'Processing' UI state",
   },
   DEVICE_PROXY_URL: {
     def: "",
@@ -198,7 +202,8 @@ const envDefinitions = {
   ETHEREUM_GAS_LIMIT_AMPLIFIER: {
     def: 1.2,
     parser: floatParser,
-    desc: "Ethereum gasLimit multiplier for contracts to prevent out of gas issue",
+    desc:
+      "Ethereum gasLimit multiplier for contracts to prevent out of gas issue",
   },
   EXPERIMENTAL_BLE: {
     def: false,
@@ -233,7 +238,8 @@ const envDefinitions = {
   EXPERIMENTAL_LIBCORE: {
     def: false,
     parser: boolParser,
-    desc: "enable experimental libcore implementation of a currency (affects scan accounts)",
+    desc:
+      "enable experimental libcore implementation of a currency (affects scan accounts)",
   },
   EXPERIMENTAL_MANAGER: {
     def: false,
@@ -243,7 +249,8 @@ const envDefinitions = {
   EXPERIMENTAL_ROI_CALCULATION: {
     def: false,
     parser: boolParser,
-    desc: "enable an experimental version of the portfolio percentage calculation",
+    desc:
+      "enable an experimental version of the portfolio percentage calculation",
   },
   EXPERIMENTAL_SEND_MAX: {
     def: false,
@@ -273,7 +280,8 @@ const envDefinitions = {
   DISABLE_APP_VERSION_REQUIREMENTS: {
     def: false,
     parser: boolParser,
-    desc: "force an old application version to be accepted regardless of its version",
+    desc:
+      "force an old application version to be accepted regardless of its version",
   },
   FORCE_PROVIDER: {
     def: 1,
@@ -319,7 +327,8 @@ const envDefinitions = {
     def: "ripple,ethereum,tezos,stellar",
     // LLC-475
     parser: stringParser,
-    desc: "comma-separated list of currencies which does not properly support balance history libcore implementation",
+    desc:
+      "comma-separated list of currencies which does not properly support balance history libcore implementation",
   },
   LIBCORE_PASSWORD: {
     def: "",
@@ -339,7 +348,8 @@ const envDefinitions = {
   MANAGER_INSTALL_DELAY: {
     def: 1000,
     parser: intParser,
-    desc: "defines the time to wait before installing apps to prevent known glitch (<=1.5.5) when chaining installs",
+    desc:
+      "defines the time to wait before installing apps to prevent known glitch (<=1.5.5) when chaining installs",
   },
   MAX_ACCOUNT_NAME_SIZE: {
     def: 50,
@@ -349,7 +359,8 @@ const envDefinitions = {
   MOCK: {
     def: "",
     parser: stringParser,
-    desc: "switch the app into a MOCK mode for test purpose, the value will be used as a seed for the rng. Avoid falsy values.",
+    desc:
+      "switch the app into a MOCK mode for test purpose, the value will be used as a seed for the rng. Avoid falsy values.",
   },
   OPERATION_ADDRESSES_LIMIT: {
     def: 100,
@@ -359,7 +370,8 @@ const envDefinitions = {
   OPERATION_OPTIMISTIC_RETENTION: {
     def: 30 * 60 * 1000,
     parser: intParser,
-    desc: "timeout to keep an optimistic operation that was broadcasted but not yet visible from libcore or the API",
+    desc:
+      "timeout to keep an optimistic operation that was broadcasted but not yet visible from libcore or the API",
   },
   OPERATION_PAGE_SIZE_INITIAL: {
     def: 100,
@@ -369,7 +381,8 @@ const envDefinitions = {
   POLKADOT_ELECTION_STATUS_THRESHOLD: {
     def: 25,
     parser: intParser,
-    desc: "in blocks - number of blocks before Polkadot election effectively opens to consider it as open and disable all staking features",
+    desc:
+      "in blocks - number of blocks before Polkadot election effectively opens to consider it as open and disable all staking features",
   },
   SATSTACK: {
     def: false,
@@ -424,12 +437,14 @@ const envDefinitions = {
   SYNC_MAX_CONCURRENT: {
     def: 4,
     parser: intParser,
-    desc: "maximum limit to synchronize accounts concurrently to limit overload",
+    desc:
+      "maximum limit to synchronize accounts concurrently to limit overload",
   },
   USER_ID: {
     def: "",
     parser: stringParser,
-    desc: "unique identifier of app instance. used to derivate dissociated ids for difference purposes (e.g. the firmware update incremental deployment).",
+    desc:
+      "unique identifier of app instance. used to derivate dissociated ids for difference purposes (e.g. the firmware update incremental deployment).",
   },
   WALLETCONNECT: {
     def: false,
@@ -482,10 +497,10 @@ const getDefinition = (name: string): EnvDef<any> | null | undefined =>
   envDefinitions[name];
 
 envDefinitions as Record<EnvName, EnvDef<any>>;
-const defaults: Record<EnvName, any> = mapValues(
+const defaults: Record<EnvName, any> = (mapValues(
   envDefinitions,
   (o) => o.def
-) as unknown as Record<EnvName, any>;
+) as unknown) as Record<EnvName, any>;
 // private local state
 const env: Record<EnvName, any> = { ...defaults };
 export const getAllEnvNames = (): EnvName[] =>

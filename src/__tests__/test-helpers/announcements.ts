@@ -12,7 +12,8 @@ const announcementsPool: RawAnnouncement[] = [
     content: {
       en: {
         title: "Incoming cosmos fork",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
+        text:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
         link: {
           href: "https://ledger.com/there-is/an/incoming-cosmos-fork",
           label: "Click here for more information on upcoming fork",
@@ -32,7 +33,8 @@ const announcementsPool: RawAnnouncement[] = [
     content: {
       en: {
         title: "Incoming cosmos fork",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
+        text:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
         link: {
           href: "https://ledger.com/there-is/an/incoming-cosmos-fork",
           label: "Click here for more information on upcoming fork",
@@ -51,7 +53,8 @@ const announcementsPool: RawAnnouncement[] = [
     content: {
       en: {
         title: "Incoming bitcoin fork",
-        text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
+        text:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
         link: {
           href: "https://ledger.com/there-is/an/incoming-cosmos-fork",
           label: "Click here for more information on upcoming fork",
@@ -59,7 +62,8 @@ const announcementsPool: RawAnnouncement[] = [
       },
       fr: {
         title: "Fork bitcoin en approche",
-        text: "Lorem ipsum mais en français dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
+        text:
+          "Lorem ipsum mais en français dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
         link: {
           href: "https://ledger.com/there-is/an/fork-bitcoin-en-approche",
           label: "Clique ici pour en savoir plus sur le fork bitcoin ;)",

@@ -32,8 +32,9 @@ const translateExtraInfo = async (
     }
 
     case "REWARD": {
-      unwrapped =
-        await core.CosmosLikeMessage.unwrapMsgWithdrawDelegationReward(msg);
+      unwrapped = await core.CosmosLikeMessage.unwrapMsgWithdrawDelegationReward(
+        msg
+      );
       address = await unwrapped.getValidatorAddress();
       amount = new BigNumber(0);
       break;

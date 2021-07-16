@@ -123,10 +123,8 @@ describe("cosmos/react", () => {
         hooks.useCosmosDelegationsQuerySelector(account, newTx as Transaction)
       );
       expect(
-        (
-          (result.current.value as CosmosMappedDelegation)
-            .validator as CosmosValidatorItem
-        ).validatorAddress
+        ((result.current.value as CosmosMappedDelegation)
+          .validator as CosmosValidatorItem).validatorAddress
       ).toBe(delegations[0].validatorAddress);
     });
     it("should find delegation by cosmosSourceValidator field and return as value for redelegate", async () => {
@@ -153,10 +151,8 @@ describe("cosmos/react", () => {
         hooks.useCosmosDelegationsQuerySelector(account, newTx as Transaction)
       );
       expect(
-        (
-          (result.current.value as CosmosMappedDelegation)
-            .validator as CosmosValidatorItem
-        ).validatorAddress
+        ((result.current.value as CosmosMappedDelegation)
+          .validator as CosmosValidatorItem).validatorAddress
       ).toBe(cosmosSourceValidator);
     });
   });

@@ -26,6 +26,7 @@ import type {
 import { getPortfolioRangeConfig, getDates } from "./range";
 import { defaultAssetsDistribution } from "../";
 import type { AssetsDistributionOpts } from "../";
+
 export function getPortfolioCount(
   accounts: AccountLike[],
   range: PortfolioRange
@@ -45,6 +46,7 @@ export function getPortfolioCount(
 
   return getPortfolioCountByDate(oldestDate, range);
 }
+
 export function getPortfolioCountByDate(
   start: Date,
   range: PortfolioRange
@@ -56,6 +58,7 @@ export function getPortfolioCountByDate(
 
   return count < defaultYearCount ? defaultYearCount : count;
 }
+
 export function getBalanceHistory(
   account: AccountLike,
   range: PortfolioRange,
@@ -80,6 +83,7 @@ export function getBalanceHistory(
 
   return history;
 }
+
 export function getBalanceHistoryWithCountervalue(
   account: AccountLike,
   range: PortfolioRange,
@@ -212,15 +216,18 @@ export function getPortfolio(
     date,
     value: histories.reduce((sum, h) => sum + (h[i]?.countervalue ?? 0), 0),
   }));
-  const [countervalueChangeValue, countervalueReceiveSum, countervalueSendSum] =
-    availables.reduce(
-      (prev, a) => [
-        prev[0] + a.change.value, // TODO Portfolio: it'll always be 0, no? 🤔
-        prev[1] + a.countervalueReceiveSum,
-        prev[2] + a.countervalueSendSum,
-      ],
-      [0, 0, 0]
-    );
+  const [
+    countervalueChangeValue,
+    countervalueReceiveSum,
+    countervalueSendSum,
+  ] = availables.reduce(
+    (prev, a) => [
+      prev[0] + a.change.value, // TODO Portfolio: it'll always be 0, no? 🤔
+      prev[1] + a.countervalueReceiveSum,
+      prev[2] + a.countervalueSendSum,
+    ],
+    [0, 0, 0]
+  );
   // in case there were no receive, we just track the market change
   // weighted by the current balances
   const balanceDivider = getEnv("EXPERIMENTAL_ROI_CALCULATION")
@@ -246,6 +253,7 @@ export function getPortfolio(
     },
   };
 }
+
 export function getCurrencyPortfolio(
   accounts: AccountLike[],
   range: PortfolioRange,
@@ -295,6 +303,7 @@ export function getCurrencyPortfolio(
     countervalueChange,
   };
 }
+
 export function getAssetsDistribution(
   topAccounts: Account[],
   cvState: CounterValuesState,

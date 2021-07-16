@@ -42,7 +42,9 @@ const getCacheKey = (a, t) =>
     t.useAllAmount
   )}_${t.recipient}_${t.feePerByte ? t.feePerByte.toString() : ""}_${
     t.utxoStrategy.pickUnconfirmedRBF ? 1 : 0
-  }_${t.utxoStrategy.strategy}_${String(t.rbf)}_${t.utxoStrategy.excludeUTXOs
+  }_${t.utxoStrategy.strategy}_${String(
+    t.rbf
+  )}_${t.utxoStrategy.excludeUTXOs
     .map(({ hash, outputIndex }) => `${hash}@${outputIndex}`)
     .join("+")}`;
 
