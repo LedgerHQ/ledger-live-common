@@ -212,7 +212,7 @@ const extraCurrenciesData = () => {
 const syncAccount = async (data) => {
   const currency = getCryptoCurrencyById(data.currencyName);
   const bridge = getCurrencyBridge(currency);
-  const deviceId = mockDeviceWithAPDUs(data.apdus);
+  const deviceId = await mockDeviceWithAPDUs(data.apdus);
   invariant(currency, `could not find currency for ${data.currencyName}`);
 
   try {

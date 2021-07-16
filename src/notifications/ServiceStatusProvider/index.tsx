@@ -5,13 +5,14 @@ import React, {
   useCallback,
   ReactElement,
 } from "react";
-import type { State } from "./types";
-import networkApi from "./api";
+import type { State, ServiceStatusApi } from "./types";
+import defaultNetworkApi from "./api";
 import { useMachine } from "@xstate/react";
 import { serviceStatusMachine } from "./machine";
 type Props = {
   children: React.ReactNode;
   autoUpdateDelay: number;
+  networkApi?: ServiceStatusApi;
 };
 type API = {
   updateData: () => Promise<void>;
@@ -30,6 +31,7 @@ export function useServiceStatus(): StatusContextType {
 export const ServiceStatusProvider = ({
   children,
   autoUpdateDelay,
+  networkApi = defaultNetworkApi,
 }: Props): ReactElement => {
   const fetchData = useCallback(async () => {
     const serviceStatusSummary = await networkApi.fetchStatusSummary();
@@ -37,7 +39,7 @@ export const ServiceStatusProvider = ({
       incidents: serviceStatusSummary.incidents,
       updateTime: Date.now(),
     };
-  }, []);
+  }, [networkApi]);
   const [state, send] = useMachine(serviceStatusMachine, {
     services: {
       fetchData,

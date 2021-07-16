@@ -274,21 +274,23 @@ export async function fetchTronAccountTxs(
 export const getContractUserEnergyRatioConsumption = async (
   address: string
 ): Promise<number> => {
-  const { consume_user_resource_percent = 0 } = await fetchTronContract(
-    address
-  );
-  return consume_user_resource_percent;
+  const result = await fetchTronContract(address);
+  if (result) {
+    const { consume_user_resource_percent } = result;
+    return consume_user_resource_percent;
+  }
+  return 0;
 };
 export const fetchTronContract = async (
   addr: string
-): Promise<Record<string, any>> => {
+): Promise<Record<string, any> | undefined> => {
   try {
     const data = await post(`${getBaseApiUrl()}/wallet/getcontract`, {
       value: decode58Check(addr),
     });
     return data;
   } catch (e) {
-    return {};
+    return undefined;
   }
 };
 export const getTronAccountNetwork = async (

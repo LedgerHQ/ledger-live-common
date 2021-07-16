@@ -1,11 +1,10 @@
 import { BigNumber } from "bignumber.js";
 import querystring from "querystring";
 import { TypeRegistry } from "@polkadot/types";
-import { Registry } from "@polkadot/types/types";
 import { getSpecTypes } from "@polkadot/types-known";
-import { Metadata } from "@polkadot/metadata";
-import { expandMetadata } from "@polkadot/metadata/decorate";
-import { Extrinsics } from "@polkadot/metadata/decorate/types";
+import { Metadata } from "@polkadot/types/metadata";
+import { expandMetadata } from "@polkadot/types/metadata/decorate";
+import { Extrinsics } from "@polkadot/types/metadata/decorate/types";
 import { makeLRUCache } from "../../../cache";
 import type { CacheRes } from "../../../cache";
 import { getEnv } from "../../../env";

@@ -3,6 +3,9 @@ import { getFiatCurrencyByTicker, getCryptoCurrencyById } from "../currencies";
 const bitcoin = getCryptoCurrencyById("bitcoin");
 const usd = getFiatCurrencyByTicker("USD");
 const now = Date.now();
+
+jest.setTimeout(60000);
+
 describe("API sanity", () => {
   test("recent days have rate for BTC USD", async () => {
     const state = await loadCountervalues(initialState, {

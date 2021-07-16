@@ -1,4 +1,6 @@
-import type { AppManifest, PlatformApi } from "../types";
+// @flow
+import type { AppManifest, PlatformApi } from "../../types";
+
 const manifest: AppManifest[] = [
   {
     id: "paraswap",
@@ -289,4 +291,5 @@ async function fetchManifest(): Promise<AppManifest[]> {
 const api: PlatformApi = {
   fetchManifest,
 };
+
 export default api;

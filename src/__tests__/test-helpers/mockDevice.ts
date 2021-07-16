@@ -1,6 +1,6 @@
 import invariant from "invariant";
 import {
-  createTransportReplayer,
+  openTransportReplayer,
   RecordStore,
 } from "@ledgerhq/hw-transport-mocker";
 import { registerTransportModule } from "../../hw";
@@ -10,15 +10,19 @@ const recordStores = {};
 export function releaseMockDevice(id: string) {
   const store = recordStores[id];
   invariant(store, "MockDevice does not exist (%s)", id);
-  store.ensureQueueEmpty();
-  delete recordStores[id];
-  delete transports[id];
+  try {
+    // FIXME: I don't understand with the Queue is not empty
+    store.ensureQueueEmpty();
+  } finally {
+    delete recordStores[id];
+    delete transports[id];
+  }
 }
-export function mockDeviceWithAPDUs(apdus: string) {
+export async function mockDeviceWithAPDUs(apdus: string) {
   const id = `mock:${++idCounter}`;
   const store = RecordStore.fromString(apdus);
   recordStores[id] = store;
-  transports[id] = createTransportReplayer(store);
+  transports[id] = await openTransportReplayer(store);
   return id;
 }
 registerTransportModule({
@@ -26,7 +30,7 @@ registerTransportModule({
   open: (id) => {
     if (id in transports) {
       const Tr = transports[id];
-      return Tr.open();
+      return Tr;
     }
   },
   disconnect: () => Promise.resolve(),

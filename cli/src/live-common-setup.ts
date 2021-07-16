@@ -3,7 +3,7 @@ import React from "react";
 import { connect } from "react-redux";
 import invariant from "invariant";
 import {
-  createTransportReplayer,
+  openTransportReplayer,
   RecordStore,
 } from "@ledgerhq/hw-transport-mocker";
 import Transport from "@ledgerhq/hw-transport";
@@ -46,16 +46,20 @@ const recordStores = {};
 export function releaseMockDevice(id: string) {
   const store = recordStores[id];
   invariant(store, "MockDevice does not exist (%s)", id);
-  store.ensureQueueEmpty();
-  delete recordStores[id];
-  delete mockTransports[id];
+  try {
+    // FIXME: I don't understand with the Queue is not empty
+    store.ensureQueueEmpty();
+  } finally {
+    delete recordStores[id];
+    delete mockTransports[id];
+  }
 }
 
-export function mockDeviceWithAPDUs(apdus: string) {
+export async function mockDeviceWithAPDUs(apdus: string) {
   const id = `mock:${++idCounter}`;
   const store = RecordStore.fromString(apdus);
   recordStores[id] = store;
-  mockTransports[id] = createTransportReplayer(store);
+  mockTransports[id] = await openTransportReplayer(store);
   return id;
 }
 
@@ -64,7 +68,7 @@ registerTransportModule({
   open: (id) => {
     if (id in mockTransports) {
       const Tr = mockTransports[id];
-      return Tr.open();
+      return Tr;
     }
   },
   disconnect: () => Promise.resolve(),
@@ -127,11 +131,13 @@ async function init() {
     const [, q] = m;
     if (cacheBle[query]) return cacheBle[query];
     const t = await (!q
-      ? ((await getTransport()
-          .constructor) as typeof BluetoothTransport).create()
+      ? (
+          (await getTransport().constructor) as typeof BluetoothTransport
+        ).create()
       : new Observable(
-          ((await getTransport()
-            .constructor) as typeof BluetoothTransport).listen
+          (
+            (await getTransport().constructor) as typeof BluetoothTransport
+          ).listen
         )
           .pipe(
             first(
@@ -175,10 +181,9 @@ async function init() {
     disconnect: async (query) =>
       query.startsWith("ble")
         ? cacheBle[query]
-          ? ((await getTransport()
-              .constructor) as typeof BluetoothTransport).disconnect(
-              cacheBle[query].id
-            )
+          ? (
+              (await getTransport().constructor) as typeof BluetoothTransport
+            ).disconnect(cacheBle[query].id)
           : Promise.resolve()
         : undefined,
   });
