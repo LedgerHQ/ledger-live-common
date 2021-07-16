@@ -10,9 +10,13 @@ const recordStores = {};
 export function releaseMockDevice(id: string) {
   const store = recordStores[id];
   invariant(store, "MockDevice does not exist (%s)", id);
-  store.ensureQueueEmpty();
-  delete recordStores[id];
-  delete transports[id];
+  try {
+    // FIXME: I don't understand with the Queue is not empty
+    store.ensureQueueEmpty();
+  } finally {
+    delete recordStores[id];
+    delete transports[id];
+  }
 }
 export async function mockDeviceWithAPDUs(apdus: string) {
   const id = `mock:${++idCounter}`;
@@ -26,7 +30,7 @@ registerTransportModule({
   open: (id) => {
     if (id in transports) {
       const Tr = transports[id];
-      return Tr.open();
+      return Tr;
     }
   },
   disconnect: () => Promise.resolve(),
