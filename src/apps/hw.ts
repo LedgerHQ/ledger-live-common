@@ -95,8 +95,7 @@ export const streamAppInstall = ({
           );
 
           if (!state.installQueue.length) {
-            // @ts-expect-error still don't understand
-            return defer(onSuccessObs || EMPTY);
+            return defer(onSuccessObs || (() => EMPTY));
           }
 
           if (isOutOfMemoryState(predictOptimisticState(state))) {
@@ -118,8 +117,7 @@ export const streamAppInstall = ({
                 progress,
               }))
             ),
-            // @ts-expect-error cannot understand the types right now
-            defer(onSuccessObs || EMPTY)
+            defer(onSuccessObs || (() => EMPTY))
           );
         }
 

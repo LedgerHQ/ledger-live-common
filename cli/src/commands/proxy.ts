@@ -299,8 +299,9 @@ const job = ({
           }
 
           try {
-            // @ts-expect-error no clue
-            const res = await transport.exchange(Buffer.from(apduHex, "hex"));
+            const res = await transport.exchange(
+              Buffer.from(apduHex as string, "hex")
+            );
             log("proxy", `WS(${index}): ${apduHex} => ${res.toString("hex")}`);
             if (destroyed) return;
             ws.send(
