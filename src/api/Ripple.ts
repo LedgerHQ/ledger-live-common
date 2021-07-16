@@ -6,32 +6,14 @@ import {
 } from "../currencies";
 import { getEnv } from "../env";
 import { RippleAPI } from "ripple-lib";
+import { Payment } from "ripple-lib/dist/npm/transaction/payment";
+import { TransactionsOptions } from "ripple-lib/dist/npm/ledger/transactions";
 
-type AsyncApiFunction = (api: typeof RippleAPI) => Promise<any>;
+type AsyncApiFunction = (api: RippleAPI) => Promise<any>;
 
-type XRPAmount = {
-  currency: string;
-  value: string;
-};
-type XRPPayment = {
-  source: {
-    address: string;
-    amount: XRPAmount;
-  };
-  destination: {
-    address: string;
-    minAmount: XRPAmount;
-    tag: number | null | undefined;
-  };
-};
 type XRPInstruction = {
   fee: string;
   maxLedgerVersionOffset: number;
-};
-type XRPTxOption = {
-  minLedgerVersion: number;
-  maxLedgerVersion: number;
-  types: Array<string>;
 };
 
 const rippleUnit = getCryptoCurrencyById("ripple").units[0];
@@ -162,17 +144,15 @@ export const formatAPICurrencyXRP = (
 
 export const preparePayment = async (
   address: string,
-  payment: XRPPayment,
+  payment: Payment,
   instruction: XRPInstruction
 ): Promise<any> =>
-  withApi(async (api: typeof RippleAPI) => {
-    // @ts-expect-error preparePayment not in RippleAPI type definition maybe a bug?
+  withApi(async (api: RippleAPI) => {
     return api.preparePayment(address, payment, instruction);
   });
 
 export const submit = async (signature: string): Promise<any> =>
-  withApi(async (api: typeof RippleAPI) => {
-    // @ts-expect-error request not in RippleAPI type definition maybe a bug?
+  withApi(async (api: RippleAPI) => {
     return api.request("submit", {
       tx_blob: signature,
     });
@@ -184,25 +164,22 @@ export const getAccountInfo = async (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   endpointConfig?: string | null | undefined
 ): Promise<any> =>
-  withApi(async (api: typeof RippleAPI) => {
-    // @ts-expect-error getAccountInfo not in RippleAPI type definition maybe a bug?
+  withApi(async (api: RippleAPI) => {
     return api.getAccountInfo(recipient);
   });
 export const getServerInfo = async (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   endpointConfig?: string | null | undefined
 ): Promise<any> =>
-  withApi(async (api: typeof RippleAPI) => {
-    // @ts-expect-error getServerInfo not in RippleAPI type definition maybe a bug?
+  withApi(async (api: RippleAPI) => {
     return api.getServerInfo();
   });
 
 /* eslint-enable no-unused-vars */
 export const getTransactions = async (
   address: string,
-  options: XRPTxOption | null | undefined
+  options: TransactionsOptions | undefined
 ): Promise<any> =>
-  withApi(async (api: typeof RippleAPI) => {
-    // @ts-expect-error getTransactions not in RippleAPI type definition maybe a bug?
+  withApi(async (api: RippleAPI) => {
     return api.getTransactions(address, options);
   });

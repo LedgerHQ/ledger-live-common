@@ -14,7 +14,7 @@ import {
   SatStackStatus,
 } from "./satstack";
 import dataset from "./datasets/bitcoin";
-import { inferDescriptorFromAccount } from "./descriptor";
+import { inferDescriptorFromAccount, AccountDescriptor } from "./descriptor";
 import { setEnv } from "../../env";
 import { fromAccountRaw } from "../../account";
 jest.setTimeout(10000);
@@ -199,16 +199,14 @@ describe("stringifySatStackConfig", () => {
         extra: {
           foo: "bar",
         },
-        // @ts-expect-error not sure what to fix here
-        accounts: (dataset.accounts || [])
+        accounts: ((dataset.accounts || [])
           .map((a) => inferDescriptorFromAccount(fromAccountRaw(a.raw)))
-          .filter(Boolean)
-          .map((descriptor, i) => ({
-            descriptor,
-            extra: {
-              i,
-            },
-          })),
+          .filter(Boolean) as AccountDescriptor[]).map((descriptor, i) => ({
+          descriptor,
+          extra: {
+            i,
+          },
+        })),
       })
     ).toEqual(`{
   "accounts": [
@@ -403,13 +401,11 @@ describe("requiresSatStackReady", () => {
     setEnv("MOCK", "");
   });
   test("without satstack", async () => {
-    // @ts-expect-error the expected value is void
-    await expect(requiresSatStackReady()).resolves.toBe();
+    await expect(requiresSatStackReady()).resolves.toBe(undefined);
   });
   test("with satstack", async () => {
     setEnv("SATSTACK", true);
-    // @ts-expect-error the expected value is void
-    await expect(requiresSatStackReady()).resolves.toBe();
+    await expect(requiresSatStackReady()).resolves.toBe(undefined);
   });
   test("with satstack not ready", async () => {
     setEnv("SATSTACK", true);

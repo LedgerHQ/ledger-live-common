@@ -58,10 +58,7 @@ const exec = async (opts: SwapJobOpts) => {
   );
 
   //Remove suffix from arguments before passing them to sync.
-  // @ts-expect-error i don't understand what's wrong
-  const secondAccountOpts: ScanCommonOpts & {
-    tokenId: string;
-  } = commandLineArgs(
+  const secondAccountOpts = commandLineArgs(
     [
       ...scanCommonOpts,
       {
@@ -74,7 +71,8 @@ const exec = async (opts: SwapJobOpts) => {
     {
       argv: opts._unknown.map((a, i) => (i % 2 ? a : a.replace("_2", ""))),
     }
-  );
+  ) as ScanCommonOpts & { tokenId: string };
+
   console.log("• Open the source currency app");
   await delay(8000);
   let fromParentAccount: Account | null = null;

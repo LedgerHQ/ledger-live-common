@@ -261,9 +261,8 @@ function useSyncQueue({
   }, [synchronize]);
   const [syncQueue] = useState(() =>
     priorityQueue(
-      // FIXME: i don't know what to do here
-      // @ts-expect-error we might need to stop using nasty spreads
-      (...a) => synchronizeRef.current(...a),
+      (accountId: string, next: () => void) =>
+        synchronizeRef.current(accountId, next),
       getEnv("SYNC_MAX_CONCURRENT")
     )
   );
