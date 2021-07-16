@@ -55,8 +55,7 @@ export default {
       name: "disableAutofillGaps",
       alias: "g",
       type: Boolean,
-      desc:
-        "if set, disable the autofill of gaps to evaluate the rates availability",
+      desc: "if set, disable the autofill of gaps to evaluate the rates availability",
     },
   ],
   job: (

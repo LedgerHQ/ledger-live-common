@@ -25,58 +25,62 @@ export type FilterOptions = {
 
 type UpdateAwareInstalledApps = Record<string, boolean>;
 
-const searchFilter = (query?: string) => ({ name, currencyId }) => {
-  if (!query) return true;
-  // Nb allow for multiple comma separated search terms
-  const queries = query
-    .split(",")
-    .map((t) => t.toLowerCase().trim())
-    .filter(Boolean);
-  const currency = currencyId ? getCryptoCurrencyById(currencyId) : null;
-  const terms = `${name} ${
-    currency ? `${currency.name} ${currency.ticker}` : ""
-  }`;
-  return queries.some((query) => terms.toLowerCase().includes(query));
-};
+const searchFilter =
+  (query?: string) =>
+  ({ name, currencyId }) => {
+    if (!query) return true;
+    // Nb allow for multiple comma separated search terms
+    const queries = query
+      .split(",")
+      .map((t) => t.toLowerCase().trim())
+      .filter(Boolean);
+    const currency = currencyId ? getCryptoCurrencyById(currencyId) : null;
+    const terms = `${name} ${
+      currency ? `${currency.name} ${currency.ticker}` : ""
+    }`;
+    return queries.some((query) => terms.toLowerCase().includes(query));
+  };
 
-const typeFilter = (
-  filters: AppType[] = ["all"],
-  updateAwareInstalledApps: UpdateAwareInstalledApps,
-  installQueue: string[] = []
-) => (app) =>
-  filters.every((filter) => {
-    switch (filter) {
-      case "installed":
-        return (
-          installQueue.includes(app.name) ||
-          app.name in updateAwareInstalledApps
-        );
+const typeFilter =
+  (
+    filters: AppType[] = ["all"],
+    updateAwareInstalledApps: UpdateAwareInstalledApps,
+    installQueue: string[] = []
+  ) =>
+  (app) =>
+    filters.every((filter) => {
+      switch (filter) {
+        case "installed":
+          return (
+            installQueue.includes(app.name) ||
+            app.name in updateAwareInstalledApps
+          );
 
-      case "not_installed":
-        return !(app.name in updateAwareInstalledApps);
+        case "not_installed":
+          return !(app.name in updateAwareInstalledApps);
 
-      case "updatable":
-        return (
-          app.name in updateAwareInstalledApps &&
-          !updateAwareInstalledApps[app.name]
-        );
+        case "updatable":
+          return (
+            app.name in updateAwareInstalledApps &&
+            !updateAwareInstalledApps[app.name]
+          );
 
-      case "supported":
-        return (
-          app.currencyId &&
-          isCurrencySupported(getCryptoCurrencyById(app.currencyId))
-        );
+        case "supported":
+          return (
+            app.currencyId &&
+            isCurrencySupported(getCryptoCurrencyById(app.currencyId))
+          );
 
-      case "not_supported":
-        return !(
-          app.currencyId &&
-          isCurrencySupported(getCryptoCurrencyById(app.currencyId))
-        );
+        case "not_supported":
+          return !(
+            app.currencyId &&
+            isCurrencySupported(getCryptoCurrencyById(app.currencyId))
+          );
 
-      default:
-        return true;
-    }
-  });
+        default:
+          return true;
+      }
+    });
 
 export const sortApps = (apps: App[], _options: SortOptions): App[] => {
   const { type, order } = _options;

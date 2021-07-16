@@ -2,7 +2,7 @@ import semver from "semver";
 import type { AppManifest, AppPlatform, AppBranch } from "./types";
 import { getPlatformVersion } from "./version";
 
-export function translateContent(content: any, locale: string = "en") {
+export function translateContent(content: any, locale = "en") {
   if (!content || typeof content !== "object") return content;
   return content[locale] || content.en;
 }

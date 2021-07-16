@@ -1,13 +1,10 @@
-// @flow
-
 import type { AppManifest } from "../types";
 import semver from "semver";
-
 export type FilterParams = {
-  branches?: string[],
-  platform?: string,
-  private?: boolean,
-  version?: string,
+  branches?: string[];
+  platform?: string;
+  private?: boolean;
+  version?: string;
 };
 
 function matchVersion(filterParams: FilterParams, manifest: AppManifest) {
@@ -48,7 +45,6 @@ export function filterPlatformApps(
     );
   });
 }
-
 export function mergeManifestLists(
   list1: AppManifest[],
   list2: AppManifest[]

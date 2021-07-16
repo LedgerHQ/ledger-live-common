@@ -10,10 +10,11 @@ let libcoreJobsCounter = 0;
 let lastFlush: Promise<void> = Promise.resolve();
 let flushTimeout: NodeJS.Timeout | null | number = null;
 const libcoreJobsCounterSubject: Subject<number> = new Subject();
-export const libcoreJobBusy: Observable<boolean> = libcoreJobsCounterSubject.pipe(
-  map((v) => v > 0),
-  distinctUntilChanged()
-);
+export const libcoreJobBusy: Observable<boolean> =
+  libcoreJobsCounterSubject.pipe(
+    map((v) => v > 0),
+    distinctUntilChanged()
+  );
 type AfterGCJob<R> = {
   job: (arg0: Core) => Promise<R>;
   resolve: (arg0: R) => void;
@@ -88,9 +89,10 @@ export async function withLibcore<R>(
   }
 }
 type Fn<A extends Array<any>, R> = (...args: A) => Promise<R>;
-export const withLibcoreF = <A extends Array<any>, R>(
-  job: (core: Core) => Fn<A, R>
-): Fn<A, R> => (...args) => withLibcore((c) => job(c)(...args));
+export const withLibcoreF =
+  <A extends Array<any>, R>(job: (core: Core) => Fn<A, R>): Fn<A, R> =>
+  (...args) =>
+    withLibcore((c) => job(c)(...args));
 let loadCoreImpl: (() => Promise<Core>) | null | undefined;
 // reset the libcore data
 export async function reset(): Promise<void> {

@@ -55,11 +55,11 @@ function convertASN1toBase64(signature) {
   }
 
   // decode DER string format
-  let rOffset = 4;
-  let rLen = signature[3];
+  const rOffset = 4;
+  const rLen = signature[3];
   const sLen = signature[4 + rLen + 1]; // skip over following 0x02 type prefix for s
 
-  let sOffset = signature.length - sLen;
+  const sOffset = signature.length - sLen;
   const sigR = signature.slice(rOffset, rOffset + rLen); // skip e.g. 3045022100 and pad
 
   const sigS = signature.slice(sOffset);

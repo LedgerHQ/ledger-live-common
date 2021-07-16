@@ -9,9 +9,7 @@ import {
 import { promiseAllBatched } from "../../promise";
 import type { BitcoinInput, BitcoinOutput } from "./types";
 
-async function bitcoin(
-  arg: any
-): Promise<{
+async function bitcoin(arg: any): Promise<{
   estimatedFees: BigNumber;
   value: BigNumber;
   txInputs: BitcoinInput[];

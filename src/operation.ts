@@ -32,9 +32,7 @@ export function encodeOperationId(
 ): string {
   return `${accountId}-${hash}-${type}`;
 }
-export function decodeOperationId(
-  id: string
-): {
+export function decodeOperationId(id: string): {
   accountId: string;
   hash: string;
   type: string;

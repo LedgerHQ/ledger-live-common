@@ -346,12 +346,8 @@ export const fromTronResourcesRaw = ({
 
   if (cacheTransactionInfoByIdRaw) {
     for (const k in cacheTransactionInfoByIdRaw) {
-      const [
-        fee,
-        blockNumber,
-        withdraw_amount,
-        unfreeze_amount,
-      ] = cacheTransactionInfoByIdRaw[k];
+      const [fee, blockNumber, withdraw_amount, unfreeze_amount] =
+        cacheTransactionInfoByIdRaw[k];
       cacheTransactionInfoById[k] = {
         fee,
         blockNumber,

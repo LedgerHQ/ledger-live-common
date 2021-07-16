@@ -3,10 +3,10 @@ import type {
   TransactionCommon,
   TransactionCommonRaw,
 } from "../../types/transaction";
-export type CoreStatics = {};
-export type CoreAccountSpecifics = {};
-export type CoreOperationSpecifics = {};
-export type CoreCurrencySpecifics = {};
+export type CoreStatics = Record<any, any>;
+export type CoreAccountSpecifics = Record<any, any>;
+export type CoreOperationSpecifics = Record<any, any>;
+export type CoreCurrencySpecifics = Record<any, any>;
 export type CryptoOrgResources = {
   bondedBalance: BigNumber;
   redelegatingBalance: BigNumber;
@@ -29,7 +29,7 @@ export type TransactionRaw = TransactionCommonRaw & {
   mode: string;
   fees?: string; // also the transaction fields as raw JSON data
 };
-export type CryptoOrgPreloadData = {};
+export type CryptoOrgPreloadData = Record<any, any>;
 export type NetworkInfo = {
   family: "crypto_org";
 };

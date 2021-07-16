@@ -23,7 +23,8 @@ export const tezosOperationTag = {
   OPERATION_TAG_DELEGATION: 10,
 };
 export type TezosOperationMode = "send" | "delegate" | "undelegate";
-export type TezosOperationTag = typeof tezosOperationTag[keyof typeof tezosOperationTag];
+export type TezosOperationTag =
+  typeof tezosOperationTag[keyof typeof tezosOperationTag];
 
 declare class CoreTezosLikeAddress {
   toBase58(): Promise<string>;

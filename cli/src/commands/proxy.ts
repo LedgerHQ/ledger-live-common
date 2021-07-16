@@ -21,8 +21,7 @@ const args = [
     name: "file",
     alias: "f",
     type: String,
-    desc:
-      "in combination with --record, will save all the proxied APDUs to a provided file. If --record is not provided, proxy will start in replay mode of the provided file. If --file is not used at all, the proxy will just act as a proxy without saving the APDU.",
+    desc: "in combination with --record, will save all the proxied APDUs to a provided file. If --record is not provided, proxy will start in replay mode of the provided file. If --file is not used at all, the proxy will just act as a proxy without saving the APDU.",
   },
   {
     name: "verbose",

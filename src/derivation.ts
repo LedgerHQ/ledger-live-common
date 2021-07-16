@@ -484,9 +484,7 @@ export type WalletDerivationInput<R> = {
   currency: CryptoCurrency;
   derivationMode: DerivationMode;
   derivateAddress: (arg0: GetAddressOptions) => Observable<Result>;
-  stepAddress: (
-    arg0: StepAddressInput
-  ) => Observable<{
+  stepAddress: (arg0: StepAddressInput) => Observable<{
     result?: R;
     complete?: boolean;
   }>;
@@ -521,9 +519,8 @@ export function walletDerivation<R>({
     switchMap((parentDerivation) => {
       const seedIdentifier = parentDerivation.publicKey;
       const emptyCount = 0;
-      const mandatoryEmptyAccountSkip = getMandatoryEmptyAccountSkip(
-        derivationMode
-      );
+      const mandatoryEmptyAccountSkip =
+        getMandatoryEmptyAccountSkip(derivationMode);
       const derivationScheme = getDerivationScheme({
         derivationMode,
         currency,

@@ -41,12 +41,10 @@ const cosmos = {
     {
       FIXME_tests: ["balance is sum of ops"],
       raw: {
-        id:
-          "libcore:1:cosmos:cosmospub1addwnpepqwyytxex2dgejj93yjf0rg95v3eqzyxpg75p2hfr6s36tnpuy8vf5p6kez4:",
+        id: "libcore:1:cosmos:cosmospub1addwnpepqwyytxex2dgejj93yjf0rg95v3eqzyxpg75p2hfr6s36tnpuy8vf5p6kez4:",
         seedIdentifier:
           "0388459b2653519948b12492f1a0b464720110c147a8155d23d423a5cc3c21d89a",
-        xpub:
-          "cosmospub1addwnpepqwyytxex2dgejj93yjf0rg95v3eqzyxpg75p2hfr6s36tnpuy8vf5p6kez4",
+        xpub: "cosmospub1addwnpepqwyytxex2dgejj93yjf0rg95v3eqzyxpg75p2hfr6s36tnpuy8vf5p6kez4",
         derivationMode: "",
         index: 0,
         freshAddress: "cosmos1g84934jpu3v5de5yqukkkhxmcvsw3u2ajxvpdl",
@@ -424,8 +422,7 @@ const cosmos = {
     {
       FIXME_tests: ["balance is sum of ops"],
       raw: {
-        id:
-          "libcore:1:cosmos:cosmospub1addwnpepqd3nvwwx39pqqvw88sg409675u6wyt4wtzqyt2t0e9y4629t50cdzftxnvz:",
+        id: "libcore:1:cosmos:cosmospub1addwnpepqd3nvwwx39pqqvw88sg409675u6wyt4wtzqyt2t0e9y4629t50cdzftxnvz:",
         seedIdentifier:
           "cosmospub1addwnpepqd3nvwwx39pqqvw88sg409675u6wyt4wtzqyt2t0e9y4629t50cdzftxnvz",
         name: "Cosmos Static Account",
@@ -446,8 +443,7 @@ const cosmos = {
         balance: "1000000",
         spendableBalance: "0",
         balanceHistory: {},
-        xpub:
-          "cosmospub1addwnpepqd3nvwwx39pqqvw88sg409675u6wyt4wtzqyt2t0e9y4629t50cdzftxnvz",
+        xpub: "cosmospub1addwnpepqd3nvwwx39pqqvw88sg409675u6wyt4wtzqyt2t0e9y4629t50cdzftxnvz",
         cosmosResources: {
           delegations: [],
           redelegations: [],

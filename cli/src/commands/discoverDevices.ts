@@ -12,8 +12,7 @@ export default {
       name: "interactive",
       alias: "i",
       type: Boolean,
-      desc:
-        "interactive mode that accumulate the events instead of showing them",
+      desc: "interactive mode that accumulate the events instead of showing them",
     },
   ],
   job: ({

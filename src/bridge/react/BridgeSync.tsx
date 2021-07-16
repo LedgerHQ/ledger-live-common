@@ -117,10 +117,8 @@ function useSyncQueue({
   updateAccountWithUpdater,
   blacklistedTokenIds,
 }) {
-  const [bridgeSyncState, setBridgeSyncState]: [
-    BridgeSyncState,
-    any
-  ] = useState({});
+  const [bridgeSyncState, setBridgeSyncState]: [BridgeSyncState, any] =
+    useState({});
   const setAccountSyncState = useCallback((accountId: string, s: SyncState) => {
     setBridgeSyncState((state) => ({ ...state, [accountId]: s }));
   }, []);
