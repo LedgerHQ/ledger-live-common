@@ -87,13 +87,13 @@ const reducer = (s: State, a): State => {
 
         if (
           s.transaction &&
-          // @ts-expect-error transaction.mode is not available on all union types
+          // @ts-expect-error transaction.mode is not available on all union types. type guard is required
           s.transaction.mode &&
-          // @ts-expect-error transaction.mode is not available on all union types
+          // @ts-expect-error transaction.mode is not available on all union types. type guard is required
           s.transaction.mode !== t.mode
         ) {
           t = bridge.updateTransaction(t, {
-            // @ts-expect-error transaction.mode is not available on all union types
+            // @ts-expect-error transaction.mode is not available on all union types. type guard is required
             mode: s.transaction.mode,
           });
         }

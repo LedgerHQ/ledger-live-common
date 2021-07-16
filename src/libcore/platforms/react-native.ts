@@ -193,13 +193,12 @@ export default (arg: { getNativeModule: (id: string) => any }): void => {
       backend,
       walletDynObject
     );
-    // @ts-expect-error i tried
-    const core: Core = {
+    const core = {
       ...cs,
       flush: () => Promise.all(flushes.map((f) => f())).then(() => undefined),
       getPoolInstance: () => walletPoolInstance,
       getThreadDispatcher: () => threadDispatcher,
-    };
+    } as Core;
     return core;
   }
 

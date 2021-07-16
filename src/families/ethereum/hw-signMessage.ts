@@ -27,7 +27,7 @@ export const messageHash = (message: TypedMessage) => {
 
 const resolver: EthResolver = async (
   transport,
-  // @ts-expect-error only available on MessageData
+  // @ts-expect-error only available on MessageData. (type guard)
   { path, message, rawMessage }
 ) => {
   const eth = new Eth(transport);

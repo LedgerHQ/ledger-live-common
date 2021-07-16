@@ -1,21 +1,15 @@
 import { BigNumber } from "bignumber.js";
-import StellarSdk, {
-  // @ts-expect-error stellar-sdk ts definition missing?
-  TransactionRecord,
-  // @ts-expect-error stellar-sdk ts definition missing?
-  OperationRecord,
-  // @ts-expect-error stellar-sdk ts definition missing?
-  AccountRecord,
-} from "stellar-sdk";
+import StellarSdk, { ServerApi } from "stellar-sdk";
 import type { CacheRes } from "../../cache";
 import { makeLRUCache } from "../../cache";
 import type { Account, Operation, OperationType } from "../../types";
 import { fetchSigners, fetchBaseFee, loadAccount } from "./api";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
 import { encodeOperationId } from "../../operation";
+
 const currency = getCryptoCurrencyById("stellar");
 
-const getMinimumBalance = (account: typeof AccountRecord): BigNumber => {
+const getMinimumBalance = (account: ServerApi.AccountRecord): BigNumber => {
   const baseReserve = 0.5;
   const numberOfEntries = account.subentry_count;
   const minimumBalance = (2 + numberOfEntries) * baseReserve;
@@ -24,14 +18,15 @@ const getMinimumBalance = (account: typeof AccountRecord): BigNumber => {
 
 export const getAccountSpendableBalance = async (
   balance: BigNumber,
-  account: typeof AccountRecord
+  account: ServerApi.AccountRecord
 ): Promise<BigNumber> => {
   const minimumBalance = getMinimumBalance(account);
   const baseFee = await fetchBaseFee();
   return BigNumber.max(balance.minus(minimumBalance).minus(baseFee), 0);
 };
+
 export const getOperationType = (
-  operation: typeof OperationRecord,
+  operation: ServerApi.OperationRecord,
   addr: string
 ): OperationType => {
   switch (operation.type) {
@@ -74,7 +69,7 @@ const getRecipients = (operation): string[] => {
 };
 
 export const formatOperation = async (
-  rawOperation: typeof OperationRecord,
+  rawOperation: ServerApi.OperationRecord,
   accountId: string,
   addr: string
 ): Promise<Operation> => {
@@ -99,6 +94,7 @@ export const formatOperation = async (
     senders: [rawOperation.source_account],
     recipients,
     transactionSequenceNumber: Number(transaction.source_account_sequence),
+    // @ts-expect-error check transaction_successful property
     hasFailed: !rawOperation.transaction_successful,
     blockHash: null,
     extra: memo
@@ -111,12 +107,13 @@ export const formatOperation = async (
 };
 
 const getValue = (
-  operation: typeof OperationRecord,
-  transaction: typeof TransactionRecord,
+  operation: ServerApi.OperationRecord,
+  transaction: ServerApi.TransactionRecord,
   type: OperationType
 ): BigNumber => {
   let value = new BigNumber(0);
 
+  // @ts-expect-error check transaction_successful property
   if (!operation.transaction_successful) {
     return type === "IN" ? value : new BigNumber(transaction.fee_charged || 0);
   }
@@ -165,6 +162,7 @@ export const checkRecipientExist: CacheRes<
     maxAge: 5 * 60,
   } // 5 minutes
 );
+
 export const isMemoValid = (memoType: string, memoValue: string): boolean => {
   switch (memoType) {
     case "MEMO_TEXT":
@@ -192,6 +190,7 @@ export const isMemoValid = (memoType: string, memoValue: string): boolean => {
 
   return true;
 };
+
 export const isAccountMultiSign = async (account: Account) => {
   const signers = await fetchSigners(account);
   return signers.length > 1;
@@ -222,8 +221,9 @@ export const addressExists = async (address: string): Promise<boolean> => {
   const account = await loadAccount(address);
   return !!account;
 };
+
 export const rawOperationsToOperations = async (
-  operations: typeof OperationRecord[],
+  operations: ServerApi.OperationRecord[],
   addr: string,
   accountId: string
 ): Promise<Operation[]> => {
@@ -231,9 +231,13 @@ export const rawOperationsToOperations = async (
     operations
       .filter((operation) => {
         return (
+          // @ts-expect-error check from property
           operation.from === addr ||
+          // @ts-expect-error check to property
           operation.to === addr ||
+          // @ts-expect-error check funder property
           operation.funder === addr ||
+          // @ts-expect-error check account property
           operation.account === addr ||
           operation.source_account === addr
         );

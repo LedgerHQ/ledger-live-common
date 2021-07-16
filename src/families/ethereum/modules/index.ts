@@ -132,7 +132,7 @@ export const prepareTokenAccounts = (
   address: string
 ): Promise<TokenAccount[]> =>
   values(modules)
-    // @ts-expect-error too weird for me to understand
+    // @ts-expect-error only exists in compound module. (type guard)
     .map((m) => m.prepareTokenAccounts)
     .filter(Boolean)
     .reduce(
@@ -145,7 +145,7 @@ export const digestTokenAccounts = (
   address: string
 ): Promise<TokenAccount[]> =>
   values(modules)
-    // @ts-expect-error too weird for me to understand
+    // @ts-expect-error only exists in compound module. (type guard)
     .map((m) => m.digestTokenAccounts)
     .filter(Boolean)
     .reduce(
