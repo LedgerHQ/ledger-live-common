@@ -17,10 +17,9 @@ export type AccountDescriptor = {
   internal: string;
   external: string;
 };
-const perDerivation: Partial<Record<
-  DerivationMode,
-  ((arg0: string) => string) | null | undefined
->> = {
+const perDerivation: Partial<
+  Record<DerivationMode, ((arg0: string) => string) | null | undefined>
+> = {
   "": (fragment) => `pkh(${fragment})`,
   segwit: (fragment) => `sh(wpkh(${fragment}))`,
   native_segwit: (fragment) => `wpkh(${fragment})`,

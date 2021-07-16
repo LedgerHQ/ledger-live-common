@@ -172,12 +172,8 @@ export const createAction = (
     }, [device, opened, account, parentAccount]);
     useEffect(() => {
       if (!coinifyContext || !device) return;
-      const {
-        binaryPayload,
-        payloadSignature,
-        transaction,
-        status,
-      } = coinifyContext;
+      const { binaryPayload, payloadSignature, transaction, status } =
+        coinifyContext;
       const sub = checkSignatureAndPrepare({
         deviceId: device.deviceId,
         binaryPayload,

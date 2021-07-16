@@ -240,109 +240,101 @@ const cmd = ({
           requireLatestFirmware,
         }: any) =>
           defer(() => from(getAppAndVersion(transport))).pipe(
-            concatMap(
-              (appAndVersion): Observable<ConnectAppEvent> => {
-                timeoutSub.unsubscribe();
+            concatMap((appAndVersion): Observable<ConnectAppEvent> => {
+              timeoutSub.unsubscribe();
 
-                if (isDashboardName(appAndVersion.name)) {
-                  // check if we meet minimum fw
-                  if (requireLatestFirmware) {
-                    return from(getDeviceInfo(transport)).pipe(
-                      mergeMap((deviceInfo: DeviceInfo) =>
-                        from(
-                          manager.getLatestFirmwareForDevice(deviceInfo)
-                        ).pipe(
-                          mergeMap(
-                            (
-                              latest: FirmwareUpdateContext | undefined | null
-                            ) => {
-                              if (
-                                !latest ||
-                                semver.eq(
-                                  deviceInfo.version,
-                                  latest.final.version
+              if (isDashboardName(appAndVersion.name)) {
+                // check if we meet minimum fw
+                if (requireLatestFirmware) {
+                  return from(getDeviceInfo(transport)).pipe(
+                    mergeMap((deviceInfo: DeviceInfo) =>
+                      from(manager.getLatestFirmwareForDevice(deviceInfo)).pipe(
+                        mergeMap(
+                          (
+                            latest: FirmwareUpdateContext | undefined | null
+                          ) => {
+                            if (
+                              !latest ||
+                              semver.eq(
+                                deviceInfo.version,
+                                latest.final.version
+                              )
+                            ) {
+                              o.next({ type: "latest-firmware-resolved" });
+                              return innerSub({ appName }); // NB without the fw version check
+                            } else {
+                              return throwError(
+                                new LatestFirmwareVersionRequired(
+                                  "LatestFirmwareVersionRequired",
+                                  {
+                                    latest: latest.final.version,
+                                    current: deviceInfo.version,
+                                  }
                                 )
-                              ) {
-                                o.next({ type: "latest-firmware-resolved" });
-                                return innerSub({ appName }); // NB without the fw version check
-                              } else {
-                                return throwError(
-                                  new LatestFirmwareVersionRequired(
-                                    "LatestFirmwareVersionRequired",
-                                    {
-                                      latest: latest.final.version,
-                                      current: deviceInfo.version,
-                                    }
-                                  )
-                                );
-                              }
+                              );
                             }
-                          )
+                          }
                         )
                       )
-                    );
-                  }
-                  // check if we meet dependencies
-                  if (dependencies?.length) {
-                    return streamAppInstall({
-                      transport,
-                      appNames: [appName, ...dependencies],
-                      onSuccessObs: () => {
-                        o.next({
-                          type: "dependencies-resolved",
-                        });
-                        return innerSub({
-                          appName,
-                        }); // NB without deps
-                      },
-                    });
-                  }
-
-                  // we're in dashboard
-                  return openAppFromDashboard(transport, appName);
+                    )
+                  );
                 }
-
-                // in order to check the fw version, install deps, we need dashboard
-                if (
-                  dependencies?.length ||
-                  requireLatestFirmware ||
-                  appAndVersion.name !== appName
-                ) {
-                  return attemptToQuitApp(
+                // check if we meet dependencies
+                if (dependencies?.length) {
+                  return streamAppInstall({
                     transport,
-                    appAndVersion as AppAndVersion
-                  );
-                }
-
-                if (
-                  mustUpgrade(
-                    modelId,
-                    appAndVersion.name,
-                    appAndVersion.version
-                  )
-                ) {
-                  return throwError(
-                    new UpdateYourApp(undefined, {
-                      managerAppName: appAndVersion.name,
-                    })
-                  );
-                }
-
-                if (requiresDerivation) {
-                  return derivationLogic(transport, {
-                    requiresDerivation,
-                    appAndVersion: appAndVersion as AppAndVersion,
-                    appName,
+                    appNames: [appName, ...dependencies],
+                    onSuccessObs: () => {
+                      o.next({
+                        type: "dependencies-resolved",
+                      });
+                      return innerSub({
+                        appName,
+                      }); // NB without deps
+                    },
                   });
-                } else {
-                  const e: ConnectAppEvent = {
-                    type: "opened",
-                    app: appAndVersion,
-                  };
-                  return of(e);
                 }
+
+                // we're in dashboard
+                return openAppFromDashboard(transport, appName);
               }
-            ),
+
+              // in order to check the fw version, install deps, we need dashboard
+              if (
+                dependencies?.length ||
+                requireLatestFirmware ||
+                appAndVersion.name !== appName
+              ) {
+                return attemptToQuitApp(
+                  transport,
+                  appAndVersion as AppAndVersion
+                );
+              }
+
+              if (
+                mustUpgrade(modelId, appAndVersion.name, appAndVersion.version)
+              ) {
+                return throwError(
+                  new UpdateYourApp(undefined, {
+                    managerAppName: appAndVersion.name,
+                  })
+                );
+              }
+
+              if (requiresDerivation) {
+                return derivationLogic(transport, {
+                  requiresDerivation,
+                  appAndVersion: appAndVersion as AppAndVersion,
+                  appName,
+                });
+              } else {
+                const e: ConnectAppEvent = {
+                  type: "opened",
+                  app: appAndVersion,
+                };
+                return of(e);
+              }
+            }),
             catchError((e: Error) => {
               if (
                 e instanceof DisconnectedDeviceDuringOperation ||

@@ -88,9 +88,7 @@ export function setPolkadotPreloadData(data: PolkadotPreloadData) {
   currentPolkadotPreloadedData = data;
   updates.next(data);
 }
-export function getPolkadotPreloadDataUpdates(): Observable<
-  PolkadotPreloadData
-> {
+export function getPolkadotPreloadDataUpdates(): Observable<PolkadotPreloadData> {
   return updates.asObservable();
 }
 
@@ -111,10 +109,8 @@ export const preload = async (): Promise<PolkadotPreloadData> => {
   const minimumBondBalanceStr = minimumBondBalance.toString();
 
   const currentStakingProgress = await getStakingProgress();
-  const {
-    validators: previousValidators,
-    staking: previousStakingProgress,
-  } = currentPolkadotPreloadedData;
+  const { validators: previousValidators, staking: previousStakingProgress } =
+    currentPolkadotPreloadedData;
   let validators = previousValidators;
 
   if (

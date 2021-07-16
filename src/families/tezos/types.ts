@@ -26,7 +26,8 @@ export const tezosOperationTag = {
 
 export type TezosOperationMode = "send" | "delegate" | "undelegate";
 
-export type TezosOperationTag = typeof tezosOperationTag[keyof typeof tezosOperationTag];
+export type TezosOperationTag =
+  typeof tezosOperationTag[keyof typeof tezosOperationTag];
 
 declare class CoreTezosLikeAddress {
   toBase58(): Promise<string>;

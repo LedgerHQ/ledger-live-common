@@ -45,9 +45,7 @@ export function encodeTokenAccountId(
 ): string {
   return accountId + "+" + encodeURIComponent(token.id);
 }
-export function decodeTokenAccountId(
-  id: string
-): {
+export function decodeTokenAccountId(id: string): {
   accountId: string;
   token: TokenCurrency | null | undefined;
 } {

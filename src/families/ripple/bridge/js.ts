@@ -276,46 +276,48 @@ type Tx = {
   };
 };
 
-const txToOperation = (account: Account) => ({
-  id,
-  sequence,
-  outcome: { fee, deliveredAmount, ledgerVersion, timestamp },
-  specification: { source, destination },
-}: Tx): Operation | null | undefined => {
-  const type = source.address === account.freshAddress ? "OUT" : "IN";
-  let value = deliveredAmount
-    ? parseAPICurrencyObject(deliveredAmount)
-    : new BigNumber(0);
-  const feeValue = parseAPIValue(fee);
+const txToOperation =
+  (account: Account) =>
+  ({
+    id,
+    sequence,
+    outcome: { fee, deliveredAmount, ledgerVersion, timestamp },
+    specification: { source, destination },
+  }: Tx): Operation | null | undefined => {
+    const type = source.address === account.freshAddress ? "OUT" : "IN";
+    let value = deliveredAmount
+      ? parseAPICurrencyObject(deliveredAmount)
+      : new BigNumber(0);
+    const feeValue = parseAPIValue(fee);
 
-  if (type === "OUT") {
-    if (!Number.isNaN(feeValue)) {
-      value = value.plus(feeValue);
+    if (type === "OUT") {
+      if (!Number.isNaN(feeValue)) {
+        value = value.plus(feeValue);
+      }
     }
-  }
 
-  const op: Operation = {
-    id: `${account.id}-${id}-${type}`,
-    hash: id,
-    accountId: account.id,
-    type,
-    value,
-    fee: feeValue,
-    blockHash: null,
-    blockHeight: ledgerVersion,
-    senders: [source.address],
-    recipients: [destination.address],
-    date: new Date(timestamp),
-    transactionSequenceNumber: sequence,
-    extra: {},
+    const op: Operation = {
+      id: `${account.id}-${id}-${type}`,
+      hash: id,
+      accountId: account.id,
+      type,
+      value,
+      fee: feeValue,
+      blockHash: null,
+      blockHeight: ledgerVersion,
+      senders: [source.address],
+      recipients: [destination.address],
+      date: new Date(timestamp),
+      transactionSequenceNumber: sequence,
+      extra: {},
+    };
+
+    if (destination.tag) {
+      op.extra.tag = destination.tag;
+    }
+
+    return op;
   };
-
-  if (destination.tag) {
-    op.extra.tag = destination.tag;
-  }
-
-  return op;
-};
 
 const recipientIsNew = async (endpointConfig, recipient) => {
   if (!isRecipientValid(recipient)) return false;

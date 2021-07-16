@@ -44,13 +44,11 @@ const dataset: DatasetTest<Transaction> = {
           FIXME_tests: ["balance is sum of ops"],
           // Rewards issues
           raw: {
-            id:
-              "libcore:1:algorand:c8b672d16c497bb097a48f09a9cccf0c4c7d6391acb7a4e7cd3f236fadbef9c4:",
+            id: "libcore:1:algorand:c8b672d16c497bb097a48f09a9cccf0c4c7d6391acb7a4e7cd3f236fadbef9c4:",
             seedIdentifier:
               "c8b672d16c497bb097a48f09a9cccf0c4c7d6391acb7a4e7cd3f236fadbef9c4",
             name: "Algorand 1",
-            xpub:
-              "c8b672d16c497bb097a48f09a9cccf0c4c7d6391acb7a4e7cd3f236fadbef9c4",
+            xpub: "c8b672d16c497bb097a48f09a9cccf0c4c7d6391acb7a4e7cd3f236fadbef9c4",
             derivationMode: "",
             index: 0,
             freshAddress:
@@ -217,12 +215,10 @@ const dataset: DatasetTest<Transaction> = {
         },
         {
           raw: {
-            id:
-              "libcore:1:algorand:6104eb314f51f4db5733976bd8c066297019ebaa6adcf39b4aa318d553c571cc:",
+            id: "libcore:1:algorand:6104eb314f51f4db5733976bd8c066297019ebaa6adcf39b4aa318d553c571cc:",
             seedIdentifier:
               "c8b672d16c497bb097a48f09a9cccf0c4c7d6391acb7a4e7cd3f236fadbef9c4",
-            xpub:
-              "6104eb314f51f4db5733976bd8c066297019ebaa6adcf39b4aa318d553c571cc",
+            xpub: "6104eb314f51f4db5733976bd8c066297019ebaa6adcf39b4aa318d553c571cc",
             name: "Algorand 4",
             derivationMode: "",
             index: 3,
