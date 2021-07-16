@@ -319,8 +319,7 @@ const dataset: DatasetTest<Transaction> = {
                 invariant(account.subAccounts, "subAccounts"),
                 {
                   ...t,
-                  // @ts-expect-error we know subAccounts exist with invariant
-                  subAccountId: account.subAccounts[0].id,
+                  subAccountId: account.subAccounts?.[0].id,
                   recipient: addressTZnew,
                   useAllAmount: true,
                 }
@@ -331,12 +330,10 @@ const dataset: DatasetTest<Transaction> = {
                   errors: {},
                   warnings: {},
                   estimatedFees: fees,
-                  // @ts-expect-error we know subAccounts exist with invariant
-                  amount: subAccounts[0].balance.minus(
+                  amount: subAccounts?.[0].balance.minus(
                     reservedAmountForStorageLimit(storageLimit)
                   ),
-                  // @ts-expect-error we know subAccounts exist with invariant
-                  totalSpent: subAccounts[0].balance,
+                  totalSpent: subAccounts?.[0].balance,
                 }
               ),
             },
@@ -349,8 +346,7 @@ const dataset: DatasetTest<Transaction> = {
                 ),
                 {
                   ...t,
-                  // @ts-expect-error we know subAccounts exist with invariant
-                  subAccountId: account.subAccounts[1].id,
+                  subAccountId: account.subAccounts?.[1].id,
                   recipient: addressTZnew,
                   useAllAmount: true,
                 }
@@ -364,10 +360,8 @@ const dataset: DatasetTest<Transaction> = {
                   errors: {},
                   warnings: {},
                   estimatedFees: fees,
-                  // @ts-expect-error we know subAccounts exist with invariant
-                  amount: subAccounts[1].balance,
-                  // @ts-expect-error we know subAccounts exist with invariant
-                  totalSpent: subAccounts[1].balance,
+                  amount: subAccounts?.[1].balance,
+                  totalSpent: subAccounts?.[1].balance,
                 }
               ),
             },
@@ -385,8 +379,7 @@ const dataset: DatasetTest<Transaction> = {
                 invariant(account.subAccounts, "subAccounts"),
                 {
                   ...t,
-                  // @ts-expect-error we know subAccounts exist with invariant
-                  subAccountId: account.subAccounts[0].id,
+                  subAccountId: account.subAccounts?.[0].id,
                   recipient: addressTZregular,
                   useAllAmount: true,
                 }
@@ -404,8 +397,7 @@ const dataset: DatasetTest<Transaction> = {
                 invariant(account.subAccounts, "subAccounts"),
                 {
                   ...t,
-                  // @ts-expect-error we know subAccounts exist with invariant
-                  subAccountId: account.subAccounts[0].id,
+                  subAccountId: account.subAccounts?.[0].id,
                   amount: account.balance.div(10),
                   recipient: addressTZregular,
                 }
