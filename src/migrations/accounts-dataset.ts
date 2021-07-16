@@ -2,8 +2,7 @@ import { fromAccountRaw } from "../account";
 import type { Account, AccountRaw } from "../types";
 const accounts: Account[] = [
   {
-    id:
-      "libcore:1:bitcoin:xpub6DACJs4ZgE67HEu53j2osRtw51wfJybJ88ccVQnHpmjqr9XJfMYXn6Fxt3u772FonuWfqYUrb9Z9wxe2S9pTzxGDiQZDk1cMPiDH2S5HjYa:native_segwit",
+    id: "libcore:1:bitcoin:xpub6DACJs4ZgE67HEu53j2osRtw51wfJybJ88ccVQnHpmjqr9XJfMYXn6Fxt3u772FonuWfqYUrb9Z9wxe2S9pTzxGDiQZDk1cMPiDH2S5HjYa:native_segwit",
     seedIdentifier:
       "04c34029090f64a127ed5abc5b46a4ac51d14256e121adfe65eade766c3a45d5112e480268ee3f9102d0e839b4656f0c2777a4bbeaf16054d6271f628fc99bd5af",
     name: "BTC 1",
@@ -23,8 +22,7 @@ const accounts: Account[] = [
     lastSyncDate: "2020-10-07T09:56:06.280Z",
     balance: "0",
     spendableBalance: "0",
-    xpub:
-      "xpub6DACJs4ZgE67HEu53j2osRtw51wfJybJ88ccVQnHpmjqr9XJfMYXn6Fxt3u772FonuWfqYUrb9Z9wxe2S9pTzxGDiQZDk1cMPiDH2S5HjYa",
+    xpub: "xpub6DACJs4ZgE67HEu53j2osRtw51wfJybJ88ccVQnHpmjqr9XJfMYXn6Fxt3u772FonuWfqYUrb9Z9wxe2S9pTzxGDiQZDk1cMPiDH2S5HjYa",
     bitcoinResources: {
       utxos: [],
     },
@@ -66,8 +64,7 @@ const accounts: Account[] = [
     ],
   },
   {
-    id:
-      "libcore:1:litecoin:Ltub2Zx1tbqWB7AbC4fb7aWgsuyXBm2qt97gzG5av4PHAjdAhvdZQFHS7nmcScgtAvpgcGAkVQQvR9BXwu54ny6Yqwst4KQAnyD1Yx6VezNf1S8:segwit",
+    id: "libcore:1:litecoin:Ltub2Zx1tbqWB7AbC4fb7aWgsuyXBm2qt97gzG5av4PHAjdAhvdZQFHS7nmcScgtAvpgcGAkVQQvR9BXwu54ny6Yqwst4KQAnyD1Yx6VezNf1S8:segwit",
     seedIdentifier:
       "04f0e0c596eda440b4110082147d96a316c25c2e6be47fe7325c299038328161c788ba804a297b4761587db7700b6934b1d32e9c7d407303cba816c35e83767366",
     name: "LTC 1",
@@ -87,8 +84,7 @@ const accounts: Account[] = [
     lastSyncDate: "2020-10-07T09:56:06.658Z",
     balance: "0",
     spendableBalance: "0",
-    xpub:
-      "Ltub2Zx1tbqWB7AbC4fb7aWgsuyXBm2qt97gzG5av4PHAjdAhvdZQFHS7nmcScgtAvpgcGAkVQQvR9BXwu54ny6Yqwst4KQAnyD1Yx6VezNf1S8",
+    xpub: "Ltub2Zx1tbqWB7AbC4fb7aWgsuyXBm2qt97gzG5av4PHAjdAhvdZQFHS7nmcScgtAvpgcGAkVQQvR9BXwu54ny6Yqwst4KQAnyD1Yx6VezNf1S8",
     bitcoinResources: {
       utxos: [],
     },
@@ -107,8 +103,7 @@ const accounts: Account[] = [
     ],
   },
   {
-    id:
-      "libcore:1:ethereum:xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ:",
+    id: "libcore:1:ethereum:xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ:",
     seedIdentifier:
       "04468680d27b26d4304a3c2aeb2c696d5d3a2d7fea4e28e9d7d296e0ecbc626fa8bd458c4d4db0cbcb36d6e0b51bcedf44653483e40f200c366e86cbb54d579c1c",
     name: "ETH",
@@ -134,13 +129,11 @@ const accounts: Account[] = [
     balance: "280255780000000000",
     spendableBalance: "280255780000000000",
     balanceHistory: {},
-    xpub:
-      "xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ",
+    xpub: "xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ",
     subAccounts: [
       {
         type: "TokenAccountRaw",
-        id:
-          "libcore:1:ethereum:xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ:+0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        id: "libcore:1:ethereum:xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ:+0xdAC17F958D2ee523a2206206994597C13D831ec7",
         parentId:
           "libcore:1:ethereum:xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ:",
         starred: false,
@@ -178,8 +171,7 @@ const accounts: Account[] = [
       },
       {
         type: "TokenAccountRaw",
-        id:
-          "libcore:1:ethereum:xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ:+imaginary",
+        id: "libcore:1:ethereum:xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ:+imaginary",
         parentId:
           "libcore:1:ethereum:xpub6BemYiVNp19a1mxEndPgCEG5MLN7veWbvUtPGwFeTwJ4K8z7uoNkEbHgNujVnisJ7pyVJE3q2Wi1JssEdVcUZeCSVL7ezohp71siJ76SNFQ:",
         starred: false,

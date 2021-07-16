@@ -1,6 +1,6 @@
 import network from "../../network";
 import { getSwapAPIBaseURL } from "./";
-import type { KYCData, KYCStatus, SubmitKYC } from "./types";
+import type { KYCData, SubmitKYC } from "./types";
 import { ValidationError } from "../../errors";
 
 export const submitKYC: SubmitKYC = async (provider: string, data: KYCData) => {

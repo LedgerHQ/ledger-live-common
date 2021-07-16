@@ -85,8 +85,7 @@ export default {
     {
       name: "osuVersion",
       type: String,
-      desc:
-        "(to your own risk) provide yourself an OSU version to flash the device with",
+      desc: "(to your own risk) provide yourself an OSU version to flash the device with",
     },
     {
       name: "listOSUs",

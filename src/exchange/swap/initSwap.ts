@@ -57,12 +57,8 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
         if (unsubscribed) return;
 
         const { provider, rateId, payoutNetworkFees } = exchangeRate;
-        const {
-          fromParentAccount,
-          fromAccount,
-          toParentAccount,
-          toAccount,
-        } = exchange;
+        const { fromParentAccount, fromAccount, toParentAccount, toAccount } =
+          exchange;
         const { amount } = transaction;
         const refundCurrency = getAccountCurrency(fromAccount);
         const unitFrom = getAccountUnit(exchange.fromAccount);
@@ -154,13 +150,8 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
           transaction
         );
         if (unsubscribed) return;
-        const {
-          errors,
-          estimatedFees,
-        } = await accountBridge.getTransactionStatus(
-          refundAccount,
-          transaction
-        );
+        const { errors, estimatedFees } =
+          await accountBridge.getTransactionStatus(refundAccount, transaction);
         if (unsubscribed) return;
         const errorsKeys = Object.keys(errors);
 

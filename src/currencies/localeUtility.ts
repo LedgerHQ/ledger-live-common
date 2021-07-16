@@ -21,9 +21,7 @@ export const prefixFormat = ["sign", "code", "value"];
 export const suffixFormat = ["sign", "value", "separator", "code"];
 // returns decimal and thousands separator
 // FIXME: rename thousands to group
-export type GetSeparators = (
-  locale: string
-) => {
+export type GetSeparators = (locale: string) => {
   decimal: string | null | undefined;
   thousands: string | null | undefined;
 };

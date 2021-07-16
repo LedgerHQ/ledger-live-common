@@ -728,9 +728,10 @@ const getTransactionStatus = async (
       energy.eq(0) &&
       a.spendableBalance.lt(1000000)
     ) {
-      const contractUserEnergyConsumption = await getContractUserEnergyRatioConsumption(
-        account.token.contractAddress
-      );
+      const contractUserEnergyConsumption =
+        await getContractUserEnergyRatioConsumption(
+          account.token.contractAddress
+        );
 
       if (contractUserEnergyConsumption > 0) {
         warnings.amount = new TronNotEnoughEnergy();

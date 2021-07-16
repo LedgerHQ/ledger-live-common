@@ -307,10 +307,9 @@ export const reducer = (state: State, action: Action): State => {
         // if app is already installed but outdated, we'll need to update related deps
         if ((existing && !existing.updated) || depsInstalledOutdated.length) {
           // if app has installed direct dependent apps, we'll need to update them too
-          const directDependents = findDependents(
-            state.appByName,
-            name
-          ).filter((d) => state.installed.some((a) => a.name === d));
+          const directDependents = findDependents(state.appByName, name).filter(
+            (d) => state.installed.some((a) => a.name === d)
+          );
           const outdated = state.installed
             .filter(
               (a) =>

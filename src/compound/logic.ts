@@ -15,9 +15,7 @@ import {
 } from "../families/ethereum/modules/compound";
 // to confirm in practice if this threshold is high enough / too high
 const unlimitedThreshold = new BigNumber(2).pow(250);
-export function getAccountCapabilities(
-  account: TokenAccount
-):
+export function getAccountCapabilities(account: TokenAccount):
   | {
       enabledAmount: BigNumber;
       enabledAmountIsUnlimited: boolean;
@@ -179,9 +177,8 @@ export function makeCompoundSummaryForAccount(
               compoundValue: new BigNumber(operation.extra.compoundValue),
             });
             opened.unshift({
-              amountSupplied: closingOperation.amountSupplied.minus(
-                amountToClose
-              ),
+              amountSupplied:
+                closingOperation.amountSupplied.minus(amountToClose),
               openRate: closingOperation.openRate,
               startingDate: closingOperation.startingDate,
               compoundValue: closingOperation.compoundValue.minus(

@@ -333,8 +333,7 @@ export default {
     {
       name: "memo",
       alias: "m",
-      desc:
-        "a file to memorize the previously saved result so we don't run again from the start",
+      desc: "a file to memorize the previously saved result so we don't run again from the start",
     },
   ],
   job: ({

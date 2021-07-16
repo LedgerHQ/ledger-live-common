@@ -10,8 +10,7 @@ const cache = {
     icon: "warning",
     content: {
       title: "Incoming cosmos fork",
-      text:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
+      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
       link: {
         href: "https://ledger.com/there-is/an/incoming-cosmos-fork",
         label: "Click here for more information on upcoming fork",
@@ -29,8 +28,7 @@ const cache = {
     icon: "info",
     content: {
       title: "Incoming cosmos fork",
-      text:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
+      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
       link: {
         href: "https://ledger.com/there-is/an/incoming-cosmos-fork",
         label: "Click here for more information on upcoming fork",
@@ -47,8 +45,7 @@ const cache = {
     icon: "warning",
     content: {
       title: "Incoming bitcoin fork",
-      text:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
+      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
       link: {
         href: "https://ledger.com/there-is/an/incoming-cosmos-fork",
         label: "Click here for more information on upcoming fork",
@@ -78,8 +75,7 @@ describe("groupAnnouncements", () => {
             icon: "warning",
             content: {
               title: "Incoming bitcoin fork",
-              text:
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
+              text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
               link: {
                 href: "https://ledger.com/there-is/an/incoming-cosmos-fork",
                 label: "Click here for more information on upcoming fork",
@@ -102,8 +98,7 @@ describe("groupAnnouncements", () => {
             icon: "info",
             content: {
               title: "Incoming cosmos fork",
-              text:
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
+              text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
               link: {
                 href: "https://ledger.com/there-is/an/incoming-cosmos-fork",
                 label: "Click here for more information on upcoming fork",
@@ -125,8 +120,7 @@ describe("groupAnnouncements", () => {
             icon: "warning",
             content: {
               title: "Incoming cosmos fork",
-              text:
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
+              text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc nibh felis, pom id...",
               link: {
                 href: "https://ledger.com/there-is/an/incoming-cosmos-fork",
                 label: "Click here for more information on upcoming fork",

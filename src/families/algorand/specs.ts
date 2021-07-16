@@ -183,9 +183,10 @@ const algorand: AppSpec<Transaction> = {
         const subAccount = account.subAccounts?.find(
           (sa) => sa.id === subAccountId
         );
-        const subAccountBeforeTransaction = accountBeforeTransaction.subAccounts?.find(
-          (sa) => sa.id === subAccountId
-        );
+        const subAccountBeforeTransaction =
+          accountBeforeTransaction.subAccounts?.find(
+            (sa) => sa.id === subAccountId
+          );
         expect(subAccount?.balance.toString()).toBe(
           subAccountBeforeTransaction?.balance.minus(status.amount).toString()
         );

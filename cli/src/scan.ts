@@ -52,8 +52,7 @@ export const currencyOpt = {
   name: "currency",
   alias: "c",
   type: String,
-  desc:
-    "Currency name or ticker. If not provided, it will be inferred from the device.",
+  desc: "Currency name or ticker. If not provided, it will be inferred from the device.",
 };
 const localCache = {};
 const cache = makeBridgeCacheSystem({
@@ -83,23 +82,20 @@ export const scanCommonOpts = [
   {
     name: "xpub",
     type: String,
-    desc:
-      "use an xpub (alternatively to --device) [DEPRECATED: prefer use of id]",
+    desc: "use an xpub (alternatively to --device) [DEPRECATED: prefer use of id]",
     multiple: true,
   },
   {
     name: "id",
     type: String,
-    desc:
-      "restore an account id (or a partial version of an id) (alternatively to --device)",
+    desc: "restore an account id (or a partial version of an id) (alternatively to --device)",
     multiple: true,
   },
   {
     name: "file",
     type: String,
     typeDesc: "filename",
-    desc:
-      "use a JSON account file or '-' for stdin (alternatively to --device)",
+    desc: "use a JSON account file or '-' for stdin (alternatively to --device)",
   },
   {
     name: "appjsonFile",
@@ -112,8 +108,7 @@ export const scanCommonOpts = [
     name: "scheme",
     alias: "s",
     type: String,
-    desc:
-      "if provided, filter the derivation path that are scanned by a given sceme. Providing '' empty string will only use the default standard derivation scheme.",
+    desc: "if provided, filter the derivation path that are scanned by a given sceme. Providing '' empty string will only use the default standard derivation scheme.",
   },
   {
     name: "index",
@@ -125,8 +120,7 @@ export const scanCommonOpts = [
     name: "length",
     alias: "l",
     type: Number,
-    desc:
-      "set the number of accounts after the index. Defaults to 1 if index was provided, Infinity otherwise.",
+    desc: "set the number of accounts after the index. Defaults to 1 if index was provided, Infinity otherwise.",
   },
   {
     name: "paginateOperations",
@@ -340,11 +334,8 @@ export function scan(arg: ScanCommonOpts): Observable<Account> {
         });
         return from(
           fullIds.map((id) => {
-            const {
-              derivationMode,
-              xpubOrAddress,
-              currencyId,
-            } = decodeAccountId(id);
+            const { derivationMode, xpubOrAddress, currencyId } =
+              decodeAccountId(id);
             const currency = getCryptoCurrencyById(currencyId);
             const scheme = getDerivationScheme({
               derivationMode,

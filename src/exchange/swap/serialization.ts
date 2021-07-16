@@ -31,12 +31,8 @@ export const fromExchangeRaw = (exchangeRaw: ExchangeRaw): Exchange => {
 };
 
 export const toExchangeRaw = (exchange: Exchange): ExchangeRaw => {
-  const {
-    fromAccount,
-    fromParentAccount,
-    toAccount,
-    toParentAccount,
-  } = exchange;
+  const { fromAccount, fromParentAccount, toAccount, toParentAccount } =
+    exchange;
   return {
     fromAccount: toAccountLikeRaw(fromAccount),
     fromParentAccount: fromParentAccount

@@ -6,7 +6,7 @@ import { FIXED_GAS_PRICE, FIXED_DEFAULT_GAS_LIMIT } from "./logic";
  */
 const getEstimatedFees = async (): Promise<BigNumber> => {
   // TODO: call gas station to get a more accurate tx fee in the future
-  let estimateFee = Math.ceil(FIXED_GAS_PRICE * FIXED_DEFAULT_GAS_LIMIT);
+  const estimateFee = Math.ceil(FIXED_GAS_PRICE * FIXED_DEFAULT_GAS_LIMIT);
   return new BigNumber(estimateFee);
 };
 

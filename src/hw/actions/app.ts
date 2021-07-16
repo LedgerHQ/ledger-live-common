@@ -322,8 +322,8 @@ function inferCommandParams(appRequest: AppRequest) {
   let derivationMode;
   let derivationPath;
 
-  const { account } = appRequest;
-  let { appName, currency, dependencies, requireLatestFirmware } = appRequest;
+  const { account, requireLatestFirmware } = appRequest;
+  let { appName, currency, dependencies } = appRequest;
 
   if (!currency && account) {
     currency = account.currency;
@@ -434,8 +434,9 @@ const implementations = {
           .pipe(
             timeout(DEVICE_POLLING_TIMEOUT),
             catchError((err) => {
-              const productName = getDeviceModel(pollingOnDevice.modelId)
-                .productName;
+              const productName = getDeviceModel(
+                pollingOnDevice.modelId
+              ).productName;
               return err instanceof TimeoutError
                 ? of({
                     type: "error",

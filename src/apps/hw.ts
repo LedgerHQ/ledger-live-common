@@ -28,14 +28,12 @@ import {
 import { runAllWithProgress } from "../apps/runner";
 import type { ConnectAppEvent } from "../hw/connectApp";
 
-export const execWithTransport = (transport: Transport): Exec => (
-  appOp: AppOp,
-  targetId: string | number,
-  app: App
-) => {
-  const fn = appOp.type === "install" ? installApp : uninstallApp;
-  return fn(transport, targetId, app);
-};
+export const execWithTransport =
+  (transport: Transport): Exec =>
+  (appOp: AppOp, targetId: string | number, app: App) => {
+    const fn = appOp.type === "install" ? installApp : uninstallApp;
+    return fn(transport, targetId, app);
+  };
 
 const appsThatKeepChangingHashes = ["Fido U2F"];
 
@@ -145,58 +143,56 @@ export const listApps = (
     let sub;
 
     async function main() {
-      const installedP: Promise<[
-        { name: string; hash: string }[],
-        boolean
-      ]> = new Promise<{ name: string; hash: string }[]>((resolve, reject) => {
-        sub = ManagerAPI.listInstalledApps(transport, {
-          targetId: deviceInfo.targetId,
-          perso: "perso_11",
-        }).subscribe({
-          next: (e) => {
-            if (e.type === "result") {
-              resolve(e.payload);
-            } else if (
-              e.type === "device-permission-granted" ||
-              e.type === "device-permission-requested"
-            ) {
-              o.next(e);
-            }
-          },
-          error: reject,
-        });
-      })
-        .then((apps) =>
-          apps.map(({ name, hash }) => ({
-            name,
-            hash,
-            blocks: 0,
-          }))
-        )
-        .catch((e) => {
-          log("hw", "failed to HSM list apps " + String(e) + "\n" + e.stack);
-
-          if (getEnv("EXPERIMENTAL_FALLBACK_APDU_LISTAPPS")) {
-            return hwListApps(transport)
-              .then((apps) =>
-                apps.map(({ name, hash, blocks }) => ({
-                  name,
-                  hash,
-                  blocks,
-                }))
-              )
-              .catch((e) => {
-                log(
-                  "hw",
-                  "failed to device list apps " + String(e) + "\n" + e.stack
-                );
-                throw e;
-              });
-          } else {
-            throw e;
-          }
+      const installedP: Promise<[{ name: string; hash: string }[], boolean]> =
+        new Promise<{ name: string; hash: string }[]>((resolve, reject) => {
+          sub = ManagerAPI.listInstalledApps(transport, {
+            targetId: deviceInfo.targetId,
+            perso: "perso_11",
+          }).subscribe({
+            next: (e) => {
+              if (e.type === "result") {
+                resolve(e.payload);
+              } else if (
+                e.type === "device-permission-granted" ||
+                e.type === "device-permission-requested"
+              ) {
+                o.next(e);
+              }
+            },
+            error: reject,
+          });
         })
-        .then((apps) => [apps, true]);
+          .then((apps) =>
+            apps.map(({ name, hash }) => ({
+              name,
+              hash,
+              blocks: 0,
+            }))
+          )
+          .catch((e) => {
+            log("hw", "failed to HSM list apps " + String(e) + "\n" + e.stack);
+
+            if (getEnv("EXPERIMENTAL_FALLBACK_APDU_LISTAPPS")) {
+              return hwListApps(transport)
+                .then((apps) =>
+                  apps.map(({ name, hash, blocks }) => ({
+                    name,
+                    hash,
+                    blocks,
+                  }))
+                )
+                .catch((e) => {
+                  log(
+                    "hw",
+                    "failed to device list apps " + String(e) + "\n" + e.stack
+                  );
+                  throw e;
+                });
+            } else {
+              throw e;
+            }
+          })
+          .then((apps) => [apps, true]);
 
       const provider = getProviderId(deviceInfo);
       const deviceVersionP = ManagerAPI.getDeviceVersion(
@@ -381,12 +377,13 @@ export const listApps = (
           availableVersion,
         };
       });
-      const appsListNames = (getEnv("MANAGER_DEV_MODE")
-        ? apps
-        : apps.filter(
-            (a) =>
-              !a?.isDevTools || installed.some(({ name }) => name === a.name)
-          )
+      const appsListNames = (
+        getEnv("MANAGER_DEV_MODE")
+          ? apps
+          : apps.filter(
+              (a) =>
+                !a?.isDevTools || installed.some(({ name }) => name === a.name)
+            )
       )
         .map((a) => a?.name ?? "")
         .filter(Boolean);

@@ -1,5 +1,3 @@
-// @flow
-
 import React, {
   createContext,
   useCallback,
@@ -11,10 +9,8 @@ import React, {
 import type { PlatformAppContextType, Props, State } from "./types";
 import api from "./api";
 import { mergeManifestLists } from "./helpers";
-
-//$FlowFixMe
+//@ts-expect-error empty context type on init
 const PlatformAppContext = createContext<PlatformAppContextType>({});
-
 const initialState: State = {
   manifests: [],
   manifestById: {},
@@ -22,26 +18,20 @@ const initialState: State = {
   lastUpdateTime: undefined,
   error: undefined,
 };
-
 const AUTO_UPDATE_DEFAULT_DELAY = 1800 * 1000; // 1800 seconds
 
 export function usePlatformApp(): PlatformAppContextType {
   return useContext(PlatformAppContext);
 }
-
 export function PlatformAppProvider({
   autoUpdateDelay,
   extraManifests,
   children,
 }: Props) {
   const [state, setState] = useState<State>(initialState);
-
   const updateData = useCallback(async () => {
     try {
-      setState((previousState) => ({
-        ...previousState,
-        isLoading: true,
-      }));
+      setState((previousState) => ({ ...previousState, isLoading: true }));
       const manifests = await api.fetchManifest();
       const allManifests = extraManifests
         ? mergeManifestLists(manifests, extraManifests)
@@ -65,11 +55,9 @@ export function PlatformAppProvider({
       }));
     }
   }, [extraManifests]);
-
   useEffect(() => {
     updateData();
   }, [updateData]);
-
   useEffect(() => {
     const intervalInstance = setInterval(
       updateData,
@@ -79,15 +67,7 @@ export function PlatformAppProvider({
     );
     return () => clearInterval(intervalInstance);
   }, [autoUpdateDelay, updateData]);
-
-  const value = useMemo(
-    () => ({
-      ...state,
-      updateData,
-    }),
-    [state, updateData]
-  );
-
+  const value = useMemo(() => ({ ...state, updateData }), [state, updateData]);
   return (
     <PlatformAppContext.Provider value={value}>
       {children}

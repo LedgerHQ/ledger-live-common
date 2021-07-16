@@ -177,7 +177,7 @@ export const getOperations = async (
   startAt: number,
   currencyId: string
 ): Promise<Operation[]> => {
-  let rawTransactions: Operation[] = [];
+  const rawTransactions: Operation[] = [];
   const crypto_org_indexer = isTestNet(currencyId)
     ? getEnv("CRYPTO_ORG_TESTNET_INDEXER")
     : getEnv("CRYPTO_ORG_INDEXER");

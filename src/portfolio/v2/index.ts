@@ -212,18 +212,15 @@ export function getPortfolio(
     date,
     value: histories.reduce((sum, h) => sum + (h[i]?.countervalue ?? 0), 0),
   }));
-  const [
-    countervalueChangeValue,
-    countervalueReceiveSum,
-    countervalueSendSum,
-  ] = availables.reduce(
-    (prev, a) => [
-      prev[0] + a.change.value, // TODO Portfolio: it'll always be 0, no? 🤔
-      prev[1] + a.countervalueReceiveSum,
-      prev[2] + a.countervalueSendSum,
-    ],
-    [0, 0, 0]
-  );
+  const [countervalueChangeValue, countervalueReceiveSum, countervalueSendSum] =
+    availables.reduce(
+      (prev, a) => [
+        prev[0] + a.change.value, // TODO Portfolio: it'll always be 0, no? 🤔
+        prev[1] + a.countervalueReceiveSum,
+        prev[2] + a.countervalueSendSum,
+      ],
+      [0, 0, 0]
+    );
   // in case there were no receive, we just track the market change
   // weighted by the current balances
   const balanceDivider = getEnv("EXPERIMENTAL_ROI_CALCULATION")

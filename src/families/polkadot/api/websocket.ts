@@ -314,11 +314,8 @@ export const getTransactionParams = async () =>
     const blockHash = await api.rpc.chain.getFinalizedHead();
     const genesisHash = await api.rpc.chain.getBlockHash(0);
     const { number } = await api.rpc.chain.getHeader(blockHash);
-    const {
-      specName,
-      specVersion,
-      transactionVersion,
-    } = await api.rpc.state.getRuntimeVersion(blockHash);
+    const { specName, specVersion, transactionVersion } =
+      await api.rpc.state.getRuntimeVersion(blockHash);
     return {
       blockHash,
       blockNumber: number,

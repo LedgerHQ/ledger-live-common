@@ -14,7 +14,6 @@ import type {
   CryptoCurrency,
   TokenCurrency,
   OperationType,
-  Operation,
 } from "../../../types";
 import type { ModeModule } from "../types";
 import {
@@ -389,28 +388,30 @@ export function prepareTokenAccounts(
   const compoundByTokenId = inferSubAccountsCompound(currency, subAccounts);
   // add implicitly all ctoken account when a token account exists so we can fetch the balance again
   const implicitCTokenAccounts = values(compoundByTokenId)
-    .map(({ tokenAccount, ctokenAccount, ctoken }: any):
-      | TokenAccount
-      | null
-      | undefined =>
-      tokenAccount && !ctokenAccount // TODO reuse generateTokenAccount
-        ? {
-            // this is a placeholder that will be dropped by digestTokenAccounts
-            type: "TokenAccount",
-            id: "empty_" + ctoken.id,
-            token: ctoken,
-            parentId: "",
-            balance: new BigNumber(0),
-            spendableBalance: new BigNumber(0),
-            creationDate: new Date(),
-            operationsCount: 0,
-            operations: [],
-            pendingOperations: [],
-            starred: false,
-            swapHistory: [],
-            balanceHistoryCache: emptyHistoryCache, // calculated in the jsHelpers
-          }
-        : null
+    .map(
+      ({
+        tokenAccount,
+        ctokenAccount,
+        ctoken,
+      }: any): TokenAccount | null | undefined =>
+        tokenAccount && !ctokenAccount // TODO reuse generateTokenAccount
+          ? {
+              // this is a placeholder that will be dropped by digestTokenAccounts
+              type: "TokenAccount",
+              id: "empty_" + ctoken.id,
+              token: ctoken,
+              parentId: "",
+              balance: new BigNumber(0),
+              spendableBalance: new BigNumber(0),
+              creationDate: new Date(),
+              operationsCount: 0,
+              operations: [],
+              pendingOperations: [],
+              starred: false,
+              swapHistory: [],
+              balanceHistoryCache: emptyHistoryCache, // calculated in the jsHelpers
+            }
+          : null
     )
     .filter(Boolean) as TokenAccount[];
   if (implicitCTokenAccounts.length === 0) return subAccounts;

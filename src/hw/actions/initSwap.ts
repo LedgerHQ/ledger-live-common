@@ -121,12 +121,8 @@ export const createAction = (
       requireLatestFirmware,
     } = initSwapRequest;
 
-    const {
-      fromAccount,
-      fromParentAccount,
-      toAccount,
-      toParentAccount,
-    } = exchange;
+    const { fromAccount, fromParentAccount, toAccount, toParentAccount } =
+      exchange;
     const mainFromAccount = getMainAccount(fromAccount, fromParentAccount);
     const maintoAccount = getMainAccount(toAccount, toParentAccount);
     const appState = createAppAction(connectAppExec).useHook(

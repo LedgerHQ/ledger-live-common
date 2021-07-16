@@ -139,15 +139,13 @@ export default {
       name: "marketcap",
       alias: "m",
       type: Number,
-      desc:
-        "use top N first tickers available in marketcap instead of having to specify each --currency",
+      desc: "use top N first tickers available in marketcap instead of having to specify each --currency",
     },
     {
       name: "disableAutofillGaps",
       alias: "g",
       type: Boolean,
-      desc:
-        "if set, disable the autofill of gaps to evaluate the rates availability",
+      desc: "if set, disable the autofill of gaps to evaluate the rates availability",
     },
     {
       name: "latest",

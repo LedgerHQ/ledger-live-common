@@ -112,12 +112,8 @@ export function deviceActionFlow<T extends Transaction>(
     }
 
     if (!finalState) {
-      let possibleKnownStep:
-        | Step<T>
-        | null
-        | undefined = description.steps.find((s) =>
-        event.text.startsWith(s.title)
-      );
+      let possibleKnownStep: Step<T> | null | undefined =
+        description.steps.find((s) => event.text.startsWith(s.title));
 
       // if there is a fallback provided, we will run it to try to detect another possible known step
       if (!possibleKnownStep && description.fallback) {

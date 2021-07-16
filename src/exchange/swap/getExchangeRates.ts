@@ -64,9 +64,10 @@ const getExchangeRates: GetExchangeRates = async (
     }
 
     // NB Allows us to simply multiply satoshi values from/to
-    const magnitudeAwareRate = (tradeMethod === "fixed"
-      ? new BigNumber(maybeRate)
-      : new BigNumber(amountTo).div(amountFrom)
+    const magnitudeAwareRate = (
+      tradeMethod === "fixed"
+        ? new BigNumber(maybeRate)
+        : new BigNumber(amountTo).div(amountFrom)
     ).div(new BigNumber(10).pow(unitFrom.magnitude - unitTo.magnitude));
 
     const payoutNetworkFees = new BigNumber(maybePayoutNetworkFees || 0).times(
@@ -112,13 +113,8 @@ const inferError = (
   }
 ): Error | undefined => {
   const tenPowMagnitude = new BigNumber(10).pow(unitFrom.magnitude);
-  const {
-    amountTo,
-    minAmountFrom,
-    maxAmountFrom,
-    errorCode,
-    errorMessage,
-  } = responseData;
+  const { amountTo, minAmountFrom, maxAmountFrom, errorCode, errorMessage } =
+    responseData;
 
   if (!amountTo) {
     // We are in an error case regardless of api version.
