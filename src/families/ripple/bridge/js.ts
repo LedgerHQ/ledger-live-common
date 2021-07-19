@@ -539,10 +539,12 @@ const currencyBridge: CurrencyBridge = {
     }),
 };
 
-const sync = (
-  _account: Account,
-  { endpointConfig, freshAddress, blockHeight, operations }: any
-): Observable<(arg0: Account) => Account> =>
+const sync = ({
+  endpointConfig,
+  freshAddress,
+  blockHeight,
+  operations,
+}: any): Observable<(arg0: Account) => Account> =>
   new Observable((o) => {
     let finished = false;
     const currentOpsLength = operations ? operations.length : 0;
