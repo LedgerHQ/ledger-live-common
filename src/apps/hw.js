@@ -31,12 +31,14 @@ import {
 import { runAllWithProgress } from "../apps/runner";
 import type { ConnectAppEvent } from "../hw/connectApp";
 
-export const execWithTransport =
-  (transport: typeof Transport): Exec =>
-  (appOp: AppOp, targetId: string | number, app: App) => {
-    const fn = appOp.type === "install" ? installApp : uninstallApp;
-    return fn(transport, targetId, app);
-  };
+export const execWithTransport = (transport: typeof Transport): Exec => (
+  appOp: AppOp,
+  targetId: string | number,
+  app: App
+) => {
+  const fn = appOp.type === "install" ? installApp : uninstallApp;
+  return fn(transport, targetId, app);
+};
 
 const appsThatKeepChangingHashes = ["Fido U2F"];
 
@@ -344,13 +346,12 @@ export const listApps = (
         };
       });
 
-      const appsListNames = (
-        getEnv("MANAGER_DEV_MODE")
-          ? apps
-          : apps.filter(
-              (a) =>
-                !a.isDevTools || installed.some(({ name }) => name === a.name)
-            )
+      const appsListNames = (getEnv("MANAGER_DEV_MODE")
+        ? apps
+        : apps.filter(
+            (a) =>
+              !a.isDevTools || installed.some(({ name }) => name === a.name)
+          )
       ).map((a) => a.name);
 
       const result: ListAppsResult = {
