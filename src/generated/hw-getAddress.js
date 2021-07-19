@@ -2,6 +2,7 @@
 import algorand from "../families/algorand/hw-getAddress.js";
 import bitcoin from "../families/bitcoin/hw-getAddress.js";
 import cosmos from "../families/cosmos/hw-getAddress.js";
+import crypto_org from "../families/crypto_org/hw-getAddress.js";
 import elrond from "../families/elrond/hw-getAddress.js";
 import ethereum from "../families/ethereum/hw-getAddress.js";
 import neo from "../families/neo/hw-getAddress.js";
@@ -15,6 +16,7 @@ export default {
   algorand,
   bitcoin,
   cosmos,
+  crypto_org,
   elrond,
   ethereum,
   neo,
