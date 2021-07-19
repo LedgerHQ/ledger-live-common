@@ -30,6 +30,7 @@ type AnnouncementBase = {
   device?: AnnouncementDeviceFilter, // optional firmware targeting
   platforms?: AnnnouncementPlatformsFilter[], // optional platform targeting
   appVersions?: string[], // optional app version targeting. Accepts any valid semver string.
+  liveCommonVersions?: string[], // optional live-common version targeting. Accepts any valid semver string.
 };
 
 export type AnnouncementContent = {

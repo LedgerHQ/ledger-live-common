@@ -5,6 +5,7 @@ import type {
   AnnouncementsUserSettings,
 } from "./types";
 import semver from "semver";
+import { version as LLCommonVersion } from "../../../package.json";
 
 export function localizeAnnouncements(
   rawAnnouncements: RawAnnouncement[],
@@ -52,6 +53,7 @@ export function filterAnnouncements(
       device,
       platforms,
       appVersions,
+      liveCommonVersions,
     }) => {
       if (languages && !languages.includes(language)) {
         return false;
@@ -109,6 +111,15 @@ export function filterAnnouncements(
         );
 
         if (isAppVersionMatch === false) return false;
+      }
+
+      // filter out by ll-comon version
+      if (liveCommonVersions?.length) {
+        const isLLCommonVersionMatch = liveCommonVersions.some((version) =>
+          semver.satisfies(LLCommonVersion, version)
+        );
+
+        if (isLLCommonVersionMatch === false) return false;
       }
 
       const publishedAt = new Date(published_at);
