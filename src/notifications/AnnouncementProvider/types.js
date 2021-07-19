@@ -29,6 +29,7 @@ type AnnouncementBase = {
   currencies?: string[], // optional per currency account ownership targeting.
   device?: AnnouncementDeviceFilter, // optional firmware targeting
   platforms?: AnnnouncementPlatformsFilter[], // optional platform targeting
+  appVersions?: string[], // optional app version targeting. Accepts any valid semver string.
 };
 
 export type AnnouncementContent = {
@@ -57,6 +58,7 @@ export type AnnouncementsUserSettings = {
   getDate: () => Date,
   lastSeenDevice?: DeviceModelInfo,
   platform?: string,
+  appVersion?: string,
 };
 
 export type AnnouncementsApi = {

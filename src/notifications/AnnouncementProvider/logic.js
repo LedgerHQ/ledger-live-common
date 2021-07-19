@@ -4,6 +4,7 @@ import type {
   Announcement,
   AnnouncementsUserSettings,
 } from "./types";
+import semver from "semver";
 
 export function localizeAnnouncements(
   rawAnnouncements: RawAnnouncement[],
@@ -37,6 +38,7 @@ export function filterAnnouncements(
     getDate,
     lastSeenDevice,
     platform: contextPlatform,
+    appVersion: contextAppVersion,
   } = context;
 
   const date = getDate();
@@ -49,6 +51,7 @@ export function filterAnnouncements(
       expired_at,
       device,
       platforms,
+      appVersions,
     }) => {
       if (languages && !languages.includes(language)) {
         return false;
@@ -97,6 +100,15 @@ export function filterAnnouncements(
         )
       ) {
         return false;
+      }
+
+      // filter out by app version
+      if (appVersions?.length && contextAppVersion) {
+        const isAppVersionMatch = appVersions.some((version) =>
+          semver.satisfies(contextAppVersion, version)
+        );
+
+        if (isAppVersionMatch === false) return false;
       }
 
       const publishedAt = new Date(published_at);
