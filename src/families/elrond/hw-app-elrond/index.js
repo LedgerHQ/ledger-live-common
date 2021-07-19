@@ -69,7 +69,7 @@ export default class Elrond {
     const buf = Buffer.alloc(8);
 
     buf.writeUInt32BE(path[3], 0);
-    buf.writeUInt32BE(path[4], 4);
+    buf.writeUInt32BE(path[2], 4);
 
     return buf;
   }
