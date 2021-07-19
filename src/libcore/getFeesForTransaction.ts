@@ -11,9 +11,7 @@ export type Input = {
   transaction: Transaction;
 };
 
-type F = (
-  arg0: Input
-) => Promise<{
+type F = (arg0: Input) => Promise<{
   estimatedFees: BigNumber;
   estimatedGas: BigNumber | null | undefined;
   // Note: Use in Cosmos
@@ -23,25 +21,26 @@ type F = (
 }>;
 
 export const getFeesForTransaction: F = withLibcoreF(
-  (core) => async ({ account, transaction }) => {
-    try {
-      const { currency } = account;
-      const { coreWallet, coreAccount } = await getCoreAccount(core, account);
-      const coreCurrency = await coreWallet.getCurrency();
-      const f = byFamily[currency.family];
-      if (!f) throw new Error("currency " + currency.id + " not supported");
-      const fees = await f({
-        account,
-        core,
-        coreAccount,
-        coreCurrency,
-        transaction,
-        isPartial: true,
-        isCancelled: () => false,
-      });
-      return fees;
-    } catch (error) {
-      throw remapLibcoreErrors(error);
+  (core) =>
+    async ({ account, transaction }) => {
+      try {
+        const { currency } = account;
+        const { coreWallet, coreAccount } = await getCoreAccount(core, account);
+        const coreCurrency = await coreWallet.getCurrency();
+        const f = byFamily[currency.family];
+        if (!f) throw new Error("currency " + currency.id + " not supported");
+        const fees = await f({
+          account,
+          core,
+          coreAccount,
+          coreCurrency,
+          transaction,
+          isPartial: true,
+          isCancelled: () => false,
+        });
+        return fees;
+      } catch (error) {
+        throw remapLibcoreErrors(error);
+      }
     }
-  }
 );

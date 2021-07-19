@@ -176,195 +176,197 @@ const safeEncodeEIP55 = (addr) => {
 };
 
 // in case of a SELF send, 2 ops are returned.
-const txToOps = ({ address, id }) => (tx: Tx): Operation[] => {
-  // workaround bugs in our explorer that don't treat partial/optimistic operation really well
-  if (!tx.gas_used) return [];
-  const { hash, block, actions, transfer_events } = tx;
-  const addr = address;
-  const from = safeEncodeEIP55(tx.from);
-  const to = safeEncodeEIP55(tx.to);
-  const sending = addr === from;
-  const receiving = addr === to;
-  const value = new BigNumber(tx.value);
-  const fee = new BigNumber(tx.gas_price).times(tx.gas_used || 0);
-  const hasFailed = new BigNumber(tx.status || 0).eq(0);
-  const blockHeight = block && block.height.toNumber();
-  const blockHash = block && block.hash;
-  const date = tx.received_at ? new Date(tx.received_at) : new Date();
-  const transactionSequenceNumber = parseInt(tx.nonce);
-  // Internal transactions
-  const internalOperations: Operation[] = !actions
-    ? []
-    : (actions
-        .map((action, i) => {
-          const actionFrom = safeEncodeEIP55(action.from);
-          const actionTo = safeEncodeEIP55(action.to);
+const txToOps =
+  ({ address, id }) =>
+  (tx: Tx): Operation[] => {
+    // workaround bugs in our explorer that don't treat partial/optimistic operation really well
+    if (!tx.gas_used) return [];
+    const { hash, block, actions, transfer_events } = tx;
+    const addr = address;
+    const from = safeEncodeEIP55(tx.from);
+    const to = safeEncodeEIP55(tx.to);
+    const sending = addr === from;
+    const receiving = addr === to;
+    const value = new BigNumber(tx.value);
+    const fee = new BigNumber(tx.gas_price).times(tx.gas_used || 0);
+    const hasFailed = new BigNumber(tx.status || 0).eq(0);
+    const blockHeight = block && block.height.toNumber();
+    const blockHash = block && block.hash;
+    const date = tx.received_at ? new Date(tx.received_at) : new Date();
+    const transactionSequenceNumber = parseInt(tx.nonce);
+    // Internal transactions
+    const internalOperations: Operation[] = !actions
+      ? []
+      : (actions
+          .map((action, i) => {
+            const actionFrom = safeEncodeEIP55(action.from);
+            const actionTo = safeEncodeEIP55(action.to);
 
-          // Since explorer is considering also wrapping tx as an internal action,
-          // we must filter it by considering that only internal action with same data,
-          // sender and receiver, is the one representing/corresponding to wrapping tx
-          if (
-            actionFrom === from &&
-            actionTo === to &&
-            tx.value.eq(action.value)
-          ) {
-            return;
+            // Since explorer is considering also wrapping tx as an internal action,
+            // we must filter it by considering that only internal action with same data,
+            // sender and receiver, is the one representing/corresponding to wrapping tx
+            if (
+              actionFrom === from &&
+              actionTo === to &&
+              tx.value.eq(action.value)
+            ) {
+              return;
+            }
+
+            const receiving = addr === actionTo;
+            const value = action.value;
+            const fee = new BigNumber(0);
+
+            if (receiving) {
+              return {
+                id: `${id}-${hash}-i${i}`,
+                hash,
+                type: "IN",
+                value,
+                fee,
+                blockHeight,
+                blockHash,
+                accountId: id,
+                senders: [actionFrom],
+                recipients: [actionTo],
+                date,
+                extra: {},
+                transactionSequenceNumber,
+              };
+            }
+          })
+          .filter(Boolean) as Operation[]);
+    // We are putting the sub operations in place for now, but they will later be exploded out of the operations back to their token accounts
+    const subOperations = !transfer_events
+      ? []
+      : flatMap(transfer_events.list, (event) => {
+          const from = safeEncodeEIP55(event.from);
+          const to = safeEncodeEIP55(event.to);
+          const sending = addr === from;
+          const receiving = addr === to;
+
+          if (!sending && !receiving) {
+            return [];
           }
 
-          const receiving = addr === actionTo;
-          const value = action.value;
-          const fee = new BigNumber(0);
+          const token = findTokenByAddress(event.contract);
+          if (!token) return [];
+          const accountId = encodeTokenAccountId(id, token);
+          const value = event.count;
+          const all: Operation[] = [];
 
-          if (receiving) {
-            return {
-              id: `${id}-${hash}-i${i}`,
+          if (sending) {
+            const type = "OUT";
+            all.push({
+              id: `${accountId}-${hash}-${type}`,
               hash,
-              type: "IN",
+              type,
               value,
               fee,
               blockHeight,
               blockHash,
-              accountId: id,
-              senders: [actionFrom],
-              recipients: [actionTo],
+              accountId,
+              senders: [from],
+              recipients: [to],
               date,
               extra: {},
               transactionSequenceNumber,
-            };
+            });
           }
-        })
-        .filter(Boolean) as Operation[]);
-  // We are putting the sub operations in place for now, but they will later be exploded out of the operations back to their token accounts
-  const subOperations = !transfer_events
-    ? []
-    : flatMap(transfer_events.list, (event) => {
-        const from = safeEncodeEIP55(event.from);
-        const to = safeEncodeEIP55(event.to);
-        const sending = addr === from;
-        const receiving = addr === to;
 
-        if (!sending && !receiving) {
-          return [];
-        }
+          if (receiving) {
+            const type = "IN";
+            all.push({
+              id: `${accountId}-${hash}-${type}`,
+              hash,
+              type,
+              value,
+              fee,
+              blockHeight,
+              blockHash,
+              accountId,
+              senders: [from],
+              recipients: [to],
+              date,
+              extra: {},
+              transactionSequenceNumber,
+            });
+          }
 
-        const token = findTokenByAddress(event.contract);
-        if (!token) return [];
-        const accountId = encodeTokenAccountId(id, token);
-        const value = event.count;
-        const all: Operation[] = [];
+          return all;
+        });
+    const ops: Operation[] = [];
 
-        if (sending) {
-          const type = "OUT";
-          all.push({
-            id: `${accountId}-${hash}-${type}`,
-            hash,
-            type,
-            value,
-            fee,
-            blockHeight,
-            blockHash,
-            accountId,
-            senders: [from],
-            recipients: [to],
-            date,
-            extra: {},
-            transactionSequenceNumber,
-          });
-        }
-
-        if (receiving) {
-          const type = "IN";
-          all.push({
-            id: `${accountId}-${hash}-${type}`,
-            hash,
-            type,
-            value,
-            fee,
-            blockHeight,
-            blockHash,
-            accountId,
-            senders: [from],
-            recipients: [to],
-            date,
-            extra: {},
-            transactionSequenceNumber,
-          });
-        }
-
-        return all;
+    if (sending) {
+      const type = value.eq(0) ? "FEES" : "OUT";
+      ops.push({
+        id: `${id}-${hash}-${type}`,
+        hash,
+        type,
+        value: hasFailed ? new BigNumber(0) : value.plus(fee),
+        fee,
+        blockHeight,
+        blockHash,
+        accountId: id,
+        senders: [from],
+        recipients: [to],
+        date,
+        extra: {},
+        hasFailed,
+        internalOperations: internalOperations,
+        subOperations,
+        transactionSequenceNumber,
       });
-  const ops: Operation[] = [];
+    }
 
-  if (sending) {
-    const type = value.eq(0) ? "FEES" : "OUT";
-    ops.push({
-      id: `${id}-${hash}-${type}`,
-      hash,
-      type,
-      value: hasFailed ? new BigNumber(0) : value.plus(fee),
-      fee,
-      blockHeight,
-      blockHash,
-      accountId: id,
-      senders: [from],
-      recipients: [to],
-      date,
-      extra: {},
-      hasFailed,
-      internalOperations: internalOperations,
-      subOperations,
-      transactionSequenceNumber,
-    });
-  }
+    if (receiving) {
+      ops.push({
+        id: `${id}-${hash}-IN`,
+        hash: hash,
+        type: "IN",
+        value,
+        fee,
+        blockHeight,
+        blockHash,
+        accountId: id,
+        senders: [from],
+        recipients: [to],
+        date: new Date(date.getTime() + 1),
+        // hack: make the IN appear after the OUT in history.
+        extra: {},
+        internalOperations: sending ? [] : internalOperations,
+        // if it was already in sending, we don't add twice
+        subOperations: sending ? [] : subOperations,
+        transactionSequenceNumber,
+      });
+    }
 
-  if (receiving) {
-    ops.push({
-      id: `${id}-${hash}-IN`,
-      hash: hash,
-      type: "IN",
-      value,
-      fee,
-      blockHeight,
-      blockHash,
-      accountId: id,
-      senders: [from],
-      recipients: [to],
-      date: new Date(date.getTime() + 1),
-      // hack: make the IN appear after the OUT in history.
-      extra: {},
-      internalOperations: sending ? [] : internalOperations,
-      // if it was already in sending, we don't add twice
-      subOperations: sending ? [] : subOperations,
-      transactionSequenceNumber,
-    });
-  }
+    if (
+      !sending &&
+      !receiving &&
+      (internalOperations.length || subOperations.length)
+    ) {
+      ops.push({
+        id: `${id}-${hash}-NONE`,
+        hash: hash,
+        type: "NONE",
+        value: new BigNumber(0),
+        fee,
+        blockHeight,
+        blockHash,
+        accountId: id,
+        senders: [from],
+        recipients: [to],
+        date,
+        extra: {},
+        internalOperations,
+        subOperations,
+        transactionSequenceNumber,
+      });
+    }
 
-  if (
-    !sending &&
-    !receiving &&
-    (internalOperations.length || subOperations.length)
-  ) {
-    ops.push({
-      id: `${id}-${hash}-NONE`,
-      hash: hash,
-      type: "NONE",
-      value: new BigNumber(0),
-      fee,
-      blockHeight,
-      blockHash,
-      accountId: id,
-      senders: [from],
-      recipients: [to],
-      date,
-      extra: {},
-      internalOperations,
-      subOperations,
-      transactionSequenceNumber,
-    });
-  }
-
-  return ops;
-};
+    return ops;
+  };
 
 const fetchCurrentBlock = ((perCurrencyId) => (currency) => {
   if (perCurrencyId[currency.id]) return perCurrencyId[currency.id]();

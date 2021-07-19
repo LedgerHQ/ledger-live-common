@@ -4,8 +4,7 @@ const manifest: AppManifest[] = [
   {
     id: "paraswap",
     name: "ParaSwap",
-    url:
-      "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?url=https%3A%2F%2Fparaswap.io%2F%3Fembed%3Dtrue%26referrer%3Dledger2&nanoApp=Paraswap&dappName=ParaSwap",
+    url: "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?url=https%3A%2F%2Fparaswap.io%2F%3Fembed%3Dtrue%26referrer%3Dledger2&nanoApp=Paraswap&dappName=ParaSwap",
     homepageUrl: "https://paraswap.io",
     supportUrl: "https://paraswap.io",
     icon: "https://cdn.live.ledger.com/icons/platform/paraswap.png",
@@ -18,12 +17,10 @@ const manifest: AppManifest[] = [
     currencies: ["ethereum"],
     content: {
       shortDescription: {
-        en:
-          "Swap your crypto with ParaSwap that aggregates and provides the best quotes decentralised exchanges.",
+        en: "Swap your crypto with ParaSwap that aggregates and provides the best quotes decentralised exchanges.",
       },
       description: {
-        en:
-          "Swap your crypto with ParaSwap that aggregates and provides the best quotes decentralised exchanges.",
+        en: "Swap your crypto with ParaSwap that aggregates and provides the best quotes decentralised exchanges.",
       },
     },
     permissions: [
@@ -65,12 +62,10 @@ const manifest: AppManifest[] = [
     currencies: ["ethereum", "bitcoin"],
     content: {
       shortDescription: {
-        en:
-          "Purchase Bitcoin, Ethereum and more crypto with Wyre, only available to our US customers.",
+        en: "Purchase Bitcoin, Ethereum and more crypto with Wyre, only available to our US customers.",
       },
       description: {
-        en:
-          "Purchase Bitcoin, Ethereum and more crypto with Wyre, only available to our US customers.",
+        en: "Purchase Bitcoin, Ethereum and more crypto with Wyre, only available to our US customers.",
       },
     },
     permissions: [
@@ -86,8 +81,7 @@ const manifest: AppManifest[] = [
   {
     id: "zerion",
     name: "Zerion",
-    url:
-      "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?dappName=Zerion&nanoApp=Paraswap&url=https%3A%2F%2Fapp.zerion.io%2F%3Fembed%3Dledgerdappbrowser",
+    url: "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?dappName=Zerion&nanoApp=Paraswap&url=https%3A%2F%2Fapp.zerion.io%2F%3Fembed%3Dledgerdappbrowser",
     homepageUrl: "https://zerion.io/",
     icon: "https://cdn.live.ledger.com/icons/platform/zerion.png",
     platform: "all",
@@ -110,8 +104,7 @@ const manifest: AppManifest[] = [
   {
     id: "rainbow",
     name: "Rainbow.me",
-    url:
-      "https://ledger-live-platform-apps.vercel.app/app/web-browser?url=https%3A%2F%2Frainbow.me%2F%7Baccount.address%7D&currencies=ethereum&webAppName=Rainbow.me",
+    url: "https://ledger-live-platform-apps.vercel.app/app/web-browser?url=https%3A%2F%2Frainbow.me%2F%7Baccount.address%7D&currencies=ethereum&webAppName=Rainbow.me",
     homepageUrl: "https://rainbow.me",
     icon: "https://cdn.live.ledger.com/icons/platform/rainbow.png",
     platform: "all",
@@ -145,12 +138,10 @@ const manifest: AppManifest[] = [
     currencies: ["ethereum"],
     content: {
       shortDescription: {
-        en:
-          "Lend or Borrow your crypto through a liquidity market protocol and stay in control of your funds.",
+        en: "Lend or Borrow your crypto through a liquidity market protocol and stay in control of your funds.",
       },
       description: {
-        en:
-          "Lend or Borrow your crypto through a liquidity market protocol and stay in control of your funds.",
+        en: "Lend or Borrow your crypto through a liquidity market protocol and stay in control of your funds.",
       },
     },
     permissions: [],
@@ -170,12 +161,10 @@ const manifest: AppManifest[] = [
     currencies: ["ethereum"],
     content: {
       shortDescription: {
-        en:
-          "Lend or Borrow your crypto via a completely decentralized and open-source protocol.",
+        en: "Lend or Borrow your crypto via a completely decentralized and open-source protocol.",
       },
       description: {
-        en:
-          "Lend or Borrow your crypto via a completely decentralized and open-source protocol.",
+        en: "Lend or Borrow your crypto via a completely decentralized and open-source protocol.",
       },
     },
     permissions: [],
@@ -195,12 +184,10 @@ const manifest: AppManifest[] = [
     currencies: ["ethereum"],
     content: {
       shortDescription: {
-        en:
-          "Trade through a self-custody decentralized exchange on Ethereum layer-2.",
+        en: "Trade through a self-custody decentralized exchange on Ethereum layer-2.",
       },
       description: {
-        en:
-          "Trade through a self-custody decentralized exchange on Ethereum layer-2.",
+        en: "Trade through a self-custody decentralized exchange on Ethereum layer-2.",
       },
     },
     permissions: [],
@@ -266,12 +253,10 @@ const manifest: AppManifest[] = [
     currencies: "*",
     content: {
       shortDescription: {
-        en:
-          "Try out the Ledger Live API to test capabilities of our platform integration solution. Use at your own risk.",
+        en: "Try out the Ledger Live API to test capabilities of our platform integration solution. Use at your own risk.",
       },
       description: {
-        en:
-          "Try out the Ledger Live API to test capabilities of our platform integration solution. Use at your own risk.",
+        en: "Try out the Ledger Live API to test capabilities of our platform integration solution. Use at your own risk.",
       },
     },
     permissions: [

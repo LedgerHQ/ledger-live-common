@@ -134,17 +134,13 @@ export function useTronPowerLoading(account: Account): boolean {
 }
 
 /** Search filters for SR list */
-const searchFilter = (query?: string) => ({
-  name,
-  address,
-}: {
-  name: string | null | undefined;
-  address: string;
-}) => {
-  if (!query) return true;
-  const terms = `${name || ""} ${address}`;
-  return terms.toLowerCase().includes(query.toLowerCase().trim());
-};
+const searchFilter =
+  (query?: string) =>
+  ({ name, address }: { name: string | null | undefined; address: string }) => {
+    if (!query) return true;
+    const terms = `${name || ""} ${address}`;
+    return terms.toLowerCase().includes(query.toLowerCase().trim());
+  };
 
 /** Hook to search and sort SR list according to initial votes and query */
 export function useSortedSr(

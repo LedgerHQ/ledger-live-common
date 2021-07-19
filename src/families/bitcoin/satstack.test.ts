@@ -199,9 +199,11 @@ describe("stringifySatStackConfig", () => {
         extra: {
           foo: "bar",
         },
-        accounts: ((dataset.accounts || [])
-          .map((a) => inferDescriptorFromAccount(fromAccountRaw(a.raw)))
-          .filter(Boolean) as AccountDescriptor[]).map((descriptor, i) => ({
+        accounts: (
+          (dataset.accounts || [])
+            .map((a) => inferDescriptorFromAccount(fromAccountRaw(a.raw)))
+            .filter(Boolean) as AccountDescriptor[]
+        ).map((descriptor, i) => ({
           descriptor,
           extra: {
             i,

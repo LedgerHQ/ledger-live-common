@@ -190,9 +190,8 @@ export const AccessDeniedError = createCustomErrorClass("AccessDeniedError");
 export const AlgorandASANotOptInInRecipient = createCustomErrorClass(
   "AlgorandASANotOptInInRecipient"
 );
-export const CompoundLowerAllowanceOfActiveAccountError = createCustomErrorClass(
-  "CompoundLowerAllowanceOfActiveAccountError"
-);
+export const CompoundLowerAllowanceOfActiveAccountError =
+  createCustomErrorClass("CompoundLowerAllowanceOfActiveAccountError");
 export const OutdatedApp = createCustomErrorClass("OutdatedApp");
 export const FreshAddressIndexInvalid = createCustomErrorClass(
   "FreshAddressIndexInvalid"

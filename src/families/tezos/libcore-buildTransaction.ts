@@ -94,7 +94,9 @@ export async function tezosBuildTransaction({
   if (isCancelled()) return;
   const storageBigInt = await bigNumberToLibcoreBigInt(core, storageLimit);
   if (isCancelled()) return;
-  const transactionBuilder = await (tezosAccount as CoreTezosLikeAccount).buildTransaction();
+  const transactionBuilder = await (
+    tezosAccount as CoreTezosLikeAccount
+  ).buildTransaction();
   if (isCancelled()) return;
   let type;
 

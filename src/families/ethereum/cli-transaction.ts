@@ -26,8 +26,7 @@ const options = [
   {
     name: "gasPrice",
     type: String,
-    desc:
-      "how much gasPrice. default is 2gwei. (example format: 2gwei, 0.000001eth, in wei if no unit precised)",
+    desc: "how much gasPrice. default is 2gwei. (example format: 2gwei, 0.000001eth, in wei if no unit precised)",
   },
   {
     name: "mode",

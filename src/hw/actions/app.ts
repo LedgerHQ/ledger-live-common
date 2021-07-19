@@ -440,8 +440,9 @@ const implementations = {
           .pipe(
             timeout(DEVICE_POLLING_TIMEOUT),
             catchError((err) => {
-              const productName = getDeviceModel(pollingOnDevice.modelId)
-                .productName;
+              const productName = getDeviceModel(
+                pollingOnDevice.modelId
+              ).productName;
               return err instanceof TimeoutError
                 ? of({
                     type: "error",

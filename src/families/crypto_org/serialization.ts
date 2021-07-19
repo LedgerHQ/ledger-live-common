@@ -3,12 +3,8 @@ import type { CryptoOrgResourcesRaw, CryptoOrgResources } from "./types";
 export function toCryptoOrgResourcesRaw(
   r: CryptoOrgResources
 ): CryptoOrgResourcesRaw {
-  const {
-    bondedBalance,
-    redelegatingBalance,
-    unbondingBalance,
-    commissions,
-  } = r;
+  const { bondedBalance, redelegatingBalance, unbondingBalance, commissions } =
+    r;
   return {
     bondedBalance: bondedBalance.toString(),
     redelegatingBalance: redelegatingBalance.toString(),
@@ -19,12 +15,8 @@ export function toCryptoOrgResourcesRaw(
 export function fromCryptoOrgResourcesRaw(
   r: CryptoOrgResourcesRaw
 ): CryptoOrgResources {
-  const {
-    bondedBalance,
-    redelegatingBalance,
-    unbondingBalance,
-    commissions,
-  } = r;
+  const { bondedBalance, redelegatingBalance, unbondingBalance, commissions } =
+    r;
   return {
     bondedBalance: new BigNumber(bondedBalance),
     redelegatingBalance: new BigNumber(redelegatingBalance),
