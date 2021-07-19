@@ -2,7 +2,6 @@
 import algorand from "../families/algorand/transaction.js";
 import bitcoin from "../families/bitcoin/transaction.js";
 import cosmos from "../families/cosmos/transaction.js";
-import crypto_org from "../families/crypto_org/transaction.js";
 import elrond from "../families/elrond/transaction.js";
 import ethereum from "../families/ethereum/transaction.js";
 import neo from "../families/neo/transaction.js";
@@ -16,7 +15,6 @@ export default {
   algorand,
   bitcoin,
   cosmos,
-  crypto_org,
   elrond,
   ethereum,
   neo,

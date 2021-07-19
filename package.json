@@ -1,21 +1,18 @@
 {
-  "engines": {
-    "node": ">=14"
-  },
   "name": "@ledgerhq/live-common",
   "description": "Common ground for the Ledger Live apps",
   "repository": {
     "type": "git",
     "url": "https://github.com/LedgerHQ/ledger-live-common"
   },
-  "version": "20.5.2",
+  "version": "19.12.1",
   "main": "lib/index.js",
   "license": "Apache-2.0",
   "scripts": {
     "flow-typed": "flow-typed install -s",
     "build": "./scripts/build.sh",
     "prepare": "yarn build",
-    "watch": "node scripts/buildReactIcons.js && node scripts/buildReactFlags.js  && BABEL_ENV=cjs babel -wsd lib src & flow-copy-source -wv src lib",
+    "watch": "node scripts/buildReactIcons.js && BABEL_ENV=cjs babel -wsd lib src & flow-copy-source -wv src lib",
     "updateAppSupportsQuitApp": "node scripts/updateAppSupportsQuitApp.js",
     "prettier": "prettier --write 'src/**/*.?s' 'cli/src/**/*.?s'",
     "lint": "eslint src",
@@ -23,10 +20,10 @@
     "jest": "rimraf libcoredb && mkdir libcoredb && cross-env TZ=America/New_York jest",
     "test": "yarn jest",
     "ci-lint": "yarn lint && yarn flow",
-    "ci-test-common": "env-cmd -f ./.ci.env yarn test --ci --updateSnapshot && git diff --exit-code src",
+    "ci-test-common": "cross-env EXPERIMENTAL_EXPLORERS=1 yarn test --ci --updateSnapshot && git diff --exit-code src",
     "ci-setup-cli": "yalc publish && cd cli && yalc add @ledgerhq/live-common && yarn && yarn build && yarn link",
     "ci-test-cli": "cd cli && yarn test",
-    "ci-test-bot": "env-cmd -f ./.ci.env yarn jest --testMatch '**/*.bot.js'"
+    "ci-test-bot": "cross-env EXPERIMENTAL_EXPLORERS=1 yarn jest --testMatch '**/*.bot.js'"
   },
   "files": [
     "lib",
@@ -61,9 +58,6 @@
       "cli/",
       "test-helpers/"
     ],
-    "transformIgnorePatterns": [
-      "/node_modules/(?!@polkadot|@babel/runtime/helpers/esm/)"
-    ],
     "moduleDirectories": [
       "node_modules",
       "cli/node_modules"
@@ -75,28 +69,26 @@
     "react-redux": "7"
   },
   "dependencies": {
-    "@crypto-com/chain-jslib": "^0.0.16",
     "@ledgerhq/compressjs": "1.3.2",
-    "@ledgerhq/cryptoassets": "6.1.0",
-    "@ledgerhq/devices": "6.1.0",
+    "@ledgerhq/cryptoassets": "6.0.2",
+    "@ledgerhq/devices": "6.0.2",
     "@ledgerhq/errors": "6.0.2",
-    "@ledgerhq/hw-app-algorand": "6.1.0",
-    "@ledgerhq/hw-app-btc": "6.1.0",
-    "@ledgerhq/hw-app-cosmos": "6.1.0",
-    "@ledgerhq/hw-app-eth": "6.1.0",
-    "@ledgerhq/hw-app-polkadot": "6.1.0",
-    "@ledgerhq/hw-app-str": "6.1.0",
-    "@ledgerhq/hw-app-tezos": "6.1.0",
-    "@ledgerhq/hw-app-trx": "6.1.0",
-    "@ledgerhq/hw-app-xrp": "6.1.0",
-    "@ledgerhq/hw-transport": "6.1.0",
-    "@ledgerhq/hw-transport-mocker": "6.1.0",
-    "@ledgerhq/hw-transport-node-speculos": "6.1.0",
+    "@ledgerhq/hw-app-algorand": "6.0.2",
+    "@ledgerhq/hw-app-btc": "6.0.2",
+    "@ledgerhq/hw-app-cosmos": "6.0.2",
+    "@ledgerhq/hw-app-eth": "6.0.2",
+    "@ledgerhq/hw-app-polkadot": "6.0.2",
+    "@ledgerhq/hw-app-str": "6.0.2",
+    "@ledgerhq/hw-app-tezos": "6.0.2",
+    "@ledgerhq/hw-app-trx": "6.0.2",
+    "@ledgerhq/hw-app-xrp": "6.0.2",
+    "@ledgerhq/hw-transport": "6.0.2",
+    "@ledgerhq/hw-transport-mocker": "6.0.2",
+    "@ledgerhq/hw-transport-node-speculos": "6.0.2",
     "@ledgerhq/logs": "6.0.2",
-    "@polkadot/types": "5.0.1",
-    "@polkadot/types-known": "5.0.1",
+    "@polkadot/types": "3.11.1",
     "@walletconnect/client": "1.4.1",
-    "@xstate/react": "^1.5.1",
+    "@xstate/react": "^1.3.4",
     "async": "^3.2.0",
     "axios": "0.21.1",
     "bchaddrjs": "^0.5.2",
@@ -126,7 +118,7 @@
     "ripemd160": "^2.0.2",
     "ripple-binary-codec": "^1.1.3",
     "ripple-bs58check": "^2.0.2",
-    "ripple-lib": "1.9.6",
+    "ripple-lib": "1.9.5",
     "rxjs": "6",
     "rxjs-compat": "^6.6.7",
     "secp256k1": "^4.0.2",
@@ -135,7 +127,7 @@
     "stellar-sdk": "^8.2.2",
     "triple-beam": "^1.3.0",
     "winston": "^3.3.3",
-    "xstate": "^4.22.0"
+    "xstate": "^4.20.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.13.16",
@@ -154,7 +146,6 @@
     "babel-jest": "^26.6.3",
     "benchmark": "^2.1.4",
     "cross-env": "^7.0.3",
-    "env-cmd": "*",
     "eslint": "^7.25.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-config-prettier": "^7.2.0",

@@ -30,15 +30,15 @@ import {
 import { verifyValidatorAddresses } from "./api";
 import {
   EXISTENTIAL_DEPOSIT,
+  MINIMUM_BOND_AMOUNT,
   FEES_SAFETY_BUFFER,
   isValidAddress,
   isFirstBond,
   isController,
-  isStash,
   hasLockedBalance,
   hasMaxUnlockings,
   calculateAmount,
-  getMinimumAmountToBond,
+  getMinimalLockedBalance,
   getMinimumBalance,
 } from "./logic";
 import { getCurrentPolkadotPreloadData } from "./preload";
@@ -80,13 +80,7 @@ const getSendTransactionStatus = async (
     leftover.lt(minimumBalanceExistential) &&
     leftover.gt(0)
   ) {
-    errors.amount = new PolkadotDoMaxSendInstead("", {
-      minimumBalance: formatCurrencyUnit(
-        a.currency.units[0],
-        EXISTENTIAL_DEPOSIT,
-        { showCode: true }
-      ),
-    });
+    errors.amount = new PolkadotDoMaxSendInstead();
   } else if (totalSpent.gt(a.spendableBalance)) {
     errors.amount = new NotEnoughBalance();
   }
@@ -126,9 +120,7 @@ const getSendTransactionStatus = async (
 const getTransactionStatus = async (a: Account, t: Transaction) => {
   const errors = {};
   const warnings = {};
-  const preloaded = getCurrentPolkadotPreloadData();
-  const { staking, validators } = preloaded;
-  const minimumBondBalance = BigNumber(preloaded.minimumBondBalance);
+  const { staking, validators } = getCurrentPolkadotPreloadData();
 
   if (t.mode === "send") {
     return await getSendTransactionStatus(a, t);
@@ -151,20 +143,8 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
   const currentBonded =
     a.polkadotResources?.lockedBalance.minus(unlockingBalance) || BigNumber(0);
 
-  const minimumAmountToBond = getMinimumAmountToBond(a, minimumBondBalance);
-
   switch (t.mode) {
     case "bond":
-      if (amount.lt(minimumAmountToBond)) {
-        errors.amount = new PolkadotBondMinimumAmount("", {
-          minimumBondAmount: formatCurrencyUnit(
-            a.currency.units[0],
-            minimumAmountToBond,
-            { showCode: true }
-          ),
-        });
-      }
-
       if (isFirstBond(a)) {
         // Not a stash yet -> bond method sets the controller
         if (!t.recipient) {
@@ -176,6 +156,25 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
             "Recipient is already a controller"
           );
         }
+
+        // If not a stash yet, first bond must respect minimum amount of 1 DOT
+        if (amount.lt(MINIMUM_BOND_AMOUNT)) {
+          errors.amount = new PolkadotBondMinimumAmount("", {
+            minimalAmount: formatCurrencyUnit(
+              a.currency.units[0],
+              MINIMUM_BOND_AMOUNT,
+              { showCode: true }
+            ),
+          });
+        }
+      } else if (amount.lt(getMinimalLockedBalance(a))) {
+        errors.amount = new PolkadotBondMinimumAmount("", {
+          minimalAmount: formatCurrencyUnit(
+            a.currency.units[0],
+            getMinimalLockedBalance(a),
+            { showCode: true }
+          ),
+        });
       }
 
       break;
@@ -192,7 +191,7 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
       if (amount.lte(0)) {
         errors.amount = new AmountRequired();
       } else if (
-        amount.gt(currentBonded.minus(EXISTENTIAL_DEPOSIT)) &&
+        amount.gt(currentBonded.minus(MINIMUM_BOND_AMOUNT)) &&
         amount.lt(currentBonded)
       ) {
         warnings.amount = new PolkadotLowBondedBalance();
@@ -210,11 +209,11 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
         errors.amount = new AmountRequired();
       } else if (amount.gt(unlockingBalance)) {
         errors.amount = new NotEnoughBalance();
-      } else if (amount.lt(minimumAmountToBond)) {
+      } else if (amount.lt(getMinimalLockedBalance(a))) {
         errors.amount = new PolkadotBondMinimumAmount("", {
           minimalAmount: formatCurrencyUnit(
             a.currency.units[0],
-            minimumAmountToBond,
+            getMinimalLockedBalance(a),
             { showCode: true }
           ),
         });
@@ -270,12 +269,6 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
         errors.staking = new PolkadotUnauthorizedOperation();
       } else if (!a.polkadotResources?.nominations) {
         errors.staking = new PolkadotNoNominations();
-      }
-      break;
-
-    case "setController":
-      if (!isStash(a)) {
-        errors.staking = new PolkadotUnauthorizedOperation();
       }
       break;
   }

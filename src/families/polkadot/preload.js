@@ -5,14 +5,13 @@ import { Observable, Subject } from "rxjs";
 import { log } from "@ledgerhq/logs";
 
 import { PRELOAD_MAX_AGE } from "./logic";
-import { getRegistry, getMinimumBondBalance } from "./cache";
+import { getRegistry } from "./cache";
 import type { PolkadotPreloadData, PolkadotValidator } from "./types";
 import { getStakingProgress, getValidators } from "./validators";
 
 let currentPolkadotPreloadedData: PolkadotPreloadData = {
   validators: [],
   staking: null,
-  minimumBondBalance: "0",
 };
 
 function fromHydrateValidator(validatorRaw: Object): PolkadotValidator {
@@ -35,7 +34,6 @@ function fromHydrateValidator(validatorRaw: Object): PolkadotValidator {
 function fromHydratePreloadData(data: mixed): PolkadotPreloadData {
   let validators = [];
   let staking = null;
-  let minimumBondBalance = "0";
 
   if (typeof data === "object" && data) {
     if (Array.isArray(data.validators)) {
@@ -58,19 +56,11 @@ function fromHydratePreloadData(data: mixed): PolkadotPreloadData {
         bondingDuration: Number(bondingDuration) || 28,
       };
     }
-
-    if (
-      data.minimumBondBalance !== null &&
-      typeof data.minimumBondBalance === "string"
-    ) {
-      minimumBondBalance = data.minimumBondBalance || "0";
-    }
   }
 
   return {
     validators,
     staking,
-    minimumBondBalance,
   };
 }
 
@@ -106,8 +96,6 @@ const shouldRefreshValidators = (previousState, currentState) => {
 export const preload = async (): Promise<PolkadotPreloadData> => {
   await getRegistry(); // ensure registry is already in cache.
   const currentStakingProgress = await getStakingProgress();
-  const minimumBondBalance = await getMinimumBondBalance();
-  const minimumBondBalanceStr = minimumBondBalance.toString();
 
   const {
     validators: previousValidators,
@@ -132,7 +120,6 @@ export const preload = async (): Promise<PolkadotPreloadData> => {
   return {
     validators,
     staking: currentStakingProgress,
-    minimumBondBalance: minimumBondBalanceStr,
   };
 };
 

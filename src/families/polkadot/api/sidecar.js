@@ -4,8 +4,8 @@ import querystring from "querystring";
 
 import { TypeRegistry, ModulesWithCalls } from "@polkadot/types";
 import { getSpecTypes } from "@polkadot/types-known";
-import { Metadata } from "@polkadot/types/metadata";
-import { expandMetadata } from "@polkadot/types/metadata/decorate";
+import { Metadata } from "@polkadot/metadata";
+import { expandMetadata } from "@polkadot/metadata/decorate";
 
 import { makeLRUCache } from "../../../cache";
 import type { CacheRes } from "../../../cache";
@@ -172,23 +172,6 @@ const fetchActiveEra = async (): Promise<SidecarPalletStorageItem> => {
   });
 
   return data;
-};
-
-/**
- * Fetch the minimum value allowed for a bond
- *
- * @async
- * @param {string} addr
- *
- * @returns {string}
- */
-export const getMinimumBondBalance = async (): Promise<BigNumber> => {
-  const { data }: { data: SidecarPalletStorageItem } = await network({
-    method: "GET",
-    url: getSidecarUrl(`/pallets/staking/storage/minNominatorBond`),
-  });
-
-  return (data.value && BigNumber(data.value)) || BigNumber(0);
 };
 
 /**
@@ -682,7 +665,7 @@ export const getConstants: CacheRes<Array<void>, Object> = makeLRUCache(
   async (): Promise<Object> => fetchConstants(),
   () => "polkadot",
   {
-    max: 1, // Store only one constants object since we only have polkadot.
+    max: 1, // Store only one constnats object since we only have polkadot.
     maxAge: 60 * 60 * 1000, // 1 hour
   }
 );

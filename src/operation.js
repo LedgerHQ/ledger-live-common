@@ -99,7 +99,6 @@ export function getOperationAmountNumber(op: Operation): BigNumber {
     case "BOND":
     case "UNBOND":
     case "WITHDRAW_UNBONDED":
-    case "SET_CONTROLLER":
     case "NOMINATE":
     case "CHILL":
       return op.fee.negated();

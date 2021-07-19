@@ -40,7 +40,7 @@ export const sync: $PropertyType<AccountBridge<*>, "sync"> = (initialAccount) =>
 
         const nextAcc = {
           ...acc,
-          blockHeight: acc.blockHeight + 1000, // make a sync move a lot by blockHeight to avoid flawky tests issue on op confirm.
+          blockHeight: acc.blockHeight + 1,
           lastSyncDate: new Date(),
           operations: ops.concat(acc.operations.slice(0)),
           pendingOperations: [],
@@ -59,7 +59,7 @@ export const sync: $PropertyType<AccountBridge<*>, "sync"> = (initialAccount) =>
       o.complete();
     };
 
-    syncTimeouts[accountId] = setTimeout(sync, 500);
+    syncTimeouts[accountId] = setTimeout(sync, 2000);
 
     return () => {
       clearTimeout(syncTimeouts[accountId]);

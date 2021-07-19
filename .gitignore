@@ -35,13 +35,6 @@ flow-coverage
 src/data/icons/react
 src/data/icons/reactNative
 
-# Generated icons
-src/data/flags/react
-src/data/flags/reactNative
-
 cli/tests/*/output
 cli/tests/tmp
 .env
-
-# Jetbrains
-.idea

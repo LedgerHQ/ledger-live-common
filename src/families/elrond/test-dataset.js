@@ -12,7 +12,7 @@ type TestTransaction = {
   },
 };
 
-const dataset: DatasetTest<Transaction> = {
+export default dataset = {
   implementations: ["js"],
   currencies: {
     elrond: {
@@ -56,5 +56,3 @@ const dataset: DatasetTest<Transaction> = {
     },
   },
 };
-
-export default dataset;
