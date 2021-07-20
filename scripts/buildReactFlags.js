@@ -83,7 +83,7 @@ glob(`${rootDir}/svg/*.svg`, (err, icons) => {
       svg,
       { ...options, template: reactTemplate },
       { componentName: name },
-      `${reactDir}/${name}.js`
+      `${reactDir}/${name}.tsx`
     );
 
     convert(
@@ -94,7 +94,7 @@ glob(`${rootDir}/svg/*.svg`, (err, icons) => {
         template: reactTemplate,
       },
       { componentName: name },
-      `${reactNativeDir}/${name}.js`
+      `${reactNativeDir}/${name}.tsx`
     );
   });
 });
