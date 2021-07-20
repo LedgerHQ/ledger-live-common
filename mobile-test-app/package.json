@@ -29,7 +29,7 @@
     "querystring": "^0.2.1",
     "querystring-es3": "^0.2.1",
     "react": "16.14.0",
-    "react-native": "0.61.5",
+    "react-native": "0.62.3",
     "react-native-crypto": "^2.2.0",
     "react-native-randombytes": "^3.6.1",
     "react-native-tcp": "gre/react-native-tcp",
