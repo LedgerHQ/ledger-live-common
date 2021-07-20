@@ -9,6 +9,7 @@ import {
   useAppUninstallNeedsDeps,
 } from "./react";
 import { useNotEnoughMemoryToInstall } from "./react";
+import { AppType, SortOptions } from "./filtering";
 
 const mockedState = initState(
   mockListAppsResult(
@@ -178,8 +179,8 @@ const mockedStateWithInstallQueue = {
 test('Apps hooks - useAppsSections - Sort "device" category apps with installing apps first', () => {
   const options = {
     query: "",
-    appFilter: "all",
-    sort: { type: "name", order: "desc" },
+    appFilter: "all" as AppType,
+    sort: { type: "name", order: "desc" } as SortOptions,
   };
   const { result: vanillaResult } = renderHook(() =>
     useAppsSections(mockedState, options)
