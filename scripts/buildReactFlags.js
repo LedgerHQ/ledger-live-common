@@ -49,7 +49,7 @@ const convert = (svg, options, componentName, outputFile) => {
     .then((result) => {
       // @TODO remove this flow comment once TS is the norm here
       // can't do it is babel ast for now sorry about it
-      const component = `//@flow
+      const component = `
       ${result.replace("xlinkHref=", "href=")}`;
 
       fs.writeFileSync(outputFile, component, "utf-8");
@@ -58,15 +58,15 @@ const convert = (svg, options, componentName, outputFile) => {
 };
 
 glob(`${rootDir}/svg/*.svg`, (err, icons) => {
-  fs.writeFileSync(`${reactDir}/index.js`, "", "utf-8");
-  fs.writeFileSync(`${reactNativeDir}/index.js`, "", "utf-8");
+  fs.writeFileSync(`${reactDir}/index.tsx`, "", "utf-8");
+  fs.writeFileSync(`${reactNativeDir}/index.tsx`, "", "utf-8");
 
   icons.forEach((i) => {
     let name = `${camelcase(path.basename(i, ".svg"))}Flag`;
     const exportString = `export { default as ${name} } from "./${name}";\n`;
 
-    fs.appendFileSync(`${reactDir}/index.js`, exportString, "utf-8");
-    fs.appendFileSync(`${reactNativeDir}/index.js`, exportString, "utf-8");
+    fs.appendFileSync(`${reactDir}/index.tsx`, exportString, "utf-8");
+    fs.appendFileSync(`${reactNativeDir}/index.tsx`, exportString, "utf-8");
 
     const svg = fs.readFileSync(i, "utf-8");
     const options = {
