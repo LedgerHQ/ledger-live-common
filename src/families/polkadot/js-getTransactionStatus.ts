@@ -15,11 +15,11 @@ import {
   PolkadotUnauthorizedOperation,
   PolkadotElectionClosed,
   PolkadotNotValidator,
-  PolkadotLowBondedBalance,
   PolkadotNoUnlockedBalance,
   PolkadotNoNominations,
   PolkadotAllFundsWarning,
   PolkadotBondMinimumAmount,
+  PolkadotBondMinimumAmountWarning,
   PolkadotMaxUnbonding,
   PolkadotValidatorsRequired,
   PolkadotDoMaxSendInstead,
@@ -203,10 +203,16 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
       if (amount.lte(0)) {
         errors.amount = new AmountRequired();
       } else if (
-        amount.gt(currentBonded.minus(EXISTENTIAL_DEPOSIT)) &&
+        amount.gt(currentBonded.minus(minimumBondBalance)) &&
         amount.lt(currentBonded)
       ) {
-        warnings.amount = new PolkadotLowBondedBalance();
+        warnings.amount = new PolkadotBondMinimumAmountWarning("", {
+          minimumBondBalance: formatCurrencyUnit(
+            a.currency.units[0],
+            minimumBondBalance,
+            { showCode: true }
+          ),
+        });
       } else if (amount.gt(currentBonded)) {
         errors.amount = new NotEnoughBalance();
       }
@@ -223,10 +229,10 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
       } else if (amount.gt(unlockingBalance)) {
         errors.amount = new NotEnoughBalance();
       } else if (amount.lt(minimumAmountToBond)) {
-        errors.amount = new PolkadotBondMinimumAmount("", {
-          minimalAmount: formatCurrencyUnit(
+        warnings.amount = new PolkadotBondMinimumAmountWarning("", {
+          minimumBondBalance: formatCurrencyUnit(
             a.currency.units[0],
-            minimumAmountToBond,
+            minimumBondBalance,
             { showCode: true }
           ),
         });

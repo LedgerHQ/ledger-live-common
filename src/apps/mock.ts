@@ -101,6 +101,7 @@ export function mockListAppsResult(
         id: i,
         app: i,
         name,
+        displayName: name,
         version: "0.0.0",
         description: null,
         icon: "bitcoin",

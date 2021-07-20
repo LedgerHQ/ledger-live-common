@@ -39,6 +39,7 @@ listCryptoCurrencies(true, true).forEach((a) => {
   ["Volta", "Ethereum"],
   ["ZenCash", "Bitcoin"],
   ["Paraswap", "Ethereum"],
+  ["Lido", "Ethereum"],
 ].forEach(([name, dep]) => declareDep(name, dep));
 export const getDependencies = (appName: string): string[] =>
   directDep[appName] || [];
@@ -46,7 +47,11 @@ export const getDependents = (appName: string): string[] =>
   reverseDep[appName] || [];
 export const polyfillApplication = (app: Application): Application => {
   const crypto = listCryptoCurrencies(true, true).find(
-    (crypto) => app.name.toLowerCase() === crypto.managerAppName.toLowerCase()
+    (crypto) =>
+      app.name.toLowerCase() === crypto.managerAppName.toLowerCase() &&
+      (crypto.managerAppName !== "Ethereum" ||
+        // if it's ethereum, we have a specific case that we must only allow the Ethereum app
+        app.name === "Ethereum")
   );
   let o = app;
 

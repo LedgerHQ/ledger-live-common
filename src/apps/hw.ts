@@ -305,6 +305,7 @@ export const listApps = (
           const app: App = polyfillApp({
             id: version.id,
             name: version.name,
+            displayName: version.display_name,
             version: version.version,
             currencyId,
             description: version.description,

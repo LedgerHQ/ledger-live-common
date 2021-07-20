@@ -40,6 +40,7 @@ export const ServiceStatusProvider = ({
       updateTime: Date.now(),
     };
   }, [networkApi]);
+
   const [state, send] = useMachine(serviceStatusMachine, {
     services: {
       fetchData,

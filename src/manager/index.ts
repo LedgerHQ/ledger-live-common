@@ -22,6 +22,7 @@ const oldAppsInstallDisabled = [
   "ZenCash",
   "Ripple",
   "Ontology",
+  "Zcoin",
 ];
 
 const canHandleInstall = (app: ApplicationVersion) =>

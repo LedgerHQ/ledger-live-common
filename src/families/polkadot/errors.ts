@@ -23,6 +23,11 @@ export const PolkadotAllFundsWarning = createCustomErrorClass(
 export const PolkadotBondMinimumAmount = createCustomErrorClass(
   "PolkadotBondMinimumAmount"
 );
+
+export const PolkadotBondMinimumAmountWarning = createCustomErrorClass(
+  "PolkadotBondMinimumAmountWarning"
+);
+
 export const PolkadotMaxUnbonding = createCustomErrorClass(
   "PolkadotMaxUnbonding"
 );

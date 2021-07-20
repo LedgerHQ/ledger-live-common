@@ -113,17 +113,15 @@ export function useAppsSections(
     }
   );
 
-  const device = installedAppList
-    .sort(({ name: _name }, { name }) =>
-      installed.findIndex((n) => n.name === _name) >
-      installed.findIndex((n) => n.name === name)
-        ? -1
-        : 0
-    )
-    .sort(
-      ({ name: _name }, { name }) =>
-        installQueue.indexOf(_name) > installQueue.indexOf(name) ? -1 : 0 // place install queue on top of list
-    );
+  const device = installedAppList.sort(({ name: _name }, { name }) => {
+    // place install queue on top of list
+    // with the app being installed at the top
+    let pos1 = installQueue.indexOf(_name);
+    let pos2 = installQueue.indexOf(name);
+    pos1 = pos1 < 0 ? Number.MAX_VALUE : pos1;
+    pos2 = pos2 < 0 ? Number.MAX_VALUE : pos2;
+    return pos1 - pos2;
+  });
 
   return {
     update,
