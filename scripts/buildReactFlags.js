@@ -21,8 +21,7 @@ function reactTemplate(
   opts,
   { imports, interfaces, componentName, _, jsx, exports }
 ) {
-  // @TODO update this once TS is the norm here
-  const plugins = ["js", "flow"];
+  const plugins = ["typescript"];
 
   //  if (opts.typescript) {
   //    plugins.push("typescript");
@@ -33,14 +32,14 @@ function reactTemplate(
     ${imports};
 
     type Props = {
-      size: number, 
+      size: number,
     }
 
     ${interfaces}
     function ${componentName}({ size }: Props) {
       return ${jsx};
     }
-    
+
     ${exports}
   `;
 }
