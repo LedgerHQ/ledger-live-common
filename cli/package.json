@@ -33,6 +33,7 @@
     "@ledgerhq/hw-app-btc": "6.2.0",
     "@ledgerhq/hw-transport-http": "6.2.0",
     "@ledgerhq/hw-transport-mocker": "6.2.0",
+    "@ledgerhq/hw-transport-node-ble": "^6.2.0",
     "@ledgerhq/hw-transport-node-hid": "6.2.0",
     "@ledgerhq/hw-transport-node-speculos": "6.2.0",
     "@ledgerhq/ledger-core": "6.12.3",
