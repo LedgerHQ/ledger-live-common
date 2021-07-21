@@ -123,9 +123,9 @@ export const makeSync = (
 
       const accountId = `js:2:${initial.currency.id}:${initial.freshAddress}:${initial.derivationMode}`;
       const needClear = initial.id !== accountId;
+
       try {
-        // FIXME Test this?
-        const path2 = getSeedIdentifierDerivation(
+        const freshAddressPath = getSeedIdentifierDerivation(
           initial.currency,
           initial.derivationMode
         );
@@ -134,11 +134,9 @@ export const makeSync = (
           {
             currency: initial.currency,
             id: accountId,
-            deviceId: initial.seedIdentifier,
             index: initial.index,
             address: initial.freshAddress,
-            //derivationPath: freshAddressPath,
-            derivationPath: path2,
+            derivationPath: freshAddressPath,
             derivationMode: initial.derivationMode,
             initialAccount: needClear ? clearAccount(initial) : initial,
           },
@@ -205,21 +203,15 @@ export const makeScanAccounts = (
 
       if (finished) return;
 
-      // FIXME Test this?
-      const path2 = getSeedIdentifierDerivation(currency, derivationMode);
-
       const accountId = `js:2:${currency.id}:${address}:${derivationMode}`;
       const accountShape: Account = await getAccountShape(
         {
           transport,
           currency,
           id: accountId,
-          //deviceId: seedIdentifier,
-          deviceId,
           index,
           address,
-          //derivationPath: freshAddressPath,
-          derivationPath: path2,
+          derivationPath: freshAddressPath,
           derivationMode,
         },
         syncConfig
