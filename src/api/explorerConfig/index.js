@@ -98,10 +98,12 @@ const initialExplorerConfig: FullConfig = {
       base: "EXPLORER",
       version: "v2",
     },
+    /*
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
+    */
   },
   litecoin: {
     id: "ltc",
@@ -222,6 +224,13 @@ const initialExplorerConfig: FullConfig = {
       version: "v2",
     },
     experimental: {
+      base: "EXPLORER",
+      version: "v3",
+    },
+  },
+  bsc: {
+    id: "bnb",
+    stable: {
       base: "EXPLORER",
       version: "v3",
     },
