@@ -67,6 +67,10 @@ export async function createSpeculosDevice(
   const buttonPort = 42000 + idCounter;
   const automationPort = 43000 + idCounter;
 
+  // workaround until we have a clearer way to resolve sdk for a firmware.
+  const sdk =
+    model === "nanoX" ? "1.2" : model === "nanoS" ? firmware.slice(0, 3) : null;
+
   const appPath = `./apps/${model.toLowerCase()}/${firmware}/${appName.replace(
     / /g,
     ""
@@ -103,8 +107,7 @@ export async function createSpeculosDevice(
           `${dependency}:${`./apps/${model.toLowerCase()}/${firmware}/${dependency}/app_${appVersion}.elf`}`,
         ]
       : []),
-    "--sdk",
-    "1.6",
+    ...(sdk ? ["--sdk", sdk] : []),
     "--seed",
     `${seed}`,
     "--display",
