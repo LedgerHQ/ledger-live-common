@@ -76,12 +76,7 @@ export async function createSpeculosDevice(
     ""
   )}/app_${appVersion}.elf`;
 
-  log(
-    "speculos",
-    `${speculosID}: spawning with coinapps=${coinapps} on app ${appPath}`
-  );
-
-  const p = spawn("docker", [
+  const params = [
     "run",
     "-v",
     `${coinapps}:/speculos/apps`,
@@ -108,8 +103,6 @@ export async function createSpeculosDevice(
         ]
       : []),
     ...(sdk ? ["--sdk", sdk] : []),
-    "--seed",
-    `${seed}`,
     "--display",
     "headless",
     "--vnc-password",
@@ -122,7 +115,11 @@ export async function createSpeculosDevice(
     "42000",
     "--automation-port",
     "43000",
-  ]);
+  ];
+
+  log("speculos", `${speculosID}: spawning = ${params.join(" ")}`);
+
+  const p = spawn("docker", [...params, "--seed", `${seed}`]);
 
   let resolveReady;
   let rejectReady;
