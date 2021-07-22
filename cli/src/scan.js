@@ -152,6 +152,7 @@ const implTypePerFamily = {
   ripple: "js",
   ethereum: "js",
   polkadot: "js",
+  bitcoin: "js",
 };
 
 const possibleImpls = {
