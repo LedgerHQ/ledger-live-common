@@ -316,8 +316,8 @@ export function appCandidatesMatches(
   return (
     (!search.model || search.model === appCandidate.model) &&
     (!search.appName ||
-      search.appName.replace(/ /s, "").toLowerCase() ===
-        appCandidate.appName.replace(/ /s, "").toLowerCase()) &&
+      search.appName.replace(/ /g, "").toLowerCase() ===
+        appCandidate.appName.replace(/ /g, "").toLowerCase()) &&
     (!searchFirmware ||
       appCandidate.firmware === searchFirmware ||
       semverSatisfies(hackBadSemver(appCandidate.firmware), searchFirmware)) &&
