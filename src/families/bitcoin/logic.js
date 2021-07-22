@@ -166,7 +166,7 @@ export const perCoinLogic: { [_: CryptoCurrencyIds]: ?CoinLogic } = {
       return str.startsWith(prefix) ? str.slice(prefix.length) : str;
     },
 
-    syncReplaceAddress: (addr) => bchToCashaddrAddressWithoutPrefix(addr),
+    //syncReplaceAddress: (addr) => bchToCashaddrAddressWithoutPrefix(addr),
 
     injectGetAddressParams: () => ({ forceFormat: "cashaddr" }),
   },
