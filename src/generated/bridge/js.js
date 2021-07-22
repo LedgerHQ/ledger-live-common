@@ -1,4 +1,5 @@
 // @flow
+import bitcoin from "../../families/bitcoin/bridge/js.js";
 import crypto_org from "../../families/crypto_org/bridge/js.js";
 import ethereum from "../../families/ethereum/bridge/js.js";
 import neo from "../../families/neo/bridge/js.js";
@@ -8,6 +9,7 @@ import stellar from "../../families/stellar/bridge/js.js";
 import tron from "../../families/tron/bridge/js.js";
 
 export default {
+  bitcoin,
   crypto_org,
   ethereum,
   neo,
