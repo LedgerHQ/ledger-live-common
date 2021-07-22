@@ -275,8 +275,6 @@ const getAccountShape: GetAccountShape = async (info) => {
     id: explorerId,
   } = explorer;
 
-  const FIXME_explorerId = explorer.id === "v2" ? "ledgerv2" : "ledgerv3";
-
   const paramXpub = initialAccount?.xpub;
   const walletAccount = await wallet.generateAccount({
     btc: !paramXpub && new Btc(transport),
@@ -285,7 +283,7 @@ const getAccountShape: GetAccountShape = async (info) => {
     index,
     network: FIXME_network,
     derivationMode: FIXME_derivationMode,
-    explorer: FIXME_explorerId,
+    explorer: `ledger${explorer.version}`,
     explorerURI: `${explorerEndpoint}/blockchain/${explorerVersion}/${explorerId}`,
     storage: "mock",
     storageParams: [],
