@@ -308,6 +308,7 @@ const checkInstalled = (installed, candidate: Candidate) => {
 
 const wipeAll = (t, deviceInfo) =>
   listApps(t, deviceInfo).pipe(
+    // @ts-expect-error
     filter((e) => e.type === "result"),
     map((e: any) => e.result),
     mergeMap((listAppsResult) => {
@@ -413,6 +414,7 @@ export default {
           }
         )
       ).pipe(
+        // @ts-expect-error
         mergeMap(([deviceInfo, candidates]) =>
           concat(
             wipeAll(t, deviceInfo).pipe(ignoreElements()),

@@ -57,15 +57,17 @@ export async function createSpeculosDevice(
   const vncPort = 41000 + idCounter;
   const buttonPort = 42000 + idCounter;
   const automationPort = 43000 + idCounter;
+
+  // workaround until we have a clearer way to resolve sdk for a firmware.
+  const sdk =
+    model === "nanoX" ? "1.2" : model === "nanoS" ? firmware.slice(0, 3) : null;
+
   const appPath = `./apps/${model.toLowerCase()}/${firmware}/${appName.replace(
     / /g,
     ""
   )}/app_${appVersion}.elf`;
-  log(
-    "speculos",
-    `${speculosID}: spawning with coinapps=${coinapps} on app ${appPath}`
-  );
-  const p = spawn("docker", [
+
+  const params = [
     "run",
     "-v",
     `${coinapps}:/speculos/apps`,
@@ -91,10 +93,7 @@ export async function createSpeculosDevice(
           `${dependency}:${`./apps/${model.toLowerCase()}/${firmware}/${dependency}/app_${appVersion}.elf`}`,
         ]
       : []),
-    "--sdk",
-    "1.6",
-    "--seed",
-    `${seed}`,
+    ...(sdk ? ["--sdk", sdk] : []),
     "--display",
     "headless",
     "--vnc-password",
@@ -107,7 +106,12 @@ export async function createSpeculosDevice(
     "42000",
     "--automation-port",
     "43000",
-  ]);
+  ];
+
+  log("speculos", `${speculosID}: spawning = ${params.join(" ")}`);
+
+  const p = spawn("docker", [...params, "--seed", `${seed}`]);
+
   let resolveReady;
   let rejectReady;
   const ready = new Promise((resolve, reject) => {
@@ -209,17 +213,15 @@ export type AppCandidate = {
 };
 const modelMap: Record<string, DeviceModelId> = {
   nanos: <DeviceModelId>"nanoS",
-  // nanox: "nanoX",
+  nanox: <DeviceModelId>"nanoX",
   blue: <DeviceModelId>"blue",
 };
 const modelMapPriority: Record<string, number> = {
   nanos: 3,
-  // nanox: 2,
+  nanox: 2,
   blue: 1,
 };
-const defaultFirmware: Record<string, string> = {
-  nanoS: "<2",
-};
+const defaultFirmware: Record<string, string> = {};
 
 function hackBadSemver(str) {
   const split = str.split(".");
@@ -309,8 +311,8 @@ export function appCandidatesMatches(
   return (
     (!search.model || search.model === appCandidate.model) &&
     (!search.appName ||
-      search.appName.replace(/ /s, "").toLowerCase() ===
-        appCandidate.appName.replace(/ /s, "").toLowerCase()) &&
+      search.appName.replace(/ /g, "").toLowerCase() ===
+        appCandidate.appName.replace(/ /g, "").toLowerCase()) &&
     (!searchFirmware ||
       appCandidate.firmware === searchFirmware ||
       semverSatisfies(hackBadSemver(appCandidate.firmware), searchFirmware)) &&
