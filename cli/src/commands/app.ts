@@ -1,7 +1,7 @@
 import { from, concat } from "rxjs";
 import { map, mergeMap, ignoreElements } from "rxjs/operators";
 import manager from "@ledgerhq/live-common/lib/manager";
-import type { DeviceInfo, ApplicationVersion } from "@ledgerhq/live-common/lib/types/manager";
+import type { DeviceInfo } from "@ledgerhq/live-common/lib/types/manager";
 import { withDevice } from "@ledgerhq/live-common/lib/hw/deviceAccess";
 import getDeviceInfo from "@ledgerhq/live-common/lib/hw/getDeviceInfo";
 import openApp from "@ledgerhq/live-common/lib/hw/openApp";
@@ -76,7 +76,6 @@ export default {
           mergeMap((deviceInfo: DeviceInfo) =>
             from(manager.getAppsList(deviceInfo, true)).pipe(
               mergeMap((list) => {
-                // @ts-expect-error
                 const app = list.find(
                   (item) =>
                     item.name.toLowerCase() ===
@@ -99,7 +98,6 @@ export default {
               concat(
                 ...(uninstall || []).map((application) => {
                   const { targetId } = deviceInfo;
-                // @ts-expect-error
                   const app = list.find(
                     (item) =>
                       item.name.toLowerCase() ===
@@ -116,7 +114,6 @@ export default {
                 }),
                 ...(install || []).map((application) => {
                   const { targetId } = deviceInfo;
-                // @ts-expect-error
                   const app = list.find(
                     (item) =>
                       item.name.toLowerCase() ===
