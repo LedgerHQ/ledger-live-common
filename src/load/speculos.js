@@ -226,17 +226,15 @@ export type AppCandidate = {
 
 const modelMap: { [_: string]: DeviceModelId } = {
   nanos: "nanoS",
-  // nanox: "nanoX",
+  nanox: "nanoX",
   blue: "blue",
 };
 const modelMapPriority: { [_: string]: number } = {
   nanos: 3,
-  // nanox: 2,
+  nanox: 2,
   blue: 1,
 };
-const defaultFirmware: { [_: string]: string } = {
-  // nanoS: "2.0.0-1",
-};
+const defaultFirmware: { [_: string]: string } = {};
 
 function hackBadSemver(str) {
   let [x, y, z, ...rest] = str.split(".");
