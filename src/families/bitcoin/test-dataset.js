@@ -22,7 +22,7 @@ import viacoin from "./datasets/viacoin";
 import zcash from "./datasets/zcash";
 
 const dataset: DatasetTest<Transaction> = {
-  implementations: ["libcore", "mock"],
+  implementations: ["js", "mock"], // TODO Test this
   currencies: {
     bitcoin_cash,
     bitcoin_gold,

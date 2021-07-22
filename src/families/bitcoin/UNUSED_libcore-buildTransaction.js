@@ -34,8 +34,8 @@ async function bitcoinBuildTransaction({
   const { currency } = account;
 
   const perCoin = perCoinLogic[currency.id];
-  const recipient = perCoin?.asLibcoreTransactionRecipient
-    ? perCoin.asLibcoreTransactionRecipient(transaction.recipient)
+  const recipient = perCoin?.asExplicitTransactionRecipient
+    ? perCoin.asExplicitTransactionRecipient(transaction.recipient)
     : transaction.recipient;
 
   const bitcoinLikeAccount = await coreAccount.asBitcoinLikeAccount();
@@ -75,7 +75,7 @@ async function bitcoinBuildTransaction({
     if (syncReplaceAddress) {
       utxos = utxos.map((u) => ({
         ...u,
-        address: u.address && syncReplaceAddress(account, u.address),
+        address: u.address && syncReplaceAddress(u.address),
       }));
     }
   }
