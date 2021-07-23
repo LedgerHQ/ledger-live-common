@@ -51,8 +51,7 @@ const manifest: AppManifest[] = [
   {
     id: "lido",
     name: "Lido",
-    url:
-      "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?dappName=Lido&nanoApp=Lido&url=https%3A%2F%2Fstake.lido.fi%2F%3Fref%3D0x558247e365be655f9144e1a0140D793984372Ef3%26embed%3Dtrue",
+    url: "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?dappName=Lido&nanoApp=Lido&url=https%3A%2F%2Fstake.lido.fi%2F%3Fref%3D0x558247e365be655f9144e1a0140D793984372Ef3%26embed%3Dtrue",
     homepageUrl: "https://lido.fi/",
     icon: "https://cdn.live.ledger.com/icons/platform/lido.png",
     platform: "all",

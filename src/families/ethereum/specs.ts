@@ -419,7 +419,7 @@ const bsc: AppSpec<Transaction> = {
     {
       name: "move some BEP20",
       maxRun: 1,
-      // @ts-expect-error
+      // @ts-expect-error rxjs stuff
       transaction: ({ account, siblings, bridge }) => {
         const bep20Account = sample(
           (account.subAccounts || []).filter((a) => a.balance.gt(0))
