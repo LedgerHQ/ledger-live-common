@@ -13,6 +13,7 @@ const ripple: AppSpec<Transaction> = {
   currency,
   appQuery: {
     model: DeviceModelId.nanoS,
+    firmware: "<2",
     appName: "XRP",
   },
   mutations: [

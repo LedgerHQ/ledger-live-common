@@ -66,12 +66,10 @@ const initialExplorerConfig: FullConfig = {
       base: "EXPLORER",
       version: "v2",
     },
-    /*
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
-    */
   },
   dogecoin: {
     id: "doge",
