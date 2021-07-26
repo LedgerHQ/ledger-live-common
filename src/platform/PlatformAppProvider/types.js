@@ -14,6 +14,7 @@ export type Props = {
   children: React$Node,
   autoUpdateDelay?: number,
   extraManifests?: AppManifest[],
+  platformAppsServerURL: string,
 };
 
 export type API = {
@@ -21,3 +22,7 @@ export type API = {
 };
 
 export type PlatformAppContextType = State & API;
+
+export type PlatformApi = {
+  fetchManifest: (url: string) => Promise<AppManifest[]>,
+};

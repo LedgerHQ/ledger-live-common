@@ -32,6 +32,7 @@ export function usePlatformApp(): PlatformAppContextType {
 export function PlatformAppProvider({
   autoUpdateDelay,
   extraManifests,
+  platformAppsServerURL,
   children,
 }: Props) {
   const [state, setState] = useState<State>(initialState);
@@ -42,7 +43,7 @@ export function PlatformAppProvider({
         ...previousState,
         isLoading: true,
       }));
-      const manifests = await api.fetchManifest();
+      const manifests = await api.fetchManifest(platformAppsServerURL);
       const allManifests = extraManifests
         ? mergeManifestLists(manifests, extraManifests)
         : manifests;
@@ -64,7 +65,7 @@ export function PlatformAppProvider({
         error,
       }));
     }
-  }, [extraManifests]);
+  }, [extraManifests, platformAppsServerURL]);
 
   useEffect(() => {
     updateData();

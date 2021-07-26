@@ -487,6 +487,11 @@ const envDefinitions = {
     parser: boolParser,
     desc: "enable visibility of debug apps and tools in Platform Catalog",
   },
+  PLATFORM_MANIFEST_API_URL: {
+    def: "",
+    parser: stringParser,
+    desc: "url used to fetch platform app manifests",
+  },
   PLATFORM_API_URL: {
     def: "",
     parser: stringParser,
