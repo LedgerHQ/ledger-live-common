@@ -2,11 +2,15 @@ import type { TX, Output as WalletOutput } from "wallet-btc/storage/types";
 import WalletLedger from "wallet-btc";
 import { BigNumber } from "bignumber.js";
 
-import Transport from "@ledgerhq/hw-transport";
 import Btc from "@ledgerhq/hw-app-btc";
 import { log } from "@ledgerhq/logs";
 
-import type { Account, Operation, OperationType } from "../../types";
+import type {
+  Account,
+  Operation,
+  OperationType,
+  DerivationMode,
+} from "../../types";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { makeSync, makeScanAccounts, mergeOps } from "../../bridge/jsHelpers";
 import { findCurrencyExplorer } from "../../api/Ledger";
@@ -20,15 +24,52 @@ const DEBUGZ = false;
 
 let wallet = null; // TODO We'll probably need this instance in other places too
 
-function getWallet() {
+const getWallet = () => {
   if (!wallet) {
     wallet = new WalletLedger();
   }
   return wallet;
-}
+};
 
-// FIXME wallet-btc returns all transactions twice (for each side of the tx), need to deduplicate them
-function FIXME_deduplicateOperations(operations: Operation[]): Operation[] {
+// Map LL's DerivationMode to wallet-btc's Account.params.derivationMode
+// TODO wallet-btc should export a DerivationMode type
+const toWalletDerivationMode = (mode: DerivationMode): string => {
+  switch (mode) {
+    case "segwit":
+    case "segwit_on_legacy":
+    case "segwit_unsplit":
+    case "bch_on_bitcoin_segwit":
+    case "vertcoin_128_segwit":
+      return "SegWit";
+    case "native_segwit":
+      return "Native SegWit";
+    default:
+      return "Legacy";
+  }
+};
+
+// Map LL's currency ID to wallet-btc's Account.params.network
+// TODO wallet-btc should export a Network type
+const toWalletNetwork = (currencyId: string): string => {
+  return ["bitcoin_testnet"].includes(currencyId) ? "testnet" : "mainnet";
+};
+
+// Map wallet-btc's Output to LL's BitcoinOutput
+const fromWalletUtxo = (utxo: WalletOutput): BitcoinOutput => {
+  return {
+    hash: utxo.output_hash,
+    outputIndex: utxo.output_index,
+    blockHeight: utxo.block_height,
+    address: utxo.address,
+    //path, // TODO wallet-btc limitation: doesn't provide it
+    value: BigNumber(utxo.value),
+    //rbf, // TODO
+  };
+};
+
+// wallet-btc limitation: returns all transactions twice (for each side of the tx)
+// so we need to deduplicate them...
+const deduplicateOperations = (operations: Operation[]): Operation[] => {
   var seen = {};
   var out = [];
   var j = 0;
@@ -39,61 +80,15 @@ function FIXME_deduplicateOperations(operations: Operation[]): Operation[] {
     }
   }
   return out;
-}
-
-// Map LL's DerivationMode to wallet-btc's Account.derivationMode
-const toWalletDerivationMode = (mode: string): string => {
-  switch (mode) {
-    case "segwit":
-      return "SegWit";
-    case "native_segwit":
-      return "Native SegWit";
-    default:
-      return "Legacy";
-  }
 };
 
-// Map LL's BitcoinOutput to wallet-btc's Output
-function fromWalletUtxo(utxo: WalletOutput): BitcoinOutput {
-  /*
-    {
-      value: string;
-      address: string;
-      output_hash: string;
-      output_index: number;
-      script_hex: string;
-    }
-    TO
-    {
-      hash: string,
-      outputIndex: number,
-      blockHeight: ?number,
-      address: ?string,
-      path: ?string,
-      value: BigNumber,
-      rbf: boolean,
-    }
-  */
-  return {
-    hash: utxo.output_hash,
-    outputIndex: utxo.output_index,
-    //blockHeight: TODO,
-    address: utxo.address,
-    //path: TODO,
-    value: BigNumber(utxo.value),
-    //rbf: TODO,
-  };
-}
-
-// TODO Optimize a bit this near-spaghetti code?
-function mapTxToOperations(
+const mapTxToOperations = (
   tx: TX,
   currencyId: string,
   accountId: string,
   accountAddresses: string[],
   changeAddresses: string[]
-): $Shape<Operation[]> {
-  // FIXME What is the structure of tx ??? Doesn't match TX type...
+): $Shape<Operation[]> => {
   //DEBUGZ && console.log("XXX - mapTxToOperation - input tx:");
   //DEBUGZ && console.log(tx);
   //DEBUGZ && console.log("-------------------------------");
@@ -131,6 +126,9 @@ function mapTxToOperations(
       }
     }
   }
+
+  const transactionSequenceNumber =
+    accountInputs.length > 0 && accountInputs[0].sequence; // All inputs of a same transaction have the same sequence
 
   const hasSpentNothing = value.eq(0);
 
@@ -189,10 +187,9 @@ function mapTxToOperations(
       recipients,
       blockHeight,
       blockHash,
-      //transactionSequenceNumber, // FIXME Relevant or not for btc?
+      transactionSequenceNumber,
       accountId,
       date,
-      //extra, // FIXME Required or not for btc?
       hasFailed,
     });
   }
@@ -225,10 +222,9 @@ function mapTxToOperations(
         recipients,
         blockHeight,
         blockHash,
-        //transactionSequenceNumber, // FIXME Relevant or not for btc?
+        transactionSequenceNumber,
         accountId,
         date,
-        //extra, // FIXME Required or not for btc?
         hasFailed,
       });
     }
@@ -237,7 +233,7 @@ function mapTxToOperations(
   //DEBUGZ && console.log("XXX - mapTxToOperation - output operations:");
   //DEBUGZ && console.log(operations);
   return operations;
-}
+};
 
 const getAccountShape: GetAccountShape = async (info) => {
   const {
@@ -252,39 +248,34 @@ const getAccountShape: GetAccountShape = async (info) => {
 
   //DEBUGZ && console.log("XXX - getAccountShape - info:", info);
 
-  const FIXME_derivationMode = toWalletDerivationMode(derivationMode);
+  if (currency.id === "bitcoin") {
+    await requiresSatStackReady();
+  }
+
+  const paramXpub = initialAccount?.xpub;
 
   // FIXME Hack because makeScanAccounts doesn't support non-account based coins
   // Replaces the full derivation path with only the seed identification part
   // 44'/0'/0'/0/0 --> 44'/0'
   const path = derivationPath.split("/", 2).join("/");
 
-  if (currency.id === "bitcoin") {
-    await requiresSatStackReady();
-  }
-
-  const wallet = getWallet();
-
-  const FIXME_network =
-    currency.id === "bitcoin_testnet" ? "testnet" : "mainnet";
+  const walletNetwork = toWalletNetwork(currency.id);
+  const walletDerivationMode = toWalletDerivationMode(derivationMode);
 
   const explorer = findCurrencyExplorer(currency);
-  const {
-    endpoint: explorerEndpoint,
-    version: explorerVersion,
-    id: explorerId,
-  } = explorer;
 
-  const paramXpub = initialAccount?.xpub;
+  const wallet = getWallet();
+  // TODO:
+  //const walletAccount = account.bitcoinResources.walletAccount || await wallet.generateAccount({
   const walletAccount = await wallet.generateAccount({
     btc: !paramXpub && new Btc(transport),
     xpub: paramXpub,
     path,
     index,
-    network: FIXME_network,
-    derivationMode: FIXME_derivationMode,
+    network: walletNetwork,
+    derivationMode: walletDerivationMode,
     explorer: `ledger${explorer.version}`,
-    explorerURI: `${explorerEndpoint}/blockchain/${explorerVersion}/${explorerId}`,
+    explorerURI: `${explorer.endpoint}/blockchain/${explorer.version}/${explorer.id}`,
     storage: "mock",
     storageParams: [],
   });
@@ -334,7 +325,10 @@ const getAccountShape: GetAccountShape = async (info) => {
     )
     .flat();
 
-  const newUniqueOperations = FIXME_deduplicateOperations(newOperations);
+  //DEBUGZ && console.log("XXX - getAccountShape - newOperations - XXX");
+  //DEBUGZ && console.log(newOperations);
+
+  const newUniqueOperations = deduplicateOperations(newOperations);
 
   const operations = mergeOps(oldOperations, newUniqueOperations);
 
@@ -345,7 +339,7 @@ const getAccountShape: GetAccountShape = async (info) => {
     id: accountId,
     xpub,
     balance,
-    spendableBalance: balance, // FIXME May need to compute actual value
+    spendableBalance: balance,
     operations,
     operationsCount: operations.length,
     blockHeight,
