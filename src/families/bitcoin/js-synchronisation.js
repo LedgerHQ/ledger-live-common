@@ -1,5 +1,4 @@
 import type { TX, Output as WalletOutput } from "wallet-btc/storage/types";
-import WalletLedger from "wallet-btc";
 import { BigNumber } from "bignumber.js";
 
 import Btc from "@ledgerhq/hw-app-btc";
@@ -19,17 +18,9 @@ import { encodeOperationId } from "../../operation";
 import { requiresSatStackReady } from "./satstack";
 import { BitcoinOutput } from "./types";
 import { perCoinLogic } from "./logic";
+import wallet from "./wallet";
 
 const DEBUGZ = false;
-
-let wallet = null; // TODO We'll probably need this instance in other places too
-
-const getWallet = () => {
-  if (!wallet) {
-    wallet = new WalletLedger();
-  }
-  return wallet;
-};
 
 // Map LL's DerivationMode to wallet-btc's Account.params.derivationMode
 // TODO wallet-btc should export a DerivationMode type
@@ -264,7 +255,6 @@ const getAccountShape: GetAccountShape = async (info) => {
 
   const explorer = findCurrencyExplorer(currency);
 
-  const wallet = getWallet();
   // TODO:
   //const walletAccount = account.bitcoinResources.walletAccount || await wallet.generateAccount({
   const walletAccount = await wallet.generateAccount({
