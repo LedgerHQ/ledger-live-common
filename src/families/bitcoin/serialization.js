@@ -1,5 +1,6 @@
 // @flow
 import { BigNumber } from "bignumber.js";
+import wallet from "./wallet";
 
 import type {
   BitcoinResourcesRaw,
@@ -81,8 +82,11 @@ export function fromBitcoinOutputRaw([
 export function toBitcoinResourcesRaw(
   r: BitcoinResources
 ): BitcoinResourcesRaw {
+
   return {
     utxos: r.utxos.map(toBitcoinOutputRaw),
+    walletAccount:
+      r.walletAccount && wallet.exportToSerializedAccount(r.walletAccount),
   };
 }
 
@@ -91,5 +95,7 @@ export function fromBitcoinResourcesRaw(
 ): BitcoinResources {
   return {
     utxos: r.utxos.map(fromBitcoinOutputRaw),
+    walletAccount:
+      r.walletAccount && wallet.importFromSerializedAccount(r.walletAccount),
   };
 }

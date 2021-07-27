@@ -20,8 +20,6 @@ import { BitcoinOutput } from "./types";
 import { perCoinLogic } from "./logic";
 import wallet from "./wallet";
 
-const DEBUGZ = false;
-
 // Map LL's DerivationMode to wallet-btc's Account.params.derivationMode
 // TODO wallet-btc should export a DerivationMode type
 const toWalletDerivationMode = (mode: DerivationMode): string => {
@@ -80,10 +78,6 @@ const mapTxToOperations = (
   accountAddresses: string[],
   changeAddresses: string[]
 ): $Shape<Operation[]> => {
-  //DEBUGZ && console.log("XXX - mapTxToOperation - input tx:");
-  //DEBUGZ && console.log(tx);
-  //DEBUGZ && console.log("-------------------------------");
-
   const operations = [];
 
   const hash = tx.hash;
@@ -221,8 +215,6 @@ const mapTxToOperations = (
     }
   }
 
-  //DEBUGZ && console.log("XXX - mapTxToOperation - output operations:");
-  //DEBUGZ && console.log(operations);
   return operations;
 };
 
@@ -236,8 +228,6 @@ const getAccountShape: GetAccountShape = async (info) => {
     derivationMode,
     initialAccount,
   } = info;
-
-  //DEBUGZ && console.log("XXX - getAccountShape - info:", info);
 
   if (currency.id === "bitcoin") {
     await requiresSatStackReady();
@@ -255,30 +245,24 @@ const getAccountShape: GetAccountShape = async (info) => {
 
   const explorer = findCurrencyExplorer(currency);
 
-  // TODO:
-  //const walletAccount = account.bitcoinResources.walletAccount || await wallet.generateAccount({
-  const walletAccount = await wallet.generateAccount({
-    btc: !paramXpub && new Btc(transport),
-    xpub: paramXpub,
-    path,
-    index,
-    network: walletNetwork,
-    derivationMode: walletDerivationMode,
-    explorer: `ledger${explorer.version}`,
-    explorerURI: `${explorer.endpoint}/blockchain/${explorer.version}/${explorer.id}`,
-    storage: "mock",
-    storageParams: [],
-  });
+  const walletAccount =
+    initialAccount?.bitcoinResources?.walletAccount ||
+    (await wallet.generateAccount({
+      btc: !paramXpub && new Btc(transport),
+      xpub: paramXpub,
+      path,
+      index,
+      network: walletNetwork,
+      derivationMode: walletDerivationMode,
+      explorer: `ledger${explorer.version}`,
+      explorerURI: `${explorer.endpoint}/blockchain/${explorer.version}/${explorer.id}`,
+      storage: "mock",
+      storageParams: [],
+    }));
 
   const xpub = paramXpub || walletAccount.xpub.xpub;
 
   const oldOperations = initialAccount?.operations || [];
-  // FIXME Test incremental sync
-  /*
-  const startAt = oldOperations.length
-    ? (oldOperations[0].blockHeight || 0) + 1
-    : 0;
-  */
 
   await wallet.syncAccount(walletAccount);
 
@@ -315,9 +299,6 @@ const getAccountShape: GetAccountShape = async (info) => {
     )
     .flat();
 
-  //DEBUGZ && console.log("XXX - getAccountShape - newOperations - XXX");
-  //DEBUGZ && console.log(newOperations);
-
   const newUniqueOperations = deduplicateOperations(newOperations);
 
   const operations = mergeOps(oldOperations, newUniqueOperations);
@@ -335,6 +316,7 @@ const getAccountShape: GetAccountShape = async (info) => {
     blockHeight,
     bitcoinResources: {
       utxos,
+      walletAccount,
     },
   };
 };

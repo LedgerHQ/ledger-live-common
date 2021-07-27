@@ -2,6 +2,10 @@
 
 import type { BigNumber } from "bignumber.js";
 import type {
+  Account as WalletAccount,
+  SerializedAccount as WalletSerializedAccount,
+} from "wallet-btc";
+import type {
   TransactionCommon,
   TransactionCommonRaw,
 } from "../../types/transaction";
@@ -45,10 +49,12 @@ export type BitcoinOutputRaw = [
 
 export type BitcoinResources = {
   utxos: BitcoinOutput[],
+  walletAccount: WalletAccount,
 };
 
 export type BitcoinResourcesRaw = {
   utxos: BitcoinOutputRaw[],
+  walletAccount: WalletSerializedAccount,
 };
 
 export const BitcoinLikeFeePolicy = Object.freeze({
@@ -89,97 +95,6 @@ export type BitcoinLikeNetworkParameters = {
   // Addition BIPs enabled for this network.
   additionalBIPs: string[],
 };
-
-/*
-declare class CoreBitcoinLikeInput {
-  getPreviousTransaction(): Promise<string>;
-  getPreviousTxHash(): Promise<?string>;
-  getPreviousOutputIndex(): Promise<number>;
-  getValue(): Promise<?CoreAmount>;
-  getSequence(): Promise<number>;
-  getDerivationPath(): Promise<CoreDerivationPath[]>;
-  getAddress(): Promise<?string>;
-}
-
-declare class CoreBitcoinLikeOutput {
-  getTransactionHash(): Promise<string>;
-  getOutputIndex(): Promise<number>;
-  getValue(): Promise<CoreAmount>;
-  getBlockHeight(): Promise<?number>;
-  getDerivationPath(): Promise<?CoreDerivationPath>;
-  getAddress(): Promise<?string>;
-  isReplaceable(): Promise<boolean>;
-}
-
-declare class CoreBitcoinLikeTransaction {
-  getHash(): Promise<string>;
-  getFees(): Promise<?CoreAmount>;
-  getInputs(): Promise<CoreBitcoinLikeInput[]>;
-  getOutputs(): Promise<CoreBitcoinLikeOutput[]>;
-  serializeOutputs(): Promise<string>;
-  getTimestamp(): Promise<?number>;
-}
-
-declare class CoreBitcoinLikeOperation {
-  getTransaction(): Promise<CoreBitcoinLikeTransaction>;
-}
-
-declare class CoreBitcoinLikeTransactionBuilder {
-  wipeToAddress(address: string): Promise<void>;
-  sendToAddress(amount: CoreAmount, recipient: string): Promise<void>;
-  excludeUtxo(transactionHash: string, outputIndex: number): Promise<void>;
-  pickInputs(number, number): Promise<void>;
-  setFeesPerByte(feesPerByte: CoreAmount): Promise<void>;
-  build(): Promise<CoreBitcoinLikeTransaction>;
-}
-
-declare class CoreBitcoinLikeAccount {
-  getUTXO(from: number, to: number): Promise<CoreBitcoinLikeOutput[]>;
-  getUTXOCount(): Promise<number>;
-  buildTransaction(
-    isPartial: boolean
-  ): Promise<CoreBitcoinLikeTransactionBuilder>;
-  broadcastRawTransaction(signed: string): Promise<string>;
-  getFees(): Promise<CoreBigInt[]>;
-}
-
-declare class CoreBitcoinLikeNetworkParameters {
-  getSigHash(): Promise<string>;
-  getUsesTimestampedTransaction(): Promise<boolean>;
-}
-
-export type CoreStatics = {
-  BitcoinLikeAccount: Class<CoreBitcoinLikeAccount>,
-  BitcoinLikeInput: Class<CoreBitcoinLikeInput>,
-  BitcoinLikeNetworkParameters: Class<CoreBitcoinLikeNetworkParameters>,
-  BitcoinLikeOperation: Class<CoreBitcoinLikeOperation>,
-  BitcoinLikeOutput: Class<CoreBitcoinLikeOutput>,
-  BitcoinLikeTransaction: Class<CoreBitcoinLikeTransaction>,
-  BitcoinLikeTransactionBuilder: Class<CoreBitcoinLikeTransactionBuilder>,
-};
-
-export type {
-  CoreBitcoinLikeAccount,
-  CoreBitcoinLikeInput,
-  CoreBitcoinLikeNetworkParameters,
-  CoreBitcoinLikeOperation,
-  CoreBitcoinLikeOutput,
-  CoreBitcoinLikeTransaction,
-  CoreBitcoinLikeTransactionBuilder,
-};
-
-export type CoreAccountSpecifics = {
-  asBitcoinLikeAccount(): Promise<CoreBitcoinLikeAccount>,
-};
-
-export type CoreOperationSpecifics = {
-  asBitcoinLikeOperation(): Promise<CoreBitcoinLikeOperation>,
-};
-
-export type CoreCurrencySpecifics = {
-  getBitcoinLikeNetworkParameters(): Promise<CoreBitcoinLikeNetworkParameters>,
-};
-*/
 
 export type FeeItem = {
   key: string,
