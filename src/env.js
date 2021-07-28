@@ -488,9 +488,14 @@ const envDefinitions = {
     desc: "enable visibility of debug apps and tools in Platform Catalog",
   },
   PLATFORM_MANIFEST_API_URL: {
-    def: "",
+    def: "https://cdn.live.ledger.com/platform/apps/v1/data.json",
     parser: stringParser,
     desc: "url used to fetch platform app manifests",
+  },
+  PLATFORM_MANIFEST_STAGING_API_URL: {
+    def: "https://cdn.live.ledger-stg.com/platform/apps/v1/data.json",
+    parser: stringParser,
+    desc: "url used to fetch platform app manifests (staging)",
   },
   PLATFORM_API_URL: {
     def: "",
