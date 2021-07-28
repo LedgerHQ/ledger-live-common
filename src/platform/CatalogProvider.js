@@ -5,7 +5,7 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import type { AppManifest, AppBranch, AppPlatform } from "./types";
 import { isSupported, matchPlatform, matchBranches } from "./logic";
 
-import api from "./api";
+import api from "./PlatformAppProvider/api";
 
 type State = {
   apps: AppManifest[],
