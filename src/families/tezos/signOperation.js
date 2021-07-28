@@ -40,7 +40,7 @@ export const signOperation = ({
         /*
         const out = await tezos.estimate.transfer({
           to: transaction.recipient,
-          amount: transaction.amount,
+          amount: transaction.amount.div(10 ** 6),
         });
 
         console.log(out);
@@ -50,7 +50,7 @@ export const signOperation = ({
 
         await tezos.contract.transfer({
           to: transaction.recipient,
-          amount: transaction.amount,
+          amount: transaction.amount.div(10 ** 6), // TODO utility
         });
 
         o.next({ type: "device-signature-requested" });
