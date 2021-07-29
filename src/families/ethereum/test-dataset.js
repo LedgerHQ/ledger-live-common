@@ -32,6 +32,25 @@ export const ethereum1 = {
   xpub: "",
 };
 
+export const ethereum2 = {
+  id: "js:1:ethereum:0xabf06640f8ca8fC5e0Ed471b10BeFCDf65A33e43:",
+  seedIdentifier: "0xabf06640f8ca8fC5e0Ed471b10BeFCDf65A33e43",
+  name: "0xabf06640f8ca8fC5e0Ed471b10BeFCDf65A33e43",
+  derivationMode: "",
+  index: 0,
+  freshAddress: "0xabf06640f8ca8fC5e0Ed471b10BeFCDf65A33e43",
+  freshAddressPath: "44'/60'/0'/0/0",
+  freshAddresses: [],
+  pendingOperations: [],
+  operations: [],
+  currencyId: "ethereum",
+  unitMagnitude: 18,
+  balance: "",
+  blockHeight: 0,
+  lastSyncDate: "",
+  xpub: "",
+};
+
 const expectedTokenAccount = (a) => {
   invariant(a && a.type === "TokenAccount", "expected token account");
   return a;
@@ -171,6 +190,9 @@ const dataset: DatasetTest<Transaction> = {
             }
           },
           raw: ethereum1,
+        },
+        {
+          raw: ethereum2,
         },
       ],
     },
