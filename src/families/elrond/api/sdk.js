@@ -7,9 +7,7 @@ import type { Operation, OperationType } from "../../../types";
 import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";
 
-const ELROND_API_ENDPOINT = () => getEnv("ELROND_API_ENDPOINT");
-
-let api = new ElrondApi(ELROND_API_ENDPOINT());
+let api = new ElrondApi(getEnv("ELROND_API_ENDPOINT"));
 
 /**
  * Get account balances and nonce
