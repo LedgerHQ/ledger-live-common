@@ -2,6 +2,7 @@
 import type { Account } from "../../types";
 import { getNetworkConfig } from "./api";
 import type { Transaction } from "./types";
+import { bech32 } from "bech32";
 
 export const compareVersions = (versionA: string, versionB: string): number => {
   let i, diff;
@@ -32,13 +33,20 @@ export const compareVersions = (versionA: string, versionB: string): number => {
  * @param {string} address
  */
 export const isValidAddress = (address: string): boolean => {
-  if (!address) return false;
+  // if (!address) return false;
 
-  if (!address.startsWith("erd1")) return false;
+  // if (!address.startsWith("erd1")) return false;
 
-  if (address.length !== 62) return false;
+  // if (address.length !== 62) return false;
 
-  return true;
+  try {
+    bech32.decode(address, 256);
+    return true;
+  } catch (erro) {
+    return false;
+  }
+
+  // return true;
 };
 
 export const isSelfTransaction = (a: Account, t: Transaction): boolean => {
