@@ -8,6 +8,7 @@ import { closeAllDevices } from "./live-common-setup";
 import commandsMain from "./commands-index";
 // TODO cli-transaction.js => cli.js
 import perFamily from "@ledgerhq/live-common/lib/generated/cli-transaction";
+import { commands, interactive } from "./interactive";
 
 const commands = {
   ...Object.values(perFamily)
@@ -98,59 +99,7 @@ if (mainOptions.command) {
     },
   });
 } else {
-  // CONTEXT IS THE REPL STATE
-  // add what you need to "accumulate things"
-  const ledgerContext = {
-    accounts: [],
-  };
-
-  const setContext = function (ctx) {
-    Object.assign(
-      ledgerContext,
-      typeof ctx === "function" ? ctx(ledgerContext) : ctx
-    );
-  };
-
-  const evaluate = function (line, _context, _filename, callback) {
-    const [command, ...argv] = line.split(/\s+/).filter(Boolean);
-    if (!command) {
-      callback();
-      return;
-    }
-    const cmd = commands[command];
-    if (!cmd) {
-      console.error("Command not found: " + command);
-      callback();
-      return;
-    }
-    const options = commandLineArgs(cmd.args, {
-      argv,
-      stopAtFirstUnknown: true,
-    });
-    from(cmd.job(options, ledgerContext, setContext)).subscribe({
-      next: (log) => {
-        if (log !== undefined) console.log(log);
-      },
-      error: (error) => {
-        const e = error instanceof Error ? error : deserializeError(error);
-        console.error(e);
-        callback();
-      },
-      complete: () => {
-        callback();
-      },
-    });
-  };
-  repl
-    .start({
-      prompt: "ledger> ",
-      input: process.stdin,
-      output: process.stdout,
-      eval: evaluate,
-    })
-    .on("exit", function () {
-      closeAllDevices();
-    });
+  interactive();
 }
 
 let sigIntSent;
