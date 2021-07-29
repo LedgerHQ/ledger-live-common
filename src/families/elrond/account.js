@@ -25,7 +25,7 @@ function formatAccountSpecifics(account: Account): string {
   }
 
   if (elrondResources.nonce) {
-    str += "\nonce : " + elrondResources.nonce;
+    str += "\n nonce : " + elrondResources.nonce;
   }
 
   return str;
