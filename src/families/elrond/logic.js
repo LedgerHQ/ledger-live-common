@@ -70,7 +70,3 @@ export const getNonce = (a: Account): number => {
 
   return nonce;
 };
-
-export const getNetworkConfigs = async () => {
-  return await getNetworkConfig();
-};

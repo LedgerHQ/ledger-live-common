@@ -2,7 +2,8 @@
 import type { Transaction } from "./types";
 import type { Account } from "../../types";
 
-import { getNonce, getNetworkConfigs } from "./logic";
+import { getNonce } from "./logic";
+import { getNetworkConfig } from "./api";
 
 import { HASH_TRANSACTION, RAW_TRANSACTION } from "./constants";
 
@@ -18,7 +19,7 @@ export const buildTransaction = async (
 ) => {
   const address = a.freshAddress;
   const nonce = getNonce(a);
-  const { gasPrice, gasLimit, chainId } = await getNetworkConfigs();
+  const { gasPrice, gasLimit, chainId } = await getNetworkConfig();
   const transactionType = signUsingHash ? HASH_TRANSACTION : RAW_TRANSACTION;
 
   const unsigned = {
