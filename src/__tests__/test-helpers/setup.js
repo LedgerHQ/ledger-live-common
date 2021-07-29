@@ -5,6 +5,7 @@ jest.setTimeout(180000);
 setSupportedCurrencies([
   "bitcoin",
   "ethereum",
+  "elrond",
   "ripple",
   "bitcoin_cash",
   "litecoin",
