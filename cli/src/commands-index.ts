@@ -1,3 +1,4 @@
+import addAccounts from "./commands/addAccounts";
 import app from "./commands/app";
 import appUninstallAll from "./commands/appUninstallAll";
 import appsCheckAllAppVersions from "./commands/appsCheckAllAppVersions";
@@ -29,6 +30,7 @@ import getAddress from "./commands/getAddress";
 import getTransactionStatus from "./commands/getTransactionStatus";
 import libcoreReset from "./commands/libcoreReset";
 import libcoreSetPassword from "./commands/libcoreSetPassword";
+import listAccounts from "./commands/listAccounts";
 import liveData from "./commands/liveData";
 import makeCompoundSummary from "./commands/makeCompoundSummary";
 import managerListApps from "./commands/managerListApps";
@@ -52,6 +54,7 @@ import version from "./commands/version";
 import walletconnect from "./commands/walletconnect";
 
 export default {
+  addAccounts,
   app,
   appUninstallAll,
   appsCheckAllAppVersions,
@@ -83,6 +86,7 @@ export default {
   getTransactionStatus,
   libcoreReset,
   libcoreSetPassword,
+  listAccounts,
   liveData,
   makeCompoundSummary,
   managerListApps,

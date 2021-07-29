@@ -2,6 +2,7 @@
 
 import { deserializeError } from "@ledgerhq/errors";
 import { from } from "rxjs";
+import repl from "repl";
 import commandLineArgs from "command-line-args";
 import { closeAllDevices } from "./live-common-setup";
 import commandsMain from "./commands-index";
@@ -25,7 +26,7 @@ const mainOptions = commandLineArgs(
   }
 );
 
-if (mainOptions.help || !mainOptions.command) {
+if (mainOptions.help) {
   console.log("Ledger Live @ https://github.com/LedgerHQ/ledger-live-common");
   console.log("");
   console.log("Usage: ledger-live <command> ...");
@@ -74,27 +75,83 @@ if (mainOptions.help || !mainOptions.command) {
   process.exit(0);
 }
 
-const cmd = commands[mainOptions.command];
-if (!cmd) {
-  console.error("Command not found: ledger-live " + mainOptions.command);
-  process.exit(1);
-}
-const argv = mainOptions._unknown || [];
-const options = commandLineArgs(cmd.args, { argv, stopAtFirstUnknown: true });
-from(cmd.job(options)).subscribe({
-  next: (log) => {
-    if (log !== undefined) console.log(log);
-  },
-  error: (error) => {
-    const e = error instanceof Error ? error : deserializeError(error);
-    if (process.env.VERBOSE || process.env.VERBOSE_FILE) console.error(e);
-    else console.error(String(e.message || e));
+if (mainOptions.command) {
+  const cmd = commands[mainOptions.command];
+  if (!cmd) {
+    console.error("Command not found: ledger-live " + mainOptions.command);
     process.exit(1);
-  },
-  complete: () => {
-    closeAllDevices();
-  },
-});
+  }
+  const argv = mainOptions._unknown || [];
+  const options = commandLineArgs(cmd.args, { argv, stopAtFirstUnknown: true });
+  from(cmd.job(options)).subscribe({
+    next: (log) => {
+      if (log !== undefined) console.log(log);
+    },
+    error: (error) => {
+      const e = error instanceof Error ? error : deserializeError(error);
+      if (process.env.VERBOSE || process.env.VERBOSE_FILE) console.error(e);
+      else console.error(String(e.message || e));
+      process.exit(1);
+    },
+    complete: () => {
+      closeAllDevices();
+    },
+  });
+} else {
+  // CONTEXT IS THE REPL STATE
+  // add what you need to "accumulate things"
+  const ledgerContext = {
+    accounts: [],
+  };
+
+  const setContext = function (ctx) {
+    Object.assign(
+      ledgerContext,
+      typeof ctx === "function" ? ctx(ledgerContext) : ctx
+    );
+  };
+
+  const evaluate = function (line, _context, _filename, callback) {
+    const [command, ...argv] = line.split(/\s+/).filter(Boolean);
+    if (!command) {
+      callback();
+      return;
+    }
+    const cmd = commands[command];
+    if (!cmd) {
+      console.error("Command not found: " + command);
+      callback();
+      return;
+    }
+    const options = commandLineArgs(cmd.args, {
+      argv,
+      stopAtFirstUnknown: true,
+    });
+    from(cmd.job(options, ledgerContext, setContext)).subscribe({
+      next: (log) => {
+        if (log !== undefined) console.log(log);
+      },
+      error: (error) => {
+        const e = error instanceof Error ? error : deserializeError(error);
+        console.error(e);
+        callback();
+      },
+      complete: () => {
+        callback();
+      },
+    });
+  };
+  repl
+    .start({
+      prompt: "ledger> ",
+      input: process.stdin,
+      output: process.stdout,
+      eval: evaluate,
+    })
+    .on("exit", function () {
+      closeAllDevices();
+    });
+}
 
 let sigIntSent;
 process.on("SIGINT", () => {
