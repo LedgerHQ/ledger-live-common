@@ -5,11 +5,11 @@ import {
   RecipientRequired,
   InvalidAddress,
   FeeNotLoaded,
+  InvalidAddressBecauseDestinationIsAlsoSource,
 } from "@ledgerhq/errors";
 import type { Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
 import { isValidAddress, isSelfTransaction } from "./logic";
-import { ElrondSelfTransactionError } from "./errors";
 
 const getTransactionStatus = async (
   a: Account,
@@ -24,9 +24,7 @@ const getTransactionStatus = async (
   }
 
   if (isSelfTransaction(a, t)) {
-    errors.recipient = new ElrondSelfTransactionError(
-      "Recipient address is the same as the sender!"
-    );
+    errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
   }
 
   if (!isValidAddress(t.recipient)) {
