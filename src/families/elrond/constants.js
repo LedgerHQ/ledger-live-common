@@ -7,3 +7,5 @@ export const RAW_TRANSACTION = {
   version: 1,
   options: 0,
 };
+
+export const METACHAIN_SHARD = 4294967295;

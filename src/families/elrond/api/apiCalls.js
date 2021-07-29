@@ -1,5 +1,9 @@
 import network from "../../../network";
-import { HASH_TRANSACTION, RAW_TRANSACTION } from "../constants";
+import {
+  HASH_TRANSACTION,
+  RAW_TRANSACTION,
+  METACHAIN_SHARD,
+} from "../constants";
 
 export default class ElrondApi {
   constructor(API_URL: String) {
@@ -114,7 +118,7 @@ export default class ElrondApi {
       data: [{ nonce: blockHeight }],
     } = await network({
       method: "GET",
-      url: `${this.API_URL}/blocks?shard=4294967295&fields=nonce`,
+      url: `${this.API_URL}/blocks?shard=${METACHAIN_SHARD}&fields=nonce`,
     });
 
     return blockHeight;
