@@ -6,6 +6,7 @@ import type { Transaction } from "../types";
 import type { Operation, OperationType } from "../../../types";
 import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";
+import { getTransactionParams } from "../cache";
 
 let api = new ElrondApi(getEnv("ELROND_API_ENDPOINT"));
 
@@ -113,7 +114,7 @@ export const getOperations = async (
  */
 export const getFees = async (unsigned): Promise<BigNumber> => {
   const { data } = unsigned;
-  const { gasLimit, gasPerByte, gasPrice } = await api.getNetworkConfig();
+  const { gasLimit, gasPerByte, gasPrice } = await getTransactionParams();
 
   if (!data) {
     return BigNumber(gasLimit * gasPrice);
