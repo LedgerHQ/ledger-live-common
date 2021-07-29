@@ -1,19 +1,15 @@
 // @flow
-import type { DatasetTest } from "../../types";
 import { fromTransactionRaw } from "../elrond/transaction";
+import { BigNumber } from "bignumber.js";
+import {
+  InvalidAddressBecauseDestinationIsAlsoSource,
+  NotEnoughBalance,
+  InvalidAddress,
+} from "@ledgerhq/errors";
+import type { DatasetTest } from "../../types";
 import type { Transaction } from "./types";
 
-type TestTransaction = {
-  name: string,
-  transaction: Transaction,
-  expectedStatus: {
-    amount: BigNumber,
-    errors: {},
-    warnings: {},
-  },
-};
-
-export default dataset = {
+const dataset: DatasetTest<Transaction> = {
   implementations: ["mock", "js"],
   currencies: {
     elrond: {
@@ -60,11 +56,7 @@ export default dataset = {
                   "erd1rnq7m8kdrpyfany4fweqtydsk4pgx0l6dtl6tvcad5wesagruxts62e9rk",
                 amount: "100000000",
                 mode: "send",
-                era: null,
-                validators: [],
                 fees: null,
-                rewardDestination: null,
-                numSlashingSpans: 0,
               }),
               expectedStatus: {
                 amount: BigNumber("100000000"),
@@ -81,11 +73,7 @@ export default dataset = {
                 recipient: "elrondinv",
                 amount: "100000000",
                 mode: "send",
-                era: null,
-                validators: [],
                 fees: null,
-                rewardDestination: null,
-                numSlashingSpans: 0,
               }),
               expectedStatus: {
                 errors: {
@@ -102,11 +90,7 @@ export default dataset = {
                   "erd1frj909pfums4m8aza596595l9pl56crwdj077vs2aqcw6ynl28wsfkw9rd",
                 amount: "1000000000000000",
                 mode: "send",
-                era: null,
-                validators: [],
                 fees: null,
-                rewardDestination: null,
-                numSlashingSpans: 0,
               }),
               expectedStatus: {
                 errors: {
@@ -121,3 +105,5 @@ export default dataset = {
     },
   },
 };
+
+export default dataset;
