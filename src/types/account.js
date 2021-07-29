@@ -26,6 +26,10 @@ import type {
   ElrondResourcesRaw,
 } from "../families/elrond/types";
 import type {
+  CryptoOrgResources,
+  CryptoOrgResourcesRaw,
+} from "../families/crypto_org/types";
+import type {
   BalanceHistory,
   BalanceHistoryRaw,
   PortfolioRange,
@@ -239,6 +243,7 @@ export type Account = {
   algorandResources?: AlgorandResources,
   polkadotResources?: PolkadotResources,
   elrondResources?: ElrondResources,
+  cryptoOrgResources?: CryptoOrgResources,
 
   // Swap operations linked to this account
   swapHistory: SwapOperation[],
@@ -328,6 +333,7 @@ export type AccountRaw = {
   algorandResources?: AlgorandResourcesRaw,
   polkadotResources?: PolkadotResourcesRaw,
   elrondResources?: ElrondResourcesRaw,
+  cryptoOrgResources?: CryptoOrgResourcesRaw,
   swapHistory?: SwapOperationRaw[],
   syncHash?: string,
 };

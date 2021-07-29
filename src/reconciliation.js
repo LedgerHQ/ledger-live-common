@@ -27,6 +27,7 @@ import {
   fromAlgorandResourcesRaw,
   fromPolkadotResourcesRaw,
   fromElrondResourcesRaw,
+  fromCryptoOrgResourcesRaw,
 } from "./account";
 import consoleWarnExpectToEqual from "./consoleWarnExpectToEqual";
 
@@ -345,6 +346,16 @@ export function patchAccount(
     account.elrondResources !== updatedRaw.elrondResources
   ) {
     next.elrondResources = fromElrondResourcesRaw(updatedRaw.elrondResources);
+    changed = true;
+  }
+  
+  if ( 
+    updatedRaw.cryptoOrgResources &&
+    account.cryptoOrgResources !== updatedRaw.cryptoOrgResources
+  ) {
+    next.cryptoOrgResources = fromCryptoOrgResourcesRaw(
+      updatedRaw.cryptoOrgResources
+    );
     changed = true;
   }
 

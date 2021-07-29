@@ -36,6 +36,8 @@ type InitSwapRequest = {
   exchange: Exchange,
   exchangeRate: ExchangeRate,
   transaction: Transaction,
+  userId?: string,
+  requireLatestFirmware?: boolean,
 };
 
 type Result =
@@ -116,7 +118,14 @@ export const createAction = (
       state.freezeReduxDevice
     );
 
-    const { exchange, exchangeRate, transaction } = initSwapRequest;
+    const {
+      exchange,
+      exchangeRate,
+      transaction,
+      userId,
+      requireLatestFirmware,
+    } = initSwapRequest;
+
     const {
       fromAccount,
       fromParentAccount,
@@ -133,6 +142,7 @@ export const createAction = (
           { account: mainFromAccount },
           { account: maintoAccount },
         ],
+        requireLatestFirmware,
       }
     );
 
@@ -153,6 +163,7 @@ export const createAction = (
           exchangeRate,
           transaction,
           deviceId: device.deviceId,
+          userId,
         })
       )
         .pipe(
@@ -172,7 +183,7 @@ export const createAction = (
       return () => {
         sub.unsubscribe();
       };
-    }, [exchange, exchangeRate, transaction, device, opened, hasError]);
+    }, [exchange, exchangeRate, transaction, device, opened, hasError, userId]);
 
     return {
       ...appState,

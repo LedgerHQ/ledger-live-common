@@ -39,6 +39,10 @@ import {
   toElrondResourcesRaw,
   fromElrondResourcesRaw,
 } from "../families/elrond/serialization";
+import { 
+  toCryptoOrgResourcesRaw,
+  fromCryptoOrgResourcesRaw,
+} from "../families/crypto_org/serialization";
 import {
   getCryptoCurrencyById,
   getTokenById,
@@ -58,6 +62,7 @@ export { toAlgorandResourcesRaw, fromAlgorandResourcesRaw };
 export { toBitcoinResourcesRaw, fromBitcoinResourcesRaw };
 export { toPolkadotResourcesRaw, fromPolkadotResourcesRaw };
 export { toElrondResourcesRaw, fromElrondResourcesRaw };
+export { toCryptoOrgResourcesRaw, fromCryptoOrgResourcesRaw };
 
 export function toBalanceHistoryRaw(b: BalanceHistory): BalanceHistoryRaw {
   return b.map(({ date, value }) => [date.toISOString(), value.toString()]);
@@ -654,6 +659,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     syncHash,
     polkadotResources,
     elrondResources,
+    cryptoOrgResources,
   } = rawAccount;
 
   const subAccounts =
@@ -753,8 +759,13 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
   if (polkadotResources) {
     res.polkadotResources = fromPolkadotResourcesRaw(polkadotResources);
   }
+  
   if (elrondResources) {
     res.elrondResources = fromElrondResourcesRaw(elrondResources);
+  }
+
+  if (cryptoOrgResources) {
+    res.cryptoOrgResources = fromCryptoOrgResourcesRaw(cryptoOrgResources);
   }
 
   return res;
@@ -794,6 +805,7 @@ export function toAccountRaw({
   syncHash,
   polkadotResources,
   elrondResources,
+  cryptoOrgResources,
 }: Account): AccountRaw {
   const res: $Exact<AccountRaw> = {
     id,
@@ -853,6 +865,9 @@ export function toAccountRaw({
   }
   if (elrondResources) {
     res.elrondResources = toElrondResourcesRaw(elrondResources);
+  }
+  if (cryptoOrgResources) {
+    res.cryptoOrgResources = toCryptoOrgResourcesRaw(cryptoOrgResources);
   }
   return res;
 }
