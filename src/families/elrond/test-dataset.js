@@ -10,7 +10,7 @@ import type { DatasetTest } from "../../types";
 import type { Transaction } from "./types";
 
 const dataset: DatasetTest<Transaction> = {
-  implementations: ["mock", "js"],
+  implementations: ["js"],
   currencies: {
     elrond: {
       scanAccounts: [
@@ -71,7 +71,7 @@ const dataset: DatasetTest<Transaction> = {
               transaction: fromTransactionRaw({
                 family: "elrond",
                 recipient: "elrondinv",
-                amount: "100000000",
+                amount: BigNumber("100000000"),
                 mode: "send",
                 fees: null,
               }),
@@ -88,7 +88,7 @@ const dataset: DatasetTest<Transaction> = {
                 family: "elrond",
                 recipient:
                   "erd1frj909pfums4m8aza596595l9pl56crwdj077vs2aqcw6ynl28wsfkw9rd",
-                amount: "1000000000000000",
+                amount: BigNumber("1000000000000000"),
                 mode: "send",
                 fees: null,
               }),
