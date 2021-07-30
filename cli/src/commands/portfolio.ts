@@ -25,7 +25,8 @@ import {
   loadCountervalues,
   inferTrackingPairForAccounts,
 } from "@ledgerhq/live-common/lib/countervalues/logic";
-import { LedgerState } from "../interactive";
+import { LedgerState, requireAccounts } from "../interactive";
+import { openStdin } from "process";
 
 function asPortfolioRange(period: string): PortfolioRange {
   const ranges = getRanges();
@@ -58,6 +59,11 @@ export default {
       type: Boolean,
       desc: "if set, disable the autofill of gaps to evaluate the rates availability",
     },
+    {
+      name: "full",
+      type: Boolean,
+      desc: "also show graph per account",
+    },
   ],
   job: (
     opts: Partial<
@@ -65,6 +71,7 @@ export default {
         disableAutofillGaps: boolean;
         countervalue: string;
         period: string;
+        full: boolean;
       }
     >,
     state: LedgerState | undefined
@@ -74,7 +81,7 @@ export default {
       countervalue,
       "currency not found with ticker=" + opts.countervalue
     );
-    return (state ? from(state.accounts) : scan(opts)).pipe(
+    return requireAccounts(opts, state).pipe(
       reduce((all, a) => all.concat(a), [] as Account[]),
       concatMap((accounts) =>
         from(
@@ -152,26 +159,28 @@ export default {
             }
 
             let str = "";
-            accounts.forEach((top) => {
-              str += render("Account " + getAccountName(top), [top]);
-              str += "\n";
+            if (opts.full) {
+              accounts.forEach((top) => {
+                str += render("Account " + getAccountName(top), [top]);
+                str += "\n";
 
-              if (top.subAccounts) {
-                top.subAccounts.forEach((sub) => {
-                  str += render(
-                    "Account " +
-                      getAccountName(top) +
-                      " > " +
-                      getAccountName(sub),
-                    [sub]
-                  ).replace(/\n/s, "  \n");
-                  str += "\n";
-                });
-              }
+                if (top.subAccounts) {
+                  top.subAccounts.forEach((sub) => {
+                    str += render(
+                      "Account " +
+                        getAccountName(top) +
+                        " > " +
+                        getAccountName(sub),
+                      [sub]
+                    ).replace(/\n/s, "  \n");
+                    str += "\n";
+                  });
+                }
 
+                str += "\n";
+              });
               str += "\n";
-            });
-            str += "\n";
+            }
             str += render(
               "SUMMARY OF PORTFOLIO: " + all.length + " accounts, total of ",
               accounts

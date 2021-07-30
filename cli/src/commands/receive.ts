@@ -5,6 +5,7 @@ import { scan, scanCommonOpts } from "../scan";
 import type { ScanCommonOpts } from "../scan";
 import { asQR } from "../qr";
 import { FreshAddressIndexInvalid } from "@ledgerhq/live-common/lib/errors";
+import { LedgerState, requireAccount } from "../interactive";
 export default {
   description: "Receive crypto-assets (verify on device)",
   args: [
@@ -24,9 +25,10 @@ export default {
     opts: ScanCommonOpts & {
       qr: boolean;
       freshAddressIndex: number | null | undefined;
-    }
+    },
+    state: LedgerState | undefined
   ) =>
-    scan(opts).pipe(
+    requireAccount(opts, state).pipe(
       concatMap((account) =>
         concat(
           of(

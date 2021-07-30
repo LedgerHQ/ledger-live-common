@@ -9,11 +9,12 @@ import {
   inferSignedOperations,
   inferSignedOperationsOpts,
 } from "../signedOperation";
+import { LedgerState, requireAccount } from "../interactive";
 export default {
   description: "Broadcast signed operation(s)",
   args: [...scanCommonOpts, ...inferSignedOperationsOpts],
-  job: (opts: ScanCommonOpts & InferSignedOperationsOpts) =>
-    scan(opts).pipe(
+  job: (opts: ScanCommonOpts & InferSignedOperationsOpts, state: LedgerState | undefined) =>
+    requireAccount(opts, state).pipe(
       concatMap((account) =>
         inferSignedOperations(account, opts).pipe(
           concatMap((signedOperation) =>

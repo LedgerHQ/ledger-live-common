@@ -10,6 +10,7 @@ import { scan, scanCommonOpts } from "../scan";
 import type { ScanCommonOpts } from "../scan";
 import type { InferTransactionsOpts } from "../transaction";
 import { inferTransactions, inferTransactionsOpts } from "../transaction";
+import { LedgerState, requireAccount } from "../interactive";
 const getTransactionStatusFormatters = {
   default: ({ status, transaction, account }) =>
     "TRANSACTION " +
@@ -43,9 +44,10 @@ export default {
     opts: ScanCommonOpts &
       InferTransactionsOpts & {
         format: string;
-      }
+      },
+      state: LedgerState | undefined
   ) =>
-    scan(opts).pipe(
+    requireAccount(opts, state).pipe(
       concatMap((account) =>
         from(inferTransactions(account, opts)).pipe(
           mergeMap((inferred) =>

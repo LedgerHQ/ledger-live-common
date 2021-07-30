@@ -19,6 +19,7 @@ export default {
       format: string;
     }
   ) =>
+    // TODO repl version of "sync" to impleemnt
     scan(opts).pipe(
       map((account) =>
         (accountFormatters[opts.format] || accountFormatters.default)(account)

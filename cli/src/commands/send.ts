@@ -23,6 +23,7 @@ import { scan, scanCommonOpts } from "../scan";
 import type { ScanCommonOpts } from "../scan";
 import type { InferTransactionsOpts } from "../transaction";
 import { inferTransactions, inferTransactionsOpts } from "../transaction";
+import { LedgerState, requireAccount } from "../interactive";
 export default {
   description: "Send crypto-assets",
   args: [
@@ -50,13 +51,14 @@ export default {
         "ignore-errors": boolean;
         "disable-broadcast": boolean;
         format: string;
-      }
+      },
+    state: LedgerState | undefined
   ) => {
     const l =
       opts.format !== "json" && opts.format !== "silent" // eslint-disable-next-line no-console
         ? (l) => console.log(l)
         : (_l) => {};
-    return scan(opts).pipe(
+    return requireAccount(opts, state).pipe(
       tap((account) => {
         l(`→ FROM ${formatAccount(account, "basic")}`);
       }),

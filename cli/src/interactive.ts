@@ -1,12 +1,14 @@
 /* eslint-disable no-console */
-import { deserializeError } from "@ledgerhq/errors";
-import { from } from "rxjs";
+import { deserializeError, InvalidAddressBecauseDestinationIsAlsoSource } from "@ledgerhq/errors";
+import { from, Observable, of } from "rxjs";
+import { first } from "rxjs/operators";
 import repl from "repl";
 import commandLineArgs from "command-line-args";
 import { closeAllDevices } from "./live-common-setup";
 import commandsMain from "./commands-index";
 import perFamily from "@ledgerhq/live-common/lib/generated/cli-transaction";
 import type { Account } from "@ledgerhq/live-common/lib/types";
+import {scan, ScanCommonOpts} from "./scan"
 
 export const commands = {
   ...Object.values(perFamily)
@@ -77,4 +79,19 @@ export function interactive() {
     .on("exit", function () {
       closeAllDevices();
     });
+}
+
+
+export const requireAccount = function (opts: ScanCommonOpts, state: LedgerState | undefined): Observable<Account> {
+  if (!state) {
+    return scan(opts).pipe(first());
+  }
+  let account = state.selectedAccount;
+  account = state.accounts[0]; // first hack
+  if (!account) throw new Error("please 'selectAccount' first");
+  return of(account);
+}
+
+export const requireAccounts = function (opts: ScanCommonOpts, state: LedgerState | undefined): Observable<Account> {
+  return !state ? scan(opts) : from(state.accounts);
 }
