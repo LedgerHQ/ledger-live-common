@@ -32,6 +32,10 @@ const estimateMaxSpendable = async ({
 
   const fees = await getEstimatedFees({ a, t });
 
+  if (fees.gt(a.spendableBalance)) {
+    return BigNumber(0);
+  }
+
   return a.spendableBalance.minus(fees);
 };
 
