@@ -25,6 +25,7 @@ import {
   loadCountervalues,
   inferTrackingPairForAccounts,
 } from "@ledgerhq/live-common/lib/countervalues/logic";
+import { LedgerState } from "../interactive";
 
 function asPortfolioRange(period: string): PortfolioRange {
   const ranges = getRanges();
@@ -65,14 +66,15 @@ export default {
         countervalue: string;
         period: string;
       }
-    >
+    >,
+    state: LedgerState | undefined
   ) => {
     const countervalue = findCurrencyByTicker(opts.countervalue || "USD");
     invariant(
       countervalue,
       "currency not found with ticker=" + opts.countervalue
     );
-    return scan(opts).pipe(
+    return (state ? from(state.accounts) : scan(opts)).pipe(
       reduce((all, a) => all.concat(a), [] as Account[]),
       concatMap((accounts) =>
         from(
