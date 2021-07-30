@@ -1,3 +1,4 @@
+import TEMPLATE from "./commands/TEMPLATE";
 import addAccounts from "./commands/addAccounts";
 import app from "./commands/app";
 import appUninstallAll from "./commands/appUninstallAll";
@@ -56,6 +57,7 @@ import version from "./commands/version";
 import walletconnect from "./commands/walletconnect";
 
 export default {
+  TEMPLATE,
   addAccounts,
   app,
   appUninstallAll,

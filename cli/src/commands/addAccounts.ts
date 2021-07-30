@@ -4,18 +4,23 @@ import { map, tap } from "rxjs/operators";
 import { accountFormatters } from "@ledgerhq/live-common/lib/account";
 import { scan, scanCommonOpts } from "../scan";
 import type { ScanCommonOpts } from "../scan";
+import { AccountNotSupported } from "@ledgerhq/errors";
 
 export default {
   description: "Add accounts",
   args: [...scanCommonOpts],
-  job: (opts: ScanCommonOpts & { format: string }, _ctx, setContext) =>
+  job: (opts: ScanCommonOpts & { format: string }, ctx, setContext) =>
     scan(opts).pipe(
+      map(account => ({
+        ...account,
+        name: "["+ctx.accounts.length+"] "+account.name
+      })),
       tap(
         (account) =>
           setContext &&
-          setContext((ctx) => ({
-            accounts: ctx.accounts.concat([account]),
-          }))
+          setContext((ctx) => 
+            ctx.accounts.some(a => a.id === account.id) ? {} :
+          ({ accounts: ctx.accounts.concat([account]) }))
       ),
       map(accountFormatters.head)
     ),
