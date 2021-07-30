@@ -134,8 +134,8 @@ export default {
 
       const setter = (ctx: StateUpdater) => {
         setCtx(ctx);
-        o.complete();
         render(<Box />);
+        o.complete();
       };
 
       render(

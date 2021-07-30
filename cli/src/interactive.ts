@@ -63,6 +63,7 @@ export function interactive() {
         callback();
       },
       complete: () => {
+        console.log("will callback");
         callback();
       },
     });
