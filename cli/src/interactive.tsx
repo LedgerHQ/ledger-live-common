@@ -95,7 +95,6 @@ export const requireAccount = function (
     return scan(opts).pipe(first());
   }
   let account = state.selectedAccount;
-  account = state.accounts[0]; // first hack
   if (!account) throw new Error("please 'selectAccount' first");
   return of(account);
 };
