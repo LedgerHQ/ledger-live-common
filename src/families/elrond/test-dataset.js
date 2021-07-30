@@ -9,6 +9,9 @@ import {
 import type { DatasetTest } from "../../types";
 import type { Transaction } from "./types";
 
+const TEST_ADDRESS =
+  "erd1vgfp3g7azqjx4wsmtt7067m0l62v3psmqzr24j6xvywj2tlz0gesvyzsq2";
+
 const dataset: DatasetTest<Transaction> = {
   implementations: ["js"],
   currencies: {
@@ -29,14 +32,12 @@ const dataset: DatasetTest<Transaction> = {
       accounts: [
         {
           raw: {
-            id: `js:2:elrond:erd1rnq7m8kdrpyfany4fweqtydsk4pgx0l6dtl6tvcad5wesagruxts62e9rk:`,
-            seedIdentifier:
-              "erd1rnq7m8kdrpyfany4fweqtydsk4pgx0l6dtl6tvcad5wesagruxts62e9rk",
+            id: `js:2:elrond:${TEST_ADDRESS}:`,
+            seedIdentifier: `${TEST_ADDRESS}`,
             name: "Elrond 1",
             derivationMode: "",
             index: 0,
-            freshAddress:
-              "erd1rnq7m8kdrpyfany4fweqtydsk4pgx0l6dtl6tvcad5wesagruxts62e9rk",
+            freshAddress: `${TEST_ADDRESS}`,
             freshAddressPath: "44'/508'/0'/0/0'",
             freshAddresses: [],
             blockHeight: 0,
@@ -52,8 +53,7 @@ const dataset: DatasetTest<Transaction> = {
               name: "recipient and sender must not be the same",
               transaction: fromTransactionRaw({
                 family: "elrond",
-                recipient:
-                  "erd1rnq7m8kdrpyfany4fweqtydsk4pgx0l6dtl6tvcad5wesagruxts62e9rk",
+                recipient: `${TEST_ADDRESS}`,
                 amount: "100000000",
                 mode: "send",
                 fees: null,
@@ -88,7 +88,7 @@ const dataset: DatasetTest<Transaction> = {
                 family: "elrond",
                 recipient:
                   "erd1frj909pfums4m8aza596595l9pl56crwdj077vs2aqcw6ynl28wsfkw9rd",
-                amount: BigNumber("1000000000000000"),
+                amount: BigNumber("1000000000000000000000000"),
                 mode: "send",
                 fees: null,
               }),
