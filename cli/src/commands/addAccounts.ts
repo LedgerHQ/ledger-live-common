@@ -4,7 +4,6 @@ import { map, tap } from "rxjs/operators";
 import { accountFormatters } from "@ledgerhq/live-common/lib/account";
 import { scan, scanCommonOpts } from "../scan";
 import type { ScanCommonOpts } from "../scan";
-import { AccountNotSupported } from "@ledgerhq/errors";
 
 export default {
   description: "Add accounts",

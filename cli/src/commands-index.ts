@@ -14,6 +14,7 @@ import clear from "./commands/clear";
 import countervalues from "./commands/countervalues";
 import derivation from "./commands/derivation";
 import devDeviceAppsScenario from "./commands/devDeviceAppsScenario";
+import deviceActionApp from "./commands/deviceActionApp";
 import deviceAppVersion from "./commands/deviceAppVersion";
 import deviceInfo from "./commands/deviceInfo";
 import deviceVersion from "./commands/deviceVersion";
@@ -73,6 +74,7 @@ export default {
   countervalues,
   derivation,
   devDeviceAppsScenario,
+  deviceActionApp,
   deviceAppVersion,
   deviceInfo,
   deviceVersion,
