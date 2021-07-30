@@ -19,7 +19,7 @@ export const createTransaction = (): Transaction => {
     amount: BigNumber(0),
     recipient: "",
     useAllAmount: false,
-    fees: 50000,
+    fees: BigNumber(50000),
   };
 };
 
