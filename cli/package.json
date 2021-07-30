@@ -48,6 +48,8 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "flow-typed": "^3.2.1",
+    "ink": "^3.0.9",
+    "ink-spinner": "^4.0.2",
     "lodash.product": "^18.9.19",
     "qrcode-terminal": "^0.12.0",
     "qrloop": "^1.2.0",

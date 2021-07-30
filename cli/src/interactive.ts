@@ -3,17 +3,14 @@ import { deserializeError } from "@ledgerhq/errors";
 import { from } from "rxjs";
 import repl from "repl";
 import commandLineArgs from "command-line-args";
-// @ts-ignore
 import { closeAllDevices } from "./live-common-setup";
-// @ts-ignore
 import commandsMain from "./commands-index";
-// @ts-ignore
 import perFamily from "@ledgerhq/live-common/lib/generated/cli-transaction";
 import type { Account } from "@ledgerhq/live-common/lib/types";
 
 export const commands = {
   ...Object.values(perFamily)
-    // @ts-ignore
+    // @ts-expect-error command stuff
     .map((m) => typeof m === "object" && m && m.commands)
     .reduce((acc, c) => ({ ...acc, ...c }), {}),
   ...commandsMain,

@@ -2,20 +2,10 @@
 
 import { deserializeError } from "@ledgerhq/errors";
 import { from } from "rxjs";
-import repl from "repl";
 import commandLineArgs from "command-line-args";
 import { closeAllDevices } from "./live-common-setup";
-import commandsMain from "./commands-index";
 // TODO cli-transaction.js => cli.js
-import perFamily from "@ledgerhq/live-common/lib/generated/cli-transaction";
 import { commands, interactive } from "./interactive";
-
-const commands = {
-  ...Object.values(perFamily)
-    .map((m: any) => typeof m === "object" && m && m.commands)
-    .reduce((acc, c) => ({ ...acc, ...c }), {}),
-  ...commandsMain,
-};
 
 const mainOptions = commandLineArgs(
   [
