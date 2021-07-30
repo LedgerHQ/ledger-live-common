@@ -3,7 +3,7 @@ import { BigNumber } from "bignumber.js";
 // import { FeeTooHigh } from "@ledgerhq/errors";
 import type { CurrenciesData } from "../../../types";
 import type { NetworkInfoRaw, Transaction } from "../types";
-import { fromTransactionRaw } from "../serialization";
+import { fromTransactionRaw } from "../transaction";
 import scanAccounts1 from "./bitcoin.scanAccounts.1";
 
 const networkInfo: NetworkInfoRaw = {
