@@ -9,6 +9,7 @@ import bot from "./commands/bot";
 import botPortfolio from "./commands/botPortfolio";
 import broadcast from "./commands/broadcast";
 import cleanSpeculos from "./commands/cleanSpeculos";
+import clear from "./commands/clear";
 import countervalues from "./commands/countervalues";
 import derivation from "./commands/derivation";
 import devDeviceAppsScenario from "./commands/devDeviceAppsScenario";
@@ -41,6 +42,7 @@ import repl from "./commands/repl";
 import satstack from "./commands/satstack";
 import satstackStatus from "./commands/satstackStatus";
 import scanDescriptors from "./commands/scanDescriptors";
+import selectAccount from "./commands/selectAccount";
 import send from "./commands/send";
 import signMessage from "./commands/signMessage";
 import speculosList from "./commands/speculosList";
@@ -65,6 +67,7 @@ export default {
   botPortfolio,
   broadcast,
   cleanSpeculos,
+  clear,
   countervalues,
   derivation,
   devDeviceAppsScenario,
@@ -97,6 +100,7 @@ export default {
   satstack,
   satstackStatus,
   scanDescriptors,
+  selectAccount,
   send,
   signMessage,
   speculosList,

@@ -51,7 +51,7 @@ export function interactive() {
       argv,
       stopAtFirstUnknown: true,
     });
-    from(cmd.job(options, state, setState)).subscribe({
+    from(cmd.job(options, state, setState) || []).subscribe({
       next: (log) => {
         if (log !== undefined) console.log(log);
       },
