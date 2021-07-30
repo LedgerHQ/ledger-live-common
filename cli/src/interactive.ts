@@ -71,7 +71,7 @@ export function interactive() {
   };
   repl
     .start({
-      prompt: "ledger> ",
+      prompt: "ldgr🧑‍💻 > ",
       input: process.stdin,
       output: process.stdout,
       eval: evaluate,
