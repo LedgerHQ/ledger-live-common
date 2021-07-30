@@ -1,12 +1,12 @@
-// @flow
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Account } from "@ledgerhq/live-common/lib/types";
 import { scanCommonOpts } from "../scan";
 import type { ScanCommonOpts } from "../scan";
 import { Box, render, Text, useInput, Newline } from "ink";
 import Spinner from "ink-spinner";
-import { from } from "rxjs";
-// import { formatCurrencyUnit } from "@ledgerhq/live-common/lib/currencies";
+import { Observable } from "rxjs";
+import { StateUpdater } from "../interactive";
+import { formatCurrencyUnit } from "@ledgerhq/live-common/lib/currencies";
 
 const AccountDisplay = ({
   account,
@@ -15,9 +15,9 @@ const AccountDisplay = ({
   account: Account;
   active: boolean;
 }) => {
-  // const balance = formatCurrencyUnit(account.unit, account.balance, {
-  //   showCode: true,
-  // });
+  const balance = formatCurrencyUnit(account.unit, account.balance, {
+    showCode: true,
+  });
 
   return (
     <>
@@ -28,6 +28,10 @@ const AccountDisplay = ({
           <Text color="blue">{"   "}</Text>
         )}
         <Text color={active ? "blue" : "white"}>{account.name}</Text>
+        <Text>
+          Balance: <Text color="green">{balance}</Text> (
+          {account.operations.length}ops)
+        </Text>
       </Box>
       {/* <Newline /> */}
       {/* <Text>
@@ -55,9 +59,21 @@ const AccountDisplay = ({
   );
 };
 
-const AccountsList = ({ accounts }: { accounts: Account[] }) => {
+const AccountsList = ({
+  accounts,
+  setCtx,
+}: {
+  accounts: Account[];
+  setCtx: (ctx: StateUpdater) => void;
+}) => {
   const [active, setActive] = useState(0);
   const [order, setOrder] = useState(accounts);
+
+  const selectAccount = useCallback(() => {
+    setCtx({
+      selectedAccount: accounts[active],
+    });
+  }, [setCtx, active, accounts]);
 
   useInput((input, key) => {
     if (key.downArrow || input === "j") {
@@ -76,6 +92,10 @@ const AccountsList = ({ accounts }: { accounts: Account[] }) => {
         }
         return ac - 1;
       });
+    }
+
+    if (key.return) {
+      selectAccount();
     }
   });
 
@@ -101,10 +121,25 @@ const AccountsList = ({ accounts }: { accounts: Account[] }) => {
 export default {
   description: "list accounts",
   args: [...scanCommonOpts],
-  job: (opts: ScanCommonOpts & { format: string }, ctx) => {
-    if (!ctx.accounts.length) {
-      return from("No accounts loaded yet. Use addAccounts");
-    }
-    render(<AccountsList accounts={ctx ? ctx.accounts : []} />);
-  },
+  job: (
+    opts: ScanCommonOpts & { format: string },
+    ctx,
+    setCtx: (ctx: StateUpdater) => void
+  ) =>
+    new Observable((o) => {
+      if (!ctx.accounts.length) {
+        o.next("No accounts loaded yet. Use addAccounts");
+        o.complete();
+      }
+
+      const setter = (ctx: StateUpdater) => {
+        setCtx(ctx);
+        o.complete();
+        render(<Box />);
+      };
+
+      render(
+        <AccountsList accounts={ctx ? ctx.accounts : []} setCtx={setter} />
+      );
+    }),
 };

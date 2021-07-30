@@ -18,6 +18,7 @@ export const commands = {
 
 export type LedgerState = {
   accounts: Account[];
+  selectedAccount: Account | null;
 };
 
 export type StateUpdater =
@@ -29,6 +30,7 @@ export function interactive() {
   // add what you need to "accumulate things"
   const state: LedgerState = {
     accounts: [],
+    selectedAccount: null,
   };
 
   const setState = function (ctx: StateUpdater) {
