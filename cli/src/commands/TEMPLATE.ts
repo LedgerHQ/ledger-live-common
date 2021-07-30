@@ -1,4 +1,3 @@
-// @flow
 import { from } from "rxjs"; // https://rxjs.dev/ is a stream library
 import type { LedgerState, StateUpdater } from "../interactive";
 
@@ -17,6 +16,6 @@ export default {
   // - setState: IF in repl mode, it is the function to update that state (same style as setState in react)
   // and returns an Observable<*> where Observable is a concept from rxjs
   // there are many ways to create observable
-  job: (opts: Opts, state: ?LedgerState, setState: ?(StateUpdater) => void) =>
+  job: (opts: Opts, state: LedgerState | undefined, setState: (StateUpdater) => void | undefined) =>
     from(["hello", "world"]),
 };
