@@ -1,19 +1,23 @@
 // @flow
-import React, {  Component } from "react";
-import { Text } from "ink";
-import type { Device, Action } from "@ledgerhq/live-common/lib/hw/actions/types";
+import React, { Component } from "react";
+import { Box, Text } from "ink";
+import Spinner from "ink-spinner";
+import type {
+  Device,
+  Action,
+} from "@ledgerhq/live-common/lib/hw/actions/types";
 import { DeviceModelId } from "@ledgerhq/devices";
 
 type OwnProps<R, H, P> = {
   overridesPreferredDeviceModel?: DeviceModelId;
-  onResult?: ((P) => void);
+  onResult?: (P) => void;
   action: Action<R, H, P>;
   request: R;
 };
 
 type Props<R, H, P> = OwnProps<R, H, P>;
 
-class OnResult extends Component<{ onResult: Function }> {
+class OnResult extends Component<{ onResult: (args: any) => void }> {
   componentDidMount() {
     const { onResult, ...rest } = this.props;
     onResult(rest);
@@ -40,8 +44,8 @@ const DeviceAction = <R, H, P>({
   const currentDevice: Device = {
     deviceId: "",
     modelId: DeviceModelId.nanoS,
-    wired: true
-  }
+    wired: true,
+  };
   const hookState: any = action.useHook(currentDevice, request);
   const {
     appAndVersion,
@@ -94,7 +98,18 @@ const DeviceAction = <R, H, P>({
 
   if (installingApp) {
     const appName = requestOpenApp;
-    return <Text>Please Open App {appName}</Text>;
+    return (
+      <>
+        <Text color="blue">
+          <Spinner type="dots" />
+        </Text>
+        <Box marginX={1} />
+        <Text>
+          <Text>Please Open App {appName}</Text>
+        </Text>
+      </>
+    );
+
     // return renderInstallingApp({ appName, progress });
   }
 
@@ -112,7 +127,16 @@ const DeviceAction = <R, H, P>({
   }
 
   if (listingApps) {
-    return <Text>Listing apps</Text>;
+    return (
+      <>
+        <Text color="blue">
+          <Spinner type="dots" />
+        </Text>
+        <Box marginX={1} />
+        <Text>Listing apps</Text>
+      </>
+    );
+
     // return renderListingApps();
   }
 
@@ -215,7 +239,15 @@ const DeviceAction = <R, H, P>({
   }
 
   if (typeof deviceStreamingProgress === "number") {
-    return <Text>Loading...</Text>;
+    return (
+      <>
+        <Text color="blue">
+          <Spinner type="dots" />
+        </Text>
+        <Box marginX={1} />
+        <Text>Loading...</Text>
+      </>
+    );
     /*
     return renderLoading({
       modelId,
@@ -241,11 +273,7 @@ const DeviceAction = <R, H, P>({
     return null;
   }
 
-  return (
-    <>
-      {onResult ? <OnResult onResult={onResult} {...payload} /> : null}
-    </>
-  );
+  return <>{onResult ? <OnResult onResult={onResult} {...payload} /> : null}</>;
 };
 
 export default DeviceAction;
