@@ -1,14 +1,14 @@
 /* eslint-disable no-console */
-import { deserializeError, InvalidAddressBecauseDestinationIsAlsoSource } from "@ledgerhq/errors";
+import { deserializeError } from "@ledgerhq/errors";
 import { from, Observable, of } from "rxjs";
 import { first } from "rxjs/operators";
-import repl from "repl";
+import repl, { REPLServer } from "repl";
 import commandLineArgs from "command-line-args";
 import { closeAllDevices } from "./live-common-setup";
 import commandsMain from "./commands-index";
 import perFamily from "@ledgerhq/live-common/lib/generated/cli-transaction";
 import type { Account } from "@ledgerhq/live-common/lib/types";
-import {scan, ScanCommonOpts} from "./scan"
+import { scan, ScanCommonOpts } from "./scan";
 
 export const commands = {
   ...Object.values(perFamily)
@@ -27,6 +27,7 @@ export type StateUpdater =
   | Partial<LedgerState>
   | ((o: LedgerState) => Partial<LedgerState>);
 
+let currentRepl: REPLServer | undefined;
 export function interactive() {
   // CONTEXT IS THE REPL STATE
   // add what you need to "accumulate things"
@@ -37,6 +38,10 @@ export function interactive() {
 
   const setState = function (ctx: StateUpdater) {
     Object.assign(state, typeof ctx === "function" ? ctx(state) : ctx);
+
+    if (state.selectedAccount && currentRepl) {
+      currentRepl.setPrompt(state.selectedAccount.name + "> ");
+    }
   };
 
   const evaluate = function (line, _context, _filename, callback) {
@@ -56,7 +61,7 @@ export function interactive() {
       stopAtFirstUnknown: true,
     });
     from(cmd.job(options, state, setState) || []).subscribe({
-      next: (log) => {
+      next: (log: any) => {
         if (log !== undefined) console.log(log);
       },
       error: (error) => {
@@ -69,7 +74,8 @@ export function interactive() {
       },
     });
   };
-  repl
+
+  currentRepl = repl
     .start({
       prompt: "ldgr🧑‍💻 > ",
       input: process.stdin,
@@ -81,8 +87,10 @@ export function interactive() {
     });
 }
 
-
-export const requireAccount = function (opts: ScanCommonOpts, state: LedgerState | undefined): Observable<Account> {
+export const requireAccount = function (
+  opts: ScanCommonOpts,
+  state: LedgerState | undefined
+): Observable<Account> {
   if (!state) {
     return scan(opts).pipe(first());
   }
@@ -90,8 +98,11 @@ export const requireAccount = function (opts: ScanCommonOpts, state: LedgerState
   account = state.accounts[0]; // first hack
   if (!account) throw new Error("please 'selectAccount' first");
   return of(account);
-}
+};
 
-export const requireAccounts = function (opts: ScanCommonOpts, state: LedgerState | undefined): Observable<Account> {
+export const requireAccounts = function (
+  opts: ScanCommonOpts,
+  state: LedgerState | undefined
+): Observable<Account> {
   return !state ? scan(opts) : from(state.accounts);
-}
+};
