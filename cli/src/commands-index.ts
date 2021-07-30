@@ -14,7 +14,6 @@ import clear from "./commands/clear";
 import countervalues from "./commands/countervalues";
 import derivation from "./commands/derivation";
 import devDeviceAppsScenario from "./commands/devDeviceAppsScenario";
-import deviceActionApp from "./commands/deviceActionApp";
 import deviceAppVersion from "./commands/deviceAppVersion";
 import deviceInfo from "./commands/deviceInfo";
 import deviceVersion from "./commands/deviceVersion";
@@ -31,12 +30,14 @@ import genuineCheck from "./commands/genuineCheck";
 import getAccountNetworkInfo from "./commands/getAccountNetworkInfo";
 import getAddress from "./commands/getAddress";
 import getTransactionStatus from "./commands/getTransactionStatus";
+import help from "./commands/help";
 import libcoreReset from "./commands/libcoreReset";
 import libcoreSetPassword from "./commands/libcoreSetPassword";
 import listAccounts from "./commands/listAccounts";
 import liveData from "./commands/liveData";
 import makeCompoundSummary from "./commands/makeCompoundSummary";
 import managerListApps from "./commands/managerListApps";
+import openApp from "./commands/openApp";
 import portfolio from "./commands/portfolio";
 import proxy from "./commands/proxy";
 import receive from "./commands/receive";
@@ -74,7 +75,6 @@ export default {
   countervalues,
   derivation,
   devDeviceAppsScenario,
-  deviceActionApp,
   deviceAppVersion,
   deviceInfo,
   deviceVersion,
@@ -91,12 +91,14 @@ export default {
   getAccountNetworkInfo,
   getAddress,
   getTransactionStatus,
+  help,
   libcoreReset,
   libcoreSetPassword,
   listAccounts,
   liveData,
   makeCompoundSummary,
   managerListApps,
+  openApp,
   portfolio,
   proxy,
   receive,

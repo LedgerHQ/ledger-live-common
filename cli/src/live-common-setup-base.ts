@@ -6,6 +6,9 @@ import { listen } from "@ledgerhq/logs";
 import implementLibcore from "@ledgerhq/live-common/lib/libcore/platforms/nodejs";
 import { setSupportedCurrencies } from "@ledgerhq/live-common/lib/currencies";
 import { setPlatformVersion } from "@ledgerhq/live-common/lib/platform/version";
+import { setDeviceMode } from "@ledgerhq/live-common/lib/hw/actions/app";
+
+setDeviceMode("polling");
 
 setPlatformVersion("0.0.1");
 
