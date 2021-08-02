@@ -1,5 +1,3 @@
-// @flow
-
 import { getEnv } from "../../env";
 
 type RemotePlatformAppProvider = {
