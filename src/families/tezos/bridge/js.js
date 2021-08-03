@@ -1,39 +1,16 @@
 // @flow
-import invariant from "invariant";
-import type { Observable } from "rxjs";
 import { BigNumber } from "bignumber.js";
-import {
-  AmountRequired,
-  NotEnoughBalance,
-  NotEnoughBalanceToDelegate,
-  NotEnoughBalanceInParentAccount,
-  FeeNotLoaded,
-  FeeTooHigh,
-  NotSupportedLegacyAddress,
-  InvalidAddressBecauseDestinationIsAlsoSource,
-  RecommendSubAccountsToEmpty,
-  RecommendUndelegation,
-} from "@ledgerhq/errors";
-import type {
-  CurrencyBridge,
-  AccountBridge,
-  SignOperationEvent,
-  Account,
-} from "../../../types";
+import { TezosToolkit } from "@taquito/taquito";
+import type { CurrencyBridge, AccountBridge } from "../../../types";
 import {
   makeSync,
   makeScanAccounts,
   makeAccountBridgeReceive,
 } from "../../../bridge/jsHelpers";
-import { getMainAccount, isAccountBalanceSignificant } from "../../../account";
-import { patchOperationWithHash } from "../../../operation";
-import { getCryptoCurrencyById } from "../../../currencies";
-import type { Transaction, NetworkInfo } from "../types";
+import { getMainAccount } from "../../../account";
+import type { Transaction } from "../types";
 import { getAccountShape } from "../synchronisation";
-import { inferDynamicRange } from "../../../range";
-import { validateRecipient } from "../../../bridge/shared";
-import { makeLRUCache } from "../../../cache";
-import { fetchAllBakers, hydrateBakers, isAccountDelegating } from "../bakers";
+import { fetchAllBakers, hydrateBakers } from "../bakers";
 import { getEnv } from "../../../env";
 import { signOperation } from "../signOperation";
 
@@ -54,23 +31,38 @@ const createTransaction = () => ({
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
 const getTransactionStatus = async (a, t) => {
-  // FIXME
-  const estimatedFees = BigNumber(0);
+  const estimatedFees = t.fees;
   const errors = {};
   const warnings = {};
   const result = {
     errors,
     warnings,
     estimatedFees,
-    amount: BigNumber(0),
-    totalSpent: BigNumber(0),
+    amount: t.amount,
+    totalSpent: t.amount.plus(t.fees),
   };
   return Promise.resolve(result);
 };
 
-const prepareTransaction = async (a, t) => {
-  // FIXME
-  return Promise.resolve(t);
+const prepareTransaction = async (account, transaction) => {
+  const tezos = new TezosToolkit(getEnv("API_TEZOS_NODE"));
+
+  tezos.setProvider({
+    signer: {
+      publicKeyHash: async () => account.freshAddress,
+    },
+  });
+
+  const out = await tezos.estimate.transfer({
+    to: transaction.recipient,
+    amount: transaction.amount.div(10 ** 6),
+  });
+
+  transaction.fees = new BigNumber(out.totalCost).plus(100); // why need to add 100 ?
+  transaction.gasLimit = new BigNumber(out.gasLimit);
+  transaction.storageLimit = new BigNumber(out.storageLimit);
+
+  return transaction;
 };
 
 const estimateMaxSpendable = async ({
@@ -93,8 +85,14 @@ const estimateMaxSpendable = async ({
 
 const broadcast = async ({
   account,
-  signedOperation: { operation, signature },
+  signedOperation: {
+    operation: {
+      extra: { opbytes },
+    },
+    signature,
+  },
 }) => {
+  //github.com/ecadlabs/taquito/blob/eb8a12a82108fff6825e87755272475dab16f3e8/packages/taquito-rpc/src/taquito-rpc.ts#L639
   throw new Error("not implemented");
 };
 

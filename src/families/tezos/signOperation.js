@@ -1,10 +1,8 @@
 // @flow
 
-import { Observable, from, of } from "rxjs";
+import { Observable } from "rxjs";
 import { LedgerSigner, DerivationType } from "@taquito/ledger-signer";
 import { TezosToolkit } from "@taquito/taquito";
-import { BigNumber } from "bignumber.js";
-import { log } from "@ledgerhq/logs";
 import type { Transaction } from "./types";
 import type { Operation, Account, SignOperationEvent } from "../../types";
 import { withDevice } from "../../hw/deviceAccess";
@@ -25,7 +23,6 @@ export const signOperation = ({
 
       async function main() {
         const { freshAddressPath, freshAddress } = account;
-        const { amount, recipient } = transaction;
 
         const tezos = new TezosToolkit(getEnv("API_TEZOS_NODE"));
 
@@ -37,57 +34,56 @@ export const signOperation = ({
         );
         tezos.setProvider({ signer: ledgerSigner });
 
-        /*
-        const out = await tezos.estimate.transfer({
-          to: transaction.recipient,
-          amount: transaction.amount.div(10 ** 6),
-        });
+        let res, signature, opbytes;
+        switch (transaction.mode) {
+          case "send":
+            tezos.contract.context.injector.inject = async () => ""; // disable broadcast
+            res = await tezos.contract.transfer({
+              to: transaction.recipient,
+              amount: transaction.amount.div(10 ** 6),
+              fee: transaction.fees,
+              storageLimit: transaction.storageLimit,
+              gasLimit: transaction.gasLimit,
+            });
+            signature = res.raw.opOb.signature;
+            opbytes = res.raw.opbytes;
+            break;
+          default:
+            throw "not implemented yet";
+        }
 
-        console.log(out);
-        */
-
-        console.log("about to sign bro");
-
-        await tezos.contract.transfer({
-          to: transaction.recipient,
-          amount: transaction.amount.div(10 ** 6), // TODO utility
-        });
+        if (cancelled) {
+          return;
+        }
 
         o.next({ type: "device-signature-requested" });
 
         o.next({ type: "device-signature-granted" });
 
-        // Second, we re-set some tx fields from the device signature
-
-        // Generate the signature ready to be broadcasted
-        const signature = ``; // FIXME
-
-        const to = recipient; // FIXME
-        const value = amount; // FIXME
-
         // build optimistic operation
         const txHash = ""; // resolved at broadcast time
         const senders = [freshAddress];
-        const recipients = [to];
-        const fee = BigNumber(0); // FIXME
-        const transactionSequenceNumber = 0; // FIXME
+        const recipients = [transaction.recipient];
         const accountId = account.id;
 
         // currently, all mode are always at least one OUT tx on ETH parent
         const operation: $Exact<Operation> = {
           id: `${accountId}-${txHash}-OUT`,
           hash: txHash,
-          transactionSequenceNumber,
           type: "OUT",
-          value: BigNumber(value),
-          fee,
+          value: transaction.amount,
+          fee: transaction.fees,
+          extra: {
+            storageLimit: transaction.storageLimit,
+            gasLimit: transaction.gasLimit,
+            opbytes,
+          },
           blockHash: null,
           blockHeight: null,
           senders,
           recipients,
           accountId,
           date: new Date(),
-          extra: {},
         };
 
         o.next({
