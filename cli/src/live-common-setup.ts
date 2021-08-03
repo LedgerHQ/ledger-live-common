@@ -188,9 +188,10 @@ async function init() {
         : undefined,
   });
 
-  const { default: TransportNodeHid } = await import(
-    "@ledgerhq/hw-transport-node-hid"
-  );
+  const {
+    default: TransportNodeHid,
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+  } = require("@ledgerhq/hw-transport-node-hid");
 
   registerTransportModule({
     id: "hid",
