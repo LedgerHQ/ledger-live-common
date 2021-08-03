@@ -20,6 +20,7 @@ import estimateMaxSpendable from "./commands/estimateMaxSpendable";
 import exportAccounts from "./commands/exportAccounts";
 import firmwareRepair from "./commands/firmwareRepair";
 import firmwareUpdate from "./commands/firmwareUpdate";
+import generateAppJsonFromDataset from "./commands/generateAppJsonFromDataset";
 import generateTestScanAccounts from "./commands/generateTestScanAccounts";
 import generateTestTransaction from "./commands/generateTestTransaction";
 import genuineCheck from "./commands/genuineCheck";
@@ -40,10 +41,12 @@ import satstackStatus from "./commands/satstackStatus";
 import scanDescriptors from "./commands/scanDescriptors";
 import send from "./commands/send";
 import signMessage from "./commands/signMessage";
+import speculosList from "./commands/speculosList";
 import swap from "./commands/swap";
 import sync from "./commands/sync";
 import testDetectOpCollision from "./commands/testDetectOpCollision";
 import testGetTrustedInputFromTxHash from "./commands/testGetTrustedInputFromTxHash";
+import user from "./commands/user";
 import validRecipient from "./commands/validRecipient";
 import version from "./commands/version";
 import walletconnect from "./commands/walletconnect";
@@ -71,6 +74,7 @@ export default {
   exportAccounts,
   firmwareRepair,
   firmwareUpdate,
+  generateAppJsonFromDataset,
   generateTestScanAccounts,
   generateTestTransaction,
   genuineCheck,
@@ -91,10 +95,12 @@ export default {
   scanDescriptors,
   send,
   signMessage,
+  speculosList,
   swap,
   sync,
   testDetectOpCollision,
   testGetTrustedInputFromTxHash,
+  user,
   validRecipient,
   version,
   walletconnect,

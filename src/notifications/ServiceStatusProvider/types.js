@@ -1,5 +1,10 @@
 // @flow
 
+type Component = {
+  id: string,
+  name: string,
+};
+
 export type Incident = {
   created_at: string,
   id: string,
@@ -12,6 +17,7 @@ export type Incident = {
   shortlink: ?string,
   status: string,
   updated_at: ?string,
+  components?: Component[],
 };
 
 export type IncidentUpdate = {
@@ -41,5 +47,5 @@ export type ServiceStatusApi = {
 };
 
 export type ServiceStatusUserSettings = {
-  currencies: string[],
+  tickers: string[],
 };

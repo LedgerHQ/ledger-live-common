@@ -1,8 +1,13 @@
 // @flow
 
 import React, { createContext, useContext, useMemo, useCallback } from "react";
-import type { State, ServiceStatusUserSettings, Incident } from "./types";
-import networkApi from "./api";
+import type {
+  State,
+  ServiceStatusUserSettings,
+  Incident,
+  ServiceStatusApi,
+} from "./types";
+import defaultNetworkApi from "./api";
 import { useMachine } from "@xstate/react";
 import { serviceStatusMachine } from "./machine";
 
@@ -10,6 +15,7 @@ type Props = {
   children: React$Node,
   autoUpdateDelay: number,
   context: ServiceStatusUserSettings,
+  networkApi?: ServiceStatusApi,
 };
 
 type API = {
@@ -26,12 +32,17 @@ export function useServiceStatus(): StatusContextType {
 
 export function filterServiceStatusIncidents(
   incidents: Incident[],
-  currencies: string[] = []
+  tickers: string[] = []
 ): Incident[] {
-  if (!currencies || currencies.length === 0) return [];
+  if (!tickers || tickers.length === 0) return [];
 
-  const currenciesRegex = new RegExp(currencies.join("|"), "i");
-  return incidents.filter((inc) => currenciesRegex.test(inc.name));
+  const tickersRegex = new RegExp(tickers.join("|"), "i");
+  return incidents.filter(
+    ({ components }) =>
+      !components || // dont filter out if no components
+      components.length === 0 ||
+      components.some(({ name }) => tickersRegex.test(name)) // component name should hold currency name
+  );
 }
 
 // filter out service status incidents by given currencies or fallback on context currencies
@@ -44,9 +55,9 @@ export function useFilteredServiceStatus(
   const filteredIncidents = useMemo(() => {
     return filterServiceStatusIncidents(
       incidents,
-      filters.currencies || context.currencies
+      filters.tickers || context.tickers
     );
-  }, [incidents, context, filters.currencies]);
+  }, [incidents, context, filters.tickers]);
 
   return { ...stateData, incidents: filteredIncidents };
 }
@@ -55,6 +66,7 @@ export const ServiceStatusProvider = ({
   children,
   autoUpdateDelay,
   context,
+  networkApi = defaultNetworkApi,
 }: Props) => {
   const fetchData = useCallback(async () => {
     const serviceStatusSummary = await networkApi.fetchStatusSummary();
@@ -63,7 +75,7 @@ export const ServiceStatusProvider = ({
       incidents: serviceStatusSummary.incidents,
       updateTime: Date.now(),
     };
-  }, []);
+  }, [networkApi]);
 
   const [state, send] = useMachine(serviceStatusMachine, {
     services: {

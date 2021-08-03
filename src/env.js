@@ -145,6 +145,26 @@ const envDefinitions = {
     desc:
       "gasLimit * gasPrice to determine the fees price. A too low GAS_PRICE will get rejected before the transaction is broadcast",
   },
+  CRYPTO_ORG_INDEXER: {
+    def: "https://crypto.org/explorer",
+    parser: stringParser,
+    desc: "location of the crypto.org indexer API",
+  },
+  CRYPTO_ORG_TESTNET_INDEXER: {
+    def: "https://crypto.org/explorer/croeseid3",
+    parser: stringParser,
+    desc: "location of the crypto.org indexer testnet API",
+  },
+  CRYPTO_ORG_RPC_URL: {
+    def: "",
+    parser: stringParser,
+    desc: "location of the crypto.org indexer API",
+  },
+  CRYPTO_ORG_TESTNET_RPC_URL: {
+    def: "https://testnet-croeseid-3.crypto.org:26657",
+    parser: stringParser,
+    desc: "location of the crypto.org chain testnet node",
+  },
   DEBUG_UTXO_DISPLAY: {
     def: 4,
     parser: intParser,
@@ -165,6 +185,11 @@ const envDefinitions = {
     def: "",
     parser: stringParser,
     desc: "enable a proxy to use instead of a physical device",
+  },
+  DEVICE_PROXY_MODEL: {
+    def: "nanoS",
+    parser: stringParser,
+    desc: "allow to override the default model of a proxied device",
   },
   DISABLE_TRANSACTION_BROADCAST: {
     def: false,
@@ -229,11 +254,6 @@ const envDefinitions = {
     desc:
       "enable an experimental version of the portfolio percentage calculation",
   },
-  EXPERIMENTAL_INLINE_INSTALL: {
-    def: false,
-    parser: boolParser,
-    desc: "enable an experimental inline app installation flow",
-  },
   EXPERIMENTAL_SEND_MAX: {
     def: false,
     parser: boolParser,
@@ -243,6 +263,11 @@ const envDefinitions = {
     def: false,
     parser: boolParser,
     desc: "enable an experimental implementation of USB support",
+  },
+  EXPERIMENTAL_SWAP: {
+    def: false,
+    parser: boolParser,
+    desc: "enable an experimental swap interface",
   },
   EXPLORER: {
     def: "https://explorers.api.live.ledger.com",
@@ -391,7 +416,7 @@ const envDefinitions = {
     desc: "dev flag to skip onboarding flow",
   },
   SWAP_API_BASE: {
-    def: "https://swap.ledger.com/v2",
+    def: "https://swap.ledger.com/v3",
     parser: stringParser,
     desc: "Swap API base",
   },
@@ -456,6 +481,31 @@ const envDefinitions = {
     def: 2,
     parser: intParser,
     desc: "version used for ledger status api",
+  },
+  PLATFORM_DEBUG: {
+    def: false,
+    parser: boolParser,
+    desc: "enable visibility of debug apps and tools in Platform Catalog",
+  },
+  PLATFORM_MANIFEST_API_URL: {
+    def: "https://cdn.live.ledger.com/platform/apps/v1/data.json",
+    parser: stringParser,
+    desc: "url used to fetch platform app manifests",
+  },
+  PLATFORM_MANIFEST_STAGING_API_URL: {
+    def: "https://cdn.live.ledger-stg.com/platform/apps/v1/data.json",
+    parser: stringParser,
+    desc: "url used to fetch platform app manifests (staging)",
+  },
+  PLATFORM_API_URL: {
+    def: "",
+    parser: stringParser,
+    desc: "url used to fetch platform catalog",
+  },
+  PLATFORM_API_VERSION: {
+    def: 1,
+    parser: intParser,
+    desc: "version used for the platform api",
   },
 };
 
