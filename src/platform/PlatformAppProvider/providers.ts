@@ -1,9 +1,9 @@
 import { getEnv } from "../../env";
 
 type RemotePlatformAppProvider = {
-  value: string,
-  url: string,
-  label: string,
+  value: string;
+  url: string;
+  label: string;
 };
 
 export const providers: RemotePlatformAppProvider[] = [
