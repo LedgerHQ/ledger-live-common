@@ -36,7 +36,7 @@ const args = [
     desc: "do not output the proxy logs",
   },
   {
-    name: "auto-skip",
+    name: "disable-auto-skip",
     type: Boolean,
     desc: "auto skip apdu that don't replay instead of error",
   },
@@ -61,7 +61,7 @@ const job = ({
   port,
   silent,
   verbose,
-  "auto-skip": autoSkipUnknownApdu,
+  "disable-auto-skip": noAutoSkip,
 }) =>
   new Observable((o) => {
     const unsub = listen((l) => {
@@ -97,7 +97,7 @@ const job = ({
         Transport = createTransportRecorder(getTransportLike(), recordStore);
       } else {
         recordStore = RecordStore.fromString(fs.readFileSync(file, "utf8"), {
-          autoSkipUnknownApdu,
+          autoSkipUnknownApdu: !noAutoSkip,
         });
 
         if (recordStore.isEmpty()) {
