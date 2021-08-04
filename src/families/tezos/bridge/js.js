@@ -13,6 +13,7 @@ import { getAccountShape } from "../synchronisation";
 import { fetchAllBakers, hydrateBakers } from "../bakers";
 import { getEnv } from "../../../env";
 import { signOperation } from "../signOperation";
+import { patchOperationWithHash } from "../../../operation";
 
 const receive = makeAccountBridgeReceive();
 
@@ -50,6 +51,7 @@ const prepareTransaction = async (account, transaction) => {
   tezos.setProvider({
     signer: {
       publicKeyHash: async () => account.freshAddress,
+      publicKey: async () => account.tezosResources.publicKey,
     },
   });
 
@@ -83,17 +85,12 @@ const estimateMaxSpendable = async ({
   return s.amount;
 };
 
-const broadcast = async ({
-  account,
-  signedOperation: {
-    operation: {
-      extra: { opbytes },
-    },
-    signature,
-  },
-}) => {
-  //github.com/ecadlabs/taquito/blob/eb8a12a82108fff6825e87755272475dab16f3e8/packages/taquito-rpc/src/taquito-rpc.ts#L639
-  throw new Error("not implemented");
+const broadcast = async ({ signedOperation: { operation } }) => {
+  const tezos = new TezosToolkit(getEnv("API_TEZOS_NODE"));
+  const hash = await tezos.contract.context.injector.inject(
+    operation.extra.opbytes
+  );
+  return patchOperationWithHash(operation, hash);
 };
 
 const scanAccounts = makeScanAccounts(getAccountShape);

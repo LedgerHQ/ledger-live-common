@@ -6,18 +6,17 @@ import { mergeOps } from "../../bridge/jsHelpers";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { encodeOperationId } from "../../operation";
 import {
-  encodeTokenAccountId,
-  decodeTokenAccountId,
   areAllOperationsLoaded,
-  inferSubOperations,
-  emptyHistoryCache,
 } from "../../account";
 import type { Operation, Account } from "../../types";
 import api from "./api/tzkt";
 import type { APIOperation } from "./api/tzkt";
+import { DerivationType } from "@taquito/ledger-signer";
+import { compressPublicKey } from "@taquito/ledger-signer/dist/lib/utils";
+import { b58cencode, prefix, Prefix } from "@taquito/utils";
 
 export const getAccountShape: GetAccountShape = async (infoInput) => {
-  let { address, initialAccount } = infoInput;
+  let { address, initialAccount, rest } = infoInput;
 
   const initialStableOperations = initialAccount
     ? initialAccount.operations
@@ -57,11 +56,17 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
 
   const apiOperations = await fetchAllTransactions(address, lastId);
 
-  const { revealed, publicKey, counter } = apiAccount;
+  const { revealed, counter } = apiAccount;
 
   const tezosResources = {
     revealed,
-    publicKey,
+    publicKey: b58cencode(
+      compressPublicKey(
+        Buffer.from(rest.publicKey, "hex"),
+        DerivationType.ED25519
+      ),
+      prefix[Prefix.EDPK]
+    ),
     counter,
   };
 

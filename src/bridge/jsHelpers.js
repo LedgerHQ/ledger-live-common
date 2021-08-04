@@ -183,7 +183,7 @@ export const makeScanAccounts = (
 
     async function stepAccount(
       index,
-      { address, path: freshAddressPath },
+      { address, path: freshAddressPath, ...rest },
       derivationMode,
       seedIdentifier
     ): Promise<?Account> {
@@ -195,6 +195,7 @@ export const makeScanAccounts = (
           currency,
           id: accountId,
           address,
+          rest,
         },
         syncConfig
       );
