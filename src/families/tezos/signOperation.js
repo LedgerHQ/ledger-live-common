@@ -34,10 +34,11 @@ export const signOperation = ({
         );
         tezos.setProvider({ signer: ledgerSigner });
 
+        tezos.contract.context.injector.inject = async () => ""; // disable broadcast
+
         let res, signature, opbytes;
         switch (transaction.mode) {
           case "send":
-            tezos.contract.context.injector.inject = async () => ""; // disable broadcast
             res = await tezos.contract.transfer({
               to: transaction.recipient,
               amount: transaction.amount.div(10 ** 6),
