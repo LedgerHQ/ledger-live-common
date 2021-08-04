@@ -108,7 +108,10 @@ const job = ({
           "proxy",
           `${recordStore.queue.length} mocked APDUs will be replayed from ${file}`
         );
-        Transport = openTransportReplayer(recordStore);
+        Transport = {
+          open: () => openTransportReplayer(recordStore),
+          create: () => openTransportReplayer(recordStore),
+        };
       }
     } else {
       Transport = getTransportLike();

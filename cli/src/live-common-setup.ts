@@ -79,7 +79,8 @@ if (process.env.DEVICE_PROXY_URL) {
   registerTransportModule({
     id: "http",
     open: () =>
-      retry(() => (Tr.constructor as typeof Transport).create(3000, 5000), {
+      // @ts-ignore
+      retry(() => Tr.create(3000, 5000), {
         context: "open-http-proxy",
       }),
     disconnect: () => Promise.resolve(),
