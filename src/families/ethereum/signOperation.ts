@@ -102,9 +102,9 @@ export const signOperation = ({
                 v = cv.toString(16);
               }
 
-              tx.v = Buffer.from("0x" + v);
-              tx.r = Buffer.from("0x" + result.r);
-              tx.s = Buffer.from("0x" + result.s);
+              tx.v = Buffer.from(v, "hex");
+              tx.r = Buffer.from(result.r, "hex");
+              tx.s = Buffer.from(result.s, "hex");
               // Generate the signature ready to be broadcasted
               const signature = `0x${tx.serialize().toString("hex")}`;
               // build optimistic operation
