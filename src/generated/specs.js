@@ -2,6 +2,7 @@
 import algorand from "../families/algorand/specs.js";
 import bitcoin from "../families/bitcoin/specs.js";
 import cosmos from "../families/cosmos/specs.js";
+import crypto_org from "../families/crypto_org/specs.js";
 import ethereum from "../families/ethereum/specs.js";
 import polkadot from "../families/polkadot/specs.js";
 import ripple from "../families/ripple/specs.js";
@@ -12,6 +13,7 @@ export default {
   algorand,
   bitcoin,
   cosmos,
+  crypto_org,
   ethereum,
   polkadot,
   ripple,
