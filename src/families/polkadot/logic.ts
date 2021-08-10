@@ -1,5 +1,4 @@
 import { BigNumber } from "bignumber.js";
-import { decodeAddress } from "@polkadot/util-crypto";
 import type { Account, OperationType } from "../../types";
 import type { Transaction } from "./types";
 import { getCurrentPolkadotPreloadData } from "./preload";
