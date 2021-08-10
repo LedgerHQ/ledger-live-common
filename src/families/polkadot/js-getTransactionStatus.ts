@@ -28,7 +28,6 @@ import { verifyValidatorAddresses } from "./api";
 import {
   EXISTENTIAL_DEPOSIT,
   FEES_SAFETY_BUFFER,
-  isValidAddress,
   isFirstBond,
   isController,
   isStash,
@@ -38,6 +37,7 @@ import {
   getMinimumAmountToBond,
   getMinimumBalance,
 } from "./logic";
+import { isValidAddress } from "./address";
 import { getCurrentPolkadotPreloadData } from "./preload";
 import { isControllerAddress, isNewAccount, isElectionClosed } from "./cache";
 

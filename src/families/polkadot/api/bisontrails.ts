@@ -5,7 +5,7 @@ import { encodeOperationId } from "../../../operation";
 import { getEnv } from "../../../env";
 import { getOperationType } from "./common";
 import type { OperationType, Operation } from "../../../types";
-import { isValidAddress } from "../logic";
+import { isValidAddress } from "../address";
 
 const LIMIT = 200;
 

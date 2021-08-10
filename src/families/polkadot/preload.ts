@@ -6,6 +6,7 @@ import { PRELOAD_MAX_AGE } from "./logic";
 import { getRegistry, getMinimumBondBalance } from "./cache";
 import type { PolkadotPreloadData, PolkadotValidator } from "./types";
 import { getStakingProgress, getValidators } from "./validators";
+
 let currentPolkadotPreloadedData: PolkadotPreloadData = {
   validators: [],
   staking: undefined,

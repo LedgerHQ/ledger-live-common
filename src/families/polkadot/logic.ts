@@ -9,27 +9,7 @@ export const MAX_NOMINATIONS = 16;
 export const MAX_UNLOCKINGS = 32;
 export const PRELOAD_MAX_AGE = 60 * 1000;
 export const MAX_AMOUNT_INPUT = 0xffffffffffffffff;
-export const POLKADOT_SS58_PREFIX = 0;
 export const FEES_SAFETY_BUFFER = new BigNumber(1000000000); // Arbitrary buffer for paying fees of next transactions
-
-/**
- * Returns true if address is valid, false if it's invalid (can't parse or wrong checksum)
- *
- * @param {*} address
- */
-export const isValidAddress = (
-  address: string,
-  ss58Format: number = POLKADOT_SS58_PREFIX
-): boolean => {
-  if (!address) return false;
-
-  try {
-    decodeAddress(address, false, ss58Format);
-    return true;
-  } catch (err) {
-    return false;
-  }
-};
 
 /**
  * Returns true if account is a stash.
