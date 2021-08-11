@@ -5,7 +5,7 @@ import { getValidators } from "./api";
 const PRELOAD_MAX_AGE = 30 * 60 * 1000; // 30 minutes
 
 let currentPreloadedData: ElrondPreloadData = {
-  validators: {}
+  validators: {},
 };
 
 function fromHydratePreloadData(data: any): ElrondPreloadData {
@@ -19,8 +19,8 @@ function fromHydratePreloadData(data: any): ElrondPreloadData {
 
   return {
     validators: {
-      foo
-    }
+      foo,
+    },
   };
 }
 
@@ -38,14 +38,14 @@ export function getElrondPreloadDataUpdates(): Observable<ElrondPreloadData> {
 }
 export const getPreloadStrategy = () => {
   return {
-    preloadMaxAge: PRELOAD_MAX_AGE
+    preloadMaxAge: PRELOAD_MAX_AGE,
   };
 };
 export const preload = async (): Promise<ElrondPreloadData> => {
   log("elrond/preload", "preloading elrond data...");
   const validators = (await getValidators()) || [];
   return {
-    validators
+    validators,
   };
 };
 export const hydrate = (data: unknown) => {

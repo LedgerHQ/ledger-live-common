@@ -10,7 +10,13 @@ import { getNetworkConfig } from "./api";
  *
  * @returns {Promise<Object>} txInfo
  */
-export const getTransactionParams: CacheRes<Array<void>, Record<string, any>> = makeLRUCache(async (): Promise<Record<string, any>> => getNetworkConfig(), () => "elrond", {
-  maxAge: 5 * 60 * 1000 // 5 minutes
-
-});
+export const getTransactionParams: CacheRes<
+  Array<void>,
+  Record<string, any>
+> = makeLRUCache(
+  async (): Promise<Record<string, any>> => getNetworkConfig(),
+  () => "elrond",
+  {
+    maxAge: 5 * 60 * 1000, // 5 minutes
+  }
+);

@@ -6,7 +6,7 @@ const CLA = 0xed;
 const INS = {
   GET_VERSION: 0x02,
   GET_ADDRESS: 0x03,
-  SET_ADDRESS: 0x05
+  SET_ADDRESS: 0x05,
 };
 const SIGN_RAW_TX_INS = 0x04;
 const SIGN_HASH_TX_INS = 0x07;
@@ -15,11 +15,21 @@ const ACTIVE_SIGNERS = [SIGN_RAW_TX_INS, SIGN_HASH_TX_INS, SIGN_MESSAGE_INS];
 const SW_OK = 0x9000;
 const SW_CANCEL = 0x6986;
 export default class Elrond {
-  transport: Transport<any>;
+  transport: Transport;
 
-  constructor(transport: Transport<any>, scrambleKey: string = "eGLD") {
+  constructor(transport: Transport, scrambleKey = "eGLD") {
     this.transport = transport;
-    transport.decorateAppAPIMethods(this, ["getAddress", "setAddress", "signTransaction", "signMessage", "getAppConfiguration"], scrambleKey);
+    transport.decorateAppAPIMethods(
+      this,
+      [
+        "getAddress",
+        "setAddress",
+        "signTransaction",
+        "signMessage",
+        "getAppConfiguration",
+      ],
+      scrambleKey
+    );
   }
 
   /**
@@ -31,12 +41,17 @@ export default class Elrond {
    * const { contractData, accountIndex, addressIndex, version } = result;
    */
   async getAppConfiguration(): Promise<any> {
-    const response = await this.transport.send(CLA, INS.GET_VERSION, 0x00, 0x00);
+    const response = await this.transport.send(
+      CLA,
+      INS.GET_VERSION,
+      0x00,
+      0x00
+    );
     return {
       contractData: response[0],
       accountIndex: response[1],
       addressIndex: response[2],
-      version: `${response[3]}.${response[4]}.${response[5]}`
+      version: `${response[3]}.${response[4]}.${response[5]}`,
     };
   }
 
@@ -57,16 +72,26 @@ export default class Elrond {
    * const result = await elrond.getAddress("44'/508'/0'/0'/0'");
    * const { address, returnCode } = result;
    */
-  async getAddress(path: string, display?: boolean): Promise<{
+  async getAddress(
+    path: string,
+    display?: boolean
+  ): Promise<{
     address: string;
   }> {
     const bipPath = BIPPath.fromString(path).toPathArray();
     const data = this.serializePath(bipPath);
-    const response = await this.transport.send(CLA, INS.GET_ADDRESS, display ? 0x01 : 0x00, 0x00, data, [SW_OK, SW_CANCEL]);
+    const response = await this.transport.send(
+      CLA,
+      INS.GET_ADDRESS,
+      display ? 0x01 : 0x00,
+      0x00,
+      data,
+      [SW_OK, SW_CANCEL]
+    );
     const addressLength = response[0];
     const address = response.slice(1, 1 + addressLength).toString("ascii");
     return {
-      address
+      address,
     };
   }
 
@@ -83,10 +108,21 @@ export default class Elrond {
   async setAddress(path: string, display?: boolean) {
     const bipPath = BIPPath.fromString(path).toPathArray();
     const data = this.serializePath(bipPath);
-    await this.transport.send(CLA, INS.SET_ADDRESS, display ? 0x01 : 0x00, 0x00, data, [SW_OK, SW_CANCEL]);
+    await this.transport.send(
+      CLA,
+      INS.SET_ADDRESS,
+      display ? 0x01 : 0x00,
+      0x00,
+      data,
+      [SW_OK, SW_CANCEL]
+    );
   }
 
-  async signTransaction(path: string, message: string, usingHash: boolean): Promise<string> {
+  async signTransaction(
+    path: string,
+    message: string,
+    usingHash: boolean
+  ): Promise<string> {
     const chunks: Buffer[] = [];
     const buffer: Buffer = Buffer.from(message);
 
@@ -100,7 +136,9 @@ export default class Elrond {
       chunks.push(buffer.slice(i, end));
     }
 
-    return usingHash ? this.sign(chunks, SIGN_HASH_TX_INS) : this.sign(chunks, SIGN_RAW_TX_INS);
+    return usingHash
+      ? this.sign(chunks, SIGN_HASH_TX_INS)
+      : this.sign(chunks, SIGN_RAW_TX_INS);
   }
 
   async signMessage(message: Buffer[]): Promise<string> {
@@ -119,14 +157,20 @@ export default class Elrond {
         ins: type,
         p1: index === 0 ? 0x00 : CURVE_MASK,
         p2: CURVE_MASK,
-        data
+        data,
       };
       apdus.push(apdu);
     });
     let response: any = {};
 
-    for (let apdu of apdus) {
-      response = await this.transport.send(apdu.cla, apdu.ins, apdu.p1, apdu.p2, apdu.data);
+    for (const apdu of apdus) {
+      response = await this.transport.send(
+        apdu.cla,
+        apdu.ins,
+        apdu.p1,
+        apdu.p2,
+        apdu.data
+      );
     }
 
     if (response.length !== 67 || response[0] !== 64) {
@@ -136,5 +180,4 @@ export default class Elrond {
     const signature = response.slice(1, response.length - 2).toString("hex");
     return signature;
   }
-
 }

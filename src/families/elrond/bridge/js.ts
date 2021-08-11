@@ -3,7 +3,11 @@ import type { Transaction } from "../types";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 import { getPreloadStrategy, preload, hydrate } from "../preload";
 import { sync, scanAccounts } from "../js-synchronisation";
-import { createTransaction, updateTransaction, prepareTransaction } from "../js-transaction";
+import {
+  createTransaction,
+  updateTransaction,
+  prepareTransaction,
+} from "../js-transaction";
 import getTransactionStatus from "../js-getTransactionStatus";
 import estimateMaxSpendable from "../js-estimateMaxSpendable";
 import signOperation from "../js-signOperation";
@@ -13,7 +17,7 @@ const currencyBridge: CurrencyBridge = {
   getPreloadStrategy,
   preload,
   hydrate,
-  scanAccounts
+  scanAccounts,
 };
 const accountBridge: AccountBridge<Transaction> = {
   estimateMaxSpendable,
@@ -24,9 +28,9 @@ const accountBridge: AccountBridge<Transaction> = {
   sync,
   receive,
   signOperation,
-  broadcast
+  broadcast,
 };
 export default {
   currencyBridge,
-  accountBridge
+  accountBridge,
 };

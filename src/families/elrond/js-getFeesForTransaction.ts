@@ -13,7 +13,7 @@ import { buildTransaction } from "./js-buildTransaction";
 const getEstimatedFees = async ({
   a,
   t,
-  signUsingHash = true
+  signUsingHash = true,
 }: {
   a: Account;
   t: Transaction;

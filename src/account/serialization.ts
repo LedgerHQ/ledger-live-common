@@ -38,7 +38,7 @@ import {
   toElrondResourcesRaw,
   fromElrondResourcesRaw,
 } from "../families/elrond/serialization";
-import { 
+import {
   toCryptoOrgResourcesRaw,
   fromCryptoOrgResourcesRaw,
 } from "../families/crypto_org/serialization";
@@ -773,7 +773,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
   if (polkadotResources) {
     res.polkadotResources = fromPolkadotResourcesRaw(polkadotResources);
   }
-  
+
   if (elrondResources) {
     res.elrondResources = fromElrondResourcesRaw(elrondResources);
   }

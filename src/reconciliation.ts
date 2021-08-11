@@ -356,8 +356,8 @@ export function patchAccount(
     next.elrondResources = fromElrondResourcesRaw(updatedRaw.elrondResources);
     changed = true;
   }
-  
-  if ( 
+
+  if (
     updatedRaw.cryptoOrgResources &&
     // @ts-expect-error types don't overlap ¯\_(ツ)_/¯
     account.cryptoOrgResources !== updatedRaw.cryptoOrgResources

@@ -49,6 +49,11 @@ export const isSelfTransaction = (a: Account, t: Transaction): boolean => {
  */
 export const getNonce = (a: Account): number => {
   const lastPendingOp = a.pendingOperations[0];
-  const nonce = Math.max(a.elrondResources?.nonce || 0, lastPendingOp && typeof lastPendingOp.transactionSequenceNumber === "number" ? lastPendingOp.transactionSequenceNumber + 1 : 0);
+  const nonce = Math.max(
+    a.elrondResources?.nonce || 0,
+    lastPendingOp && typeof lastPendingOp.transactionSequenceNumber === "number"
+      ? lastPendingOp.transactionSequenceNumber + 1
+      : 0
+  );
   return nonce;
 };

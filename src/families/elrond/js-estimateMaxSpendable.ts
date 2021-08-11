@@ -13,16 +13,17 @@ import getEstimatedFees from "./js-getFeesForTransaction";
 const estimateMaxSpendable = async ({
   account,
   parentAccount,
-  transaction
+  transaction,
 }: {
   account: AccountLike;
   parentAccount: Account | null | undefined;
   transaction: Transaction | null | undefined;
 }): Promise<BigNumber> => {
   const a = getMainAccount(account, parentAccount);
-  const t = { ...createTransaction(),
+  const t = {
+    ...createTransaction(),
     ...transaction,
-    amount: a.spendableBalance
+    amount: a.spendableBalance,
   };
   const fees = await getEstimatedFees({
     a,

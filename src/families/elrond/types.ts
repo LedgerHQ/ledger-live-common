@@ -1,9 +1,12 @@
 import type { BigNumber } from "bignumber.js";
-import type { TransactionCommon, TransactionCommonRaw } from "../../types/transaction";
-export type CoreStatics = {};
-export type CoreAccountSpecifics = {};
-export type CoreOperationSpecifics = {};
-export type CoreCurrencySpecifics = {};
+import type {
+  TransactionCommon,
+  TransactionCommonRaw,
+} from "../../types/transaction";
+export type CoreStatics = Record<string, never>;
+export type CoreAccountSpecifics = Record<string, never>;
+export type CoreOperationSpecifics = Record<string, never>;
+export type CoreCurrencySpecifics = Record<string, never>;
 export type ElrondResources = {
   nonce: number;
 };

@@ -1,5 +1,9 @@
 import network from "../../../network";
-import { HASH_TRANSACTION, RAW_TRANSACTION, METACHAIN_SHARD } from "../constants";
+import {
+  HASH_TRANSACTION,
+  RAW_TRANSACTION,
+  METACHAIN_SHARD,
+} from "../constants";
 export default class ElrondApi {
   private API_URL: string;
 
@@ -7,19 +11,16 @@ export default class ElrondApi {
     this.API_URL = API_URL;
   }
 
-  async getAccountDetails(addr: String) {
+  async getAccountDetails(addr: string) {
     const {
-      data: {
-        balance,
-        nonce
-      }
+      data: { balance, nonce },
     } = await network({
       method: "GET",
-      url: `${this.API_URL}/accounts/${addr}`
+      url: `${this.API_URL}/accounts/${addr}`,
     });
     return {
       balance,
-      nonce
+      nonce,
     };
   }
 
@@ -27,13 +28,11 @@ export default class ElrondApi {
     let data = [];
 
     try {
-      let {
-        data: {
-          validators
-        }
+      const {
+        data: { validators },
       } = await network({
         method: "GET",
-        url: `${this.API_URL}/validator/statistics`
+        url: `${this.API_URL}/validator/statistics`,
       });
       data = validators;
     } catch (error) {
@@ -52,46 +51,36 @@ export default class ElrondApi {
             erd_denomination: denomination,
             erd_min_gas_limit: gasLimit,
             erd_min_gas_price: gasPrice,
-            erd_gas_per_data_byte: gasPerByte
-          }
-        }
-      }
+            erd_gas_per_data_byte: gasPerByte,
+          },
+        },
+      },
     } = await network({
       method: "GET",
-      url: `${this.API_URL}/network/config`
+      url: `${this.API_URL}/network/config`,
     });
     return {
       chainId,
       denomination,
       gasLimit,
       gasPrice,
-      gasPerByte
+      gasPerByte,
     };
   }
 
-  async submit({
-    operation,
-    signature,
-    signUsingHash
-  }) {
-    const {
-      chainId,
-      gasLimit,
-      gasPrice
-    } = await this.getNetworkConfig();
+  async submit({ operation, signature, signUsingHash }) {
+    const { chainId, gasLimit, gasPrice } = await this.getNetworkConfig();
     const transactionType = signUsingHash ? HASH_TRANSACTION : RAW_TRANSACTION;
     const {
       senders: [sender],
       recipients: [receiver],
       value,
-      transactionSequenceNumber: nonce
+      transactionSequenceNumber: nonce,
     } = operation;
     const {
       data: {
-        data: {
-          txHash: hash
-        }
-      }
+        data: { txHash: hash },
+      },
     } = await network({
       method: "POST",
       url: `${this.API_URL}/transaction/send`,
@@ -104,43 +93,37 @@ export default class ElrondApi {
         gasLimit,
         chainID: chainId,
         signature,
-        ...transactionType
-      }
+        ...transactionType,
+      },
     });
     return {
-      hash
+      hash,
     };
   }
 
-  async getHistory(addr: string, startAt: Number) {
-    const {
-      data: transactions
-    } = await network({
+  async getHistory(addr: string, startAt: number) {
+    const { data: transactions } = await network({
       method: "GET",
-      url: `${this.API_URL}/transactions?condition=should&sender=${addr}&receiver=${addr}&after=${startAt}`
+      url: `${this.API_URL}/transactions?condition=should&sender=${addr}&receiver=${addr}&after=${startAt}`,
     });
     if (!transactions.length) return transactions; //Account does not have any transactions
 
-    return Promise.all(transactions.map(async transaction => {
-      const {
-        blockHeight,
-        blockHash
-      } = await this.getConfirmedTransaction(transaction.txHash);
-      return { ...transaction,
-        blockHash,
-        blockHeight
-      };
-    }));
+    return Promise.all(
+      transactions.map(async (transaction) => {
+        const { blockHeight, blockHash } = await this.getConfirmedTransaction(
+          transaction.txHash
+        );
+        return { ...transaction, blockHash, blockHeight };
+      })
+    );
   }
 
   async getBlockchainBlockHeight() {
     const {
-      data: [{
-        nonce: blockHeight
-      }]
+      data: [{ nonce: blockHeight }],
     } = await network({
       method: "GET",
-      url: `${this.API_URL}/blocks?shard=${METACHAIN_SHARD}&fields=nonce`
+      url: `${this.API_URL}/blocks?shard=${METACHAIN_SHARD}&fields=nonce`,
     });
     return blockHeight;
   }
@@ -149,20 +132,16 @@ export default class ElrondApi {
     const {
       data: {
         data: {
-          transaction: {
-            hyperblockNonce,
-            blockHash
-          }
-        }
-      }
+          transaction: { hyperblockNonce, blockHash },
+        },
+      },
     } = await network({
       method: "GET",
-      url: `${this.API_URL}/transaction/${txHash}`
+      url: `${this.API_URL}/transaction/${txHash}`,
     });
     return {
       blockHeight: hyperblockNonce,
-      blockHash
+      blockHash,
     };
   }
-
 }
