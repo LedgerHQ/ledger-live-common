@@ -33,13 +33,7 @@ function formatOperationSpecifics(
   _op: Operation,
   _unit: Unit | null | undefined
 ): string {
-  const str = " ";
-  const formatConfig = {
-    disableRounding: true,
-    alwaysShowSign: false,
-    showCode: true,
-  };
-  return str;
+  return "";
 }
 
 export default {
