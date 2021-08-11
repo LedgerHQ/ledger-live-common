@@ -2,6 +2,7 @@
 import crypto_org from "../../families/crypto_org/bridge/js.js";
 import ethereum from "../../families/ethereum/bridge/js.js";
 import neo from "../../families/neo/bridge/js.js";
+import platon from "../../families/platon/bridge/js.js";
 import polkadot from "../../families/polkadot/bridge/js.js";
 import ripple from "../../families/ripple/bridge/js.js";
 import stellar from "../../families/stellar/bridge/js.js";
@@ -11,6 +12,7 @@ export default {
   crypto_org,
   ethereum,
   neo,
+  platon,
   polkadot,
   ripple,
   stellar,

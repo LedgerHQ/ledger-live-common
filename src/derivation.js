@@ -212,6 +212,9 @@ const modes = Object.freeze({
   polkadotbip44: {
     overridesDerivation: "44'/354'/<account>'/0'/<address>'",
   },
+  platonbip44h: {
+    overridesDerivation: "44'/486'/0'/0/<account>",
+  },
 });
 
 (modes: { [_: DerivationMode]: ModeSpec }); // eslint-disable-line
@@ -225,6 +228,7 @@ const legacyDerivations: $Shape<CryptoCurrencyConfig<DerivationMode[]>> = {
   tezos: ["galleonL", "tezboxL", "tezosbip44h", "tezbox"],
   stellar: ["sep5"],
   polkadot: ["polkadotbip44"],
+  platon: ["platonbip44h"],
 };
 
 const legacyDerivationsPerFamily: $Shape<
@@ -390,6 +394,7 @@ const disableBIP44 = {
   tezos: true, // current workaround, device app does not seem to support bip44
   stellar: true,
   polkadot: true,
+  platon: true,
 };
 
 const seedIdentifierPath = {

@@ -30,7 +30,7 @@ exchange.js \
 presync.js \
 "
 
-withoutNetworkInfo=("algorand polkadot")
+withoutNetworkInfo=("platon")
 
 cd ../src
 

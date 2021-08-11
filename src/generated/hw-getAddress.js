@@ -5,6 +5,7 @@ import cosmos from "../families/cosmos/hw-getAddress.js";
 import crypto_org from "../families/crypto_org/hw-getAddress.js";
 import ethereum from "../families/ethereum/hw-getAddress.js";
 import neo from "../families/neo/hw-getAddress.js";
+import platon from "../families/platon/hw-getAddress.js";
 import polkadot from "../families/polkadot/hw-getAddress.js";
 import ripple from "../families/ripple/hw-getAddress.js";
 import stellar from "../families/stellar/hw-getAddress.js";
@@ -18,6 +19,7 @@ export default {
   crypto_org,
   ethereum,
   neo,
+  platon,
   polkadot,
   ripple,
   stellar,

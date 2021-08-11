@@ -5,6 +5,7 @@ import cosmos from "../families/cosmos/transaction.js";
 import crypto_org from "../families/crypto_org/transaction.js";
 import ethereum from "../families/ethereum/transaction.js";
 import neo from "../families/neo/transaction.js";
+import platon from "../families/platon/transaction.js";
 import polkadot from "../families/polkadot/transaction.js";
 import ripple from "../families/ripple/transaction.js";
 import stellar from "../families/stellar/transaction.js";
@@ -18,6 +19,7 @@ export default {
   crypto_org,
   ethereum,
   neo,
+  platon,
   polkadot,
   ripple,
   stellar,

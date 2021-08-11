@@ -4,6 +4,7 @@ import bitcoin from "../families/bitcoin/cli-transaction.js";
 import cosmos from "../families/cosmos/cli-transaction.js";
 import crypto_org from "../families/crypto_org/cli-transaction.js";
 import ethereum from "../families/ethereum/cli-transaction.js";
+import platon from "../families/platon/cli-transaction.js";
 import polkadot from "../families/polkadot/cli-transaction.js";
 import ripple from "../families/ripple/cli-transaction.js";
 import stellar from "../families/stellar/cli-transaction.js";
@@ -16,6 +17,7 @@ export default {
   cosmos,
   crypto_org,
   ethereum,
+  platon,
   polkadot,
   ripple,
   stellar,

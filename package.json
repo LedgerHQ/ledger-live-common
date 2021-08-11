@@ -84,6 +84,7 @@
     "@ledgerhq/hw-app-btc": "6.3.0",
     "@ledgerhq/hw-app-cosmos": "6.3.0",
     "@ledgerhq/hw-app-eth": "6.4.0",
+    "@ledgerhq/hw-app-lat": "6.2.0",
     "@ledgerhq/hw-app-polkadot": "6.3.0",
     "@ledgerhq/hw-app-str": "6.3.0",
     "@ledgerhq/hw-app-tezos": "6.3.0",

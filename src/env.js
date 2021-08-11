@@ -213,7 +213,7 @@ const envDefinitions = {
     desc: "enable experimental support of Bluetooth",
   },
   EXPERIMENTAL_CURRENCIES: {
-    def: "",
+    def: "platon",
     parser: stringParser,
     desc: "enable experimental support of currencies (comma separated)",
   },
