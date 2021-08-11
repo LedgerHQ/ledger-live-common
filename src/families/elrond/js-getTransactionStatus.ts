@@ -1,22 +1,12 @@
-// @flow
 import { BigNumber } from "bignumber.js";
-import {
-  NotEnoughBalance,
-  RecipientRequired,
-  InvalidAddress,
-  FeeNotLoaded,
-  InvalidAddressBecauseDestinationIsAlsoSource,
-} from "@ledgerhq/errors";
+import { NotEnoughBalance, RecipientRequired, InvalidAddress, FeeNotLoaded, InvalidAddressBecauseDestinationIsAlsoSource } from "@ledgerhq/errors";
 import type { Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
 import { isValidAddress, isSelfTransaction } from "./logic";
 
-const getTransactionStatus = async (
-  a: Account,
-  t: Transaction
-): Promise<TransactionStatus> => {
-  const errors = {};
-  const warnings = {};
+const getTransactionStatus = async (a: Account, t: Transaction): Promise<TransactionStatus> => {
+  const errors: Record<string, Error> = {};
+  const warnings: Record<string, Error> = {};
   const useAllAmount = !!t.useAllAmount;
 
   if (!t.recipient) {
@@ -35,15 +25,9 @@ const getTransactionStatus = async (
     errors.fees = new FeeNotLoaded();
   }
 
-  const estimatedFees = t.fees || BigNumber(0);
-
-  const totalSpent = useAllAmount
-    ? a.balance
-    : BigNumber(t.amount).plus(estimatedFees);
-
-  const amount = useAllAmount
-    ? a.balance.minus(estimatedFees)
-    : BigNumber(t.amount);
+  const estimatedFees = t.fees || new BigNumber(0);
+  const totalSpent = useAllAmount ? a.balance : new BigNumber(t.amount).plus(estimatedFees);
+  const amount = useAllAmount ? a.balance.minus(estimatedFees) : new BigNumber(t.amount);
 
   if (totalSpent.gt(a.balance)) {
     errors.amount = new NotEnoughBalance();
@@ -54,7 +38,7 @@ const getTransactionStatus = async (
     warnings,
     estimatedFees,
     amount,
-    totalSpent,
+    totalSpent
   });
 };
 

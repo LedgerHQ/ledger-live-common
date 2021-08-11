@@ -1,11 +1,10 @@
-// @flow
+import { $Shape } from "utility-types";
 import { BigNumber } from "bignumber.js";
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
-
 import getEstimatedFees from "./js-getFeesForTransaction";
 
-const sameFees = (a, b) => (!a || !b ? false : a === b);
+const sameFees = (a, b) => !a || !b ? false : a === b;
 
 /**
  * Create an empty transaction
@@ -16,10 +15,10 @@ export const createTransaction = (): Transaction => {
   return {
     family: "elrond",
     mode: "send",
-    amount: BigNumber(0),
+    amount: new BigNumber(0),
     recipient: "",
     useAllAmount: false,
-    fees: BigNumber(50000),
+    fees: new BigNumber(50000)
   };
 };
 
@@ -29,11 +28,10 @@ export const createTransaction = (): Transaction => {
  * @param {*} t
  * @param {*} patch
  */
-export const updateTransaction = (
-  t: Transaction,
-  patch: $Shape<Transaction>
-) => {
-  return { ...t, ...patch };
+export const updateTransaction = (t: Transaction, patch: $Shape<Transaction>) => {
+  return { ...t,
+    ...patch
+  };
 };
 
 /**
@@ -44,11 +42,16 @@ export const updateTransaction = (
  */
 export const prepareTransaction = async (a: Account, t: Transaction) => {
   let fees = t.fees;
-
-  fees = await getEstimatedFees({ a, t });
+  fees = await getEstimatedFees({
+    a,
+    t, 
+    signUsingHash: true
+  });
 
   if (!sameFees(t.fees, fees)) {
-    return { ...t, fees };
+    return { ...t,
+      fees
+    };
   }
 
   return t;
