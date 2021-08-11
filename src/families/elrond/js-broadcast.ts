@@ -1,7 +1,5 @@
-// @flow
 import type { Operation, SignedOperation } from "../../types";
 import { patchOperationWithHash } from "../../operation";
-
 import { broadcastTransaction } from "./api";
 
 /**
@@ -9,20 +7,25 @@ import { broadcastTransaction } from "./api";
  * @param {signature: string, operation: string} signedOperation
  */
 const broadcast = async ({
-  signedOperation: { signature, operation },
+  signedOperation: {
+    signature,
+    operation
+  }
 }: {
-  signedOperation: SignedOperation,
+  signedOperation: SignedOperation;
 }): Promise<Operation> => {
   const {
-    extra: { signUsingHash },
+    extra: {
+      signUsingHash
+    }
   } = operation;
-
-  const { hash } = await broadcastTransaction({
+  const {
+    hash
+  } = await broadcastTransaction({
     operation,
     signature,
-    signUsingHash,
+    signUsingHash
   });
-
   return patchOperationWithHash(operation, hash);
 };
 

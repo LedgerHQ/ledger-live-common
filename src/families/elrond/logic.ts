@@ -1,7 +1,6 @@
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
 import { Address } from "@elrondnetwork/erdjs";
-
 export const compareVersions = (versionA: string, versionB: string): number => {
   let i, diff;
   const regExStrip0 = /(\.0+)+$/;
@@ -11,6 +10,7 @@ export const compareVersions = (versionA: string, versionB: string): number => {
 
   for (i = 0; i < minVersionLength; i++) {
     diff = parseInt(segmentsA[i], 10) - parseInt(segmentsB[i], 10);
+
     if (diff == 0) {
       continue;
     }
@@ -38,7 +38,6 @@ export const isValidAddress = (address: string): boolean => {
     return false;
   }
 };
-
 export const isSelfTransaction = (a: Account, t: Transaction): boolean => {
   return t.recipient === a.freshAddress;
 };
@@ -50,13 +49,6 @@ export const isSelfTransaction = (a: Account, t: Transaction): boolean => {
  */
 export const getNonce = (a: Account): number => {
   const lastPendingOp = a.pendingOperations[0];
-
-  const nonce = Math.max(
-    a.elrondResources?.nonce || 0,
-    lastPendingOp && typeof lastPendingOp.transactionSequenceNumber === "number"
-      ? lastPendingOp.transactionSequenceNumber + 1
-      : 0
-  );
-
+  const nonce = Math.max(a.elrondResources?.nonce || 0, lastPendingOp && typeof lastPendingOp.transactionSequenceNumber === "number" ? lastPendingOp.transactionSequenceNumber + 1 : 0);
   return nonce;
 };

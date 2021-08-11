@@ -1,11 +1,7 @@
-// @flow
 import { BigNumber } from "bignumber.js";
-
 import type { AccountLike, Account } from "../../types";
 import { getMainAccount } from "../../account";
-
 import type { Transaction } from "./types";
-
 import { createTransaction } from "./js-transaction";
 import getEstimatedFees from "./js-getFeesForTransaction";
 
@@ -17,23 +13,25 @@ import getEstimatedFees from "./js-getFeesForTransaction";
 const estimateMaxSpendable = async ({
   account,
   parentAccount,
-  transaction,
+  transaction
 }: {
-  account: AccountLike,
-  parentAccount: ?Account,
-  transaction: ?Transaction,
+  account: AccountLike;
+  parentAccount: Account | null | undefined;
+  transaction: Transaction | null | undefined;
 }): Promise<BigNumber> => {
   const a = getMainAccount(account, parentAccount);
-  const t = {
-    ...createTransaction(),
+  const t = { ...createTransaction(),
     ...transaction,
-    amount: a.spendableBalance,
+    amount: a.spendableBalance
   };
-
-  const fees = await getEstimatedFees({ a, t });
+  const fees = await getEstimatedFees({
+    a,
+    t,
+    signUsingHash: true,
+  });
 
   if (fees.gt(a.spendableBalance)) {
-    return BigNumber(0);
+    return new BigNumber(0);
   }
 
   return a.spendableBalance.minus(fees);

@@ -1,16 +1,17 @@
-// @flow
 import type { ElrondResourcesRaw, ElrondResources } from "./types";
-
 export function toElrondResourcesRaw(r: ElrondResources): ElrondResourcesRaw {
-  const { nonce } = r;
+  const {
+    nonce
+  } = r;
   return {
-    nonce,
+    nonce
   };
 }
-
 export function fromElrondResourcesRaw(r: ElrondResourcesRaw): ElrondResources {
-  const { nonce } = r;
+  const {
+    nonce
+  } = r;
   return {
-    nonce,
+    nonce
   };
 }
