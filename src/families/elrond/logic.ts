@@ -1,6 +1,7 @@
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
 import * as bech32 from "bech32";
+
 /**
  * The human-readable-part of the bech32 addresses.
  */
@@ -35,25 +36,23 @@ export const compareVersions = (versionA: string, versionB: string): number => {
   return segmentsA.length - segmentsB.length;
 };
 
-
-
 function fromBech32(value: string): string {
   let decoded;
 
   try {
-      decoded = bech32.decode(value);
+    decoded = bech32.decode(value);
   } catch (err) {
-      throw new Error("Erd address can't be created");
+    throw new Error("Erd address can't be created");
   }
 
-  let prefix = decoded.prefix;
+  const prefix = decoded.prefix;
   if (prefix != HRP) {
-      throw new Error("Bad HRP");
+    throw new Error("Bad HRP");
   }
 
-  let pubkey = Buffer.from(bech32.fromWords(decoded.words));
+  const pubkey = Buffer.from(bech32.fromWords(decoded.words));
   if (pubkey.length != PUBKEY_LENGTH) {
-      throw new Error("Erd address can't be created");
+    throw new Error("Erd address can't be created");
   }
 
   return value;
