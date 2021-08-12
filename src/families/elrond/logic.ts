@@ -1,6 +1,16 @@
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
-import { Address } from "@elrondnetwork/erdjs";
+import * as bech32 from "bech32";
+/**
+ * The human-readable-part of the bech32 addresses.
+ */
+const HRP = "erd";
+
+ /**
+ * The length (in bytes) of a public key (from which a bech32 address can be obtained).
+ */
+const PUBKEY_LENGTH = 32;
+
 export const compareVersions = (versionA: string, versionB: string): number => {
   let i, diff;
   const regExStrip0 = /(\.0+)+$/;
@@ -25,6 +35,30 @@ export const compareVersions = (versionA: string, versionB: string): number => {
   return segmentsA.length - segmentsB.length;
 };
 
+
+
+function fromBech32(value: string): string {
+  let decoded;
+
+  try {
+      decoded = bech32.decode(value);
+  } catch (err) {
+      throw new Error("Erd address can't be created");
+  }
+
+  let prefix = decoded.prefix;
+  if (prefix != HRP) {
+      throw new Error("Bad HRP");
+  }
+
+  let pubkey = Buffer.from(bech32.fromWords(decoded.words));
+  if (pubkey.length != PUBKEY_LENGTH) {
+      throw new Error("Erd address can't be created");
+  }
+
+  return value;
+}
+
 /**
  * Returns true if address is a valid bech32
  *
@@ -32,7 +66,7 @@ export const compareVersions = (versionA: string, versionB: string): number => {
  */
 export const isValidAddress = (address: string): boolean => {
   try {
-    new Address(address);
+    fromBech32(address);
     return true;
   } catch (error) {
     return false;
