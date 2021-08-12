@@ -1,14 +1,12 @@
 import Fil from "@zondax/ledger-filecoin";
 import type { Resolver } from "../../hw/getAddress/types";
+import { getPath, isError } from "./utils";
 
 const resolver: Resolver = async (transport, { path }) => {
   const fil = new Fil(transport);
 
-  const customePath = path && path.substr(0, 2) !== "m/" ? `m/${path}` : path;
-  const r = await fil.getAddressAndPubKey(customePath);
-
-  if (r.return_code != 36864)
-    throw new Error(`${r.return_code} - ${r.error_message}`);
+  const r = await fil.getAddressAndPubKey(getPath(path));
+  isError(r);
 
   return {
     path,
