@@ -1,4 +1,3 @@
-// @flow
 import type { CurrenciesData } from "../../../types";
 import type { Transaction } from "../types";
 
