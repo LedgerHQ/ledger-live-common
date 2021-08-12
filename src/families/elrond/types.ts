@@ -1,4 +1,5 @@
 import type { BigNumber } from "bignumber.js";
+import { RangeRaw } from "../../range";
 import type {
   TransactionCommon,
   TransactionCommonRaw,
@@ -58,6 +59,16 @@ export type ElrondValidator = {
   locked: BigNumber;
   online: boolean;
 };
+
+export type NetworkInfo = {
+  family: "elrond";
+  gasPrice: Range;
+};
+export type NetworkInfoRaw = {
+  family: "elrond";
+  gasPrice: RangeRaw;
+};
+
 export type ElrondPreloadData = {
   validators: Record<string, any>;
 };
