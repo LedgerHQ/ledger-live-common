@@ -64,6 +64,10 @@ function fromBech32(value: string): string {
  * @param {string} address
  */
 export const isValidAddress = (address: string): boolean => {
+  if (!address) {
+    return false;
+  }
+  
   try {
     fromBech32(address);
     return true;
