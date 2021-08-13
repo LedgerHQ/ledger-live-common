@@ -18,7 +18,7 @@ const getTransactionStatus = async (
   const warnings: Record<string, Error> = {};
   const useAllAmount = !!t.useAllAmount;
 
-  if (!t.recipient) {
+  if (!t.recipient || t.recipient === "") {
     errors.recipient = new RecipientRequired();
   }
 
