@@ -18,15 +18,11 @@ const getTransactionStatus = async (
   const warnings: Record<string, Error> = {};
   const useAllAmount = !!t.useAllAmount;
 
-  if (!t.recipient || t.recipient === "") {
+  if (!t.recipient) {
     errors.recipient = new RecipientRequired();
-  }
-
-  if (isSelfTransaction(a, t)) {
+  } else if (isSelfTransaction(a, t)) {
     errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
-  }
-
-  if (!isValidAddress(t.recipient)) {
+  } else if (!isValidAddress(t.recipient)) {
     errors.recipient = new InvalidAddress();
   }
 
