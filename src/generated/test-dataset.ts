@@ -6,6 +6,8 @@ import cosmos from "../families/cosmos/test-dataset";
 
 import crypto_org from "../families/crypto_org/test-dataset";
 
+import elrond from "../families/elrond/test-dataset";
+
 import ethereum from "../families/ethereum/test-dataset";
 
 import polkadot from "../families/polkadot/test-dataset";
@@ -24,6 +26,7 @@ export default {
   bitcoin,
   cosmos,
   crypto_org,
+  elrond,
   ethereum,
   polkadot,
   ripple,
