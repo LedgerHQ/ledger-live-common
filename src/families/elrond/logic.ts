@@ -7,7 +7,7 @@ import * as bech32 from "bech32";
  */
 const HRP = "erd";
 
- /**
+/**
  * The length (in bytes) of a public key (from which a bech32 address can be obtained).
  */
 const PUBKEY_LENGTH = 32;
@@ -64,7 +64,7 @@ function fromBech32(value: string): string {
  * @param {string} address
  */
 export const isValidAddress = (address: string): boolean => {
-  if (address === '') {
+  if (address === "") {
     return false;
   }
 
