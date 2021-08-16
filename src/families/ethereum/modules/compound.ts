@@ -125,7 +125,7 @@ const compoundSupply: ModeModule = {
         disableRounding: true,
       }),
     });
-    fields.push(contractField(ctoken, account) as DeviceTransactionField);
+    fields.push(contractField(ctoken) as DeviceTransactionField);
   },
 
   fillOptimisticOperation(a, t, op) {
