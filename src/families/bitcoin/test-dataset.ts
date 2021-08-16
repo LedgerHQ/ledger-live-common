@@ -25,7 +25,7 @@ const dataset: DatasetTest<Transaction> = {
     bitcoin_gold,
     bitcoin,
     dash,
-    decred,
+    // decred, // BACK-2443
     digibyte,
     dogecoin,
     zencash,

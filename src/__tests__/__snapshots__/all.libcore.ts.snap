@@ -11629,21 +11629,21 @@ Array [
     "bitcoinResources": Object {
       "utxos": Array [
         Array [
-          "a75c98002a9da7baf6ca51d9435cc13aa222f153b2e70291735f2353f71eaa05",
-          0,
-          579923,
-          "GYBWCwH46vnXx24RFk9p8ykJFZdPnygSug",
-          undefined,
-          "123000",
-          0,
-        ],
-        Array [
           "1053e9455bc1b95745d8ce9a58ecfedeb170449f2dceaa96c96e180f89aee95f",
           0,
-          579923,
+          undefined,
           "GYBWCwH46vnXx24RFk9p8ykJFZdPnygSug",
           undefined,
           "1000000",
+          0,
+        ],
+        Array [
+          "a75c98002a9da7baf6ca51d9435cc13aa222f153b2e70291735f2353f71eaa05",
+          0,
+          undefined,
+          "GYBWCwH46vnXx24RFk9p8ykJFZdPnygSug",
+          undefined,
+          "123000",
           0,
         ],
         Array [
@@ -12099,7 +12099,7 @@ Array [
         Array [
           "4c36443d9b1ffd8305f9ed42a621ef8ed0692f316dfd6f6711926eb4d67f1785",
           0,
-          582786,
+          undefined,
           "GP4e26AhwLe6LLep9DBj5ZHUGsv8KvWhBM",
           undefined,
           "568927",
@@ -13172,6 +13172,117 @@ Array [
       ],
       "type": "OUT",
       "value": "6565",
+    },
+  ],
+  Array [],
+]
+`;
+
+exports[`crypto_org_croeseid currency bridge scanAccounts crypto_org_croeseid seed gre (temporary) 1`] = `
+Array [
+  Object {
+    "balance": "9994999995000",
+    "cryptoOrgResources": Object {
+      "bondedBalance": "0",
+      "commissions": "0",
+      "redelegatingBalance": "0",
+      "unbondingBalance": "0",
+    },
+    "currencyId": "crypto_org_croeseid",
+    "derivationMode": "",
+    "freshAddress": "tcro1674pnmkjklf35p6y3nsd5wep3x6wden6482ny2",
+    "freshAddressPath": "44'/394'/0'/0/0",
+    "freshAddresses": Array [
+      Object {
+        "address": "tcro1674pnmkjklf35p6y3nsd5wep3x6wden6482ny2",
+        "derivationPath": "44'/394'/0'/0/0",
+      },
+    ],
+    "id": "js:2:crypto_org_croeseid:tcro1674pnmkjklf35p6y3nsd5wep3x6wden6482ny2:",
+    "index": 0,
+    "name": "Crypto.org Croeseid Coin 1",
+    "operationsCount": 2,
+    "pendingOperations": Array [],
+    "seedIdentifier": "02ac96e7f6648484ef48f5cfcd540249c89e4dbfff0553dcf664612c79cfd19429",
+    "spendableBalance": "9994999995000",
+    "starred": false,
+    "swapHistory": Array [],
+    "syncHash": undefined,
+    "unitMagnitude": 8,
+    "used": true,
+  },
+  Object {
+    "balance": "0",
+    "cryptoOrgResources": Object {
+      "bondedBalance": "0",
+      "commissions": "0",
+      "redelegatingBalance": "0",
+      "unbondingBalance": "0",
+    },
+    "currencyId": "crypto_org_croeseid",
+    "derivationMode": "",
+    "freshAddress": "tcro1uv50tc9m0vu4w0g33v7y7ejht4r66gjfek4utv",
+    "freshAddressPath": "44'/394'/1'/0/0",
+    "freshAddresses": Array [
+      Object {
+        "address": "tcro1uv50tc9m0vu4w0g33v7y7ejht4r66gjfek4utv",
+        "derivationPath": "44'/394'/1'/0/0",
+      },
+    ],
+    "id": "js:2:crypto_org_croeseid:tcro1uv50tc9m0vu4w0g33v7y7ejht4r66gjfek4utv:",
+    "index": 1,
+    "name": "Crypto.org Croeseid Coin 2",
+    "operationsCount": 0,
+    "pendingOperations": Array [],
+    "seedIdentifier": "02ac96e7f6648484ef48f5cfcd540249c89e4dbfff0553dcf664612c79cfd19429",
+    "spendableBalance": "0",
+    "starred": false,
+    "swapHistory": Array [],
+    "syncHash": undefined,
+    "unitMagnitude": 8,
+    "used": false,
+  },
+]
+`;
+
+exports[`crypto_org_croeseid currency bridge scanAccounts crypto_org_croeseid seed gre (temporary) 2`] = `
+Array [
+  Array [
+    Object {
+      "accountId": "js:2:crypto_org_croeseid:tcro1674pnmkjklf35p6y3nsd5wep3x6wden6482ny2:",
+      "blockHash": "04C8F44323B3E635DB2B0F91DCC1398D5C7F323B58700811BBD7F298B6F566F3",
+      "blockHeight": 2112047,
+      "extra": Object {},
+      "fee": "5000",
+      "hasFailed": false,
+      "hash": "441F84979B9A3692E27F803201CA230F4369104E1ECC33DF8BF42320D07A0323",
+      "id": "js:2:crypto_org_croeseid:tcro1674pnmkjklf35p6y3nsd5wep3x6wden6482ny2:-441F84979B9A3692E27F803201CA230F4369104E1ECC33DF8BF42320D07A0323-OUT",
+      "recipients": Array [
+        "tcro1nqy7500hrvxeu4wmffq4zr8gwgnff2evhe7v47",
+      ],
+      "senders": Array [
+        "tcro1674pnmkjklf35p6y3nsd5wep3x6wden6482ny2",
+      ],
+      "type": "OUT",
+      "value": "5000000000",
+    },
+    Object {
+      "accountId": "js:2:crypto_org_croeseid:tcro1674pnmkjklf35p6y3nsd5wep3x6wden6482ny2:",
+      "blockHash": "14412D39FF982F84ED74192DA01B8672D498896944D667D46E105632FD45B5AD",
+      "blockHeight": 1260530,
+      "extra": Object {},
+      "fee": "10000",
+      "hasFailed": false,
+      "hash": "951EF28EDEE6AA0F48C192E54D95A64B1639CB6FFD63BF05A7E63A8DCB70BEB2",
+      "id": "js:2:crypto_org_croeseid:tcro1674pnmkjklf35p6y3nsd5wep3x6wden6482ny2:-951EF28EDEE6AA0F48C192E54D95A64B1639CB6FFD63BF05A7E63A8DCB70BEB2-IN",
+      "recipients": Array [
+        "tcro1674pnmkjklf35p6y3nsd5wep3x6wden6482ny2",
+      ],
+      "senders": Array [
+        "tcro1n4t5q77kn9vf73s7ljs96m85jgg49yqpasmwm3",
+      ],
+      "type": "IN",
+      "value": "10000000000000",
     },
   ],
   Array [],
@@ -30680,7 +30791,7 @@ Array [
         Array [
           "b0af09fe7605a9560e18eaa0fc0332b716640310b2428c2bb392fb69d4e78777",
           1,
-          2115071,
+          undefined,
           "DM1ccD7RCcoUpqZKDaWaY99vmz7NjtaTrv",
           undefined,
           "25947828",
@@ -31153,11 +31264,11 @@ Array [
         "DJdwXM9UKU3YYWoXziZMYPLToeBi5RTkR1",
       ],
       "senders": Array [
-        "DTd6GJiwHfKLhQC31tH4xmDRPzuLZKWiYe",
-        "DNUEG3SaK1QPBjx5oxSzskWT3nEz3SECgC",
+        "DA1NKyrpE4TL94FCWWu84JE2SiA8uAGVt6",
         "D5Gov8AxLoU6LYiJNUvZhkdwbGwi1Kz6jj",
         "DE97UNTmFiyBzi9qSDCxauTshcEyq7GBAs",
-        "DA1NKyrpE4TL94FCWWu84JE2SiA8uAGVt6",
+        "DNUEG3SaK1QPBjx5oxSzskWT3nEz3SECgC",
+        "DTd6GJiwHfKLhQC31tH4xmDRPzuLZKWiYe",
       ],
       "type": "OUT",
       "value": "301037240",
@@ -31902,21 +32013,21 @@ Array [
     "bitcoinResources": Object {
       "utxos": Array [
         Array [
+          "57857c9064f9748e95a145750a486928cae3408cc3595e8e6438834a76dcdd63",
+          0,
+          undefined,
+          "QhpbXpX5xXavAtKEG97fcbQjNqcGjpMFo4",
+          undefined,
+          "30000000",
+          0,
+        ],
+        Array [
           "665ad2c31f04fcb02d4a4c8baf4a56378fd6065fa28b2c3b3b19db917b13347f",
           1,
           503781,
           "QguUJmH3SgaDySPgsrMgb45sJGKFtKavmr",
           undefined,
           "6214370",
-          0,
-        ],
-        Array [
-          "57857c9064f9748e95a145750a486928cae3408cc3595e8e6438834a76dcdd63",
-          0,
-          540078,
-          "QhpbXpX5xXavAtKEG97fcbQjNqcGjpMFo4",
-          undefined,
-          "30000000",
           0,
         ],
       ],
@@ -48196,7 +48307,7 @@ Array [
         Array [
           "3e666cd80f1ba022527035b2e3765f0a6eea858220ad83400e6d5f296436d271",
           0,
-          1239308,
+          undefined,
           "33iMXaJbU4LW1MP2Dz7LJiZg15bzb3Ks89",
           undefined,
           "56611532",
