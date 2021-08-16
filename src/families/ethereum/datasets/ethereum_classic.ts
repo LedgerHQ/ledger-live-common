@@ -2,7 +2,7 @@ import type { CurrenciesData } from "../../../types";
 import type { Transaction } from "../types";
 const dataset: CurrenciesData<Transaction> = {
   scanAccounts: [
-{
+    {
       name: "ethereum_classic seed 1",
       apdus: `
       => e002000009028000002c8000003d
