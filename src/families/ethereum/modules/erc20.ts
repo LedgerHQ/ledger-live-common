@@ -6,19 +6,27 @@ import { BigNumber } from "bignumber.js";
 import type { ModeModule } from "../types";
 import { AmountRequired } from "@ledgerhq/errors";
 import { inferTokenAccount, validateRecipient } from "../transaction";
-import { getAccountCurrency, getAccountUnit } from "../../../account";
 import {
-  findTokenByAddress,
+  getAccountCurrency,
+  getAccountUnit,
+  getMainAccount,
+} from "../../../account";
+import {
+  findTokenByAddressInCurrency,
   findTokenById,
   formatCurrencyUnit,
 } from "../../../currencies";
 import { getAccountCapabilities } from "../../../compound/logic";
 import { CompoundLowerAllowanceOfActiveAccountError } from "../../../errors";
 import { DeviceTransactionField } from "../../../transaction";
+import { Account } from "../../../types";
 const infinite = new BigNumber(2).pow(256).minus(1);
 
-function contractField(transaction) {
-  const recipientToken = findTokenByAddress(transaction.recipient);
+function contractField(transaction, a: Account) {
+  const recipientToken = findTokenByAddressInCurrency(
+    transaction.recipient,
+    a.currency.id
+  );
   const maybeCompoundToken = findTokenById(recipientToken?.compoundFor || "");
   return {
     type: "text",
@@ -101,7 +109,7 @@ const erc20approve: ModeModule = {
     };
   },
 
-  fillDeviceTransactionConfig({ transaction, account }, fields) {
+  fillDeviceTransactionConfig({ transaction, account, parentAccount }, fields) {
     fields.push({
       type: "text",
       label: "Type",
@@ -122,7 +130,12 @@ const erc20approve: ModeModule = {
       });
     }
 
-    fields.push(contractField(transaction) as DeviceTransactionField);
+    fields.push(
+      contractField(
+        transaction,
+        getMainAccount(account, parentAccount)
+      ) as DeviceTransactionField
+    );
   },
 
   fillOptimisticOperation(_account, _transaction, operation) {

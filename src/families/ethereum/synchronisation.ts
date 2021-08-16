@@ -14,7 +14,7 @@ import {
   emptyHistoryCache,
 } from "../../account";
 import {
-  findTokenByAddress,
+  findTokenByAddressInCurrency,
   listTokensForCryptoCurrency,
 } from "../../currencies";
 import type { Operation, TokenAccount, Account } from "../../types";
@@ -177,7 +177,7 @@ const safeEncodeEIP55 = (addr) => {
 
 // in case of a SELF send, 2 ops are returned.
 const txToOps =
-  ({ address, id }) =>
+  ({ currency, address, id }) =>
   (tx: Tx): Operation[] => {
     // workaround bugs in our explorer that don't treat partial/optimistic operation really well
     if (!tx.gas_used) return [];
@@ -249,7 +249,10 @@ const txToOps =
             return [];
           }
 
-          const token = findTokenByAddress(event.contract);
+          const token = findTokenByAddressInCurrency(
+            event.contract,
+            currency.id
+          );
           if (!token) return [];
           const accountId = encodeTokenAccountId(id, token);
           const value = event.count;
