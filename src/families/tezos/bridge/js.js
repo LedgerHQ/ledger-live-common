@@ -74,8 +74,10 @@ const prepareTransaction = async (account, transaction) => {
       });
       break;
     case "undelegate":
-      // FIXME
-      throw "not implemented yet";
+      out = await tezos.estimate.setDelegate({
+        source: account.freshAddress,
+      });
+      break;
     default:
       throw "unsuported";
   }

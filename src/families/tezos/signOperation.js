@@ -53,10 +53,14 @@ export const signOperation = ({
             res = await tezos.contract.setDelegate({
               delegate: transaction.recipient,
             });
+            opbytes = res.raw.opbytes;
             break;
           case "undelegate":
-            // FIXME
-            throw "not implemented yet";
+            res = await tezos.contract.setDelegate({
+              source: freshAddress,
+            });
+            opbytes = res.raw.opbytes;
+            break;
           default:
             throw "not supported";
         }
