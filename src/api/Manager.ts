@@ -186,7 +186,7 @@ const compatibleMCUForDeviceInfo = (
       m.providers.includes(provider)
   );
 
-const findBestMCU = (compatibleMCU: McuVersion[]) => {
+const findBestMCU = (compatibleMCU: McuVersion[]): McuVersion | undefined => {
   let best = compatibleMCU[0];
 
   for (let i = 1; i < compatibleMCU.length; i++) {

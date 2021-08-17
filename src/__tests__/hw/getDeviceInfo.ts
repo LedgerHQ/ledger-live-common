@@ -507,7 +507,7 @@ test("Nano X BL >= 2", async () => {
     majMin: "1.4",
     providerName: null,
     targetId: 83951618,
-    seTargetId: 70451200,
+    seTargetId: 855638020,
     mcuTargetId: 83951618,
     isOSU: false,
     isBootloader: true,

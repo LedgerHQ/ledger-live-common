@@ -1,7 +1,15 @@
 import { log } from "@ledgerhq/logs";
 import { MCUNotGenuineToDashboard } from "@ledgerhq/errors";
 import { Observable, from, of, EMPTY, concat, throwError } from "rxjs";
-import { concatMap, delay, filter, map, throttleTime } from "rxjs/operators";
+import {
+  concatMap,
+  delay,
+  filter,
+  map,
+  mergeMap,
+  throttleTime,
+} from "rxjs/operators";
+import semver from "semver";
 import ManagerAPI from "../api/Manager";
 import { withDevicePolling, withDevice } from "./deviceAccess";
 import { getProviderId } from "../manager/provider";
@@ -12,6 +20,7 @@ import {
   followDeviceRepair,
   followDeviceUpdate,
 } from "../deviceWordings";
+import { FinalFirmware, McuVersion } from "../types/manager";
 const wait2s = of({
   type: "wait",
 }).pipe(delay(2000));
@@ -37,6 +46,11 @@ export const repairChoices = [
     forceMCU: "0.9",
   },
 ];
+
+const filterMCUForDeviceInfo = (deviceInfo) => {
+  const provider = getProviderId(deviceInfo);
+  return (mcu) => mcu.providers.includes(provider);
+};
 
 const repair = (
   deviceId: string,
@@ -105,14 +119,62 @@ const repair = (
           default:
             return from(mcusPromise).pipe(
               concatMap((mcus) => {
-                const next = ManagerAPI.findBestMCU(
-                  ManagerAPI.compatibleMCUForDeviceInfo(
-                    mcus,
-                    deviceInfo,
-                    getProviderId(deviceInfo)
-                  )
-                );
-                if (next) return installMcu(next.name);
+                let next;
+                const { seVersion, seTargetId, mcuBlVersion } = deviceInfo;
+
+                if (seVersion && seTargetId) {
+                  const validMcusForDeviceInfo = mcus
+                    .filter(filterMCUForDeviceInfo(deviceInfo))
+                    .filter((mcu) => mcu.from_bootloader_version !== "none");
+
+                  return from(
+                    ManagerAPI.getCurrentFirmware({
+                      deviceId: seTargetId,
+                      version: seVersion,
+                      provider: getProviderId(deviceInfo),
+                    })
+                  ).pipe(
+                    map((finalFirmware: FinalFirmware) => {
+                      const mcu = ManagerAPI.findBestMCU(
+                        finalFirmware.mcu_versions
+                          .map((id) =>
+                            validMcusForDeviceInfo.find((mcu) => mcu.id === id)
+                          )
+                          .filter(Boolean)
+                      );
+
+                      if (!mcu) return EMPTY;
+                      const expectedBootloaderVersion = semver.coerce(
+                        mcu.from_bootloader_version
+                      );
+                      const currentBootloaderVersion =
+                        semver.coerce(mcuBlVersion);
+
+                      if (
+                        expectedBootloaderVersion === currentBootloaderVersion
+                      ) {
+                        next = mcu;
+                      } else {
+                        next = {
+                          name: mcuBlVersion,
+                        };
+                      }
+
+                      if (next) return installMcu(next.name);
+                    })
+                  );
+                } else {
+                  next = ManagerAPI.findBestMCU(
+                    ManagerAPI.compatibleMCUForDeviceInfo(
+                      mcus,
+                      deviceInfo,
+                      getProviderId(deviceInfo)
+                    )
+                  );
+
+                  if (next) return installMcu(next.name);
+                }
+
                 return EMPTY;
               })
             );

@@ -48,7 +48,7 @@ export default async function getVersion(
       // se part 1
       const part1Length = data[i++];
       const part1 = data.slice(i, i + part1Length);
-      i += flagsLength;
+      i += part1Length;
 
       // at this time, this is how we branch old & new format
       if (part1Length === 5) {
