@@ -3,7 +3,7 @@ const validBase64RegExp = new RegExp(
   /^(?:[A-Za-z\d+/]{4})*(?:[A-Za-z\d+/]{3}=|[A-Za-z\d+/]{2}==)?$/
 );
 
-// FIXME - Get this return code from filecoin package, not from here
+// FIXME Filecoin - Get this return code from filecoin package, not from here
 export const isNoErrorReturnCode = (code: number) => code === 0x9000;
 
 export const getPath = (path: string) =>

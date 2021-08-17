@@ -36,14 +36,16 @@ import type { CurrencyBridge, AccountBridge } from "../types/bridge";
 import getAddress from "../hw/getAddress";
 import { open, close } from "../hw";
 import { withDevice } from "../hw/deviceAccess";
+
+export type GetAccountShapeArg0 = {
+  currency: CryptoCurrency;
+  address: string;
+  id: string;
+  initialAccount?: Account;
+};
+
 export type GetAccountShape = (
-  arg0: {
-    currency: CryptoCurrency;
-    address: string;
-    id: string;
-    initialAccount?: Account;
-    rest?: any;
-  },
+  arg0: GetAccountShapeArg0,
   arg1: SyncConfig
 ) => Promise<Partial<Account>>;
 type AccountUpdater = (arg0: Account) => Account;
