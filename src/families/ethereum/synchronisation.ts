@@ -14,10 +14,18 @@ import {
   emptyHistoryCache,
 } from "../../account";
 import { listTokensForCryptoCurrency } from "../../currencies";
-import type { Operation, TokenAccount, Account } from "../../types";
+import type {
+  Operation,
+  TokenAccount,
+  Account,
+  NFTOperation,
+  NFT,
+} from "../../types";
 import { API, apiForCurrency, Tx } from "../../api/Ethereum";
 import { digestTokenAccounts, prepareTokenAccounts } from "./modules";
 import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";
+import { encodeNftId } from "../../nft";
+
 export const getAccountShape: GetAccountShape = async (
   infoInput,
   { blacklistedTokenIds }
@@ -65,10 +73,12 @@ export const getAccountShape: GetAccountShape = async (
   const balance = await balanceP;
   // transform transactions into operations
   let newOps = flatMap(txs, txToOps(info));
+
   // extracting out the sub operations by token account
   const perTokenAccountIdOperations = {};
+  const flatNftOps: NFTOperation[] = [];
   newOps.forEach((op) => {
-    const { subOperations } = op;
+    const { subOperations, nftOperations } = op;
 
     if (subOperations?.length) {
       subOperations.forEach((sop) => {
@@ -79,7 +89,12 @@ export const getAccountShape: GetAccountShape = async (
         perTokenAccountIdOperations[sop.accountId].push(sop);
       });
     }
+
+    if (nftOperations) {
+      nftOperations.forEach((nop) => flatNftOps.push(nop));
+    }
   });
+
   const subAccountsExisting = {};
   initialAccount?.subAccounts?.forEach((a) => {
     // in case of coming from libcore, we need to converge to new ids
@@ -90,10 +105,12 @@ export const getAccountShape: GetAccountShape = async (
   });
   const subAccountsExistingIds = Object.keys(subAccountsExisting);
   const perTokenAccountChangedIds = Object.keys(perTokenAccountIdOperations);
+
   log(
     "ethereum",
     `${address} reconciliate ${txs.length} txs => ${newOps.length} new ops. ${perTokenAccountChangedIds.length} updates into ${subAccountsExistingIds.length} token accounts`
   );
+
   // reconciliate token accounts
   let tokenAccounts: TokenAccount[] = union(
     subAccountsExistingIds,
@@ -140,16 +157,24 @@ export const getAccountShape: GetAccountShape = async (
       };
     })
     .filter(Boolean);
+
   tokenAccounts = await prepareTokenAccounts(currency, tokenAccounts, address);
+
   tokenAccounts = await loadERC20Balances(tokenAccounts, address, api);
+
   tokenAccounts = await digestTokenAccounts(currency, tokenAccounts, address);
+
   const subAccounts = reconciliateSubAccounts(tokenAccounts, initialAccount);
   // has sub accounts have changed, we need to relink the subOperations
   newOps = newOps.map((o) => ({
     ...o,
     subOperations: inferSubOperations(o.hash, subAccounts),
   }));
+
   const operations = mergeOps(initialStableOperations, newOps);
+
+  const NFT = await getERC721NFTs(flatNftOps);
+
   const accountShape: Partial<Account> = {
     operations,
     balance,
@@ -159,6 +184,7 @@ export const getAccountShape: GetAccountShape = async (
     lastSyncDate: new Date(),
     balanceHistory: undefined,
     syncHash,
+    NFT,
   };
   return accountShape;
 };
@@ -179,7 +205,7 @@ const txToOps =
   (tx: Tx): Operation[] => {
     // workaround bugs in our explorer that don't treat partial/optimistic operation really well
     if (!tx.gas_used) return [];
-    const { hash, block, actions, transfer_events } = tx;
+    const { hash, block, actions, transfer_events, erc721TransferEvents } = tx;
     const addr = address;
     const from = safeEncodeEIP55(tx.from);
     const to = safeEncodeEIP55(tx.to);
@@ -192,6 +218,7 @@ const txToOps =
     const blockHash = block && block.hash;
     const date = tx.received_at ? new Date(tx.received_at) : new Date();
     const transactionSequenceNumber = parseInt(tx.nonce);
+
     // Internal transactions
     const internalOperations: Operation[] = !actions
       ? []
@@ -234,6 +261,7 @@ const txToOps =
             }
           })
           .filter(Boolean) as Operation[]);
+
     // We are putting the sub operations in place for now, but they will later be exploded out of the operations back to their token accounts
     const subOperations = !transfer_events
       ? []
@@ -296,6 +324,61 @@ const txToOps =
 
           return all;
         });
+
+    const nftOperations = !erc721TransferEvents
+      ? []
+      : flatMap(erc721TransferEvents.list, (event) => {
+          const from = safeEncodeEIP55(event.from);
+          const to = safeEncodeEIP55(event.to);
+          const contract = safeEncodeEIP55(event.contract);
+          const tokenId = new BigNumber(event.token_id);
+          const nftId = encodeNftId(id, event.contract, tokenId);
+          const sending = addr === from;
+          const receiving = addr === to;
+
+          if (!sending && !receiving) {
+            return [];
+          }
+
+          const all: NFTOperation[] = [];
+
+          if (sending) {
+            const type = "OUT";
+            all.push({
+              id: `${nftId}-${hash}-${type}`,
+              senders: [from],
+              recipients: [to],
+              contract,
+              tokenId,
+              hash,
+              type,
+              blockHeight,
+              blockHash,
+              date,
+              transactionSequenceNumber,
+            });
+          }
+
+          if (receiving) {
+            const type = "IN";
+            all.push({
+              id: `${nftId}-${hash}-${type}`,
+              senders: [from],
+              recipients: [to],
+              contract,
+              tokenId,
+              hash,
+              type,
+              blockHeight,
+              blockHash,
+              date,
+              transactionSequenceNumber,
+            });
+          }
+
+          return all;
+        });
+
     const ops: Operation[] = [];
 
     if (sending) {
@@ -316,6 +399,7 @@ const txToOps =
         hasFailed,
         internalOperations: internalOperations,
         subOperations,
+        nftOperations,
         transactionSequenceNumber,
       });
     }
@@ -338,6 +422,7 @@ const txToOps =
         internalOperations: sending ? [] : internalOperations,
         // if it was already in sending, we don't add twice
         subOperations: sending ? [] : subOperations,
+        nftOperations: sending ? [] : nftOperations,
         transactionSequenceNumber,
       });
     }
@@ -345,7 +430,9 @@ const txToOps =
     if (
       !sending &&
       !receiving &&
-      (internalOperations.length || subOperations.length)
+      (internalOperations.length ||
+        subOperations.length ||
+        nftOperations.length)
     ) {
       ops.push({
         id: `${id}-${hash}-NONE`,
@@ -362,6 +449,7 @@ const txToOps =
         extra: {},
         internalOperations,
         subOperations,
+        nftOperations,
         transactionSequenceNumber,
       });
     }
@@ -434,6 +522,45 @@ async function loadERC20Balances(tokenAccounts, address, api) {
       return a;
     })
     .filter(Boolean);
+}
+
+function getERC721NFTs(nftOperations: NFTOperation[]): NFT[] {
+  const nftOpsMap: Record<string, NFTOperation[]> = nftOperations.reduce(
+    (acc, curr) => {
+      const nftKey = curr.contract + curr.tokenId.toString();
+      if (!acc[nftKey]) {
+        acc[nftKey] = [];
+      }
+
+      acc[nftKey].push(curr);
+      return acc;
+    },
+    {}
+  );
+
+  const NFTs = Object.keys(nftOpsMap)
+    .map((n) => {
+      const lastOp = nftOpsMap[n]
+        .sort((a, b) => b.date.getTime() - a.date.getTime())
+        .shift();
+
+      if (lastOp?.type === "IN") {
+        return {
+          id: lastOp.id,
+          tokenId: lastOp.tokenId,
+          collection: {
+            contract: lastOp.contract,
+            name: "not yet",
+            totalSupply: 0,
+            contractSpec: "ERC721",
+          },
+        } as NFT;
+      }
+      return null;
+    })
+    .filter(Boolean);
+
+  return NFTs as NFT[];
 }
 
 const SAFE_REORG_THRESHOLD = 80;

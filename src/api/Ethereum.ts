@@ -9,6 +9,7 @@ import network from "../network";
 import { blockchainBaseURL } from "./Ledger";
 import { FeeEstimationFailed } from "../errors";
 import { makeLRUCache } from "../cache";
+
 export type Block = {
   height: BigNumber;
 }; // TODO more fields actually
@@ -37,6 +38,14 @@ export type Tx = {
     }>;
     truncated: boolean;
   };
+  erc721TransferEvents?: {
+    list: Array<{
+      contract: string;
+      from: string;
+      to: string;
+      token_id: BigNumber;
+    }>;
+  };
   actions?: Array<{
     from: string;
     to: string;
@@ -50,15 +59,23 @@ export type Tx = {
     time: string;
   };
 };
+
 export type ERC20BalancesInput = Array<{
   address: string;
   contract: string;
 }>;
+
 export type ERC20BalanceOutput = Array<{
   address: string;
   contract: string;
   balance: BigNumber;
 }>;
+
+export type ERC721BalanceOutput = Array<{
+  contract: string;
+  values: string[];
+}>;
+
 export type API = {
   getTransactions: (
     address: string,
@@ -93,6 +110,7 @@ export type API = {
     high: BigNumber;
   }>;
 };
+
 export const apiForCurrency = (currency: CryptoCurrency): API => {
   const baseURL = blockchainBaseURL(currency);
 
@@ -107,7 +125,8 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
       let { data } = await network({
         method: "GET",
         url: URL.format({
-          pathname: `${baseURL}/addresses/${address}/transactions`,
+          /** @important Removed and mocked while we are waiting for the API */
+          pathname: `https://over-the-overload.vercel.app/blockchain/v3/eth/addresses/${address}/transactions`,
           query: {
             batch_size,
             noinput: true,
