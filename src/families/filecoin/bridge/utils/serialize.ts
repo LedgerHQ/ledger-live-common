@@ -22,45 +22,52 @@ function bigintToArray(v) {
   return Buffer.concat([Buffer.from(signByte, "hex"), Buffer.from(tmp, "hex")]);
 }
 
-export const toCBOR = (tc: Transaction) => {
+export const toCBOR = (from: string, tx: Transaction) => {
+  const {
+    recipient,
+    method,
+    version,
+    nonce,
+    gasLimit,
+    gasPremium,
+    gasFeeCap,
+    params,
+    amount,
+  } = tx;
   const answer: any[] = [];
 
   // "version" field
-  answer.push(tc.version);
+  answer.push(version);
 
   // "to" field
-  answer.push(Buffer.from(tc.message.to, "hex"));
+  answer.push(Buffer.from(recipient, "hex"));
 
   // "from" field
-  answer.push(Buffer.from(tc.recipient, "hex"));
+  answer.push(Buffer.from(from, "hex"));
 
   // "nonce" field
-  answer.push(tc.nonce);
+  answer.push(nonce);
 
   // "value"
-  let buf = bigintToArray(tc.amount);
+  let buf = bigintToArray(amount);
   answer.push(buf);
 
   // "gaslimit"
-  answer.push(parseInt(tc.gaslimit, 10));
+  answer.push(gasLimit);
 
   // "gasfeecap"
-  buf = bigintToArray(tc.message.gasfeecap);
+  buf = bigintToArray(gasFeeCap);
   answer.push(buf);
 
   // "gaspremium"
-  buf = bigintToArray(tc.message.gaspremium);
+  buf = bigintToArray(gasPremium);
   answer.push(buf);
 
   // "method"
-  answer.push(tc.message.method);
+  answer.push(method);
 
-  if (tc.message.params) {
-    // "params"
-    answer.push(tc.message.params);
-  } else {
-    answer.push(Buffer.alloc(0));
-  }
+  if (params) answer.push(params);
+  else answer.push(Buffer.alloc(0));
 
   return cbor.encode(answer);
 };

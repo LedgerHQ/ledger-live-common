@@ -19,6 +19,7 @@ export type Transaction = TransactionCommon & {
   data?: Buffer;
   method: number;
   version: number;
+  params?: string;
   gasPrice?: BigNumber | null;
   gasLimit?: BigNumber | null;
   gasFeeCap?: BigNumber | null;

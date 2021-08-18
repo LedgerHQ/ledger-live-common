@@ -19,6 +19,8 @@ import { getMainAccount } from "../../../account";
 import { Observable } from "rxjs";
 import { close, open } from "../../../hw";
 import { toCBOR } from "./utils/serialize";
+import { Operation } from "../../../types/operation";
+import { isError } from "../utils";
 
 const receive = makeAccountBridgeReceive();
 
@@ -78,6 +80,10 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
 }): Observable<SignOperationEvent> =>
   new Observable((o) => {
     async function main() {
+      const { recipient, amount } = transaction;
+      const { id: accountId, freshAddresses } = account;
+      const [mainAddress] = freshAddresses;
+
       const transport = await open(deviceId);
 
       try {
@@ -88,28 +94,49 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
         });
 
         // Serialize tx
-        const serializedTx = toCBOR(transaction);
+        const serializedTx = toCBOR(mainAddress.address, transaction);
 
         // Sign by device
         const filecoin = new Fil(transport);
-
-        await filecoin.sign(
-          account.freshAddresses[0].derivationPath,
+        const result = await filecoin.sign(
+          mainAddress.derivationPath,
           serializedTx
         );
+        isError(result);
 
         o.next({
           type: "device-signature-granted",
         });
 
-        // FIXME Filecoin - Build operation object
-        const operation: any = {};
+        const fee = new BigNumber(0); // FIXME Filecoin
+        const value = amount.plus(fee);
+
+        // resolved at broadcast time
+        const txHash = "";
+
+        // build signature on the correct format
+        const signature = `0x${result.signature_compact.toString("hex")}`;
+
+        const operation: Operation = {
+          id: `${accountId}-${txHash}-OUT`,
+          hash: txHash,
+          type: "OUT",
+          senders: [mainAddress.address],
+          recipients: [recipient],
+          accountId,
+          value,
+          fee,
+          blockHash: null,
+          blockHeight: null,
+          date: new Date(),
+          extra: {},
+        };
 
         o.next({
           type: "signed",
           signedOperation: {
             operation,
-            signature: "",
+            signature,
             expirationDate: null,
           },
         });
