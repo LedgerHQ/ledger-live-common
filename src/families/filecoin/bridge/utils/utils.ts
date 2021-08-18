@@ -2,7 +2,13 @@ import { Operation } from "../../../types";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
 import { BigNumber } from "bignumber.js";
 import { TransactionResponse } from "./types";
-import { GetAccountShapeArg0 } from "../../../bridge/jsHelpers";
+import {
+  GetAccountShape,
+  GetAccountShapeArg0,
+} from "../../../bridge/jsHelpers";
+import { fetchBalances, fetchBlockHeight, fetchTxs } from "./api";
+import flatMap from "lodash/flatMap";
+import fs from "fs";
 
 export const getUnit = () => getCryptoCurrencyById("filecoin").units[0];
 
@@ -54,3 +60,20 @@ export const mapTxToOps =
 
     return ops;
   };
+
+export const getAccountShape: GetAccountShape = async (info) => {
+  const { address } = info;
+
+  const blockHeight = await fetchBlockHeight();
+  const balance = await fetchBalances(address);
+  const txs = await fetchTxs(address);
+
+  const result = {
+    balance: parseCurrencyUnit(getUnit(), String(balance.total_balance)),
+    operations: flatMap(txs, mapTxToOps(info)),
+    blockHeight: blockHeight.current_block_identifier.index,
+  };
+
+  fs.appendFileSync("getAccountShape.log", JSON.stringify(result));
+  return result;
+};
