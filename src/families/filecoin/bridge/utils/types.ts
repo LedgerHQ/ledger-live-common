@@ -1,3 +1,19 @@
+export interface EstimatedFeesRequest {
+  to: string;
+  from: string;
+}
+
+export interface EstimatedFeesResponse {
+  gas_limit: number;
+  gas_fee_cap: string;
+  gas_premium: string;
+  nonce: number;
+}
+
+export interface TransactionsResponse {
+  txs: TransactionResponse[];
+}
+
 export interface TransactionResponse {
   amount: number;
   to: string;

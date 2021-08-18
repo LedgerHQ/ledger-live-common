@@ -1,18 +1,39 @@
 import { CurrencyNotSupported } from "@ledgerhq/errors";
 import { BigNumber } from "bignumber.js";
+import Fil from "@zondax/ledger-filecoin";
 
 import { makeAccountBridgeReceive, makeSync } from "../../../bridge/jsHelpers";
-import { Account, AccountBridge, TransactionStatus } from "../../../types";
+import {
+  Account,
+  AccountBridge,
+  AccountLike,
+  BroadcastFnSignature,
+  SignOperationEvent,
+  SignOperationFnSignature,
+  TransactionStatus,
+} from "../../../types";
 import { Transaction } from "../types";
 import { getAccountShape } from "./utils/utils";
+import { fetchBalances } from "./utils/api";
+import { getMainAccount } from "../../../account";
+import { Observable } from "rxjs";
+import { close, open } from "../../../hw";
+import { toCBOR } from "./utils/serialize";
 
 const receive = makeAccountBridgeReceive();
 
-const createTransaction = (a: Account): Transaction => {
-  throw new CurrencyNotSupported("filecoin currency not supported", {
-    currencyName: a.currency.name,
-  });
-};
+const createTransaction = (account: Account): Transaction => ({
+  family: "filecoin",
+  amount: new BigNumber(0),
+  method: 0,
+  version: 0,
+  gasPrice: new BigNumber(0),
+  gasLimit: new BigNumber(0),
+  gasFeeCap: new BigNumber(0),
+  gasPremium: new BigNumber(0),
+  recipient: "",
+  useAllAmount: false,
+});
 
 const updateTransaction = (
   t: Transaction,
@@ -26,13 +47,82 @@ const getTransactionStatus = (a: Account): Promise<TransactionStatus> =>
     })
   );
 
-const estimateMaxSpendable = (): Promise<BigNumber> =>
-  Promise.reject(new Error("estimateMaxSpendable not implemented"));
+const estimateMaxSpendable = async ({
+  account,
+  parentAccount,
+}: {
+  account: AccountLike;
+  parentAccount?: Account | null | undefined;
+  transaction?: Transaction | null | undefined;
+}): Promise<BigNumber> => {
+  const a = getMainAccount(account, parentAccount);
+  const balances = await fetchBalances(a.freshAddresses[0].address);
+
+  // FIXME Filecoin - Check if we have to minus some other value
+  return new BigNumber(balances.spendable_balance);
+};
 
 const prepareTransaction = async (a, t: Transaction): Promise<Transaction> =>
   Promise.resolve(t);
 
 const sync = makeSync(getAccountShape);
+
+const broadcast: BroadcastFnSignature = async () => {
+  throw new Error("broadcast not implemented");
+};
+
+const signOperation: SignOperationFnSignature<Transaction> = ({
+  account,
+  deviceId,
+  transaction,
+}): Observable<SignOperationEvent> =>
+  new Observable((o) => {
+    async function main() {
+      const transport = await open(deviceId);
+
+      try {
+        // FIXME Filecoin - Check if everything is ready to execute signing process over tx
+
+        o.next({
+          type: "device-signature-requested",
+        });
+
+        // Serialize tx
+        const serializedTx = toCBOR(transaction);
+
+        // Sign by device
+        const filecoin = new Fil(transport);
+
+        await filecoin.sign(
+          account.freshAddresses[0].derivationPath,
+          serializedTx
+        );
+
+        o.next({
+          type: "device-signature-granted",
+        });
+
+        // FIXME Filecoin - Build operation object
+        const operation: any = {};
+
+        o.next({
+          type: "signed",
+          signedOperation: {
+            operation,
+            signature: "",
+            expirationDate: null,
+          },
+        });
+      } finally {
+        close(transport, deviceId);
+      }
+    }
+
+    main().then(
+      () => o.complete(),
+      (e) => o.error(e)
+    );
+  });
 
 export const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
@@ -42,10 +132,6 @@ export const accountBridge: AccountBridge<Transaction> = {
   estimateMaxSpendable,
   sync,
   receive,
-  signOperation: () => {
-    throw new Error("signOperation not implemented");
-  },
-  broadcast: () => {
-    throw new Error("broadcast not implemented");
-  },
+  broadcast,
+  signOperation,
 };
