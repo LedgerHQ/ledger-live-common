@@ -3,7 +3,7 @@ import {
   NetworkStatusResponse,
   TransactionResponse,
 } from "./types";
-import network from "../../../network";
+import network from "../../../../network";
 import { log } from "@ledgerhq/logs";
 
 const root = "http://127.0.0.1:8888/blockchain/filecoin";

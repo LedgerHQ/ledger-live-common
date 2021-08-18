@@ -1,11 +1,14 @@
-import { Operation } from "../../../types";
-import { getCryptoCurrencyById, parseCurrencyUnit } from "../../../currencies";
+import { Operation } from "../../../../types";
+import {
+  getCryptoCurrencyById,
+  parseCurrencyUnit,
+} from "../../../../currencies";
 import { BigNumber } from "bignumber.js";
 import { TransactionResponse } from "./types";
 import {
   GetAccountShape,
   GetAccountShapeArg0,
-} from "../../../bridge/jsHelpers";
+} from "../../../../bridge/jsHelpers";
 import { fetchBalances, fetchBlockHeight, fetchTxs } from "./api";
 import flatMap from "lodash/flatMap";
 import fs from "fs";
