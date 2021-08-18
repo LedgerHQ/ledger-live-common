@@ -1,14 +1,7 @@
 import { log } from "@ledgerhq/logs";
 import { MCUNotGenuineToDashboard } from "@ledgerhq/errors";
 import { Observable, from, of, EMPTY, concat, throwError } from "rxjs";
-import {
-  concatMap,
-  delay,
-  filter,
-  map,
-  mergeMap,
-  throttleTime,
-} from "rxjs/operators";
+import { concatMap, delay, filter, map, throttleTime } from "rxjs/operators";
 import semver from "semver";
 import ManagerAPI from "../api/Manager";
 import { withDevicePolling, withDevice } from "./deviceAccess";
@@ -20,7 +13,7 @@ import {
   followDeviceRepair,
   followDeviceUpdate,
 } from "../deviceWordings";
-import { FinalFirmware, McuVersion } from "../types/manager";
+import { FinalFirmware } from "../types/manager";
 const wait2s = of({
   type: "wait",
 }).pipe(delay(2000));
