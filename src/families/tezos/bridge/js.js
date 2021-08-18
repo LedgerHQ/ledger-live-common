@@ -1,16 +1,30 @@
 // @flow
 import { BigNumber } from "bignumber.js";
+import invariant from "invariant";
 import { TezosToolkit, DEFAULT_FEE } from "@taquito/taquito";
+import {
+  AmountRequired,
+  NotEnoughBalance,
+  NotEnoughBalanceToDelegate,
+  NotEnoughBalanceInParentAccount,
+  FeeNotLoaded,
+  FeeTooHigh,
+  NotSupportedLegacyAddress,
+  InvalidAddressBecauseDestinationIsAlsoSource,
+  RecommendSubAccountsToEmpty,
+  RecommendUndelegation,
+} from "@ledgerhq/errors";
+import { validateRecipient } from "../../../bridge/shared";
 import type { CurrencyBridge, AccountBridge } from "../../../types";
 import {
   makeSync,
   makeScanAccounts,
   makeAccountBridgeReceive,
 } from "../../../bridge/jsHelpers";
-import { getMainAccount } from "../../../account";
+import { getMainAccount, isAccountBalanceSignificant } from "../../../account";
 import type { Transaction } from "../types";
 import { getAccountShape } from "../synchronisation";
-import { fetchAllBakers, hydrateBakers } from "../bakers";
+import { fetchAllBakers, hydrateBakers, isAccountDelegating } from "../bakers";
 import { getEnv } from "../../../env";
 import { signOperation } from "../signOperation";
 import { patchOperationWithHash } from "../../../operation";
@@ -31,15 +45,101 @@ const createTransaction = () => ({
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
-const getTransactionStatus = async (account, t) => {
-  let estimatedFees = t.fees;
-  if (!account.tezosResources.revealed) {
-    // FIXME
-    // https://github.com/ecadlabs/taquito/commit/48a11cfaffe4c6bdfa6f04ebbd0b756f4b135865#diff-3b138622526cbaa55605b79011aa411652367136a3e92e43faecc654da3854e7
-    estimatedFees = estimatedFees.plus(374 || DEFAULT_FEE.REVEAL);
+const getTransactionStatus = async (a, t) => {
+  const errors: {
+    recipient?: Error;
+    amount?: Error;
+    fees?: Error;
+  } = {};
+
+  const warnings: {
+    amount?: Error;
+    feeTooHigh?: Error;
+    recipient?: Error;
+  } = {};
+
+  const subAcc = !t.subAccountId
+    ? null
+    : a.subAccounts && a.subAccounts.find((ta) => ta.id === t.subAccountId);
+  invariant(
+    t.mode === "send" || !subAcc,
+    "delegation features not supported for sub accounts"
+  );
+  const account = subAcc || a;
+
+  let estimatedFees = new BigNumber(0);
+
+  if (!t.taquitoError) {
+    if (t.mode !== "undelegate") {
+      if (account.freshAddress === t.recipient) {
+        errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
+      } else {
+        const { recipientError, recipientWarning } = await validateRecipient(
+          a.currency,
+          t.recipient
+        );
+
+        if (recipientError) {
+          errors.recipient = recipientError;
+        }
+
+        if (recipientWarning) {
+          warnings.recipient = recipientWarning;
+        }
+      }
+    }
+
+    if (t.recipient.startsWith("KT") && !errors.recipient) {
+      errors.recipient = new NotSupportedLegacyAddress();
+    }
+
+    // no fee / not enough balance already handled by taquitoError
+    // t.fees will always be set
+
+    estimatedFees = t.fees;
+    if (!account.tezosResources.revealed) {
+      // FIXME
+      // https://github.com/ecadlabs/taquito/commit/48a11cfaffe4c6bdfa6f04ebbd0b756f4b135865#diff-3b138622526cbaa55605b79011aa411652367136a3e92e43faecc654da3854e7
+      estimatedFees = estimatedFees.plus(374 || DEFAULT_FEE.REVEAL);
+    }
+
+    if (t.mode === "send") {
+      if (!errors.amount && t.amount.eq(0)) {
+        errors.amount = new AmountRequired();
+      } else if (t.amount.gt(0) && estimatedFees.times(10).gt(t.amount)) {
+        warnings.feeTooHigh = new FeeTooHigh();
+      }
+
+      const thresholdWarning = 0.5 * 10 ** a.currency.units[0].magnitude;
+
+      if (
+        !subAcc &&
+        !errors.amount &&
+        account.balance
+          .minus(t.amount)
+          .minus(estimatedFees)
+          .lt(thresholdWarning)
+      ) {
+        if (isAccountDelegating(account)) {
+          warnings.amount = new RecommendUndelegation();
+        } else if ((a.subAccounts || []).some(isAccountBalanceSignificant)) {
+          warnings.amount = new RecommendSubAccountsToEmpty();
+        }
+      }
+    }
+  } else {
+    console.log("taquitoerror", t.taquitoError);
+
+    // remap taquito errors
+    if (t.taquitoError.id === "proto.010-PtGRANAD.contract.balance_too_low") {
+      if (t.mode === "send") {
+        errors.amount = new NotEnoughBalance();
+      } else {
+        errors.amount = new NotEnoughBalanceToDelegate();
+      }
+    }
   }
-  const errors = {};
-  const warnings = {};
+
   const result = {
     errors,
     warnings,
@@ -60,36 +160,39 @@ const prepareTransaction = async (account, transaction) => {
     },
   });
 
-  let out;
-  switch (transaction.mode) {
-    case "send":
-      out = await tezos.estimate.transfer({
-        to: transaction.recipient,
-        amount: transaction.amount.div(10 ** 6),
-      });
-      break;
-    case "delegate":
-      out = await tezos.estimate.setDelegate({
-        delegate: transaction.recipient,
-      });
-      break;
-    case "undelegate":
-      out = await tezos.estimate.setDelegate({
-        source: account.freshAddress,
-      });
-      break;
-    default:
-      throw "unsuported";
-  }
+  try {
+    let out;
+    switch (transaction.mode) {
+      case "send":
+        out = await tezos.estimate.transfer({
+          to: transaction.recipient,
+          amount: transaction.amount.div(10 ** 6),
+        });
+        break;
+      case "delegate":
+        out = await tezos.estimate.setDelegate({
+          delegate: transaction.recipient,
+        });
+        break;
+      case "undelegate":
+        out = await tezos.estimate.setDelegate({
+          source: account.freshAddress,
+        });
+        break;
+      default:
+        throw "unsuported";
+    }
 
-  transaction.fees = new BigNumber(out.suggestedFeeMutez);
-  transaction.gasLimit = new BigNumber(out.gasLimit);
-  transaction.storageLimit = new BigNumber(out.storageLimit);
+    transaction.fees = new BigNumber(out.suggestedFeeMutez);
+    transaction.gasLimit = new BigNumber(out.gasLimit);
+    transaction.storageLimit = new BigNumber(out.storageLimit);
+  } catch (e) {
+    transaction.taquitoError = e;
+  }
 
   return transaction;
 };
 
-// FIXME
 const estimateMaxSpendable = async ({
   account,
   parentAccount,
@@ -102,10 +205,10 @@ const estimateMaxSpendable = async ({
     ...transaction,
     // this seed is empty (worse case scenario is to send to new). addr from: 1. eyebrow 2. odor 3. rice 4. attack 5. loyal 6. tray 7. letter 8. harbor 9. resemble 10. sphere 11. system 12. forward 13. onion 14. buffalo 15. crumble
     recipient: transaction?.recipient || "tz1VJitLYB31fEC82efFkLRU4AQUH9QgH3q6",
-    useAllAmount: true,
+    amount: 0,
   });
   const s = await getTransactionStatus(mainAccount, t);
-  return s.amount;
+  return mainAccount.balance.minus(s.estimatedFees);
 };
 
 const broadcast = async ({ signedOperation: { operation } }) => {
