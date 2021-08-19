@@ -44,7 +44,7 @@ function expectSumOfOpsIsBalance(account) {
     account.operations
       .reduce(
         (acc, op) => getOperationAmountNumberWithInternals(op).plus(acc),
-        BigNumber(0)
+        new BigNumber(0)
       )
       .toString()
   ).toEqual(account.balance.toString());
@@ -66,7 +66,7 @@ export function syncAccount(
     .toPromise();
 }
 
-function makeAccountObject(address) {
+function makeAccountObject(address): Account {
   return {
     type: "Account",
     id: "js:1:tezos:" + address + ":",
@@ -83,8 +83,8 @@ function makeAccountObject(address) {
     // these fields will be completed as we will sync
     freshAddresses: [],
     blockHeight: 0,
-    balance: BigNumber(0),
-    spendableBalance: BigNumber(0),
+    balance: new BigNumber(0),
+    spendableBalance: new BigNumber(0),
     operationsCount: 0,
     operations: [],
     pendingOperations: [],

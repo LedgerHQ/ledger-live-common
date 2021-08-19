@@ -1,5 +1,6 @@
 // @flow
 import { BigNumber } from "bignumber.js";
+import invariant from "invariant";
 import { TezosToolkit, DEFAULT_FEE } from "@taquito/taquito";
 import {
   AmountRequired,
@@ -28,10 +29,10 @@ import { log } from "@ledgerhq/logs";
 
 const receive = makeAccountBridgeReceive();
 
-const createTransaction = () => ({
+const createTransaction: () => Transaction = () => ({
   family: "tezos",
   mode: "send",
-  amount: BigNumber(0),
+  amount: new BigNumber(0),
   fees: null,
   gasLimit: null,
   storageLimit: null,
@@ -145,6 +146,7 @@ const prepareTransaction = async (account, transaction) => {
   const tezos = new TezosToolkit(getEnv("API_TEZOS_NODE"));
 
   tezos.setProvider({
+    // @ts-ignore
     signer: {
       publicKeyHash: async () => account.freshAddress,
       publicKey: async () => tezosResources.publicKey,
@@ -166,6 +168,7 @@ const prepareTransaction = async (account, transaction) => {
         break;
       case "delegate":
         out = await tezos.estimate.setDelegate({
+          source: account.freshAddress,
           delegate: transaction.recipient,
         });
         break;
@@ -204,7 +207,7 @@ const estimateMaxSpendable = async ({
     ...transaction,
     // this seed is empty (worse case scenario is to send to new). addr from: 1. eyebrow 2. odor 3. rice 4. attack 5. loyal 6. tray 7. letter 8. harbor 9. resemble 10. sphere 11. system 12. forward 13. onion 14. buffalo 15. crumble
     recipient: transaction?.recipient || "tz1VJitLYB31fEC82efFkLRU4AQUH9QgH3q6",
-    amount: BigNumber(0),
+    amount: new BigNumber(0),
     // FIXME it's supposed to be useAllAmount: true,
   });
   const s = await getTransactionStatus(mainAccount, t);
@@ -213,6 +216,7 @@ const estimateMaxSpendable = async ({
 
 const broadcast = async ({ signedOperation: { operation } }) => {
   const tezos = new TezosToolkit(getEnv("API_TEZOS_NODE"));
+  // @ts-ignore
   const hash = await tezos.contract.context.injector.inject(
     operation.extra.opbytes
   );
@@ -232,7 +236,7 @@ const preload = async () => {
   return { bakers };
 };
 
-const hydrate = (data: mixed) => {
+const hydrate = (data: any) => {
   if (!data || typeof data !== "object") return;
   const { bakers } = data;
   if (!bakers || typeof bakers !== "object" || !Array.isArray(bakers)) return;

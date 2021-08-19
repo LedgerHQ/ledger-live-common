@@ -15,7 +15,7 @@ export const signOperation = ({
   transaction,
 }: {
   account: Account,
-  deviceId: *,
+  deviceId: any,
   transaction: Transaction,
 }): Observable<SignOperationEvent> =>
   withDevice(deviceId)((transport) =>
@@ -37,7 +37,8 @@ export const signOperation = ({
           DerivationType.ED25519
         );
         tezos.setProvider({ signer: ledgerSigner });
-
+        
+        // @ts-ignore
         tezos.contract.context.injector.inject = async () => ""; // disable broadcast
 
         let res, signature, opbytes;
@@ -45,16 +46,17 @@ export const signOperation = ({
           case "send":
             res = await tezos.contract.transfer({
               to: transaction.recipient,
-              amount: transaction.amount.div(10 ** 6),
-              fee: transaction.fees,
-              storageLimit: transaction.storageLimit,
-              gasLimit: transaction.gasLimit,
+              amount: transaction.amount.div(10 ** 6).toNumber(),
+              fee: transaction.fees?.toNumber() || 0,
+              storageLimit: transaction.storageLimit?.toNumber() || 0,
+              gasLimit: transaction.gasLimit?.toNumber() || 0,
             });
             signature = res.raw.opOb.signature;
             opbytes = res.raw.opbytes;
             break;
           case "delegate":
             res = await tezos.contract.setDelegate({
+              source: freshAddress,
               delegate: transaction.recipient,
             });
             opbytes = res.raw.opbytes;
@@ -85,7 +87,7 @@ export const signOperation = ({
         const accountId = account.id;
 
         // currently, all mode are always at least one OUT tx on ETH parent
-        const operation: $Exact<Operation> = {
+        const operation = {
           id: `${accountId}-${txHash}-OUT`,
           hash: txHash,
           type: "OUT",

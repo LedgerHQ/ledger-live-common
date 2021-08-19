@@ -4,6 +4,7 @@ import type { Transaction } from "./types";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
+import { DeviceModelId } from "@ledgerhq/devices";
 
 const maxAccount = 8;
 
@@ -11,7 +12,7 @@ const tezos: AppSpec<Transaction> = {
   name: "Tezos",
   currency: getCryptoCurrencyById("tezos"),
   appQuery: {
-    model: "nanoS",
+    model: DeviceModelId.nanoS,
     appName: "TezosWallet",
   },
   transactionCheck: ({ maxSpendable }) => {

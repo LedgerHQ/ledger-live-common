@@ -69,14 +69,14 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
     counter,
   };
 
-  const balance = BigNumber(apiAccount.balance);
+  const balance = new BigNumber(apiAccount.balance);
   const subAccounts = [];
 
-  const newOps = apiOperations.map(txToOp(infoInput)).filter(Boolean);
+  const newOps: any[] = apiOperations.map(txToOp(infoInput)).filter(Boolean);
 
   const operations = mergeOps(initialStableOperations, newOps);
 
-  const accountShape: $Shape<Account> = {
+  const accountShape = {
     operations,
     balance,
     subAccounts,
@@ -91,11 +91,11 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
 
 const txToOp = ({ address, id: accountId }) => (
   tx: APIOperation
-): ?Operation => {
+): Operation | null | undefined => {
   let type;
   let maybeValue;
-  let senders = [];
-  let recipients = [];
+  let senders: string[] = [];
+  let recipients: string[] = [];
   const hasFailed = tx.status ? tx.status !== "applied" : false;
 
   switch (tx.type) {
@@ -106,7 +106,7 @@ const txToOp = ({ address, id: accountId }) => (
       if (from !== address && to !== address && initiator !== address) {
         // failsafe for a case that shouldn't happen.
         console.warn("found tx is unrelated to account! " + tx.hash);
-        return;
+        return null;
       }
       senders = [from || initiator || ""];
       recipients = [to || ""];
@@ -119,7 +119,7 @@ const txToOp = ({ address, id: accountId }) => (
       } else {
         type = to === address ? "IN" : "OUT";
         if (!hasFailed) {
-          maybeValue = BigNumber(tx.amount || 0);
+          maybeValue = new BigNumber(tx.amount || 0);
           if (maybeValue.eq(0)) {
             type = "FEES";
           }
@@ -140,13 +140,13 @@ const txToOp = ({ address, id: accountId }) => (
       break;
     case "migration":
       type = tx.balanceChange < 0 ? "OUT" : "IN";
-      maybeValue = BigNumber(Math.abs(tx.balanceChange || 0));
+      maybeValue = new BigNumber(Math.abs(tx.balanceChange || 0));
       senders = [address];
       recipients = [address];
       break;
     case "origination":
       type = "CREATE";
-      maybeValue = BigNumber(tx.contractBalance || 0);
+      maybeValue = new BigNumber(tx.contractBalance || 0);
       senders = [address];
       recipients = [tx.originatedContract.address];
       break;
@@ -154,12 +154,12 @@ const txToOp = ({ address, id: accountId }) => (
       type = "IN";
       senders = [address];
       recipients = [address];
-      maybeValue = BigNumber(tx.balance || 0);
+      maybeValue = new BigNumber(tx.balance || 0);
       break;
     // TODO more type of tx
     default:
       console.warn("unsupported tx:", tx);
-      return;
+      return null;
   }
 
   let {
@@ -178,12 +178,12 @@ const txToOp = ({ address, id: accountId }) => (
     hash = "";
   }
 
-  let value = maybeValue || BigNumber(0);
+  let value = maybeValue || new BigNumber(0);
   if (type === "IN" && value.eq(0)) {
     return; // not interesting op
   }
 
-  let fee = BigNumber(bakerFee || 0);
+  let fee = new BigNumber(bakerFee || 0);
 
   if (!hasFailed) {
     fee = fee.plus(allocationFee || 0).plus(storageFee || 0);

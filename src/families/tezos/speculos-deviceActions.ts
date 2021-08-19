@@ -4,7 +4,7 @@ import type { Transaction } from "./types";
 import { formatCurrencyUnit } from "../../currencies";
 import { deviceActionFlow } from "../../bot/specs";
 
-const acceptTransaction: DeviceAction<Transaction, *> = deviceActionFlow({
+const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
   steps: [
     {
       title: "Review",

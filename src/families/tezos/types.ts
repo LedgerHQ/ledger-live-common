@@ -10,21 +10,17 @@ import type {
   TransactionCommonRaw,
 } from "../../types/transaction";
 
-export type TezosOperationMode = "send" | "delegate" | "undelegate";
-
-export type TezosOperationTag = $Values<typeof tezosOperationTag>;
-
-export type TezosResources = {|
+export type TezosResources = {
   revealed: boolean,
   publicKey: string,
   counter: number,
-|};
+};
 
-export type TezosResourcesRaw = {|
+export type TezosResourcesRaw = {
   revealed: boolean,
   publicKey: string,
   counter: number,
-|};
+};
 
 // WILL BE DROPPED =>
 
