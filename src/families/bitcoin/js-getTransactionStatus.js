@@ -12,9 +12,13 @@ import { LowerThanMinimumRelayFee } from "./../../errors";
 import type { Account } from "./../../types";
 import type { Transaction } from "./types";
 import { calculateFees, validateRecipient } from "./cache";
-import { isChangeOutput, getMinRelayFee } from "./logic";
+import { getMinRelayFee } from "./logic";
+
+// TODO Test all cases
 
 const getTransactionStatus = async (a: Account, t: Transaction) => {
+  console.log("XXX - getTransactionStatus - START");
+
   const errors = {};
   const warnings = {};
   const useAllAmount = !!t.useAllAmount;
@@ -44,7 +48,7 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
       (res) => {
         txInputs = res.txInputs;
         txOutputs = res.txOutputs;
-        estimatedFees = res.estimatedFees;
+        estimatedFees = res.fees;
       },
       (error) => {
         if (error.name === "NotEnoughBalance") {
@@ -61,7 +65,7 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
     BigNumber(0)
   );
   const sumOfChanges = (txOutputs || [])
-    .filter(isChangeOutput)
+    .filter((o) => o.isChange)
     .reduce((sum, output) => sum.plus(output.value), BigNumber(0));
 
   if (txInputs) {
@@ -75,6 +79,7 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
     );
   }
 
+  // TODO Make sure minimum spendable is handled (dust)
   const totalSpent = sumOfInputs.minus(sumOfChanges);
   const amount = useAllAmount ? totalSpent.minus(estimatedFees) : t.amount;
 
@@ -99,6 +104,7 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
     warnings.feeTooHigh = new FeeTooHigh();
   }
 
+  console.log("XXX - getTransactionStatus - END");
   return Promise.resolve({
     errors,
     warnings,

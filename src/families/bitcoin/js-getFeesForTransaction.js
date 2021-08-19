@@ -3,11 +3,11 @@ import { BigNumber } from "bignumber.js";
 
 import type { Account } from "./../../types";
 import type { Transaction, BitcoinInput, BitcoinOutput } from "./types";
+import { buildTransaction } from "./js-buildTransation";
+import { perCoinLogic } from "./logic";
 
-// FIXME Does this object make sense?
 export type EstimatedFees = {
-  estimatedFees: BigNumber,
-  value: BigNumber,
+  fees: BigNumber,
   txInputs: BitcoinInput[],
   txOutputs: BitcoinOutput[],
 };
@@ -18,40 +18,37 @@ const getFeesForTransaction = async ({
   account: Account,
   transaction: Transaction,
 }): Promise<EstimatedFees> => {
-  // TODO
+  console.log("XXX - getFeesForTransaction - START");
 
-  // Current libcore-based implem:
-  /*
-  const builded = await buildTransaction(arg);
-  if (!builded) return;
-  const feesAmount = await builded.getFees();
-  if (!feesAmount) {
-    throw new Error("getFeesForTransaction: fees should not be undefined");
-  }
-  const estimatedFees = await libcoreAmountToBigNumber(feesAmount);
-  // we don't have a getValue on bitcoin
-  const value = BigNumber(0);
-  const inputs = await builded.getInputs();
-  let txInputs: BitcoinInput[] = await promiseAllBatched(
-    4,
-    inputs,
-    parseBitcoinInput
-  );
-  const outputs = await builded.getOutputs();
-  let txOutputs: BitcoinOutput[] = await promiseAllBatched(
-    4,
-    outputs,
-    parseBitcoinOutput
-  );
+  const walletTx = await buildTransaction(account, transaction);
 
-  const { account } = arg;
+  const fees = new BigNumber(walletTx.fee).integerValue();
+
+  let txInputs: BitcoinInput[] = walletTx.inputs.map((i) => {
+    return {
+      address: i.address,
+      value: new BigNumber(i.value),
+      previousTxHash: i.output_hash,
+      previousOutputIndex: i.output_index,
+    };
+  });
+
+  let txOutputs: BitcoinOutput[] = walletTx.outputs.map((o) => {
+    return {
+      outputIndex: walletTx.outputs.indexOf(o),
+      address: o.address,
+      isChange: o.isChange,
+      value: new BigNumber(o.value), // OK
+    };
+  });
+
   const perCoin = perCoinLogic[account.currency.id];
   if (perCoin) {
     const { syncReplaceAddress } = perCoin;
     if (syncReplaceAddress) {
       txInputs = txInputs.map((i) => ({
         ...i,
-        address: syncReplaceAddress(i.address),
+        address: i.address && syncReplaceAddress(i.address),
       }));
       txOutputs = txOutputs.map((o) => ({
         ...o,
@@ -60,14 +57,8 @@ const getFeesForTransaction = async ({
     }
   }
 
-  */
-
-  return {
-    estimatedFees: BigNumber(0),
-    value: BigNumber(0),
-    txInputs: [],
-    txOutputs: [],
-  };
+  console.log("XXX - getFeesForTransaction - END");
+  return { fees, txInputs, txOutputs };
 };
 
 export default getFeesForTransaction;

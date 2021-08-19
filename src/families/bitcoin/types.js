@@ -29,7 +29,7 @@ export type BitcoinOutput = {
   outputIndex: number,
   blockHeight: ?number,
   address: ?string,
-  path: ?string,
+  isChange: boolean,
   value: BigNumber,
   rbf: boolean,
 };
@@ -39,7 +39,7 @@ export type BitcoinOutputRaw = [
   number,
   ?number,
   ?string,
-  ?string,
+  number,
   string,
   number // rbf 0/1 for compression
 ];
@@ -60,11 +60,11 @@ export const BitcoinLikeFeePolicy = Object.freeze({
 });
 
 export const BitcoinLikeSigHashType = Object.freeze({
-  SIGHASH_ALL: Buffer.from([0x01]),
-  SIGHASH_NONE: Buffer.from([0x02]),
-  SIGHASH_SINGLE: Buffer.from([0x03]),
-  SIGHASH_FORKID: Buffer.from([0x40]),
-  SIGHASH_ANYONECANPAY: Buffer.from([0x80]),
+  SIGHASH_ALL: "0x01",
+  SIGHASH_NONE: "0x02",
+  SIGHASH_SINGLE: "0x03",
+  SIGHASH_FORKID: "0x40",
+  SIGHASH_ANYONECANPAY: "0x80",
 });
 
 // TODO maybe not all fields are useful
@@ -88,7 +88,7 @@ export type BitcoinLikeNetworkParameters = {
   // Delay applied to all timestamps. Used to debounce transactions.
   timestampDelay: BigNumber,
   // Bitcoin signature flag indicating what part of a transaction a signature signs, values in BitcoinLikeSigHashType
-  sigHash: Buffer,
+  sigHash: string,
   // Addition BIPs enabled for this network.
   additionalBIPs: string[],
 };
@@ -143,24 +143,21 @@ export type UtxoStrategy = {
   }>,
 };
 
-// TODO Add inputs, outputs, fees... any other missing fields
 export type Transaction = {|
   ...TransactionCommon,
   family: "bitcoin",
-  utxoStrategy: UtxoStrategy,
+  utxoStrategy: UtxoStrategy, // FIXME Change to BitcoinPickingStrategy?
   rbf: boolean,
   feePerByte: ?BigNumber,
-  fees: ?BigNumber,
   networkInfo: ?NetworkInfo,
 |};
 
 export type TransactionRaw = {|
   ...TransactionCommonRaw,
   family: "bitcoin",
-  utxoStrategy: UtxoStrategy,
+  utxoStrategy: UtxoStrategy, // FIXME Change to BitcoinPickingStrategy?
   rbf: boolean,
   feePerByte: ?string,
-  fees: ?string,
   networkInfo: ?NetworkInfoRaw,
 |};
 

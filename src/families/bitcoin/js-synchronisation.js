@@ -52,7 +52,7 @@ const fromWalletUtxo = (utxo: WalletOutput): BitcoinOutput => {
     address: utxo.address,
     //path, // TODO wallet-btc limitation: doesn't provide it
     value: BigNumber(utxo.value),
-    //rbf, // TODO
+    //rbf, // TODO wallet-btc limitation: doesn't provide it
   };
 };
 
@@ -275,7 +275,9 @@ const getAccountShape: GetAccountShape = async (info) => {
   });
   const blockHeight = latestTx?.block?.height;
 
-  const transactions = await wallet.getAccountTransactions(walletAccount);
+  const { txs: transactions } = await wallet.getAccountTransactions(
+    walletAccount
+  );
 
   const accountAddressesWithInfo = await walletAccount.xpub.getXpubAddresses();
   const accountAddresses = accountAddressesWithInfo
@@ -308,7 +310,7 @@ const getAccountShape: GetAccountShape = async (info) => {
   const rawUtxos = await wallet.getAccountUnspentUtxos(walletAccount);
   const utxos = rawUtxos.map(fromWalletUtxo);
 
-  const serializedData = wallet.exportToSerializedAccount(walletAccount);
+  const serializedData = await wallet.exportToSerializedAccount(walletAccount);
   return {
     id: accountId,
     xpub,

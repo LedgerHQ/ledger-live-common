@@ -7,6 +7,7 @@ import type {
   BitcoinOutput,
   BitcoinResources,
   Transaction,
+  NetworkInfo,
   UtxoStrategy,
 } from "./types";
 
@@ -28,6 +29,19 @@ const minFees = {
 
 export const getMinRelayFee = (currency: CryptoCurrency): number =>
   minFees[currency.id] || 0;
+
+export const inferFeePerByte = (t: Transaction, networkInfo: NetworkInfo) => {
+  if (t.feesStrategy) {
+    const speed = networkInfo.feeItems.items.find(
+      (item) => t.feesStrategy === item.speed
+    );
+    if (!speed) {
+      return networkInfo.feeItems.defaultFeePerByte;
+    }
+    return speed.feePerByte;
+  }
+  return t.feePerByte || networkInfo.feeItems.defaultFeePerByte;
+};
 
 export const isValidRecipient = async ({
   currency,
@@ -96,12 +110,6 @@ export const getUTXOStatus = (
   return { excluded: false };
 };
 
-export const isChangeOutput = (output: BitcoinOutput): boolean => {
-  if (!output.path) return false;
-  const p = output.path.split("/");
-  return p[p.length - 2] === "1";
-};
-
 const bchExplicit = (str: string): string => {
   const explicit = str.includes(":") ? str : "bitcoincash:" + str;
   try {
@@ -166,7 +174,7 @@ export const perCoinLogic: { [_: CryptoCurrencyIds]: ?CoinLogic } = {
       return str.startsWith(prefix) ? str.slice(prefix.length) : str;
     },
 
-    //syncReplaceAddress: (addr) => bchToCashaddrAddressWithoutPrefix(addr),
+    syncReplaceAddress: (addr) => bchToCashaddrAddressWithoutPrefix(addr),
 
     injectGetAddressParams: () => ({ forceFormat: "cashaddr" }),
   },

@@ -25,16 +25,18 @@ const estimateMaxSpendable = async ({
   parentAccount: ?Account,
   transaction: ?Transaction,
 }): Promise<BigNumber> => {
+  console.log("XXX - estimateMaxSpendable - START");
   const mainAccount = getMainAccount(account, parentAccount);
   const t = await prepareTransaction(mainAccount, {
-    // worse case scenario using a legacy address
     ...createTransaction(),
     ...transaction,
     recipient:
+      // worse case scenario using a legacy address
       transaction?.recipient || getAbandonSeedAddress(mainAccount.currency.id),
     useAllAmount: true,
   });
   const s = await getTransactionStatus(mainAccount, t);
+  console.log("XXX - estimateMaxSpendable - END");
   return s.amount;
 };
 

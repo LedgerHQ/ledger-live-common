@@ -11,7 +11,7 @@ import { pickSiblings } from "../../bot/specs";
 import { bitcoinPickingStrategy } from "./types";
 import type { MutationSpec, AppSpec } from "../../bot/types";
 import { LowerThanMinimumRelayFee } from "../../errors";
-import { isChangeOutput, getMinRelayFee, getUTXOStatus } from "./logic";
+import { getMinRelayFee, getUTXOStatus } from "./logic";
 
 type Arg = $Shape<{
   minimalAmount: BigNumber,
@@ -81,7 +81,7 @@ const genericTest = ({
         ? operation.senders
         : txInputs.map((t) => t.address).filter(Boolean),
       recipients: txOutputs
-        .filter((o) => !isChangeOutput(o))
+        .filter((o) => !o.isChange)
         .map((t) => t.address)
         .filter(Boolean),
     })

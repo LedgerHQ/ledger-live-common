@@ -1,9 +1,10 @@
 // @flow
+import invariant from "invariant";
+import flow from "lodash/flow";
 import { BigNumber } from "bignumber.js";
-
 import type { Account } from "../../types";
-
-import { getFees } from "./api/ledgerApi";
+import type { NetworkInfo } from "./types";
+import { getWalletAccount } from "./wallet";
 
 const speeds = ["fast", "medium", "slow"];
 
@@ -20,20 +21,50 @@ export function avoidDups(nums: Array<BigNumber>): Array<BigNumber> {
 export async function getAccountNetworkInfo(
   account: Account
 ): Promise<NetworkInfo> {
-  const bigNumbers = await getFees(account);
+  console.log("XXX - getAccountNetworkInfo - START");
 
-  const normalized = avoidDups(
-    bigNumbers.map((bn) => bn.div(1000).integerValue(BigNumber.ROUND_CEIL))
+  const walletAccount = await getWalletAccount(account);
+
+  const rawFees = await walletAccount.xpub.explorer.getFees();
+
+  // Convoluted logic to convert from:
+  // { "2": 2435, "3": 1241, "6": 1009, "last_updated": 1627973170 }
+  // to:
+  // { 2435, 1241, 1009 }
+  const feesPerByte = flow([
+    // Remove the 'last_updated' key
+    Object.entries,
+    (entries) => entries.filter(([key]) => !isNaN(key)),
+    // Reconstruct the array with only the values
+    Object.fromEntries,
+    Object.values,
+    // Safety against invalid data
+    (f) => f.filter((f) => f != null && typeof f === "number"),
+    // Normalize values
+    (f) =>
+      f.map((f) =>
+        new BigNumber(f).div(1000).integerValue(BigNumber.ROUND_CEIL)
+      ),
+    avoidDups,
+  ])(rawFees);
+
+  invariant(
+    feesPerByte.length === 3,
+    "cardinality of fees should be exactly 3"
   );
+
   const feeItems = {
-    items: normalized.map((feePerByte, i) => ({
+    items: feesPerByte.map((feePerByte, i) => ({
       key: String(i),
       speed: speeds[i],
       feePerByte,
     })),
     defaultFeePerByte:
-      normalized[Math.floor(normalized.length / 2)] || BigNumber(0),
+      feesPerByte[Math.floor(feesPerByte.length / 2)] || BigNumber(0),
   };
+
+  console.log("XXX - getAccountNetworkInfo - END");
+
   return {
     family: "bitcoin",
     feeItems,

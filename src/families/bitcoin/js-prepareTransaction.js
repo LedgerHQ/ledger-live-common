@@ -3,30 +3,18 @@
 import invariant from "invariant";
 
 import type { Account } from "../../types";
-import type { Transaction, NetworkInfo } from "./types";
+import type { Transaction } from "./types";
 
 import { requiresSatStackReady } from "./satstack";
-import { calculateFees } from "./cache";
 import { getAccountNetworkInfo } from "./getAccountNetworkInfo";
+import { inferFeePerByte } from "./logic";
 
-const inferFeePerByte = (t: Transaction, networkInfo: NetworkInfo) => {
-  if (t.feesStrategy) {
-    const speed = networkInfo.feeItems.items.find(
-      (item) => t.feesStrategy === item.speed
-    );
-    if (!speed) {
-      return networkInfo.feeItems.defaultFeePerByte;
-    }
-    return speed.feePerByte;
-  }
-  return t.feePerByte || networkInfo.feeItems.defaultFeePerByte;
-};
-
-// FIXME Currently getting both "fees per byte" and "fees for transaction": maybe need only one?
 const prepareTransaction = async (
   a: Account,
   t: Transaction
 ): Promise<Transaction> => {
+  console.log("XXX - prepareTransaction - START");
+
   if (a.currency.id === "bitcoin") {
     await requiresSatStackReady();
   }
@@ -37,6 +25,7 @@ const prepareTransaction = async (
   }
 
   const feePerByte = inferFeePerByte(t, networkInfo);
+  console.log("XXX - prepareTransaction - END");
   if (
     t.networkInfo === networkInfo &&
     (feePerByte === t.feePerByte || feePerByte.eq(t.feePerByte || 0))
@@ -44,14 +33,10 @@ const prepareTransaction = async (
   ) {
     return t;
   }
-
-  const fees = await calculateFees({ account: a, transaction: t });
-
   return {
     ...t,
     networkInfo,
     feePerByte,
-    fees,
   };
 };
 

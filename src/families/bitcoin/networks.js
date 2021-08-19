@@ -4,9 +4,32 @@ import { BigNumber } from "bignumber.js";
 import type { BitcoinLikeNetworkParameters } from "./types";
 import { BitcoinLikeFeePolicy, BitcoinLikeSigHashType } from "./types";
 
+// FIXME Custom parameters from libcore -- not used yet
+/*
+const BIP115_PARAMETERS = {
+  blockHash: "9ec9845acb02fab24e1c0368b3b517c1a4488fba97f0e3459ac053ea01000000",
+  blockHeight: {0xC0,0x1F,0x02};
+};
+
+//Zcash overwinter
+const ZIP143_PARAMETERS = {
+  3,
+  {0x80},
+  {0x03, 0xC4, 0x82, 0x70},
+  347500
+};
+
+//Zcash Sapling (starting from block 419200)
+const ZIP_SAPLING_PARAMETERS = {
+  4,
+  {0x80},
+  {0x89, 0x2F, 0x20, 0x85},
+  419200
+};
+*/
+
 export const getNetworkParameters = (
-  networkName: string,
-  version: number
+  networkName: string
 ): BitcoinLikeNetworkParameters => {
   if (networkName === "bitcoin") {
     return {
@@ -177,7 +200,7 @@ export const getNetworkParameters = (
       feePolicy: BitcoinLikeFeePolicy.PER_BYTE,
       dustAmount: BigNumber(10000),
       messagePrefix: "StealthCoin Signed Message:\n",
-      usesTimestampedTransaction: version === 1,
+      usesTimestampedTransaction: false, // Used to depend on "version", cf. https://github.com/LedgerHQ/lib-ledger-core/blob/fc9d762b83fc2b269d072b662065747a64ab2816/core/src/wallet/bitcoin/networks.cpp#L250
       timestampDelay: BigNumber(15),
       sigHash: BitcoinLikeSigHashType.SIGHASH_ALL,
       additionalBIPs: [],

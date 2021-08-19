@@ -5,16 +5,18 @@ import { Observable } from "rxjs";
 
 import Btc from "@ledgerhq/hw-app-btc";
 import { log } from "@ledgerhq/logs";
-import { FeeNotLoaded } from "@ledgerhq/errors";
 
 import type { Account, Operation, SignOperationEvent } from "./../../types";
 import { isSegwitDerivationMode } from "./../../derivation";
 import { encodeOperationId } from "./../../operation";
 import { open, close } from "./../../hw";
 
-import type { BitcoinOutput, Transaction } from "./types";
-import { isChangeOutput, perCoinLogic } from "./logic";
+import type { Transaction } from "./types";
 import { getNetworkParameters } from "./networks";
+import { buildTransaction } from "./js-buildTransation";
+import { calculateFees } from "./cache";
+import wallet, { getWalletAccount } from "./wallet";
+import { perCoinLogic } from "./logic";
 
 const signOperation = ({
   account,
@@ -27,30 +29,77 @@ const signOperation = ({
 }): Observable<SignOperationEvent> =>
   Observable.create((o) => {
     async function main() {
+      console.log("XXX - signOperation - START");
+
       const { currency } = account;
       const transport = await open(deviceId);
+      const hwApp = new Btc(transport);
 
-      // TODO Use this code adapted from libcore impl, or re-write it all if needed
+      const walletAccount = await getWalletAccount(account);
 
       try {
-        if (!transaction.fees) {
-          throw new FeeNotLoaded();
-        }
-
         log("hw", `signTransaction ${currency.id} for account ${account.id}`);
 
-        const perCoin = perCoinLogic[currency.id];
+        const txInfo = await buildTransaction(account, transaction);
 
-        const version = 1; // FIXME get correct version (1st byte of signature?)
-        const networkParams = getNetworkParameters(currency.id, version);
+        let senders = [];
+        let recipients = [];
+        let fee = BigNumber(0);
+        await calculateFees({ account, transaction }).then((res) => {
+          senders = res.txInputs.map((i) => i.address).filter(Boolean);
+          recipients = res.txOutputs.map((o) => o.address).filter(Boolean);
+          fee = res.fees;
+        });
 
-        const sigHashTypeHex = await networkParams.sigHash;
+        // FIXME Can't do without wallet-btc providing change path in outputs
+        /*
+        let changePath;
+        for (const output of outputs) {
+          //const output = await parseBitcoinOutput(o);
+          if (output.isChange) {
+            changePath = output.path || undefined;
+          }
+        }
+        */
+
+        // FIXME (legacy)
+        // should be `transaction.getLockTime()` as soon as lock time is
+        // handled by libcore (actually: it always returns a default value
+        // and that caused issue with zcash (see #904))
+        // cf. https://github.com/LedgerHQ/lib-ledger-core/blob/fc9d762b83fc2b269d072b662065747a64ab2816/core/src/wallet/bitcoin/transaction_builders/BitcoinLikeUtxoPicker.cpp#L156-L159
+        let lockTime;
+
+        // (legacy) Set lockTime for Komodo to enable reward claiming on UTXOs created by
+        // Ledger Live. We should only set this if the currency is Komodo and
+        // lockTime isn't already defined.
+        if (currency.id === "komodo" && lockTime === undefined) {
+          const unixtime = Math.floor(Date.now() / 1000);
+          lockTime = unixtime - 777;
+        }
+
+        const networkParams = getNetworkParameters(currency.id);
+        const sigHashTypeHex = networkParams.sigHash;
+        console.log("XXX - signOperation - sigHashTypeHex:", sigHashTypeHex);
         const sigHashType = parseInt(sigHashTypeHex, 16);
+        console.log("XXX - signOperation - sigHashType:", sigHashType);
         if (isNaN(sigHashType)) {
           throw new Error("sigHashType should not be NaN");
         }
 
-        const hwApp = new Btc(transport);
+        // FIXME Check if derivation mode of recipient instead of sender
+        const segwit = isSegwitDerivationMode(account.derivationMode);
+
+        // FIXME Call to explorer needed to set timestamp
+        // cf. https://github.com/LedgerHQ/lib-ledger-core/blob/fc9d762b83fc2b269d072b662065747a64ab2816/core/src/wallet/bitcoin/transaction_builders/BitcoinLikeUtxoPicker.cpp#L150-L154
+        /*
+        const hasTimestamp = networkParams.usesTimestampedTransaction;
+        const initialTimestamp = hasTimestamp
+          ? transaction.timestamp
+          : undefined;
+        */
+
+        const perCoin = perCoinLogic[currency.id];
+
         let additionals = [currency.id];
         if (account.derivationMode === "native_segwit") {
           additionals.push("bech32");
@@ -65,137 +114,28 @@ const signOperation = ({
           ? Buffer.from([0x00, 0x00, 0x00, 0x00])
           : undefined;
 
-        // TODO Retreive and manage inputs
-        const inputs = [];
-
-        /*
-        const hasTimestamp = networkParams.usesTimestampedTransaction;
-        const hasExtraData = perCoin?.hasExtraData || false;
-        const rawInputs: CoreBitcoinLikeInput[] = await coreTransaction.getInputs();
-        const inputs = await promiseAllBatched(
-          5,
-          rawInputs,
-          async (input, i) => {
-            const hexPreviousTransaction = await input.getPreviousTransaction();
-            //log("libcore", "splitTransaction " + String(hexPreviousTransaction));
-
-            // v1 of XST txs have timestamp but not v2
-            const inputHasTimestamp =
-              (currency.id === "stealthcoin" &&
-                hexPreviousTransaction.slice(0, 2) === "01") ||
-              hasTimestamp;
-
-            log("hw", `splitTransaction`, {
-              hexPreviousTransaction,
-              supportsSegwit: currency.supportsSegwit,
-              inputHasTimestamp,
-              hasExtraData,
-              additionals,
-            });
-
-            const previousTransaction = hwApp.splitTransaction(
-              hexPreviousTransaction,
-              currency.supportsSegwit,
-              inputHasTimestamp,
-              hasExtraData,
-              additionals
-            );
-
-            const outputIndex = await input.getPreviousOutputIndex();
-
-            // NB libcore's sequence is not used because int32 limit issue
-            const sequence = transaction.rbf ? 0 : 0xffffffff;
-
-            //log("libcore", "inputs[" + i + "]", { previousTransaction: JSON.stringify(previousTransaction), outputIndex, sequence, });
-
-            return [
-              previousTransaction,
-              outputIndex,
-              undefined, // (legacy) we don't use that
-              sequence,
-            ];
-          }
-        );
-        */
-
-        // TODO
-        const associatedKeysets = [];
-        /*
-        const associatedKeysets = await promiseAllBatched(
-          5,
-          rawInputs,
-          async (input) => {
-            const derivationPaths = await input.getDerivationPath();
-            const [first] = derivationPaths;
-            if (!first) throw new Error("unexpected empty derivationPaths");
-            const r = await first.toString();
-            return r;
-          }
-        );
-        */
-
-        // FIXME Getting utxos from Account.bitcoinResources - does it work?
-        //const outputs: CoreBitcoinLikeOutput[] = await coreTransaction.getOutputs();
-        const outputs: BitcoinOutput[] = account.bitcoinResources?.utxos || []; // TODO Throw an error if !account.bitcoinResources
-
-        let changePath;
-        for (const output of outputs) {
-          //const output = await parseBitcoinOutput(o);
-          if (isChangeOutput(output)) {
-            changePath = output.path || undefined;
-          }
-        }
-
-        // TODO Serialize utxos
-        //const outputScriptHex = await coreTransaction.serializeOutputs();
-        const outputScriptHex = "";
-
-        // FIXME Transaction type doesn't contain timestamp, add it?
-        const initialTimestamp = undefined;
-        /*
-        const initialTimestamp = hasTimestamp
-          ? transaction.timestamp
-          : undefined;
-        */
-
-        // FIXME (legacy)
-        // should be `transaction.getLockTime()` as soon as lock time is
-        // handled by libcore (actually: it always returns a default value
-        // and that caused issue with zcash (see #904))
-        let lockTime;
-
-        // (legacy) Set lockTime for Komodo to enable reward claiming on UTXOs created by
-        // Ledger Live. We should only set this if the currency is Komodo and
-        // lockTime isn't already defined.
-        if (currency.id === "komodo" && lockTime === undefined) {
-          const unixtime = Math.floor(Date.now() / 1000);
-          lockTime = unixtime - 777;
-        }
-
-        // FIXME Taking derivationMode from account here, does it work?
-        const segwit = isSegwitDerivationMode(account.derivationMode);
-
-        log("hw", `createPaymentTransactionNew`, {
-          associatedKeysets,
-          changePath,
-          outputScriptHex,
+        console.log("XXX - sign operation - signAccountTx params:", {
+          btc: hwApp,
+          fromAccount: walletAccount,
+          txInfo,
+          //changePath,
           lockTime,
           sigHashType,
           segwit,
-          initialTimestamp,
+          //initialTimestamp,
           additionals,
-          expiryHeight: expiryHeight && expiryHeight.toString("hex"),
+          expiryHeight,
         });
 
-        const signature = await hwApp.createPaymentTransactionNew({
-          inputs,
-          associatedKeysets,
-          changePath,
-          outputScriptHex,
+        const signature = await wallet.signAccountTx({
+          btc: hwApp,
+          fromAccount: walletAccount,
+          txInfo,
+          //changePath,
           lockTime,
           sigHashType,
           segwit,
-          initialTimestamp,
+          //initialTimestamp,
           additionals,
           expiryHeight,
           onDeviceSignatureGranted: () =>
@@ -205,30 +145,6 @@ const signOperation = ({
           onDeviceStreaming: ({ progress, index, total }) =>
             o.next({ type: "device-streaming", progress, index, total }),
         });
-
-        // TODO Get from inputs the addresses of senders
-        const senders = [];
-        /*
-        const sendersInput = await coreTransaction.getInputs(); // FIXME What's the difference with 'rawInputs 'above??
-        const senders = (
-          await promiseAllBatched(5, sendersInput, (senderInput) =>
-            senderInput.getAddress()
-          )
-        ).filter(Boolean);
-        */
-
-        // TODO Get from outputs the addresses of recipients
-        const recipients = [];
-        /*
-        const recipientsOutput = await coreTransaction.getOutputs(); // FIXME What's the difference with 'outputs' above??
-        const recipients = (
-          await promiseAllBatched(5, recipientsOutput, (recipientOutput) =>
-            recipientOutput.getAddress()
-          )
-        ).filter(Boolean);
-        */
-
-        const fee = transaction.fees || BigNumber(0);
 
         // Build the optimistic operation
         const operation: $Exact<Operation> = {
@@ -254,6 +170,7 @@ const signOperation = ({
             expirationDate: null,
           },
         });
+        console.log("XXX - signOperation - END");
       } finally {
         close(transport, deviceId);
       }
