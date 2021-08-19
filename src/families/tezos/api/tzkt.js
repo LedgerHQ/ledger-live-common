@@ -78,6 +78,7 @@ export type APIOperation =
     }
   | {
       type: "", // this is to express fact we have others and we need to always filter out others
+      ...CommonOperationType,
     };
 
 const api = {

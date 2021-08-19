@@ -5,9 +5,7 @@ import { log } from "@ledgerhq/logs";
 import { mergeOps } from "../../bridge/jsHelpers";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { encodeOperationId } from "../../operation";
-import {
-  areAllOperationsLoaded,
-} from "../../account";
+import { areAllOperationsLoaded } from "../../account";
 import type { Operation, Account } from "../../types";
 import api from "./api/tzkt";
 import type { APIOperation } from "./api/tzkt";
@@ -17,6 +15,7 @@ import { b58cencode, prefix, Prefix } from "@taquito/utils";
 
 export const getAccountShape: GetAccountShape = async (infoInput) => {
   let { address, initialAccount, rest } = infoInput;
+  // FIXME: rest is NOT in the type and also is ONLY provided by scanAccounts! so we must refine this as you may have to retrieve it from initalAccount in the sync case
 
   const initialStableOperations = initialAccount
     ? initialAccount.operations
@@ -217,14 +216,16 @@ const fetchAllTransactions = async (
   address: string,
   lastId?: number
 ): Promise<APIOperation[]> => {
-  let r;
   let txs: APIOperation[] = [];
   let maxIteration = 20; // safe limit
   do {
-    r = await api.getAccountOperations(address, { lastId, sort: 0 });
+    // FIXME not sure what is going on here
+    const r = await api.getAccountOperations(address, { lastId, sort: 0 });
     if (r.length === 0) return txs;
     txs = txs.concat(r);
-    lastId = txs[txs.length - 1].id;
+    const last = txs[txs.length - 1];
+    if (!last) return txs;
+    lastId = last.id;
     if (!lastId) {
       log("tezos", "id missing!");
       return txs;

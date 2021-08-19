@@ -7,6 +7,7 @@ import type { Transaction } from "./types";
 import type { Operation, Account, SignOperationEvent } from "../../types";
 import { withDevice } from "../../hw/deviceAccess";
 import { getEnv } from "../../env";
+import { FeeNotLoaded } from "@ledgerhq/errors";
 
 export const signOperation = ({
   account,
@@ -22,6 +23,9 @@ export const signOperation = ({
       let cancelled;
 
       async function main() {
+        const { fees } = transaction;
+        if (!fees) throw new FeeNotLoaded();
+
         const { freshAddressPath, freshAddress } = account;
 
         const tezos = new TezosToolkit(getEnv("API_TEZOS_NODE"));
@@ -69,6 +73,7 @@ export const signOperation = ({
           return;
         }
 
+        // FIXME this is not good, the requested trigger a "please validate on device" on the UI, it is not a "2 events in a raw"
         o.next({ type: "device-signature-requested" });
 
         o.next({ type: "device-signature-granted" });
@@ -85,7 +90,7 @@ export const signOperation = ({
           hash: txHash,
           type: "OUT",
           value: transaction.amount,
-          fee: transaction.fees,
+          fee: fees,
           extra: {
             storageLimit: transaction.storageLimit,
             gasLimit: transaction.gasLimit,
@@ -111,7 +116,7 @@ export const signOperation = ({
 
       main().then(
         () => o.complete(),
-        (e) => (console.error("OOPSY", e), o.error(e))
+        (e) => o.error(e)
       );
 
       return () => {
