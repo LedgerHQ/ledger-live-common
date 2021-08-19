@@ -16,6 +16,8 @@ import type {
   OperationRaw,
   SubAccount,
   SubAccountRaw,
+  NFTOperation,
+  NFTOperationRaw,
 } from "../types";
 import type { TronResources, TronResourcesRaw } from "../families/tron/types";
 import {
@@ -65,12 +67,14 @@ export { toCryptoOrgResourcesRaw, fromCryptoOrgResourcesRaw };
 export function toBalanceHistoryRaw(b: BalanceHistory): BalanceHistoryRaw {
   return b.map(({ date, value }) => [date.toISOString(), value.toString()]);
 }
+
 export function fromBalanceHistoryRaw(b: BalanceHistoryRaw): BalanceHistory {
   return b.map(([date, value]) => ({
     date: new Date(date),
     value: new BigNumber(value),
   }));
 }
+
 export function toBalanceHistoryRawMap(
   bhm: BalanceHistoryMap
 ): BalanceHistoryRawMap {
@@ -80,6 +84,7 @@ export function toBalanceHistoryRawMap(
   });
   return map as BalanceHistoryRawMap;
 }
+
 export function fromBalanceHistoryRawMap(
   bhm: BalanceHistoryRawMap
 ): BalanceHistoryMap {
@@ -89,6 +94,7 @@ export function fromBalanceHistoryRawMap(
   });
   return map as BalanceHistoryMap;
 }
+
 export const toOperationRaw = (
   {
     date,
@@ -96,6 +102,7 @@ export const toOperationRaw = (
     fee,
     subOperations,
     internalOperations,
+    nftOperations,
     extra,
     id,
     hash,
@@ -155,8 +162,41 @@ export const toOperationRaw = (
     copy.internalOperations = internalOperations.map((o) => toOperationRaw(o));
   }
 
+  if (nftOperations) {
+    copy.nftOperations = nftOperations.map((o) => toNFTOperationRaw(o));
+  }
+
   return copy;
 };
+
+export const toNFTOperationRaw = ({
+  id,
+  senders,
+  recipients,
+  hash,
+  type,
+  blockHeight,
+  blockHash,
+  date,
+  transactionSequenceNumber,
+  tokenId,
+  contract,
+}: NFTOperation): NFTOperationRaw => {
+  return {
+    id,
+    hash,
+    type,
+    senders,
+    recipients,
+    blockHash,
+    blockHeight,
+    date: date.toISOString(),
+    transactionSequenceNumber,
+    tokenId: tokenId.toString(),
+    contract,
+  } as NFTOperationRaw;
+};
+
 export const inferSubOperations = (
   txHash: string,
   subAccounts: SubAccount[]
@@ -185,6 +225,7 @@ export const inferSubOperations = (
 
   return all;
 };
+
 export const fromOperationRaw = (
   {
     date,
@@ -193,6 +234,7 @@ export const fromOperationRaw = (
     extra,
     subOperations,
     internalOperations,
+    nftOperations,
     id,
     hash,
     type,
@@ -257,8 +299,41 @@ export const fromOperationRaw = (
     );
   }
 
+  if (nftOperations) {
+    res.nftOperations = nftOperations.map((o) => fromNFTOperationRaw(o));
+  }
+
   return res;
 };
+
+export const fromNFTOperationRaw = ({
+  id,
+  senders,
+  recipients,
+  hash,
+  type,
+  blockHeight,
+  blockHash,
+  date,
+  transactionSequenceNumber,
+  tokenId,
+  contract,
+}: NFTOperationRaw): NFTOperation => {
+  return {
+    id,
+    hash,
+    type,
+    senders,
+    recipients,
+    blockHash,
+    blockHeight,
+    date: new Date(date),
+    transactionSequenceNumber,
+    tokenId: new BigNumber(tokenId),
+    contract,
+  } as NFTOperation;
+};
+
 export const toTronResourcesRaw = ({
   frozen,
   delegatedFrozen,
@@ -331,6 +406,7 @@ export const toTronResourcesRaw = ({
     cacheTransactionInfoById,
   };
 };
+
 export const fromTronResourcesRaw = ({
   frozen,
   delegatedFrozen,
@@ -471,6 +547,7 @@ export function fromTokenAccountRaw(raw: TokenAccountRaw): TokenAccount {
   res.balanceHistoryCache = generateHistoryFromOperations(res as TokenAccount);
   return res as TokenAccount;
 }
+
 export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
   const {
     id,
@@ -509,6 +586,7 @@ export function toTokenAccountRaw(ta: TokenAccount): TokenAccountRaw {
     approvals,
   };
 }
+
 export function fromChildAccountRaw(raw: ChildAccountRaw): ChildAccount {
   const {
     id,
@@ -552,6 +630,7 @@ export function fromChildAccountRaw(raw: ChildAccountRaw): ChildAccount {
   res.balanceHistoryCache = generateHistoryFromOperations(res);
   return res;
 }
+
 export function toChildAccountRaw(ca: ChildAccount): ChildAccountRaw {
   const {
     id,
@@ -589,6 +668,7 @@ export function toChildAccountRaw(ca: ChildAccount): ChildAccountRaw {
     swapHistory: (swapHistory || []).map(toSwapOperationRaw),
   };
 }
+
 export function fromSubAccountRaw(raw: SubAccountRaw): SubAccount {
   switch (raw.type) {
     case "ChildAccountRaw":
@@ -601,6 +681,7 @@ export function fromSubAccountRaw(raw: SubAccountRaw): SubAccount {
       throw new Error("invalid raw.type=" + (raw as SubAccountRaw).type);
   }
 }
+
 export function toSubAccountRaw(subAccount: SubAccount): SubAccountRaw {
   switch (subAccount.type) {
     case "ChildAccount":
@@ -615,6 +696,7 @@ export function toSubAccountRaw(subAccount: SubAccount): SubAccountRaw {
       );
   }
 }
+
 export function fromAccountLikeRaw(
   rawAccountLike: AccountRawLike
 ): AccountLike {
@@ -626,6 +708,7 @@ export function fromAccountLikeRaw(
   //$FlowFixMe
   return fromAccountRaw(rawAccountLike);
 }
+
 export function toAccountLikeRaw(accountLike: AccountLike): AccountRawLike {
   switch (accountLike.type) {
     case "Account":
@@ -635,6 +718,7 @@ export function toAccountLikeRaw(accountLike: AccountLike): AccountRawLike {
       return toSubAccountRaw(accountLike);
   }
 }
+
 export function fromAccountRaw(rawAccount: AccountRaw): Account {
   const {
     id,
