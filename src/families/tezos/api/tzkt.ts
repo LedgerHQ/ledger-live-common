@@ -29,7 +29,7 @@ type APIAccount =
 type CommonOperationType = {
   type: "transaction",
   id: number,
-  hash: ?string,
+  hash?: string,
   storageFee?: number,
   allocationFee?: number,
   bakerFee?: number,
@@ -40,45 +40,38 @@ type CommonOperationType = {
 };
 
 export type APIOperation =
-  | {
+  | CommonOperationType & {
       type: "transaction",
       amount: number,
-      initiator: ?{ address: string },
-      sender: ?{ address: string },
-      target: ?{ address: string },
-      ...CommonOperationType,
+      initiator: { address: string } | undefined | null,
+      sender: { address: string } | undefined | null,
+      target: { address: string } | undefined | null,
     }
-  | {
+  | CommonOperationType & {
       type: "reveal",
-      ...CommonOperationType,
     }
-  | {
+  | CommonOperationType & {
       type: "delegation",
-      ...CommonOperationType,
-      prevDelegate: ?{ address: string },
-      newDelegate: ?{ address: string },
+      prevDelegate: { address: string } | undefined | null,
+      newDelegate: { address: string } | undefined | null,
     }
-  | {
+  | CommonOperationType & {
       type: "activation",
-      ...CommonOperationType,
       balance: number,
     }
-  | {
+  | CommonOperationType & {
       type: "origination",
-      ...CommonOperationType,
       contractBalance: number,
       originatedContract: {
         address: string,
       },
     }
-  | {
+  | CommonOperationType & {
       type: "migration",
-      ...CommonOperationType,
       balanceChange: number,
     }
-  | {
+  | CommonOperationType & {
       type: "", // this is to express fact we have others and we need to always filter out others
-      ...CommonOperationType,
     };
 
 const api = {
