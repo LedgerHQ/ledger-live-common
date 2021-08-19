@@ -1,17 +1,13 @@
 // @flow
 import { BigNumber } from "bignumber.js";
-import invariant from "invariant";
 import { TezosToolkit, DEFAULT_FEE } from "@taquito/taquito";
 import {
   AmountRequired,
   NotEnoughBalance,
   NotEnoughBalanceToDelegate,
-  NotEnoughBalanceInParentAccount,
-  FeeNotLoaded,
   FeeTooHigh,
   NotSupportedLegacyAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
-  RecommendSubAccountsToEmpty,
   RecommendUndelegation,
 } from "@ledgerhq/errors";
 import { validateRecipient } from "../../../bridge/shared";
@@ -21,7 +17,7 @@ import {
   makeScanAccounts,
   makeAccountBridgeReceive,
 } from "../../../bridge/jsHelpers";
-import { getMainAccount, isAccountBalanceSignificant } from "../../../account";
+import { getMainAccount } from "../../../account";
 import type { Transaction } from "../types";
 import { getAccountShape } from "../synchronisation";
 import { fetchAllBakers, hydrateBakers, isAccountDelegating } from "../bakers";
@@ -45,7 +41,7 @@ const createTransaction = () => ({
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
-const getTransactionStatus = async (a, t) => {
+const getTransactionStatus = async (account, t) => {
   const errors: {
     recipient?: Error;
     amount?: Error;
@@ -58,15 +54,6 @@ const getTransactionStatus = async (a, t) => {
     recipient?: Error;
   } = {};
 
-  const subAcc = !t.subAccountId
-    ? null
-    : a.subAccounts && a.subAccounts.find((ta) => ta.id === t.subAccountId);
-  invariant(
-    t.mode === "send" || !subAcc,
-    "delegation features not supported for sub accounts"
-  );
-  const account = subAcc || a;
-
   let estimatedFees = new BigNumber(0);
 
   if (!t.taquitoError) {
@@ -75,7 +62,7 @@ const getTransactionStatus = async (a, t) => {
         errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
       } else {
         const { recipientError, recipientWarning } = await validateRecipient(
-          a.currency,
+          account.currency,
           t.recipient
         );
 
@@ -113,7 +100,6 @@ const getTransactionStatus = async (a, t) => {
       const thresholdWarning = 0.5 * 10 ** a.currency.units[0].magnitude;
 
       if (
-        !subAcc &&
         !errors.amount &&
         account.balance
           .minus(t.amount)
@@ -122,8 +108,6 @@ const getTransactionStatus = async (a, t) => {
       ) {
         if (isAccountDelegating(account)) {
           warnings.amount = new RecommendUndelegation();
-        } else if ((a.subAccounts || []).some(isAccountBalanceSignificant)) {
-          warnings.amount = new RecommendSubAccountsToEmpty();
         }
       }
     }
@@ -161,6 +145,10 @@ const prepareTransaction = async (account, transaction) => {
   });
 
   try {
+    if (transaction.useAllAmount) {
+      transaction.amount = new BigNumber(0);
+    }
+
     let out;
     switch (transaction.mode) {
       case "send":
@@ -186,6 +174,11 @@ const prepareTransaction = async (account, transaction) => {
     transaction.fees = new BigNumber(out.suggestedFeeMutez);
     transaction.gasLimit = new BigNumber(out.gasLimit);
     transaction.storageLimit = new BigNumber(out.storageLimit);
+
+    if (transaction.useAllAmount) {
+      const s = await getTransactionStatus(account, transaction);
+      transaction.amount = account.balance.minus(s.estimatedFees);
+    }
   } catch (e) {
     transaction.taquitoError = e;
   }
@@ -208,7 +201,7 @@ const estimateMaxSpendable = async ({
     amount: 0,
   });
   const s = await getTransactionStatus(mainAccount, t);
-  return mainAccount.balance.minus(s.estimatedFees);
+  return s.amount;
 };
 
 const broadcast = async ({ signedOperation: { operation } }) => {
