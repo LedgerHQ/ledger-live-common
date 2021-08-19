@@ -1,7 +1,19 @@
+import BigNumber from "bignumber.js";
 import { setSupportedCurrencies } from "../../currencies";
 import { setPlatformVersion } from "../../platform/version";
 
 jest.setTimeout(180000);
+
+expect.extend({
+  toBeBigNumber(value) {
+    const pass = BigNumber.isBigNumber(value);
+    const message = pass
+      ? () => `${value} is a BigNumber`
+      : () => `${value} is not a BigNumber`;
+
+    return { message, pass };
+  },
+});
 
 setPlatformVersion("0.0.1");
 
@@ -9,6 +21,7 @@ setSupportedCurrencies([
   "bitcoin",
   "ethereum",
   "bsc",
+  "elrond",
   "ripple",
   "bitcoin_cash",
   "litecoin",
@@ -38,4 +51,6 @@ setSupportedCurrencies([
   "bitcoin_testnet",
   "ethereum_ropsten",
   "cosmos_testnet",
+  "crypto_org_croeseid",
+  "crypto_org",
 ]);
