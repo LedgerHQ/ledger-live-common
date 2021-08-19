@@ -1,7 +1,14 @@
 import { log } from "@ledgerhq/logs";
 import { MCUNotGenuineToDashboard } from "@ledgerhq/errors";
 import { Observable, from, of, EMPTY, concat, throwError } from "rxjs";
-import { concatMap, delay, filter, map, throttleTime } from "rxjs/operators";
+import {
+  concatMap,
+  delay,
+  filter,
+  map,
+  mergeMap,
+  throttleTime,
+} from "rxjs/operators";
 import semver from "semver";
 import ManagerAPI from "../api/Manager";
 import { withDevicePolling, withDevice } from "./deviceAccess";
@@ -13,7 +20,7 @@ import {
   followDeviceRepair,
   followDeviceUpdate,
 } from "../deviceWordings";
-import { FinalFirmware } from "../types/manager";
+import { DeviceVersion, FinalFirmware } from "../types/manager";
 const wait2s = of({
   type: "wait",
 }).pipe(delay(2000));
@@ -115,18 +122,29 @@ const repair = (
                 let next;
                 const { seVersion, seTargetId, mcuBlVersion } = deviceInfo;
 
+                // This is a special case where a user with LNX version >= 2.0.0
+                // comes back with a broken updated device. We need to be able
+                // to patch MCU or Bootloader if needed
                 if (seVersion && seTargetId) {
                   const validMcusForDeviceInfo = mcus
                     .filter(filterMCUForDeviceInfo(deviceInfo))
                     .filter((mcu) => mcu.from_bootloader_version !== "none");
 
                   return from(
-                    ManagerAPI.getCurrentFirmware({
-                      deviceId: seTargetId,
-                      version: seVersion,
-                      provider: getProviderId(deviceInfo),
-                    })
+                    ManagerAPI.getDeviceVersion(
+                      seTargetId,
+                      getProviderId(deviceInfo)
+                    )
                   ).pipe(
+                    mergeMap((deviceVersion: DeviceVersion) =>
+                      from(
+                        ManagerAPI.getCurrentFirmware({
+                          deviceId: deviceVersion.id,
+                          version: seVersion,
+                          provider: getProviderId(deviceInfo),
+                        })
+                      )
+                    ),
                     map((finalFirmware: FinalFirmware) => {
                       const mcu = ManagerAPI.findBestMCU(
                         finalFirmware.mcu_versions
