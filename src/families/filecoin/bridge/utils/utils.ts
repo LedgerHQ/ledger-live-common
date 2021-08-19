@@ -1,4 +1,4 @@
-import { Operation } from "../../../../types";
+import { Account, Address, Operation } from "../../../../types";
 import {
   getCryptoCurrencyById,
   parseCurrencyUnit,
@@ -80,3 +80,8 @@ export const getAccountShape: GetAccountShape = async (info) => {
   fs.appendFileSync("getAccountShape.log", JSON.stringify(result));
   return result;
 };
+
+export const getAddress = (a: Account): Address =>
+  a.freshAddresses.length > 0
+    ? a.freshAddresses[0]
+    : { address: a.freshAddress, derivationPath: a.freshAddressPath };

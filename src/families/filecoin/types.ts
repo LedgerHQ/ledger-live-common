@@ -27,6 +27,7 @@ export type Transaction = TransactionCommon & {
 };
 export type TransactionRaw = TransactionCommonRaw & {
   family: FamilyType;
+  version: number;
   nonce?: number;
   data?: string;
   method: number;

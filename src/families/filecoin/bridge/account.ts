@@ -1,6 +1,10 @@
-import { CurrencyNotSupported } from "@ledgerhq/errors";
+import {
+  InvalidAddressBecauseDestinationIsAlsoSource,
+  RecipientRequired,
+} from "@ledgerhq/errors";
 import { BigNumber } from "bignumber.js";
 import Fil from "@zondax/ledger-filecoin";
+import { Observable } from "rxjs";
 
 import { makeAccountBridgeReceive, makeSync } from "../../../bridge/jsHelpers";
 import {
@@ -13,14 +17,14 @@ import {
   TransactionStatus,
 } from "../../../types";
 import { Transaction } from "../types";
-import { getAccountShape } from "./utils/utils";
-import { fetchBalances } from "./utils/api";
+import { getAccountShape, getAddress } from "./utils/utils";
+import { fetchBalances, fetchEstimatedFees } from "./utils/api";
 import { getMainAccount } from "../../../account";
-import { Observable } from "rxjs";
 import { close, open } from "../../../hw";
 import { toCBOR } from "./utils/serialize";
 import { Operation } from "../../../types/operation";
-import { isError } from "../utils";
+import { getPath, isError } from "../utils";
+import { log } from "@ledgerhq/logs";
 
 const receive = makeAccountBridgeReceive();
 
@@ -42,12 +46,43 @@ const updateTransaction = (
   patch: Transaction
 ): Transaction => ({ ...t, ...patch });
 
-const getTransactionStatus = (a: Account): Promise<TransactionStatus> =>
-  Promise.reject(
-    new CurrencyNotSupported("filecoin currency not supported", {
-      currencyName: a.currency.name,
-    })
-  );
+const getTransactionStatus = async (
+  a: Account,
+  t: Transaction
+): Promise<TransactionStatus> => {
+  const errors: TransactionStatus["errors"] = {};
+  const warnings: TransactionStatus["warnings"] = {};
+  let estimatedFees = new BigNumber(0);
+  let totalSpent = new BigNumber(0);
+
+  log("getTransactionStatus", `${JSON.stringify(t)}`);
+  const { address } = getAddress(a);
+  const { recipient, amount } = t;
+
+  if (!recipient) errors.recipient = new RecipientRequired("");
+  else if (address === recipient)
+    errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
+
+  if (!errors.recipient) {
+    const result = await fetchEstimatedFees({ to: recipient, from: address });
+
+    // FIXME Filecoin - Fix this operation
+    estimatedFees = new BigNumber(result.gas_fee_cap).plus(
+      new BigNumber(result.gas_premium)
+    );
+
+    // FIXME Filecoin - Fix this operation
+    totalSpent = amount.plus(estimatedFees);
+  }
+
+  return {
+    errors,
+    warnings,
+    estimatedFees,
+    amount,
+    totalSpent,
+  };
+};
 
 const estimateMaxSpendable = async ({
   account,
@@ -58,14 +93,17 @@ const estimateMaxSpendable = async ({
   transaction?: Transaction | null | undefined;
 }): Promise<BigNumber> => {
   const a = getMainAccount(account, parentAccount);
-  const balances = await fetchBalances(a.freshAddresses[0].address);
+  const { address } = getAddress(a);
+  const balances = await fetchBalances(address);
 
   // FIXME Filecoin - Check if we have to minus some other value
   return new BigNumber(balances.spendable_balance);
 };
 
-const prepareTransaction = async (a, t: Transaction): Promise<Transaction> =>
-  Promise.resolve(t);
+const prepareTransaction = async (
+  a: Account,
+  t: Transaction
+): Promise<Transaction> => t;
 
 const sync = makeSync(getAccountShape);
 
@@ -81,8 +119,8 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
   new Observable((o) => {
     async function main() {
       const { recipient, amount } = transaction;
-      const { id: accountId, freshAddresses } = account;
-      const [mainAddress] = freshAddresses;
+      const { id: accountId } = account;
+      const { address, derivationPath } = getAddress(account);
 
       const transport = await open(deviceId);
 
@@ -94,12 +132,12 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
         });
 
         // Serialize tx
-        const serializedTx = toCBOR(mainAddress.address, transaction);
+        const serializedTx = toCBOR(address, transaction);
 
         // Sign by device
         const filecoin = new Fil(transport);
         const result = await filecoin.sign(
-          mainAddress.derivationPath,
+          getPath(derivationPath),
           serializedTx
         );
         isError(result);
@@ -108,7 +146,7 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
           type: "device-signature-granted",
         });
 
-        const fee = new BigNumber(0); // FIXME Filecoin
+        const fee = new BigNumber(0); // FIXME Filecoin - Check how to calculate the fee
         const value = amount.plus(fee);
 
         // resolved at broadcast time
@@ -121,7 +159,7 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
           id: `${accountId}-${txHash}-OUT`,
           hash: txHash,
           type: "OUT",
-          senders: [mainAddress.address],
+          senders: [address],
           recipients: [recipient],
           accountId,
           value,

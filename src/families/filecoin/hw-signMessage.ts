@@ -8,6 +8,8 @@ const resolver: Resolver = async (
 ): Promise<Result> => {
   const fil = new Fil(transport);
 
+  if (!message) throw new Error(`Message cannot be empty`);
+
   const r = await fil.sign(getPath(path), getBufferFromString(message));
   isError(r);
 
