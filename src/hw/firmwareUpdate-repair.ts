@@ -167,7 +167,7 @@ const repair = (
                         next = mcu;
                       } else {
                         next = {
-                          name: mcuBlVersion,
+                          name: mcu.from_bootloader_version,
                         };
                       }
 
