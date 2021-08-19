@@ -383,7 +383,7 @@ const genuineCheck = (
     targetId: any;
     perso: any;
   }
-): Observable<SocketEvent> => {
+): Observable<any> => {
   if (getEnv("MOCK")) {
     return createMockSocket(secureChannelMock(false), resultMock("0000"));
   }
@@ -491,8 +491,8 @@ const installMcu = (
     targetId,
     version,
   }: {
-    targetId: any;
-    version: any;
+    targetId: number | string;
+    version: string;
   }
 ): Observable<any> => {
   if (getEnv("MOCK")) {
@@ -503,6 +503,7 @@ const installMcu = (
     targetId,
     version,
   });
+
   return createDeviceSocket(transport, {
     url: URL.format({
       pathname: `${getEnv("BASE_SOCKET_URL")}/mcu`,

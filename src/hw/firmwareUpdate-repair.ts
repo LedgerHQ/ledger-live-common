@@ -145,7 +145,7 @@ const repair = (
                         })
                       )
                     ),
-                    map((finalFirmware: FinalFirmware) => {
+                    mergeMap((finalFirmware: FinalFirmware) => {
                       const mcu = ManagerAPI.findBestMCU(
                         finalFirmware.mcu_versions
                           .map((id) =>
@@ -171,7 +171,7 @@ const repair = (
                         };
                       }
 
-                      if (next) return installMcu(next.name);
+                      return installMcu(next.name);
                     })
                   );
                 } else {
