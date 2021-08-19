@@ -41,6 +41,8 @@ export const signOperation = ({
         // @ts-ignore
         tezos.contract.context.injector.inject = async () => ""; // disable broadcast
 
+        o.next({ type: "device-signature-requested" });
+
         let res, signature, opbytes;
         switch (transaction.mode) {
           case "send":
@@ -74,9 +76,6 @@ export const signOperation = ({
         if (cancelled) {
           return;
         }
-
-        // FIXME this is not good, the requested trigger a "please validate on device" on the UI, it is not a "2 events in a raw"
-        o.next({ type: "device-signature-requested" });
 
         o.next({ type: "device-signature-granted" });
 

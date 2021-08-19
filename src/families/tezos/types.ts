@@ -130,6 +130,7 @@ export type NetworkInfoRaw = {
 };
 // TODO add a field for indicating if staking
 // FIXME we must add tezosError and make it serializable in the Raw version (or find a format, like json)
+// FIXME = added below but what else needed to be done ?
 export type Transaction = TransactionCommon & {
   family: "tezos";
   mode: TezosOperationMode;
@@ -137,6 +138,7 @@ export type Transaction = TransactionCommon & {
   fees: BigNumber | null | undefined;
   gasLimit: BigNumber | null | undefined;
   storageLimit: BigNumber | null | undefined;
+  taquitoError: string | null | undefined;
 };
 export type TransactionRaw = TransactionCommonRaw & {
   family: "tezos";
@@ -145,6 +147,7 @@ export type TransactionRaw = TransactionCommonRaw & {
   fees: string | null | undefined;
   gasLimit: string | null | undefined;
   storageLimit: string | null | undefined;
+  taquitoError: string | null | undefined;
 };
 export const reflect = (declare: (arg0: string, arg1: Spec) => void) => {
   declare("TezosLikeAddress", {

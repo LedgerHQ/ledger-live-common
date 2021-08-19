@@ -15,7 +15,6 @@ import { b58cencode, prefix, Prefix } from "@taquito/utils";
 
 export const getAccountShape: GetAccountShape = async (infoInput) => {
   let { address, initialAccount, rest } = infoInput;
-  // FIXME: rest is NOT in the type and also is ONLY provided by scanAccounts! so we must refine this as you may have to retrieve it from initalAccount in the sync case
 
   const initialStableOperations = initialAccount
     ? initialAccount.operations
@@ -51,15 +50,13 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
     apiAccount.type
   );
 
-  // TODO paginate with lastId
-
   const apiOperations = await fetchAllTransactions(address, lastId);
 
   const { revealed, counter } = apiAccount;
 
   const tezosResources = {
     revealed,
-    publicKey: b58cencode(
+    publicKey: initialAccount?.tezosResources?.publicKey || b58cencode(
       compressPublicKey(
         Buffer.from(rest.publicKey, "hex"),
         DerivationType.ED25519

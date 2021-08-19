@@ -39,6 +39,7 @@ const createTransaction: () => Transaction = () => ({
   recipient: "",
   networkInfo: null,
   useAllAmount: false,
+  taquitoError: null,
 });
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
@@ -120,7 +121,7 @@ const getTransactionStatus = async (account, t) => {
     log("taquitoerror", String(t.taquitoError));
 
     // remap taquito errors
-    if (t.taquitoError.id === "proto.010-PtGRANAD.contract.balance_too_low") {
+    if (t.taquitoError === "proto.010-PtGRANAD.contract.balance_too_low") {
       if (t.mode === "send") {
         errors.amount = new NotEnoughBalance();
       } else {
@@ -154,6 +155,8 @@ const prepareTransaction = async (account, transaction) => {
   });
 
   try {
+    // FIXME: tezos estimate throws with amount 0
+    // what to do ?
     if (transaction.useAllAmount) {
       transaction.amount = new BigNumber(0);
     }
@@ -190,7 +193,7 @@ const prepareTransaction = async (account, transaction) => {
       transaction.amount = account.balance.minus(s.estimatedFees);
     }
   } catch (e) {
-    transaction.taquitoError = e;
+    transaction.taquitoError = e.id;
   }
 
   return transaction;
@@ -207,8 +210,7 @@ const estimateMaxSpendable = async ({
     ...transaction,
     // this seed is empty (worse case scenario is to send to new). addr from: 1. eyebrow 2. odor 3. rice 4. attack 5. loyal 6. tray 7. letter 8. harbor 9. resemble 10. sphere 11. system 12. forward 13. onion 14. buffalo 15. crumble
     recipient: transaction?.recipient || "tz1VJitLYB31fEC82efFkLRU4AQUH9QgH3q6",
-    amount: new BigNumber(0),
-    // FIXME it's supposed to be useAllAmount: true,
+    useAllAmount: new BigNumber(0),
   });
   const s = await getTransactionStatus(mainAccount, t);
   return s.amount;
