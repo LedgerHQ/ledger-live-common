@@ -126,9 +126,18 @@ const repair = (
                 // comes back with a broken updated device. We need to be able
                 // to patch MCU or Bootloader if needed
                 if (seVersion && seTargetId) {
+                  log(
+                    "hw",
+                    "firmwareUpdate-repair seVersion and seTargetId found",
+                    { seVersion, seTargetId }
+                  );
                   const validMcusForDeviceInfo = mcus
                     .filter(filterMCUForDeviceInfo(deviceInfo))
                     .filter((mcu) => mcu.from_bootloader_version !== "none");
+
+                  log("hw", "firmwareUpdate-repair valid mcus for device", {
+                    validMcusForDeviceInfo,
+                  });
 
                   return from(
                     ManagerAPI.getDeviceVersion(
@@ -146,6 +155,10 @@ const repair = (
                       )
                     ),
                     mergeMap((finalFirmware: FinalFirmware) => {
+                      log("hw", "firmwareUpdate-repair got final firmware", {
+                        finalFirmware,
+                      });
+
                       const mcu = ManagerAPI.findBestMCU(
                         finalFirmware.mcu_versions
                           .map((id) =>
@@ -154,6 +167,8 @@ const repair = (
                           .filter(Boolean)
                       );
 
+                      log("hw", "firmwareUpdate-repair got mcu", { mcu });
+
                       if (!mcu) return EMPTY;
                       const expectedBootloaderVersion = semver.coerce(
                         mcu.from_bootloader_version
@@ -161,14 +176,29 @@ const repair = (
                       const currentBootloaderVersion =
                         semver.coerce(mcuBlVersion);
 
+                      log("hw", "firmwareUpdate-repair bootloader versions", {
+                        currentBootloaderVersion,
+                        expectedBootloaderVersion,
+                      });
+
                       if (
                         expectedBootloaderVersion === currentBootloaderVersion
                       ) {
                         next = mcu;
+                        log(
+                          "hw",
+                          "firmwareUpdate-repair bootloader versions are the same",
+                          { next }
+                        );
                       } else {
                         next = {
                           name: mcu.from_bootloader_version,
                         };
+                        log(
+                          "hw",
+                          "firmwareUpdate-repair bootloader versions are different",
+                          { next }
+                        );
                       }
 
                       return installMcu(next.name);
