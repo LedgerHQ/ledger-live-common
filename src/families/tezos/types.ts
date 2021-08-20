@@ -129,8 +129,6 @@ export type NetworkInfoRaw = {
   fees: string;
 };
 // TODO add a field for indicating if staking
-// FIXME we must add tezosError and make it serializable in the Raw version (or find a format, like json)
-// FIXME = added below but what else needed to be done ?
 export type Transaction = TransactionCommon & {
   family: "tezos";
   mode: TezosOperationMode;
