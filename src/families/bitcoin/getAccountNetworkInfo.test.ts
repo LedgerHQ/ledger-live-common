@@ -1,5 +1,5 @@
-import { avoidDups } from "./libcore-getAccountNetworkInfo";
 import { BigNumber } from "bignumber.js";
+import { avoidDups } from "./getAccountNetworkInfo";
 test("avoidFeeDupsInFeePerByte [3,2,2] => [4,3,2]", async () => {
   expect(
     avoidDups([new BigNumber(3), new BigNumber(3), new BigNumber(2)])

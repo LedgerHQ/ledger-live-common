@@ -1,14 +1,16 @@
 import type { BigNumber } from "bignumber.js";
+import type { SerializedAccount as WalletSerializedAccount } from "wallet-btc";
+
 import type {
   TransactionCommon,
   TransactionCommonRaw,
 } from "../../types/transaction";
-import type {
-  CoreBigInt,
-  CoreAmount,
-  CoreDerivationPath,
-  Spec,
-} from "../../libcore/types";
+
+export type CoreStatics = Record<string, never>;
+export type CoreAccountSpecifics = Record<string, never>;
+export type CoreOperationSpecifics = Record<string, never>;
+export type CoreCurrencySpecifics = Record<string, never>;
+
 export type BitcoinInput = {
   address: string | null | undefined;
   value: BigNumber | null | undefined;
@@ -26,7 +28,7 @@ export type BitcoinOutput = {
   outputIndex: number;
   blockHeight: number | null | undefined;
   address: string | null | undefined;
-  path: string | null | undefined;
+  isChange: boolean;
   value: BigNumber;
   rbf: boolean;
 };
@@ -35,101 +37,58 @@ export type BitcoinOutputRaw = [
   number,
   number | null | undefined,
   string | null | undefined,
-  string | null | undefined,
+  number,
   string,
   number // rbf 0/1 for compression
 ];
 export type BitcoinResources = {
   utxos: BitcoinOutput[];
+  serializedData: WalletSerializedAccount;
 };
 export type BitcoinResourcesRaw = {
   utxos: BitcoinOutputRaw[];
+  serializedData: WalletSerializedAccount;
 };
 
-declare class CoreBitcoinLikeInput {
-  getPreviousTransaction(): Promise<string>;
-  getPreviousTxHash(): Promise<string | null | undefined>;
-  getPreviousOutputIndex(): Promise<number>;
-  getValue(): Promise<CoreAmount | null | undefined>;
-  getSequence(): Promise<number>;
-  getDerivationPath(): Promise<CoreDerivationPath[]>;
-  getAddress(): Promise<string | null | undefined>;
-}
+export const BitcoinLikeFeePolicy = Object.freeze({
+  PER_BYTE: "PER_BYTE",
+  PER_KBYTE: "PER_KBYTE",
+});
 
-declare class CoreBitcoinLikeOutput {
-  getTransactionHash(): Promise<string>;
-  getOutputIndex(): Promise<number>;
-  getValue(): Promise<CoreAmount>;
-  getBlockHeight(): Promise<number | null | undefined>;
-  getDerivationPath(): Promise<CoreDerivationPath | null | undefined>;
-  getAddress(): Promise<string | null | undefined>;
-  isReplaceable(): Promise<boolean>;
-}
+export const BitcoinLikeSigHashType = Object.freeze({
+  SIGHASH_ALL: 0x01,
+  SIGHASH_NONE: 0x02,
+  SIGHASH_SINGLE: 0x03,
+  SIGHASH_FORKID: 0x40,
+  SIGHASH_ANYONECANPAY: 0x80,
+});
 
-declare class CoreBitcoinLikeTransaction {
-  getHash(): Promise<string>;
-  getFees(): Promise<CoreAmount | null | undefined>;
-  getInputs(): Promise<CoreBitcoinLikeInput[]>;
-  getOutputs(): Promise<CoreBitcoinLikeOutput[]>;
-  serializeOutputs(): Promise<string>;
-  getTimestamp(): Promise<number | null | undefined>;
-}
-
-declare class CoreBitcoinLikeOperation {
-  getTransaction(): Promise<CoreBitcoinLikeTransaction>;
-}
-
-declare class CoreBitcoinLikeTransactionBuilder {
-  wipeToAddress(address: string): Promise<void>;
-  sendToAddress(amount: CoreAmount, recipient: string): Promise<void>;
-  excludeUtxo(transactionHash: string, outputIndex: number): Promise<void>;
-  pickInputs(arg0: number, arg1: number): Promise<void>;
-  setFeesPerByte(feesPerByte: CoreAmount): Promise<void>;
-  build(): Promise<CoreBitcoinLikeTransaction>;
-}
-
-declare class CoreBitcoinLikeAccount {
-  getUTXO(from: number, to: number): Promise<CoreBitcoinLikeOutput[]>;
-  getUTXOCount(): Promise<number>;
-  buildTransaction(
-    isPartial: boolean
-  ): Promise<CoreBitcoinLikeTransactionBuilder>;
-  broadcastRawTransaction(signed: string): Promise<string>;
-  getFees(): Promise<CoreBigInt[]>;
-}
-
-declare class CoreBitcoinLikeNetworkParameters {
-  getSigHash(): Promise<string>;
-  getUsesTimestampedTransaction(): Promise<boolean>;
-}
-
-export type CoreStatics = {
-  BitcoinLikeAccount: CoreBitcoinLikeAccount;
-  BitcoinLikeInput: CoreBitcoinLikeInput;
-  BitcoinLikeNetworkParameters: CoreBitcoinLikeNetworkParameters;
-  BitcoinLikeOperation: CoreBitcoinLikeOperation;
-  BitcoinLikeOutput: CoreBitcoinLikeOutput;
-  BitcoinLikeTransaction: CoreBitcoinLikeTransaction;
-  BitcoinLikeTransactionBuilder: CoreBitcoinLikeTransactionBuilder;
+// TODO maybe not all fields are useful
+export type BitcoinLikeNetworkParameters = {
+  // Name of the network.
+  identifier: string;
+  // Version of the Pay To Public Hash standard.
+  P2PKHVersion: Buffer;
+  // Version of the Pay To Script Hash standard.
+  P2SHVersion: Buffer;
+  // Version of the Extended Public Key standard.
+  xpubVersion: Buffer;
+  // Policy to use when expressing fee amount, values in BitcoinLikeFeePolicy
+  feePolicy: string;
+  // Minimal amount a UTXO should have before being considered BTC dust.
+  dustAmount: BigNumber;
+  // Constant prefix to prepend all signature messages.
+  messagePrefix: string;
+  // Are transactions encoded with timestamp?
+  usesTimestampedTransaction: boolean;
+  // Delay applied to all timestamps. Used to debounce transactions.
+  timestampDelay: BigNumber;
+  // Bitcoin signature flag indicating what part of a transaction a signature signs, values in BitcoinLikeSigHashType
+  sigHash: number;
+  // Addition BIPs enabled for this network.
+  additionalBIPs: string[];
 };
-export type {
-  CoreBitcoinLikeAccount,
-  CoreBitcoinLikeInput,
-  CoreBitcoinLikeNetworkParameters,
-  CoreBitcoinLikeOperation,
-  CoreBitcoinLikeOutput,
-  CoreBitcoinLikeTransaction,
-  CoreBitcoinLikeTransactionBuilder,
-};
-export type CoreAccountSpecifics = {
-  asBitcoinLikeAccount(): Promise<CoreBitcoinLikeAccount>;
-};
-export type CoreOperationSpecifics = {
-  asBitcoinLikeOperation(): Promise<CoreBitcoinLikeOperation>;
-};
-export type CoreCurrencySpecifics = {
-  getBitcoinLikeNetworkParameters(): Promise<CoreBitcoinLikeNetworkParameters>;
-};
+
 export type FeeItem = {
   key: string;
   speed: string;
@@ -163,7 +122,7 @@ export const bitcoinPickingStrategy = {
 };
 export type BitcoinPickingStrategy =
   typeof bitcoinPickingStrategy[keyof typeof bitcoinPickingStrategy];
-// FIXME the UtxoStrategy level should be flattened back in Transaction
+// FIXME (legacy) the UtxoStrategy level should be flattened back in Transaction
 export type UtxoStrategy = {
   strategy: BitcoinPickingStrategy;
   pickUnconfirmedRBF: boolean;
@@ -174,144 +133,16 @@ export type UtxoStrategy = {
 };
 export type Transaction = TransactionCommon & {
   family: "bitcoin";
-  utxoStrategy: UtxoStrategy;
+  utxoStrategy: UtxoStrategy; // FIXME Change to BitcoinPickingStrategy?
   rbf: boolean;
   feePerByte: BigNumber | null | undefined;
   networkInfo: NetworkInfo | null | undefined;
 };
 export type TransactionRaw = TransactionCommonRaw & {
   family: "bitcoin";
-  utxoStrategy: UtxoStrategy;
+  utxoStrategy: UtxoStrategy; // FIXME Change to BitcoinPickingStrategy?
   rbf: boolean;
   feePerByte: string | null | undefined;
   networkInfo: NetworkInfoRaw | null | undefined;
 };
-export const reflect = (
-  declare: (arg0: string, arg1: Spec) => void
-): {
-  OperationMethods: {
-    asBitcoinLikeOperation: {
-      returns: "BitcoinLikeOperation";
-    };
-  };
-  AccountMethods: {
-    asBitcoinLikeAccount: {
-      returns: "BitcoinLikeAccount";
-    };
-  };
-} => {
-  declare("BitcoinLikeInput", {
-    methods: {
-      getPreviousTransaction: {
-        returns: "hex",
-      },
-      getPreviousTxHash: {},
-      getValue: {
-        returns: "Amount",
-      },
-      getPreviousOutputIndex: {},
-      getSequence: {},
-      getDerivationPath: {
-        returns: ["DerivationPath"],
-      },
-      getAddress: {},
-    },
-  });
-  declare("BitcoinLikeOutput", {
-    methods: {
-      getTransactionHash: {},
-      getOutputIndex: {},
-      getValue: {
-        returns: "Amount",
-      },
-      getBlockHeight: {},
-      getDerivationPath: {
-        returns: "DerivationPath",
-      },
-      getAddress: {},
-      isReplaceable: {},
-    },
-  });
-  declare("BitcoinLikeTransaction", {
-    methods: {
-      getHash: {},
-      getFees: {
-        returns: "Amount",
-      },
-      getInputs: {
-        returns: ["BitcoinLikeInput"],
-      },
-      getOutputs: {
-        returns: ["BitcoinLikeOutput"],
-      },
-      serializeOutputs: {
-        returns: "hex",
-      },
-      getTimestamp: {},
-    },
-  });
-  declare("BitcoinLikeOperation", {
-    methods: {
-      getTransaction: {
-        returns: "BitcoinLikeTransaction",
-      },
-    },
-  });
-  declare("BitcoinLikeTransactionBuilder", {
-    methods: {
-      wipeToAddress: {},
-      sendToAddress: {
-        params: ["Amount"],
-      },
-      excludeUtxo: {},
-      pickInputs: {},
-      setFeesPerByte: {
-        params: ["Amount"],
-      },
-      build: {
-        returns: "BitcoinLikeTransaction",
-      },
-    },
-  });
-  declare("BitcoinLikeAccount", {
-    methods: {
-      getUTXO: {
-        returns: ["BitcoinLikeOutput"],
-      },
-      getUTXOCount: {},
-      buildTransaction: {
-        returns: "BitcoinLikeTransactionBuilder",
-      },
-      broadcastRawTransaction: {
-        params: ["hex"],
-      },
-      getFees: {
-        returns: ["BigInt"],
-      },
-    },
-  });
-  declare("BitcoinLikeNetworkParameters", {
-    njsUsesPlainObject: true,
-    methods: {
-      getSigHash: {
-        returns: "hex",
-        njsField: "SigHash",
-      },
-      getUsesTimestampedTransaction: {
-        njsField: "UsesTimestampedTransaction",
-      },
-    },
-  });
-  return {
-    OperationMethods: {
-      asBitcoinLikeOperation: {
-        returns: "BitcoinLikeOperation",
-      },
-    },
-    AccountMethods: {
-      asBitcoinLikeAccount: {
-        returns: "BitcoinLikeAccount",
-      },
-    },
-  };
-};
+export const reflect = (_declare: any): void => {};

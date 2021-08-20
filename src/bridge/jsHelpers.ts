@@ -3,6 +3,7 @@ import { BigNumber } from "bignumber.js";
 import { Observable, from } from "rxjs";
 import { log } from "@ledgerhq/logs";
 import { WrongDeviceForAccount } from "@ledgerhq/errors";
+import Transport from "@ledgerhq/hw-transport";
 import {
   getSeedIdentifierDerivation,
   getDerivationModesForCurrency,
@@ -31,6 +32,7 @@ import type {
   ScanAccountEvent,
   SyncConfig,
   CryptoCurrency,
+  DerivationMode,
 } from "../types";
 import type { CurrencyBridge, AccountBridge } from "../types/bridge";
 import getAddress from "../hw/getAddress";
@@ -41,7 +43,11 @@ export type GetAccountShape = (
     currency: CryptoCurrency;
     address: string;
     id: string;
+    index: number;
     initialAccount?: Account;
+    derivationPath: string;
+    derivationMode: DerivationMode;
+    transport?: Transport;
   },
   arg1: SyncConfig
 ) => Promise<Partial<Account>>;
@@ -116,11 +122,19 @@ export const makeSync =
         const needClear = initial.id !== accountId;
 
         try {
+          const freshAddressPath = getSeedIdentifierDerivation(
+            initial.currency,
+            initial.derivationMode
+          );
+
           const shape = await getAccountShape(
             {
               currency: initial.currency,
               id: accountId,
+              index: initial.index, // FIXME typescript
               address: initial.freshAddress,
+              derivationPath: freshAddressPath,
+              derivationMode: initial.derivationMode,
               initialAccount: needClear ? clearAccount(initial) : initial,
             },
             syncConfig
@@ -175,15 +189,20 @@ export const makeScanAccounts =
         index,
         { address, path: freshAddressPath },
         derivationMode,
-        seedIdentifier
+        seedIdentifier,
+        transport
       ): Promise<Account | null | undefined> {
         if (finished) return;
         const accountId = `js:2:${currency.id}:${address}:${derivationMode}`;
         const accountShape: Partial<Account> = await getAccountShape(
           {
+            transport,
             currency,
             id: accountId,
+            index,
             address,
+            derivationPath: freshAddressPath,
+            derivationMode,
           },
           syncConfig
         );
@@ -311,7 +330,8 @@ export const makeScanAccounts =
                 index,
                 res,
                 derivationMode,
-                seedIdentifier
+                seedIdentifier,
+                transport
               );
               log(
                 "scanAccounts",
