@@ -7,8 +7,8 @@ import {
 import { fromAccountRaw } from "../../account";
 import bitcoinDatasets from "./datasets/bitcoin";
 describe("inferDescriptorFromAccount", () => {
-  invariant(bitcoinDatasets.accounts, "bitcoin datasets have accounts");
   // FIXME: migrate away from invariant for more type guard
+  invariant(bitcoinDatasets.accounts, "bitcoin datasets have accounts");
   const [bitcoin1, bitcoin2] = (bitcoinDatasets.accounts as any).map((a) =>
     fromAccountRaw(a.raw)
   );

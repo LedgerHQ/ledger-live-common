@@ -7,6 +7,7 @@ import type {
   BitcoinOutputRaw,
   BitcoinOutput,
 } from "./types";
+
 export function toBitcoinInputRaw({
   address,
   value,
@@ -38,7 +39,7 @@ export function toBitcoinOutputRaw({
   outputIndex,
   blockHeight,
   address,
-  path,
+  isChange,
   value,
   rbf,
 }: BitcoinOutput): BitcoinOutputRaw {
@@ -47,7 +48,7 @@ export function toBitcoinOutputRaw({
     outputIndex,
     blockHeight,
     address,
-    path,
+    isChange ? 1 : 0,
     value.toString(),
     rbf ? 1 : 0,
   ];
@@ -57,7 +58,7 @@ export function fromBitcoinOutputRaw([
   outputIndex,
   blockHeight,
   address,
-  path,
+  isChange,
   value,
   rbf,
 ]: BitcoinOutputRaw): BitcoinOutput {
@@ -66,7 +67,7 @@ export function fromBitcoinOutputRaw([
     outputIndex,
     blockHeight: blockHeight || undefined,
     address: address || undefined,
-    path: path || undefined,
+    isChange: !!isChange,
     value: new BigNumber(value),
     rbf: !!rbf,
   };
@@ -76,6 +77,7 @@ export function toBitcoinResourcesRaw(
 ): BitcoinResourcesRaw {
   return {
     utxos: r.utxos.map(toBitcoinOutputRaw),
+    serializedData: r.serializedData,
   };
 }
 export function fromBitcoinResourcesRaw(
@@ -83,5 +85,6 @@ export function fromBitcoinResourcesRaw(
 ): BitcoinResources {
   return {
     utxos: r.utxos.map(fromBitcoinOutputRaw),
+    serializedData: r.serializedData,
   };
 }

@@ -16,6 +16,24 @@ function sameSwap(a: SwapOperation, b: SwapOperation) {
 }
 
 export const implicitMigration = (accounts: Account[]): Account[] => {
+  // TODO Need this for BTC-JS?
+  /*
+  // this infer the next account id following ongoing libcore->js migration
+  function targetBitcoinJSaccountId(a: AccountLike) {
+    if (a.type === "Account") {
+      const decoded = decodeAccountId(a.id);
+      if (decoded.type !== "libcore") {
+        return a.id;
+      }
+      if (decoded.currencyId !== "bitcoin") {
+        return a.id;
+      }
+      return `js:2:${decoded.currencyId}:${a.freshAddress}:${decoded.derivationMode}`;
+    }
+    return a.id;
+  }
+  */
+
   // this infer the next account id following ongoing libcore->js migration
   function targetEthereumJSaccountId(a: AccountLike) {
     if (a.type === "Account") {
