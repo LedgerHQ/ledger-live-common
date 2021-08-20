@@ -155,10 +155,11 @@ const prepareTransaction = async (account, transaction) => {
   });
 
   try {
-    // FIXME: tezos estimate throws with amount 0
-    // what to do ?
     if (transaction.useAllAmount) {
-      transaction.amount = new BigNumber(0);
+      // taquito does not accept 0, so we do 1
+      // only failing case is when the account precisely has fees + 1. which is
+      // unlikely
+      transaction.amount = new BigNumber(1);
     }
 
     let out;
@@ -210,7 +211,7 @@ const estimateMaxSpendable = async ({
     ...transaction,
     // this seed is empty (worse case scenario is to send to new). addr from: 1. eyebrow 2. odor 3. rice 4. attack 5. loyal 6. tray 7. letter 8. harbor 9. resemble 10. sphere 11. system 12. forward 13. onion 14. buffalo 15. crumble
     recipient: transaction?.recipient || "tz1VJitLYB31fEC82efFkLRU4AQUH9QgH3q6",
-    useAllAmount: new BigNumber(0),
+    useAllAmount: true
   });
   const s = await getTransactionStatus(mainAccount, t);
   return s.amount;
