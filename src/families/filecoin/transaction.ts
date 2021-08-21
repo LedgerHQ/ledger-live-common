@@ -24,7 +24,7 @@ const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     method: tr.method,
     nonce: tr.nonce,
     gasFeeCap: new BigNumber(tr.gasFeeCap),
-    gasLimit: tr.gasLimit,
+    gasLimit: new BigNumber(tr.gasLimit),
     gasPremium: new BigNumber(tr.gasPremium),
   };
 };
@@ -40,7 +40,7 @@ const toTransactionRaw = (t: Transaction): TransactionRaw => {
     family: t.family,
     nonce: t.nonce,
     gasFeeCap: t.gasFeeCap.toString(),
-    gasLimit: t.gasLimit,
+    gasLimit: t.gasLimit.toNumber(),
     gasPremium: t.gasPremium.toString(),
   };
 };

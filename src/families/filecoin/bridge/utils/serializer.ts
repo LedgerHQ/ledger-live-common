@@ -56,7 +56,7 @@ export const toCBOR = (
   answer.push(buf);
 
   // "gaslimit"
-  answer.push(gasLimit);
+  answer.push(gasLimit.toNumber());
 
   // "gasfeecap"
   buf = bigintToArray(gasFeeCap);

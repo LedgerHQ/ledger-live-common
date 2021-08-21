@@ -22,7 +22,7 @@ export type Transaction = TransactionCommon & {
   method: number;
   version: number;
   params?: string;
-  gasLimit: number;
+  gasLimit: BigNumber;
   gasFeeCap: BigNumber;
   gasPremium: BigNumber;
 };

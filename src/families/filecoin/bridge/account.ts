@@ -1,4 +1,5 @@
 import {
+  FeeNotLoaded,
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   RecipientRequired,
@@ -38,7 +39,7 @@ const createTransaction = (account: Account): Transaction => ({
   method: 0,
   version: 0,
   nonce: 0,
-  gasLimit: 0,
+  gasLimit: new BigNumber(0),
   gasFeeCap: new BigNumber(0),
   gasPremium: new BigNumber(0),
   recipient: "",
@@ -59,9 +60,8 @@ const getTransactionStatus = async (
   let estimatedFees = new BigNumber(0);
   let totalSpent = new BigNumber(0);
 
-  log("getTransactionStatus", `${JSON.stringify(t)}`);
   const { address } = getAddress(a);
-  const { recipient, amount } = t;
+  const { recipient, amount, gasPremium, gasFeeCap } = t;
 
   if (!recipient) errors.recipient = new RecipientRequired();
   else if (address === recipient)
@@ -71,13 +71,13 @@ const getTransactionStatus = async (
   else if (!validateAddress(address).isValid)
     errors.sender = new InvalidAddress();
 
-  if (!errors.recipient) {
-    const result = await fetchEstimatedFees({ to: recipient, from: address });
+  if (gasFeeCap.toNumber() === 0 || gasPremium.toNumber() === 0) {
+    errors.gas = new FeeNotLoaded();
+  }
 
+  if (!errors.gas) {
     // FIXME Filecoin - Fix this operation
-    estimatedFees = new BigNumber(result.gas_fee_cap).plus(
-      new BigNumber(result.gas_premium)
-    );
+    estimatedFees = t.gasFeeCap.plus(t.gasPremium);
 
     // FIXME Filecoin - Fix this operation
     totalSpent = amount.plus(estimatedFees);
@@ -111,7 +111,20 @@ const estimateMaxSpendable = async ({
 const prepareTransaction = async (
   a: Account,
   t: Transaction
-): Promise<Transaction> => t;
+): Promise<Transaction> => {
+  const { address } = getAddress(a);
+  const { recipient } = t;
+
+  if (recipient && address) {
+    const result = await fetchEstimatedFees({ to: recipient, from: address });
+    t.gasFeeCap = new BigNumber(result.gas_fee_cap);
+    t.gasPremium = new BigNumber(result.gas_premium);
+    t.gasLimit = new BigNumber(result.gas_limit);
+    t.nonce = result.nonce;
+  }
+
+  return t;
+};
 
 const sync = makeSync(getAccountShape);
 
@@ -185,7 +198,7 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
             params: "",
             to: recipient,
             from: address,
-            gas_limit: gasLimit,
+            gas_limit: gasLimit.toNumber(),
             gas_premium: gasPremium.toString(),
             gas_fee_cap: gasFeeCap.toString(),
             value: amount.toString(),
