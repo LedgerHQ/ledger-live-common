@@ -1,5 +1,7 @@
 import {
   BalanceResponse,
+  BroadcastTransactionRequest,
+  BroadcastTransactionResponse,
   EstimatedFeesRequest,
   EstimatedFeesResponse,
   NetworkStatusResponse,
@@ -71,4 +73,14 @@ export const fetchTxs = async (
     `/addresses/${addr}/transactions`
   );
   return response.txs; // FIXME Validate if the response fits this interface
+};
+
+export const broadcastTx = async (
+  message: BroadcastTransactionRequest
+): Promise<BroadcastTransactionResponse> => {
+  const response = await send<BroadcastTransactionResponse>(
+    `/transaction/broadcast`,
+    message
+  );
+  return response; // FIXME Validate if the response fits this interface
 };

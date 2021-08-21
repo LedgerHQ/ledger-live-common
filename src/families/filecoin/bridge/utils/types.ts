@@ -38,6 +38,29 @@ export interface NetworkStatusResponse {
   current_block_timestamp: number;
 }
 
+export interface BroadcastTransactionRequest {
+  message: {
+    version: number;
+    to: string;
+    from: string;
+    nonce: number;
+    value: string;
+    gas_limit: number;
+    gas_fee_cap: string;
+    gas_premium: string;
+    method: number;
+    params: string;
+  };
+  signature: {
+    type: number;
+    data: string;
+  };
+}
+
+export interface BroadcastTransactionResponse {
+  hash: string;
+}
+
 interface BlockIdentifier {
   index: number;
   hash: string;

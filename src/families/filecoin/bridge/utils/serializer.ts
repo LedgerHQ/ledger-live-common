@@ -22,9 +22,12 @@ function bigintToArray(v) {
   return Buffer.concat([Buffer.from(signByte, "hex"), Buffer.from(tmp, "hex")]);
 }
 
-export const toCBOR = (from: string, tx: Transaction) => {
+export const toCBOR = (
+  from: Buffer,
+  recipient: Buffer,
+  tx: Transaction
+): Buffer => {
   const {
-    recipient,
     method,
     version,
     nonce,
@@ -40,10 +43,10 @@ export const toCBOR = (from: string, tx: Transaction) => {
   answer.push(version);
 
   // "to" field
-  answer.push(Buffer.from(recipient, "hex"));
+  answer.push(recipient);
 
   // "from" field
-  answer.push(Buffer.from(from, "hex"));
+  answer.push(from);
 
   // "nonce" field
   answer.push(nonce);

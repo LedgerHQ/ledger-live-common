@@ -1,4 +1,5 @@
 import {
+  InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   RecipientRequired,
 } from "@ledgerhq/errors";
@@ -18,13 +19,16 @@ import {
 } from "../../../types";
 import { Transaction } from "../types";
 import { getAccountShape, getAddress } from "./utils/utils";
-import { fetchBalances, fetchEstimatedFees } from "./utils/api";
+import { broadcastTx, fetchBalances, fetchEstimatedFees } from "./utils/api";
 import { getMainAccount } from "../../../account";
 import { close, open } from "../../../hw";
-import { toCBOR } from "./utils/serialize";
+import { toCBOR } from "./utils/serializer";
 import { Operation } from "../../../types/operation";
 import { getPath, isError } from "../utils";
 import { log } from "@ledgerhq/logs";
+import { getAddressRaw, validateAddress } from "./utils/addresses";
+import { BroadcastTransactionRequest } from "./utils/types";
+import { patchOperationWithHash } from "../../../operation";
 
 const receive = makeAccountBridgeReceive();
 
@@ -33,8 +37,8 @@ const createTransaction = (account: Account): Transaction => ({
   amount: new BigNumber(0),
   method: 0,
   version: 0,
-  gasPrice: new BigNumber(0),
-  gasLimit: new BigNumber(0),
+  nonce: 0,
+  gasLimit: 0,
   gasFeeCap: new BigNumber(0),
   gasPremium: new BigNumber(0),
   recipient: "",
@@ -59,9 +63,13 @@ const getTransactionStatus = async (
   const { address } = getAddress(a);
   const { recipient, amount } = t;
 
-  if (!recipient) errors.recipient = new RecipientRequired("");
+  if (!recipient) errors.recipient = new RecipientRequired();
   else if (address === recipient)
     errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
+  else if (!validateAddress(recipient).isValid)
+    errors.recipient = new InvalidAddress();
+  else if (!validateAddress(address).isValid)
+    errors.sender = new InvalidAddress();
 
   if (!errors.recipient) {
     const result = await fetchEstimatedFees({ to: recipient, from: address });
@@ -107,8 +115,14 @@ const prepareTransaction = async (
 
 const sync = makeSync(getAccountShape);
 
-const broadcast: BroadcastFnSignature = async () => {
-  throw new Error("broadcast not implemented");
+const broadcast: BroadcastFnSignature = async ({
+  account,
+  signedOperation: { operation },
+}) => {
+  const resp = await broadcastTx(operation.extra.reqToBroadcast);
+
+  const { hash } = resp;
+  return patchOperationWithHash(operation, hash);
 };
 
 const signOperation: SignOperationFnSignature<Transaction> = ({
@@ -132,7 +146,13 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
         });
 
         // Serialize tx
-        const serializedTx = toCBOR(address, transaction);
+        const serializedTx = toCBOR(
+          getAddressRaw(address),
+          getAddressRaw(recipient),
+          transaction
+        );
+
+        log("debug", `Serialized CBOR tx: [${serializedTx.toString("hex")}]`);
 
         // Sign by device
         const filecoin = new Fil(transport);
@@ -146,14 +166,38 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
           type: "device-signature-granted",
         });
 
-        const fee = new BigNumber(0); // FIXME Filecoin - Check how to calculate the fee
+        // FIXME Filecoin - Check how to calculate the fee
+        const fee = new BigNumber(0);
         const value = amount.plus(fee);
 
         // resolved at broadcast time
         const txHash = "";
 
         // build signature on the correct format
-        const signature = `0x${result.signature_compact.toString("hex")}`;
+        const signature = `${result.signature_compact.toString("base64")}`;
+        const { gasLimit, gasFeeCap, gasPremium, method, version, nonce } =
+          transaction;
+        const reqToBroadcast: BroadcastTransactionRequest = {
+          message: {
+            version,
+            method,
+            nonce,
+            params: "",
+            to: recipient,
+            from: address,
+            gas_limit: gasLimit,
+            gas_premium: gasPremium.toString(),
+            gas_fee_cap: gasFeeCap.toString(),
+            value: amount.toString(),
+          },
+          signature: {
+            type: parseInt(
+              result.signature_compact.slice(-1).toString("hex"),
+              16
+            ),
+            data: signature,
+          },
+        };
 
         const operation: Operation = {
           id: `${accountId}-${txHash}-OUT`,
@@ -167,7 +211,9 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
           blockHash: null,
           blockHeight: null,
           date: new Date(),
-          extra: {},
+          extra: {
+            reqToBroadcast,
+          },
         };
 
         o.next({

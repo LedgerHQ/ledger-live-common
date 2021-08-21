@@ -1,41 +1,43 @@
-import { TransactionCommon, TransactionCommonRaw } from "../../types";
-import { Range, RangeRaw } from "../../range";
+import {
+  BroadcastArg0,
+  Operation,
+  TransactionCommon,
+  TransactionCommonRaw,
+} from "../../types";
 import { BigNumber } from "bignumber.js";
 
 type FamilyType = "filecoin";
 
 export type NetworkInfo = {
   family: FamilyType;
-  gasPrice: Range;
 };
 export type NetworkInfoRaw = {
   family: FamilyType;
-  gasPrice: RangeRaw;
 };
 
 export type Transaction = TransactionCommon & {
   family: FamilyType;
-  nonce?: number;
+  nonce: number;
   data?: Buffer;
   method: number;
   version: number;
   params?: string;
-  gasPrice?: BigNumber | null;
-  gasLimit?: BigNumber | null;
-  gasFeeCap?: BigNumber | null;
-  gasPremium?: BigNumber | null;
+  gasLimit: number;
+  gasFeeCap: BigNumber;
+  gasPremium: BigNumber;
 };
 export type TransactionRaw = TransactionCommonRaw & {
   family: FamilyType;
   version: number;
-  nonce?: number;
+  nonce: number;
   data?: string;
   method: number;
-  gasPrice?: string | null;
-  gasLimit?: string | null;
-  gasFeeCap?: string | null;
-  gasPremium?: string | null;
+  gasLimit: number;
+  gasFeeCap: string;
+  gasPremium: string;
 };
+
+export type BroadcastFnSignature = (arg0: BroadcastArg0) => Promise<Operation>;
 
 export type CoreStatics = Record<string, never>;
 export type CoreAccountSpecifics = Record<string, never>;

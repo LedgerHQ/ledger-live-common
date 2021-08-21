@@ -22,9 +22,10 @@ const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     family: tr.family,
     version: tr.version,
     method: tr.method,
-    gasFeeCap: new BigNumber(tr.gasFeeCap ? tr.gasFeeCap : 0),
-    gasLimit: new BigNumber(tr.gasLimit ? tr.gasLimit : 0),
-    gasPremium: new BigNumber(tr.gasPremium ? tr.gasPremium : 0),
+    nonce: tr.nonce,
+    gasFeeCap: new BigNumber(tr.gasFeeCap),
+    gasLimit: tr.gasLimit,
+    gasPremium: new BigNumber(tr.gasPremium),
   };
 };
 
@@ -37,9 +38,10 @@ const toTransactionRaw = (t: Transaction): TransactionRaw => {
     method: t.method,
     version: t.version,
     family: t.family,
-    gasFeeCap: t.gasFeeCap ? t.gasFeeCap.toString() : "0",
-    gasLimit: t.gasLimit ? t.gasLimit.toString() : "0",
-    gasPremium: t.gasPremium ? t.gasPremium.toString() : "0",
+    nonce: t.nonce,
+    gasFeeCap: t.gasFeeCap.toString(),
+    gasLimit: t.gasLimit,
+    gasPremium: t.gasPremium.toString(),
   };
 };
 
