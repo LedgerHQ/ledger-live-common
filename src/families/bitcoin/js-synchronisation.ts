@@ -277,10 +277,9 @@ const getAccountShape: GetAccountShape = async (info) => {
   const oldOperations = initialAccount?.operations || [];
   await wallet.syncAccount(walletAccount);
   const balance = await wallet.getAccountBalance(walletAccount);
-  const latestTx = await walletAccount.xpub.storage.getLastTx({
-    account: index,
-  });
-  const blockHeight = latestTx?.block?.height;
+  const currentBlock = await walletAccount.xpub.explorer.getCurrentBlock();
+  const blockHeight = currentBlock?.height;
+
   // @ts-expect-error return from wallet-btc should be typed
   const { txs: transactions } = await wallet.getAccountTransactions(
     walletAccount
