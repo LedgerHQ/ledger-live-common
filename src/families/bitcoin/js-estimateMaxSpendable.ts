@@ -1,11 +1,8 @@
 import { BigNumber } from "bignumber.js";
-import { getAbandonSeedAddress } from "@ledgerhq/cryptoassets";
 import type { AccountLike, Account } from "../../types";
 import type { Transaction } from "./types";
 import { getMainAccount } from "../../account";
-import createTransaction from "./js-createTransaction";
-import prepareTransaction from "./js-prepareTransaction";
-import getTransactionStatus from "./js-getTransactionStatus";
+import { getWalletAccount } from "./wallet";
 
 /**
  * Returns the maximum possible amount for transaction
@@ -21,17 +18,13 @@ const estimateMaxSpendable = async ({
   parentAccount: Account | null | undefined;
   transaction: Transaction | null | undefined;
 }): Promise<BigNumber> => {
+  // TODO Need implementation in wallet-btc (LL-6959)
+  /*
   const mainAccount = getMainAccount(account, parentAccount);
-  const t = await prepareTransaction(mainAccount, {
-    ...createTransaction(),
-    ...transaction,
-    // worse case scenario using a legacy address
-    recipient:
-      transaction?.recipient || getAbandonSeedAddress(mainAccount.currency.id),
-    useAllAmount: true,
-  });
-  const s = await getTransactionStatus(mainAccount, t);
-  return s.amount;
+  const walletAccount = await getWalletAccount(mainAccount);
+  const estimate = walletAccount.estimateAccountMaxSpendable(walletAccount);
+  //*/
+  return new BigNumber(account.balance);
 };
 
 export default estimateMaxSpendable;
