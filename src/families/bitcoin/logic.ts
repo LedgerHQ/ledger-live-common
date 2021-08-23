@@ -1,5 +1,7 @@
 import cashaddr from "cashaddrjs";
 import bchaddr from "bchaddrjs";
+import { isValidAddress } from "wallet-btc";
+import { RecipientRequired, InvalidAddress } from "@ledgerhq/errors";
 import type { Account, CryptoCurrency, CryptoCurrencyIds } from "./../../types";
 import type {
   BitcoinOutput,
@@ -8,6 +10,7 @@ import type {
   NetworkInfo,
   UtxoStrategy,
 } from "./types";
+
 // correspond ~ to min relay fees but determined empirically for a tx to be accepted by network
 const minFees = {
   bitcoin: 1000,
@@ -38,36 +41,19 @@ export const inferFeePerByte = (t: Transaction, networkInfo: NetworkInfo) => {
 
   return t.feePerByte || networkInfo.feeItems.defaultFeePerByte;
 };
-export const isValidRecipient = async ({
-  currency,
-  recipient,
-}: {
-  currency: CryptoCurrency;
-  recipient: string;
+export const isValidRecipient = async (params: {
+  currency: CryptoCurrency,
+  recipient: string,
 }): Promise<Error | null | undefined> => {
-  // TODO
-  // Current libcore-based implem:
-
-  /*
-    const { currency, recipient } = arg;
-    if (!recipient) {
-      return Promise.reject(new RecipientRequired(""));
-    }
-    const custom = customAddressValidationByFamily[arg.currency.family];
-    if (custom) {
-      const res = await custom(core, arg);
-      return res;
-    }
-    const poolInstance = core.getPoolInstance();
-    const currencyCore = await poolInstance.getCurrency(currency.id);
-    const value = await core.Address.isValid(recipient, currencyCore);
-    if (value) {
-      return Promise.resolve(null);
-    }
+  if (!params.recipient) {
+    return Promise.reject(new RecipientRequired(""));
+  }
+  const valid = isValidAddress(params.recipient);
+  if (!valid) {
     return Promise.reject(
-      new InvalidAddress(null, { currencyName: currency.name })
+      new InvalidAddress("Invalid address for currency " + params.currency.name)
     );
-    */
+  }
   return Promise.resolve(null);
 };
 
