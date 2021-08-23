@@ -7,10 +7,9 @@ import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
 import { toOperationRaw } from "../../account";
 import { DeviceModelId } from "@ledgerhq/devices";
+import BigNumber from "bignumber.js";
 
-const currency = getCryptoCurrencyById("elrond");
-const EXISTENTIAL_DEPOSIT = parseCurrencyUnit(currency.units[0], "1.0");
-const ELROND_MIN_SAFE = parseCurrencyUnit(currency.units[0], "0.05");
+const ELROND_MIN_SAFE = new BigNumber(10000);
 const elrondSpec: AppSpec<Transaction> = {
   name: "Elrond",
   currency: getCryptoCurrencyById("elrond"),
@@ -43,14 +42,14 @@ const elrondSpec: AppSpec<Transaction> = {
           .div(1.9 + 0.2 * Math.random())
           .integerValue();
 
-        if (!sibling.used && amount.lt(EXISTENTIAL_DEPOSIT)) {
+        if (!sibling.used && amount.gt(ELROND_MIN_SAFE)) {
           invariant(
-            account.spendableBalance.gt(
-              EXISTENTIAL_DEPOSIT.plus(ELROND_MIN_SAFE)
+            account.spendableBalance.lt(
+              ELROND_MIN_SAFE
             ),
             "send is too low to activate account"
           );
-          amount = EXISTENTIAL_DEPOSIT.plus(ELROND_MIN_SAFE);
+          amount = ELROND_MIN_SAFE;
         }
 
         return {
