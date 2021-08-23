@@ -42,9 +42,9 @@ const elrondSpec: AppSpec<Transaction> = {
           .div(1.9 + 0.2 * Math.random())
           .integerValue();
 
-        if (!sibling.used && amount.gt(ELROND_MIN_SAFE)) {
+        if (!sibling.used && amount.lt(ELROND_MIN_SAFE)) {
           invariant(
-            account.spendableBalance.lt(
+            account.spendableBalance.gt(
               ELROND_MIN_SAFE
             ),
             "send is too low to activate account"
