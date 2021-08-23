@@ -77,10 +77,6 @@ const signOperation = ({
 
         const networkParams = getNetworkParameters(currency.id);
         const sigHashType = networkParams.sigHash;
-        //console.log("XXX - signOperation - sigHashTypeHex:", sigHashTypeHex);
-        //const sigHashType = parseInt(sigHashTypeHex, 16);
-        console.log("XXX - signOperation - sigHashType:", sigHashType);
-
         if (isNaN(sigHashType)) {
           throw new Error("sigHashType should not be NaN");
         }
