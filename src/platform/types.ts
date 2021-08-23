@@ -5,7 +5,7 @@ export type {
   Currency as PlatformCurrency,
   Unit as PlatformUnit,
   Transaction as PlatformTransaction,
-} from "ledger-live-platform-sdk";
+} from "@ledgerhq/live-app-sdk";
 
 export type TranslatableString = {
   en: string;

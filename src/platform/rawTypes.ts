@@ -3,6 +3,6 @@ import type { SignedOperationRaw } from "../types";
 export type {
   RawAccount as RawPlatformAccount,
   RawTransaction as RawPlatformTransaction,
-} from "ledger-live-platform-sdk";
+} from "@ledgerhq/live-app-sdk";
 
 export type RawPlatformSignedTransaction = SignedOperationRaw;
