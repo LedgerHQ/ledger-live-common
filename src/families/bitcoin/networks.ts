@@ -65,7 +65,6 @@ export const getNetworkParameters = (
       messagePrefix: "Bitcoin signed Message:\n",
       usesTimestampedTransaction: false,
       timestampDelay: new BigNumber(0),
-      // FIXME Does this work??
       sigHash:
         BitcoinLikeSigHashType.SIGHASH_ALL |
         BitcoinLikeSigHashType.SIGHASH_FORKID,
@@ -82,7 +81,6 @@ export const getNetworkParameters = (
       messagePrefix: "Bitcoin gold signed Message:\n",
       usesTimestampedTransaction: false,
       timestampDelay: new BigNumber(0),
-      // FIXME Does this work??
       sigHash:
         BitcoinLikeSigHashType.SIGHASH_ALL |
         BitcoinLikeSigHashType.SIGHASH_FORKID,
