@@ -51,7 +51,7 @@ export default async function getVersion(
       i += part1Length;
 
       // at this time, this is how we branch old & new format
-      if (part1Length === 5) {
+      if (part1Length >= 5) {
         seVersion = part1.toString();
         // se part 2
         const part2Length = data[i++];
