@@ -275,24 +275,24 @@ export type AccountRaw = {
   operationsCount?: number;
   // this is optional for backward compat
   // ------------------------------------- Specific raw fields
-  currencyId: string,
-  operations: OperationRaw[],
-  pendingOperations: OperationRaw[],
-  unitMagnitude: number,
-  lastSyncDate: string,
-  endpointConfig?: string | null | undefined,
-  subAccounts?: SubAccountRaw[],
-  balanceHistory?: BalanceHistoryRawMap,
-  balanceHistoryCache?: BalanceHistoryCache,
-  bitcoinResources?: BitcoinResourcesRaw,
-  tronResources?: TronResourcesRaw,
-  cosmosResources?: CosmosResourcesRaw,
-  algorandResources?: AlgorandResourcesRaw,
-  polkadotResources?: PolkadotResourcesRaw,
-  elrondResources?: ElrondResourcesRaw,
-  cryptoOrgResources?: CryptoOrgResourcesRaw,
-  swapHistory?: SwapOperationRaw[],
-  syncHash?: string,
+  currencyId: string;
+  operations: OperationRaw[];
+  pendingOperations: OperationRaw[];
+  unitMagnitude: number;
+  lastSyncDate: string;
+  endpointConfig?: string | null | undefined;
+  subAccounts?: SubAccountRaw[];
+  balanceHistory?: BalanceHistoryRawMap;
+  balanceHistoryCache?: BalanceHistoryCache;
+  bitcoinResources?: BitcoinResourcesRaw;
+  tronResources?: TronResourcesRaw;
+  cosmosResources?: CosmosResourcesRaw;
+  algorandResources?: AlgorandResourcesRaw;
+  polkadotResources?: PolkadotResourcesRaw;
+  elrondResources?: ElrondResourcesRaw;
+  cryptoOrgResources?: CryptoOrgResourcesRaw;
+  swapHistory?: SwapOperationRaw[];
+  syncHash?: string;
 };
 export type SubAccountRaw = TokenAccountRaw | ChildAccountRaw;
 export type AccountRawLike = AccountRaw | SubAccountRaw;
