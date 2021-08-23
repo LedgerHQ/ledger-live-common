@@ -19,7 +19,7 @@ import {
   TransactionStatus,
 } from "../../../types";
 import { Transaction } from "../types";
-import { getAccountShape, getAddress } from "./utils/utils";
+import { getAccountShape, getAddress, getTxToBroadcast } from "./utils/utils";
 import { broadcastTx, fetchBalances, fetchEstimatedFees } from "./utils/api";
 import { getMainAccount } from "../../../account";
 import { close, open } from "../../../hw";
@@ -188,29 +188,12 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
 
         // build signature on the correct format
         const signature = `${result.signature_compact.toString("base64")}`;
-        const { gasLimit, gasFeeCap, gasPremium, method, version, nonce } =
-          transaction;
-        const reqToBroadcast: BroadcastTransactionRequest = {
-          message: {
-            version,
-            method,
-            nonce,
-            params: "",
-            to: recipient,
-            from: address,
-            gas_limit: gasLimit.toNumber(),
-            gas_premium: gasPremium.toString(),
-            gas_fee_cap: gasFeeCap.toString(),
-            value: amount.toString(),
-          },
-          signature: {
-            type: parseInt(
-              result.signature_compact.slice(-1).toString("hex"),
-              16
-            ),
-            data: signature,
-          },
-        };
+
+        const reqToBroadcast = getTxToBroadcast(
+          account,
+          transaction,
+          signature
+        );
 
         const operation: Operation = {
           id: `${accountId}-${txHash}-OUT`,

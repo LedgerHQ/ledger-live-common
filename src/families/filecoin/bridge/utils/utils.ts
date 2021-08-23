@@ -1,17 +1,19 @@
+import fs from "fs";
+
 import { Account, Address, Operation } from "../../../../types";
 import {
   getCryptoCurrencyById,
   parseCurrencyUnit,
 } from "../../../../currencies";
 import { BigNumber } from "bignumber.js";
-import { TransactionResponse } from "./types";
+import { BroadcastTransactionRequest, TransactionResponse } from "./types";
 import {
   GetAccountShape,
   GetAccountShapeArg0,
 } from "../../../../bridge/jsHelpers";
 import { fetchBalances, fetchBlockHeight, fetchTxs } from "./api";
 import flatMap from "lodash/flatMap";
-import fs from "fs";
+import { Transaction } from "../../types";
 
 export const getUnit = () => getCryptoCurrencyById("filecoin").units[0];
 
@@ -64,6 +66,48 @@ export const mapTxToOps =
     return ops;
   };
 
+export const getAddress = (a: Account): Address =>
+  a.freshAddresses.length > 0
+    ? a.freshAddresses[0]
+    : { address: a.freshAddress, derivationPath: a.freshAddressPath };
+
+export const getTxToBroadcast = (
+  account: Account,
+  transaction: Transaction,
+  signature: string
+): BroadcastTransactionRequest => {
+  const { address } = getAddress(account);
+  const {
+    recipient,
+    amount,
+    gasLimit,
+    gasFeeCap,
+    gasPremium,
+    method,
+    version,
+    nonce,
+  } = transaction;
+
+  return {
+    message: {
+      version,
+      method,
+      nonce,
+      params: "",
+      to: recipient,
+      from: address,
+      gaslimit: gasLimit.toNumber(),
+      gaspremium: gasPremium.toString(),
+      gasfeecap: gasFeeCap.toString(),
+      value: amount.toFixed(),
+    },
+    signature: {
+      type: 1,
+      data: signature,
+    },
+  };
+};
+
 export const getAccountShape: GetAccountShape = async (info) => {
   const { address } = info;
 
@@ -80,8 +124,3 @@ export const getAccountShape: GetAccountShape = async (info) => {
   fs.appendFileSync("getAccountShape.log", JSON.stringify(result));
   return result;
 };
-
-export const getAddress = (a: Account): Address =>
-  a.freshAddresses.length > 0
-    ? a.freshAddresses[0]
-    : { address: a.freshAddress, derivationPath: a.freshAddressPath };

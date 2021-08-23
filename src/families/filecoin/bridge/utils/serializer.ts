@@ -1,26 +1,27 @@
 import cbor from "cbor";
 import { Transaction } from "../../types";
+import BigNumber from "bignumber.js";
 
-function bigintToArray(v) {
+const bigNumberToArray = (v: BigNumber) => {
   let tmp;
 
   // Adding byte sign
   let signByte = "00";
-  if (BigInt(v) < 0) {
+  if (v.lt(0)) {
     signByte = "01";
   }
 
-  if (v === "") {
+  if (v.toString() === "") {
     // to test with null bigint
     return Buffer.from(signByte, "hex");
   } else {
-    tmp = BigInt(v).toString(16);
+    tmp = v.toString(16);
     // not sure why it is not padding and buffer does not like it
     if (tmp.length % 2 === 1) tmp = "0" + tmp;
   }
 
   return Buffer.concat([Buffer.from(signByte, "hex"), Buffer.from(tmp, "hex")]);
-}
+};
 
 export const toCBOR = (
   from: Buffer,
@@ -52,18 +53,18 @@ export const toCBOR = (
   answer.push(nonce);
 
   // "value"
-  let buf = bigintToArray(amount);
+  let buf = bigNumberToArray(amount);
   answer.push(buf);
 
   // "gaslimit"
   answer.push(gasLimit.toNumber());
 
   // "gasfeecap"
-  buf = bigintToArray(gasFeeCap);
+  buf = bigNumberToArray(gasFeeCap);
   answer.push(buf);
 
   // "gaspremium"
-  buf = bigintToArray(gasPremium);
+  buf = bigNumberToArray(gasPremium);
   answer.push(buf);
 
   // "method"

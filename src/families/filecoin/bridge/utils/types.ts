@@ -45,9 +45,9 @@ export interface BroadcastTransactionRequest {
     from: string;
     nonce: number;
     value: string;
-    gas_limit: number;
-    gas_fee_cap: string;
-    gas_premium: string;
+    gaslimit: number;
+    gasfeecap: string;
+    gaspremium: string;
     method: number;
     params: string;
   };
