@@ -1,7 +1,9 @@
 import {
+  AmountRequired,
   FeeNotLoaded,
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
+  NotEnoughBalance,
   RecipientRequired,
 } from "@ledgerhq/errors";
 import { BigNumber } from "bignumber.js";
@@ -28,7 +30,6 @@ import { Operation } from "../../../types/operation";
 import { getPath, isError } from "../utils";
 import { log } from "@ledgerhq/logs";
 import { getAddressRaw, validateAddress } from "./utils/addresses";
-import { BroadcastTransactionRequest } from "./utils/types";
 import { patchOperationWithHash } from "../../../operation";
 
 const receive = makeAccountBridgeReceive();
@@ -61,7 +62,7 @@ const getTransactionStatus = async (
   let totalSpent = new BigNumber(0);
 
   const { address } = getAddress(a);
-  const { recipient, amount, gasPremium, gasFeeCap } = t;
+  const { recipient, amount, gasPremium, gasFeeCap, gasLimit } = t;
 
   if (!recipient) errors.recipient = new RecipientRequired();
   else if (address === recipient)
@@ -71,17 +72,21 @@ const getTransactionStatus = async (
   else if (!validateAddress(address).isValid)
     errors.sender = new InvalidAddress();
 
-  if (gasFeeCap.toNumber() === 0 || gasPremium.toNumber() === 0) {
+  if (
+    gasFeeCap.toNumber() === 0 ||
+    gasPremium.toNumber() === 0 ||
+    gasLimit.toNumber() === 0
+  )
     errors.gas = new FeeNotLoaded();
-  }
 
-  if (!errors.gas) {
-    // FIXME Filecoin - Fix this operation
-    estimatedFees = t.gasFeeCap.plus(t.gasPremium);
+  // FIXME Filecoin - Fix this operation
+  estimatedFees = gasFeeCap.multipliedBy(gasLimit);
 
-    // FIXME Filecoin - Fix this operation
-    totalSpent = amount.plus(estimatedFees);
-  }
+  // FIXME Filecoin - Fix this operation
+  totalSpent = amount.plus(estimatedFees);
+
+  if (amount.lte(0)) errors.amount = new AmountRequired();
+  if (totalSpent.gt(a.spendableBalance)) errors.amount = new NotEnoughBalance();
 
   return {
     errors,
