@@ -4,30 +4,36 @@ import type { TransactionInfo as WalletTxInfo } from "wallet-btc";
 import { FeeNotLoaded } from "@ledgerhq/errors";
 
 import type { Account } from "../../types";
-import type { Transaction, BitcoinPickingStrategy } from "./types";
+import type { Transaction, UtxoStrategy } from "./types";
 import { bitcoinPickingStrategy } from "./types";
 import wallet, { getWalletAccount } from "./wallet";
 
 // TODO Test all strategies
 const selectUtxoPickingStrategy = (
   walletAccount: WalletAccount,
-  utxoStrategy: BitcoinPickingStrategy
+  utxoStrategy: UtxoStrategy
 ) => {
-  if (utxoStrategy === bitcoinPickingStrategy.MERGE_OUTPUTS) {
+  // TODO Manage transaction.utxoStrategy.pickUnconfirmedRBF
+
+  if (utxoStrategy.strategy === bitcoinPickingStrategy.MERGE_OUTPUTS) {
     return new Merge(
       walletAccount.xpub.crypto,
-      walletAccount.xpub.derivationMode
+      walletAccount.xpub.derivationMode,
+      utxoStrategy.excludeUTXOs
     );
-  } else if (utxoStrategy === bitcoinPickingStrategy.DEEP_OUTPUTS_FIRST) {
+  } else if (
+    utxoStrategy.strategy === bitcoinPickingStrategy.DEEP_OUTPUTS_FIRST
+  ) {
     return new DeepFirst(
       walletAccount.xpub.crypto,
-      walletAccount.xpub.derivationMode
+      walletAccount.xpub.derivationMode,
+      utxoStrategy.excludeUTXOs
     );
-  } else if (utxoStrategy === bitcoinPickingStrategy.OPTIMIZE_SIZE) {
-    // FIXME Is the mapping OPTIMIZE_SIZE <> CoinSelect correct??
+  } else if (utxoStrategy.strategy === bitcoinPickingStrategy.OPTIMIZE_SIZE) {
     return new CoinSelect(
       walletAccount.xpub.crypto,
-      walletAccount.xpub.derivationMode
+      walletAccount.xpub.derivationMode,
+      utxoStrategy.excludeUTXOs
     );
   } else {
     throw new Error("Unsupported Bitcoin UTXO picking strategy");
@@ -44,8 +50,9 @@ export const buildTransaction = async (
   const walletAccount = await getWalletAccount(account);
   const utxoPickingStrategy = selectUtxoPickingStrategy(
     walletAccount,
-    transaction.utxoStrategy.strategy
+    transaction.utxoStrategy
   );
+
   const txInfo = await wallet.buildAccountTx({
     fromAccount: walletAccount,
     dest: transaction.recipient,

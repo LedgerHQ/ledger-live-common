@@ -93,6 +93,7 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
 
   if (
     process.env.EXPERIMENTAL_MIN_RELAY_FEE &&
+    estimatedFees &&
     estimatedFees.gt(0) &&
     estimatedFees.lt(getMinRelayFee(a.currency))
   ) {
