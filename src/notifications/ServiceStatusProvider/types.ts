@@ -25,14 +25,14 @@ export type IncidentUpdate = {
   incident_id?: string;
   status?: string;
   updated_at?: string;
-  context: ServiceStatusUserSettings;
+  context?: ServiceStatusUserSettings;
 };
 export type State = {
   incidents: Incident[];
   isLoading: boolean;
   lastUpdateTime: number | null | undefined;
   error: Error | null | undefined;
-  context: ServiceStatusUserSettings;
+  context?: ServiceStatusUserSettings;
 };
 export type ServiceStatusSummary = {
   incidents: Incident[] | null | undefined;

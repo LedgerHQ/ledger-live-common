@@ -18,7 +18,7 @@ type Props = {
   children: React.ReactNode;
   autoUpdateDelay: number;
   networkApi?: ServiceStatusApi;
-  context: ServiceStatusUserSettings;
+  context?: ServiceStatusUserSettings;
 };
 
 type API = {
@@ -64,7 +64,7 @@ export function useFilteredServiceStatus(
   const filteredIncidents = useMemo(() => {
     return filterServiceStatusIncidents(
       incidents,
-      filters.tickers || context.tickers
+      filters.tickers || context?.tickers
     );
   }, [incidents, context, filters.tickers]);
 
