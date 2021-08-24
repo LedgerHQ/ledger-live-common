@@ -121,7 +121,8 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
       let { data } = await network({
         method: "GET",
         url: URL.format({
-          pathname: `${baseURL}/addresses/${address}/transactions`,
+          /** @important FIXME: transactions are mocked while we are waiting for the API */
+          pathname: `https://over-the-overload.vercel.app/blockchain/v3/eth/addresses/${address}/transactions`,
           query: {
             batch_size,
             noinput: true,
@@ -195,6 +196,7 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
     async getNFTMetadata(input) {
       const { data }: { data: NFTMetadata[] } = await network({
         method: "POST",
+        /** @important FIXME: metadata are mocked while we are waiting for the API */
         url: "https://mock-nft-metadata-api.vercel.app/v1/chains/eth/contracts/tokens/infos",
         data: input,
       });
