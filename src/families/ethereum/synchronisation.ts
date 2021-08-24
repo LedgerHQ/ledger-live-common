@@ -163,7 +163,6 @@ export const getAccountShape: GetAccountShape = async (
     subOperations: inferSubOperations(o.hash, subAccounts),
   }));
   const operations = mergeOps(initialStableOperations, newOps);
-
   const NFTMetadata = await api.getNFTMetadata(
     flatNftOps.map(({ contract, tokenId }) => ({ contract, tokenId }))
   );
