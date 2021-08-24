@@ -1,9 +1,10 @@
+import setWith from "lodash/setWith";
 import URL from "url";
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import { LedgerAPINotAvailable } from "@ledgerhq/errors";
 import JSONBigNumber from "@ledgerhq/json-bignumber";
-import type { CryptoCurrency } from "../types";
+import type { CryptoCurrency, NFTMetadataResponse } from "../types";
 import type { EthereumGasLimitRequest } from "../families/ethereum/types";
 import network from "../network";
 import { blockchainBaseURL } from "./Ledger";
@@ -37,6 +38,12 @@ export type Tx = {
     }>;
     truncated: boolean;
   };
+  erc721_transfer_events?: Array<{
+    contract: string;
+    sender: string;
+    receiver: string;
+    token_id: string;
+  }>;
   actions?: Array<{
     from: string;
     to: string;
@@ -59,6 +66,10 @@ export type ERC20BalanceOutput = Array<{
   contract: string;
   balance: BigNumber;
 }>;
+export type NFTMetadataInput = Array<{
+  contract: string;
+  tokenId: string;
+}>;
 export type API = {
   getTransactions: (
     address: string,
@@ -72,6 +83,7 @@ export type API = {
   getAccountNonce: (address: string) => Promise<number>;
   broadcastTransaction: (signedTransaction: string) => Promise<string>;
   getERC20Balances: (input: ERC20BalancesInput) => Promise<ERC20BalanceOutput>;
+  getNFTMetadata: (input: NFTMetadataInput) => Promise<NFTMetadataResponse[]>;
   getAccountBalance: (address: string) => Promise<BigNumber>;
   roughlyEstimateGasLimit: (address: string) => Promise<BigNumber>;
   getERC20ApprovalsPerContract: (
@@ -175,6 +187,16 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
         transformResponse: JSONBigNumber.parse,
         data: input,
       });
+      return data;
+    },
+
+    async getNFTMetadata(input) {
+      const { data }: { data: NFTMetadataResponse[] } = await network({
+        method: "POST",
+        url: "https://mock-nft-metadata-api.vercel.app/v1/chains/eth/contracts/tokens/infos",
+        data: input,
+      });
+
       return data;
     },
 
