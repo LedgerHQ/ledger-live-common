@@ -1,6 +1,4 @@
-import type {
-  Transaction,
-} from "../../families/elrond/types";
+import type { Transaction } from "../../families/elrond/types";
 import invariant from "invariant";
 import { getCryptoCurrencyById } from "../../currencies";
 import { pickSiblings } from "../../bot/specs";
@@ -46,9 +44,7 @@ const elrondSpec: AppSpec<Transaction> = {
 
         if (!sibling.used && amount.lt(ELROND_MIN_SAFE)) {
           invariant(
-            account.spendableBalance.gt(
-              ELROND_MIN_SAFE
-            ),
+            account.spendableBalance.gt(ELROND_MIN_SAFE),
             "send is too low to activate account"
           );
           amount = ELROND_MIN_SAFE;
@@ -67,7 +63,7 @@ const elrondSpec: AppSpec<Transaction> = {
         };
       },
     },
-  ]
+  ],
 };
 
 export default {
