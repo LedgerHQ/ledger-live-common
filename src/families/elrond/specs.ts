@@ -2,12 +2,13 @@ import type {
   Transaction,
 } from "../../families/elrond/types";
 import invariant from "invariant";
-import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
+import { getCryptoCurrencyById } from "../../currencies";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
 import { toOperationRaw } from "../../account";
 import { DeviceModelId } from "@ledgerhq/devices";
 import BigNumber from "bignumber.js";
+import expect from "expect";
 
 const ELROND_MIN_SAFE = new BigNumber(10000);
 const elrondSpec: AppSpec<Transaction> = {
@@ -25,6 +26,7 @@ const elrondSpec: AppSpec<Transaction> = {
     const opExpected: Record<string, any> = toOperationRaw({
       ...optimisticOperation,
     });
+    operation.extra = opExpected.extra;
     delete opExpected.value;
     delete opExpected.fee;
     delete opExpected.date;
