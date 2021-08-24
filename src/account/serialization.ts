@@ -16,6 +16,8 @@ import type {
   OperationRaw,
   SubAccount,
   SubAccountRaw,
+  NFTOperationRaw,
+  NFTOperation,
 } from "../types";
 import type { TronResources, TronResourcesRaw } from "../families/tron/types";
 import {
@@ -101,6 +103,7 @@ export const toOperationRaw = (
     fee,
     subOperations,
     internalOperations,
+    nftOperations,
     extra,
     id,
     hash,
@@ -160,7 +163,38 @@ export const toOperationRaw = (
     copy.internalOperations = internalOperations.map((o) => toOperationRaw(o));
   }
 
+  if (nftOperations) {
+    copy.nftOperations = nftOperations.map((o) => toNFTOperationRaw(o));
+  }
+
   return copy;
+};
+export const toNFTOperationRaw = ({
+  id,
+  senders,
+  recipients,
+  hash,
+  type,
+  blockHeight,
+  blockHash,
+  date,
+  transactionSequenceNumber,
+  tokenId,
+  contract,
+}: NFTOperation): NFTOperationRaw => {
+  return {
+    id,
+    hash,
+    type,
+    senders,
+    recipients,
+    blockHash,
+    blockHeight,
+    date: date.toISOString(),
+    transactionSequenceNumber,
+    tokenId,
+    contract,
+  } as NFTOperationRaw;
 };
 export const inferSubOperations = (
   txHash: string,
@@ -198,6 +232,7 @@ export const fromOperationRaw = (
     extra,
     subOperations,
     internalOperations,
+    nftOperations,
     id,
     hash,
     type,
@@ -262,7 +297,38 @@ export const fromOperationRaw = (
     );
   }
 
+  if (nftOperations) {
+    res.nftOperations = nftOperations.map((o) => fromNFTOperationRaw(o));
+  }
+
   return res;
+};
+export const fromNFTOperationRaw = ({
+  id,
+  senders,
+  recipients,
+  hash,
+  type,
+  blockHeight,
+  blockHash,
+  date,
+  transactionSequenceNumber,
+  tokenId,
+  contract,
+}: NFTOperationRaw): NFTOperation => {
+  return {
+    id,
+    hash,
+    type,
+    senders,
+    recipients,
+    blockHash,
+    blockHeight,
+    date: new Date(date),
+    transactionSequenceNumber,
+    tokenId,
+    contract,
+  } as NFTOperation;
 };
 export const toTronResourcesRaw = ({
   frozen,
