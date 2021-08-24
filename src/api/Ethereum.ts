@@ -1,9 +1,10 @@
+import setWith from "lodash/setWith";
 import URL from "url";
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import { LedgerAPINotAvailable } from "@ledgerhq/errors";
 import JSONBigNumber from "../JSONBigNumber";
-import type { CryptoCurrency } from "../types";
+import type { CryptoCurrency, NFTMetadata } from "../types";
 import type { EthereumGasLimitRequest } from "../families/ethereum/types";
 import network from "../network";
 import { blockchainBaseURL } from "./Ledger";
@@ -37,6 +38,12 @@ export type Tx = {
     }>;
     truncated: boolean;
   };
+  erc721_transfer_events?: Array<{
+    contract: string;
+    sender: string;
+    receiver: string;
+    token_id: string;
+  }>;
   actions?: Array<{
     from: string;
     to: string;
@@ -59,6 +66,12 @@ export type ERC20BalanceOutput = Array<{
   contract: string;
   balance: BigNumber;
 }>;
+export type NFTMetadataInput = Array<{
+  contract: string;
+  tokenId: string;
+}>;
+// NFTMetadata are grouped : { [contract] : [tokenId] : NFTMetadata }
+export type NFTMetadataOutput = Record<string, Record<string, NFTMetadata>>;
 export type API = {
   getTransactions: (
     address: string,
@@ -72,6 +85,7 @@ export type API = {
   getAccountNonce: (address: string) => Promise<number>;
   broadcastTransaction: (signedTransaction: string) => Promise<string>;
   getERC20Balances: (input: ERC20BalancesInput) => Promise<ERC20BalanceOutput>;
+  getNFTMetadata: (input: NFTMetadataInput) => Promise<NFTMetadataOutput>;
   getAccountBalance: (address: string) => Promise<BigNumber>;
   roughlyEstimateGasLimit: (address: string) => Promise<BigNumber>;
   getERC20ApprovalsPerContract: (
@@ -176,6 +190,25 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
         data: input,
       });
       return data;
+    },
+
+    async getNFTMetadata(input) {
+      const { data }: { data: NFTMetadata[] } = await network({
+        method: "POST",
+        url: "https://mock-nft-metadata-api.vercel.app/v1/chains/eth/contracts/tokens/infos",
+        data: input,
+      });
+
+      return data.reduce(
+        (acc, curr) =>
+          setWith(
+            acc,
+            [curr.contract?.toLowerCase?.(), curr.tokenId?.toLowerCase?.()],
+            curr,
+            Object
+          ),
+        {}
+      );
     },
 
     async getERC20ApprovalsPerContract(owner, contract) {
