@@ -6,10 +6,13 @@ import tezos from "../families/tezos/test-specifics";
 
 import tron from "../families/tron/test-specifics";
 
+import ethereum from "../families/ethereum/test-specifics";
+
 
 export default {
   cosmos,
   polkadot,
   tezos,
   tron,
+  ethereum,
 };
