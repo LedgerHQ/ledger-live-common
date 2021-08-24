@@ -67,6 +67,8 @@ export type Operation = {
   // in context of accounts that have internal transactions that belong to a parent transaction
   // we have internal operations. Those are not included in the top level operations but can be presented to UI at that same level
   internalOperations?: Operation[];
+  // Operations related to ERC721 | ERC1155 tokens
+  nftOperations?: NFTOperation[];
 };
 export type OperationRaw = {
   id: string;
@@ -89,4 +91,38 @@ export type OperationRaw = {
   // in context of accounts that have internal transactions that belong to a parent transaction
   // we have internal operations. Those are not included in the top level operations but can be presented to UI at that same level
   internalOperations?: OperationRaw[];
+  // Operations related to ERC721 | ERC1155 tokens
+  nftOperations?: NFTOperationRaw[];
+};
+
+export type NFTOperation = Pick<
+  Operation,
+  | "id"
+  | "senders"
+  | "recipients"
+  | "hash"
+  | "type"
+  | "blockHeight"
+  | "blockHash"
+  | "date"
+  | "transactionSequenceNumber"
+> & {
+  tokenId: string;
+  contract: string;
+};
+
+export type NFTOperationRaw = Pick<
+  OperationRaw,
+  | "id"
+  | "senders"
+  | "recipients"
+  | "hash"
+  | "type"
+  | "blockHeight"
+  | "blockHash"
+  | "date"
+  | "transactionSequenceNumber"
+> & {
+  tokenId: string;
+  contract: string;
 };
