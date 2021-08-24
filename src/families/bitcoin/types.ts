@@ -122,7 +122,6 @@ export const bitcoinPickingStrategy = {
 };
 export type BitcoinPickingStrategy =
   typeof bitcoinPickingStrategy[keyof typeof bitcoinPickingStrategy];
-// FIXME (legacy) the UtxoStrategy level should be flattened back in Transaction
 export type UtxoStrategy = {
   strategy: BitcoinPickingStrategy;
   pickUnconfirmedRBF: boolean;
@@ -133,14 +132,14 @@ export type UtxoStrategy = {
 };
 export type Transaction = TransactionCommon & {
   family: "bitcoin";
-  utxoStrategy: UtxoStrategy; // FIXME Change to BitcoinPickingStrategy?
+  utxoStrategy: UtxoStrategy;
   rbf: boolean;
   feePerByte: BigNumber | null | undefined;
   networkInfo: NetworkInfo | null | undefined;
 };
 export type TransactionRaw = TransactionCommonRaw & {
   family: "bitcoin";
-  utxoStrategy: UtxoStrategy; // FIXME Change to BitcoinPickingStrategy?
+  utxoStrategy: UtxoStrategy;
   rbf: boolean;
   feePerByte: string | null | undefined;
   networkInfo: NetworkInfoRaw | null | undefined;

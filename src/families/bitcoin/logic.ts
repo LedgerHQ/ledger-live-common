@@ -42,8 +42,8 @@ export const inferFeePerByte = (t: Transaction, networkInfo: NetworkInfo) => {
   return t.feePerByte || networkInfo.feeItems.defaultFeePerByte;
 };
 export const isValidRecipient = async (params: {
-  currency: CryptoCurrency,
-  recipient: string,
+  currency: CryptoCurrency;
+  recipient: string;
 }): Promise<Error | null | undefined> => {
   if (!params.recipient) {
     return Promise.reject(new RecipientRequired(""));
