@@ -55,8 +55,8 @@ const fromWalletUtxo = (utxo: WalletOutput): BitcoinOutput => {
     blockHeight: utxo.block_height,
     address: utxo.address,
     value: new BigNumber(utxo.value),
-    isChange: false, // TODO wallet-btc limitation: doesn't provide it
-    rbf: false, // TODO wallet-btc limitation: doesn't provide it
+    rbf: utxo.rbf,
+    isChange: false, // wallet-btc limitation: doesn't provide it
   };
 };
 
@@ -275,7 +275,9 @@ const getAccountShape: GetAccountShape = async (info) => {
 
   const xpub = paramXpub || walletAccount.xpub.xpub;
   const oldOperations = initialAccount?.operations || [];
+
   await wallet.syncAccount(walletAccount);
+
   const balance = await wallet.getAccountBalance(walletAccount);
   const currentBlock = await walletAccount.xpub.explorer.getCurrentBlock();
   const blockHeight = currentBlock?.height;
