@@ -140,7 +140,7 @@ export const toOperationRaw = (
     blockHeight,
     extra: e,
     date: date.toISOString(),
-    value: value.toString(),
+    value: value.toFixed(),
     fee: fee.toString(),
   };
 
