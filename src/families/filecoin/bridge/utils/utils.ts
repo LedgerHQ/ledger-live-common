@@ -1,5 +1,3 @@
-import fs from "fs";
-
 import { Account, Address, Operation } from "../../../../types";
 import {
   getCryptoCurrencyById,
@@ -121,6 +119,5 @@ export const getAccountShape: GetAccountShape = async (info) => {
     blockHeight: blockHeight.current_block_identifier.index,
   };
 
-  fs.appendFileSync("getAccountShape.log", JSON.stringify(result));
   return result;
 };

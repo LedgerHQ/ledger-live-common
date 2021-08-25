@@ -290,8 +290,19 @@ export const makeScanAccounts =
             const stopAt = isIterableDerivationMode(derivationMode) ? 255 : 1;
             const startsAt = getDerivationModeStartsAt(derivationMode);
 
+            log(
+              "degub",
+              `start scanning account process. MandatoryEmptyAccountSkip ${mandatoryEmptyAccountSkip} / StartsAt: ${startsAt} - StopAt: ${stopAt}`
+            );
+
             for (let index = startsAt; index < stopAt; index++) {
-              if (finished) break;
+              log("degub", `start to scan a new account. Index: ${index}`);
+
+              if (finished) {
+                log("degub", `new account scanning process has been finished`);
+                break;
+              }
+
               if (!derivationModeSupportsIndex(derivationMode, index)) continue;
               const freshAddressPath = runDerivationScheme(
                 derivationScheme,
@@ -341,6 +352,10 @@ export const makeScanAccounts =
                   });
 
               if (account.used || showNewAccount) {
+                log(
+                  "debug",
+                  `Emit 'discovered' event for a new account found. AccountUsed: ${account.used} - showNewAccount: ${showNewAccount}`
+                );
                 o.next({
                   type: "discovered",
                   account,

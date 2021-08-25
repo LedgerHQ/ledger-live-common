@@ -1,8 +1,12 @@
 import Fil from "@zondax/ledger-filecoin";
+import { log } from "@ledgerhq/logs";
+
 import type { Resolver } from "../../hw/getAddress/types";
 import { getPath, isError } from "./utils";
 
 const resolver: Resolver = async (transport, { path }) => {
+  log("debug", "start getAddress process");
+
   const fil = new Fil(transport);
 
   const r = await fil.getAddressAndPubKey(getPath(path));
