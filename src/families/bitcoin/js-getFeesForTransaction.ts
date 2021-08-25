@@ -27,9 +27,9 @@ const getFeesForTransaction = async ({
       address: o.address,
       isChange: o.isChange,
       value: new BigNumber(o.value),
-      hash: undefined, // FIXME Get info from wallet-btc?
-      blockHeight: undefined, // FIXME Get info from wallet-btc?
-      rbf: false, // FIXME Get info from wallet-btc?
+      hash: undefined,
+      blockHeight: undefined,
+      rbf: transaction.rbf,
     };
   });
   const perCoin = perCoinLogic[account.currency.id];
