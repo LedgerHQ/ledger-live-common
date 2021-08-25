@@ -1,4 +1,4 @@
-import { FAMILIES } from "ledger-live-platform-sdk";
+import { FAMILIES } from "@ledgerhq/live-app-sdk";
 
 import * as ethereumAdapter from "../families/ethereum/platformAdapter";
 import * as bitcoinAdapter from "../families/bitcoin/platformAdapter";
