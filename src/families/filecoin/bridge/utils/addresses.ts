@@ -1,5 +1,5 @@
 import base32Decode from "base32-decode";
-import blake2 from "blake2";
+import { blake2bInit, blake2bUpdate, blake2bFinal, Blake2bCTX } from "blakejs";
 import leb128 from "leb128";
 import { log } from "@ledgerhq/logs";
 
@@ -64,7 +64,7 @@ export const validateAddress = (input: string): ValidateAddressResult => {
   if (!validPrefixs[prefix]) return { isValid: false };
   if (!validProtocols[protocol]) return { isValid: false };
 
-  let newCksum, rcvCksum, addr: Buffer;
+  let newCksum, rcvCksum, addr: Buffer, context: Blake2bCTX;
   const protocolBuf = Buffer.from(`0${protocol.toString()}`, "hex");
   const addrAndCksum = input.substr(2).toUpperCase();
 
@@ -96,11 +96,9 @@ export const validateAddress = (input: string): ValidateAddressResult => {
       if (protocol === "3" && addr.length > BLS_MAX_LEN)
         return { isValid: false };
 
-      BLS_MAX_LEN;
-      newCksum = blake2
-        .createHash("blake2b", { digestLength: 4 })
-        .update(Buffer.concat([protocolBuf, addr]))
-        .digest();
+      context = blake2bInit(4);
+      blake2bUpdate(context, Buffer.concat([protocolBuf, addr]));
+      newCksum = Buffer.from(blake2bFinal(context));
 
       log(
         "debug",
