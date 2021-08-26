@@ -1,8 +1,8 @@
 import { BigNumber } from "bignumber.js";
 import type { BitcoinLikeNetworkParameters } from "./types";
 import { BitcoinLikeFeePolicy, BitcoinLikeSigHashType } from "./types";
-// FIXME Custom parameters from libcore -- not used yet
 
+// TODO Custom parameters from libcore -- not used yet
 /*
 const BIP115_PARAMETERS = {
   blockHash: "9ec9845acb02fab24e1c0368b3b517c1a4488fba97f0e3459ac053ea01000000",
@@ -23,6 +23,7 @@ const ZIP_SAPLING_PARAMETERS = {
   419200
 };
 */
+
 export const getNetworkParameters = (
   networkName: string
 ): BitcoinLikeNetworkParameters => {
