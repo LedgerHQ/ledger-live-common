@@ -1,4 +1,4 @@
-import { CryptoCurrency, findTokenById, listTokensForCryptoCurrency } from "@ledgerhq/cryptoassets";
+import { CryptoCurrency, findTokenById, listTokens, listTokensForCryptoCurrency } from "@ledgerhq/cryptoassets";
 import BigNumber from "bignumber.js";
 import { emptyHistoryCache } from "../../account";
 import { CoreAccount, CoreOperation } from "../../libcore/types";
@@ -13,29 +13,28 @@ const OperationOrderKey = {
 async function buildElrondESDTTokenAccount({
   parentAccountId,
   token,
-  coreAccount,
   existingTokenAccount,
   balance,
 }) {
-  const extractedId = token.identifier;
+  const extractedId = token.id;
   const id = parentAccountId + "+" + extractedId;
 
   const getAllOperations = async () => {
-    const query = await coreAccount.queryOperations();
-    await query.complete();
-    await query.addOrder(OperationOrderKey.date, false);
-    const coreOperations = await query.execute();
-    const operations = await minimalOperationsBuilder(
-      (existingTokenAccount && existingTokenAccount.operations) || [],
-      coreOperations,
-      (coreOperation: CoreOperation) =>
-        buildESDTOperation({
-          coreOperation,
-          accountId: id,
-          tokenId: extractedId,
-        })
-    );
-    return operations;
+    // const query = await coreAccount.queryOperations();
+    // await query.complete();
+    // await query.addOrder(OperationOrderKey.date, false);
+    // const coreOperations = await query.execute();
+    // const operations = await minimalOperationsBuilder(
+    //   (existingTokenAccount && existingTokenAccount.operations) || [],
+    //   coreOperations,
+    //   (coreOperation: CoreOperation) =>
+    //     buildESDTOperation({
+    //       coreOperation,
+    //       accountId: id,
+    //       tokenId: extractedId,
+    //     })
+    // );
+    return [];
   };
 
   const operations = await getAllOperations();
@@ -52,26 +51,25 @@ async function buildElrondESDTTokenAccount({
     spendableBalance: balance,
     swapHistory: [],
     creationDate:
-      operations.length > 0
-        ? operations[operations.length - 1].date
-        : new Date(),
+      // operations.length > 0
+      //   ? operations[operations.length - 1].date
+      new Date(),
     balanceHistoryCache: emptyHistoryCache, // calculated in the jsHelpers
   };
   return tokenAccount;
 }
+
 async function elrondBuildESDTTokenAccounts({
   currency,
-  coreAccount,
   accountId,
   existingAccount,
   syncConfig,
 }: {
   currency: CryptoCurrency;
-  coreAccount: CoreAccount;
   accountId: string;
   existingAccount: Account | null | undefined;
   syncConfig: SyncConfig;
-}): Promise<TokenAccount[] | null | undefined> {
+}): Promise<TokenAccount[] | undefined> {
   const { blacklistedTokenIds = [] } = syncConfig;
   if (listTokensForCryptoCurrency(currency).length === 0) {
     return undefined;
@@ -82,40 +80,37 @@ async function elrondBuildESDTTokenAccounts({
 
   const existingAccountTickers: string[] = []; // used to keep track of ordering
 
-  if (existingAccount) {
-    const elrondAddress = existingAccount.freshAddress;
-    const accountESDTs = await getAccountESDTTokens(elrondAddress);
-    if (existingAccount.subAccounts) {
-      for (const existingSubAccount of existingAccount.subAccounts) {
-        if (existingSubAccount.type === "TokenAccount") {
-          const { ticker, id } = existingSubAccount.token;
-  
-          if (!blacklistedTokenIds.includes(id)) {
-            existingAccountTickers.push(ticker);
-            existingAccountByTicker[ticker] = existingSubAccount;
-          }
+  if (existingAccount && existingAccount.subAccounts) {
+    for (const existingSubAccount of existingAccount.subAccounts) {
+      if (existingSubAccount.type === "TokenAccount") {
+        const { ticker, id } = existingSubAccount.token;
+
+        if (!blacklistedTokenIds.includes(id)) {
+          existingAccountTickers.push(ticker);
+          existingAccountByTicker[ticker] = existingSubAccount;
         }
       }
     }
-
-    accountESDTs.forEach(async (esdt) => {
-      const token = findTokenById(esdt.identifier);
-
-      if (token && !blacklistedTokenIds.includes(token.id)) {
-        const existingTokenAccount = existingAccountByTicker[token.ticker];
-        const tokenAccount = await buildElrondESDTTokenAccount({
-          parentAccountId: accountId,
-          existingTokenAccount,
-          token,
-          coreAccount,
-          balance: new BigNumber(esdt.balance),
-        });
-        if (tokenAccount) {
-          tokenAccounts.push(tokenAccount);
-        }
-      }
-    })
   }
+
+  const accountESDTs = await getAccountESDTTokens();
+  accountESDTs.forEach(async (esdt) => {
+    const token = findTokenById(`elrond/esdt/${esdt.identifier}`);
+
+    if (token && !blacklistedTokenIds.includes(token.id)) {
+      const existingTokenAccount = existingAccountByTicker[token.ticker];
+      const tokenAccount = await buildElrondESDTTokenAccount({
+        parentAccountId: accountId,
+        existingTokenAccount,
+        token,
+        balance: new BigNumber(esdt.balance),
+      });
+     
+      if (tokenAccount) {
+        tokenAccounts.push(tokenAccount);
+      }
+    }
+  });
 
   // Preserve order of tokenAccounts from the existing token accounts
   tokenAccounts.sort((a, b) => {
@@ -126,6 +121,7 @@ async function elrondBuildESDTTokenAccounts({
     if (j < 0) return -1;
     return i - j;
   });
+
   return tokenAccounts;
 }
 
