@@ -102,6 +102,14 @@ export const getOperations = async (
   );
 };
 
+export const getAccountESDTTokens = async (
+  address: string,
+): Promise<any[]> => {
+  const tokens = await api.getTokensForAddress(address);
+
+  return tokens;
+}
+
 /**
  * Obtain fees from blockchain
  */

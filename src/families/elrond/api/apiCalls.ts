@@ -118,6 +118,15 @@ export default class ElrondApi {
     );
   }
 
+  async getTokensForAddress(addr: string) {
+    const { data: tokens } = await network({
+      method: "GET",
+      url: `${this.API_URL}/accounts/${addr}/tokens`
+    });
+
+    return tokens;
+  }
+
   async getBlockchainBlockHeight() {
     const {
       data: [{ nonce: blockHeight }],
