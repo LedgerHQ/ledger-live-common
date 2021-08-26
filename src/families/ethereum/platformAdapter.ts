@@ -11,12 +11,14 @@ export const convertToLiveTransaction = (
 ): Partial<Transaction> => {
   const hasFeesProvided = areFeesProvided(tx);
 
+  const { gasLimit, ...restTx } = tx;
+
   const liveTx: Partial<Transaction> = {
-    ...tx,
+    ...restTx,
     amount: tx.amount,
     recipient: tx.recipient,
     gasPrice: tx.gasPrice,
-    userGasLimit: tx.gasLimit,
+    userGasLimit: gasLimit,
   };
 
   return hasFeesProvided ? { ...liveTx, feesStrategy: "custom" } : liveTx;

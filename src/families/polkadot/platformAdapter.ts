@@ -7,5 +7,5 @@ export const convertToLiveTransaction = (
   tx: PlatformTransaction
 ): Partial<Transaction> => ({
   ...tx,
-  era: `${tx.era}`,
+  era: tx.era ? `${tx.era}` : undefined,
 });
