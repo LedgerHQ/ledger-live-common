@@ -8,13 +8,10 @@ import type { Transaction, UtxoStrategy } from "./types";
 import { bitcoinPickingStrategy } from "./types";
 import wallet, { getWalletAccount } from "./wallet";
 
-// TODO Test all strategies
 const selectUtxoPickingStrategy = (
   walletAccount: WalletAccount,
   utxoStrategy: UtxoStrategy
 ) => {
-  // TODO Manage transaction.utxoStrategy.pickUnconfirmedRBF
-
   if (utxoStrategy.strategy === bitcoinPickingStrategy.MERGE_OUTPUTS) {
     return new Merge(
       walletAccount.xpub.crypto,

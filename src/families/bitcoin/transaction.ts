@@ -43,7 +43,6 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     utxoStrategy: tr.utxoStrategy,
     family: tr.family,
     feePerByte: tr.feePerByte ? new BigNumber(tr.feePerByte) : null,
-    //fees: tr.fees ? new BigNumber(tr.fees) : null,
     networkInfo: tr.networkInfo && {
       family: tr.networkInfo.family,
       feeItems: fromFeeItemsRaw(tr.networkInfo.feeItems),
@@ -59,7 +58,6 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
     utxoStrategy: t.utxoStrategy,
     family: t.family,
     feePerByte: t.feePerByte ? t.feePerByte.toString() : null,
-    //fees: t.fees ? t.fees.toString() : null,
     networkInfo: t.networkInfo && {
       family: t.networkInfo.family,
       feeItems: toFeeItemsRaw(t.networkInfo.feeItems),

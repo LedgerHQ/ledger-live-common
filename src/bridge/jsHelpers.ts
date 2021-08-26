@@ -132,7 +132,7 @@ export const makeSync =
             {
               currency: initial.currency,
               id: accountId,
-              index: initial.index, // FIXME typescript
+              index: initial.index,
               address: initial.freshAddress,
               derivationPath: freshAddressPath,
               derivationMode: initial.derivationMode,

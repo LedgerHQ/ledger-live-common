@@ -35,7 +35,8 @@ const signOperation = ({
         let senders: string[] = [];
         let recipients: string[] = [];
         let fee = new BigNumber(0);
-        // FIXME Better not re-calculate these fields here, rather set them in prepareTransaction?
+        // Maybe better not re-calculate these fields here, instead include them
+        // in Transaction type and set them in prepareTransaction?
         await calculateFees({
           account,
           transaction,
@@ -82,15 +83,16 @@ const signOperation = ({
         }
 
         const segwit = isSegwitDerivationMode(account.derivationMode);
+
         // FIXME Call to explorer needed to set timestamp
         // cf. https://github.com/LedgerHQ/lib-ledger-core/blob/fc9d762b83fc2b269d072b662065747a64ab2816/core/src/wallet/bitcoin/transaction_builders/BitcoinLikeUtxoPicker.cpp#L150-L154
-
         /*
         const hasTimestamp = networkParams.usesTimestampedTransaction;
         const initialTimestamp = hasTimestamp
           ? transaction.timestamp
           : undefined;
         */
+
         const perCoin = perCoinLogic[currency.id];
         let additionals = [currency.id];
 
@@ -109,20 +111,7 @@ const signOperation = ({
         const expiryHeight = perCoin?.hasExpiryHeight
           ? Buffer.from([0x00, 0x00, 0x00, 0x00])
           : undefined;
-        /*
-        console.log("XXX - sign operation - signAccountTx params:", {
-          btc: hwApp,
-          fromAccount: walletAccount,
-          txInfo,
-          //changePath,
-          lockTime,
-          sigHashType,
-          segwit,
-          //initialTimestamp,
-          additionals,
-          expiryHeight,
-        });
-        */
+
         const signature = await wallet.signAccountTx({
           btc: hwApp,
           fromAccount: walletAccount,
@@ -153,8 +142,8 @@ const signOperation = ({
         // Build the optimistic operation
         const operation: Operation = {
           id: encodeOperationId(account.id, "", "OUT"),
-          hash: "",
           // Will be resolved in broadcast()
+          hash: "",
           type: "OUT",
           value: new BigNumber(transaction.amount).plus(fee),
           fee,
