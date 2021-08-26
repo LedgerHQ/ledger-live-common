@@ -2,9 +2,10 @@ import type { Account } from "../../types";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { makeSync, makeScanAccounts, mergeOps } from "../../bridge/jsHelpers";
 import { getAccount, getOperations } from "./api";
+import elrondBuildESDTTokenAccounts from "./js-buildSubAccounts";
 
 const getAccountShape: GetAccountShape = async (info) => {
-  const { id, address, initialAccount } = info;
+  const { id, address, initialAccount, currency } = info;
   const oldOperations = initialAccount?.operations || [];
   // Needed for incremental synchronisation
   const startAt =
@@ -16,6 +17,16 @@ const getAccountShape: GetAccountShape = async (info) => {
   // Merge new operations with the previously synced ones
   const newOperations = await getOperations(id, address, startAt);
   const operations = mergeOps(oldOperations, newOperations);
+
+  const subAccounts = await elrondBuildESDTTokenAccounts({
+    currency,
+    accountId: id,
+    existingAccount: initialAccount,
+    syncConfig: {
+      paginationConfig: {}
+    }
+  });
+
   const shape = {
     id,
     balance,
@@ -25,7 +36,9 @@ const getAccountShape: GetAccountShape = async (info) => {
     elrondResources: {
       nonce,
     },
+    subAccounts,
   };
+
   return { ...shape, operations };
 };
 
