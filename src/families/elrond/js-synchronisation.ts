@@ -1,4 +1,4 @@
-import type { Account } from "../../types";
+import type { Account, TokenAccount } from "../../types";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { makeSync, makeScanAccounts, mergeOps } from "../../bridge/jsHelpers";
 import { getAccount, getOperations } from "./api";
@@ -17,15 +17,18 @@ const getAccountShape: GetAccountShape = async (info) => {
   // Merge new operations with the previously synced ones
   const newOperations = await getOperations(id, address, startAt);
   const operations = mergeOps(oldOperations, newOperations);
-
-  const subAccounts = await elrondBuildESDTTokenAccounts({
-    currency,
-    accountId: id,
-    existingAccount: initialAccount,
-    syncConfig: {
-      paginationConfig: {}
-    }
-  });
+  
+  let subAccounts: TokenAccount[] | undefined = [];
+  if (nonce) {
+    subAccounts = await elrondBuildESDTTokenAccounts({
+      currency,
+      accountId: id,
+      existingAccount: initialAccount,
+      syncConfig: {
+        paginationConfig: {}
+      }
+    });
+  }
 
   const shape = {
     id,
