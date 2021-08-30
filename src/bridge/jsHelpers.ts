@@ -42,7 +42,7 @@ export type GetAccountShape = (
     address: string;
     id: string;
     initialAccount?: Account;
-    rest?: any,
+    rest?: any;
   },
   arg1: SyncConfig
 ) => Promise<Partial<Account>>;

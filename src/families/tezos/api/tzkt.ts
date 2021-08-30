@@ -4,26 +4,26 @@ import network from "../../../network";
 
 type APIAccount =
   | {
-      type: "empty",
-      address: string,
-      counter: number,
+      type: "empty";
+      address: string;
+      counter: number;
     }
   | {
-      type: "user",
-      address: string,
-      publicKey: string,
-      revealed: boolean,
-      balance: number,
-      counter: number,
+      type: "user";
+      address: string;
+      publicKey: string;
+      revealed: boolean;
+      balance: number;
+      counter: number;
       delegate?: {
-        alias: string,
-        address: string,
-        active: boolean,
-      },
-      delegationLevel: number,
-      delegationTime: string,
-      numTransactions: number,
-      firstActivityTime: string,
+        alias: string;
+        address: string;
+        active: boolean;
+      };
+      delegationLevel: number;
+      delegationTime: string;
+      numTransactions: number;
+      firstActivityTime: string;
     };
 
 type CommonOperationType = {

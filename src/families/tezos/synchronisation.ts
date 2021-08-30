@@ -52,11 +52,11 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
 
   const apiOperations = await fetchAllTransactions(address, lastId);
 
-  const { revealed, counter } = apiAccount;
+  const { revealed, counter, publicKey } = apiAccount;
 
   const tezosResources = {
     revealed,
-    publicKey: initialAccount?.tezosResources?.publicKey || b58cencode(
+    publicKey: publicKey || initialAccount?.tezosResources?.publicKey || b58cencode(
       compressPublicKey(
         Buffer.from(rest.publicKey, "hex"),
         DerivationType.ED25519
