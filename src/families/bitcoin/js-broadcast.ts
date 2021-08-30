@@ -19,8 +19,12 @@ const broadcast = async ({
     throw new Error("bitcoin wallet account expected");
   }
   const walletAccount = await wallet.importFromSerializedAccount(walletData);
-  const hash = await wallet.broadcastTx(walletAccount, signature);
-  return patchOperationWithHash(operation, hash);
+  try {
+    const hash = await wallet.broadcastTx(walletAccount, signature);
+    return patchOperationWithHash(operation, hash);
+  } catch (error) {
+    throw new Error(error); // TODO Improve error message for broadcast failure cases
+  }
 };
 
 export default broadcast;
