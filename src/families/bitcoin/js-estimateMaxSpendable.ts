@@ -12,18 +12,18 @@ import { getWalletAccount } from "./wallet";
 const estimateMaxSpendable = async ({
   account,
   parentAccount,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   transaction,
 }: {
   account: AccountLike;
   parentAccount: Account | null | undefined;
   transaction: Transaction | null | undefined;
 }): Promise<BigNumber> => {
-  // TODO Need implementation in wallet-btc (LL-6959)
-  /*
   const mainAccount = getMainAccount(account, parentAccount);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const walletAccount = await getWalletAccount(mainAccount);
-  const estimate = walletAccount.estimateAccountMaxSpendable(walletAccount);
-  //*/
+  // TODO Need implementation in wallet-btc (LL-6959)
+  // const estimate = wallet.estimateAccountMaxSpendable(walletAccount, transaction?.feePerByte || 0);
   return new BigNumber(account.balance);
 };
 
