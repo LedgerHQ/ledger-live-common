@@ -1,11 +1,27 @@
 import { PolkadotTransaction as PlatformTransaction } from "@ledgerhq/live-app-sdk";
 import { Transaction } from "./types";
 
-export const CAN_EDIT_FEES = false;
+const CAN_EDIT_FEES = false;
 
-export const convertToLiveTransaction = (
+const convertToLiveTransaction = (
   tx: PlatformTransaction
 ): Partial<Transaction> => ({
   ...tx,
   era: tx.era ? `${tx.era}` : undefined,
 });
+
+const getPlatformTransactionSignFlowInfos = (
+  tx: PlatformTransaction
+): {
+  canEditFees: boolean;
+  hasFeesProvided: boolean;
+  liveTx: Partial<Transaction>;
+} => {
+  return {
+    canEditFees: CAN_EDIT_FEES,
+    liveTx: convertToLiveTransaction(tx),
+    hasFeesProvided: false,
+  };
+};
+
+export default { getPlatformTransactionSignFlowInfos };

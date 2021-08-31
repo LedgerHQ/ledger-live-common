@@ -1,9 +1,4 @@
-import { FAMILIES } from "@ledgerhq/live-app-sdk";
-
-import * as ethereumAdapter from "../families/ethereum/platformAdapter";
-import * as bitcoinAdapter from "../families/bitcoin/platformAdapter";
-import * as rippleAdapter from "../families/ripple/platformAdapter";
-import * as polkadotAdapter from "../families/polkadot/platformAdapter";
+import byFamily from "../generated/platformAdapter";
 
 import type { Account, CryptoCurrency, Transaction } from "../types";
 import type {
@@ -49,58 +44,15 @@ export const getPlatformTransactionSignFlowInfos = (
   hasFeesProvided: boolean;
   liveTx: Partial<Transaction>;
 } => {
-  switch (platformTx.family) {
-    case FAMILIES.ETHEREUM: {
-      const liveTx = ethereumAdapter.convertToLiveTransaction(platformTx);
+  const family = byFamily[platformTx.family];
 
-      const hasFeesProvided = ethereumAdapter.areFeesProvided(platformTx);
-
-      return {
-        canEditFees: ethereumAdapter.CAN_EDIT_FEES,
-        liveTx,
-        hasFeesProvided,
-      };
-    }
-
-    case FAMILIES.BITCOIN: {
-      const liveTx = bitcoinAdapter.convertToLiveTransaction(platformTx);
-
-      const hasFeesProvided = bitcoinAdapter.areFeesProvided(platformTx);
-
-      return {
-        canEditFees: bitcoinAdapter.CAN_EDIT_FEES,
-        liveTx,
-        hasFeesProvided,
-      };
-    }
-
-    case FAMILIES.RIPPLE: {
-      const liveTx = rippleAdapter.convertToLiveTransaction(platformTx);
-
-      const hasFeesProvided = rippleAdapter.areFeesProvided(platformTx);
-
-      return {
-        canEditFees: rippleAdapter.CAN_EDIT_FEES,
-        liveTx,
-        hasFeesProvided,
-      };
-    }
-
-    case FAMILIES.POLKADOT: {
-      const liveTx = polkadotAdapter.convertToLiveTransaction(platformTx);
-
-      return {
-        canEditFees: polkadotAdapter.CAN_EDIT_FEES,
-        liveTx,
-        hasFeesProvided: false,
-      };
-    }
-
-    default:
-      return {
-        canEditFees: false,
-        liveTx: { ...platformTx },
-        hasFeesProvided: false,
-      };
+  if (family) {
+    return family.getPlatformTransactionSignFlowInfos(platformTx);
   }
+
+  return {
+    canEditFees: false,
+    liveTx: { ...platformTx } as Partial<Transaction>,
+    hasFeesProvided: false,
+  };
 };
