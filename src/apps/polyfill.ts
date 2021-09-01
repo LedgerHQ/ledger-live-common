@@ -61,9 +61,13 @@ export const polyfillApplication = (app: Application): Application => {
 
   return o;
 };
+// In context of LL-5352 until backend fixes the mistake, remove the dependencies for Decred.
 export const polyfillApp = (app: App): App => {
   return {
     ...app,
-    dependencies: uniq(app.dependencies.concat(getDependencies(app.name))),
+    dependencies:
+      app.name === "Decred" || app.name === "Decred Testnet"
+        ? []
+        : uniq(app.dependencies.concat(getDependencies(app.name))),
   };
 };
