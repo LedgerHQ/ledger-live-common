@@ -22,7 +22,6 @@ type CompleteExchangeRequest = {
   binaryPayload: string;
   signature: string;
   exchange: Exchange;
-
   exchangeType: number;
   rateType: number;
 };

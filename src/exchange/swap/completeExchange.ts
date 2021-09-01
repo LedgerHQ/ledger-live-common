@@ -159,7 +159,7 @@ const completeExchange = (
           } catch (e) {
             // @ts-expect-error TransportStatusError to be typed on ledgerjs
             if (e instanceof TransportStatusError && e.statusCode === 0x6a83) {
-              log("exchange", "transfport error");
+              log("exchange", "transport error");
               throw new WrongDeviceForAccount(undefined, {
                 accountName: refundAccount.name,
               });
