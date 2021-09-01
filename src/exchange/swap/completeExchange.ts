@@ -25,7 +25,6 @@ type CompleteExchangeInput = {
   binaryPayload: string;
   signature: string;
   transaction: Transaction;
-
   exchangeType: number;
   rateType: number;
 };
@@ -41,8 +40,8 @@ const completeExchange = (
     provider,
     binaryPayload,
     signature,
-    exchangeType = 0x00, // TODO defaulting to swap, perhaps we want it mandatory
-    rateType = 0x00,
+    exchangeType,
+    rateType = 0x00, // TODO Pass fixed/float for UI switch ?
   } = input;
 
   const { fromAccount, fromParentAccount } = exchange;
@@ -132,46 +131,47 @@ const completeExchange = (
 
           throw e;
         }
+        if (exchangeType === 0x00) {
+          // Swap specific checks to confirm the refund address is correct.
+          if (unsubscribed) return;
+          const refundAddressParameters = await perFamily[
+            refundCurrency.family
+          ].getSerializedAddressParameters(
+            refundAccount.freshAddressPath,
+            refundAccount.derivationMode,
+            refundCurrency.id
+          );
+          if (unsubscribed) return;
 
-        if (unsubscribed) return;
-        const refundAddressParameters = await perFamily[
-          refundCurrency.family
-        ].getSerializedAddressParameters(
-          refundAccount.freshAddressPath,
-          refundAccount.derivationMode,
-          refundCurrency.id
-        );
-        if (unsubscribed) return;
+          const {
+            config: refundAddressConfig,
+            signature: refundAddressConfigSignature,
+          } = getCurrencyExchangeConfig(refundCurrency);
+          if (unsubscribed) return;
 
-        const {
-          config: refundAddressConfig,
-          signature: refundAddressConfigSignature,
-        } = getCurrencyExchangeConfig(refundCurrency);
-        if (unsubscribed) return;
+          try {
+            await exchange.checkRefundAddress(
+              refundAddressConfig,
+              refundAddressConfigSignature,
+              refundAddressParameters.addressParameters
+            );
+            log("exchange", "checkrefund address");
+          } catch (e) {
+            // @ts-expect-error TransportStatusError to be typed on ledgerjs
+            if (e instanceof TransportStatusError && e.statusCode === 0x6a83) {
+              log("exchange", "transfport error");
+              throw new WrongDeviceForAccount(undefined, {
+                accountName: refundAccount.name,
+              });
+            }
+            throw e;
+          }
+        }
 
         o.next({
           type: "complete-exchange-requested",
           estimatedFees,
         });
-
-        try {
-          await exchange.checkRefundAddress(
-            refundAddressConfig,
-            refundAddressConfigSignature,
-            refundAddressParameters.addressParameters
-          );
-          log("exchange", "checkrefund address");
-        } catch (e) {
-          // @ts-expect-error TransportStatusError to be typed on ledgerjs
-          if (e instanceof TransportStatusError && e.statusCode === 0x6a83) {
-            log("exchange", "transfport error");
-            throw new WrongDeviceForAccount(undefined, {
-              accountName: refundAccount.name,
-            });
-          }
-
-          throw e;
-        }
 
         if (unsubscribed) return;
         ignoreTransportError = true;

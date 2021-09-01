@@ -141,8 +141,7 @@ export const createAction = (
           binaryPayload,
           signature,
           exchange,
-
-          exchangeType, // TODO what do we do with this
+          exchangeType,
           rateType,
         })
       )
