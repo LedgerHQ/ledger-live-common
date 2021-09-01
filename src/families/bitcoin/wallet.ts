@@ -1,4 +1,4 @@
-import { WalletLedger } from "wallet-btc";
+import { WalletLedger } from "@ledgerhq/wallet-btc";
 import type { Account } from "./../../types";
 let wallet: WalletLedger | null = null;
 export const getWalletAccount = async (account: Account) => {

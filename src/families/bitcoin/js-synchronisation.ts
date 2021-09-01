@@ -3,7 +3,7 @@ import type {
   TX,
   Input as WalletInput,
   Output as WalletOutput,
-} from "wallet-btc";
+} from "@ledgerhq/wallet-btc";
 import { BigNumber } from "bignumber.js";
 import Btc from "@ledgerhq/hw-app-btc";
 import { log } from "@ledgerhq/logs";
