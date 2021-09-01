@@ -61,7 +61,7 @@ export const polyfillApplication = (app: Application): Application => {
 
   return o;
 };
-// In context of LL-5352 until backend fixes the mistake, remove the dependencies for Decred.
+// FIXME LL-5352 until backend fixes the mistake, remove the dependencies for Decred.
 export const polyfillApp = (app: App): App => {
   return {
     ...app,

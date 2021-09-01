@@ -92,7 +92,11 @@ export function mockListAppsResult(
     .map((a) => a.trim())
     .filter(Boolean)
     .map((name, i) => {
-      const dependencies = getDependencies(name);
+      // FIXME LL-5352 until backend fixes the mistake, remove the dependencies for Decred.
+      const dependencies =
+        name === "Decred" || name === "Decred Testnet"
+          ? []
+          : getDependencies(name);
       const currency = findCryptoCurrency((c) => c.managerAppName === name);
       const indexOfMarketCap = currency
         ? tickersByMarketCap.indexOf(currency.ticker)
