@@ -2,7 +2,7 @@ import { BigNumber } from "bignumber.js";
 import type { AccountLike, Account } from "../../types";
 import type { Transaction } from "./types";
 import { getMainAccount } from "../../account";
-import { getWalletAccount } from "./wallet";
+import wallet, { getWalletAccount } from "./wallet";
 
 /**
  * Returns the maximum possible amount for transaction
@@ -12,7 +12,6 @@ import { getWalletAccount } from "./wallet";
 const estimateMaxSpendable = async ({
   account,
   parentAccount,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   transaction,
 }: {
   account: AccountLike;
@@ -20,11 +19,14 @@ const estimateMaxSpendable = async ({
   transaction: Transaction | null | undefined;
 }): Promise<BigNumber> => {
   const mainAccount = getMainAccount(account, parentAccount);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const walletAccount = await getWalletAccount(mainAccount);
-  // TODO Need implementation in wallet-btc (LL-6959)
-  // const estimate = wallet.estimateAccountMaxSpendable(walletAccount, transaction?.feePerByte || 0);
-  return new BigNumber(account.balance);
+
+  const estimate = await wallet.estimateAccountMaxSpendable(
+    walletAccount,
+    transaction?.feePerByte?.toNumber() || 0 //!\ wallet-btc handles fees as JS number
+  );
+
+  return estimate;
 };
 
 export default estimateMaxSpendable;
