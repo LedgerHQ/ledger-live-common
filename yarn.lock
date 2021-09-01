@@ -1335,6 +1335,34 @@
   resolved "https://registry.yarnpkg.com/@ledgerhq/logs/-/logs-6.2.0.tgz#9fb2d6f1811316697f7b3cc14607f6c608912419"
   integrity sha512-SLyFyD7ElMhgKWPYedFGCT/ilcbGPgL5hXXYHxOM79Fs5fWi0zaUpt5oGqGMsOAAFaMa9/rbun0pokzPhEFz8A==
 
+"@ledgerhq/wallet-btc@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/wallet-btc/-/wallet-btc-1.1.1.tgz#080394fc4958a644b7a9c9e61191aee353a436fc"
+  integrity sha512-PPCkOo+uTtfkqsQQ0sPuKgIdUkXO6/SeRwEdg9HBo+lEGOB1UfzatstCrtEDgjhq7YX8M1PA9wPG3ZgwhDEqBQ==
+  dependencies:
+    "@ledgerhq/errors" "6.2.0"
+    "@ledgerhq/hw-app-btc" "^6.0.2"
+    "@ledgerhq/json-bignumber" "^1.0.2"
+    "@ledgerhq/logs" "6.2.0"
+    "@types/bchaddrjs" "^0.4.0"
+    "@types/bitcore-lib-cash" "^8.23.3"
+    "@types/bs58check" "^2.1.0"
+    axios "^0.21.1"
+    axios-retry "^3.1.9"
+    bchaddrjs "^0.5.2"
+    bignumber.js "^9.0.1"
+    bip32 "^2.0.6"
+    bip39 "^3.0.4"
+    bitcoinjs-lib "^5.2.0"
+    bitcore-lib "^8.25.10"
+    bitcore-lib-cash "^8.25.10"
+    bitcore-lib-zcash "^0.13.20"
+    bs58 "^4.0.1"
+    bs58check "^2.1.2"
+    buffer "^6.0.3"
+    coininfo "^5.1.0"
+    lodash "^4.17.21"
+
 "@nodelib/fs.scandir@2.1.4":
   version "2.1.4"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.4.tgz#d4b3549a5db5de2683e0c1071ab4f140904bbf69"
@@ -1788,9 +1816,9 @@
   integrity sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==
 
 "@types/node@*":
-  version "16.7.8"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-16.7.8.tgz#2448be5f24fe6b77114632b6350fcd219334651e"
-  integrity sha512-8upnoQU0OPzbIkm+ZMM0zCeFCkw2s3mS0IWdx0+AAaWqm4fkBb0UJp8Edl7FVKRamYbpJC/aVsHpKWBIbiC7Zg==
+  version "16.7.10"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-16.7.10.tgz#7aa732cc47341c12a16b7d562f519c2383b6d4fc"
+  integrity sha512-S63Dlv4zIPb8x6MMTgDq5WWRJQe56iBEY0O3SOFA9JrRienkOVDXSXBjjJw6HTNQYSE2JI6GMCR6LVbIMHJVvA==
 
 "@types/node@10.12.18":
   version "10.12.18"
@@ -6890,34 +6918,6 @@ walker@^1.0.7:
   integrity sha1-L3+bj9ENZ3JisYqITijRlhjgKPs=
   dependencies:
     makeerror "1.0.x"
-
-wallet-btc@1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/wallet-btc/-/wallet-btc-1.1.0.tgz#0ab2b99ab6374984dc5328b4eeda8900c501ea89"
-  integrity sha512-AfVyNZ/atQ8122kKzjgio3xI4cjWaf5KYqxUzZpgu6eNzYztW51hCrvQGq7Yj4+h6RcqhhzLBrlK3y6UkKUL2w==
-  dependencies:
-    "@ledgerhq/errors" "6.2.0"
-    "@ledgerhq/hw-app-btc" "^6.0.2"
-    "@ledgerhq/json-bignumber" "^1.0.2"
-    "@ledgerhq/logs" "6.2.0"
-    "@types/bchaddrjs" "^0.4.0"
-    "@types/bitcore-lib-cash" "^8.23.3"
-    "@types/bs58check" "^2.1.0"
-    axios "^0.21.1"
-    axios-retry "^3.1.9"
-    bchaddrjs "^0.5.2"
-    bignumber.js "^9.0.1"
-    bip32 "^2.0.6"
-    bip39 "^3.0.4"
-    bitcoinjs-lib "^5.2.0"
-    bitcore-lib "^8.25.10"
-    bitcore-lib-cash "^8.25.10"
-    bitcore-lib-zcash "^0.13.20"
-    bs58 "^4.0.1"
-    bs58check "^2.1.2"
-    buffer "^6.0.3"
-    coininfo "^5.1.0"
-    lodash "^4.17.21"
 
 webidl-conversions@^5.0.0:
   version "5.0.0"
