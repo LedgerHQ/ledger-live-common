@@ -229,7 +229,6 @@ const getAccountShape: GetAccountShape = async (info) => {
     transport,
     currency,
     id: accountId,
-    index,
     derivationPath,
     derivationMode,
     initialAccount,
@@ -240,10 +239,14 @@ const getAccountShape: GetAccountShape = async (info) => {
   }
 
   const paramXpub = initialAccount?.xpub;
-  // FIXME Hack because makeScanAccounts doesn't support non-account based coins
-  // Replaces the full derivation path with only the seed identification part
+
+  // Extract the seed identification part from the full derivation path
   // 44'/0'/0'/0/0 --> 44'/0'
-  const path = derivationPath.split("/", 2).join("/");
+  const rootPath = derivationPath.split("/", 2).join("/");
+
+  // Extract the account index
+  // 44'/0'/3'/0/0 --> 3
+  const accountIndex = parseInt(derivationPath.split("/")[2]);
 
   const walletNetwork = toWalletNetwork(currency.id);
   const walletDerivationMode = toWalletDerivationMode(derivationMode);
@@ -263,8 +266,8 @@ const getAccountShape: GetAccountShape = async (info) => {
     : await wallet.generateAccount({
         btc: (!paramXpub && transport && new Btc(transport)) || undefined,
         xpub: paramXpub,
-        path,
-        index,
+        path: rootPath,
+        index: accountIndex,
         network: walletNetwork,
         derivationMode: walletDerivationMode,
         explorer: explorer && `ledger${explorer.version}`,
