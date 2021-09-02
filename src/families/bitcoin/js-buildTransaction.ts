@@ -12,29 +12,18 @@ const selectUtxoPickingStrategy = (
   walletAccount: WalletAccount,
   utxoStrategy: UtxoStrategy
 ) => {
-  if (utxoStrategy.strategy === bitcoinPickingStrategy.MERGE_OUTPUTS) {
-    return new Merge(
-      walletAccount.xpub.crypto,
-      walletAccount.xpub.derivationMode,
-      utxoStrategy.excludeUTXOs
-    );
-  } else if (
-    utxoStrategy.strategy === bitcoinPickingStrategy.DEEP_OUTPUTS_FIRST
-  ) {
-    return new DeepFirst(
-      walletAccount.xpub.crypto,
-      walletAccount.xpub.derivationMode,
-      utxoStrategy.excludeUTXOs
-    );
-  } else if (utxoStrategy.strategy === bitcoinPickingStrategy.OPTIMIZE_SIZE) {
-    return new CoinSelect(
-      walletAccount.xpub.crypto,
-      walletAccount.xpub.derivationMode,
-      utxoStrategy.excludeUTXOs
-    );
-  } else {
-    throw new Error("Unsupported Bitcoin UTXO picking strategy");
-  }
+  const handler = {
+    [bitcoinPickingStrategy.MERGE_OUTPUTS]: Merge,
+    [bitcoinPickingStrategy.DEEP_OUTPUTS_FIRST]: DeepFirst,
+    [bitcoinPickingStrategy.OPTIMIZE_SIZE]: CoinSelect,
+  }[utxoStrategy.strategy];
+  if (!handler) throw new Error("Unsupported Bitcoin UTXO picking strategy");
+
+  return new handler(
+    walletAccount.xpub.crypto,
+    walletAccount.xpub.derivationMode,
+    utxoStrategy.excludeUTXOs
+  );
 };
 
 export const buildTransaction = async (
