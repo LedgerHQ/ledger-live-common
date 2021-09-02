@@ -77,14 +77,14 @@ const api = {
   async getBlockCount(): Promise<number> {
     const { data } = await network({
       method: "GET",
-      url: `https://api.tzkt.io/v1/blocks/count`,
+      url: `http://51.210.220.222:5000/v1/blocks/count`,
     });
     return data;
   },
   async getAccountByAddress(address: string): Promise<APIAccount> {
     const { data } = await network({
       method: "GET",
-      url: `https://api.tzkt.io/v1/accounts/${address}`,
+      url: `http://51.210.220.222:5000/v1/accounts/${address}`,
     });
     return data;
   },
@@ -98,7 +98,7 @@ const api = {
     const { data } = await network({
       method: "GET",
       url: URL.format({
-        pathname: `https://api.tzkt.io/v1/accounts/${address}/operations`,
+        pathname: `http://51.210.220.222:5000/v1/accounts/${address}/operations`,
         query,
       }),
     });
