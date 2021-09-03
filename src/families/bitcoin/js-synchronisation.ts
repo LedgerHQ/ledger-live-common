@@ -274,6 +274,7 @@ const getAccountShape: GetAccountShape = async (info) => {
   const currentBlock = await walletAccount.xpub.explorer.getCurrentBlock();
   const blockHeight = currentBlock?.height;
 
+  // @ts-expect-error return from wallet-btc should be typed
   const { txs: transactions } = await wallet.getAccountTransactions(
     walletAccount
   );
