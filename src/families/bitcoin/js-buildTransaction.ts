@@ -39,10 +39,15 @@ export const buildTransaction = async (
     transaction.utxoStrategy
   );
 
+  const maxSpendable = await wallet.estimateAccountMaxSpendable(
+    walletAccount,
+    transaction.feePerByte.toNumber() //!\ wallet-btc handles fees as JS number
+  );
+
   const txInfo = await wallet.buildAccountTx({
     fromAccount: walletAccount,
     dest: transaction.recipient,
-    amount: transaction.amount,
+    amount: transaction.useAllAmount ? maxSpendable : transaction.amount,
     feePerByte: transaction.feePerByte.toNumber(), //!\ wallet-btc handles fees as JS number
     utxoPickingStrategy,
     // Definition of replaceable, per the standard: https://github.com/bitcoin/bips/blob/61ccc84930051e5b4a99926510d0db4a8475a4e6/bip-0125.mediawiki#summary
