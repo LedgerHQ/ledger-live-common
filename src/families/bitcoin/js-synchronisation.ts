@@ -228,19 +228,18 @@ const getAccountShape: GetAccountShape = async (info) => {
     transport,
     currency,
     id: accountId,
+    index,
     derivationPath,
     derivationMode,
     initialAccount,
   } = info;
   const paramXpub = initialAccount?.xpub;
 
-  // Extract the seed identification part from the full derivation path
+  // In case we get a full derivation path, extract the seed identification part
   // 44'/0'/0'/0/0 --> 44'/0'
+  // FIXME Only the CLI provides a full derivationPath: why?
   const rootPath = derivationPath.split("/", 2).join("/");
 
-  // Extract the account index
-  // 44'/0'/3'/0/0 --> 3
-  const accountIndex = parseInt(derivationPath.split("/")[2]);
   const walletNetwork = toWalletNetwork(currency.id);
   const walletDerivationMode = toWalletDerivationMode(derivationMode);
   const explorer = findCurrencyExplorer(currency);
@@ -259,7 +258,7 @@ const getAccountShape: GetAccountShape = async (info) => {
         btc: (!paramXpub && transport && new Btc(transport)) || undefined,
         xpub: paramXpub,
         path: rootPath,
-        index: accountIndex,
+        index,
         currency: currency.id,
         network: walletNetwork,
         derivationMode: walletDerivationMode,

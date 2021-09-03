@@ -3,6 +3,7 @@ import type { AccountLike, Account } from "../../types";
 import type { Transaction } from "./types";
 import { getMainAccount } from "../../account";
 import wallet, { getWalletAccount } from "./wallet";
+import { getAccountNetworkInfo } from "./getAccountNetworkInfo";
 
 /**
  * Returns the maximum possible amount for transaction
@@ -20,13 +21,16 @@ const estimateMaxSpendable = async ({
 }): Promise<BigNumber> => {
   const mainAccount = getMainAccount(account, parentAccount);
   const walletAccount = await getWalletAccount(mainAccount);
-
-  const estimate = await wallet.estimateAccountMaxSpendable(
+  let feePerByte = transaction?.feePerByte;
+  if (!feePerByte) {
+    const networkInfo = await getAccountNetworkInfo(mainAccount);
+    feePerByte = networkInfo.feeItems.defaultFeePerByte;
+  }
+  const maxSpendable = await wallet.estimateAccountMaxSpendable(
     walletAccount,
-    transaction?.feePerByte?.toNumber() || 0 //!\ wallet-btc handles fees as JS number
+    feePerByte.toNumber() //!\ wallet-btc handles fees as JS number
   );
-
-  return estimate;
+  return maxSpendable.lt(0) ? new BigNumber(0) : maxSpendable;
 };
 
 export default estimateMaxSpendable;

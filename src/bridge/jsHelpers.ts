@@ -43,6 +43,7 @@ export type GetAccountShape = (
     currency: CryptoCurrency;
     address: string;
     id: string;
+    index: number;
     initialAccount?: Account;
     derivationPath: string;
     derivationMode: DerivationMode;
@@ -130,6 +131,7 @@ export const makeSync =
             {
               currency: initial.currency,
               id: accountId,
+              index: initial.index,
               address: initial.freshAddress,
               derivationPath: freshAddressPath,
               derivationMode: initial.derivationMode,
@@ -197,6 +199,7 @@ export const makeScanAccounts =
             transport,
             currency,
             id: accountId,
+            index,
             address,
             derivationPath: freshAddressPath,
             derivationMode,
