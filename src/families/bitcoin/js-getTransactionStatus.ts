@@ -8,13 +8,15 @@ import {
   FeeRequired,
 } from "@ledgerhq/errors";
 import { LowerThanMinimumRelayFee } from "./../../errors";
-import type { Account } from "./../../types";
+import type { Account, TransactionStatus } from "./../../types";
 import type { Transaction } from "./types";
 import { calculateFees, validateRecipient } from "./cache";
 import { getMinRelayFee } from "./logic";
 
-// TODO Test all cases
-const getTransactionStatus = async (a: Account, t: Transaction) => {
+const getTransactionStatus = async (
+  a: Account,
+  t: Transaction
+): Promise<TransactionStatus> => {
   const errors: any = {};
   const warnings: any = {};
   const useAllAmount = !!t.useAllAmount;
@@ -39,7 +41,7 @@ const getTransactionStatus = async (a: Account, t: Transaction) => {
     errors.feePerByte = new FeeNotLoaded();
   } else if (t.feePerByte.eq(0)) {
     errors.feePerByte = new FeeRequired();
-  } else if (!errors.recipient) {
+  } else if (t.recipient && !errors.recipient) {
     await calculateFees({
       account: a,
       transaction: t,
