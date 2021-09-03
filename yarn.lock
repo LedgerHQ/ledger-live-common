@@ -1208,7 +1208,7 @@
     "@ledgerhq/hw-transport" "^6.3.0"
     bip32-path "^0.4.2"
 
-"@ledgerhq/hw-app-btc@6.3.0", "@ledgerhq/hw-app-btc@^6.0.2":
+"@ledgerhq/hw-app-btc@6.3.0":
   version "6.3.0"
   resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-btc/-/hw-app-btc-6.3.0.tgz#21694b8e6f6e182b3d7fbdba836297b502623211"
   integrity sha512-rwEG9rt7PrrxO4KAtCdYNAMfVs2V1DtB/n+RbABym74WK+jMSIM3vR6e59WGGt0cKUajHdptT4VoWGKzs9uLnQ==
@@ -1335,13 +1335,13 @@
   resolved "https://registry.yarnpkg.com/@ledgerhq/logs/-/logs-6.2.0.tgz#9fb2d6f1811316697f7b3cc14607f6c608912419"
   integrity sha512-SLyFyD7ElMhgKWPYedFGCT/ilcbGPgL5hXXYHxOM79Fs5fWi0zaUpt5oGqGMsOAAFaMa9/rbun0pokzPhEFz8A==
 
-"@ledgerhq/wallet-btc@^1.1.1":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/wallet-btc/-/wallet-btc-1.1.1.tgz#080394fc4958a644b7a9c9e61191aee353a436fc"
-  integrity sha512-PPCkOo+uTtfkqsQQ0sPuKgIdUkXO6/SeRwEdg9HBo+lEGOB1UfzatstCrtEDgjhq7YX8M1PA9wPG3ZgwhDEqBQ==
+"@ledgerhq/wallet-btc@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/wallet-btc/-/wallet-btc-1.1.2.tgz#fab2c74342734a82ad9fecc6d1df3169fe0f7961"
+  integrity sha512-jk1kOb4BM5pRGQ1F7SnwfRj7bOvKMh48naZXstVsiEK/KgN7UvKdOlq2Fh7ajF9KDSxFCLJn+pipN4ZR9xxtWA==
   dependencies:
     "@ledgerhq/errors" "6.2.0"
-    "@ledgerhq/hw-app-btc" "^6.0.2"
+    "@ledgerhq/hw-app-btc" "6.3.0"
     "@ledgerhq/json-bignumber" "^1.0.2"
     "@ledgerhq/logs" "6.2.0"
     "@types/bchaddrjs" "^0.4.0"
@@ -1361,6 +1361,7 @@
     bs58check "^2.1.2"
     buffer "^6.0.3"
     coininfo "^5.1.0"
+    generic-pool "^3.8.2"
     lodash "^4.17.21"
 
 "@nodelib/fs.scandir@2.1.4":
@@ -3984,6 +3985,11 @@ functional-red-black-tree@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz#1b0ab3bd553b2a0d6399d29c0e3ea0b252078327"
   integrity sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc=
+
+generic-pool@^3.8.2:
+  version "3.8.2"
+  resolved "https://registry.yarnpkg.com/generic-pool/-/generic-pool-3.8.2.tgz#aab4f280adb522fdfbdc5e5b64d718d3683f04e9"
+  integrity sha512-nGToKy6p3PAbYQ7p1UlWl6vSPwfwU6TMSWK7TTu+WUY4ZjyZQGniGGt2oNVvyNSpyZYSB43zMXVLcBm08MTMkg==
 
 gensync@^1.0.0-beta.2:
   version "1.0.0-beta.2"
