@@ -17,7 +17,6 @@ import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { makeSync, makeScanAccounts, mergeOps } from "../../bridge/jsHelpers";
 import { findCurrencyExplorer } from "../../api/Ledger";
 import { encodeOperationId } from "../../operation";
-import { requiresSatStackReady } from "./satstack";
 import { BitcoinOutput } from "./types";
 import { perCoinLogic } from "./logic";
 import wallet from "./wallet";
@@ -233,11 +232,6 @@ const getAccountShape: GetAccountShape = async (info) => {
     derivationMode,
     initialAccount,
   } = info;
-
-  if (currency.id === "bitcoin") {
-    await requiresSatStackReady();
-  }
-
   const paramXpub = initialAccount?.xpub;
 
   // Extract the seed identification part from the full derivation path
@@ -247,10 +241,8 @@ const getAccountShape: GetAccountShape = async (info) => {
   // Extract the account index
   // 44'/0'/3'/0/0 --> 3
   const accountIndex = parseInt(derivationPath.split("/")[2]);
-
   const walletNetwork = toWalletNetwork(currency.id);
   const walletDerivationMode = toWalletDerivationMode(derivationMode);
-
   const explorer = findCurrencyExplorer(currency);
   if (!explorer) {
     throw new Error(`No explorer found for currency ${currency.name}`);
@@ -268,6 +260,7 @@ const getAccountShape: GetAccountShape = async (info) => {
         xpub: paramXpub,
         path: rootPath,
         index: accountIndex,
+        currency: currency.id,
         network: walletNetwork,
         derivationMode: walletDerivationMode,
         explorer: explorer && `ledger${explorer.version}`,
@@ -275,12 +268,9 @@ const getAccountShape: GetAccountShape = async (info) => {
         storage: "mock",
         storageParams: [],
       });
-
   const xpub = paramXpub || walletAccount.xpub.xpub;
   const oldOperations = initialAccount?.operations || [];
-
   await wallet.syncAccount(walletAccount);
-
   const balance = await wallet.getAccountBalance(walletAccount);
   const currentBlock = await walletAccount.xpub.explorer.getCurrentBlock();
   const blockHeight = currentBlock?.height;

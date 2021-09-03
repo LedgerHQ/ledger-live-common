@@ -1,7 +1,6 @@
 import invariant from "invariant";
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
-import { requiresSatStackReady } from "./satstack";
 import { getAccountNetworkInfo } from "./getAccountNetworkInfo";
 import { inferFeePerByte } from "./logic";
 
@@ -9,10 +8,6 @@ const prepareTransaction = async (
   a: Account,
   t: Transaction
 ): Promise<Transaction> => {
-  if (a.currency.id === "bitcoin") {
-    await requiresSatStackReady();
-  }
-
   let networkInfo = t.networkInfo;
 
   if (!networkInfo) {
