@@ -22,7 +22,13 @@ const getCacheKeyForCalculateFees = ({
     .join("+")}`;
 
 export const calculateFees = makeLRUCache(
-  async ({ account, transaction }) =>
+  async ({
+    account,
+    transaction,
+  }: {
+    account: Account;
+    transaction: Transaction;
+  }) =>
     getFeesForTransaction({
       account,
       transaction,
