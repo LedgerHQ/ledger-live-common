@@ -21,7 +21,9 @@ export const buildTransaction = async (
   const transactionType = signUsingHash ? HASH_TRANSACTION : RAW_TRANSACTION;
   const unsigned = {
     nonce,
-    value: t.useAllAmount ? a.balance.minus(t.fees ? t.fees : new BigNumber(0)) : t.amount,
+    value: t.useAllAmount
+      ? a.balance.minus(t.fees ? t.fees : new BigNumber(0))
+      : t.amount,
     receiver: t.recipient,
     sender: address,
     gasPrice,
