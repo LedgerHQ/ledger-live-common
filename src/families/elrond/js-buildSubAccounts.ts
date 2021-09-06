@@ -81,7 +81,6 @@ async function elrondBuildESDTTokenAccounts({
     const token = findTokenById(`elrond/esdt/${esdt.identifier}`);
 
     if (token && !blacklistedTokenIds.includes(token.id)) {
-      const existingTokenAccount = existingAccountByTicker[token.ticker];
       const tokenAccount = await buildElrondESDTTokenAccount({
         parentAccountId: accountId,
         accountAddress,
