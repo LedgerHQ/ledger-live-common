@@ -17,8 +17,9 @@ async function buildElrondESDTTokenAccount({
 }) {
   const extractedId = token.id;
   const id = parentAccountId + "+" + extractedId;
+  const tokenIdentifier = Buffer.from(token.id.split('/')[2], 'hex').toString();
 
-  const operations = await getAccountESDTOperations(parentAccountId, accountAddress, token.id.split('/')[2]);
+  const operations = await getAccountESDTOperations(parentAccountId, accountAddress, tokenIdentifier);
   const tokenAccount: TokenAccount = {
     type: "TokenAccount",
     id,
