@@ -23,6 +23,7 @@ const getAccountShape: GetAccountShape = async (info) => {
     subAccounts = await elrondBuildESDTTokenAccounts({
       currency,
       accountId: id,
+      accountAddress: address,
       existingAccount: initialAccount,
       syncConfig: {
         paginationConfig: {}

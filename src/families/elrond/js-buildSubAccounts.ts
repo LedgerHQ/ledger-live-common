@@ -1,43 +1,24 @@
-import { CryptoCurrency, findTokenById, listTokens, listTokensForCryptoCurrency } from "@ledgerhq/cryptoassets";
+import { CryptoCurrency, findTokenById, listTokens, listTokensForCryptoCurrency, TokenCurrency } from "@ledgerhq/cryptoassets";
 import BigNumber from "bignumber.js";
 import { emptyHistoryCache } from "../../account";
-import { CoreAccount, CoreOperation } from "../../libcore/types";
-import { minimalOperationsBuilder } from "../../reconciliation";
 import { Account, SyncConfig, TokenAccount } from "../../types";
-import { getAccountESDTTokens } from "./api";
-import { buildESDTOperation } from "./buildESDTOperation";
-const OperationOrderKey = {
-  date: 0,
-};
+import { getAccountESDTOperations, getAccountESDTTokens } from "./api";
 
 async function buildElrondESDTTokenAccount({
   parentAccountId,
+  accountAddress,
   token,
-  existingTokenAccount,
   balance,
+}: {
+  parentAccountId: string;
+  accountAddress: string;
+  token: TokenCurrency;
+  balance: BigNumber;
 }) {
   const extractedId = token.id;
   const id = parentAccountId + "+" + extractedId;
 
-  const getAllOperations = async () => {
-    // const query = await coreAccount.queryOperations();
-    // await query.complete();
-    // await query.addOrder(OperationOrderKey.date, false);
-    // const coreOperations = await query.execute();
-    // const operations = await minimalOperationsBuilder(
-    //   (existingTokenAccount && existingTokenAccount.operations) || [],
-    //   coreOperations,
-    //   (coreOperation: CoreOperation) =>
-    //     buildESDTOperation({
-    //       coreOperation,
-    //       accountId: id,
-    //       tokenId: extractedId,
-    //     })
-    // );
-    return [];
-  };
-
-  const operations = await getAllOperations();
+  const operations = await getAccountESDTOperations(parentAccountId, accountAddress, token.id.split('/')[2]);
   const tokenAccount: TokenAccount = {
     type: "TokenAccount",
     id,
@@ -51,9 +32,8 @@ async function buildElrondESDTTokenAccount({
     spendableBalance: balance,
     swapHistory: [],
     creationDate:
-      // operations.length > 0
-      //   ? operations[operations.length - 1].date
-      new Date(),
+      operations.length > 0
+        ? operations[operations.length - 1].date : new Date(),
     balanceHistoryCache: emptyHistoryCache, // calculated in the jsHelpers
   };
   return tokenAccount;
@@ -62,11 +42,13 @@ async function buildElrondESDTTokenAccount({
 async function elrondBuildESDTTokenAccounts({
   currency,
   accountId,
+  accountAddress,
   existingAccount,
   syncConfig,
 }: {
   currency: CryptoCurrency;
   accountId: string;
+  accountAddress: string;
   existingAccount: Account | null | undefined;
   syncConfig: SyncConfig;
 }): Promise<TokenAccount[] | undefined> {
@@ -101,7 +83,7 @@ async function elrondBuildESDTTokenAccounts({
       const existingTokenAccount = existingAccountByTicker[token.ticker];
       const tokenAccount = await buildElrondESDTTokenAccount({
         parentAccountId: accountId,
-        existingTokenAccount,
+        accountAddress,
         token,
         balance: new BigNumber(esdt.balance),
       });

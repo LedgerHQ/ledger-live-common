@@ -6,4 +6,5 @@ export {
   getFees,
   broadcastTransaction,
   getAccountESDTTokens,
+  getAccountESDTOperations,
 } from "./sdk";

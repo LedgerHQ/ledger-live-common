@@ -113,6 +113,16 @@ export const getAccountESDTTokens = async (
   }];
 }
 
+export const getAccountESDTOperations = async (
+  accountId: string,
+  address: string,
+  tokenIdentifier: string,
+): Promise<Operation[]> => {
+  const accountESDTTransactions = await api.getESDTTransactionsForAddress(address, tokenIdentifier);
+
+  return accountESDTTransactions.map(transaction => transactionToOperation(accountId, address, transaction));
+}
+
 /**
  * Obtain fees from blockchain
  */
