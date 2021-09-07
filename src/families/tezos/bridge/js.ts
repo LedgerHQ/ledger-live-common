@@ -12,7 +12,13 @@ import {
   RecommendUndelegation,
 } from "@ledgerhq/errors";
 import { validateRecipient } from "../../../bridge/shared";
-import type { CurrencyBridge, AccountBridge } from "../../../types";
+import type {
+  CurrencyBridge,
+  AccountBridge,
+  Account,
+  TransactionStatus,
+  AccountLike,
+} from "../../../types";
 import {
   makeSync,
   makeScanAccounts,
@@ -44,7 +50,10 @@ const createTransaction: () => Transaction = () => ({
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
-const getTransactionStatus = async (account, t) => {
+const getTransactionStatus = async (
+  account: Account,
+  t: Transaction
+): Promise<TransactionStatus> => {
   const errors: {
     recipient?: Error;
     amount?: Error;
@@ -57,10 +66,10 @@ const getTransactionStatus = async (account, t) => {
     recipient?: Error;
   } = {};
 
-  let estimatedFees = new BigNumber(0);
+  let estimatedFees = new BigNumber(t.fees || 0);
 
-  invariant(account.tezosResources, "tezosResources is missing");
   const { tezosResources } = account;
+  if (!tezosResources) throw new Error("tezosResources is missing");
 
   if (!t.taquitoError) {
     if (t.mode !== "undelegate") {
@@ -87,9 +96,6 @@ const getTransactionStatus = async (account, t) => {
     }
 
     // no fee / not enough balance already handled by taquitoError
-    // t.fees will always be set
-
-    estimatedFees = t.fees;
     if (!tezosResources.revealed) {
       // FIXME
       // https://github.com/ecadlabs/taquito/commit/48a11cfaffe4c6bdfa6f04ebbd0b756f4b135865#diff-3b138622526cbaa55605b79011aa411652367136a3e92e43faecc654da3854e7
@@ -140,9 +146,12 @@ const getTransactionStatus = async (account, t) => {
   return Promise.resolve(result);
 };
 
-const prepareTransaction = async (account, transaction) => {
-  invariant(account.tezosResources, "tezosResources is missing");
+const prepareTransaction = async (
+  account: Account,
+  transaction: Transaction
+): Promise<Transaction> => {
   const { tezosResources } = account;
+  if (!tezosResources) throw new Error("tezosResources is missing");
 
   const tezos = new TezosToolkit(getEnv("API_TEZOS_NODE"));
 
@@ -168,7 +177,7 @@ const prepareTransaction = async (account, transaction) => {
       case "send":
         out = await tezos.estimate.transfer({
           to: transaction.recipient,
-          amount: transaction.amount.div(10 ** 6),
+          amount: transaction.amount.div(10 ** 6).toNumber(),
         });
         break;
       case "delegate":
@@ -205,7 +214,11 @@ const estimateMaxSpendable = async ({
   account,
   parentAccount,
   transaction,
-}) => {
+}: {
+  account: AccountLike;
+  parentAccount: Account | undefined;
+  transaction: Transaction;
+}): Promise<BigNumber> => {
   const mainAccount = getMainAccount(account, parentAccount);
   const t = await prepareTransaction(mainAccount, {
     ...createTransaction(),
