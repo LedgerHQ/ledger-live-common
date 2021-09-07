@@ -11,15 +11,15 @@ import type {
 } from "../../types/transaction";
 
 export type TezosResources = {
-  revealed: boolean,
-  publicKey: string,
-  counter: number,
+  revealed: boolean;
+  publicKey: string;
+  counter: number;
 };
 
 export type TezosResourcesRaw = {
-  revealed: boolean,
-  publicKey: string,
-  counter: number,
+  revealed: boolean;
+  publicKey: string;
+  counter: number;
 };
 
 // WILL BE DROPPED =>

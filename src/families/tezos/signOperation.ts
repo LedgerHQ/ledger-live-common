@@ -14,9 +14,9 @@ export const signOperation = ({
   deviceId,
   transaction,
 }: {
-  account: Account,
-  deviceId: any,
-  transaction: Transaction,
+  account: Account;
+  deviceId: any;
+  transaction: Transaction;
 }): Observable<SignOperationEvent> =>
   withDevice(deviceId)((transport) =>
     Observable.create((o) => {
@@ -37,7 +37,7 @@ export const signOperation = ({
           DerivationType.ED25519
         );
         tezos.setProvider({ signer: ledgerSigner });
-        
+
         // @ts-ignore
         tezos.contract.context.injector.inject = async () => ""; // disable broadcast
 
@@ -49,7 +49,7 @@ export const signOperation = ({
             res = await tezos.contract.transfer({
               to: transaction.recipient,
               amount: transaction.amount.div(10 ** 6).toNumber(),
-              fee: transaction.fees?.toNumber() || 0,
+              fee: transaction.fees?.toNumber() || 0,
               storageLimit: transaction.storageLimit?.toNumber() || 0,
               gasLimit: transaction.gasLimit?.toNumber() || 0,
             });

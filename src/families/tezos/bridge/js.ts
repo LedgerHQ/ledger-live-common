@@ -46,15 +46,15 @@ const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
 const getTransactionStatus = async (account, t) => {
   const errors: {
-    recipient?: Error,
-    amount?: Error,
-    fees?: Error,
+    recipient?: Error;
+    amount?: Error;
+    fees?: Error;
   } = {};
 
   const warnings: {
-    amount?: Error,
-    feeTooHigh?: Error,
-    recipient?: Error,
+    amount?: Error;
+    feeTooHigh?: Error;
+    recipient?: Error;
   } = {};
 
   let estimatedFees = new BigNumber(0);
@@ -211,7 +211,7 @@ const estimateMaxSpendable = async ({
     ...transaction,
     // this seed is empty (worse case scenario is to send to new). addr from: 1. eyebrow 2. odor 3. rice 4. attack 5. loyal 6. tray 7. letter 8. harbor 9. resemble 10. sphere 11. system 12. forward 13. onion 14. buffalo 15. crumble
     recipient: transaction?.recipient || "tz1VJitLYB31fEC82efFkLRU4AQUH9QgH3q6",
-    useAllAmount: true
+    useAllAmount: true,
   });
   const s = await getTransactionStatus(mainAccount, t);
   return s.amount;
