@@ -827,6 +827,7 @@ export function toAccountRaw({
   tronResources,
   cosmosResources,
   bitcoinResources,
+  tezosResources,
   swapHistory,
   algorandResources,
   syncHash,
@@ -884,6 +885,10 @@ export function toAccountRaw({
 
   if (cosmosResources) {
     res.cosmosResources = toCosmosResourcesRaw(cosmosResources);
+  }
+
+  if (tezosResources) {
+    res.tezosResources = toTezosResourcesRaw(tezosResources);
   }
 
   if (bitcoinResources) {
