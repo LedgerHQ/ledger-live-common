@@ -28,6 +28,8 @@ const accounts = [
   "tz1hobi4RsAeswm9JA7mHB96vqc1eAWRzxDc",
 ];
 
+jest.setTimeout(30 * 1000);
+
 accounts.forEach((address) => {
   describe(address + " account works", () => {
     test("sum of ops is balance", async () => {
