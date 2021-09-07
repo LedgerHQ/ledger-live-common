@@ -1,6 +1,5 @@
 // @flow
 import { BigNumber } from "bignumber.js";
-import invariant from "invariant";
 import { TezosToolkit, DEFAULT_FEE } from "@taquito/taquito";
 import {
   AmountRequired,
