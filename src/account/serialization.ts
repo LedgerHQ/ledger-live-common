@@ -669,6 +669,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     subAccounts: subAccountsRaw,
     tronResources,
     cosmosResources,
+    tezosResources,
     bitcoinResources,
     swapHistory,
     algorandResources,
@@ -761,6 +762,10 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
 
   if (cosmosResources) {
     res.cosmosResources = fromCosmosResourcesRaw(cosmosResources);
+  }
+
+  if (tezosResources) {
+    res.tezosResources = fromTezosResourcesRaw(tezosResources);
   }
 
   if (bitcoinResources) {
