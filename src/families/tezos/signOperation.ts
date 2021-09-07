@@ -4,7 +4,7 @@ import { Observable } from "rxjs";
 import { LedgerSigner, DerivationType } from "@taquito/ledger-signer";
 import { TezosToolkit } from "@taquito/taquito";
 import type { Transaction } from "./types";
-import type { Operation, Account, SignOperationEvent } from "../../types";
+import type { Account, SignOperationEvent } from "../../types";
 import { withDevice } from "../../hw/deviceAccess";
 import { getEnv } from "../../env";
 import { FeeNotLoaded } from "@ledgerhq/errors";
@@ -38,6 +38,7 @@ export const signOperation = ({
         );
         tezos.setProvider({ signer: ledgerSigner });
 
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         tezos.contract.context.injector.inject = async () => ""; // disable broadcast
 

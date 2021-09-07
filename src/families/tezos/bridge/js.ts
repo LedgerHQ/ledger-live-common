@@ -147,10 +147,11 @@ const prepareTransaction = async (account, transaction) => {
   const tezos = new TezosToolkit(getEnv("API_TEZOS_NODE"));
 
   tezos.setProvider({
-    // @ts-ignore
     signer: {
       publicKeyHash: async () => account.freshAddress,
       publicKey: async () => tezosResources.publicKey,
+      sign: () => Promise.reject(new Error("unsupported")),
+      secretKey: () => Promise.reject(new Error("unsupported")),
     },
   });
 
@@ -193,7 +194,7 @@ const prepareTransaction = async (account, transaction) => {
       const s = await getTransactionStatus(account, transaction);
       transaction.amount = account.balance.minus(s.estimatedFees);
     }
-  } catch (e) {
+  } catch (e: any) {
     transaction.taquitoError = e.id;
   }
 
@@ -219,6 +220,7 @@ const estimateMaxSpendable = async ({
 
 const broadcast = async ({ signedOperation: { operation } }) => {
   const tezos = new TezosToolkit(getEnv("API_TEZOS_NODE"));
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const hash = await tezos.contract.context.injector.inject(
     operation.extra.opbytes
