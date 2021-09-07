@@ -58,7 +58,7 @@
     "@ledgerhq/hw-transport-node-speculos": "6.3.0",
     "@ledgerhq/live-app-sdk": "^0.2.0",
     "@ledgerhq/logs": "6.2.0",
-    "@ledgerhq/wallet-btc": "^1.1.2",
+    "@ledgerhq/wallet-btc": "1.1.2-beta.1",
     "@polkadot/types": "5.8.3",
     "@polkadot/types-known": "5.8.3",
     "@taquito/ledger-signer": "^10.1.1",

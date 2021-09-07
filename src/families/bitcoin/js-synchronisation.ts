@@ -1,6 +1,7 @@
 import { $Shape } from "utility-types";
 import type {
   TX,
+  Currency,
   Input as WalletInput,
   Output as WalletOutput,
 } from "@ledgerhq/wallet-btc";
@@ -259,7 +260,7 @@ const getAccountShape: GetAccountShape = async (info) => {
         xpub: paramXpub,
         path: rootPath,
         index,
-        currency: currency.id,
+        currency: <Currency>currency.id,
         network: walletNetwork,
         derivationMode: walletDerivationMode,
         explorer: explorer && `ledger${explorer.version}`,
