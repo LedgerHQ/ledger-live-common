@@ -1335,10 +1335,10 @@
   resolved "https://registry.yarnpkg.com/@ledgerhq/logs/-/logs-6.2.0.tgz#9fb2d6f1811316697f7b3cc14607f6c608912419"
   integrity sha512-SLyFyD7ElMhgKWPYedFGCT/ilcbGPgL5hXXYHxOM79Fs5fWi0zaUpt5oGqGMsOAAFaMa9/rbun0pokzPhEFz8A==
 
-"@ledgerhq/wallet-btc@^1.1.2":
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/wallet-btc/-/wallet-btc-1.1.2.tgz#fab2c74342734a82ad9fecc6d1df3169fe0f7961"
-  integrity sha512-jk1kOb4BM5pRGQ1F7SnwfRj7bOvKMh48naZXstVsiEK/KgN7UvKdOlq2Fh7ajF9KDSxFCLJn+pipN4ZR9xxtWA==
+"@ledgerhq/wallet-btc@1.1.2-beta.1":
+  version "1.1.2-beta.1"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/wallet-btc/-/wallet-btc-1.1.2-beta.1.tgz#153cebc903ca281eeef3488a21c40f53d947a9af"
+  integrity sha512-yY6KCRz9gdutAIwbhbf9nLbIG1xT2nlK+zlgMVK+Ra2E4L2wiDrPPKy6+azOK1lfp9JQTPOKX1RsGmybXL8jRA==
   dependencies:
     "@ledgerhq/errors" "6.2.0"
     "@ledgerhq/hw-app-btc" "6.3.0"
