@@ -783,6 +783,10 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     res.elrondResources = fromElrondResourcesRaw(elrondResources);
   }
 
+  if (elrondResources) {
+    res.elrondResources = fromElrondResourcesRaw(elrondResources);
+  }
+
   if (cryptoOrgResources) {
     res.cryptoOrgResources = fromCryptoOrgResourcesRaw(cryptoOrgResources);
   }

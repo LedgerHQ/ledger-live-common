@@ -6,6 +6,8 @@ import cosmos from "../families/cosmos/speculos-deviceActions";
 
 import crypto_org from "../families/crypto_org/speculos-deviceActions";
 
+import elrond from "../families/elrond/speculos-deviceActions";
+
 import ethereum from "../families/ethereum/speculos-deviceActions";
 
 import polkadot from "../families/polkadot/speculos-deviceActions";
@@ -24,6 +26,7 @@ export default {
   bitcoin,
   cosmos,
   crypto_org,
+  elrond,
   ethereum,
   polkadot,
   ripple,
