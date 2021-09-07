@@ -5,7 +5,7 @@ import { log } from "@ledgerhq/logs";
 import { mergeOps } from "../../bridge/jsHelpers";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { encodeOperationId } from "../../operation";
-import { areAllOperationsLoaded } from "../../account";
+import { areAllOperationsLoaded, decodeAccountId } from "../../account";
 import type { Operation, Account } from "../../types";
 import api from "./api/tzkt";
 import type { APIOperation } from "./api/tzkt";
@@ -13,8 +13,32 @@ import { DerivationType } from "@taquito/ledger-signer";
 import { compressPublicKey } from "@taquito/ledger-signer/dist/lib/utils";
 import { b58cencode, prefix, Prefix } from "@taquito/utils";
 
+function restorePublicKey(
+  publicKey: string,
+  initialAccount: Account | undefined,
+  rest
+): string {
+  if (publicKey) return publicKey;
+  if (initialAccount) {
+    const { tezosResources } = initialAccount;
+    if (tezosResources) {
+      return tezosResources.publicKey;
+    }
+    const { xpubOrAddress } = decodeAccountId(initialAccount.id);
+    if (xpubOrAddress) return xpubOrAddress;
+  }
+  invariant(rest.publicKey, "publicKey must not be empty");
+  return b58cencode(
+    compressPublicKey(
+      Buffer.from(rest.publicKey, "hex"),
+      DerivationType.ED25519
+    ),
+    prefix[Prefix.EDPK]
+  );
+}
+
 export const getAccountShape: GetAccountShape = async (infoInput) => {
-  let { address, initialAccount, rest } = infoInput;
+  const { address, initialAccount, rest } = infoInput;
 
   const initialStableOperations = initialAccount
     ? initialAccount.operations
@@ -23,7 +47,7 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
   // fetch transactions, incrementally if possible
   const mostRecentStableOperation = initialStableOperations[0];
 
-  let lastId =
+  const lastId =
     initialAccount &&
     areAllOperationsLoaded(initialAccount) &&
     mostRecentStableOperation
@@ -56,16 +80,7 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
 
   const tezosResources = {
     revealed,
-    publicKey:
-      publicKey ||
-      initialAccount?.tezosResources?.publicKey ||
-      b58cencode(
-        compressPublicKey(
-          Buffer.from(rest.publicKey, "hex"),
-          DerivationType.ED25519
-        ),
-        prefix[Prefix.EDPK]
-      ),
+    publicKey: restorePublicKey(publicKey, initialAccount, rest),
     counter,
   };
 
@@ -162,9 +177,9 @@ const txToOp =
         return null;
     }
 
-    let {
+    let { hash } = tx;
+    const {
       id,
-      hash,
       allocationFee,
       bakerFee,
       storageFee,
