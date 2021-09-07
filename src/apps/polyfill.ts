@@ -25,6 +25,9 @@ listCryptoCurrencies(true, true).forEach((a) => {
     declareDep(a.managerAppName + " Test", dep.managerAppName);
   }
 });
+// whitelist dependencies
+export const whitelistDependencies = ["Decred", "Decred Testnet"];
+
 // extra dependencies
 [
   ["ARTIS sigma1", "Ethereum"],
@@ -61,13 +64,13 @@ export const polyfillApplication = (app: Application): Application => {
 
   return o;
 };
-// FIXME LL-5352 until backend fixes the mistake, remove the dependencies for Decred.
 export const polyfillApp = (app: App): App => {
+  const dependencies = whitelistDependencies.includes(app.name)
+    ? []
+    : app.dependencies;
+
   return {
     ...app,
-    dependencies:
-      app.name === "Decred" || app.name === "Decred Testnet"
-        ? []
-        : uniq(app.dependencies.concat(getDependencies(app.name))),
+    dependencies: uniq(dependencies.concat(getDependencies(app.name))),
   };
 };
