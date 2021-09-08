@@ -192,7 +192,7 @@ const cliFormat = (account, level?: string) => {
 };
 
 const stats = (account) => {
-  const { subAccounts, operations } = account;
+  const { subAccounts, operations, NFT } = account;
   const sumOfAllOpsNumber = operations.reduce(
     (sum: BigNumber, op) => sum.plus(getOperationAmountNumberWithInternals(op)),
     new BigNumber(0)
@@ -208,6 +208,7 @@ const stats = (account) => {
     sumOfAllOps,
     opsCount: operations.length,
     subAccountsCount: (subAccounts || []).length,
+    NFT: (NFT || []).length,
   };
 };
 
