@@ -20,10 +20,10 @@ const getTransactionStatus = async (
   const errors: any = {};
   const warnings: any = {};
   const useAllAmount = !!t.useAllAmount;
-  const { recipientError, recipientWarning } = await validateRecipient({
-    currency: a.currency,
-    recipient: t.recipient,
-  });
+  const { recipientError, recipientWarning } = await validateRecipient(
+    a.currency,
+    t.recipient
+  );
 
   if (recipientError) {
     errors.recipient = recipientError;

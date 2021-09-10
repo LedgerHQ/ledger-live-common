@@ -42,23 +42,14 @@ export const calculateFees = makeLRUCache(
     maxAge: 5 * 60 * 1000, // 5 minutes
   }
 );
-export const validateRecipient: CacheRes<
-  Array<{
-    currency: CryptoCurrency;
-    recipient: string;
-  }>,
-  {
-    recipientError: Error | null | undefined;
-    recipientWarning: Error | null | undefined;
-  }
-> = makeLRUCache(
-  async ({
-    currency,
-    recipient,
-  }): Promise<{
-    recipientError: Error | null | undefined;
-    recipientWarning: Error | null | undefined;
-  }> => {
+export const validateRecipient: (
+  arg0: CryptoCurrency,
+  arg1: string | null | undefined
+) => Promise<{
+  recipientError: Error | null | undefined;
+  recipientWarning: Error | null | undefined;
+}> = makeLRUCache(
+  async (currency, recipient) => {
     if (!recipient) {
       return {
         recipientError: new RecipientRequired(""),
@@ -82,8 +73,5 @@ export const validateRecipient: CacheRes<
       };
     }
   },
-  ({ currency, recipient }) => `${currency.id}_${recipient || ""}`,
-  {
-    maxAge: 5 * 60 * 1000, // 5 minutes
-  }
+  (currency, recipient) => `${currency.id}_${recipient || ""}`
 );
