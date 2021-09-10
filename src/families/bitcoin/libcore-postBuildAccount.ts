@@ -15,6 +15,10 @@ const postBuildAccount = async ({
   account: Account;
   coreAccount: CoreAccount;
 }): Promise<Account> => {
+  if (!account.bitcoinResources) {
+    return account;
+  }
+
   if (isSatStackEnabled() && account.currency.id === "bitcoin") {
     const inferred = inferDescriptorFromAccount(account);
 

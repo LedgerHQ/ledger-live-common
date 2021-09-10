@@ -50,8 +50,6 @@ const signOperation = ({
           fee = res.fees;
         });
 
-        }
-
         // FIXME (legacy)
         // should be `transaction.getLockTime()` as soon as lock time is
         // handled by libcore (actually: it always returns a default value

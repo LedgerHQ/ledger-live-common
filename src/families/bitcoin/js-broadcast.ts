@@ -22,7 +22,7 @@ const broadcast = async ({
   try {
     const hash = await wallet.broadcastTx(walletAccount, signature);
     return patchOperationWithHash(operation, hash);
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(error); // TODO Improve error message for broadcast failure cases
   }
 };
