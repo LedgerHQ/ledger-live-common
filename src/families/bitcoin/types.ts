@@ -138,11 +138,11 @@ export type BitcoinOutputRaw = [
 ];
 export type BitcoinResources = {
   utxos: BitcoinOutput[];
-  serializedData: WalletSerializedAccount;
+  serializedData?: WalletSerializedAccount; // TODO '?' TO BE REMOVED
 };
 export type BitcoinResourcesRaw = {
   utxos: BitcoinOutputRaw[];
-  serializedData: WalletSerializedAccount;
+  serializedData?: WalletSerializedAccount; // TODO '?' TO BE REMOVED
 };
 
 export const BitcoinLikeFeePolicy = Object.freeze({
