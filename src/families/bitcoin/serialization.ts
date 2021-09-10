@@ -38,6 +38,7 @@ export function toBitcoinOutputRaw({
   outputIndex,
   blockHeight,
   address,
+  isChange,
   path,
   value,
   rbf,
@@ -47,6 +48,7 @@ export function toBitcoinOutputRaw({
     outputIndex,
     blockHeight,
     address,
+    isChange ? 1 : 0,
     path,
     value.toString(),
     rbf ? 1 : 0,
@@ -57,6 +59,7 @@ export function fromBitcoinOutputRaw([
   outputIndex,
   blockHeight,
   address,
+  isChange,
   path,
   value,
   rbf,
@@ -66,6 +69,7 @@ export function fromBitcoinOutputRaw([
     outputIndex,
     blockHeight: blockHeight || undefined,
     address: address || undefined,
+    isChange: !!isChange,
     path: path || undefined,
     value: new BigNumber(value),
     rbf: !!rbf,
@@ -76,6 +80,7 @@ export function toBitcoinResourcesRaw(
 ): BitcoinResourcesRaw {
   return {
     utxos: r.utxos.map(toBitcoinOutputRaw),
+    serializedData: r.serializedData,
   };
 }
 export function fromBitcoinResourcesRaw(
@@ -83,5 +88,6 @@ export function fromBitcoinResourcesRaw(
 ): BitcoinResources {
   return {
     utxos: r.utxos.map(fromBitcoinOutputRaw),
+    serializedData: r.serializedData,
   };
 }
