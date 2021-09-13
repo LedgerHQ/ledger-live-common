@@ -1221,10 +1221,10 @@
     "@ledgerhq/hw-transport" "^6.3.0"
     bip32-path "^0.4.2"
 
-"@ledgerhq/hw-app-btc@6.6.0":
-  version "6.6.0"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-btc/-/hw-app-btc-6.6.0.tgz#322e709d3f669ca4f8714d144226e6893b5de139"
-  integrity sha512-tO6yFtFb3SuFng8jiT8SrDvXLRe3vIFpQiZNWKbxbFLun1fcDrbkPuB9li3Glo9LgQ8dL4tHy891hrwdyczrMg==
+"@ledgerhq/hw-app-btc@6.3.0":
+  version "6.3.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-btc/-/hw-app-btc-6.3.0.tgz#21694b8e6f6e182b3d7fbdba836297b502623211"
+  integrity sha512-rwEG9rt7PrrxO4KAtCdYNAMfVs2V1DtB/n+RbABym74WK+jMSIM3vR6e59WGGt0cKUajHdptT4VoWGKzs9uLnQ==
   dependencies:
     "@ledgerhq/hw-transport" "^6.3.0"
     "@ledgerhq/logs" "^6.2.0"
@@ -1337,11 +1337,6 @@
     "@ledgerhq/errors" "^5.50.0"
     events "^3.3.0"
 
-"@ledgerhq/live-app-sdk@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/live-app-sdk/-/live-app-sdk-0.2.0.tgz#d50ca7ddd07eeeb564728a1998bf0fb154533315"
-  integrity sha512-OwyEu/Ue/D/mw/Fgc4HrXm4jlzD43r7nfLXC913U+YprPapUcT9e6cc28xIEYXnJqY0GVV/ISdP7ODGfJC21Xg==
-
 "@ledgerhq/json-bignumber@^1.0.2":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@ledgerhq/json-bignumber/-/json-bignumber-1.0.2.tgz#c08f7fa00316b0065b0ea153d6153808a302e0b1"
@@ -1349,10 +1344,10 @@
   dependencies:
     bignumber.js "^9.0.1"
 
-"@ledgerhq/live-app-sdk@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/live-app-sdk/-/live-app-sdk-0.1.1.tgz#637966823bb1976154f08104b26ec9ce2b17d6b4"
-  integrity sha512-c5WRBBSa8K2zrEiiKleBdNvR3XEmA2FgXAAuhi24DUJSdWINfO0SQVlQQTWexRZgiyYZaMsWGHJqQcXJQRxkDQ==
+"@ledgerhq/live-app-sdk@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/live-app-sdk/-/live-app-sdk-0.2.0.tgz#d50ca7ddd07eeeb564728a1998bf0fb154533315"
+  integrity sha512-OwyEu/Ue/D/mw/Fgc4HrXm4jlzD43r7nfLXC913U+YprPapUcT9e6cc28xIEYXnJqY0GVV/ISdP7ODGfJC21Xg==
   dependencies:
     bignumber.js "^9.0.1"
     json-rpc-2.0 "^0.2.16"
@@ -1366,6 +1361,35 @@
   version "5.50.0"
   resolved "https://registry.yarnpkg.com/@ledgerhq/logs/-/logs-5.50.0.tgz#29c6419e8379d496ab6d0426eadf3c4d100cd186"
   integrity sha512-swKHYCOZUGyVt4ge0u8a7AwNcA//h4nx5wIi0sruGye1IJ5Cva0GyK9L2/WdX+kWVTKp92ZiEo1df31lrWGPgA==
+
+"@ledgerhq/wallet-btc@1.1.3":
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/wallet-btc/-/wallet-btc-1.1.3.tgz#0f4445a9a0118655a6429bc85f605124f4c9e41f"
+  integrity sha512-516yNURKkBlh4gChYPC3nHYtyx1FgHJ68JX8CCQ9zG77lguMtHpOQ9qlVnMSsx2uNsaH24yjBRmoQmWpavohdA==
+  dependencies:
+    "@ledgerhq/errors" "6.2.0"
+    "@ledgerhq/hw-app-btc" "6.3.0"
+    "@ledgerhq/json-bignumber" "^1.0.2"
+    "@ledgerhq/logs" "6.2.0"
+    "@types/bchaddrjs" "^0.4.0"
+    "@types/bitcore-lib-cash" "^8.23.3"
+    "@types/bs58check" "^2.1.0"
+    axios "^0.21.1"
+    axios-retry "^3.1.9"
+    bchaddrjs "^0.5.2"
+    bignumber.js "^9.0.1"
+    bip32 "^2.0.6"
+    bip39 "^3.0.4"
+    bitcoinjs-lib "^5.2.0"
+    bitcore-lib "^8.25.10"
+    bitcore-lib-cash "^8.25.10"
+    bitcore-lib-zcash "^0.13.20"
+    bs58 "^4.0.1"
+    bs58check "^2.1.2"
+    buffer "^6.0.3"
+    coininfo "^5.1.0"
+    generic-pool "^3.8.2"
+    lodash "^4.17.21"
 
 "@nodelib/fs.scandir@2.1.4":
   version "2.1.4"
@@ -2446,7 +2470,7 @@ axios-retry@^3.1.9:
   dependencies:
     is-retry-allowed "^1.1.0"
 
-axios@0.21.1, axios@^0.21.1:
+axios@0.21.1:
   version "0.21.1"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.1.tgz#22563481962f4d6bde9a76d516ef0e5d3c09b2b8"
   integrity sha512-dKQiRHxGD9PPRIUNIWvZhPTPpl1rf/OxTYKsqKUDjBwYylTvV7SjSHJb9ratfyzM6wCdLCOYLzs73qpg5c4iGA==
@@ -2765,7 +2789,7 @@ bn.js@^2.0.0:
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-2.2.0.tgz#12162bc2ae71fc40a5626c33438f3a875cd37625"
   integrity sha1-EhYrwq5x/EClYmwzQ486h1zTdiU=
 
-bn.js@^4.11.0, bn.js@^4.11.1, bn.js@^4.11.8, bn.js@^4.11.9:
+bn.js@^4.11.0, bn.js@^4.11.1, bn.js@^4.11.8, bn.js@^4.11.9, bn.js@^4.12.0:
   version "4.12.0"
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.12.0.tgz#775b3f278efbb9718eec7361f483fb36fbbfea88"
   integrity sha512-c98Bf3tPniI+scsdk237ku1Dc3ujXQTSgyiPUDEOe7tRkhrqridvh8klBv0HCEso1OLOYcHuCv/cS6DNxKH+ZA==
@@ -2868,7 +2892,7 @@ buffer-compare@=1.1.1:
   resolved "https://registry.yarnpkg.com/buffer-compare/-/buffer-compare-1.1.1.tgz#5be7be853af89198d1f4ddc090d1d66a48aef596"
   integrity sha1-W+e+hTr4kZjR9N3AkNHWakiu9ZY=
 
-buffer-from@1.x, buffer-from@^1.0.0:
+buffer-from@^1.0.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/buffer-from/-/buffer-from-1.1.1.tgz#32713bc028f75c02fdb710d7c7bcec1f2c6070ef"
   integrity sha512-MQcXEUbCKtEo7bhqEs6560Hyd4XaovZlO/k9V3hjVUF/zwW7KBVdSK4gIt/bzwS9MbR5qob+F5jusZsb0YQK2A==
@@ -4077,6 +4101,11 @@ functional-red-black-tree@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz#1b0ab3bd553b2a0d6399d29c0e3ea0b252078327"
   integrity sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc=
+
+generic-pool@^3.8.2:
+  version "3.8.2"
+  resolved "https://registry.yarnpkg.com/generic-pool/-/generic-pool-3.8.2.tgz#aab4f280adb522fdfbdc5e5b64d718d3683f04e9"
+  integrity sha512-nGToKy6p3PAbYQ7p1UlWl6vSPwfwU6TMSWK7TTu+WUY4ZjyZQGniGGt2oNVvyNSpyZYSB43zMXVLcBm08MTMkg==
 
 gensync@^1.0.0-beta.2:
   version "1.0.0-beta.2"
@@ -7088,34 +7117,6 @@ walker@^1.0.7:
   integrity sha1-L3+bj9ENZ3JisYqITijRlhjgKPs=
   dependencies:
     makeerror "1.0.x"
-
-wallet-btc@1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/wallet-btc/-/wallet-btc-1.1.0.tgz#0ab2b99ab6374984dc5328b4eeda8900c501ea89"
-  integrity sha512-AfVyNZ/atQ8122kKzjgio3xI4cjWaf5KYqxUzZpgu6eNzYztW51hCrvQGq7Yj4+h6RcqhhzLBrlK3y6UkKUL2w==
-  dependencies:
-    "@ledgerhq/errors" "6.2.0"
-    "@ledgerhq/hw-app-btc" "^6.0.2"
-    "@ledgerhq/json-bignumber" "^1.0.2"
-    "@ledgerhq/logs" "6.2.0"
-    "@types/bchaddrjs" "^0.4.0"
-    "@types/bitcore-lib-cash" "^8.23.3"
-    "@types/bs58check" "^2.1.0"
-    axios "^0.21.1"
-    axios-retry "^3.1.9"
-    bchaddrjs "^0.5.2"
-    bignumber.js "^9.0.1"
-    bip32 "^2.0.6"
-    bip39 "^3.0.4"
-    bitcoinjs-lib "^5.2.0"
-    bitcore-lib "^8.25.10"
-    bitcore-lib-cash "^8.25.10"
-    bitcore-lib-zcash "^0.13.20"
-    bs58 "^4.0.1"
-    bs58check "^2.1.2"
-    buffer "^6.0.3"
-    coininfo "^5.1.0"
-    lodash "^4.17.21"
 
 webidl-conversions@^5.0.0:
   version "5.0.0"
