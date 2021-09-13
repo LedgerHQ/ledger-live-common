@@ -5,6 +5,7 @@ import type {
   Input as WalletInput,
   Output as WalletOutput,
 } from "@ledgerhq/wallet-btc";
+import { DerivationModes as WalletDerivationModes } from "@ledgerhq/wallet-btc";
 import { BigNumber } from "bignumber.js";
 import Btc from "@ledgerhq/hw-app-btc";
 import { log } from "@ledgerhq/logs";
@@ -22,23 +23,23 @@ import { BitcoinOutput } from "./types";
 import { perCoinLogic } from "./logic";
 import wallet from "./wallet";
 
-// Map LL's DerivationMode to wallet-btc's Account.params.derivationMode
+// Map LL's DerivationMode to wallet-btc's
 const toWalletDerivationMode = (
   mode: DerivationMode
-): "Legacy" | "SegWit" | "Native SegWit" => {
+): WalletDerivationModes => {
   switch (mode) {
     case "segwit":
     case "segwit_on_legacy":
     case "segwit_unsplit":
     case "bch_on_bitcoin_segwit":
     case "vertcoin_128_segwit":
-      return "SegWit";
+      return WalletDerivationModes.SEGWIT;
 
     case "native_segwit":
-      return "Native SegWit";
+      return WalletDerivationModes.NATIVE_SEGWIT;
 
     default:
-      return "Legacy";
+      return WalletDerivationModes.LEGACY;
   }
 };
 
