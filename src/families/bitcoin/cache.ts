@@ -1,5 +1,4 @@
 import { RecipientRequired } from "@ledgerhq/errors";
-import type { CacheRes } from "./../../cache";
 import { makeLRUCache } from "./../../cache";
 import type { Account, CryptoCurrency } from "./../../types";
 import type { Transaction } from "./types";
