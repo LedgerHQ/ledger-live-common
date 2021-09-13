@@ -407,7 +407,7 @@ const implementations = {
       const POLLING = 2000;
       const INIT_DEBOUNCE = 5000;
       const DISCONNECT_DEBOUNCE = 5000;
-      const DEVICE_POLLING_TIMEOUT = 20000;
+      const DEVICE_POLLING_TIMEOUT = 5000;
       // this pattern allows to actually support events based (like if deviceSubject emits new device changes) but inside polling paradigm
       let pollingOnDevice;
       const sub = deviceSubject.subscribe((d) => {
@@ -435,11 +435,17 @@ const implementations = {
           return;
         }
 
+        let nbTimeout = 0;
+
         log("app/polling", "polling loop");
         connectSub = connectApp(pollingOnDevice, params)
           .pipe(
             timeout(DEVICE_POLLING_TIMEOUT),
-            catchError((err) => {
+            catchError((err, caught) => {
+              nbTimeout += 1;
+              if (nbTimeout < 4) {
+                return caught; // retry
+              }
               const productName = getDeviceModel(
                 pollingOnDevice.modelId
               ).productName;
