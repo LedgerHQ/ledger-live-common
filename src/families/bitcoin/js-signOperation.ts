@@ -50,17 +50,6 @@ const signOperation = ({
           fee = res.fees;
         });
 
-        // FIXME Can't do without wallet-btc providing change path in outputs
-        /*
-        let changePath;
-        for (const output of outputs) {
-          //const output = await parseBitcoinOutput(o);
-          if (output.isChange) {
-            changePath = output.path || undefined;
-          }
-        }
-        */
-
         // FIXME (legacy)
         // should be `transaction.getLockTime()` as soon as lock time is
         // handled by libcore (actually: it always returns a default value
@@ -116,7 +105,6 @@ const signOperation = ({
           btc: hwApp,
           fromAccount: walletAccount,
           txInfo,
-          //changePath,
           lockTime,
           sigHashType,
           segwit,
@@ -142,8 +130,7 @@ const signOperation = ({
         // Build the optimistic operation
         const operation: Operation = {
           id: encodeOperationId(account.id, "", "OUT"),
-          // Will be resolved in broadcast()
-          hash: "",
+          hash: "", // Will be resolved in broadcast()
           type: "OUT",
           value: new BigNumber(transaction.amount).plus(fee),
           fee,

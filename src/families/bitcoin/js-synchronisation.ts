@@ -57,6 +57,7 @@ const fromWalletUtxo = (utxo: WalletOutput): BitcoinOutput => {
     value: new BigNumber(utxo.value),
     rbf: utxo.rbf,
     isChange: false, // wallet-btc limitation: doesn't provide it
+    path: "",
   };
 };
 
@@ -322,17 +323,6 @@ const getAccountShape: GetAccountShape = async (info) => {
 };
 
 const postSync = (initial: Account, synced: Account) => {
-  /* FIXME Would need postSync to be async
-  if (isSatStackEnabled() && synced.currency.id === "bitcoin") {
-    const inferred = inferDescriptorFromAccount(synced);
-    if (inferred) {
-      const exists = await checkDescriptorExists(inferred.internal);
-      if (!exists) {
-        throw new SatStackDescriptorNotImported();
-      }
-    }
-  }
-  */
   log("bitcoin/postSync", "bitcoinResources");
   const perCoin = perCoinLogic[synced.currency.id];
 

@@ -30,6 +30,8 @@ export function formatOutput(account: Account, o: BitcoinOutput): string {
       showCode: false,
     }).padEnd(12),
     o.address,
+    o.path,
+    o.isChange ? "(change)" : "",
     o.rbf ? "rbf" : "",
     o.hash,
     `@${o.outputIndex} (${

@@ -7,7 +7,6 @@ import type {
   BitcoinOutputRaw,
   BitcoinOutput,
 } from "./types";
-
 export function toBitcoinInputRaw({
   address,
   value,
@@ -40,6 +39,7 @@ export function toBitcoinOutputRaw({
   blockHeight,
   address,
   isChange,
+  path,
   value,
   rbf,
 }: BitcoinOutput): BitcoinOutputRaw {
@@ -49,6 +49,7 @@ export function toBitcoinOutputRaw({
     blockHeight,
     address,
     isChange ? 1 : 0,
+    path,
     value.toString(),
     rbf ? 1 : 0,
   ];
@@ -59,6 +60,7 @@ export function fromBitcoinOutputRaw([
   blockHeight,
   address,
   isChange,
+  path,
   value,
   rbf,
 ]: BitcoinOutputRaw): BitcoinOutput {
@@ -68,6 +70,7 @@ export function fromBitcoinOutputRaw([
     blockHeight: blockHeight || undefined,
     address: address || undefined,
     isChange: !!isChange,
+    path: path || undefined,
     value: new BigNumber(value),
     rbf: !!rbf,
   };
