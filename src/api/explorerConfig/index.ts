@@ -15,7 +15,7 @@ const initialExplorerConfig: FullConfig = {
     id: "abc",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
     /*
     experimental: {
@@ -28,7 +28,7 @@ const initialExplorerConfig: FullConfig = {
     id: "btg",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
     experimental: {
       base: "EXPLORER",
@@ -60,7 +60,7 @@ const initialExplorerConfig: FullConfig = {
     id: "dgb",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
     experimental: {
       base: "EXPLORER",
@@ -71,7 +71,7 @@ const initialExplorerConfig: FullConfig = {
     id: "doge",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
     experimental: {
       base: "EXPLORER",
@@ -89,7 +89,7 @@ const initialExplorerConfig: FullConfig = {
     id: "kmd",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
     /*
     experimental: {
@@ -109,7 +109,7 @@ const initialExplorerConfig: FullConfig = {
     id: "ppc",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
     experimental: {
       base: "EXPLORER",
@@ -120,7 +120,7 @@ const initialExplorerConfig: FullConfig = {
     id: "pivx",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
     experimental: {
       base: "EXPLORER",
@@ -138,7 +138,7 @@ const initialExplorerConfig: FullConfig = {
     id: "qtum",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
     experimental: {
       base: "EXPLORER",
@@ -149,14 +149,14 @@ const initialExplorerConfig: FullConfig = {
     id: "xsn",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
   },
   stratis: {
     id: "strat",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
   },
   stealthcoin: {
@@ -170,7 +170,7 @@ const initialExplorerConfig: FullConfig = {
     id: "vtc",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
     experimental: {
       base: "EXPLORER",
@@ -181,7 +181,7 @@ const initialExplorerConfig: FullConfig = {
     id: "via",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
     experimental: {
       base: "EXPLORER",
@@ -192,7 +192,7 @@ const initialExplorerConfig: FullConfig = {
     id: "zec",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
     experimental: {
       base: "EXPLORER",
@@ -203,7 +203,7 @@ const initialExplorerConfig: FullConfig = {
     id: "zen",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
     experimental: {
       base: "EXPLORER",
@@ -214,7 +214,7 @@ const initialExplorerConfig: FullConfig = {
     id: "btc_testnet",
     stable: {
       base: "EXPLORER",
-      version: "v2",
+      version: "v3",
     },
     experimental: {
       base: "EXPLORER",
