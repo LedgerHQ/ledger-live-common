@@ -25,6 +25,9 @@ listCryptoCurrencies(true, true).forEach((a) => {
     declareDep(a.managerAppName + " Test", dep.managerAppName);
   }
 });
+// whitelist dependencies
+export const whitelistDependencies = ["Decred", "Decred Testnet"];
+
 // extra dependencies
 [
   ["ARTIS sigma1", "Ethereum"],
@@ -40,6 +43,11 @@ listCryptoCurrencies(true, true).forEach((a) => {
   ["ZenCash", "Bitcoin"],
   ["Paraswap", "Ethereum"],
   ["Lido", "Ethereum"],
+  ["1inch", "Ethereum"],
+  ["Aave", "Ethereum"],
+  ["Compound", "Ethereum"],
+  ["Opensea", "Ethereum"],
+  ["StakeDAO", "Ethereum"],
 ].forEach(([name, dep]) => declareDep(name, dep));
 export const getDependencies = (appName: string): string[] =>
   directDep[appName] || [];
@@ -62,8 +70,12 @@ export const polyfillApplication = (app: Application): Application => {
   return o;
 };
 export const polyfillApp = (app: App): App => {
+  const dependencies = whitelistDependencies.includes(app.name)
+    ? []
+    : app.dependencies;
+
   return {
     ...app,
-    dependencies: uniq(app.dependencies.concat(getDependencies(app.name))),
+    dependencies: uniq(dependencies.concat(getDependencies(app.name))),
   };
 };

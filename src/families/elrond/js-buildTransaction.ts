@@ -3,7 +3,6 @@ import type { Account, SubAccount } from "../../types";
 import { getNonce } from "./logic";
 import { getNetworkConfig } from "./api";
 import { HASH_TRANSACTION, RAW_TRANSACTION } from "./constants";
-import getEstimatedFees from "./js-getFeesForTransaction";
 import BigNumber from "bignumber.js";
 
 /**
@@ -29,7 +28,9 @@ export const buildTransaction = async (
 
   const unsigned = {
     nonce,
-    value: ta ? new BigNumber(0): t.useAllAmount ? a.spendableBalance :  t.amount,
+    value: t.useAllAmount
+      ? a.balance.minus(t.fees ? t.fees : new BigNumber(0))
+      : t.amount,
     receiver: t.recipient,
     sender: address,
     gasPrice,

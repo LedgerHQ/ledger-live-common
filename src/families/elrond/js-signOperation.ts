@@ -65,6 +65,7 @@ const signOperation = ({
           : subAccounts && subAccounts.find((ta) => ta.id === subAccountId);
 
         const elrond = new Elrond(transport);
+        await elrond.setAddress(account.freshAddressPath);
         const { version } = await elrond.getAppConfiguration();
         const signUsingHash = compareVersions(version, "1.0.11") >= 0;
 
