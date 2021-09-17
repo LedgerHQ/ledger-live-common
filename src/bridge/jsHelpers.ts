@@ -42,6 +42,7 @@ export type GetAccountShapeArg0 = {
   address: string;
   id: string;
   initialAccount?: Account;
+  rest?: any;
 };
 
 export type GetAccountShape = (
