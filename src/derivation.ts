@@ -208,7 +208,6 @@ const modes = Object.freeze({
   polkadotbip44: {
     overridesDerivation: "44'/354'/<account>'/0'/<address>'",
   },
-  // FIXME Filecoin - Check if this is correct
   filecoin: {
     overridesDerivation: "44'/461'/0'/0/<account>",
   },
