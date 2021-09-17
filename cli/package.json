@@ -29,7 +29,7 @@
     "@ledgerhq/hw-transport-node-ble": "5.7.0"
   },
   "dependencies": {
-    "@ledgerhq/cryptoassets": "6.2.1",
+    "@ledgerhq/cryptoassets": "https://github.com/PlatONnetwork/ledgerjs#cryptoassets",
     "@ledgerhq/errors": "6.2.0",
     "@ledgerhq/hw-app-btc": "6.2.0",
     "@ledgerhq/hw-transport-http": "6.2.0",
