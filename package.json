@@ -68,6 +68,7 @@
     "async": "^3.2.1",
     "axios": "0.21.4",
     "cbor": "^8.0.0",
+    "base32-decode": "^1.0.0",
     "bchaddrjs": "^0.5.2",
     "bignumber.js": "^9.0.1",
     "bip32-path": "^0.4.2",
