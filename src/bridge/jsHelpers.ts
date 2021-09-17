@@ -291,15 +291,15 @@ export const makeScanAccounts =
             const startsAt = getDerivationModeStartsAt(derivationMode);
 
             log(
-              "degub",
+              "debug",
               `start scanning account process. MandatoryEmptyAccountSkip ${mandatoryEmptyAccountSkip} / StartsAt: ${startsAt} - StopAt: ${stopAt}`
             );
 
             for (let index = startsAt; index < stopAt; index++) {
-              log("degub", `start to scan a new account. Index: ${index}`);
+              log("debug", `start to scan a new account. Index: ${index}`);
 
               if (finished) {
-                log("degub", `new account scanning process has been finished`);
+                log("debug", `new account scanning process has been finished`);
                 break;
               }
 
