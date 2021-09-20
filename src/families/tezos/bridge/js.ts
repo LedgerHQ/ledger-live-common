@@ -206,9 +206,11 @@ const prepareTransaction = async (
       const gasBuffer = 500;
       const MINIMAL_FEE_PER_GAS_MUTEZ = 0.1;
       const increasedFee = (gasBuffer: number, opSize: number) => {
-          return (gasBuffer) * MINIMAL_FEE_PER_GAS_MUTEZ + opSize
-      }
-      transaction.fees = transaction.fees.plus(increasedFee(gasBuffer, Number(out.opSize)));
+        return gasBuffer * MINIMAL_FEE_PER_GAS_MUTEZ + opSize
+      };
+      transaction.fees = transaction.fees.plus(
+        increasedFee(gasBuffer, Number(out.opSize))
+      );
       transaction.gasLimit = transaction.gasLimit.plus(gasBuffer);
       const s = await getTransactionStatus(account, transaction);
       transaction.amount = account.balance.minus(s.estimatedFees);
