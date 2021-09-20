@@ -1,7 +1,11 @@
 import cashaddr from "cashaddrjs";
 import bchaddr from "bchaddrjs";
-import { isValidAddress } from "@ledgerhq/wallet-btc";
-import { RecipientRequired, InvalidAddress } from "@ledgerhq/errors";
+import { Currency, isValidAddress } from "@ledgerhq/wallet-btc";
+import {
+  RecipientRequired,
+  InvalidAddress,
+  CurrencyNotSupported,
+} from "@ledgerhq/errors";
 import type { Account, CryptoCurrency, CryptoCurrencyIds } from "./../../types";
 import type {
   BitcoinOutput,
@@ -52,7 +56,15 @@ export const isValidRecipient = async (params: {
   if (!params.recipient) {
     return Promise.reject(new RecipientRequired(""));
   }
-  const valid = isValidAddress(params.recipient);
+
+  let valid: boolean;
+  try {
+    // Optimistically assume params.currency.id is an actual Currency
+    valid = isValidAddress(params.recipient, <Currency>params.currency.id);
+  } catch (e: any) {
+    // isValidAddress() will throw Error if c is not an actual Currency
+    return Promise.reject(new InvalidAddress(e.message));
+  }
   if (!valid) {
     return Promise.reject(
       new InvalidAddress("Invalid address for currency " + params.currency.name)
