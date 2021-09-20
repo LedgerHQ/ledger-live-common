@@ -940,10 +940,10 @@
     bignumber.js "^9.0.1"
     json-rpc-2.0 "^0.2.16"
 
-"@ledgerhq/live-common@21.4.1-btcjs.2":
-  version "21.4.1-btcjs.2"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/live-common/-/live-common-21.4.1-btcjs.2.tgz#edd403ab2be1d6dc6254226e9130712827385c0a"
-  integrity sha512-CCP0MLybYVx9uLbhvWsStT5sDfCfUwGNvsynD4Yw2bDU9MpRQH50VHzbpMU/erqGoVrXtvcAjW4ejptUieAvLQ==
+"@ledgerhq/live-common@21.4.1-btcjs.5":
+  version "21.4.1-btcjs.5"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/live-common/-/live-common-21.4.1-btcjs.5.tgz#a42c35b7554cdac02d5e5dd51a8e14f091da0e33"
+  integrity sha512-RPc4xyLT10CkGrbdO4MJ3o/Ppp3+sllkJwyS0I3nT9Gh7Ku5aMJMin623j/puGhTdh5KySyNzLvocszI7G697w==
   dependencies:
     "@crypto-com/chain-jslib" "0.0.19"
     "@ledgerhq/compressjs" "1.3.2"
@@ -963,7 +963,7 @@
     "@ledgerhq/hw-transport-node-speculos" "6.3.0"
     "@ledgerhq/live-app-sdk" "^0.2.0"
     "@ledgerhq/logs" "6.2.0"
-    "@ledgerhq/wallet-btc" "1.1.3"
+    "@ledgerhq/wallet-btc" "1.1.4"
     "@polkadot/types" "5.8.3"
     "@polkadot/types-known" "5.8.3"
     "@taquito/ledger-signer" "^10.1.1"
@@ -1021,10 +1021,10 @@
   resolved "https://registry.yarnpkg.com/@ledgerhq/logs/-/logs-5.50.0.tgz#29c6419e8379d496ab6d0426eadf3c4d100cd186"
   integrity sha512-swKHYCOZUGyVt4ge0u8a7AwNcA//h4nx5wIi0sruGye1IJ5Cva0GyK9L2/WdX+kWVTKp92ZiEo1df31lrWGPgA==
 
-"@ledgerhq/wallet-btc@1.1.3":
-  version "1.1.3"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/wallet-btc/-/wallet-btc-1.1.3.tgz#0f4445a9a0118655a6429bc85f605124f4c9e41f"
-  integrity sha512-516yNURKkBlh4gChYPC3nHYtyx1FgHJ68JX8CCQ9zG77lguMtHpOQ9qlVnMSsx2uNsaH24yjBRmoQmWpavohdA==
+"@ledgerhq/wallet-btc@1.1.4":
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/wallet-btc/-/wallet-btc-1.1.4.tgz#c2bb854286cb77481d69efd2bf841771b772fe88"
+  integrity sha512-OMyUKQHygqVBP5UslHE/Ib7l2EqLcknqfr/IgRnfRnxnAz+qe1vBHaIi9XRkQEPaUUYOPQIsIK6OBwqUGoprVQ==
   dependencies:
     "@ledgerhq/errors" "6.2.0"
     "@ledgerhq/hw-app-btc" "6.3.0"
