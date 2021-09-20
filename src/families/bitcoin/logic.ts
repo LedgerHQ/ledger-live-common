@@ -52,7 +52,17 @@ export const isValidRecipient = async (params: {
   if (!params.recipient) {
     return Promise.reject(new RecipientRequired(""));
   }
-  const valid = isValidAddress(params.recipient);
+
+  let valid: boolean;
+  try {
+    // Optimistically assume params.currency.id is an actual Currency
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore halp
+    valid = isValidAddress(params.recipient, params.currency.id);
+  } catch (e: any) {
+    // isValidAddress() will throw Error if c is not an actual Currency
+    return Promise.reject(new InvalidAddress(e.message));
+  }
   if (!valid) {
     return Promise.reject(
       new InvalidAddress("Invalid address for currency " + params.currency.name)
