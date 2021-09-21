@@ -1,14 +1,15 @@
-name: Bot 'Mooncake'
+name: Bot 'Mère Denis' on BitcoinJS
 on:
-  push:
-    branches:
-      - bitcoin-js
+  schedule:
+    - cron: "0 6,12 * * 1-5"
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: bitcoin-js
       - name: Retrieving coin apps
         uses: actions/checkout@v2
         with:
@@ -40,7 +41,7 @@ jobs:
         env:
           SHOW_LEGACY_NEW_ACCOUNT: "1"
           DEBUG_HTTP_RESPONSE: "1"
-          SEED: ${{ secrets.SEED4 }}
+          SEED: ${{ secrets.SEED1 }}
           VERBOSE_FILE: bot-tests.txt
           GITHUB_SHA: ${GITHUB_SHA}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -52,7 +53,7 @@ jobs:
           EXPERIMENTAL_EXPLORERS: true
           EXPERIMENTAL_CURRENCIES_JS_BRIDGE: bitcoin,bitcoin_cash,bsc,litecoin,dash,qtum,zcash,bitcoin_gold,stratis,dogecoin,digibyte,komodo,pivx,zencash,vertcoin,peercoin,viacoin,stakenet,stealthcoin,decred,bitcoin_testnet,tezos
         run: COINAPPS=$PWD/coin-apps yarn ci-test-bot
-        timeout-minutes: 120
+        timeout-minutes: 220
       - name: Run coverage
         if: failure() || success()
         run: CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }} npx codecov
