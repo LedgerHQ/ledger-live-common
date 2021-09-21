@@ -426,7 +426,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
         body,
       },
     });
-    const { SLACK_API_TOKEN } = process.env;
+    const { SLACK_API_TOKEN, SLACK_CHANNEL } = process.env;
 
     if (SLACK_API_TOKEN && githubComment) {
       const text = `${String(GITHUB_WORKFLOW)}: ${title} (<${
@@ -440,7 +440,7 @@ export async function bot({ currency, mutation }: Arg = {}) {
         },
         data: {
           text,
-          channel: "ledger-live-bot",
+          channel: SLACK_CHANNEL || "ledger-live-bot",
         },
       });
     }
