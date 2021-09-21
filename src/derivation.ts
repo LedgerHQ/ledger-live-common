@@ -400,7 +400,7 @@ const disableBIP44 = {
 };
 const seedIdentifierPath = {
   neo: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
-  filecoin: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`, // FIXME Filecoin - Check if this account is not used on this scheme
+  filecoin: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
   _: ({ purpose, coinType }) => `${purpose}'/${coinType}'`,
 };
 export const getSeedIdentifierDerivation = (

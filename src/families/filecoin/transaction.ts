@@ -33,7 +33,6 @@ const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
 const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
 
-  // FIXME Filecoin - Check that tx gets in the correct format
   return {
     ...common,
     method: t.method,

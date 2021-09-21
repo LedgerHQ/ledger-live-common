@@ -24,19 +24,20 @@ import { Transaction } from "../types";
 import { getAccountShape, getAddress, getTxToBroadcast } from "./utils/utils";
 import { broadcastTx, fetchBalances, fetchEstimatedFees } from "./utils/api";
 import { getMainAccount } from "../../../account";
-import { close, open } from "../../../hw";
+import { close } from "../../../hw";
 import { toCBOR } from "./utils/serializer";
 import { Operation } from "../../../types/operation";
-import { getPath, isError } from "../utils";
+import { calculateEstimatedFees, getPath, isError } from "../utils";
 import { log } from "@ledgerhq/logs";
 import { getAddressRaw, validateAddress } from "./utils/addresses";
 import { patchOperationWithHash } from "../../../operation";
 import { withDevice } from "../../../hw/deviceAccess";
+import { getGasLimit } from "../../ethereum/transaction";
 
 const receive = makeAccountBridgeReceive();
 
 const createTransaction = (account: Account): Transaction => {
-  log("debug", "start createTransaction process");
+  log("debug", "[createTransaction] creating base tx");
 
   return {
     family: "filecoin",
@@ -52,19 +53,21 @@ const createTransaction = (account: Account): Transaction => {
   };
 };
 
-const updateTransaction = (
-  t: Transaction,
-  patch: Transaction
-): Transaction => ({ ...t, ...patch });
+const updateTransaction = (t: Transaction, patch: Transaction): Transaction => {
+  log("debug", "[updateTransaction] patching tx");
+
+  return { ...t, ...patch };
+};
 
 const getTransactionStatus = async (
   a: Account,
   t: Transaction
 ): Promise<TransactionStatus> => {
-  log("debug", "start getTransactionStatus process");
+  log("debug", "[getTransactionStatus] start fn");
 
   const errors: TransactionStatus["errors"] = {};
   const warnings: TransactionStatus["warnings"] = {};
+
   let estimatedFees = new BigNumber(0);
   let totalSpent = new BigNumber(0);
 
@@ -86,14 +89,16 @@ const getTransactionStatus = async (
   )
     errors.gas = new FeeNotLoaded();
 
-  // FIXME Filecoin - Fix this operation
-  estimatedFees = gasFeeCap.multipliedBy(gasLimit);
+  // This is the worst case scenario (the tx won't cost more than this value)
+  estimatedFees = calculateEstimatedFees(gasFeeCap, gasLimit);
 
-  // FIXME Filecoin - Fix this operation
+  // Add the estimated fees to the tx amount
   totalSpent = amount.plus(estimatedFees);
 
   if (amount.lte(0)) errors.amount = new AmountRequired();
-  //if (totalSpent.gt(a.spendableBalance)) errors.amount = new NotEnoughBalance();
+  if (totalSpent.gt(a.spendableBalance)) errors.amount = new NotEnoughBalance();
+
+  log("debug", "[getTransactionStatus] finish fn");
 
   return {
     errors,
@@ -107,37 +112,59 @@ const getTransactionStatus = async (
 const estimateMaxSpendable = async ({
   account,
   parentAccount,
+  transaction,
 }: {
   account: AccountLike;
   parentAccount?: Account | null | undefined;
   transaction?: Transaction | null | undefined;
 }): Promise<BigNumber> => {
-  log("debug", "start estimateMaxSpendable process");
+  log("debug", "[estimateMaxSpendable] start fn");
 
   const a = getMainAccount(account, parentAccount);
   const { address } = getAddress(a);
-  const balances = await fetchBalances(address);
 
-  // FIXME Filecoin - Check if we have to minus some other value
-  return new BigNumber(balances.spendable_balance);
+  const balances = await fetchBalances(address);
+  const balance = new BigNumber(balances.spendable_balance);
+
+  const recipient = transaction?.recipient;
+  if (recipient) {
+    log(
+      "debug",
+      "[estimateMaxSpendable] fetching estimated fees to adjust the real max spendable balance"
+    );
+
+    const result = await fetchEstimatedFees({ to: recipient, from: address });
+    const gasFeeCap = new BigNumber(result.gas_fee_cap);
+    const gasLimit = new BigNumber(result.gas_limit);
+
+    balance.minus(calculateEstimatedFees(gasFeeCap, gasLimit));
+  }
+
+  log("debug", "[estimateMaxSpendable] finish fn");
+
+  return balance;
 };
 
 const prepareTransaction = async (
   a: Account,
   t: Transaction
 ): Promise<Transaction> => {
-  log("debug", "start prepareTransaction process");
+  log("debug", "[prepareTransaction] start fn");
 
   const { address } = getAddress(a);
   const { recipient } = t;
 
   if (recipient && address) {
+    log("debug", "[prepareTransaction] fetching estimated fees");
+
     const result = await fetchEstimatedFees({ to: recipient, from: address });
     t.gasFeeCap = new BigNumber(result.gas_fee_cap);
     t.gasPremium = new BigNumber(result.gas_premium);
     t.gasLimit = new BigNumber(result.gas_limit);
     t.nonce = result.nonce;
   }
+
+  log("debug", "[prepareTransaction] finish fn");
 
   return t;
 };
@@ -148,12 +175,16 @@ const broadcast: BroadcastFnSignature = async ({
   account,
   signedOperation: { operation },
 }) => {
-  log("debug", "start broadcast process");
+  log("debug", "[broadcast] start fn");
 
   const resp = await broadcastTx(operation.extra.reqToBroadcast);
-
   const { hash } = resp;
-  return patchOperationWithHash(operation, hash);
+
+  const result = patchOperationWithHash(operation, hash);
+
+  log("debug", "[broadcast] finish fn");
+
+  return result;
 };
 
 const signOperation: SignOperationFnSignature<Transaction> = ({
@@ -165,17 +196,23 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
     (transport) =>
       new Observable((o) => {
         async function main() {
-          log("debug", "start signOperation process");
+          log("debug", "[signOperation] start fn");
 
-          const { recipient, amount } = transaction;
+          const { recipient, amount, gasFeeCap, gasLimit } = transaction;
           const { id: accountId } = account;
           const { address, derivationPath } = getAddress(account);
+
+          if (!gasFeeCap.gt(0) || !gasLimit.gt(0)) {
+            log(
+              "debug",
+              `signOperation missingData --> gasFeeCap=${gasFeeCap} gasLimit=${gasLimit}`
+            );
+            throw new FeeNotLoaded();
+          }
 
           const filecoin = new Fil(transport);
 
           try {
-            // FIXME Filecoin - Check if everything is ready to execute signing process over tx
-
             o.next({
               type: "device-signature-requested",
             });
@@ -189,7 +226,9 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
 
             log(
               "debug",
-              `Serialized CBOR tx: [${serializedTx.toString("hex")}]`
+              `[signOperation] serialized CBOR tx: [${serializedTx.toString(
+                "hex"
+              )}]`
             );
 
             // Sign by device
@@ -203,8 +242,7 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
               type: "device-signature-granted",
             });
 
-            // FIXME Filecoin - Check how to calculate the fee
-            const fee = new BigNumber(0);
+            const fee = calculateEstimatedFees(gasFeeCap, gasLimit);
             const value = amount.plus(fee);
 
             // resolved at broadcast time
@@ -246,6 +284,8 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
             });
           } finally {
             close(transport, deviceId);
+
+            log("debug", "[signOperation] finish fn");
           }
         }
 
