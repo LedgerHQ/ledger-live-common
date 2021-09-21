@@ -45,8 +45,8 @@ const signOperation = ({
             .map((i) => i.address)
             .filter(Boolean) as string[];
           recipients = res.txOutputs
-            .map((o) => o.address)
-            .filter(Boolean) as string[];
+            .filter((o) => o.address && !o.isChange)
+            .map((o) => o.address) as string[];
           fee = res.fees;
         });
 
