@@ -13,7 +13,7 @@ export type KYCStatus = keyof typeof KYC_STATUS;
 
 export const pickExchangeRate = (
   exchangeRates: ExchangeRate[],
-  exchangeRate: ExchangeRate,
+  exchangeRate: ExchangeRate | null | undefined,
   setExchangeRate: (rate?: ExchangeRate | null) => void
 ): void => {
   const hasRates = exchangeRates?.length > 0;
