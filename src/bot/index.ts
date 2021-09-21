@@ -260,27 +260,6 @@ export async function bot({ currency, family, mutation }: Arg = {}) {
       body += "</details>\n\n";
     }
 
-    const failureSpecNames = results
-      .filter((r) => (r.mutations || []).some((m) => m.error))
-      .map(({ spec }) => spec.name);
-
-    if (failureSpecNames && failureSpecNames.length) {
-      slackBody += `:nogo: _${failureSpecNames.join(", ")}_\n`;
-    }
-
-    const successSpecNames = results
-      .filter(
-        (r) =>
-          r.mutations &&
-          r.mutations.length > 0 &&
-          r.mutations.every((m) => !m.error)
-      )
-      .map(({ spec }) => spec.name);
-
-    if (successSpecNames && successSpecNames.length) {
-      slackBody += `:go: _${successSpecNames.join(", ")}_\n`;
-    }
-
     if (errorCases.length) {
       body += "<details>\n";
       body += `<summary>${errorCases.length} mutation errors</summary>\n\n`;
