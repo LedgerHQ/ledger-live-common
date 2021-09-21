@@ -9,7 +9,7 @@ import { DerivationModes } from "../types";
 import Xpub from "../xpub";
 import Crypto from "../crypto/bitcoin";
 import Explorer from "../explorer";
-import Storage from "../storage/mock";
+import BitcoinLikeStorage from "../storage";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -26,7 +26,7 @@ describe("testing xpub reorg management", () => {
   });
 
   const xpubs = [1].map((i) => {
-    const storage = new Storage();
+    const storage = new BitcoinLikeStorage();
     const seed = bip39.mnemonicToSeedSync(`test${i} test${i} test${i}`);
     const node = bip32.fromSeed(seed, network);
     const signer = (account: number, index: number) =>

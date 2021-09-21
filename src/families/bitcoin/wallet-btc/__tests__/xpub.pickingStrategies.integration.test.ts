@@ -7,7 +7,7 @@ import { DerivationModes } from "../types";
 import Xpub from "../xpub";
 import BitcoinLikeExplorer from "../explorer";
 import Crypto from "../crypto/bitcoin";
-import Storage from "../storage/mock";
+import BitcoinLikeStorage from "../storage";
 import { Merge } from "../pickingstrategies/Merge";
 import { DeepFirst } from "../pickingstrategies/DeepFirst";
 import { CoinSelect } from "../pickingstrategies/CoinSelect";
@@ -19,7 +19,7 @@ describe("testing xpub legacy transactions", () => {
     network,
   });
 
-  const storage = new Storage();
+  const storage = new BitcoinLikeStorage();
   const seed = bip39.mnemonicToSeedSync("test1 test1 test1");
   const node = bip32.fromSeed(seed, network);
   const signer = (account: number, index: number) =>

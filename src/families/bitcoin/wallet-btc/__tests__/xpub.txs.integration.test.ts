@@ -9,7 +9,7 @@ import BigNumber from "bignumber.js";
 import Xpub from "../xpub";
 import Crypto from "../crypto/bitcoin";
 import BitcoinLikeExplorer from "../explorer";
-import Storage from "../storage/mock";
+import BitcoinLikeStorage from "../storage";
 import * as utils from "../utils";
 import { InputInfo, OutputInfo, DerivationModes } from "../types";
 import { Merge } from "../pickingstrategies/Merge";
@@ -29,7 +29,7 @@ describe("testing xpub legacy transactions", () => {
   });
 
   const xpubs = [1, 2, 3].map((i) => {
-    const storage = new Storage();
+    const storage = new BitcoinLikeStorage();
     const seed = bip39.mnemonicToSeedSync(`test${i} test${i} test${i}`);
     const node = bip32.fromSeed(seed, network);
     const signer = (account: number, index: number) =>

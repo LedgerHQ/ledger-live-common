@@ -6,7 +6,7 @@ require("bitcore-lib");
 import coininfo from "coininfo";
 import { toMatchFile } from "jest-file-snapshot";
 import { DerivationModes } from "../types";
-import Storage from "../storage/mock";
+import BitcoinLikeStorage from "../storage";
 import BitcoinLikeExplorer from "../explorer";
 import Xpub from "../xpub";
 import * as currency from "../crypto";
@@ -227,7 +227,7 @@ describe("xpub integration sync", () => {
       ) {
         throw new Error("wrong explorer version");
       }
-      const storage = new Storage();
+      const storage = new BitcoinLikeStorage();
       let crypto;
       switch (dataset.coin) {
         case "btc":

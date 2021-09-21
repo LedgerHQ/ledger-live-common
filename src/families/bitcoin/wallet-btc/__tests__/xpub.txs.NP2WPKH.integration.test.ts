@@ -8,7 +8,7 @@ import { DerivationModes } from "../types";
 import Xpub from "../xpub";
 import Crypto from "../crypto/bitcoin";
 import BitcoinLikeExplorer from "../explorer";
-import Storage from "../storage/mock";
+import BitcoinLikeStorage from "../storage";
 import { Merge } from "../pickingstrategies/Merge";
 import * as utils from "../utils";
 
@@ -27,7 +27,7 @@ describe.skip("testing xpub segwit transactions", () => {
   });
 
   const xpubs = [1, 2, 3].map((i) => {
-    const storage = new Storage();
+    const storage = new BitcoinLikeStorage();
     const seed = bip39.mnemonicToSeedSync(`test${i} test${i} test${i}`);
     const node = bip32.fromSeed(seed, network);
     const signer = (account: number, index: number) =>

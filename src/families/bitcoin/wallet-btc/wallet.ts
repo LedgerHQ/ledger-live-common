@@ -20,7 +20,7 @@ import Xpub from "./xpub";
 import { IExplorer } from "./explorer/types";
 import BitcoinLikeExplorer from "./explorer";
 import { IStorage } from "./storage/types";
-import Mock from "./storage/mock";
+import BitcoinLikeStorage from "./storage";
 import { PickingStrategy } from "./pickingstrategies/types";
 import * as utils from "./utils";
 import cryptoFactory from "./crypto/factory";
@@ -44,7 +44,7 @@ class BitcoinLikeWallet {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   accountStorages: { [key: string]: (...args: any[]) => IStorage } = {
-    mock: () => new Mock(),
+    mock: () => new BitcoinLikeStorage(),
   };
 
   getExplorer(explorer: "ledgerv3" | "ledgerv2", explorerURI: string) {

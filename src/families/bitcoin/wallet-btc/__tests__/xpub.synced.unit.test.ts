@@ -5,7 +5,7 @@
 import coininfo from "coininfo";
 import { zipObject } from "lodash";
 import { DerivationModes } from "../types";
-import Storage from "../storage/mock";
+import BitcoinLikeStorage from "../storage";
 import BitcoinLikeExplorer from "../explorer";
 import Crypto from "../crypto/bitcoin";
 import Xpub from "../xpub";
@@ -23,7 +23,7 @@ describe("synced xpub utilites functions", () => {
     const xpubraw =
       "xpub6CUGRUonZSQ4TWtTMmzXdrXDtypWKiKrhko4egpiMZbpiaQL2jkwSB1icqYh2cfDfVxdx4df189oLKnC5fSwqPfgyP3hooxujYzAu3fDVmz";
     // const truthDump = path.join(__dirname, 'data', 'sync', `${xpubraw}.json`);
-    const storage = new Storage();
+    const storage = new BitcoinLikeStorage();
     const xpub = new Xpub({
       storage,
       explorer,
