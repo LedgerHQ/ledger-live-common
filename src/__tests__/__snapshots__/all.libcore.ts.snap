@@ -12911,9 +12911,9 @@ Array [
     "xpub": "cosmospub1addwnpepqf3y4jpkjr277cneyugywe7k0xh0w0fa8j25f2lyyp436rzx8j207wd7ygy",
   },
   Object {
-    "balance": "326000",
+    "balance": "325999",
     "cosmosResources": Object {
-      "delegatedBalance": "326000",
+      "delegatedBalance": "325999",
       "withdrawAddress": "",
     },
     "currencyId": "cosmos",
@@ -17143,11 +17143,11 @@ Array [
 exports[`elrond currency bridge scanAccounts elrond seed 1 1`] = `
 Array [
   Object {
-    "balance": "0",
+    "balance": "850000000000000",
     "currencyId": "elrond",
     "derivationMode": "",
     "elrondResources": Object {
-      "nonce": 2,
+      "nonce": 3,
     },
     "freshAddress": "erd1vgfp3g7azqjx4wsmtt7067m0l62v3psmqzr24j6xvywj2tlz0gesvyzsq2",
     "freshAddressPath": "44'/508'/0'/0/0",
@@ -17160,10 +17160,10 @@ Array [
     "id": "js:2:elrond:erd1vgfp3g7azqjx4wsmtt7067m0l62v3psmqzr24j6xvywj2tlz0gesvyzsq2:",
     "index": 0,
     "name": "Elrond 1",
-    "operationsCount": 3,
+    "operationsCount": 5,
     "pendingOperations": Array [],
     "seedIdentifier": "",
-    "spendableBalance": "0",
+    "spendableBalance": "850000000000000",
     "starred": false,
     "swapHistory": Array [],
     "syncHash": undefined,
@@ -17204,6 +17204,43 @@ Array [
 exports[`elrond currency bridge scanAccounts elrond seed 1 2`] = `
 Array [
   Array [
+    Object {
+      "accountId": "js:2:elrond:erd1vgfp3g7azqjx4wsmtt7067m0l62v3psmqzr24j6xvywj2tlz0gesvyzsq2:",
+      "blockHash": "a092b272855f4c812a3b45b6fe2ae1a90f7b9f2420c67668a73e2fa9bd023159",
+      "blockHeight": 5914476,
+      "extra": Object {},
+      "fee": "50000000000000",
+      "hasFailed": false,
+      "hash": "016af2b27940612e2b234df13a47b84e22d90694ddd65bc937526dd31b2c397c",
+      "id": "js:2:elrond:erd1vgfp3g7azqjx4wsmtt7067m0l62v3psmqzr24j6xvywj2tlz0gesvyzsq2:-016af2b27940612e2b234df13a47b84e22d90694ddd65bc937526dd31b2c397c-IN",
+      "recipients": Array [
+        "erd1vgfp3g7azqjx4wsmtt7067m0l62v3psmqzr24j6xvywj2tlz0gesvyzsq2",
+      ],
+      "senders": Array [
+        "erd1khl4mll00m6tgvcpmhf9tu05s9cfszruw77fk4dfmzyn7r2h6kgqdtsj7u",
+      ],
+      "type": "IN",
+      "value": "1000000000000000",
+    },
+    Object {
+      "accountId": "js:2:elrond:erd1vgfp3g7azqjx4wsmtt7067m0l62v3psmqzr24j6xvywj2tlz0gesvyzsq2:",
+      "blockHash": "c8348ad876f4c3bc9c8d009b5425f97b98105006b98511fd66934640414ee280",
+      "blockHeight": 5914503,
+      "extra": Object {},
+      "fee": "50000000000000",
+      "hasFailed": false,
+      "hash": "5ca1c624f3e51a81b9b76a08b45d6f2d8a0d4547983b924412afc72e21ba771a",
+      "id": "js:2:elrond:erd1vgfp3g7azqjx4wsmtt7067m0l62v3psmqzr24j6xvywj2tlz0gesvyzsq2:-5ca1c624f3e51a81b9b76a08b45d6f2d8a0d4547983b924412afc72e21ba771a-OUT",
+      "recipients": Array [
+        "erd1khl4mll00m6tgvcpmhf9tu05s9cfszruw77fk4dfmzyn7r2h6kgqdtsj7u",
+      ],
+      "senders": Array [
+        "erd1vgfp3g7azqjx4wsmtt7067m0l62v3psmqzr24j6xvywj2tlz0gesvyzsq2",
+      ],
+      "transactionSequenceNumber": 2,
+      "type": "OUT",
+      "value": "150000000000000",
+    },
     Object {
       "accountId": "js:2:elrond:erd1vgfp3g7azqjx4wsmtt7067m0l62v3psmqzr24j6xvywj2tlz0gesvyzsq2:",
       "blockHash": "ca620c947a18265d839707d746fc5f43aac4e0bbe058afbfd3fce54ad2add5b7",
