@@ -56,7 +56,7 @@ const responseErrorInterceptor = (error: any) => {
   return Promise.reject(error);
 };
 
-class LedgerExplorer extends EventEmitter implements IExplorer {
+class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
   client: Pool<{ client: AxiosInstance }>;
 
   underlyingClient: AxiosInstance;
@@ -344,4 +344,4 @@ class LedgerExplorer extends EventEmitter implements IExplorer {
   }
 }
 
-export default LedgerExplorer;
+export default BitcoinLikeExplorer;
