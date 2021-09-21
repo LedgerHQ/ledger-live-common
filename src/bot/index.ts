@@ -470,6 +470,7 @@ export async function bot({ currency, family, mutation }: Arg = {}) {
       if (c.mutation) txt += `/${c.mutation.name}`;
       txt += ` got ${String(c.error)}\n`;
     });
-    throw new Error(txt);
+    // throw new Error(txt);
+    console.error(txt);
   }
 }
