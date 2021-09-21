@@ -1,24 +1,24 @@
-import * as bip32 from 'bip32';
-import * as bip39 from 'bip39';
-import * as bitcoin from 'bitcoinjs-lib';
+import * as bip32 from "bip32";
+import * as bip39 from "bip39";
+import * as bitcoin from "bitcoinjs-lib";
 // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
-import coininfo from 'coininfo';
-import axios from 'axios';
-import { DerivationModes } from '../types';
-import Xpub from '../xpub';
-import Crypto from '../crypto/bitcoin';
-import Explorer from '../explorer/ledgerexplorer';
-import Storage from '../storage/mock';
+import coininfo from "coininfo";
+import axios from "axios";
+import { DerivationModes } from "../types";
+import Xpub from "../xpub";
+import Crypto from "../crypto/bitcoin";
+import Explorer from "../explorer";
+import Storage from "../storage/mock";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-describe('testing xpub reorg management', () => {
+describe("testing xpub reorg management", () => {
   const network = coininfo.bitcoin.test.toBitcoinJS();
 
   const explorer = new Explorer({
-    explorerURI: 'http://localhost:20000/blockchain/v3',
-    explorerVersion: 'v3',
+    explorerURI: "http://localhost:20000/blockchain/v3",
+    explorerVersion: "v3",
     disableBatchSize: true, // https://ledgerhq.atlassian.net/browse/BACK-2191
   });
   const crypto = new Crypto({
@@ -30,7 +30,10 @@ describe('testing xpub reorg management', () => {
     const seed = bip39.mnemonicToSeedSync(`test${i} test${i} test${i}`);
     const node = bip32.fromSeed(seed, network);
     const signer = (account: number, index: number) =>
-      bitcoin.ECPair.fromWIF(node.derive(account).derive(index).toWIF(), network);
+      bitcoin.ECPair.fromWIF(
+        node.derive(account).derive(index).toWIF(),
+        network
+      );
     const xpub = new Xpub({
       storage,
       explorer,
@@ -52,12 +55,12 @@ describe('testing xpub reorg management', () => {
     const { address } = await xpubs[0].xpub.getNewAddress(0, 0);
 
     try {
-      await axios.post('http://localhost:28443/chain/clear/all');
+      await axios.post("http://localhost:28443/chain/clear/all");
       await axios.post(`http://localhost:28443/chain/mine/${address}/1`);
       await axios.post(`http://localhost:28443/chain/faucet/${address}/7.0`);
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.log('praline setup error', e);
+      console.log("praline setup error", e);
       throw e;
     }
 
@@ -68,27 +71,29 @@ describe('testing xpub reorg management', () => {
       await xpubs[0].xpub.sync();
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.log('praline explorer setup error', e);
+      console.log("praline explorer setup error", e);
       throw e;
     }
   }, 160000);
 
-  it('should be setup correctly', async () => {
+  it("should be setup correctly", async () => {
     const balance1 = await xpubs[0].xpub.getXpubBalance();
 
     expect(balance1.toNumber()).toEqual(5700000000);
   });
 
-  it('should show 7btc balance now', async () => {
+  it("should show 7btc balance now", async () => {
     const { address } = await xpubs[0].xpub.getNewAddress(0, 0);
 
     try {
-      await axios.post('http://localhost:28443/chain/clear/all');
-      await axios.post(`http://localhost:28443/chain/mine/2N1MYgVbjLgveWPSicdScTAsYSDYEzyg7vd/1`);
+      await axios.post("http://localhost:28443/chain/clear/all");
+      await axios.post(
+        `http://localhost:28443/chain/mine/2N1MYgVbjLgveWPSicdScTAsYSDYEzyg7vd/1`
+      );
       await axios.post(`http://localhost:28443/chain/faucet/${address}/7.0`);
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.log('praline setup error', e);
+      console.log("praline setup error", e);
       throw e;
     }
 
@@ -99,7 +104,7 @@ describe('testing xpub reorg management', () => {
       await xpubs[0].xpub.sync();
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.log('praline explorer setup error', e);
+      console.log("praline explorer setup error", e);
       throw e;
     }
 
@@ -107,17 +112,17 @@ describe('testing xpub reorg management', () => {
     expect(balance1.toNumber()).toEqual(700000000);
   }, 160000);
 
-  it('should not remove any txs if there is no reorg', async () => {
+  it("should not remove any txs if there is no reorg", async () => {
     const old = xpubs[0].xpub.storage.removeTxs;
     xpubs[0].xpub.storage.removeTxs = async () => {
-      throw new Error('Should not be called');
+      throw new Error("Should not be called");
     };
 
     try {
       await xpubs[0].xpub.sync();
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.log('praline explorer setup error', e);
+      console.log("praline explorer setup error", e);
       throw e;
     }
 

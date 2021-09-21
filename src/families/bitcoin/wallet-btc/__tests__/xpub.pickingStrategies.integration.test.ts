@@ -5,7 +5,7 @@ import coininfo from "coininfo";
 import BigNumber from "bignumber.js";
 import { DerivationModes } from "../types";
 import Xpub from "../xpub";
-import LedgerExplorer from "../explorer/ledgerexplorer";
+import BitcoinLikeExplorer from "../explorer";
 import Crypto from "../crypto/bitcoin";
 import Storage from "../storage/mock";
 import { Merge } from "../pickingstrategies/Merge";
@@ -26,7 +26,7 @@ describe("testing xpub legacy transactions", () => {
     bitcoin.ECPair.fromWIF(node.derive(account).derive(index).toWIF(), network);
   const xpub = new Xpub({
     storage,
-    explorer: new LedgerExplorer({
+    explorer: new BitcoinLikeExplorer({
       explorerURI: "https://explorers.api.live.ledger.com/blockchain/v3/btc",
       explorerVersion: "v3",
     }),

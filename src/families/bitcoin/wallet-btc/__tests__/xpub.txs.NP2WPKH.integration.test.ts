@@ -7,7 +7,7 @@ import BigNumber from "bignumber.js";
 import { DerivationModes } from "../types";
 import Xpub from "../xpub";
 import Crypto from "../crypto/bitcoin";
-import LedgerExplorer from "../explorer/ledgerexplorer";
+import BitcoinLikeExplorer from "../explorer";
 import Storage from "../storage/mock";
 import { Merge } from "../pickingstrategies/Merge";
 import * as utils from "../utils";
@@ -17,7 +17,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 describe.skip("testing xpub segwit transactions", () => {
   const network = coininfo.bitcoin.regtest.toBitcoinJS();
 
-  const explorer = new LedgerExplorer({
+  const explorer = new BitcoinLikeExplorer({
     explorerURI: "http://localhost:20000/blockchain/v3",
     explorerVersion: "v3",
     disableBatchSize: true, // https://ledgerhq.atlassian.net/browse/BACK-2191

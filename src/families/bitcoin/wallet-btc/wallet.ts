@@ -18,7 +18,7 @@ import { TransactionInfo, DerivationModes } from "./types";
 import { Account, SerializedAccount } from "./account";
 import Xpub from "./xpub";
 import { IExplorer } from "./explorer/types";
-import LedgerExplorer from "./explorer/ledgerexplorer";
+import BitcoinLikeExplorer from "./explorer";
 import { IStorage } from "./storage/types";
 import Mock from "./storage/mock";
 import { PickingStrategy } from "./pickingstrategies/types";
@@ -31,12 +31,12 @@ class BitcoinLikeWallet {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   explorers: { [key: string]: (explorerURI: string) => IExplorer } = {
     ledgerv3: (explorerURI) =>
-      new LedgerExplorer({
+      new BitcoinLikeExplorer({
         explorerURI,
         explorerVersion: "v3",
       }),
     ledgerv2: (explorerURI) =>
-      new LedgerExplorer({
+      new BitcoinLikeExplorer({
         explorerURI,
         explorerVersion: "v2",
       }),
