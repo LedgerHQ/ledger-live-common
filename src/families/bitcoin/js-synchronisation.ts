@@ -21,7 +21,7 @@ import { findCurrencyExplorer } from "../../api/Ledger";
 import { encodeOperationId } from "../../operation";
 import { BitcoinOutput } from "./types";
 import { perCoinLogic } from "./logic";
-import wallet from "./wallet";
+import wallet from "./wallet-btc";
 
 // Map LL's DerivationMode to wallet-btc's
 const toWalletDerivationMode = (

@@ -2,7 +2,7 @@ import { BigNumber } from "bignumber.js";
 import type { AccountLike, Account } from "../../types";
 import type { Transaction } from "./types";
 import { getMainAccount } from "../../account";
-import wallet, { getWalletAccount } from "./wallet";
+import wallet, { getWalletAccount } from "./wallet-btc";
 import { getAccountNetworkInfo } from "./getAccountNetworkInfo";
 
 /**

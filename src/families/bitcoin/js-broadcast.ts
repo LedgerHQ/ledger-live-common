@@ -1,6 +1,6 @@
 import { patchOperationWithHash } from "./../../operation";
 import type { Account, Operation, SignedOperation } from "./../../types";
-import wallet from "./wallet";
+import wallet from "./wallet-btc";
 
 /**
  * Broadcast a signed transaction

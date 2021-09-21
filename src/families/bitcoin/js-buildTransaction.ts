@@ -6,7 +6,7 @@ import { FeeNotLoaded } from "@ledgerhq/errors";
 import type { Account } from "../../types";
 import type { Transaction, UtxoStrategy } from "./types";
 import { bitcoinPickingStrategy } from "./types";
-import wallet, { getWalletAccount } from "./wallet";
+import wallet, { getWalletAccount } from "./wallet-btc";
 
 const selectUtxoPickingStrategy = (
   walletAccount: WalletAccount,
