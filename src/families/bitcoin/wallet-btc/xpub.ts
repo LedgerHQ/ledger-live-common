@@ -4,7 +4,6 @@ import { Address, IStorage } from "./storage/types";
 import EventEmitter from "./utils/eventemitter";
 import { IExplorer } from "./explorer/types";
 import { ICrypto } from "./crypto/types";
-// eslint-disable-next-line import/no-cycle
 import { PickingStrategy } from "./pickingstrategies/types";
 import * as utils from "./utils";
 import { TransactionInfo, InputInfo, OutputInfo } from "./types";
@@ -311,13 +310,10 @@ class Xpub extends EventEmitter {
 
     const inputs: InputInfo[] = unspentUtxoSelected.map((utxo, index) => {
       return {
-        // eslint-disable-next-line @typescript-eslint/camelcase
         txHex: txHexs[index],
         value: utxo.value,
         address: utxo.address,
-        // eslint-disable-next-line @typescript-eslint/camelcase
         output_hash: utxo.output_hash,
-        // eslint-disable-next-line @typescript-eslint/camelcase
         output_index: utxo.output_index,
         sequence:
           params.sequence && Number.isInteger(params.sequence)
@@ -326,7 +322,7 @@ class Xpub extends EventEmitter {
       };
     });
     const associatedDerivations: [number, number][] = unspentUtxoSelected.map(
-      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       (utxo, index) => [txs[index].account, txs[index].index]
     );
@@ -408,13 +404,13 @@ class Xpub extends EventEmitter {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const handler = (evt: any) => {
           if (evt.type === type && evt.key === key) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             this.off("synced", handler);
             resolve();
           }
         };
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         this.on("synced", handler);
       }

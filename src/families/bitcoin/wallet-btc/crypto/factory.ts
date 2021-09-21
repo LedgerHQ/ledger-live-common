@@ -1,99 +1,99 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import coininfo from 'coininfo';
-import { Currency, ICrypto } from './types';
-import * as crypto from './index';
+import coininfo from "coininfo";
+import { Currency, ICrypto } from "./types";
+import * as crypto from "./index";
 
 export default function cryptoFactory(currency: Currency) {
   let res: ICrypto;
   switch (currency) {
-    case 'bitcoin': {
+    case "bitcoin": {
       const network = coininfo.bitcoin.main.toBitcoinJS();
       res = new crypto.Bitcoin({ network });
       break;
     }
-    case 'bitcoin_cash': {
+    case "bitcoin_cash": {
       const network = coininfo.bitcoincash.main.toBitcoinJS();
       res = new crypto.BitcoinCash({ network });
       break;
     }
-    case 'litecoin': {
+    case "litecoin": {
       const network = coininfo.litecoin.main.toBitcoinJS();
       res = new crypto.Litecoin({ network });
       break;
     }
-    case 'dash': {
+    case "dash": {
       const network = coininfo.dash.main.toBitcoinJS();
       res = new crypto.Dash({ network });
       break;
     }
-    case 'qtum': {
+    case "qtum": {
       const network = coininfo.qtum.main.toBitcoinJS();
       res = new crypto.Qtum({ network });
       break;
     }
-    case 'zcash': {
+    case "zcash": {
       const network = coininfo.zcash.main.toBitcoinJS();
       res = new crypto.Zec({ network });
       break;
     }
-    case 'bitcoin_gold': {
-      const network = coininfo['bitcoin gold'].main.toBitcoinJS();
+    case "bitcoin_gold": {
+      const network = coininfo["bitcoin gold"].main.toBitcoinJS();
       res = new crypto.BitcoinGold({ network });
       break;
     }
-    case 'dogecoin': {
+    case "dogecoin": {
       const network = coininfo.dogecoin.main.toBitcoinJS();
       res = new crypto.Doge({ network });
       break;
     }
-    case 'digibyte': {
+    case "digibyte": {
       const network = coininfo.digibyte.main.toBitcoinJS();
       res = new crypto.Digibyte({ network });
       break;
     }
-    case 'komodo': {
+    case "komodo": {
       const network = coininfo.bitcoin.main.toBitcoinJS();
       res = new crypto.Komodo({ network });
       break;
     }
-    case 'pivx': {
+    case "pivx": {
       const network = coininfo.bitcoin.main.toBitcoinJS();
       res = new crypto.Pivx({ network });
       break;
     }
-    case 'zencash': {
+    case "zencash": {
       const network = coininfo.zcash.main.toBitcoinJS();
       res = new crypto.Zen({ network });
       break;
     }
-    case 'vertcoin': {
+    case "vertcoin": {
       const network = coininfo.vertcoin.main.toBitcoinJS();
       res = new crypto.Vertcoin({ network });
       break;
     }
-    case 'peercoin': {
+    case "peercoin": {
       const network = coininfo.peercoin.main.toBitcoinJS();
       res = new crypto.Peercoin({ network });
       break;
     }
-    case 'viacoin': {
+    case "viacoin": {
       const network = coininfo.viacoin.main.toBitcoinJS();
       res = new crypto.ViaCoin({ network });
       break;
     }
-    case 'stakenet': {
+    case "stakenet": {
       const network = coininfo.bitcoin.main.toBitcoinJS();
       res = new crypto.Stakenet({ network });
       break;
     }
-    case 'stealthcoin': {
+    case "stealthcoin": {
       const network = coininfo.bitcoin.main.toBitcoinJS();
       res = new crypto.Stealth({ network });
       break;
     }
-    case 'bitcoin_testnet': {
+    case "bitcoin_testnet": {
       const network = coininfo.bitcoin.test.toBitcoinJS();
       res = new crypto.Bitcoin({ network });
       break;

@@ -1,10 +1,10 @@
 // from https://github.com/LedgerHQ/xpub-scan/blob/master/src/actions/deriveAddresses.ts
 
-import * as bjs from 'bitcoinjs-lib';
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+import * as bjs from "bitcoinjs-lib";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { bech32, bech32m } from 'bech32';
-import Base from './base';
+import { bech32, bech32m } from "bech32";
+import Base from "./base";
 
 /**
  * Temporarily copied from bitcoinjs-lib master branch (as of 2021-09-02,
@@ -19,7 +19,11 @@ import Base from './base';
  * TODO: Replace with bitcoinjs-lib call
  */
 /* eslint-disable */
-function fromBech32(address: string): { version: number, prefix: string, data: Buffer} {
+function fromBech32(address: string): {
+  version: number;
+  prefix: string;
+  data: Buffer;
+} {
   let result;
   let version;
   try {
@@ -28,11 +32,11 @@ function fromBech32(address: string): { version: number, prefix: string, data: B
 
   if (result) {
     version = result.words[0];
-    if (version !== 0) throw new TypeError(address + ' uses wrong encoding');
+    if (version !== 0) throw new TypeError(address + " uses wrong encoding");
   } else {
     result = bech32m.decode(address);
     version = result.words[0];
-    if (version === 0) throw new TypeError(address + ' uses wrong encoding');
+    if (version === 0) throw new TypeError(address + " uses wrong encoding");
   }
 
   const data = bech32.fromWords(result.words.slice(1));
@@ -47,7 +51,10 @@ function fromBech32(address: string): { version: number, prefix: string, data: B
 
 // This function expects a valid base58check address or a valid
 // bech32/bech32m address.
-function toOutputScriptTemporary(validAddress: string, network: bjs.Network): Buffer {
+function toOutputScriptTemporary(
+  validAddress: string,
+  network: bjs.Network
+): Buffer {
   try {
     const decodeBase58 = bjs.address.fromBase58Check(validAddress);
     if (decodeBase58.version === network.pubKeyHash)
@@ -70,7 +77,7 @@ class Bitcoin extends Base {
     // Make sure the address is valid on this network
     // otherwise we can't call toOutputScriptTemporary.
     if (!this.validateAddress(address)) {
-      throw new Error('Invalid address');
+      throw new Error("Invalid address");
     }
     // bitcoinjs-lib/src/address doesn't yet have released support for bech32m,
     // so we'll implement our own version of toOutputScript while waiting.
@@ -114,7 +121,11 @@ class Bitcoin extends Base {
       // Address has invalid data length
       return false;
     }
-    if (result.version === 0 && result.data.length !== 20 && result.data.length !== 32) {
+    if (
+      result.version === 0 &&
+      result.data.length !== 20 &&
+      result.data.length !== 32
+    ) {
       // Version 0 address uses an invalid witness program length
       return false;
     }
@@ -123,7 +134,10 @@ class Bitcoin extends Base {
 
   private tryBase58(address: string): boolean {
     const result = bjs.address.fromBase58Check(address);
-    if (this.network.pubKeyHash === result.version || this.network.scriptHash === result.version) {
+    if (
+      this.network.pubKeyHash === result.version ||
+      this.network.scriptHash === result.version
+    ) {
       return true;
     }
     return false;

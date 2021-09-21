@@ -1,4 +1,4 @@
-import Base from './base';
+import Base from "./base";
 
 class Komodo extends Base {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -8,7 +8,7 @@ class Komodo extends Base {
     this.network.pubKeyHash = 0x3c;
     this.network.scriptHash = 0x55;
     this.network.dustThreshold = 10000;
-    this.network.dustPolicy = 'FIXED';
+    this.network.dustPolicy = "FIXED";
     this.network.usesTimestampedTransaction = false;
   }
 }

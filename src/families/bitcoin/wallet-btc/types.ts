@@ -1,10 +1,10 @@
-import BigNumber from 'bignumber.js';
-import { Address, Input } from './storage/types';
+import BigNumber from "bignumber.js";
+import { Address, Input } from "./storage/types";
 
 export enum DerivationModes {
-  LEGACY = 'Legacy',
-  NATIVE_SEGWIT = 'Native SegWit',
-  SEGWIT = 'SegWit',
+  LEGACY = "Legacy",
+  NATIVE_SEGWIT = "Native SegWit",
+  SEGWIT = "SegWit",
 }
 
 export type InputInfo = Input & { txHex: string };

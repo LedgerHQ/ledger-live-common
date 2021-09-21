@@ -1,15 +1,15 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { toOutputScript } from 'bitcoinjs-lib/src/address';
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+import { toOutputScript } from "bitcoinjs-lib/src/address";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import bitcore from 'bitcore-lib';
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+import bitcore from "bitcore-lib";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import zec from 'bitcore-lib-zcash';
-import bs58check from 'bs58check';
-import { DerivationModes } from '../types';
-import { ICrypto, DerivationMode } from './types';
+import zec from "bitcore-lib-zcash";
+import bs58check from "bs58check";
+import { DerivationModes } from "../types";
+import { ICrypto, DerivationMode } from "./types";
 
 class ZCash implements ICrypto {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,7 +19,7 @@ class ZCash implements ICrypto {
   constructor({ network }: { network: any }) {
     this.network = network;
     this.network.dustThreshold = 10000;
-    this.network.dustPolicy = 'FIXED';
+    this.network.dustPolicy = "FIXED";
     this.network.usesTimestampedTransaction = false;
   }
 
@@ -44,7 +44,12 @@ class ZCash implements ICrypto {
     return this.baddrToTaddr(address.toString());
   }
 
-  getAddress(derivationMode: string, xpub: string, account: number, index: number): string {
+  getAddress(
+    derivationMode: string,
+    xpub: string,
+    account: number,
+    index: number
+  ): string {
     return this.getLegacyAddress(xpub, account, index);
   }
 
@@ -60,7 +65,7 @@ class ZCash implements ICrypto {
   // eslint-disable-next-line class-methods-use-this
   validateAddress(address: string): boolean {
     const { Address } = zec;
-    return Address.isValid(address, 'livenet');
+    return Address.isValid(address, "livenet");
   }
 }
 

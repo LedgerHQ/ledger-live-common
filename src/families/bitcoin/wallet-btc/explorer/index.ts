@@ -218,11 +218,9 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
             noToken: "true",
           }
         : {
-            // eslint-disable-next-line @typescript-eslint/camelcase
             no_token: "true",
           };
     if (!this.disableBatchSize) {
-      // eslint-disable-next-line @typescript-eslint/camelcase
       params.batch_size = nbMax || 1000;
     }
     const res = await this.fetchTxs(address, params);
@@ -267,7 +265,7 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
   // eslint-disable-next-line class-methods-use-this,@typescript-eslint/no-explicit-any
   hydrateTx(address: Address, tx: TX) {
     // no need to keep those as they change
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     // eslint-disable-next-line no-param-reassign
     delete tx.confirmations;
@@ -280,12 +278,12 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
     tx.address = address.address;
 
     tx.outputs.forEach((output) => {
-      // eslint-disable-next-line @typescript-eslint/camelcase,no-param-reassign
+      // eslint-disable-next-line no-param-reassign
       output.output_hash = tx.hash;
-      // eslint-disable-next-line @typescript-eslint/camelcase,no-param-reassign
+      // eslint-disable-next-line no-param-reassign
       output.block_height = tx.block ? tx.block.height : null;
       // Definition of replaceable, per the standard: https://github.com/bitcoin/bips/blob/61ccc84930051e5b4a99926510d0db4a8475a4e6/bip-0125.mediawiki#summary
-      // eslint-disable-next-line @typescript-eslint/camelcase,no-param-reassign
+      // eslint-disable-next-line no-param-reassign
       output.rbf = !!(
         tx.inputs[0]?.sequence && tx.inputs[0].sequence < 0xffffffff
       );
@@ -309,18 +307,15 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
             noToken: "true",
           }
         : {
-            // eslint-disable-next-line @typescript-eslint/camelcase
             no_token: "true",
           };
     if (!this.disableBatchSize) {
-      // eslint-disable-next-line @typescript-eslint/camelcase
       params.batch_size = batchSize;
     }
     if (lastTx) {
       if (this.explorerVersion === "v2") {
         params.blockHash = lastTx.block.hash;
       } else {
-        // eslint-disable-next-line @typescript-eslint/camelcase
         params.block_hash = lastTx.block.hash;
       }
     }

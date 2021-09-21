@@ -1,23 +1,32 @@
-import BigNumber from 'bignumber.js';
-import { flatten, sortBy } from 'lodash';
-import { NotEnoughBalance } from '@ledgerhq/errors';
-import { Output } from '../storage/types';
-import Xpub from '../xpub';
-import { PickingStrategy } from './types';
-import * as utils from '../utils';
+import BigNumber from "bignumber.js";
+import { flatten, sortBy } from "lodash";
+import { NotEnoughBalance } from "@ledgerhq/errors";
+import { Output } from "../storage/types";
+import Xpub from "../xpub";
+import { PickingStrategy } from "./types";
+import * as utils from "../utils";
 
-// eslint-disable-next-line import/prefer-default-export
 export class Merge extends PickingStrategy {
   // eslint-disable-next-line class-methods-use-this
-  async selectUnspentUtxosToUse(xpub: Xpub, amount: BigNumber, feePerByte: number, nbOutputsWithoutChange: number) {
+  async selectUnspentUtxosToUse(
+    xpub: Xpub,
+    amount: BigNumber,
+    feePerByte: number,
+    nbOutputsWithoutChange: number
+  ) {
     // get the utxos to use as input
     // from all addresses of the account
     const addresses = await xpub.getXpubAddresses();
 
     let unspentUtxos = flatten(
-      await Promise.all(addresses.map((address) => xpub.storage.getAddressUnspentUtxos(address)))
+      await Promise.all(
+        addresses.map((address) => xpub.storage.getAddressUnspentUtxos(address))
+      )
     ).filter(
-      (o) => !this.excludedUTXOs.filter((x) => x.hash === o.output_hash && x.outputIndex === o.output_index).length
+      (o) =>
+        !this.excludedUTXOs.filter(
+          (x) => x.hash === o.output_hash && x.outputIndex === o.output_index
+        ).length
     );
 
     const sizePerInput =
@@ -28,9 +37,14 @@ export class Merge extends PickingStrategy {
       utils.estimateTxSize(0, 1, this.crypto, this.derivationMode) -
       utils.estimateTxSize(0, 0, this.crypto, this.derivationMode);
 
-    unspentUtxos = sortBy(unspentUtxos, 'value');
+    unspentUtxos = sortBy(unspentUtxos, "value");
     // https://metamug.com/article/security/bitcoin-transaction-fee-satoshi-per-byte.html
-    const txSizeNoInput = utils.estimateTxSize(0, nbOutputsWithoutChange, this.crypto, this.derivationMode);
+    const txSizeNoInput = utils.estimateTxSize(
+      0,
+      nbOutputsWithoutChange,
+      this.crypto,
+      this.derivationMode
+    );
     let fee = txSizeNoInput * feePerByte;
 
     let total = new BigNumber(0);

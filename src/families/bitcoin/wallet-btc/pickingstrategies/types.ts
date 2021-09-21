@@ -1,10 +1,8 @@
-import BigNumber from 'bignumber.js';
-import { ICrypto } from '../crypto/types';
-import { Output } from '../storage/types';
-// eslint-disable-next-line import/no-cycle
-import Xpub from '../xpub';
+import BigNumber from "bignumber.js";
+import { ICrypto } from "../crypto/types";
+import { Output } from "../storage/types";
+import Xpub from "../xpub";
 
-// eslint-disable-next-line import/prefer-default-export
 export abstract class PickingStrategy {
   crypto: ICrypto;
 

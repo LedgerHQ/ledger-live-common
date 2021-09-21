@@ -1,4 +1,4 @@
-import Base from './base';
+import Base from "./base";
 
 class Stakenet extends Base {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -9,7 +9,7 @@ class Stakenet extends Base {
     this.network.pubKeyHash = 0x4c;
     this.network.scriptHash = 0x10;
     this.network.dustThreshold = 10000;
-    this.network.dustPolicy = 'FIXED';
+    this.network.dustPolicy = "FIXED";
     this.network.usesTimestampedTransaction = false;
   }
 }

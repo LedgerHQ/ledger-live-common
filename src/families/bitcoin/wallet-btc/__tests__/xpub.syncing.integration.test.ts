@@ -1,7 +1,6 @@
-/* eslint-disable import/first */
 require("bitcore-lib");
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import coininfo from "coininfo";
 import { toMatchFile } from "jest-file-snapshot";

@@ -1,6 +1,6 @@
 // import path from 'path';
 // import fs from 'fs';
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import coininfo from "coininfo";
 import { zipObject } from "lodash";

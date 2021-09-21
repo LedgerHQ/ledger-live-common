@@ -1,10 +1,9 @@
-/* eslint-disable import/first */
 require("bitcore-lib");
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { flatten } from "lodash";
 import BigNumber from "bignumber.js";
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { BufferWriter } from "bitcoinjs-lib/src/bufferutils";
 import * as bitcoin from "bitcoinjs-lib";

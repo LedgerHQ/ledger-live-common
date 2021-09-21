@@ -42,7 +42,6 @@ export interface Address {
   address: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface IStorage {
   appendTxs(txs: TX[]): Promise<number>;
   getAddressUnspentUtxos(address: Address): Promise<Output[]>;

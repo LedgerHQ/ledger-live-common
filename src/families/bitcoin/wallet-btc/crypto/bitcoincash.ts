@@ -1,11 +1,11 @@
 // from https://github.com/LedgerHQ/xpub-scan/blob/master/src/actions/deriveAddresses.ts
-import * as bch from 'bitcore-lib-cash';
-import bchaddr from 'bchaddrjs';
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+import * as bch from "bitcore-lib-cash";
+import bchaddr from "bchaddrjs";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { toOutputScript } from 'bitcoinjs-lib/src/address';
-import { DerivationModes } from '../types';
-import { ICrypto, DerivationMode } from './types';
+import { toOutputScript } from "bitcoinjs-lib/src/address";
+import { DerivationModes } from "../types";
+import { ICrypto, DerivationMode } from "./types";
 
 // a mock explorer class that just use js objects
 class BitcoinCash implements ICrypto {
@@ -20,17 +20,21 @@ class BitcoinCash implements ICrypto {
   constructor({ network }: { network: any }) {
     this.network = network;
     this.network.dustThreshold = 5430;
-    this.network.dustPolicy = 'FIXED';
+    this.network.dustPolicy = "FIXED";
     this.network.usesTimestampedTransaction = false;
   }
 
   // Based on https://github.com/go-faast/bitcoin-cash-payments/blob/54397eb97c7a9bf08b32e10bef23d5f27aa5ab01/index.js#L63-L73
   // eslint-disable-next-line
-  getLegacyBitcoinCashAddress(xpub: string, account: number, index: number): string {
+  getLegacyBitcoinCashAddress(
+    xpub: string,
+    account: number,
+    index: number
+  ): string {
     const node = new bch.HDPublicKey(xpub);
     const child = node.derive(account).derive(index);
     const address = new bch.Address(child.publicKey, bch.Networks.livenet);
-    const addrstr = address.toString().split(':');
+    const addrstr = address.toString().split(":");
     if (addrstr.length === 2) {
       return bchaddr.toCashAddress(bchaddr.toLegacyAddress(addrstr[1]));
     }
@@ -38,7 +42,12 @@ class BitcoinCash implements ICrypto {
   }
 
   // get address given an address type
-  getAddress(derivationMode: string, xpub: string, account: number, index: number): string {
+  getAddress(
+    derivationMode: string,
+    xpub: string,
+    account: number,
+    index: number
+  ): string {
     return this.getLegacyBitcoinCashAddress(xpub, account, index);
   }
 

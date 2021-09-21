@@ -1,4 +1,4 @@
-import Base from './base';
+import Base from "./base";
 
 class Pivx extends Base {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -9,7 +9,7 @@ class Pivx extends Base {
     this.network.pubKeyHash = 0x1e;
     this.network.scriptHash = 0x0d;
     this.network.dustThreshold = 10000;
-    this.network.dustPolicy = 'FIXED';
+    this.network.dustPolicy = "FIXED";
     this.network.usesTimestampedTransaction = false;
   }
 }

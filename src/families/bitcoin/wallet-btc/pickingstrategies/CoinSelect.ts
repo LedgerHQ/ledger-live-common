@@ -7,7 +7,6 @@ import { PickingStrategy } from "./types";
 import * as utils from "../utils";
 import { Merge } from "./Merge";
 
-// eslint-disable-next-line import/prefer-default-export
 export class CoinSelect extends PickingStrategy {
   // eslint-disable-next-line class-methods-use-this
   async selectUnspentUtxosToUse(

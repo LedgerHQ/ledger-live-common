@@ -1,15 +1,15 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { toOutputScript } from 'bitcoinjs-lib/src/address';
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+import { toOutputScript } from "bitcoinjs-lib/src/address";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import bitcore from 'bitcore-lib';
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+import bitcore from "bitcore-lib";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import zec from 'bitcore-lib-zcash';
-import bs58check from 'bs58check';
-import { DerivationModes } from '../types';
-import { ICrypto, DerivationMode } from './types';
+import zec from "bitcore-lib-zcash";
+import bs58check from "bs58check";
+import { DerivationModes } from "../types";
+import { ICrypto, DerivationMode } from "./types";
 
 class Zen implements ICrypto {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,14 +29,14 @@ class Zen implements ICrypto {
       public: 0x2096,
       scripthash: 0x2089,
     };
-    this.network.name = 'Zencash';
-    this.network.unit = 'ZEN';
-    this.network.messagePrefix = 'Zencash Signed Message:\n';
+    this.network.name = "Zencash";
+    this.network.unit = "ZEN";
+    this.network.messagePrefix = "Zencash Signed Message:\n";
     this.network.wif = 0x80;
     this.network.pubKeyHash = 0x2096;
     this.network.scriptHash = 0x2089;
     this.network.dustThreshold = 10000;
-    this.network.dustPolicy = 'FIXED';
+    this.network.dustPolicy = "FIXED";
     this.network.usesTimestampedTransaction = false;
   }
 
@@ -62,7 +62,12 @@ class Zen implements ICrypto {
     return this.baddrToTaddr(address.toString());
   }
 
-  getAddress(derivationMode: string, xpub: string, account: number, index: number): string {
+  getAddress(
+    derivationMode: string,
+    xpub: string,
+    account: number,
+    index: number
+  ): string {
     return this.getLegacyAddress(xpub, account, index);
   }
 
@@ -80,7 +85,12 @@ class Zen implements ICrypto {
     const res = bs58check.decodeUnsafe(address);
     if (!res) return false;
     // refer to https://github.com/LedgerHQ/lib-ledger-core/blob/fc9d762b83fc2b269d072b662065747a64ab2816/core/src/wallet/bitcoin/networks.cpp#L142
-    return res && res.length > 3 && res[0] === 0x20 && (res[1] === 0x89 || res[1] === 0x96);
+    return (
+      res &&
+      res.length > 3 &&
+      res[0] === 0x20 &&
+      (res[1] === 0x89 || res[1] === 0x96)
+    );
   }
 }
 

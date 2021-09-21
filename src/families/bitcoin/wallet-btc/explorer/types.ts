@@ -1,8 +1,7 @@
-import { AxiosInstance } from 'axios';
-import { TX, Address, Block } from '../storage/types';
+import { AxiosInstance } from "axios";
+import { TX, Address, Block } from "../storage/types";
 
 // abstract explorer api used, abstract batching logic, pagination, and retries
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface IExplorer {
   underlyingClient: AxiosInstance;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,5 +12,9 @@ export interface IExplorer {
   getCurrentBlock(): Promise<Block | null>;
   getBlockByHeight(height: number): Promise<Block | null>;
   getPendings(address: Address, nbMax?: number): Promise<TX[]>;
-  getAddressTxsSinceLastTxBlock(batchSize: number, address: Address, lastTx: TX | undefined): Promise<TX[]>;
+  getAddressTxsSinceLastTxBlock(
+    batchSize: number,
+    address: Address,
+    lastTx: TX | undefined
+  ): Promise<TX[]>;
 }

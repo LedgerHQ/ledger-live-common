@@ -1,4 +1,4 @@
-import Base from './base';
+import Base from "./base";
 
 class Stratis extends Base {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -6,7 +6,7 @@ class Stratis extends Base {
     super({ network });
     this.network.bip32.public = 0x0488c21e;
     this.network.dustThreshold = 10000;
-    this.network.dustPolicy = 'FIXED';
+    this.network.dustPolicy = "FIXED";
     this.network.usesTimestampedTransaction = true;
   }
 }
