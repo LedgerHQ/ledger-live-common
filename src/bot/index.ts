@@ -28,10 +28,11 @@ import {
 import { getPortfolio } from "../portfolio";
 type Arg = Partial<{
   currency: string;
+  family: string;
   mutation: string;
 }>;
 const usd = getFiatCurrencyByTicker("USD");
-export async function bot({ currency, mutation }: Arg = {}) {
+export async function bot({ currency, family, mutation }: Arg = {}) {
   const SEED = getEnv("SEED");
   invariant(SEED, "SEED required");
   const libcoreVersion = await withLibcore((core) =>
@@ -43,9 +44,13 @@ export async function bot({ currency, mutation }: Arg = {}) {
   const maybeCurrency = currency
     ? findCryptoCurrencyByKeyword(currency)
     : undefined;
+  const maybeFilterOnlyFamily = family;
 
   for (const family in allSpecs) {
     const familySpecs = allSpecs[family];
+    if (maybeFilterOnlyFamily && maybeFilterOnlyFamily !== family) {
+      continue;
+    }
 
     for (const key in familySpecs) {
       let spec = familySpecs[key];
