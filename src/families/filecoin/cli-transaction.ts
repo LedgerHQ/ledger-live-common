@@ -10,10 +10,7 @@ import type {
 
 const options = [];
 
-function inferAccounts(
-  account: Account,
-  opts: Record<string, any>
-): AccountLikeArray {
+function inferAccounts(account: Account): AccountLikeArray {
   invariant(account.currency.family === "filecoin", "filecoin family");
 
   const accounts: Account[] = [account];
@@ -25,11 +22,9 @@ function inferTransactions(
     account: AccountLike;
     transaction: Transaction;
     mainAccount: Account;
-  }>,
-  opts: Record<string, any>,
-  { inferAmount }: any
+  }>
 ): Transaction[] {
-  return flatMap(transactions, ({ transaction, account, mainAccount }) => {
+  return flatMap(transactions, ({ transaction }) => {
     invariant(transaction.family === "filecoin", "filecoin family");
 
     return {

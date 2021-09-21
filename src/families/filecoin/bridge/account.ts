@@ -32,11 +32,10 @@ import { log } from "@ledgerhq/logs";
 import { getAddressRaw, validateAddress } from "./utils/addresses";
 import { patchOperationWithHash } from "../../../operation";
 import { withDevice } from "../../../hw/deviceAccess";
-import { getGasLimit } from "../../ethereum/transaction";
 
 const receive = makeAccountBridgeReceive();
 
-const createTransaction = (account: Account): Transaction => {
+const createTransaction = (): Transaction => {
   log("debug", "[createTransaction] creating base tx");
 
   return {
@@ -172,7 +171,6 @@ const prepareTransaction = async (
 const sync = makeSync(getAccountShape);
 
 const broadcast: BroadcastFnSignature = async ({
-  account,
   signedOperation: { operation },
 }) => {
   log("debug", "[broadcast] start fn");
