@@ -1,3 +1,7 @@
+import { log } from "@ledgerhq/logs";
+import { AxiosRequestConfig, AxiosResponse } from "axios";
+import { LedgerAPINotAvailable } from "@ledgerhq/errors";
+
 import {
   BalanceResponse,
   BroadcastTransactionRequest,
@@ -9,13 +13,29 @@ import {
   TransactionsResponse,
 } from "./types";
 import network from "../../../../network";
-import { log } from "@ledgerhq/logs";
-import { AxiosRequestConfig, AxiosResponse } from "axios";
+import { blockchainBaseURL } from "../../../../api/Ledger";
+import { getCryptoCurrencyById } from "../../../../currencies";
+import { getEnv } from "../../../../env";
 
 const root = "http://127.0.0.1:8888/blockchain/filecoin";
 
+const getFilecoinURL = (path?: string): string => {
+  if (getEnv("DEVELOPMENT_MODE")) return root + (path ? path : "");
+
+  const currency = getCryptoCurrencyById("filecoin");
+  const baseURL = blockchainBaseURL(currency);
+
+  if (!baseURL) {
+    throw new LedgerAPINotAvailable(`LedgerAPINotAvailable ${currency.id}`, {
+      currencyName: currency.name,
+    });
+  }
+
+  return baseURL + (path ? path : "");
+};
+
 const fetch = async <T>(path: string) => {
-  const url = root + path;
+  const url = getFilecoinURL(path);
 
   // We force data to this way as network func is not using the correct param type. Changing that func will generate errors in other implementations
   const opts: AxiosRequestConfig = {
@@ -32,7 +52,8 @@ const fetch = async <T>(path: string) => {
 };
 
 const send = async <T>(path: string, data: Record<string, any>) => {
-  const url = root + path;
+  const url = getFilecoinURL(path);
+
   const opts: AxiosRequestConfig = {
     method: "POST",
     url,
@@ -51,19 +72,19 @@ const send = async <T>(path: string, data: Record<string, any>) => {
 
 export const fetchBalances = async (addr: string): Promise<BalanceResponse> => {
   const data = await fetch<BalanceResponse>(`/addresses/${addr}/balance`);
-  return data; // FIXME Validate if the response fits this interface
+  return data; // TODO Validate if the response fits this interface
 };
 
 export const fetchEstimatedFees = async (
   request: EstimatedFeesRequest
 ): Promise<EstimatedFeesResponse> => {
   const data = await send<EstimatedFeesResponse>(`/fees/estimate`, request);
-  return data; // FIXME Validate if the response fits this interface
+  return data; // TODO Validate if the response fits this interface
 };
 
 export const fetchBlockHeight = async (): Promise<NetworkStatusResponse> => {
   const data = await fetch<NetworkStatusResponse>("/network/status");
-  return data as NetworkStatusResponse; // FIXME Validate if the response fits this interface
+  return data as NetworkStatusResponse; // TODO Validate if the response fits this interface
 };
 
 export const fetchTxs = async (
@@ -72,7 +93,7 @@ export const fetchTxs = async (
   const response = await fetch<TransactionsResponse>(
     `/addresses/${addr}/transactions`
   );
-  return response.txs; // FIXME Validate if the response fits this interface
+  return response.txs; // TODO Validate if the response fits this interface
 };
 
 export const broadcastTx = async (
@@ -82,5 +103,5 @@ export const broadcastTx = async (
     `/transaction/broadcast`,
     message
   );
-  return response; // FIXME Validate if the response fits this interface
+  return response; // TODO Validate if the response fits this interface
 };
