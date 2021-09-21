@@ -1,6 +1,6 @@
 import Prando from "prando";
 import { BigNumber } from "bignumber.js";
-import type { SerializedAccount as WalletSerializedAccount } from "@ledgerhq/wallet-btc";
+import type { SerializedAccount as WalletSerializedAccount } from "../families/bitcoin/wallet-btc";
 import {
   listCryptoCurrencies,
   listTokensForCryptoCurrency,

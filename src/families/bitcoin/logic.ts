@@ -1,6 +1,6 @@
 import cashaddr from "cashaddrjs";
 import bchaddr from "bchaddrjs";
-import { isValidAddress } from "@ledgerhq/wallet-btc";
+import { isValidAddress } from "./wallet-btc";
 import { RecipientRequired, InvalidAddress } from "@ledgerhq/errors";
 import type { Account, CryptoCurrency, CryptoCurrencyIds } from "./../../types";
 import type {

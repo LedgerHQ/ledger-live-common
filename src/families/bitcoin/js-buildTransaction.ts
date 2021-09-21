@@ -1,6 +1,6 @@
-import type { Account as WalletAccount } from "@ledgerhq/wallet-btc";
-import { CoinSelect, DeepFirst, Merge } from "@ledgerhq/wallet-btc";
-import type { TransactionInfo as WalletTxInfo } from "@ledgerhq/wallet-btc";
+import type { Account as WalletAccount } from "./wallet-btc";
+import { CoinSelect, DeepFirst, Merge } from "./wallet-btc";
+import type { TransactionInfo as WalletTxInfo } from "./wallet-btc";
 import { FeeNotLoaded } from "@ledgerhq/errors";
 
 import type { Account } from "../../types";
