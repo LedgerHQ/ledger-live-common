@@ -1,5 +1,5 @@
 import { Currency } from "./crypto/types";
-import WalletLedger from "./wallet";
+import BitcoinLikeWallet from "./wallet";
 import {
   DerivationModes,
   InputInfo,
@@ -16,7 +16,7 @@ import { isValidAddress } from "./utils";
 import type { Account as LiveAccount } from "./../../../types";
 
 export {
-  WalletLedger,
+  BitcoinLikeWallet,
   Account,
   SerializedAccount,
   DerivationModes,
@@ -33,7 +33,7 @@ export {
   Currency,
 };
 
-let wallet: WalletLedger | null = null;
+let wallet: BitcoinLikeWallet | null = null;
 export const getWalletAccount = async (account: LiveAccount) => {
   const walletData = account.bitcoinResources?.serializedData;
   if (!walletData) {
@@ -45,7 +45,7 @@ export const getWalletAccount = async (account: LiveAccount) => {
 
 const getWallet = () => {
   if (!wallet) {
-    wallet = new WalletLedger();
+    wallet = new BitcoinLikeWallet();
   }
 
   return wallet;
