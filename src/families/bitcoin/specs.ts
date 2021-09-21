@@ -372,17 +372,6 @@ const stakenet: AppSpec<Transaction> = {
   test: genericTest,
   mutations: bitcoinLikeMutations(),
 };
-const stratis: AppSpec<Transaction> = {
-  name: "Stratis",
-  currency: getCryptoCurrencyById("stratis"),
-  dependency: "Bitcoin",
-  appQuery: {
-    model: DeviceModelId.nanoS,
-    appName: "Stratis",
-  },
-  test: genericTest,
-  mutations: bitcoinLikeMutations(),
-};
 const vertcoin: AppSpec<Transaction> = {
   name: "Vertcoin",
   currency: getCryptoCurrencyById("vertcoin"),
@@ -552,7 +541,6 @@ export default {
   qtum,
   stakenet,
   stealthcoin,
-  stratis,
   vertcoin,
   viacoin,
   zcash,
