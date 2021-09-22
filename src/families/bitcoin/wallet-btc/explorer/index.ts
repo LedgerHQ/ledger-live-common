@@ -10,17 +10,11 @@ import { Address, Block, TX } from "../storage/types";
 import EventEmitter from "../utils/eventemitter";
 import { IExplorer } from "./types";
 
-const { LOG } = process.env;
-
 const requestInterceptor = (
   request: AxiosRequestConfig
 ): AxiosRequestConfig => {
   const { baseURL, url, method = "", data } = request;
   log("network", `${method} ${baseURL}${url}`, data);
-  if (LOG && LOG === "http") {
-    // eslint-disable-next-line no-console
-    console.log(`${method} ${baseURL}${url}`, data);
-  }
   return request;
 };
 
@@ -32,27 +26,16 @@ const responseInterceptor = (
   const { baseURL, url, method = "" } = response?.config;
   log(
     "network-success",
-    `${response.status} ${method} ${baseURL}${url}`,
-    response.data ? { data: response.data } : undefined
+    `${response.status} ${method} ${baseURL}${url}`
+    // NOTE: disabled because way too verbose
+    // response.data ? { data: response.data } : undefined
   );
-  if (LOG && LOG === "http") {
-    // eslint-disable-next-line no-console
-    console.log(
-      "network-success",
-      `${response.status} ${method} ${baseURL}${url}`,
-      response.data ? { data: response.data } : undefined
-    );
-  }
   return response;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const responseErrorInterceptor = (error: any) => {
   log("network-error", error);
-  if (LOG && LOG === "http") {
-    // eslint-disable-next-line no-console
-    console.log("network-error", error);
-  }
   return Promise.reject(error);
 };
 
