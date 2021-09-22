@@ -4,8 +4,8 @@ import type {
   Currency,
   Input as WalletInput,
   Output as WalletOutput,
-} from "@ledgerhq/wallet-btc";
-import { DerivationModes as WalletDerivationModes } from "@ledgerhq/wallet-btc";
+} from "./wallet-btc";
+import { DerivationModes as WalletDerivationModes } from "./wallet-btc";
 import { BigNumber } from "bignumber.js";
 import Btc from "@ledgerhq/hw-app-btc";
 import { log } from "@ledgerhq/logs";
@@ -21,7 +21,7 @@ import { findCurrencyExplorer } from "../../api/Ledger";
 import { encodeOperationId } from "../../operation";
 import { BitcoinOutput } from "./types";
 import { perCoinLogic } from "./logic";
-import wallet from "./wallet";
+import wallet from "./wallet-btc";
 
 // Map LL's DerivationMode to wallet-btc's
 const toWalletDerivationMode = (
@@ -265,7 +265,7 @@ const getAccountShape: GetAccountShape = async (info) => {
         currency: <Currency>currency.id,
         network: walletNetwork,
         derivationMode: walletDerivationMode,
-        explorer: explorer && `ledger${explorer.version}`,
+        explorer: `ledger${explorer.version}`,
         explorerURI: `${explorer.endpoint}/blockchain/${explorer.version}/${explorer.id}`,
         storage: "mock",
         storageParams: [],

@@ -2,7 +2,7 @@ import flow from "lodash/flow";
 import { BigNumber } from "bignumber.js";
 import type { Account } from "../../types";
 import type { NetworkInfo } from "./types";
-import { getWalletAccount } from "./wallet";
+import { getWalletAccount } from "./wallet-btc";
 const speeds = ["fast", "medium", "slow"];
 export function avoidDups(nums: Array<BigNumber>): Array<BigNumber> {
   nums = nums.slice(0);

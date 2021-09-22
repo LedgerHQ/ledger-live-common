@@ -1,4 +1,4 @@
-import type { SerializedAccount as WalletSerializedAccount } from "@ledgerhq/wallet-btc";
+import type { SerializedAccount as WalletSerializedAccount } from "../families/bitcoin/wallet-btc";
 import { fromAccountRaw } from "../account";
 import type { Account, AccountRaw } from "../types";
 

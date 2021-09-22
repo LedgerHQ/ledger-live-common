@@ -10,7 +10,7 @@ import type { Transaction } from "./types";
 import { getNetworkParameters } from "./networks";
 import { buildTransaction } from "./js-buildTransaction";
 import { calculateFees } from "./cache";
-import wallet, { getWalletAccount } from "./wallet";
+import wallet, { getWalletAccount } from "./wallet-btc";
 import { perCoinLogic } from "./logic";
 
 const signOperation = ({
