@@ -44,6 +44,16 @@ export type Tx = {
     receiver: string;
     token_id: string;
   }>;
+  erc1155_transfer_events?: Array<{
+    contract: string;
+    sender: string;
+    operator: string;
+    receiver: string;
+    transfers: Array<{
+      id: string;
+      value: string;
+    }>;
+  }>;
   actions?: Array<{
     from: string;
     to: string;
@@ -122,7 +132,7 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
         method: "GET",
         url: URL.format({
           /** @important FIXME: transactions are mocked while we are waiting for the API */
-          pathname: `https://over-the-overload.vercel.app/blockchain/v3/eth/addresses/${address}/transactions`,
+          pathname: `http://explorers.api-01.live.ledger-stg.com/blockchain/v3/eth/addresses/${address}/transactions`,
           query: {
             batch_size,
             noinput: true,
