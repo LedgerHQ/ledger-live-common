@@ -163,11 +163,12 @@ export const getAccountShape: GetAccountShape = async (
     subOperations: inferSubOperations(o.hash, subAccounts),
   }));
   const operations = mergeOps(initialStableOperations, newOps);
+
   const NFTMetadata = await api.getNFTMetadata(
     flatNftOps.map(({ contract, tokenId }) => ({ contract, tokenId }))
   );
 
-  const nfts = await getERC721Nfts(flatNftOps, NFTMetadata);
+  const nfts = await getNfts(flatNftOps, NFTMetadata);
   const accountShape: Partial<Account> = {
     operations,
     balance,
@@ -198,8 +199,14 @@ const txToOps =
   (tx: Tx): Operation[] => {
     // workaround bugs in our explorer that don't treat partial/optimistic operation really well
     if (!tx.gas_used) return [];
-    const { hash, block, actions, transfer_events, erc721_transfer_events } =
-      tx;
+    const {
+      hash,
+      block,
+      actions,
+      transfer_events,
+      erc721_transfer_events,
+      erc1155_transfer_events,
+    } = tx;
     const addr = address;
     const from = safeEncodeEIP55(tx.from);
     const to = safeEncodeEIP55(tx.to);
@@ -273,7 +280,7 @@ const txToOps =
           );
           if (!token) return [];
           const accountId = encodeTokenAccountId(id, token);
-          const value = event.count;
+          const value = new BigNumber(event.count);
           const all: Operation[] = [];
 
           if (sending) {
@@ -316,8 +323,9 @@ const txToOps =
 
           return all;
         });
+
     // Creating NFTOps from transfer events related to ERC721 only
-    const nftOperations = !erc721_transfer_events
+    const erc721Operations = !erc721_transfer_events
       ? []
       : flatMap(erc721_transfer_events, (event) => {
           const sender = safeEncodeEIP55(event.sender);
@@ -341,7 +349,9 @@ const txToOps =
               senders: [sender],
               recipients: [receiver],
               contract,
+              standard: "ERC721",
               tokenId,
+              amount: new BigNumber(1),
               hash,
               type,
               blockHeight,
@@ -358,7 +368,9 @@ const txToOps =
               senders: [sender],
               recipients: [receiver],
               contract,
+              standard: "ERC721",
               tokenId,
+              amount: new BigNumber(1),
               hash,
               type,
               blockHeight,
@@ -371,6 +383,76 @@ const txToOps =
           return all;
         });
 
+    // Creating NFTOps from transfer events related to ERC1155 only
+    const erc1155Operations = !erc1155_transfer_events
+      ? []
+      : flatMap(erc1155_transfer_events, (event) => {
+          const sender = safeEncodeEIP55(event.sender);
+          const receiver = safeEncodeEIP55(event.receiver);
+          const contract = safeEncodeEIP55(event.contract);
+          const operator = safeEncodeEIP55(event.operator);
+          const sending = addr === sender;
+          const receiving = addr === receiver;
+
+          if (!sending && !receiving) {
+            return [];
+          }
+
+          const all: NFTOperation[] = [];
+
+          event.transfers.forEach((transfer) => {
+            const tokenId = transfer.id;
+            const amount = new BigNumber(transfer.value);
+            const nftId = encodeNftId(id, event.contract, tokenId);
+
+            if (sending) {
+              const type = "OUT";
+              all.push({
+                id: `${nftId}-${hash}-${type}`,
+                senders: [sender],
+                recipients: [receiver],
+                contract,
+                operator,
+                standard: "ERC1155",
+                tokenId,
+                amount,
+                hash,
+                type,
+                blockHeight,
+                blockHash,
+                date,
+                transactionSequenceNumber,
+              });
+            }
+
+            if (receiving) {
+              const type = "IN";
+              all.push({
+                id: `${nftId}-${hash}-${type}`,
+                senders: [sender],
+                recipients: [receiver],
+                contract,
+                operator,
+                standard: "ERC1155",
+                tokenId,
+                amount,
+                hash,
+                type,
+                blockHeight,
+                blockHash,
+                date,
+                transactionSequenceNumber,
+              });
+            }
+          });
+
+          return all;
+        });
+
+    const nftOperations = erc721Operations
+      .concat(erc1155Operations)
+      /** @warning is this necessary ? Do we need the operations to be chronologically organised for LLD/LLM ? */
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
     const ops: Operation[] = [];
 
     if (sending) {
@@ -516,64 +598,58 @@ async function loadERC20Balances(tokenAccounts, address, api) {
     .filter(Boolean);
 }
 
-function getERC721Nfts(
+function getNfts(
   nftOperations: NFTOperation[],
   nftMetadata: NFTMetadataOutput
 ): NFT[] {
-  const nftOpsMap: Record<string, NFTOperation[]> = nftOperations.reduce(
+  const nftBalance: Record<string, NFTOperation> = nftOperations.reduce(
     (acc, op) => {
       // Creating a "token for a contract" unique key
       const nftKey = op.contract + op.tokenId.toString();
+      const lastAmount = acc[nftKey]?.amount ?? new BigNumber(0);
 
-      if (!acc[nftKey]) {
-        acc[nftKey] = [];
+      if (op.type === "IN") {
+        acc[nftKey] = { ...op, amount: lastAmount.plus(op.amount) };
+      } else if (op.type === "OUT") {
+        acc[nftKey] = { ...op, amount: lastAmount.minus(op.amount) };
       }
 
-      acc[nftKey].push(op);
       return acc;
     },
     {}
   );
 
-  const NFTs = Object.keys(nftOpsMap)
-    .map((n) => {
-      const lastOp = nftOpsMap[n]
-        .sort((a, b) => b.date.getTime() - a.date.getTime())
-        .shift();
+  return Object.values(nftBalance)
+    .map((op) => {
+      if (!op || !op?.amount.gt(0)) return null;
 
-      if (lastOp?.type === "IN") {
-        const contract = lastOp.contract?.toLowerCase?.();
-        const { tokenId } = lastOp;
-        const md = nftMetadata?.[contract]?.[tokenId] ?? {};
-        const {
-          nftName = null,
-          tokenName = null,
-          picture = null,
-          description = null,
-          properties = null,
-        } = md;
+      const contract = op.contract.toLowerCase();
+      const { tokenId, standard, amount, id } = op;
+      const md = nftMetadata?.[contract]?.[tokenId] ?? {};
+      const {
+        nftName = null,
+        tokenName = null,
+        picture = null,
+        description = null,
+        properties = null,
+      } = md;
 
-        return {
-          id: lastOp.id,
-          tokenId,
-          nftName,
-          picture,
-          description,
-          properties,
-          // ERC721 is non fungible, so amount will always be 1
-          amount: 1,
-          collection: {
-            contract,
-            tokenName,
-            standard: "ERC721",
-          },
-        } as NFT;
-      }
-      return null;
+      return {
+        id,
+        tokenId,
+        nftName,
+        picture,
+        description,
+        properties,
+        amount,
+        collection: {
+          contract,
+          tokenName,
+          standard,
+        },
+      } as NFT;
     })
     .filter(Boolean) as NFT[];
-
-  return NFTs;
 }
 
 const SAFE_REORG_THRESHOLD = 80;
