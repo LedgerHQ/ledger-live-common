@@ -8,7 +8,6 @@ import type {
   CryptoCurrency,
   TokenCurrency,
   TransactionRaw,
-  Unit,
 } from "../../types";
 
 /// v3 changes here, move me to another folder soon
