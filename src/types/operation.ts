@@ -107,8 +107,11 @@ export type NFTOperation = Pick<
   | "date"
   | "transactionSequenceNumber"
 > & {
-  tokenId: string;
+  standard: "ERC721" | "ERC1155" | "ERC20";
+  operator?: string;
   contract: string;
+  tokenId: string;
+  amount: BigNumber;
 };
 
 export type NFTOperationRaw = Pick<
@@ -123,6 +126,9 @@ export type NFTOperationRaw = Pick<
   | "date"
   | "transactionSequenceNumber"
 > & {
-  tokenId: string;
+  standard: "ERC721" | "ERC1155" | "ERC20";
+  operator?: string;
   contract: string;
+  tokenId: string;
+  amount: string;
 };

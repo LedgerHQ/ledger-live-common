@@ -1,3 +1,5 @@
+import type BigNumber from "bignumber.js";
+
 export type NFT = {
   // id crafted by live
   id: string;
@@ -14,7 +16,7 @@ export type NFT = {
   properties: Array<Record<string, string>> | null;
   // ERC1155 allow for semi-fungible tokens, so same token ID, but with multiple occurences
   // (you can see each token with a possible supply)
-  amount: number;
+  amount: BigNumber;
   collection: {
     contract: string;
     // Name of the collection
