@@ -49,4 +49,35 @@ describe("Unit tests for various bitcoin functions", () => {
     ];
     testAddresses(testnetAddrs, "bitcoin_testnet");
   });
+
+  it("toOutputScript p2sh and p2pkh work as expected", () => {
+    const p2pkh = [
+      [
+        "13wuYubzsKiGHm6su5BJQ1PdWUitkJV3kE",
+        "76a91420529483bd2a346c0e09b032b7a31a574f2a0d5688ac",
+      ],
+    ];
+    testAddresses(p2pkh, "bitcoin");
+    const p2sh = [
+      [
+        "3P2B3M3R33mAYX3o2ic7PdT4MM6McL2anh",
+        "a914e9fa27cc45abc468e59bb54c66143099dbe4d3cf87",
+      ],
+    ];
+    testAddresses(p2sh, "bitcoin");
+    const p2pkhTestnet = [
+      [
+        "mxVFsFW5N4mu1HPkxPttorvocvzeZ7KZyk",
+        "76a914ba27f99e007c7f605a8305e318c1abde3cd220ac88ac",
+      ],
+    ];
+    testAddresses(p2pkhTestnet, "bitcoin_testnet");
+    const p2shTestnet = [
+      [
+        "2Mwp1inKcSNWSmai2giKV4YBvYiA3253cky",
+        "a9143213fd5b1fa0d58e0a9be31fd5095a749c186aa787",
+      ],
+    ];
+    testAddresses(p2shTestnet, "bitcoin_testnet");
+  });
 });
