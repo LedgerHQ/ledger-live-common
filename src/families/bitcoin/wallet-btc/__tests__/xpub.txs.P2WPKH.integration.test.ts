@@ -16,6 +16,7 @@ import * as utils from "../utils";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// FIXME Skipped because Praline required on CI
 describe.skip("testing xpub native segwit transactions", () => {
   const network = coininfo.bitcoin.regtest.toBitcoinJS();
 

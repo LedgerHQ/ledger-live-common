@@ -13,7 +13,8 @@ import BitcoinLikeStorage from "../storage";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-describe("testing xpub reorg management", () => {
+// FIXME Skipped because Praline required on CI
+describe.skip("testing xpub reorg management", () => {
   const network = coininfo.bitcoin.test.toBitcoinJS();
 
   const explorer = new Explorer({

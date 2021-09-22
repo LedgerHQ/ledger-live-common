@@ -19,6 +19,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 In order to launch this litecoin test locally
 TICKER=ltc TAG=latest LOG_LEVEL=debug docker-compose -f ./environments/explorer-praline-btc.yml up -d
 */
+// FIXME Skipped because Praline required on CI
 describe.skip("testing xpub legacy litecoin transactions", () => {
   const explorer = new BitcoinLikeExplorer({
     explorerURI: "http://localhost:20000/blockchain/v3",
