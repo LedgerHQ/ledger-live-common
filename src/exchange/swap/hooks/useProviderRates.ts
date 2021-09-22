@@ -5,7 +5,7 @@ import {
   SwapSelectorStateType,
 } from "./useSwapTransaction";
 import { getExchangeRates } from "..";
-import { ExchangeRate } from "../types";
+import { Exchange, ExchangeRate } from "../types";
 import { pickExchangeRate } from "../utils";
 import { Transaction } from "../../../generated/types";
 
@@ -19,7 +19,7 @@ const ratesReducerInitialState: RatesReducerState = {};
 const ratesReducer = (state: RatesReducerState, action): RatesReducerState => {
   switch (action.type) {
     case "set":
-      return { value: action.payload };
+      return { value: action.payload, status: null };
     case "idle":
       return { ...state, status: null };
     case "loading":
@@ -41,24 +41,16 @@ export const useProviderRates = ({
 }: {
   fromState: SwapSelectorStateType;
   toState: SwapSelectorStateType;
-  exchangeRate: ExchangeRate | null | undefined;
-  transaction: Transaction | null | undefined;
-  onNoRates: OnNoRatesCallback | null | undefined;
-  setExchangeRate: SetExchangeRateCallback | null | undefined;
+  exchangeRate?: ExchangeRate | null | undefined;
+  transaction?: Transaction | null | undefined;
+  onNoRates?: OnNoRatesCallback | null | undefined;
+  setExchangeRate?: SetExchangeRateCallback | null | undefined;
 }): {
   rates: RatesReducerState;
   refetchRates: () => void;
 } => {
-  const {
-    account: fromAccount,
-    parentAccount: fromParentAccount,
-    amount: fromAmount,
-  } = fromState;
-  const {
-    account: toAccount,
-    parentAccount: toParentAccount,
-    currency: toCurrency,
-  } = toState;
+  const { account: fromAccount } = fromState;
+  const { currency: toCurrency } = toState;
   const [rates, dispatchRates] = useReducer(
     ratesReducer,
     ratesReducerInitialState
@@ -76,9 +68,8 @@ export const useProviderRates = ({
           !transaction ||
           !transaction?.amount ||
           !transaction?.amount.gt(0) ||
-          !toAccount ||
-          !fromAccount //||
-          // getAccountCurrency(toAccount) !== toCurrency
+          !toCurrency ||
+          !fromAccount
         ) {
           setExchangeRate && setExchangeRate(null);
           return dispatchRates({ type: "set", payload: [] });
@@ -86,8 +77,10 @@ export const useProviderRates = ({
         dispatchRates({ type: "loading" });
         try {
           let rates: ExchangeRate[] = await getExchangeRates(
-            { fromAccount, fromParentAccount, toAccount, toParentAccount },
-            transaction
+            { fromAccount } as Exchange,
+            transaction,
+            undefined,
+            toCurrency
           );
           if (abort) return;
           if (rates.length === 0) {
@@ -122,9 +115,6 @@ export const useProviderRates = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       fromAccount,
-      fromParentAccount,
-      fromAmount,
-      toAccount,
       toCurrency,
       transaction,
       getRatesDependency,

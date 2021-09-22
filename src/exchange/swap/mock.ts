@@ -7,7 +7,7 @@ import type {
   SwapRequestEvent,
 } from "./types";
 import { getAccountUnit } from "../../account";
-import type { Transaction } from "../../types";
+import type { Transaction, TokenCurrency, CryptoCurrency } from "../../types";
 import { formatCurrencyUnit } from "../../currencies";
 import {
   SwapExchangeRateAmountTooLow,
@@ -18,12 +18,14 @@ import { getSwapAPIBaseURL } from "./";
 
 export const mockGetExchangeRates = async (
   exchange: Exchange,
-  transaction: Transaction
+  transaction: Transaction,
+  currencyTo?: TokenCurrency | CryptoCurrency | undefined | null
 ): Promise<(ExchangeRate & { expirationDate?: Date })[]> => {
   const { fromAccount, toAccount } = exchange;
   const amount = transaction.amount;
   const unitFrom = getAccountUnit(fromAccount);
-  const unitTo = getAccountUnit(toAccount);
+  const unitTo =
+    (currencyTo && currencyTo.units[0]) ?? getAccountUnit(toAccount);
   const tenPowMagnitude = new BigNumber(10).pow(unitFrom.magnitude);
   const amountFrom = amount.div(tenPowMagnitude);
   const minAmountFrom = new BigNumber(0.0001);

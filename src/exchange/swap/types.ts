@@ -8,6 +8,7 @@ import type {
   CryptoCurrency,
   TokenCurrency,
   TransactionRaw,
+  Unit,
 } from "../../types";
 
 /// v3 changes here, move me to another folder soon
@@ -85,7 +86,8 @@ export type AvailableProvider = AvailableProviderV2 | AvailableProviderV3;
 export type GetExchangeRates = (
   arg0: Exchange,
   arg1: Transaction,
-  wyreUserId?: string
+  wyreUserId?: string,
+  currencyTo?: TokenCurrency | CryptoCurrency | undefined | null
 ) => Promise<ExchangeRate[]>;
 export type GetProviders = () => Promise<AvailableProvider[]>;
 export type InitSwapResult = {
