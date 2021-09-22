@@ -1,6 +1,6 @@
 import { bech32m, bech32, BechLib } from "bech32";
-import * as utils from "../utils";
-import { Currency } from "../crypto/types";
+import * as utils from "../../../../families/bitcoin/wallet-btc/utils";
+import { Currency } from "../../../../families/bitcoin/wallet-btc/crypto/types";
 
 function validateAddrs(
   addresses: string[],

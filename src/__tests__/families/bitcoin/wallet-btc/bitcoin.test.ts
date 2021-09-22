@@ -1,5 +1,5 @@
-import { Currency } from "../crypto/types";
-import cryptoFactory from "../crypto/factory";
+import { Currency } from "../../../../families/bitcoin/wallet-btc/crypto/types";
+import cryptoFactory from "../../../../families/bitcoin/wallet-btc/crypto/factory";
 
 describe("Unit tests for various bitcoin functions", () => {
   function testAddresses(addresses: string[][], currency: Currency) {

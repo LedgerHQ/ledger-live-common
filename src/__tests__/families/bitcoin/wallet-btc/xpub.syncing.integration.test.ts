@@ -4,18 +4,18 @@ require("bitcore-lib");
 // @ts-ignore
 import coininfo from "coininfo";
 import { toMatchFile } from "jest-file-snapshot";
-import { DerivationModes } from "../types";
-import BitcoinLikeStorage from "../storage";
-import BitcoinLikeExplorer from "../explorer";
-import Xpub from "../xpub";
-import * as currency from "../crypto";
+import { DerivationModes } from "../../../../families/bitcoin/wallet-btc/types";
+import BitcoinLikeStorage from "../../../../families/bitcoin/wallet-btc/storage";
+import BitcoinLikeExplorer from "../../../../families/bitcoin/wallet-btc/explorer";
+import Xpub from "../../../../families/bitcoin/wallet-btc/xpub";
+import * as currency from "../../../../families/bitcoin/wallet-btc/crypto";
 
 const startLogging = (emitters: any) => {
   emitters.forEach((emitter: any) =>
     emitter.emitter.on(emitter.event, (data: any) => {
       if (data.type === emitter.type) {
-        // eslint-disable-next-line no-console
-        console.log(emitter.event, JSON.stringify(data, null, 2));
+        // NOTE: Disabled logging because too verbose
+        //console.log(emitter.event, JSON.stringify(data, null, 2));
       }
     })
   );

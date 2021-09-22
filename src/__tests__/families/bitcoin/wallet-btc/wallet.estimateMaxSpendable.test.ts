@@ -1,8 +1,8 @@
-import { DerivationModes } from "../types";
-import BitcoinLikeWallet from "../wallet";
-import * as utils from "../utils";
-import { Account } from "../account";
-import MockBtc from "./mocks/Btc";
+import { DerivationModes } from "../../../../families/bitcoin/wallet-btc/types";
+import BitcoinLikeWallet from "../../../../families/bitcoin/wallet-btc/wallet";
+import * as utils from "../../../../families/bitcoin/wallet-btc/utils";
+import { Account } from "../../../../families/bitcoin/wallet-btc/account";
+import MockBtc from "../../../../mock/Btc";
 
 describe("testing estimateMaxSpendable", () => {
   const wallet = new BitcoinLikeWallet();
