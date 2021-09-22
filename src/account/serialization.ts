@@ -181,8 +181,10 @@ export const toNFTOperationRaw = ({
   blockHash,
   date,
   transactionSequenceNumber,
-  tokenId,
+  standard,
   contract,
+  tokenId,
+  amount,
 }: NFTOperation): NFTOperationRaw => {
   return {
     id,
@@ -194,8 +196,10 @@ export const toNFTOperationRaw = ({
     blockHeight,
     date: date.toISOString(),
     transactionSequenceNumber,
-    tokenId,
+    standard,
     contract,
+    tokenId,
+    amount: amount.toFixed(),
   } as NFTOperationRaw;
 };
 export const inferSubOperations = (
@@ -315,8 +319,10 @@ export const fromNFTOperationRaw = ({
   blockHash,
   date,
   transactionSequenceNumber,
-  tokenId,
+  standard,
   contract,
+  tokenId,
+  amount,
 }: NFTOperationRaw): NFTOperation => {
   return {
     id,
@@ -328,8 +334,10 @@ export const fromNFTOperationRaw = ({
     blockHeight,
     date: new Date(date),
     transactionSequenceNumber,
-    tokenId,
+    standard,
     contract,
+    tokenId,
+    amount: new BigNumber(amount),
   } as NFTOperation;
 };
 export const toTronResourcesRaw = ({
