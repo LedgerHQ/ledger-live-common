@@ -7,7 +7,7 @@ import { genAccount, genTokenAccount } from "../../../mock/account";
 import { Account } from "../../../types";
 import { useFromState } from "./useFromState";
 
-const BTC = getCryptoCurrencyById("ethereum");
+const BTC = getCryptoCurrencyById("bitcoin");
 const ETH = getCryptoCurrencyById("ethereum");
 const USDT = getTokenById("ethereum/erc20/usd_tether__erc20_");
 
