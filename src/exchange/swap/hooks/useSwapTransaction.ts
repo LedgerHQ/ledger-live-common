@@ -66,6 +66,20 @@ export type SetExchangeRateCallback = (
   exchangeRate?: ExchangeRate | null
 ) => void;
 
+export const useFromAmountError = (
+  errors: Record<string, Error | undefined>
+): Error | undefined => {
+  const fromAmountError = useMemo(() => {
+    const [error] = [errors?.gasPrice, errors?.amount]
+      .filter(Boolean)
+      .filter((error) => !(error instanceof AmountRequired));
+
+    return error;
+  }, [errors?.gasPrice, errors?.amount]);
+
+  return fromAmountError;
+};
+
 export const useSwapTransaction = ({
   accounts,
   exchangeRate,
@@ -103,19 +117,8 @@ export const useSwapTransaction = ({
   } = fromState;
   const { account: toAccount } = toState;
   const transaction = bridgeTransaction?.transaction;
-  const fromAmountError = useMemo(() => {
-    const [error] = [
-      bridgeTransaction.status.errors?.gasPrice,
-      bridgeTransaction.status.errors?.amount,
-    ]
-      .filter(Boolean)
-      .filter((error) => !(error instanceof AmountRequired));
 
-    return error;
-  }, [
-    bridgeTransaction.status.errors?.gasPrice,
-    bridgeTransaction.status.errors?.amount,
-  ]);
+  const fromAmountError = useFromAmountError(bridgeTransaction.status.errors);
 
   const { isSwapReversable, reverseSwap } = useReverseAccounts({
     accounts,
