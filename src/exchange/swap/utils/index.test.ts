@@ -58,7 +58,6 @@ describe("swap/utils/pickExchangeRate", () => {
       getMockExchangeRate({ provider: "changelly", tradeMethod: "float" }),
       exchangeRate,
     ];
-    // const exchangeRate = getMockExchangeRate({ provider: "wyre" });
 
     pickExchangeRate(exchangeRates, exchangeRate, setExchangeRate);
 
