@@ -72,7 +72,7 @@ describe("useSwapProviders", () => {
   });
 
   test("only returns no-filtered fetched providers", async () => {
-    // set the SWAP_DISABLED_PROVIDERS env varialbe for this test
+    // set the SWAP_DISABLED_PROVIDERS env variable for this test
     process.env.SWAP_DISABLED_PROVIDERS = "wyre";
     const { result, waitForNextUpdate } = renderHook(() => useSwapProviders());
 
