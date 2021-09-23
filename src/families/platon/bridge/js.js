@@ -57,10 +57,9 @@ const createTransaction = () => ({
   userGasLimit: null,
   estimatedGasLimit: null,
   networkInfo: null,
-  feeCustomUnit: getCryptoCurrencyById("platon").units[0],
+  feeCustomUnit: getCryptoCurrencyById("platon").units[3],
   useAllAmount: false,
   feesStrategy: "medium",
-  ethAdr: "",
 });
 
 const updateTransaction = (t, patch) => {
@@ -86,7 +85,6 @@ const getTransactionStatus = (a, t) => {
 
   const m = modes[t.mode];
   invariant(m, "missing module for mode=" + t.mode);
-  t.ethAdr && (t.recipient = t.ethAdr);
   m.fillTransactionStatus(a, t, result);
 
   // generic gas error and warnings
@@ -141,10 +139,8 @@ const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
 
   let estimatedGasLimit;
   if (isBech32Address(t.recipient)) {
-    t.ethAdr = decodeBech32Address(t.recipient);
     estimatedGasLimit = await estimateGasLimit(a, t);
   } else if (isAddress(t.recipient)) {
-    t.ethAdr = "";
     estimatedGasLimit = await estimateGasLimit(a, {
       ...t,
       recipient: toBech32Address("lat", t.recipient),

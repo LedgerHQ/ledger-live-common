@@ -47,7 +47,6 @@ export type Transaction = {|
   feeCustomUnit: ?Unit,
   networkInfo: ?NetworkInfo,
   allowZeroAmount?: boolean,
-  ethAdr?: string,
 |};
 
 export type TransactionRaw = {|

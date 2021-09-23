@@ -194,7 +194,7 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
         return {
           low: BigNumber("1000000000"),
           medium: BigNumber("10000000000"),
-          high: BigNumber("30000000000"),
+          high: BigNumber("20000000000"),
         };
       },
       () => "",

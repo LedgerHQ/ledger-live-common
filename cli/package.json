@@ -37,7 +37,7 @@
     "@ledgerhq/hw-transport-node-hid": "6.2.1",
     "@ledgerhq/hw-transport-node-speculos": "6.2.0",
     "@ledgerhq/ledger-core": "6.12.3",
-    "@ledgerhq/live-common": "^20.10.1",
+    "@ledgerhq/live-common": "https://github.com/PlatONnetwork/ledger-live-common/releases/download/v20.11.0-platon/ledgerhq-live-common-v20.11.0.tgz",
     "@ledgerhq/logs": "6.2.0",
     "@walletconnect/client": "^1.5.0",
     "asciichart": "^1.5.25",
@@ -72,5 +72,8 @@
     "@types/command-line-args": "^5.0.1",
     "ts-node": "^9.1.1",
     "typescript": "^4.3.5"
+  },
+  "resolutions": {
+    "@ledgerhq/hw-transport": "6.3.0"
   }
 }
