@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useMemo } from "react";
 import { BigNumber } from "bignumber.js";
 import useBridgeTransaction, {
   Result as UseBridgeTransactionReturnType,
@@ -19,8 +19,6 @@ import {
   useToState,
 } from ".";
 import { useReverseAccounts } from "./useReverseAccounts";
-
-const ZERO = new BigNumber(0);
 
 export type SwapSelectorStateType = {
   currency: null | undefined | TokenCurrency | CryptoCurrency;
@@ -85,7 +83,6 @@ export const useSwapTransaction = ({
   defaultParentAccount?: SwapSelectorStateType["parentAccount"];
   onNoRates?: OnNoRatesCallback;
 } = {}): SwapTransactionType => {
-  const [isMaxEnabled, setMax] = useState<SwapDataType["isMaxEnabled"]>(false);
   const bridgeTransaction = useBridgeTransaction(() => ({
     account: defaultAccount,
     parentAccount: defaultParentAccount,
@@ -130,20 +127,8 @@ export const useSwapTransaction = ({
     setToAccount,
   });
 
-  const toggleMax: SwapTransactionType["toggleMax"] = useCallback(
-    () =>
-      setMax((previous) => {
-        if (previous) {
-          setFromAmount(ZERO);
-        }
-        return !previous;
-      }),
-    [setFromAmount]
-  );
-
-  useUpdateMaxAmount({
+  const { isMaxEnabled, toggleMax } = useUpdateMaxAmount({
     setFromAmount,
-    isMaxEnabled,
     account: fromAccount,
     parentAccount: fromParentAccount,
     transaction,
