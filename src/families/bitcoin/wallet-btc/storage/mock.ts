@@ -1,9 +1,9 @@
-import { findLast, filter, uniqBy, findIndex, has } from "lodash";
-import { Input, IStorage, Output, TX, Address } from "./types";
+import { findLast, filter, uniqBy, findIndex, has } from 'lodash';
+import { Input, IStorage, Output, TX, Address } from './types';
 
 // a mock storage class that just use js objects
 // sql.js would be perfect for the job
-class BitcoinLikeStorage implements IStorage {
+class Mock implements IStorage {
   txs: TX[] = [];
 
   // indexes
@@ -17,22 +17,15 @@ class BitcoinLikeStorage implements IStorage {
   // returning unordered tx within the same block)
   spentUtxos: { [key: string]: Input[] } = {};
 
-  async getLastTx(txFilter: {
-    account?: number;
-    index?: number;
-    address?: string;
-    confirmed?: boolean;
-  }) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  async getLastTx(txFilter: { account?: number; index?: number; address?: string; confirmed?: boolean }) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
     // @ts-ignore
     const tx: TX | undefined = findLast(this.txs, (t) => {
       return (
-        (!has(txFilter, "account") || t.account === txFilter.account) &&
-        (!has(txFilter, "index") || t.index === txFilter.index) &&
-        (!has(txFilter, "address") || t.address === txFilter.address) &&
-        (!has(txFilter, "confirmed") ||
-          (txFilter.confirmed && t.block) ||
-          (!txFilter.confirmed && !t.block))
+        (!has(txFilter, 'account') || t.account === txFilter.account) &&
+        (!has(txFilter, 'index') || t.index === txFilter.index) &&
+        (!has(txFilter, 'address') || t.address === txFilter.address) &&
+        (!has(txFilter, 'confirmed') || (txFilter.confirmed && t.block) || (!txFilter.confirmed && !t.block))
       );
     });
     return tx;
@@ -77,40 +70,31 @@ class BitcoinLikeStorage implements IStorage {
         }
       });
 
-      this.unspentUtxos[indexAddress] = this.unspentUtxos[indexAddress].filter(
-        (output) => {
-          const matchIndex = findIndex(
-            this.spentUtxos[indexAddress],
-            (input: Input) =>
-              input.output_hash === output.output_hash &&
-              input.output_index === output.output_index
-          );
-          if (matchIndex > -1) {
-            this.spentUtxos[indexAddress].splice(matchIndex, 1);
-            return false;
-          }
-          return true;
+      this.unspentUtxos[indexAddress] = this.unspentUtxos[indexAddress].filter((output) => {
+        const matchIndex = findIndex(
+          this.spentUtxos[indexAddress],
+          (input: Input) => input.output_hash === output.output_hash && input.output_index === output.output_index
+        );
+        if (matchIndex > -1) {
+          this.spentUtxos[indexAddress].splice(matchIndex, 1);
+          return false;
         }
-      );
+        return true;
+      });
     });
 
     return this.txs.length - lastLength;
   }
 
-  async getUniquesAddresses(addressesFilter: {
-    account?: number;
-    index?: number;
-  }) {
+  async getUniquesAddresses(addressesFilter: { account?: number; index?: number }) {
     // TODO: to speed up, create more useful indexes in appendTxs
     return uniqBy(
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       filter(this.txs, addressesFilter).map((tx: TX) => ({
         address: tx.address,
         account: tx.account,
         index: tx.index,
       })),
-      "address"
+      'address'
     );
   }
 
@@ -169,6 +153,7 @@ class BitcoinLikeStorage implements IStorage {
       txs: this.txs,
       primaryIndex: this.primaryIndex,
       unspentUtxos: this.unspentUtxos,
+      spentUtxos: this.spentUtxos,
     };
   }
 
@@ -176,11 +161,13 @@ class BitcoinLikeStorage implements IStorage {
     txs: TX[];
     primaryIndex: { [key: string]: number };
     unspentUtxos: { [key: string]: Output[] };
+    spentUtxos: { [key: string]: Input[] };
   }) {
     this.txs = data.txs;
     this.primaryIndex = data.primaryIndex;
     this.unspentUtxos = data.unspentUtxos;
+    this.spentUtxos = data.spentUtxos;
   }
 }
 
-export default BitcoinLikeStorage;
+export default Mock;
