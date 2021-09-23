@@ -46,8 +46,6 @@ jobs:
       - name: Run tests
         run: npx cross-env VERBOSE_FILE=tests_output.txt yarn ci-test-common
         timeout-minutes: 60
-        env:
-          EXPERIMENTAL_CURRENCIES_JS_BRIDGE: bitcoin,bitcoin_cash,bsc,litecoin,dash,qtum,zcash,bitcoin_gold,stratis,dogecoin,digibyte,komodo,pivx,zencash,vertcoin,peercoin,viacoin,stakenet,stealthcoin,decred,bitcoin_testnet
       - name: Run coverage
         if: runner.os == 'macOS'
         run: CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }} npx codecov
