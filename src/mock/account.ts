@@ -293,7 +293,7 @@ type GenAccountOptions = {
   swapHistorySize?: number;
 };
 
-function genTokenAccount(
+export function genTokenAccount(
   index: number,
   account: Account,
   token: TokenCurrency
