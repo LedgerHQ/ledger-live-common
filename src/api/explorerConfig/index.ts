@@ -8,6 +8,10 @@ const initialExplorerConfig: FullConfig = {
     id: "btc",
     stable: {
       base: "EXPLORER",
+      version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER",
       version: "v3",
     },
   },
@@ -15,26 +19,25 @@ const initialExplorerConfig: FullConfig = {
     id: "abc",
     stable: {
       base: "EXPLORER",
-      version: "v3",
+      version: "v2",
     },
-    /*
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
-    */
   },
   bitcoin_gold: {
     id: "btg",
     stable: {
       base: "EXPLORER",
-      version: "v3",
+      version: "v2",
     },
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
   },
+  // FIXME Doesn't seem supported, should we remove?
   clubcoin: {
     id: "club",
     stable: {
@@ -46,12 +49,20 @@ const initialExplorerConfig: FullConfig = {
     id: "dash",
     stable: {
       base: "EXPLORER",
+      version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER",
       version: "v3",
     },
   },
   decred: {
     id: "dcr",
     stable: {
+      base: "EXPLORER",
+      version: "v2",
+    },
+    experimental: {
       base: "EXPLORER",
       version: "v3",
     },
@@ -60,7 +71,7 @@ const initialExplorerConfig: FullConfig = {
     id: "dgb",
     stable: {
       base: "EXPLORER",
-      version: "v3",
+      version: "v2",
     },
     experimental: {
       base: "EXPLORER",
@@ -71,13 +82,14 @@ const initialExplorerConfig: FullConfig = {
     id: "doge",
     stable: {
       base: "EXPLORER",
-      version: "v3",
+      version: "v2",
     },
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
   },
+  // FIXME Doesn't seem supported, should we remove?
   hcash: {
     id: "hsr",
     stable: {
@@ -89,18 +101,20 @@ const initialExplorerConfig: FullConfig = {
     id: "kmd",
     stable: {
       base: "EXPLORER",
-      version: "v3",
+      version: "v2",
     },
-    /*
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
-    */
   },
   litecoin: {
     id: "ltc",
     stable: {
+      base: "EXPLORER",
+      version: "v2",
+    },
+    experimental: {
       base: "EXPLORER",
       version: "v3",
     },
@@ -109,7 +123,7 @@ const initialExplorerConfig: FullConfig = {
     id: "ppc",
     stable: {
       base: "EXPLORER",
-      version: "v3",
+      version: "v2",
     },
     experimental: {
       base: "EXPLORER",
@@ -120,13 +134,14 @@ const initialExplorerConfig: FullConfig = {
     id: "pivx",
     stable: {
       base: "EXPLORER",
-      version: "v3",
+      version: "v2",
     },
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
   },
+  // FIXME Doesn't seem supported, should we remove?
   poswallet: {
     id: "posw",
     stable: {
@@ -138,7 +153,7 @@ const initialExplorerConfig: FullConfig = {
     id: "qtum",
     stable: {
       base: "EXPLORER",
-      version: "v3",
+      version: "v2",
     },
     experimental: {
       base: "EXPLORER",
@@ -149,12 +164,20 @@ const initialExplorerConfig: FullConfig = {
     id: "xsn",
     stable: {
       base: "EXPLORER",
+      version: "v2",
+    },
+    experimental: {
+      base: "EXPLORER",
       version: "v3",
     },
   },
   stratis: {
     id: "strat",
     stable: {
+      base: "EXPLORER",
+      version: "v2",
+    },
+    experimental: {
       base: "EXPLORER",
       version: "v3",
     },
@@ -165,12 +188,16 @@ const initialExplorerConfig: FullConfig = {
       base: "EXPLORER",
       version: "v2",
     },
+    experimental: {
+      base: "EXPLORER",
+      version: "v3",
+    },
   },
   vertcoin: {
     id: "vtc",
     stable: {
       base: "EXPLORER",
-      version: "v3",
+      version: "v2",
     },
     experimental: {
       base: "EXPLORER",
@@ -181,7 +208,7 @@ const initialExplorerConfig: FullConfig = {
     id: "via",
     stable: {
       base: "EXPLORER",
-      version: "v3",
+      version: "v2",
     },
     experimental: {
       base: "EXPLORER",
@@ -192,7 +219,7 @@ const initialExplorerConfig: FullConfig = {
     id: "zec",
     stable: {
       base: "EXPLORER",
-      version: "v3",
+      version: "v2",
     },
     experimental: {
       base: "EXPLORER",
@@ -203,7 +230,7 @@ const initialExplorerConfig: FullConfig = {
     id: "zen",
     stable: {
       base: "EXPLORER",
-      version: "v3",
+      version: "v2",
     },
     experimental: {
       base: "EXPLORER",
@@ -214,7 +241,7 @@ const initialExplorerConfig: FullConfig = {
     id: "btc_testnet",
     stable: {
       base: "EXPLORER",
-      version: "v3",
+      version: "v2",
     },
     experimental: {
       base: "EXPLORER",
@@ -224,6 +251,10 @@ const initialExplorerConfig: FullConfig = {
   bsc: {
     id: "bnb",
     stable: {
+      base: "EXPLORER",
+      version: "v2",
+    },
+    experimental: {
       base: "EXPLORER",
       version: "v3",
     },
