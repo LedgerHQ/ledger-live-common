@@ -42,7 +42,7 @@ describe("useSwapTransaction", () => {
     });
   });
 
-  test("useFromAmountError - do not returns AmountRequired error", () => {
+  test("useFromAmountError - do not return AmountRequired error", () => {
     const amountError = new AmountRequired("This error will be filtered");
 
     const { result } = renderHook(() =>
