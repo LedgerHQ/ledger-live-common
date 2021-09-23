@@ -16,6 +16,23 @@ import {
 import { Observable, of } from "rxjs";
 import { getSwapAPIBaseURL } from "./";
 
+export const getMockExchangeRate = ({
+  provider = "changelly",
+  tradeMethod = "fixed",
+}: {
+  provider?: string;
+  tradeMethod?: "fixed" | "float";
+} = {}): ExchangeRate => ({
+  rate: new BigNumber("1"),
+  toAmount: new BigNumber("12"),
+  magnitudeAwareRate: new BigNumber(1)
+    .div(new BigNumber(10).pow(18))
+    .times(new BigNumber(10).pow(8)),
+  rateId: "mockedRateId",
+  provider,
+  tradeMethod,
+});
+
 export const mockGetExchangeRates = async (
   exchange: Exchange,
   transaction: Transaction
