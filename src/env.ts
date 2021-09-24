@@ -366,6 +366,11 @@ const envDefinitions = {
     parser: stringParser,
     desc: "switch the app into a MOCK mode for test purpose, the value will be used as a seed for the rng. Avoid falsy values.",
   },
+  NFT: {
+    def: false,
+    parser: boolParser,
+    desc: "synchronizing nfts",
+  },
   OPERATION_ADDRESSES_LIMIT: {
     def: 100,
     parser: intParser,
