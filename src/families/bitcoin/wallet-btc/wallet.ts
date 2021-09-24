@@ -68,7 +68,6 @@ class BitcoinLikeWallet {
     storageParams: any[];
   }): Promise<Account> {
     const crypto = cryptoFactory(params.currency);
-    const { network } = crypto;
 
     let { xpub } = params;
 
