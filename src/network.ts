@@ -108,9 +108,7 @@ const makeError = (msg, status, url, method) => {
 const getErrorMessage = (
   data: Record<string, any>
 ): string | null | undefined => {
-  return (
-    data.cause || data.error_message || data.error || data.message || data.msg
-  );
+  return data.message || data.error_message || data.error || data.msg;
 };
 
 const extractErrorMessage = (raw: string): string | undefined => {
