@@ -33,7 +33,6 @@ export const getAccountShape: GetAccountShape = async (
     xpubOrAddress: address,
     derivationMode,
   });
-  const info = { ...infoInput, address };
   const api = apiForCurrency(currency);
   const initialStableOperations = initialAccount
     ? stableOperations(initialAccount)
@@ -64,6 +63,7 @@ export const getAccountShape: GetAccountShape = async (
   if (!pullFromBlockHash && txs.length === 0) {
     log("ethereum", "no ops on " + address);
     return {
+      id: accountId,
       balance: new BigNumber(0),
       subAccounts: [],
       blockHeight,

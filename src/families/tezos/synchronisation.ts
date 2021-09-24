@@ -72,6 +72,7 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
 
   if (apiAccount.type === "empty") {
     return {
+      id: accountId,
       blockHeight,
       lastSyncDate: new Date(),
     };

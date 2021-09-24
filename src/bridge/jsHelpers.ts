@@ -24,6 +24,7 @@ import {
   emptyHistoryCache,
   generateHistoryFromOperations,
   recalculateAccountBalanceHistories,
+  encodeAccountId,
 } from "../account";
 import { FreshAddressIndexInvalid } from "../errors";
 import type {
@@ -120,9 +121,13 @@ export const makeSync =
   (initial, syncConfig): Observable<AccountUpdater> =>
     Observable.create((o) => {
       async function main() {
-        const accountId = `js:2:${initial.currency.id}:${
-          initial.xpub || initial.freshAddress
-        }:${initial.derivationMode}`;
+        const accountId = encodeAccountId({
+          type: "js",
+          version: "2",
+          currencyId: initial.currency.id,
+          xpubOrAddress: initial.xpub || initial.freshAddress,
+          derivationMode: initial.derivationMode,
+        });
         const needClear = initial.id !== accountId;
 
         try {
