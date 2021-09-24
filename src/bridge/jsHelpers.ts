@@ -24,6 +24,7 @@ import {
   emptyHistoryCache,
   generateHistoryFromOperations,
   recalculateAccountBalanceHistories,
+  encodeAccountId,
 } from "../account";
 import { FreshAddressIndexInvalid } from "../errors";
 import type {
@@ -38,6 +39,12 @@ import type { CurrencyBridge, AccountBridge } from "../types/bridge";
 import getAddress from "../hw/getAddress";
 import { open, close } from "../hw";
 import { withDevice } from "../hw/deviceAccess";
+
+// FIXME tmp
+import Btc from "@ledgerhq/hw-app-btc";
+import type { Currency } from "../families/bitcoin/wallet-btc";
+import wallet from "../families/bitcoin/wallet-btc";
+
 export type GetAccountShape = (
   arg0: {
     currency: CryptoCurrency;
@@ -119,7 +126,9 @@ export const makeSync =
   (initial, syncConfig): Observable<AccountUpdater> =>
     Observable.create((o) => {
       async function main() {
-        const accountId = `js:2:${initial.currency.id}:${initial.freshAddress}:${initial.derivationMode}`;
+        const accountId = `js:2:${initial.currency.id}:${
+          initial.xpub || initial.freshAddress
+        }:${initial.derivationMode}`;
         const needClear = initial.id !== accountId;
 
         try {
@@ -172,6 +181,41 @@ export const makeSync =
 
       main();
     });
+
+async function buildAccountId(params: {
+  transport;
+  currency;
+  path;
+  index;
+  address;
+  derivationMode;
+}) {
+  const { transport, currency, path, index, address, derivationMode } = params;
+  let xpubOrAddress;
+  // FIXME Hack, only for bitcoin-like currencies
+  // FIXME Only BTC for now
+  if (currency.id === "bitcoin") {
+    // prettier-ignore
+    const rootPath = path.split("/", 2).join("/");
+    xpubOrAddress = await wallet.generateXpub(
+      new Btc(transport),
+      <Currency>currency.id,
+      rootPath,
+      index
+    );
+  } else {
+    xpubOrAddress = address;
+  }
+
+  return encodeAccountId({
+    type: "js",
+    version: "2",
+    currencyId: currency.id,
+    xpubOrAddress,
+    derivationMode,
+  });
+}
+
 export const makeScanAccounts =
   (getAccountShape: GetAccountShape): CurrencyBridge["scanAccounts"] =>
   ({ currency, deviceId, syncConfig }): Observable<ScanAccountEvent> =>
@@ -194,7 +238,16 @@ export const makeScanAccounts =
         transport
       ): Promise<Account | null | undefined> {
         if (finished) return;
-        const accountId = `js:2:${currency.id}:${address}:${derivationMode}`;
+
+        const accountId = await buildAccountId({
+          transport,
+          currency,
+          path: freshAddressPath,
+          index,
+          address,
+          derivationMode,
+        });
+
         const accountShape: Partial<Account> = await getAccountShape(
           {
             transport,
