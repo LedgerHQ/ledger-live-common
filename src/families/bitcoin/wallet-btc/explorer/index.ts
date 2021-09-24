@@ -1,43 +1,18 @@
-import type { AxiosRequestConfig, AxiosResponse } from "axios";
+import type { AxiosRequestConfig } from "axios";
 import axios, { AxiosInstance } from "axios";
 import axiosRetry from "axios-retry";
 import BigNumber from "bignumber.js";
 import genericPool, { Pool } from "generic-pool";
 
 import JSONBigNumber from "@ledgerhq/json-bignumber";
-import { log } from "@ledgerhq/logs";
 import { Address, Block, TX } from "../storage/types";
 import EventEmitter from "../utils/eventemitter";
 import { IExplorer } from "./types";
-
-const requestInterceptor = (
-  request: AxiosRequestConfig
-): AxiosRequestConfig => {
-  const { baseURL, url, method = "", data } = request;
-  log("network", `${method} ${baseURL}${url}`, data);
-  return request;
-};
-
-const responseInterceptor = (
-  response: {
-    config: AxiosRequestConfig;
-  } & AxiosResponse
-) => {
-  const { baseURL, url, method = "" } = response?.config;
-  log(
-    "network-success",
-    `${response.status} ${method} ${baseURL}${url}`
-    // NOTE: disabled because way too verbose
-    // response.data ? { data: response.data } : undefined
-  );
-  return response;
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const responseErrorInterceptor = (error: any) => {
-  log("network-error", error);
-  return Promise.reject(error);
-};
+import {
+  requestInterceptor,
+  responseInterceptor,
+  errorInterceptor,
+} from "../../../../network";
 
 class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
   client: Pool<{ client: AxiosInstance }>;
@@ -96,10 +71,7 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
 
     // Logging
     client.interceptors.request.use(requestInterceptor);
-    client.interceptors.response.use(
-      responseInterceptor,
-      responseErrorInterceptor
-    );
+    client.interceptors.response.use(responseInterceptor, errorInterceptor);
   }
 
   async broadcast(tx: string) {
