@@ -36,7 +36,7 @@ import { withDevice } from "../../../hw/deviceAccess";
 const receive = makeAccountBridgeReceive();
 
 const createTransaction = (): Transaction => {
-  log("debug", "[createTransaction] creating base tx");
+  // log("debug", "[createTransaction] creating base tx");
 
   return {
     family: "filecoin",
@@ -53,7 +53,7 @@ const createTransaction = (): Transaction => {
 };
 
 const updateTransaction = (t: Transaction, patch: Transaction): Transaction => {
-  log("debug", "[updateTransaction] patching tx");
+  // log("debug", "[updateTransaction] patching tx");
 
   return { ...t, ...patch };
 };
@@ -62,7 +62,7 @@ const getTransactionStatus = async (
   a: Account,
   t: Transaction
 ): Promise<TransactionStatus> => {
-  log("debug", "[getTransactionStatus] start fn");
+  // log("debug", "[getTransactionStatus] start fn");
 
   const errors: TransactionStatus["errors"] = {};
   const warnings: TransactionStatus["warnings"] = {};
@@ -81,11 +81,7 @@ const getTransactionStatus = async (
   else if (!validateAddress(address).isValid)
     errors.sender = new InvalidAddress();
 
-  if (
-    gasFeeCap.toNumber() === 0 ||
-    gasPremium.toNumber() === 0 ||
-    gasLimit.toNumber() === 0
-  )
+  if (gasFeeCap.eq(0) || gasPremium.eq(0) || gasLimit.eq(0))
     errors.gas = new FeeNotLoaded();
 
   // This is the worst case scenario (the tx won't cost more than this value)
@@ -97,7 +93,7 @@ const getTransactionStatus = async (
   if (amount.lte(0)) errors.amount = new AmountRequired();
   if (totalSpent.gt(a.spendableBalance)) errors.amount = new NotEnoughBalance();
 
-  log("debug", "[getTransactionStatus] finish fn");
+  // log("debug", "[getTransactionStatus] finish fn");
 
   return {
     errors,
@@ -117,7 +113,7 @@ const estimateMaxSpendable = async ({
   parentAccount?: Account | null | undefined;
   transaction?: Transaction | null | undefined;
 }): Promise<BigNumber> => {
-  log("debug", "[estimateMaxSpendable] start fn");
+  // log("debug", "[estimateMaxSpendable] start fn");
 
   const a = getMainAccount(account, parentAccount);
   const { address } = getAddress(a);
@@ -139,7 +135,7 @@ const estimateMaxSpendable = async ({
     balance.minus(calculateEstimatedFees(gasFeeCap, gasLimit));
   }
 
-  log("debug", "[estimateMaxSpendable] finish fn");
+  // log("debug", "[estimateMaxSpendable] finish fn");
 
   return balance;
 };
@@ -148,13 +144,13 @@ const prepareTransaction = async (
   a: Account,
   t: Transaction
 ): Promise<Transaction> => {
-  log("debug", "[prepareTransaction] start fn");
+  // log("debug", "[prepareTransaction] start fn");
 
   const { address } = getAddress(a);
   const { recipient } = t;
 
   if (recipient && address) {
-    log("debug", "[prepareTransaction] fetching estimated fees");
+    // log("debug", "[prepareTransaction] fetching estimated fees");
 
     const result = await fetchEstimatedFees({ to: recipient, from: address });
     t.gasFeeCap = new BigNumber(result.gas_fee_cap);
@@ -163,7 +159,7 @@ const prepareTransaction = async (
     t.nonce = result.nonce;
   }
 
-  log("debug", "[prepareTransaction] finish fn");
+  // log("debug", "[prepareTransaction] finish fn");
 
   return t;
 };
@@ -173,14 +169,14 @@ const sync = makeSync(getAccountShape);
 const broadcast: BroadcastFnSignature = async ({
   signedOperation: { operation },
 }) => {
-  log("debug", "[broadcast] start fn");
+  // log("debug", "[broadcast] start fn");
 
   const resp = await broadcastTx(operation.extra.reqToBroadcast);
   const { hash } = resp;
 
   const result = patchOperationWithHash(operation, hash);
 
-  log("debug", "[broadcast] finish fn");
+  // log("debug", "[broadcast] finish fn");
 
   return result;
 };
@@ -194,7 +190,7 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
     (transport) =>
       new Observable((o) => {
         async function main() {
-          log("debug", "[signOperation] start fn");
+          // log("debug", "[signOperation] start fn");
 
           const { recipient, amount, gasFeeCap, gasLimit } = transaction;
           const { id: accountId } = account;
@@ -283,7 +279,7 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
           } finally {
             close(transport, deviceId);
 
-            log("debug", "[signOperation] finish fn");
+            // log("debug", "[signOperation] finish fn");
           }
         }
 
