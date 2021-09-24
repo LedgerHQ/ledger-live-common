@@ -24,7 +24,6 @@ import {
   emptyHistoryCache,
   generateHistoryFromOperations,
   recalculateAccountBalanceHistories,
-  encodeAccountId,
 } from "../account";
 import { FreshAddressIndexInvalid } from "../errors";
 import type {
@@ -40,16 +39,10 @@ import getAddress from "../hw/getAddress";
 import { open, close } from "../hw";
 import { withDevice } from "../hw/deviceAccess";
 
-// FIXME tmp
-import Btc from "@ledgerhq/hw-app-btc";
-import type { Currency } from "../families/bitcoin/wallet-btc";
-import wallet from "../families/bitcoin/wallet-btc";
-
 export type GetAccountShape = (
   arg0: {
     currency: CryptoCurrency;
     address: string;
-    id: string;
     index: number;
     initialAccount?: Account;
     derivationPath: string;
@@ -118,6 +111,7 @@ Operation[] {
 
   return all;
 }
+
 export const makeSync =
   (
     getAccountShape: GetAccountShape,
@@ -140,7 +134,6 @@ export const makeSync =
           const shape = await getAccountShape(
             {
               currency: initial.currency,
-              id: accountId,
               index: initial.index,
               address: initial.freshAddress,
               derivationPath: freshAddressPath,
@@ -182,40 +175,6 @@ export const makeSync =
       main();
     });
 
-async function buildAccountId(params: {
-  transport;
-  currency;
-  path;
-  index;
-  address;
-  derivationMode;
-}) {
-  const { transport, currency, path, index, address, derivationMode } = params;
-  let xpubOrAddress;
-  // FIXME Hack, only for bitcoin-like currencies
-  // FIXME Only BTC for now
-  if (currency.id === "bitcoin") {
-    // prettier-ignore
-    const rootPath = path.split("/", 2).join("/");
-    xpubOrAddress = await wallet.generateXpub(
-      new Btc(transport),
-      <Currency>currency.id,
-      rootPath,
-      index
-    );
-  } else {
-    xpubOrAddress = address;
-  }
-
-  return encodeAccountId({
-    type: "js",
-    version: "2",
-    currencyId: currency.id,
-    xpubOrAddress,
-    derivationMode,
-  });
-}
-
 export const makeScanAccounts =
   (getAccountShape: GetAccountShape): CurrencyBridge["scanAccounts"] =>
   ({ currency, deviceId, syncConfig }): Observable<ScanAccountEvent> =>
@@ -239,20 +198,10 @@ export const makeScanAccounts =
       ): Promise<Account | null | undefined> {
         if (finished) return;
 
-        const accountId = await buildAccountId({
-          transport,
-          currency,
-          path: freshAddressPath,
-          index,
-          address,
-          derivationMode,
-        });
-
         const accountShape: Partial<Account> = await getAccountShape(
           {
             transport,
             currency,
-            id: accountId,
             index,
             address,
             derivationPath: freshAddressPath,
@@ -262,6 +211,7 @@ export const makeScanAccounts =
           syncConfig
         );
         if (finished) return;
+
         const freshAddress = address;
         const operations = accountShape.operations || [];
         const operationsCount =
@@ -273,10 +223,11 @@ export const makeScanAccounts =
         const balance = accountShape.balance || new BigNumber(0);
         const spendableBalance =
           accountShape.spendableBalance || new BigNumber(0);
+        if (!accountShape.id) throw new Error("account ID must be provided");
         if (balance.isNaN()) throw new Error("invalid balance NaN");
         const initialAccount: Account = {
           type: "Account",
-          id: accountId,
+          id: accountShape.id,
           seedIdentifier,
           freshAddress,
           freshAddressPath,

@@ -14,6 +14,7 @@ import {
   emptyHistoryCache,
 } from "../../account";
 import { listTokensForCryptoCurrency } from "../../currencies";
+import { encodeAccountId } from "../../account";
 import type { Operation, TokenAccount, Account } from "../../types";
 import { API, apiForCurrency, Tx } from "../../api/Ethereum";
 import { digestTokenAccounts, prepareTokenAccounts } from "./modules";
@@ -22,9 +23,16 @@ export const getAccountShape: GetAccountShape = async (
   infoInput,
   { blacklistedTokenIds }
 ) => {
-  const { currency, initialAccount } = infoInput;
+  const { currency, initialAccount, derivationMode } = infoInput;
   let { address } = infoInput;
   address = eip55.encode(address);
+  const accountId = encodeAccountId({
+    type: "js",
+    version: "2",
+    currencyId: currency.id,
+    xpubOrAddress: address,
+    derivationMode,
+  });
   const info = { ...infoInput, address };
   const api = apiForCurrency(currency);
   const initialStableOperations = initialAccount
@@ -64,7 +72,7 @@ export const getAccountShape: GetAccountShape = async (
 
   const balance = await balanceP;
   // transform transactions into operations
-  let newOps = flatMap(txs, txToOps(info));
+  let newOps = flatMap(txs, txToOps({ address, id: accountId, currency }));
   // extracting out the sub operations by token account
   const perTokenAccountIdOperations = {};
   newOps.forEach((op) => {
@@ -85,7 +93,7 @@ export const getAccountShape: GetAccountShape = async (
     // in case of coming from libcore, we need to converge to new ids
     const { token } = decodeTokenAccountId(a.id);
     if (!token) return;
-    const id = encodeTokenAccountId(infoInput.id, token);
+    const id = encodeTokenAccountId(accountId, token);
     subAccountsExisting[id] = a;
   });
   const subAccountsExistingIds = Object.keys(subAccountsExisting);
@@ -151,6 +159,7 @@ export const getAccountShape: GetAccountShape = async (
   }));
   const operations = mergeOps(initialStableOperations, newOps);
   const accountShape: Partial<Account> = {
+    id: accountId,
     operations,
     balance,
     subAccounts,
