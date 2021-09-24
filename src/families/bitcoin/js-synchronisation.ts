@@ -18,6 +18,7 @@ import type {
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { makeSync, makeScanAccounts, mergeOps } from "../../bridge/jsHelpers";
 import { findCurrencyExplorer } from "../../api/Ledger";
+import { encodeAccountId } from "../../account";
 import { encodeOperationId } from "../../operation";
 import { BitcoinOutput } from "./types";
 import { perCoinLogic } from "./logic";
@@ -230,18 +231,42 @@ const getAccountShape: GetAccountShape = async (info) => {
   const {
     transport,
     currency,
-    id: accountId,
     index,
     derivationPath,
     derivationMode,
     initialAccount,
   } = info;
-  const paramXpub = initialAccount?.xpub;
-
   // In case we get a full derivation path, extract the seed identification part
   // 44'/0'/0'/0/0 --> 44'/0'
   // FIXME Only the CLI provides a full derivationPath: why?
   const rootPath = derivationPath.split("/", 2).join("/");
+
+  const paramXpub = initialAccount?.xpub;
+
+  let generatedXpub;
+  if (!paramXpub) {
+    // Xpub not provided, generate it using the hwapp
+
+    if (!transport) {
+      // hwapp not provided
+      throw new Error("generateXpub needs a hwapp");
+    }
+    generatedXpub = await wallet.generateXpub(
+      new Btc(transport),
+      <Currency>currency.id,
+      rootPath,
+      index
+    );
+  }
+  const xpub = paramXpub || generatedXpub;
+
+  const accountId = encodeAccountId({
+    type: "js",
+    version: "2",
+    currencyId: currency.id,
+    xpubOrAddress: xpub,
+    derivationMode,
+  });
 
   const walletNetwork = toWalletNetwork(currency.id);
   const walletDerivationMode = toWalletDerivationMode(derivationMode);
@@ -258,8 +283,9 @@ const getAccountShape: GetAccountShape = async (info) => {
         initialAccount.bitcoinResources.serializedData
       )
     : await wallet.generateAccount({
+        // TODO remove btc param, not required anymore since we now have the xpub
         btc: (!paramXpub && transport && new Btc(transport)) || undefined,
-        xpub: paramXpub,
+        xpub,
         path: rootPath,
         index,
         currency: <Currency>currency.id,
@@ -270,7 +296,7 @@ const getAccountShape: GetAccountShape = async (info) => {
         storage: "mock",
         storageParams: [],
       });
-  const xpub = paramXpub || walletAccount.xpub.xpub;
+
   const oldOperations = initialAccount?.operations || [];
   await wallet.syncAccount(walletAccount);
   const balance = await wallet.getAccountBalance(walletAccount);

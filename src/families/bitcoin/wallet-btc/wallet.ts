@@ -68,7 +68,6 @@ class BitcoinLikeWallet {
     storageParams: any[];
   }): Promise<Account> {
     const crypto = cryptoFactory(params.currency);
-    const { network } = crypto;
 
     let { xpub } = params;
 
@@ -80,48 +79,12 @@ class BitcoinLikeWallet {
         throw new Error("generateAccount need either a hwapp or xpub");
       }
 
-      const parentDerivation = await params.btc.getWalletPublicKey(
-        `${params.path}`
+      xpub = await this.generateXpub(
+        params.btc,
+        params.currency,
+        params.path,
+        params.index
       );
-      const accountDerivation = await params.btc.getWalletPublicKey(
-        `${params.path}/${params.index}'`
-      );
-
-      // parent
-      const publicKeyParentCompressed = utils.compressPublicKey(
-        parentDerivation.publicKey
-      );
-      const publicKeyParentCompressedHex = utils.parseHexString(
-        publicKeyParentCompressed
-      );
-      let result = bitcoin.crypto.sha256(
-        Buffer.from(publicKeyParentCompressedHex)
-      );
-      result = bitcoin.crypto.ripemd160(result);
-      // eslint-disable-next-line no-bitwise
-      const fingerprint =
-        ((result[0] << 24) |
-          (result[1] << 16) |
-          (result[2] << 8) |
-          result[3]) >>>
-        0;
-
-      // account
-      const publicKeyAccountCompressed = utils.compressPublicKey(
-        accountDerivation.publicKey
-      );
-      // eslint-disable-next-line no-bitwise
-      const childnum = (0x80000000 | params.index) >>> 0;
-
-      const xpubRaw = utils.createXPUB(
-        3,
-        fingerprint,
-        childnum,
-        accountDerivation.chainCode,
-        publicKeyAccountCompressed,
-        network.bip32.public
-      );
-      xpub = utils.encodeBase58Check(xpubRaw);
     }
 
     if (!xpub) {
@@ -157,6 +120,51 @@ class BitcoinLikeWallet {
         data,
       },
     };
+  }
+
+  async generateXpub(
+    btc: Btc,
+    currency: Currency,
+    path: string,
+    index: number
+  ): Promise<string> {
+    const parentDerivation = await btc.getWalletPublicKey(`${path}`);
+    const accountDerivation = await btc.getWalletPublicKey(`${path}/${index}'`);
+
+    // parent
+    const publicKeyParentCompressed = utils.compressPublicKey(
+      parentDerivation.publicKey
+    );
+    const publicKeyParentCompressedHex = utils.parseHexString(
+      publicKeyParentCompressed
+    );
+    let result = bitcoin.crypto.sha256(
+      Buffer.from(publicKeyParentCompressedHex)
+    );
+    result = bitcoin.crypto.ripemd160(result);
+    // eslint-disable-next-line no-bitwise
+    const fingerprint =
+      ((result[0] << 24) | (result[1] << 16) | (result[2] << 8) | result[3]) >>>
+      0;
+
+    // account
+    const publicKeyAccountCompressed = utils.compressPublicKey(
+      accountDerivation.publicKey
+    );
+    // eslint-disable-next-line no-bitwise
+    const childnum = (0x80000000 | index) >>> 0;
+
+    const { network } = cryptoFactory(currency);
+    const xpubRaw = utils.createXPUB(
+      3,
+      fingerprint,
+      childnum,
+      accountDerivation.chainCode,
+      publicKeyAccountCompressed,
+      network.bip32.public
+    );
+
+    return utils.encodeBase58Check(xpubRaw);
   }
 
   async importFromSerializedAccount(

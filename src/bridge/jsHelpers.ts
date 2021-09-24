@@ -24,6 +24,7 @@ import {
   emptyHistoryCache,
   generateHistoryFromOperations,
   recalculateAccountBalanceHistories,
+  encodeAccountId,
 } from "../account";
 import { FreshAddressIndexInvalid } from "../errors";
 import type {
@@ -38,11 +39,11 @@ import type { CurrencyBridge, AccountBridge } from "../types/bridge";
 import getAddress from "../hw/getAddress";
 import { open, close } from "../hw";
 import { withDevice } from "../hw/deviceAccess";
+
 export type GetAccountShape = (
   arg0: {
     currency: CryptoCurrency;
     address: string;
-    id: string;
     index: number;
     initialAccount?: Account;
     derivationPath: string;
@@ -111,6 +112,7 @@ Operation[] {
 
   return all;
 }
+
 export const makeSync =
   (
     getAccountShape: GetAccountShape,
@@ -119,7 +121,13 @@ export const makeSync =
   (initial, syncConfig): Observable<AccountUpdater> =>
     Observable.create((o) => {
       async function main() {
-        const accountId = `js:2:${initial.currency.id}:${initial.freshAddress}:${initial.derivationMode}`;
+        const accountId = encodeAccountId({
+          type: "js",
+          version: "2",
+          currencyId: initial.currency.id,
+          xpubOrAddress: initial.xpub || initial.freshAddress,
+          derivationMode: initial.derivationMode,
+        });
         const needClear = initial.id !== accountId;
 
         try {
@@ -131,7 +139,6 @@ export const makeSync =
           const shape = await getAccountShape(
             {
               currency: initial.currency,
-              id: accountId,
               index: initial.index,
               address: initial.freshAddress,
               derivationPath: freshAddressPath,
@@ -172,6 +179,7 @@ export const makeSync =
 
       main();
     });
+
 export const makeScanAccounts =
   (getAccountShape: GetAccountShape): CurrencyBridge["scanAccounts"] =>
   ({ currency, deviceId, syncConfig }): Observable<ScanAccountEvent> =>
@@ -194,12 +202,11 @@ export const makeScanAccounts =
         transport
       ): Promise<Account | null | undefined> {
         if (finished) return;
-        const accountId = `js:2:${currency.id}:${address}:${derivationMode}`;
+
         const accountShape: Partial<Account> = await getAccountShape(
           {
             transport,
             currency,
-            id: accountId,
             index,
             address,
             derivationPath: freshAddressPath,
@@ -209,6 +216,7 @@ export const makeScanAccounts =
           syncConfig
         );
         if (finished) return;
+
         const freshAddress = address;
         const operations = accountShape.operations || [];
         const operationsCount =
@@ -220,10 +228,11 @@ export const makeScanAccounts =
         const balance = accountShape.balance || new BigNumber(0);
         const spendableBalance =
           accountShape.spendableBalance || new BigNumber(0);
+        if (!accountShape.id) throw new Error("account ID must be provided");
         if (balance.isNaN()) throw new Error("invalid balance NaN");
         const initialAccount: Account = {
           type: "Account",
-          id: accountId,
+          id: accountShape.id,
           seedIdentifier,
           freshAddress,
           freshAddressPath,
