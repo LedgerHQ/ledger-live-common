@@ -130,13 +130,17 @@ describe("Unit tests for various utils functions", () => {
     validateAddrs(
       [
         "1BpEi6DfDAUFd7GtittLSdBeYJvcoaVggu",
+        "qqmyc72pkyx8c0ppgeuummq6clzverhxnsk3qh6jcf",
         "bitcoincash:qqmyc72pkyx8c0ppgeuummq6clzverhxnsk3qh6jcf",
       ],
       "bitcoin_cash",
       true
     );
     validateAddrs(
-      ["bitcoincash:qqmyc72pkyx8c0ppgeuummq6clzverhxnsk3qh6jc1"],
+      [
+        "bitcoincash:qqmyc72pkyx8c0ppgeuummq6clzverhxnsk3qh6jc1",
+        "1BpEi6DfDAUFd7GtittLSdBeYgvcoaVggu",
+      ],
       "bitcoin_cash",
       false
     );
