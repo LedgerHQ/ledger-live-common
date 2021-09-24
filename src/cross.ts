@@ -303,8 +303,36 @@ export const accountDataToAccount = ({
   let freshAddress = inputFreshAddress || "";
   let freshAddressPath = "";
 
-  if (type === "libcore") {
-    // in libcore implementation, xpubOrAddress field in the xpub
+  if (
+    type === "libcore" ||
+    // FIXME Dirty hack, since we have no way here to know if "xpubOrAddress" is one or the other.
+    // Proposed fix: https://ledgerhq.atlassian.net/browse/LL-7437
+    [
+      "bitcoin",
+      "bitcoin_testnet",
+      "bsc",
+      "bitcoin_cash",
+      "litecoin",
+      "dash",
+      "qtum",
+      "zcash",
+      "bitcoin_gold",
+      "stratis",
+      "dogecoin",
+      "digibyte",
+      "komodo",
+      "pivx",
+      "zencash",
+      "vertcoin",
+      "peercoin",
+      "viacoin",
+      "stakenet",
+      "stealthcoin",
+      "decred",
+    ].includes(currency.id)
+  ) {
+    // In libcore implementation, xpubOrAddress field always go in the xpub
+    // In JS implementation, only Bitcoin-like currencies store the xpub
     xpub = xpubOrAddress;
   } else {
     if (!freshAddress) {
