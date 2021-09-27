@@ -554,7 +554,7 @@ export function autoSignTransaction<T extends Transaction>({
                 recentEvents.map((e) => JSON.stringify(e)).join("\n")
             )
           );
-        }, 20 * 1000);
+        }, 60 * 1000);
         sub = transport.automationEvents.subscribe({
           next: (event) => {
             recentEvents.push(event);
