@@ -52,8 +52,8 @@ const genericTest = ({
 }) => {
   // workaround for buggy explorer behavior (nodes desync)
   invariant(
-    Date.now() - operation.date > 20000,
-    "operation time to be older than 20s"
+    Date.now() - operation.date > 200000,
+    "operation time to be older than 200s"
   );
   // balance move
   expect(account.balance.toString()).toBe(
