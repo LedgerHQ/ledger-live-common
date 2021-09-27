@@ -37,6 +37,8 @@ export type Transaction = TransactionCommon & {
   feeCustomUnit: Unit | null | undefined;
   networkInfo: NetworkInfo | null | undefined;
   allowZeroAmount?: boolean;
+  collection?: string;
+  tokenId?: string;
 };
 export type TransactionRaw = TransactionCommonRaw & {
   family: "ethereum";
