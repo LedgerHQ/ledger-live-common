@@ -1,6 +1,6 @@
 import type { AxiosRequestConfig } from "axios";
 import axios, { AxiosInstance } from "axios";
-import axiosRetry from "axios-retry";
+import axiosRetry, { isNetworkOrIdempotentRequestError } from "axios-retry";
 import BigNumber from "bignumber.js";
 import genericPool, { Pool } from "generic-pool";
 
@@ -54,7 +54,15 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
     const client = axios.create(clientParams);
     this.underlyingClient = client;
     // 3 retries per request
-    axiosRetry(client, { retries: 3 });
+    axiosRetry(client, {
+      retries: 3,
+      retryCondition: (e) =>
+        isNetworkOrIdempotentRequestError(e) ||
+        // workaround for explorers v3 that sometimes returns 4xx instead of 5xx
+        (e.code !== "ECONNABORTED" &&
+          (!e.response ||
+            (e.response.status >= 400 && e.response.status <= 499))),
+    });
     // max 20 requests
     this.client = genericPool.createPool(
       {
