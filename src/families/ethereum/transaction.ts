@@ -86,15 +86,26 @@ export const formatTransaction = (
     (t.subAccountId &&
       (mainAccount.subAccounts || []).find((a) => a.id === t.subAccountId)) ||
     mainAccount;
+
+  const header = (() => {
+    if (t.mode === "erc721.transfer") {
+      return `${t.mode.toUpperCase()} Collection: ${t.collection} TokenId: ${
+        t.tokenId
+      }`;
+    }
+
+    return `${t.mode.toUpperCase()} ${
+      t.useAllAmount
+        ? "MAX"
+        : formatCurrencyUnit(getAccountUnit(account), t.amount, {
+            showCode: true,
+            disableRounding: true,
+          })
+    }`;
+  })();
+
   return `
-${t.mode.toUpperCase()} ${
-    t.useAllAmount
-      ? "MAX"
-      : formatCurrencyUnit(getAccountUnit(account), t.amount, {
-          showCode: true,
-          disableRounding: true,
-        })
-  }
+${header}
 TO ${t.recipient}
 with gasPrice=${formatCurrencyUnit(
     mainAccount.currency.units[1] || mainAccount.currency.units[0],
@@ -102,6 +113,7 @@ with gasPrice=${formatCurrencyUnit(
   )}
 with gasLimit=${gasLimit.toString()}`;
 };
+
 const defaultGasLimit = new BigNumber(0x5208);
 export const getGasLimit = (t: Transaction): BigNumber =>
   t.userGasLimit || t.estimatedGasLimit || defaultGasLimit;
