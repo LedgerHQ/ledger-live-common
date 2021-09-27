@@ -510,22 +510,7 @@ const litecoin: AppSpec<Transaction> = {
     ),
   }),
 };
-const stealthcoin: AppSpec<Transaction> = {
-  name: "Stealth",
-  currency: getCryptoCurrencyById("stealthcoin"),
-  dependency: "Bitcoin",
-  appQuery: {
-    model: DeviceModelId.nanoS,
-    appName: "Stealth",
-  },
-  test: genericTest,
-  mutations: bitcoinLikeMutations({
-    minimalAmount: parseCurrencyUnit(
-      getCryptoCurrencyById("stealthcoin").units[0],
-      "0.1"
-    ),
-  }),
-};
+
 export default {
   bitcoin,
   bitcoinTestnet,
@@ -540,7 +525,6 @@ export default {
   pivx,
   qtum,
   stakenet,
-  stealthcoin,
   vertcoin,
   viacoin,
   zcash,
