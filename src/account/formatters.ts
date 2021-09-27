@@ -12,6 +12,14 @@ import { formatCurrencyUnit } from "../currencies";
 import { getOperationAmountNumber } from "../operation";
 import byFamily from "../generated/account";
 
+const styling = {
+  bold: (str: string) => `\x1b[1m${str}\x1b[22m`,
+  underline: (str: string) => `\x1b[4m${str}\x1b[24m`,
+  cyan: (str: string) => `\x1b[36m${str}\x1b[37m`,
+  magenta: (str: string) => `\x1b[35m${str}\x1b[37m`,
+  reverse: (str: string) => `\x1b[7m${str}\x1b[27m`,
+};
+
 const isSignificantAccount = (acc) =>
   acc.balance.gt(10 ** (getAccountUnit(acc).magnitude - 6));
 
@@ -79,6 +87,7 @@ const cliFormat = (account, level?: string) => {
     index,
     xpub,
     operations,
+    nfts,
   } = account;
   const balance = formatCurrencyUnit(account.unit, account.balance, {
     showCode: true,
@@ -120,6 +129,44 @@ const cliFormat = (account, level?: string) => {
         maybeDisplaySumOfOpsIssue(ta.operations, ta.balance, getAccountUnit(ta))
     )
     .join("\n");
+
+  if (nfts?.length) {
+    const NFTCollections = nfts.reduce((acc, n) => {
+      if (!acc[n.collection.contract]) {
+        acc[n.collection.contract] = [];
+      }
+      acc[n.collection.contract].push(n);
+
+      return acc;
+    }, {});
+    const contractsAddr = Object.keys(NFTCollections);
+
+    str += "\n";
+    str += `NFT Collections (${contractsAddr.length}) `;
+    str += "\n";
+
+    str += contractsAddr
+      .map((a) => {
+        const tokens = NFTCollections[a];
+        const tokenName = tokens?.[0]?.collection?.tokenName;
+        const { bold, magenta, cyan, reverse } = styling;
+
+        return (
+          `${bold(tokenName ?? "Unknown Collection Name")} (${magenta(a)}): ` +
+          tokens
+            .map((t) =>
+              t.nftName
+                ? `\n  ${t.amount}x ${reverse(` ${t.nftName} `)} ${cyan(
+                    "#" + t.tokenId
+                  )}`
+                : `\n  ${t.amount}x ${cyan("#" + t.tokenId)}`
+            )
+            .join()
+        );
+      })
+      .join("\n");
+  }
+
   if (level === "basic") return str;
   str += "\nOPERATIONS (" + operations.length + ")";
   str += operations
