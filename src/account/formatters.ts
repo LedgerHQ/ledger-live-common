@@ -72,12 +72,12 @@ function maybeDisplaySumOfOpsIssue(ops, balance, unit) {
 
 const cliFormat = (account, level?: string) => {
   const {
+    id,
     name,
     freshAddress,
     freshAddressPath,
     derivationMode,
     index,
-    xpub,
     operations,
   } = account;
   const balance = formatCurrencyUnit(account.unit, account.balance, {
@@ -87,7 +87,7 @@ const cliFormat = (account, level?: string) => {
   const freshInfo = `${freshAddress} on ${freshAddressPath}`;
   const derivationInfo = `${derivationMode}#${index}`;
   let str = `${name}: ${balance} (${opsCount}) (${freshInfo}) ${derivationInfo} ${
-    xpub || ""
+    id || ""
   }`;
   if (level === "head") return str;
   str += maybeDisplaySumOfOpsIssue(
