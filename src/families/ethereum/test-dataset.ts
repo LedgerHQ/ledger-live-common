@@ -39,8 +39,7 @@ const dataset: DatasetTest<Transaction> = {
   implementations: ["mock", "js"],
   currencies: {
     ethereum: {
-      scanAccounts: [], // FIXME https://ledgerhq.atlassian.net/browse/LL-6445
-      // scanAccounts: [ethereumScanAccounts1],
+      scanAccounts: [ethereumScanAccounts1],
       accounts: [
         {
           implementations: ["js"],
