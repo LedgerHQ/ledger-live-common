@@ -51,7 +51,6 @@ export const errorInterceptor = (error: AxiosError<any>) => {
   const { startTime = 0 } = metadata || {};
 
   let errorToThrow;
-  console.log("RESPONSE", error.response);
   if (error.response) {
     // The request was made and the server responded with a status code
     // that falls out of the range of 2xx
@@ -109,6 +108,11 @@ const makeError = (msg, status, url, method) => {
 const getErrorMessage = (
   data: Record<string, any>
 ): string | null | undefined => {
+  if (!data) return "";
+  if (typeof data === "string") return data;
+  if (data.errors) {
+    return getErrorMessage(data.errors[0]);
+  }
   return data.message || data.error_message || data.error || data.msg;
 };
 
