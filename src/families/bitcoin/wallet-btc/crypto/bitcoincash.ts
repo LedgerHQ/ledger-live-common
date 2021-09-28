@@ -62,7 +62,11 @@ class BitcoinCash implements ICrypto {
   }
 
   toOutputScript(address: string) {
-    return toOutputScript(address, this.network);
+    if (!this.validateAddress(address)) {
+      throw new Error("Invalid address");
+    }
+    // TODO: check whether if there is any side effect when we convert to legacy address (e.g. higher fees)
+    return toOutputScript(bchaddr.toLegacyAddress(address), this.network);
   }
 
   // eslint-disable-next-line class-methods-use-this
