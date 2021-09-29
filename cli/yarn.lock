@@ -927,10 +927,10 @@
     bignumber.js "^9.0.1"
     json-rpc-2.0 "^0.2.16"
 
-"@ledgerhq/live-common@^21.7.0":
-  version "21.7.0"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/live-common/-/live-common-21.7.0.tgz#63ee280ff22c729048454789ab186df07558279b"
-  integrity sha512-rmKJvp7VUFkDmEsFDvGJ+JCGooUoesvxeqCb93KBE9APKivDBG46AvMbYXAHjp5LG8g7IvOEX9+0c3FmECjaTQ==
+"@ledgerhq/live-common@21.5.1-btcjs.3":
+  version "21.5.1-btcjs.3"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/live-common/-/live-common-21.5.1-btcjs.3.tgz#96dedf5a00b224577deb1fabf4aabcea009d4118"
+  integrity sha512-zEofpLwE+1PmIZDNXIVmSslNKlTkWtrQrU8HRPWXts5eVSIRKvkDBhnNveS0bukNOmtwCSR3VgSfeQxAv2q7BQ==
   dependencies:
     "@crypto-com/chain-jslib" "0.0.19"
     "@ledgerhq/compressjs" "1.3.2"
@@ -949,23 +949,37 @@
     "@ledgerhq/hw-transport" "6.7.0"
     "@ledgerhq/hw-transport-mocker" "6.7.0"
     "@ledgerhq/hw-transport-node-speculos" "6.7.0"
+    "@ledgerhq/json-bignumber" "^1.0.2"
     "@ledgerhq/live-app-sdk" "^0.2.0"
     "@ledgerhq/logs" "6.2.0"
     "@polkadot/types" "5.5.1"
     "@polkadot/types-known" "5.5.1"
     "@taquito/ledger-signer" "^10.1.2"
     "@taquito/taquito" "10.1.2"
+    "@types/bchaddrjs" "^0.4.0"
+    "@types/bitcore-lib-cash" "^8.23.3"
+    "@types/bs58check" "^2.1.0"
     "@walletconnect/client" "1.6.5"
     "@xstate/react" "^1.6.1"
     async "^3.2.1"
     axios "0.21.4"
+    axios-retry "^3.1.9"
     bchaddrjs "^0.5.2"
+    bech32 "^2.0.0"
     bignumber.js "^9.0.1"
+    bip32 "^2.0.6"
     bip32-path "^0.4.2"
+    bip39 "^3.0.4"
+    bitcoinjs-lib "^5.2.0"
+    bitcore-lib "^8.25.10"
+    bitcore-lib-cash "^8.25.10"
+    bitcore-lib-zcash "^0.13.20"
     blake2b "^2.1.3"
     bs58 "^4.0.1"
     bs58check "^2.1.2"
+    buffer "^6.0.3"
     cashaddrjs "^0.4.4"
+    coininfo "^5.1.0"
     crypto-js "^4.1.1"
     eip55 "^2.1.0"
     eth-sig-util "3.0.1"
@@ -974,6 +988,7 @@
     ethereumjs-tx "^2.1.2"
     ethereumjs-util "^7.1.1"
     expect "^27.2.2"
+    generic-pool "^3.8.2"
     invariant "^2.2.2"
     isomorphic-ws "^4.0.1"
     json-rpc-2.0 "^0.2.19"
@@ -3124,6 +3139,11 @@ gauge@~2.7.3:
     string-width "^1.0.1"
     strip-ansi "^3.0.1"
     wide-align "^1.1.0"
+
+generic-pool@^3.8.2:
+  version "3.8.2"
+  resolved "https://registry.yarnpkg.com/generic-pool/-/generic-pool-3.8.2.tgz#aab4f280adb522fdfbdc5e5b64d718d3683f04e9"
+  integrity sha512-nGToKy6p3PAbYQ7p1UlWl6vSPwfwU6TMSWK7TTu+WUY4ZjyZQGniGGt2oNVvyNSpyZYSB43zMXVLcBm08MTMkg==
 
 get-intrinsic@^1.0.0:
   version "1.0.1"
