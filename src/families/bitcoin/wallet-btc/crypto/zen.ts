@@ -10,6 +10,7 @@ import zec from "bitcore-lib-zcash";
 import bs58check from "bs58check";
 import { DerivationModes } from "../types";
 import { ICrypto, DerivationMode } from "./types";
+import coininfo from "coininfo";
 
 class Zen implements ICrypto {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,6 +55,13 @@ class Zen implements ICrypto {
     return bs58check.encode(Buffer.from(taddr));
   }
 
+  private static toBitcoinAddr(taddr: string) {
+    // refer to https://runkitcdn.com/gojomo/baddr2taddr/1.0.2
+    const baddr = new Uint8Array(21);
+    baddr.set(bs58check.decode(taddr).slice(2), 1);
+    return bs58check.encode(Buffer.from(baddr));
+  }
+
   // eslint-disable-next-line
   getLegacyAddress(xpub: string, account: number, index: number): string {
     const pubkey = new bitcore.HDPublicKey(xpub);
@@ -77,7 +85,14 @@ class Zen implements ICrypto {
   }
 
   toOutputScript(address: string) {
-    return toOutputScript(address, this.network);
+    if (!this.validateAddress(address)) {
+      throw new Error("Invalid address");
+    }
+    // TODO find a better way to calculate the script from zen address instead of converting to bitcoin address
+    return toOutputScript(
+      Zen.toBitcoinAddr(address),
+      coininfo.bitcoin.main.toBitcoinJS()
+    );
   }
 
   // eslint-disable-next-line class-methods-use-this

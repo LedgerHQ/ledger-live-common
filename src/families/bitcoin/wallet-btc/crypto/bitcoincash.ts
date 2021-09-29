@@ -65,7 +65,7 @@ class BitcoinCash implements ICrypto {
     if (!this.validateAddress(address)) {
       throw new Error("Invalid address");
     }
-    // TODO: check whether if there is any side effect when we convert to legacy address (e.g. higher fees)
+    // TODO find a better way to calculate the script from bch address instead of converting to bitcoin address
     return toOutputScript(bchaddr.toLegacyAddress(address), this.network);
   }
 

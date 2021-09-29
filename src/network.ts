@@ -51,6 +51,7 @@ export const errorInterceptor = (error: AxiosError<any>) => {
   const { startTime = 0 } = metadata || {};
 
   let errorToThrow;
+  // eslint-disable-next-line no-console
   console.log("RESPONSE", error.response);
   if (error.response) {
     // The request was made and the server responded with a status code

@@ -10,11 +10,11 @@ import zec from "bitcore-lib-zcash";
 import bs58check from "bs58check";
 import { DerivationModes } from "../types";
 import { ICrypto, DerivationMode } from "./types";
+import coininfo from "coininfo";
 
 class ZCash implements ICrypto {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   network: any;
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor({ network }: { network: any }) {
     this.network = network;
@@ -34,6 +34,13 @@ class ZCash implements ICrypto {
     taddr.set(baddr, 2);
     taddr.set([0x1c, 0xb8], 0);
     return bs58check.encode(Buffer.from(taddr));
+  }
+
+  private static toBitcoinAddr(taddr: string) {
+    // refer to https://runkitcdn.com/gojomo/baddr2taddr/1.0.2
+    const baddr = new Uint8Array(21);
+    baddr.set(bs58check.decode(taddr).slice(2), 1);
+    return bs58check.encode(Buffer.from(baddr));
   }
 
   // eslint-disable-next-line
@@ -59,13 +66,19 @@ class ZCash implements ICrypto {
   }
 
   toOutputScript(address: string) {
-    return toOutputScript(address, this.network);
+    if (!this.validateAddress(address)) {
+      throw new Error("Invalid address");
+    }
+    // TODO find a better way to calculate the script from zec address instead of converting to bitcoin address
+    return toOutputScript(
+      ZCash.toBitcoinAddr(address),
+      coininfo.bitcoin.main.toBitcoinJS()
+    );
   }
 
   // eslint-disable-next-line class-methods-use-this
   validateAddress(address: string): boolean {
-    const { Address } = zec;
-    return Address.isValid(address, "livenet");
+    return zec.Address.isValid(address, "livenet");
   }
 }
 
