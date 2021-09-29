@@ -1004,7 +1004,7 @@ export function toNFTRaw({
     picture,
     description,
     properties,
-    amount: amount.toString(),
+    amount: amount.toFixed(),
     collection,
   };
 }
@@ -1026,7 +1026,7 @@ export function fromNFTRaw({
     picture,
     description,
     properties,
-    amount: parseInt(amount),
+    amount: new BigNumber(amount),
     collection,
   };
 }
