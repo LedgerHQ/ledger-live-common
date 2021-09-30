@@ -10,6 +10,7 @@ import type { Account, Operation, Unit } from "../types";
 import { getOperationAmountNumberWithInternals } from "../operation";
 import { formatCurrencyUnit } from "../currencies";
 import { getOperationAmountNumber } from "../operation";
+import { getTagDerivationMode } from "../derivation";
 import byFamily from "../generated/account";
 
 const isSignificantAccount = (acc) =>
@@ -80,15 +81,16 @@ const cliFormat = (account, level?: string) => {
     index,
     operations,
   } = account;
+  const tag = getTagDerivationMode(account.currency, derivationMode);
   const balance = formatCurrencyUnit(account.unit, account.balance, {
     showCode: true,
   });
   const opsCount = `${operations.length}ops`;
   const freshInfo = `${freshAddress} on ${freshAddressPath}`;
   const derivationInfo = `${derivationMode}#${index}`;
-  let str = `${name}: ${balance} (${opsCount}) (${freshInfo}) ${derivationInfo} ${
-    id || ""
-  }`;
+  let str = `${name}${
+    tag ? " [" + tag + "]" : ""
+  }: ${balance} (${opsCount}) (${freshInfo}) ${derivationInfo} ${id || ""}`;
   if (level === "head") return str;
   str += maybeDisplaySumOfOpsIssue(
     operations,
