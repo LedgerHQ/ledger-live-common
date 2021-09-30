@@ -10,6 +10,8 @@ import network from "../network";
 import { blockchainBaseURL } from "./Ledger";
 import { FeeEstimationFailed } from "../errors";
 import { makeLRUCache } from "../cache";
+import { getEnv } from "../env";
+
 export type Block = {
   height: BigNumber;
 }; // TODO more fields actually
@@ -129,8 +131,10 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
       let { data } = await network({
         method: "GET",
         url: URL.format({
-          /** @important FIXME: transactions are mocked while we are waiting for the API */
-          pathname: `http://explorers.api-01.live.ledger-stg.com/blockchain/v3/eth/addresses/${address}/transactions`,
+          pathname:
+            getEnv("NFT") && currency.ticker === "ETH"
+              ? `https://explorers.api-01.live.ledger-stg.com/blockchain/v3/eth/addresses/${address}/transactions`
+              : `${baseURL}/addresses/${address}/transactions`,
           query: {
             batch_size,
             noinput: true,
