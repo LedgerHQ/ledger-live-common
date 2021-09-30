@@ -4,7 +4,7 @@ import throttle from "lodash/throttle";
 import flatMap from "lodash/flatMap";
 import eip55 from "eip55";
 import { log } from "@ledgerhq/logs";
-import { mergeOps } from "../../bridge/jsHelpers";
+import { mergeNfts, mergeOps } from "../../bridge/jsHelpers";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import {
   encodeTokenAccountId,
@@ -19,6 +19,8 @@ import { API, apiForCurrency, Tx } from "../../api/Ethereum";
 import { digestTokenAccounts, prepareTokenAccounts } from "./modules";
 import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";
 import { encodeNftId } from "../../nft";
+import { getEnv } from "../../env";
+
 export const getAccountShape: GetAccountShape = async (
   infoInput,
   { blacklistedTokenIds }
@@ -158,7 +160,10 @@ export const getAccountShape: GetAccountShape = async (
   }));
   const operations = mergeOps(initialStableOperations, newOps);
 
-  const nfts = await getNfts(flatNftOps);
+  const nfts = getEnv("NFT")
+    ? mergeNfts(initialAccount?.nfts, await getNfts(flatNftOps))
+    : undefined;
+
   const accountShape: Partial<Account> = {
     operations,
     balance,

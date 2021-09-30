@@ -1,4 +1,5 @@
 import isEqual from "lodash/isEqual";
+import setWith from "lodash/setWith";
 import { BigNumber } from "bignumber.js";
 import { Observable, from } from "rxjs";
 import { log } from "@ledgerhq/logs";
@@ -31,6 +32,8 @@ import type {
   ScanAccountEvent,
   SyncConfig,
   CryptoCurrency,
+  NFT,
+  NFTWithMetadata,
 } from "../types";
 import type { CurrencyBridge, AccountBridge } from "../types/bridge";
 import getAddress from "../hw/getAddress";
@@ -105,6 +108,37 @@ Operation[] {
 
   return all;
 }
+export const mergeNfts = (
+  oldNfts: NFT[] | NFTWithMetadata[] | undefined,
+  newNfts: NFT[] | NFTWithMetadata[] | undefined
+): NFT[] | NFTWithMetadata[] => {
+  if (!newNfts?.length) return oldNfts ?? [];
+
+  // Getting a map of id => NFT
+  const newNftsPerId: Record<string, NFT | NFTWithMetadata> = (
+    newNfts as Array<NFT | NFTWithMetadata>
+  ).reduce((acc, curr) => setWith(acc, curr.id, curr, Object), {});
+
+  // copying the argument to avoid mutating it
+  const nfts = oldNfts?.slice() ?? [];
+  for (let i = 0; i < nfts.length; i++) {
+    const nft = nfts[i];
+    // The NFTs are the same, do don't anything
+    if (!newNftsPerId[nft.id] || isEqual(nft, newNftsPerId[nft.id])) {
+      // NFT already in, deleting it from the newNfts to keep only the un-added ones at the end
+      delete newNftsPerId[nft.id];
+      continue;
+    }
+
+    // Use the new NFT instead (as a copy cause we're deleting the reference just after)
+    nfts[i] = Object.assign({}, newNftsPerId[nft.id]);
+    // Delete it from the newNfts to keep only the un-added ones at the end
+    delete newNftsPerId[nft.id];
+  }
+
+  // Adding the rest of newNfts that was not already in oldNfts
+  return nfts.concat(Object.values(newNftsPerId));
+};
 export const makeSync =
   (
     getAccountShape: GetAccountShape,
