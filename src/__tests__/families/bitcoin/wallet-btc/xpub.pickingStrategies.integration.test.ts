@@ -324,7 +324,7 @@ describe("testing xpub legacy transactions", () => {
     let res = await utxoPickingStrategy.selectUnspentUtxosToUse(
       dataset.xpub,
       new BigNumber(10000),
-      0,
+      10,
       1
     );
     expect(res.unspentUtxos.length).toEqual(1);
@@ -336,31 +336,49 @@ describe("testing xpub legacy transactions", () => {
       10,
       1
     );
-    expect(res.unspentUtxos.length).toEqual(2);
-    expect(
-      Number(res.unspentUtxos[0].value) + Number(res.unspentUtxos[1].value)
-    ).toEqual(100000000 + 200000000);
+    expect(res.unspentUtxos.length).toEqual(1);
+    expect(Number(res.unspentUtxos[0].value)).toEqual(300000000);
 
     res = await utxoPickingStrategy.selectUnspentUtxosToUse(
       dataset.xpub,
       new BigNumber(500000000),
-      0,
+      10,
       1
     );
-    expect(res.unspentUtxos.length).toEqual(2);
-    expect(
-      Number(res.unspentUtxos[0].value) + Number(res.unspentUtxos[1].value)
-    ).toEqual(200000000 + 300000000);
+    expect(res.unspentUtxos.length).toEqual(1);
+    expect(Number(res.unspentUtxos[0].value)).toEqual(600000000);
 
     res = await utxoPickingStrategy.selectUnspentUtxosToUse(
       dataset.xpub,
       new BigNumber(800000000),
-      0,
+      10,
+      1
+    );
+    expect(res.unspentUtxos.length).toEqual(1);
+    expect(Number(res.unspentUtxos[0].value)).toEqual(5000000000);
+
+    res = await utxoPickingStrategy.selectUnspentUtxosToUse(
+      dataset.xpub,
+      new BigNumber(5000000000),
+      10,
       1
     );
     expect(res.unspentUtxos.length).toEqual(2);
     expect(
       Number(res.unspentUtxos[0].value) + Number(res.unspentUtxos[1].value)
-    ).toEqual(200000000 + 600000000);
+    ).toEqual(5100000000);
+
+    res = await utxoPickingStrategy.selectUnspentUtxosToUse(
+      dataset.xpub,
+      new BigNumber(5600000000),
+      10,
+      1
+    );
+    expect(res.unspentUtxos.length).toEqual(3);
+    expect(
+      Number(res.unspentUtxos[0].value) +
+        Number(res.unspentUtxos[1].value) +
+        Number(res.unspentUtxos[2].value)
+    ).toEqual(5000000000 + 600000000 + 100000000);
   }, 180000);
 });

@@ -5,7 +5,7 @@ import { Output } from "../storage/types";
 import Xpub from "../xpub";
 import { PickingStrategy } from "./types";
 import * as utils from "../utils";
-import { Merge } from "./Merge";
+import { DeepFirst } from "./DeepFirst";
 
 export class CoinSelect extends PickingStrategy {
   // eslint-disable-next-line class-methods-use-this
@@ -94,13 +94,13 @@ export class CoinSelect extends PickingStrategy {
     // Get no inputs fees
     // At beginning, there are no outputs in tx, so noInputFees are fixed fees
     const notInputFees =
-      effectiveFees * (fixedSize + oneOutputSize * nbOutputsWithoutChange); // at least fixed size and outputs(version...)
+      effectiveFees * (fixedSize + oneOutputSize * nbOutputsWithoutChange);
 
     // Start coin selection algorithm (according to SelectCoinBnb from Bitcoin Core)
     let currentValue = 0;
     // std::vector<bool> currentSelection;
     // currentSelection.reserve(utxos.size());
-    const currentSelection: boolean[] = [];
+    let currentSelection: boolean[] = [];
 
     // Actual amount we are targetting
     const actualTarget = notInputFees + amount.toNumber();
@@ -214,7 +214,105 @@ export class CoinSelect extends PickingStrategy {
         needChangeoutput: false,
       };
     }
-    const pickingStrategy = new Merge(
+
+    // if a coinSelect solution is not found, dfs to find a solution with minimal fees
+    currentValue = 0;
+    currentSelection = [];
+    let bestSelectionNeedChangeoutput = false;
+    let currentSelectionNeedChangeoutput = false;
+    for (let i = 0; i < TOTAL_TRIES; i += 1) {
+      let backtrack = false;
+      const nbInput = signedUTXOSize * currentSelection.filter((x) => x).length;
+      if (currentValue >= actualTarget) {
+        if (currentValue - actualTarget > feePerByte * oneOutputSize) {
+          // changeoutput is required
+          currentSelectionNeedChangeoutput = true;
+          currentWaste =
+            feePerByte *
+            utils.estimateTxSize(
+              nbInput,
+              nbOutputsWithoutChange + 1,
+              this.crypto,
+              this.derivationMode
+            );
+        } else {
+          // changeoutput is not required
+          currentSelectionNeedChangeoutput = false;
+          currentWaste =
+            feePerByte *
+              utils.estimateTxSize(
+                nbInput,
+                nbOutputsWithoutChange,
+                this.crypto,
+                this.derivationMode
+              ) +
+            currentValue -
+            actualTarget;
+        }
+        if (currentWaste <= bestWaste) {
+          bestSelection = currentSelection.slice();
+          while (effectiveUtxos.length > bestSelection.length) {
+            bestSelection.push(false);
+          }
+          bestSelection.length = effectiveUtxos.length;
+          bestWaste = currentWaste;
+          bestSelectionNeedChangeoutput = currentSelectionNeedChangeoutput;
+        }
+        backtrack = true;
+      }
+      if (currentSelection.length >= effectiveUtxos.length) {
+        backtrack = true;
+      }
+      // Move backwards
+      if (backtrack) {
+        while (
+          currentSelection.length > 0 &&
+          !currentSelection[currentSelection.length - 1]
+        ) {
+          currentSelection.pop();
+        }
+        // Case we walked back to the first utxos and all solutions searched.
+        if (currentSelection.length === 0) {
+          break;
+        }
+        currentSelection[currentSelection.length - 1] = false;
+        const eu = effectiveUtxos[currentSelection.length - 1];
+        currentValue -= eu.effectiveValue;
+      } else {
+        // Moving forwards, continuing down this branch
+        const eu = effectiveUtxos[currentSelection.length];
+        currentSelection.push(true);
+        currentValue += eu.effectiveValue;
+      }
+    }
+
+    // solution found
+    if (bestSelection.length > 0) {
+      let total = new BigNumber(0);
+      const unspentUtxoSelected: Output[] = [];
+      for (let i = 0; i < bestSelection.length; i += 1) {
+        if (bestSelection[i]) {
+          unspentUtxoSelected.push(unspentUtxos[effectiveUtxos[i].index]);
+          total = total.plus(unspentUtxos[effectiveUtxos[i].index].value);
+        }
+      }
+      const fee = utils.estimateTxSize(
+        unspentUtxoSelected.length,
+        bestSelectionNeedChangeoutput
+          ? nbOutputsWithoutChange + 1
+          : nbOutputsWithoutChange,
+        this.crypto,
+        this.derivationMode
+      );
+      return {
+        totalValue: total,
+        unspentUtxos: unspentUtxoSelected,
+        fee: Math.ceil(fee),
+        needChangeoutput: bestSelectionNeedChangeoutput,
+      };
+    }
+
+    const pickingStrategy = new DeepFirst(
       this.crypto,
       this.derivationMode,
       this.excludedUTXOs
