@@ -811,7 +811,6 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     swapHistory: [],
     syncHash,
     balanceHistoryCache: balanceHistoryCache || emptyHistoryCache,
-    nfts: (nfts || []).map((n) => fromNFTRaw(n)),
   };
   res.balanceHistoryCache = generateHistoryFromOperations(res);
 
@@ -820,6 +819,10 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     res.used = !isAccountEmpty(res);
   } else {
     res.used = used;
+  }
+
+  if (nfts) {
+    res.nfts = nfts.map(fromNFTRaw);
   }
 
   if (xpub) {
@@ -936,8 +939,11 @@ export function toAccountRaw({
     lastSyncDate: lastSyncDate.toISOString(),
     balance: balance.toString(),
     spendableBalance: spendableBalance.toString(),
-    nfts: (nfts || []).map((n) => toNFTRaw(n)),
   };
+
+  if (nfts) {
+    res.nfts = nfts.map(toNFTRaw);
+  }
 
   if (balanceHistory) {
     res.balanceHistory = toBalanceHistoryRawMap(balanceHistory);

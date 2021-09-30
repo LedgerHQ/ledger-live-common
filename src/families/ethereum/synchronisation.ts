@@ -49,6 +49,7 @@ export const getAccountShape: GetAccountShape = async (
   const outdatedBlacklist = initialAccount?.syncHash !== syncHash;
   const pullFromBlockHash =
     initialAccount &&
+    !!initialAccount.nfts &&
     areAllOperationsLoaded(initialAccount) &&
     mostRecentStableOperation &&
     !outdatedBlacklist
