@@ -177,7 +177,7 @@ export async function runWithAppSpec<T extends Transaction>(
       return appReport;
     }
 
-    const mutationsCount = {};
+    let mutationsCount = {};
     // we sequentially iterate on the initial account set to perform mutations
     const length = accounts.length;
 
@@ -220,6 +220,7 @@ export async function runWithAppSpec<T extends Transaction>(
           device = await createSpeculosDevice(deviceParams);
         }
       }
+      mutationsCount = {};
     }
 
     accounts = await promiseAllBatched(5, accounts, syncAccount);
