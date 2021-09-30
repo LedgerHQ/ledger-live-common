@@ -58,7 +58,10 @@ const genericTest = ({
   );
   */
   if (!(Date.now() - operation.date > 200000)) {
-    console.warn("operation time to be older than 200s " + operation.id);
+    console.warn("operation time to be older than 200s " + operation.id, {
+      opDate: operation.date.toISOString(),
+      now: new Date().toISOString(),
+    });
   }
 
   // balance move
