@@ -43,11 +43,14 @@ export const getAccountShape: GetAccountShape = async (
       withDelisted: true,
     }).length;
   const outdatedBlacklist = initialAccount?.syncHash !== syncHash;
+  const firstNftSync =
+    getEnv("NFT") && typeof initialAccount?.nfts === "undefined";
   const pullFromBlockHash =
     initialAccount &&
     areAllOperationsLoaded(initialAccount) &&
     mostRecentStableOperation &&
-    !outdatedBlacklist
+    !outdatedBlacklist &&
+    !firstNftSync
       ? mostRecentStableOperation.blockHash
       : undefined;
   const txsP = fetchAllTransactions(api, address, pullFromBlockHash);
