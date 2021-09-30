@@ -270,7 +270,6 @@ const bitcoin: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "Bitcoin",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations(),
 };
@@ -283,7 +282,6 @@ const bitcoinTestnet: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "Bitcoin Test",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations({
     targetAccountSize: 8,
@@ -301,7 +299,6 @@ const bitcoinGold: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "BitcoinGold",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations(),
 };
@@ -317,7 +314,6 @@ const bitcoinCash: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "BitcoinCash",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations({
     targetAccountSize: 5,
@@ -341,7 +337,6 @@ const peercoin: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "Peercoin",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations(),
 };
@@ -353,7 +348,6 @@ const pivx: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "PivX",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations(),
 };
@@ -365,7 +359,6 @@ const qtum: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "Qtum",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations(),
 };
@@ -377,7 +370,6 @@ const stakenet: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "XSN",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations(),
 };
@@ -389,7 +381,6 @@ const vertcoin: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "Vertcoin",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations(),
 };
@@ -401,7 +392,6 @@ const viacoin: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "Viacoin",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations(),
 };
@@ -413,7 +403,6 @@ const dash: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "Dash",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations({
     targetAccountSize: 5,
@@ -431,7 +420,6 @@ const dogecoin: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "Dogecoin",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations({
     targetAccountSize: 5,
@@ -449,7 +437,6 @@ const zcash: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "Zcash",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations({
     minimalAmount: parseCurrencyUnit(
@@ -466,7 +453,6 @@ const zencash: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "Horizen",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations({
     minimalAmount: parseCurrencyUnit(
@@ -483,7 +469,6 @@ const digibyte: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "Digibyte",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations({
     targetAccountSize: 5,
@@ -501,7 +486,6 @@ const komodo: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "Komodo",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations({
     minimalAmount: parseCurrencyUnit(
@@ -518,7 +502,6 @@ const litecoin: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "Litecoin",
   },
-  testTimeout: 5 * 60 * 1000,
   test: genericTest,
   mutations: bitcoinLikeMutations({
     targetAccountSize: 5,
