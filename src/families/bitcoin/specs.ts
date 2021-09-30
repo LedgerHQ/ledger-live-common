@@ -275,6 +275,7 @@ const bitcoin: AppSpec<Transaction> = {
   mutations: bitcoinLikeMutations(),
 };
 const bitcoinTestnet: AppSpec<Transaction> = {
+  multipleRuns: 2,
   name: "Bitcoin Testnet",
   currency: getCryptoCurrencyById("bitcoin_testnet"),
   dependency: "Bitcoin",
@@ -288,7 +289,7 @@ const bitcoinTestnet: AppSpec<Transaction> = {
     targetAccountSize: 8,
     minimalAmount: parseCurrencyUnit(
       getCryptoCurrencyById("bitcoin_testnet").units[0],
-      "0.001"
+      "0.0001"
     ),
   }),
 };

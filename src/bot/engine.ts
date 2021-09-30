@@ -177,45 +177,50 @@ export async function runWithAppSpec<T extends Transaction>(
       return appReport;
     }
 
-    const mutationsCount = {};
+    let mutationsCount = {};
     // we sequentially iterate on the initial account set to perform mutations
     const length = accounts.length;
 
-    for (let i = 0; i < length; i++) {
-      log("engine", `spec ${spec.name} sync all accounts`);
-      // resync all accounts (necessary between mutations)
-      t = now();
-      accounts = await promiseAllBatched(5, accounts, syncAccount);
-      appReport.accountsAfter = accounts;
-      const syncAllAccountsTime = now() - t;
-      const account = accounts[i];
-      const report = await runOnAccount({
-        appCandidate,
-        spec,
-        device,
-        account,
-        accounts,
-        mutationsCount,
-        syncAllAccountsTime,
-        preloadedData,
-      });
-      // eslint-disable-next-line no-console
-      console.log(formatReportForConsole(report));
-      mutationReports.push(report);
-      appReport.mutations = mutationReports;
+    const totalTries = spec.multipleRuns || 1;
+    for (let t = 0; t < totalTries; t++) {
+      for (let i = 0; i < length; i++) {
+        log("engine", `spec ${spec.name} sync all accounts`);
+        // resync all accounts (necessary between mutations)
+        t = now();
+        accounts = await promiseAllBatched(5, accounts, syncAccount);
+        appReport.accountsAfter = accounts;
+        const syncAllAccountsTime = now() - t;
+        const account = accounts[i];
+        const report = await runOnAccount({
+          appCandidate,
+          spec,
+          device,
+          account,
+          accounts,
+          mutationsCount,
+          syncAllAccountsTime,
+          preloadedData,
+        });
+        // eslint-disable-next-line no-console
+        console.log(formatReportForConsole(report));
+        mutationReports.push(report);
+        appReport.mutations = mutationReports;
 
-      if (
-        report.error ||
-        (report.latestSignOperationEvent &&
-          report.latestSignOperationEvent.type === "device-signature-requested")
-      ) {
-        log(
-          "engine",
-          `spec ${spec.name} is recreating the device because deviceAction didn't finished`
-        );
-        await releaseSpeculosDevice(device.id);
-        device = await createSpeculosDevice(deviceParams);
+        if (
+          report.error ||
+          (report.latestSignOperationEvent &&
+            report.latestSignOperationEvent.type ===
+              "device-signature-requested")
+        ) {
+          log(
+            "engine",
+            `spec ${spec.name} is recreating the device because deviceAction didn't finished`
+          );
+          await releaseSpeculosDevice(device.id);
+          device = await createSpeculosDevice(deviceParams);
+        }
       }
+      mutationsCount = {};
     }
 
     accounts = await promiseAllBatched(5, accounts, syncAccount);
