@@ -115,6 +115,10 @@ export const getAccountShape: GetAccountShape = async (info) => {
 
   const result = {
     balance: parseCurrencyUnit(getUnit(), String(balance.total_balance)),
+    spendableBalance: parseCurrencyUnit(
+      getUnit(),
+      String(balance.spendable_balance)
+    ),
     operations: flatMap(txs, mapTxToOps(info)),
     blockHeight: blockHeight.current_block_identifier.index,
   };

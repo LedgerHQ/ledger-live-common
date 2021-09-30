@@ -67,9 +67,6 @@ const getTransactionStatus = async (
   const errors: TransactionStatus["errors"] = {};
   const warnings: TransactionStatus["warnings"] = {};
 
-  let estimatedFees = new BigNumber(0);
-  let totalSpent = new BigNumber(0);
-
   const { address } = getAddress(a);
   const { recipient, amount, gasPremium, gasFeeCap, gasLimit } = t;
 
@@ -85,10 +82,10 @@ const getTransactionStatus = async (
     errors.gas = new FeeNotLoaded();
 
   // This is the worst case scenario (the tx won't cost more than this value)
-  estimatedFees = calculateEstimatedFees(gasFeeCap, gasLimit);
+  const estimatedFees = calculateEstimatedFees(gasFeeCap, gasLimit);
 
   // Add the estimated fees to the tx amount
-  totalSpent = amount.plus(estimatedFees);
+  const totalSpent = amount.plus(estimatedFees);
 
   if (amount.lte(0)) errors.amount = new AmountRequired();
   if (totalSpent.gt(a.spendableBalance)) errors.amount = new NotEnoughBalance();
@@ -122,6 +119,7 @@ const estimateMaxSpendable = async ({
   const balance = new BigNumber(balances.spendable_balance);
 
   const recipient = transaction?.recipient;
+  const amount = transaction?.amount;
   if (recipient) {
     log(
       "debug",
@@ -134,6 +132,8 @@ const estimateMaxSpendable = async ({
 
     balance.minus(calculateEstimatedFees(gasFeeCap, gasLimit));
   }
+
+  if (amount) balance.minus(amount);
 
   // log("debug", "[estimateMaxSpendable] finish fn");
 
