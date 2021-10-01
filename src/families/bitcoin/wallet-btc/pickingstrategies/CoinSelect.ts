@@ -29,16 +29,7 @@ export class CoinSelect extends PickingStrategy {
           (x) => x.hash === o.output_hash && x.outputIndex === o.output_index
         ).length
     );
-
-    /*
-     * This coin selection is inspired from the one used in Bitcoin Core
-     * for more details please refer to SelectCoinsBnB
-     * https://github.com/bitcoin/bitcoin/blob/0c5f67b8e5d9a502c6d321c5e0696bc3e9b4690d/src/wallet/coinselection.cpp
-     * A coin selection is considered valid if its total value is within the range : [targetAmount, targetAmount + costOfChange]
-     */
-    // refer to https://github.com/LedgerHQ/lib-ledger-core/blob/master/core/src/wallet/bitcoin/transaction_builders/BitcoinLikeStrategyUtxoPicker.cpp#L168
     const TOTAL_TRIES = 100000;
-    const longTermFees = 20;
 
     // Compute cost of change
     const fixedSize = utils.estimateTxSize(
@@ -51,39 +42,22 @@ export class CoinSelect extends PickingStrategy {
     const oneOutputSize =
       utils.estimateTxSize(0, 1, this.crypto, this.derivationMode) - fixedSize;
     // Size 1 signed UTXO (signed input)
-    const signedUTXOSize =
+    const oneInputSize =
       utils.estimateTxSize(1, 0, this.crypto, this.derivationMode) - fixedSize;
-
-    // Size of unsigned change
-    const changeSize = oneOutputSize;
-    // Size of signed change
-    const signedChangeSize = signedUTXOSize;
-
-    const effectiveFees = feePerByte;
-    // Here signedChangeSize should be multiplied by discard fees
-    // but since we don't have access to estimateSmartFees, we assume
-    // that discard fees are equal to effectiveFees
-    const costOfChange = effectiveFees * (signedChangeSize + changeSize);
 
     // Calculate effective value of outputs
     let currentAvailableValue = 0;
     let effectiveUtxos: Array<{
       index: number;
-      effectiveFees: number;
-      longTermFees: number;
       effectiveValue: number;
     }> = [];
 
     for (let i = 0; i < unspentUtxos.length; i += 1) {
       const outEffectiveValue =
-        Number(unspentUtxos[i].value) - effectiveFees * signedUTXOSize;
+        Number(unspentUtxos[i].value) - feePerByte * oneInputSize;
       if (outEffectiveValue > 0) {
-        const outEffectiveFees = effectiveFees * signedUTXOSize;
-        const outLongTermFees = longTermFees * signedUTXOSize;
         const effectiveUtxo = {
           index: i,
-          effectiveFees: outEffectiveFees,
-          longTermFees: outLongTermFees,
           effectiveValue: outEffectiveValue,
         };
         effectiveUtxos.push(effectiveUtxo);
@@ -94,13 +68,11 @@ export class CoinSelect extends PickingStrategy {
     // Get no inputs fees
     // At beginning, there are no outputs in tx, so noInputFees are fixed fees
     const notInputFees =
-      effectiveFees * (fixedSize + oneOutputSize * nbOutputsWithoutChange);
+      feePerByte * (fixedSize + oneOutputSize * nbOutputsWithoutChange);
 
     // Start coin selection algorithm (according to SelectCoinBnb from Bitcoin Core)
     let currentValue = 0;
-    // std::vector<bool> currentSelection;
-    // currentSelection.reserve(utxos.size());
-    let currentSelection: boolean[] = [];
+    const currentSelection: boolean[] = [];
 
     // Actual amount we are targetting
     const actualTarget = notInputFees + amount.toNumber();
@@ -113,116 +85,16 @@ export class CoinSelect extends PickingStrategy {
     // Sort utxos by effectiveValue
     effectiveUtxos = sortBy(effectiveUtxos, "effectiveValue");
     effectiveUtxos = effectiveUtxos.reverse();
-
     let currentWaste = 0;
     let bestWaste = Number.MAX_SAFE_INTEGER;
     let bestSelection: boolean[] = [];
 
-    // Deep first search loop to choose UTXOs
-    for (let i = 0; i < TOTAL_TRIES; i += 1) {
-      // Condition for starting a backtrack
-      let backtrack = false;
-      if (
-        currentValue + currentAvailableValue < actualTarget || // Cannot reach target with the amount remaining in currentAvailableValue
-        currentValue > actualTarget + costOfChange || // Selected value is out of range, go back and try other branch
-        (currentWaste > bestWaste &&
-          effectiveUtxos[0].effectiveFees - effectiveUtxos[0].longTermFees > 0)
-      ) {
-        // avoid selecting utxos producing more waste
-        backtrack = true;
-      } else if (currentValue >= actualTarget) {
-        // Selected valued is within range
-        currentWaste += currentValue - actualTarget;
-        if (currentWaste <= bestWaste) {
-          bestSelection = currentSelection.slice();
-          while (effectiveUtxos.length > bestSelection.length) {
-            bestSelection.push(false);
-          }
-          bestSelection.length = effectiveUtxos.length;
-          bestWaste = currentWaste;
-        }
-        // remove the excess value as we will be selecting different coins now
-        currentWaste -= currentValue - actualTarget;
-        backtrack = true;
-      }
-      // Move backwards
-      if (backtrack) {
-        // Walk backwards to find the last included UTXO that still needs to have its omission branch traversed.
-        while (
-          currentSelection.length > 0 &&
-          !currentSelection[currentSelection.length - 1]
-        ) {
-          currentSelection.pop();
-          currentAvailableValue +=
-            effectiveUtxos[currentSelection.length].effectiveValue;
-        }
-
-        // Case we walked back to the first utxos and all solutions searched.
-        if (currentSelection.length === 0) {
-          break;
-        }
-
-        // Output was included on previous iterations, try excluding now
-        currentSelection[currentSelection.length - 1] = false;
-        const eu = effectiveUtxos[currentSelection.length - 1];
-        currentValue -= eu.effectiveValue;
-        currentWaste -= eu.effectiveFees - eu.longTermFees;
-      } else {
-        // Moving forwards, continuing down this branch
-        const eu = effectiveUtxos[currentSelection.length];
-        // Remove this utxos from currentAvailableValue
-        currentAvailableValue -= eu.effectiveValue;
-
-        // Avoid searching a branch if the previous UTXO has the same value and same waste and was excluded. Since the ratio of fee to
-        // long term fee is the same, we only need to check if one of those values match in order to know that the waste is the same.
-        if (
-          currentSelection.length > 0 &&
-          !currentSelection[currentSelection.length - 1] &&
-          eu.effectiveValue ===
-            effectiveUtxos[currentSelection.length - 1].effectiveValue &&
-          eu.effectiveFees ===
-            effectiveUtxos[currentSelection.length - 1].effectiveFees
-        ) {
-          currentSelection.push(false);
-        } else {
-          // Inclusion branch first
-          currentSelection.push(true);
-          currentValue += eu.effectiveValue;
-          currentWaste += eu.effectiveFees - eu.longTermFees;
-        }
-      }
-    }
-    if (bestSelection.length > 0) {
-      let total = new BigNumber(0);
-      const unspentUtxoSelected: Output[] = [];
-      for (let i = 0; i < bestSelection.length; i += 1) {
-        if (bestSelection[i]) {
-          unspentUtxoSelected.push(unspentUtxos[effectiveUtxos[i].index]);
-          total = total.plus(unspentUtxos[effectiveUtxos[i].index].value);
-        }
-      }
-      const fee = utils.estimateTxSize(
-        unspentUtxoSelected.length,
-        nbOutputsWithoutChange,
-        this.crypto,
-        this.derivationMode
-      );
-      return {
-        totalValue: total,
-        unspentUtxos: unspentUtxoSelected,
-        fee: Math.ceil(fee),
-        needChangeoutput: false,
-      };
-    }
-
-    // if a coinSelect solution is not found, dfs to find a solution with minimal fees
-    currentValue = 0;
-    currentSelection = [];
+    // Dfs to find a solution with minimal fees
     let bestSelectionNeedChangeoutput = false;
     let currentSelectionNeedChangeoutput = false;
     for (let i = 0; i < TOTAL_TRIES; i += 1) {
       let backtrack = false;
-      const nbInput = signedUTXOSize * currentSelection.filter((x) => x).length;
+      const nbInput = currentSelection.filter((x) => x).length;
       if (currentValue >= actualTarget) {
         if (currentValue - actualTarget > feePerByte * oneOutputSize) {
           // changeoutput is required
@@ -285,7 +157,6 @@ export class CoinSelect extends PickingStrategy {
         currentValue += eu.effectiveValue;
       }
     }
-
     // solution found
     if (bestSelection.length > 0) {
       let total = new BigNumber(0);
@@ -296,14 +167,16 @@ export class CoinSelect extends PickingStrategy {
           total = total.plus(unspentUtxos[effectiveUtxos[i].index].value);
         }
       }
-      const fee = utils.estimateTxSize(
-        unspentUtxoSelected.length,
-        bestSelectionNeedChangeoutput
-          ? nbOutputsWithoutChange + 1
-          : nbOutputsWithoutChange,
-        this.crypto,
-        this.derivationMode
-      );
+      const fee =
+        feePerByte *
+        utils.estimateTxSize(
+          unspentUtxoSelected.length,
+          bestSelectionNeedChangeoutput
+            ? nbOutputsWithoutChange + 1
+            : nbOutputsWithoutChange,
+          this.crypto,
+          this.derivationMode
+        );
       return {
         totalValue: total,
         unspentUtxos: unspentUtxoSelected,
