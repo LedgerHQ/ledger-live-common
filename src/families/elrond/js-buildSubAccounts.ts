@@ -1,4 +1,4 @@
-import { CryptoCurrency, findTokenById, listTokens, listTokensForCryptoCurrency, TokenCurrency } from "@ledgerhq/cryptoassets";
+import { CryptoCurrency, findTokenById, listTokensForCryptoCurrency, TokenCurrency } from "@ledgerhq/cryptoassets";
 import BigNumber from "bignumber.js";
 import { emptyHistoryCache } from "../../account";
 import { Account, SyncConfig, TokenAccount } from "../../types";
@@ -17,7 +17,8 @@ async function buildElrondESDTTokenAccount({
 }) {
   const extractedId = token.id;
   const id = parentAccountId + "+" + extractedId;
-  const tokenIdentifier = Buffer.from(token.id.split('/')[2], 'hex').toString();
+  const tokenIdentifierHex = token.id.split('/')[2];
+  const tokenIdentifier = Buffer.from(tokenIdentifierHex, 'hex').toString();
 
   const operations = await getAccountESDTOperations(parentAccountId, accountAddress, tokenIdentifier);
   const tokenAccount: TokenAccount = {
@@ -76,9 +77,10 @@ async function elrondBuildESDTTokenAccounts({
     }
   }
 
-  const accountESDTs = await getAccountESDTTokens();
-  accountESDTs.forEach(async (esdt) => {
-    const token = findTokenById(`elrond/esdt/${esdt.identifier}`);
+  const accountESDTs = await getAccountESDTTokens(accountAddress);
+  for (let esdt of accountESDTs) {
+    const esdtIdentifierHex = Buffer.from(esdt.identifier).toString('hex');
+    const token = findTokenById(`elrond/esdt/${esdtIdentifierHex}`);
 
     if (token && !blacklistedTokenIds.includes(token.id)) {
       const tokenAccount = await buildElrondESDTTokenAccount({
@@ -92,7 +94,7 @@ async function elrondBuildESDTTokenAccounts({
         tokenAccounts.push(tokenAccount);
       }
     }
-  });
+  }
 
   // Preserve order of tokenAccounts from the existing token accounts
   tokenAccounts.sort((a, b) => {

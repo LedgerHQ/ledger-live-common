@@ -22,8 +22,8 @@ export const buildTransaction = async (
   const transactionType = signUsingHash ? HASH_TRANSACTION : RAW_TRANSACTION;
   let data;
   if (ta) {
-    const tokenIdentifier = Buffer.from(ta.id.split('/')[2], 'hex').toString();
-    data = `ESDTTransfer@${tokenIdentifier}@${t.amount}`;
+    const tokenIdentifierHex = ta.id.split('/')[2];
+    data = `ESDTTransfer@${tokenIdentifierHex}@${t.amount.toString(16)}`;
   }
 
   const unsigned = {

@@ -8,6 +8,7 @@ import { encodeOperationId } from "../../operation";
 import Elrond from "./hw-app-elrond";
 import { buildTransaction } from "./js-buildTransaction";
 import { getNonce, compareVersions } from "./logic";
+import { findTokenById } from "@ledgerhq/cryptoassets";
 
 const buildOptimisticOperation = (
   account: Account,
@@ -59,6 +60,9 @@ const signOperation = ({
         }
         // Collect data for an ESDT transfer
         const { subAccounts } = account;
+        if (subAccounts) {
+          transaction.subAccountId = subAccounts[0].id;
+        }
         const { subAccountId } = transaction;
         const tokenAccount = !subAccountId
           ? null
@@ -66,6 +70,13 @@ const signOperation = ({
 
         const elrond = new Elrond(transport);
         await elrond.setAddress(account.freshAddressPath);
+
+        if (tokenAccount) {
+          const tokenIdentifier = tokenAccount.id.split('+')[1];
+          const token = findTokenById(`elrond/esdt/${tokenIdentifier}`);
+          const message = await elrond.provideESDTInfo(token?.ticker || '', token?.id.split(',')[2] || '', token?.units[0].magnitude || 18, 'T', token?.ledgerSignature || '');
+          console.log({message});
+        }
         const { version } = await elrond.getAppConfiguration();
         const signUsingHash = compareVersions(version, "1.0.11") >= 0;
 

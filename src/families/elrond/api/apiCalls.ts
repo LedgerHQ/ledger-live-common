@@ -127,10 +127,19 @@ export default class ElrondApi {
   async getESDTTransactionsForAddress(addr: string, token: string) {
     const { data: transactions } = await network({
       method: "GET",
-      url: `${this.API_URL}/transactions?token=${token}&sender=${addr}&receiver=${addr}&condition=should`
+      url: `${this.API_URL}/transactions?sender=${addr}&receiver=${addr}&condition=should`
     });
 
-    return transactions;
+    return transactions.filter(({tokenIdentifier}) => tokenIdentifier && tokenIdentifier==token);
+  }
+
+  async getESDTTokensForAddress(addr: string) {
+    const { data: tokens } = await network({
+      method: "GET",
+      url: `${this.API_URL}/accounts/${addr}/tokens`
+    });
+
+    return tokens;
   }
 
   async getBlockchainBlockHeight() {
