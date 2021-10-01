@@ -70,6 +70,11 @@ const envDefinitions = {
     def: "wss://xrplcluster.com",
     desc: "XRP Ledger full history open WebSocket endpoint",
   },
+  API_FILECOIN_ENDPOINT: {
+    parser: stringParser,
+    def: "https://filecoin.coin.ledger.com", // FIXME Filecoin - Set the correct value for ledger proxy
+    desc: "Filecoin API url",
+  },
   API_POLKADOT_INDEXER: {
     parser: stringParser,
     def: "https://polkadot.coin.ledger.com",

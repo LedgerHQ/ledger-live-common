@@ -1,6 +1,5 @@
 import { log } from "@ledgerhq/logs";
 import { AxiosRequestConfig, AxiosResponse } from "axios";
-import { LedgerAPINotAvailable } from "@ledgerhq/errors";
 
 import {
   BalanceResponse,
@@ -13,25 +12,13 @@ import {
   TransactionsResponse,
 } from "./types";
 import network from "../../../../network";
-import { blockchainBaseURL } from "../../../../api/Ledger";
-import { getCryptoCurrencyById } from "../../../../currencies";
 import { getEnv } from "../../../../env";
 
-const root = "http://127.0.0.1:8888/blockchain/filecoin";
-
 const getFilecoinURL = (path?: string): string => {
-  if (getEnv("DEVELOPMENT_MODE")) return root + (path ? path : "");
+  const baseUrl = getEnv("API_FILECOIN_ENDPOINT");
+  if (!baseUrl) throw new Error("API base URL not available");
 
-  const currency = getCryptoCurrencyById("filecoin");
-  const baseURL = blockchainBaseURL(currency);
-
-  if (!baseURL) {
-    throw new LedgerAPINotAvailable(`LedgerAPINotAvailable ${currency.id}`, {
-      currencyName: currency.name,
-    });
-  }
-
-  return baseURL + (path ? path : "");
+  return `${baseUrl}${path ? path : ""}`;
 };
 
 const fetch = async <T>(path: string) => {
