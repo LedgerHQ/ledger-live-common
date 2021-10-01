@@ -186,7 +186,7 @@ export const perCoinLogic: Record<
   },
 };
 
-// TODO vvvvv DEPRECATED, TO BE REMOVED vvvvv
+// vvvvv DEPRECATED - used only by legacy libcore implementation vvvvv
 
 export async function parseBitcoinInput(
   input: CoreBitcoinLikeInput

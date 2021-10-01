@@ -89,11 +89,7 @@ const genericTest = ({
         ? operation.senders
         : txInputs.map((t) => t.address).filter(Boolean),
       recipients: txOutputs
-        // TODO REPLACE >>>>>>>>>>>>>>>>>>
         .filter((o) => o.address && !o.isChange && !isChangeOutput(o))
-        /*/ WITH <<<<<<<<<<<<<<<<<<<<<<<<<
-        .filter((o) => o.address && !o.isChange)
-        //*/
         .map((o) => o.address)
         .filter(Boolean),
     })
