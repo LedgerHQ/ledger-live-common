@@ -50,19 +50,10 @@ const genericTest = ({
   status,
   accountBeforeTransaction,
 }) => {
-  // reveal buggy explorer behavior (nodes desync)
-  /*
   invariant(
-    Date.now() - operation.date > 200000,
-    "operation time to be older than 200s"
+    Date.now() - operation.date < 1000000,
+    "operation time to be recent"
   );
-  */
-  if (!(Date.now() - operation.date > 200000)) {
-    console.warn("operation time to be older than 200s " + operation.id, {
-      opDate: operation.date.toISOString(),
-      now: new Date().toISOString(),
-    });
-  }
 
   // balance move
   expect(account.balance.toString()).toBe(
