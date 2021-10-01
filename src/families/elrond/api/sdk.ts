@@ -103,14 +103,9 @@ export const getOperations = async (
 };
 
 export const getAccountESDTTokens = async (
-  // address: string,
+  address: string,
 ): Promise<any[]> => {
-  // const tokens = await api.getTokensForAddress(address);
-
-  return [{
-    identifier: '4452442d633462303861',
-    balance: '100',
-  }];
+  return await api.getESDTTokensForAddress(address);
 }
 
 export const getAccountESDTOperations = async (
