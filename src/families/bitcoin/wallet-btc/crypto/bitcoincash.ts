@@ -1,4 +1,5 @@
-// from https://github.com/LedgerHQ/xpub-scan/blob/master/src/actions/deriveAddresses.ts
+// Fix the "More than one instance of bitcore-lib-cash" issue. Refer to https://github.com/bitpay/bitcore/issues/1457
+delete global._bitcoreCash;
 import * as bch from "bitcore-lib-cash";
 import bchaddr from "bchaddrjs";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
