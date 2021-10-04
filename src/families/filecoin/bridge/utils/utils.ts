@@ -114,11 +114,9 @@ export const getAccountShape: GetAccountShape = async (info) => {
   const txs = await fetchTxs(address);
 
   const result = {
-    balance: parseCurrencyUnit(getUnit(), String(balance.total_balance)),
-    spendableBalance: parseCurrencyUnit(
-      getUnit(),
-      String(balance.spendable_balance)
-    ),
+    balance: new BigNumber(balance.total_balance),
+    spendableBalance: new BigNumber(balance.spendable_balance),
+
     operations: flatMap(txs, mapTxToOps(info)),
     blockHeight: blockHeight.current_block_identifier.index,
   };

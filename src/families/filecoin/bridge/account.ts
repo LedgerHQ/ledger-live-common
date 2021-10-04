@@ -115,7 +115,10 @@ const estimateMaxSpendable = async ({
   const a = getMainAccount(account, parentAccount);
   const { address } = getAddress(a);
 
+  if (!validateAddress(address).isValid) throw new InvalidAddress();
+
   const balances = await fetchBalances(address);
+
   const balance = new BigNumber(balances.spendable_balance);
 
   const recipient = transaction?.recipient;
@@ -125,6 +128,8 @@ const estimateMaxSpendable = async ({
       "debug",
       "[estimateMaxSpendable] fetching estimated fees to adjust the real max spendable balance"
     );
+
+    if (!validateAddress(recipient).isValid) throw new InvalidAddress();
 
     const result = await fetchEstimatedFees({ to: recipient, from: address });
     const gasFeeCap = new BigNumber(result.gas_fee_cap);
@@ -152,11 +157,16 @@ const prepareTransaction = async (
   if (recipient && address) {
     // log("debug", "[prepareTransaction] fetching estimated fees");
 
-    const result = await fetchEstimatedFees({ to: recipient, from: address });
-    t.gasFeeCap = new BigNumber(result.gas_fee_cap);
-    t.gasPremium = new BigNumber(result.gas_premium);
-    t.gasLimit = new BigNumber(result.gas_limit);
-    t.nonce = result.nonce;
+    if (
+      validateAddress(recipient).isValid &&
+      validateAddress(address).isValid
+    ) {
+      const result = await fetchEstimatedFees({ to: recipient, from: address });
+      t.gasFeeCap = new BigNumber(result.gas_fee_cap);
+      t.gasPremium = new BigNumber(result.gas_premium);
+      t.gasLimit = new BigNumber(result.gas_limit);
+      t.nonce = result.nonce;
+    }
   }
 
   // log("debug", "[prepareTransaction] finish fn");
