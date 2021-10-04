@@ -3,10 +3,7 @@
 import { toOutputScript } from "bitcoinjs-lib/src/address";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import bitcore from "bitcore-lib";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import zec from "bitcore-lib-zcash";
+import zec from "zcash-bitcore-lib";
 import bs58check from "bs58check";
 import { DerivationModes } from "../types";
 import { ICrypto, DerivationMode } from "./types";
@@ -45,10 +42,10 @@ class ZCash implements ICrypto {
 
   // eslint-disable-next-line
   getLegacyAddress(xpub: string, account: number, index: number): string {
-    const pubkey = new bitcore.HDPublicKey(xpub);
+    const pubkey = new zec.HDPublicKey(xpub);
     const child = pubkey.derive(account).derive(index);
-    const address = new bitcore.Address(child.publicKey, zec.Networks.livenet);
-    return this.baddrToTaddr(address.toString());
+    const address = new zec.Address(child.publicKey, zec.Networks.livenet);
+    return address.toString();
   }
 
   getAddress(
