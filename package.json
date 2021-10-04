@@ -81,9 +81,7 @@
     "bip32-path": "^0.4.2",
     "bip39": "^3.0.4",
     "bitcoinjs-lib": "^5.2.0",
-    "bitcore-lib": "^8.25.10",
     "bitcore-lib-cash": "^8.25.21",
-    "bitcore-lib-zcash": "^0.13.20",
     "blake2b": "^2.1.3",
     "bs58": "^4.0.1",
     "bs58check": "^2.1.2",
@@ -121,7 +119,8 @@
     "stellar-sdk": "^8.3.0",
     "triple-beam": "^1.3.0",
     "winston": "^3.3.3",
-    "xstate": "^4.25.0"
+    "xstate": "^4.25.0",
+    "zcash-bitcore-lib": "^0.13.20-rc3"
   },
   "devDependencies": {
     "@svgr/core": "^5.5.0",

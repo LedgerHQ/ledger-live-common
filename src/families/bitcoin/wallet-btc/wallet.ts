@@ -1,4 +1,3 @@
-require("bitcore-lib");
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { flatten } from "lodash";
