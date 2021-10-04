@@ -32,6 +32,7 @@ const dataset: DatasetTest<Transaction> = {
       ],
       accounts: [
         {
+          FIXME_tests: ["balance is sum of ops"],
           raw: {
             id: `js:2:filecoin:${SEED_IDENTIFIER}:filecoin`,
             seedIdentifier: SEED_IDENTIFIER,
@@ -92,66 +93,6 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "Fee Required (Gas Premium)",
-              transaction: fromTransactionRaw({
-                family: "filecoin",
-                method: 1,
-                version: 1,
-                nonce: 100,
-                gasFeeCap: "1000",
-                gasLimit: 100,
-                gasPremium: "0",
-                recipient: ACCOUNT_1,
-                amount: "100000000",
-              }),
-              expectedStatus: {
-                errors: {
-                  gas: new FeeNotLoaded(),
-                },
-                warnings: {},
-              },
-            },
-            {
-              name: "Fee Required (Gas Fee Cap)",
-              transaction: fromTransactionRaw({
-                family: "filecoin",
-                method: 1,
-                version: 1,
-                nonce: 100,
-                gasFeeCap: "0",
-                gasLimit: 100,
-                gasPremium: "10000",
-                recipient: ACCOUNT_1,
-                amount: "100000000",
-              }),
-              expectedStatus: {
-                errors: {
-                  gas: new FeeNotLoaded(),
-                },
-                warnings: {},
-              },
-            },
-            {
-              name: "Fee Required (Gas Limit)",
-              transaction: fromTransactionRaw({
-                family: "filecoin",
-                method: 1,
-                version: 1,
-                nonce: 100,
-                gasFeeCap: "1000",
-                gasLimit: 0,
-                gasPremium: "10000",
-                recipient: ACCOUNT_1,
-                amount: "100000000",
-              }),
-              expectedStatus: {
-                errors: {
-                  gas: new FeeNotLoaded(),
-                },
-                warnings: {},
-              },
-            },
-            {
               name: "Not enough balance",
               transaction: fromTransactionRaw({
                 family: "filecoin",
@@ -162,7 +103,7 @@ const dataset: DatasetTest<Transaction> = {
                 gasLimit: 10,
                 gasPremium: "10000",
                 recipient: ACCOUNT_1,
-                amount: "10000000000000",
+                amount: "10000000000000000000000000",
               }),
               expectedStatus: {
                 errors: {
