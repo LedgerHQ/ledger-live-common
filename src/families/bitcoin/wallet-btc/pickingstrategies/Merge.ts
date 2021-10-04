@@ -37,7 +37,7 @@ export class Merge extends PickingStrategy {
       utils.estimateTxSize(0, 1, this.crypto, this.derivationMode) -
       utils.estimateTxSize(0, 0, this.crypto, this.derivationMode);
 
-    unspentUtxos = sortBy(unspentUtxos, "value");
+    unspentUtxos = sortBy(unspentUtxos, (utxo) => parseInt(utxo.value, 10));
     // https://metamug.com/article/security/bitcoin-transaction-fee-satoshi-per-byte.html
     const txSizeNoInput = utils.estimateTxSize(
       0,
