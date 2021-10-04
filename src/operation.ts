@@ -66,7 +66,9 @@ export function patchOperationWithHash(
   };
 }
 
-export function flattenOperationWithInternals(op: Operation): Operation[] {
+export function flattenOperationWithInternalsAndNfts(
+  op: Operation
+): Operation[] {
   let ops: Operation[] = [];
 
   // ops of type NONE does not appear in lists
@@ -77,6 +79,11 @@ export function flattenOperationWithInternals(op: Operation): Operation[] {
   // all internal operations are expanded after the main op
   if (op.internalOperations) {
     ops = ops.concat(op.internalOperations);
+  }
+
+  // all nfts operations are expanded after the main op
+  if (op.nftOperations) {
+    ops = ops.concat(op.nftOperations);
   }
 
   return ops;
@@ -122,7 +129,7 @@ export function getOperationAmountNumber(op: Operation): BigNumber {
 export function getOperationAmountNumberWithInternals(
   op: Operation
 ): BigNumber {
-  return flattenOperationWithInternals(op).reduce(
+  return flattenOperationWithInternalsAndNfts(op).reduce(
     (amount: BigNumber, op) => amount.plus(getOperationAmountNumber(op)),
     new BigNumber(0)
   );
