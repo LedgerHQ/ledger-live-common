@@ -338,9 +338,8 @@ export function patchAccount(
   }
 
   if (
-    updatedRaw.bitcoinResources
-    // Disabled because more costly for perf than refreshing
-    //&& shouldRefreshBitcoinResources(updatedRaw, account)
+    updatedRaw.bitcoinResources &&
+    shouldRefreshBitcoinResources(updatedRaw, account)
   ) {
     next.bitcoinResources = fromBitcoinResourcesRaw(
       updatedRaw.bitcoinResources
