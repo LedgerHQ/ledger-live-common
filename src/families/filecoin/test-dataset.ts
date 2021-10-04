@@ -102,7 +102,7 @@ const dataset: DatasetTest<Transaction> = {
                 gasLimit: 10,
                 gasPremium: "10000",
                 recipient: ACCOUNT_1,
-                amount: "10000000000000000000000000",
+                amount: "100000000000000000000000000",
               }),
               expectedStatus: {
                 errors: {
