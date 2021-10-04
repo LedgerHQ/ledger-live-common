@@ -1,7 +1,6 @@
 import { BigNumber } from "bignumber.js";
 import {
   AmountRequired,
-  FeeNotLoaded,
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughBalance,
