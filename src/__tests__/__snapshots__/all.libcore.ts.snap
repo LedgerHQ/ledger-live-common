@@ -5,7 +5,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "bitcoin",
@@ -111,7 +111,7 @@ Array [
   Object {
     "balance": "2717",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "7a608bb52ba2aaaae648eee7ce53d51ea571a801404af5c87867b70268e55bd0",
@@ -228,7 +228,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "bitcoin",
@@ -334,7 +334,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "bitcoin",
@@ -440,7 +440,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "bitcoin",
@@ -546,7 +546,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "bitcoin",
@@ -652,7 +652,7 @@ Array [
   Object {
     "balance": "2757",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "7dba629e308995d5280f2abe011d4e849cdd1e25e08215d51fbe7df6e53e101d",
@@ -769,7 +769,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "bitcoin",
@@ -11637,7 +11637,7 @@ Array [
   Object {
     "balance": "2593800",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "1053e9455bc1b95745d8ce9a58ecfedeb170449f2dceaa96c96e180f89aee95f",
@@ -11774,7 +11774,7 @@ Array [
   Object {
     "balance": "1757516",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "cceb3e1578451fa0a0cb7efed75b8961a371ec74ecc2d6d0815094544cdc1aec",
@@ -11891,7 +11891,7 @@ Array [
   Object {
     "balance": "1805064",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "70324bd1d65e39a7574ee5ed557420e245fc7369d24e030600b51b5cf4afd436",
@@ -12008,7 +12008,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "bitcoin_gold",
@@ -12114,7 +12114,7 @@ Array [
   Object {
     "balance": "568927",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "4c36443d9b1ffd8305f9ed42a621ef8ed0692f316dfd6f6711926eb4d67f1785",
@@ -12231,7 +12231,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "bitcoin_gold",
@@ -13205,7 +13205,7 @@ Array [
   Object {
     "balance": "74296",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "15be7ced1e5ad180f6039f0f2d2bc32cca2768d5ecff1432df750a3e42112487",
@@ -13322,7 +13322,7 @@ Array [
   Object {
     "balance": "349548",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "cdd7d96d1a79dbad9fb41e8fa491c583f7a566b8d1c2881ddbe89a4c946db404",
@@ -13439,7 +13439,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "dash",
@@ -14291,7 +14291,7 @@ Array [
   Object {
     "balance": "2302647120",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "f1787469b47cff2d19ef764e3f1ff7d4723e87c9548d1172e436dba013252a64",
@@ -14418,7 +14418,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "digibyte",
@@ -14524,7 +14524,7 @@ Array [
   Object {
     "balance": "565825271",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "d7b9e6b1450b2098fabc6152835d15fd96d78e65107fbd092c6396e0372dd052",
@@ -14641,7 +14641,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "digibyte",
@@ -14747,7 +14747,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "digibyte",
@@ -14853,7 +14853,7 @@ Array [
   Object {
     "balance": "4818737648",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "aa7f5738308da550cd0ef60072386e812e37fda7d43af8ad82f5074d9af9b43a",
@@ -14970,7 +14970,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "digibyte",
@@ -16394,7 +16394,7 @@ Array [
   Object {
     "balance": "4988700000",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "91dfcf917327cdefe23381743ab3ffcd5e83d72972f76eb6e061c94bd590dff8",
@@ -16511,7 +16511,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "dogecoin",
@@ -16617,7 +16617,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "dogecoin",
@@ -46754,7 +46754,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "komodo",
@@ -46860,7 +46860,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "komodo",
@@ -46966,7 +46966,7 @@ Array [
   Object {
     "balance": "2745254",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "5dd9621a4b1eeb19339119aa688aea241200aac6c1f267356800dfedfcb22ba7",
@@ -47083,7 +47083,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "komodo",
@@ -50483,7 +50483,7 @@ Array [
   Object {
     "balance": "2183515",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "f658de54c64a0cb95f3dc381eac15316657e7ba2c293af8451b384a8b344a719",
@@ -50620,7 +50620,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "litecoin",
@@ -50726,7 +50726,7 @@ Array [
   Object {
     "balance": "462167",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "2eb48dd5220f14daaebf5f2c9ba210005842d2766b2bac9c9254c1f674eae667",
@@ -50853,7 +50853,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "litecoin",
@@ -50959,7 +50959,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "litecoin",
@@ -51065,7 +51065,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "litecoin",
@@ -51171,7 +51171,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "litecoin",
@@ -52921,7 +52921,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "peercoin",
@@ -53027,7 +53027,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "peercoin",
@@ -53133,7 +53133,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "peercoin",
@@ -53394,7 +53394,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "pivx",
@@ -53500,7 +53500,7 @@ Array [
   Object {
     "balance": "25947828",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "b0af09fe7605a9560e18eaa0fc0332b716640310b2428c2bb392fb69d4e78777",
@@ -53617,7 +53617,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "pivx",
@@ -54402,7 +54402,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "qtum",
@@ -54508,7 +54508,7 @@ Array [
   Object {
     "balance": "7426478",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "ae75b5041f4f42e435fcd23ffab72c3774adaa270c95dc52142f590bc8c5bf35",
@@ -54625,7 +54625,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "qtum",
@@ -54731,7 +54731,7 @@ Array [
   Object {
     "balance": "36214370",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "665ad2c31f04fcb02d4a4c8baf4a56378fd6065fa28b2c3b3b19db917b13347f",
@@ -54858,7 +54858,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "qtum",
@@ -54964,7 +54964,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "qtum",
@@ -57147,7 +57147,7 @@ Array [
   Object {
     "balance": "270469528",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "acca91b5039df9f8b2507e158acd6fccb092c0abebace4ca8093f6486a729a13",
@@ -57274,7 +57274,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "stakenet",
@@ -57380,7 +57380,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "stakenet",
@@ -57486,7 +57486,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "stakenet",
@@ -57592,7 +57592,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "stakenet",
@@ -57698,7 +57698,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "stakenet",
@@ -70826,7 +70826,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "vertcoin",
@@ -70932,7 +70932,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "vertcoin",
@@ -71038,7 +71038,7 @@ Array [
   Object {
     "balance": "56611532",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "3e666cd80f1ba022527035b2e3765f0a6eea858220ad83400e6d5f296436d271",
@@ -71155,7 +71155,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "vertcoin",
@@ -71261,7 +71261,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "vertcoin",
@@ -71367,7 +71367,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "vertcoin",
@@ -71897,7 +71897,7 @@ Array [
   Object {
     "balance": "61117791",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "4b8a4a6358f65a17ac2318a5c7caf1205e68b3c3d4f2df0503215f348f3322b5",
@@ -72014,7 +72014,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "viacoin",
@@ -72120,7 +72120,7 @@ Array [
   Object {
     "balance": "43399898",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "e92d1d9ffa6259419813e29527e9e46eb6096dd0aa90ad7f03afb60a62ea3429",
@@ -72237,7 +72237,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "viacoin",
@@ -72692,7 +72692,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "zcash",
@@ -72798,7 +72798,7 @@ Array [
   Object {
     "balance": "192412",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "15513d51c7f135fe9554ca1e9d6fe2c6c2291bb7ce4051e86c61b6c91065f49d",
@@ -72915,7 +72915,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "zcash",
@@ -73021,7 +73021,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "zcash",
@@ -76060,7 +76060,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "zencash",
@@ -76166,7 +76166,7 @@ Array [
   Object {
     "balance": "3021049",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [
         Array [
           "cef383fb92632b483bda5b58652e6ce3c4ca5f22256e8fcc6820f35a7ccca32f",
@@ -76283,7 +76283,7 @@ Array [
   Object {
     "balance": "0",
     "bitcoinResources": Object {
-      "serializedData": undefined,
+      "walletAccount": undefined,
       "utxos": Array [],
     },
     "currencyId": "zencash",

@@ -1774,7 +1774,7 @@ Object {
         },
       },
       "bitcoinResources": Object {
-        "serializedData": Object {},
+        "walletAccount": Object {},
         "utxos": Array [],
       },
       "blockHeight": 132858,
@@ -4111,7 +4111,7 @@ Object {
         },
       },
       "bitcoinResources": Object {
-        "serializedData": Object {},
+        "walletAccount": Object {},
         "utxos": Array [],
       },
       "blockHeight": 132858,
@@ -4747,7 +4747,7 @@ Object {
         },
       },
       "bitcoinResources": Object {
-        "serializedData": Object {},
+        "walletAccount": Object {},
         "utxos": Array [],
       },
       "blockHeight": 132858,

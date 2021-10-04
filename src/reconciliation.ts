@@ -166,10 +166,8 @@ function shouldRefreshBitcoinResources(
   if (updatedRaw.operations.length !== account.operations.length) return true;
   const { bitcoinResources: existing } = account;
   const { bitcoinResources: raw } = updatedRaw;
-  if (
-    !isEqual(raw.serializedData.xpub?.data, existing.serializedData.xpub?.data)
-  )
-    return true;
+  // FIXME Need more typing in wallet-btc to have a meaningful comparison
+  //if (!isEqual(raw.walletAccount?.xpub?.data, existing.walletAccount?.xpub?.data)) return true;
   return raw.utxos.length !== existing.utxos.length;
 }
 

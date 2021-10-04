@@ -33,7 +33,7 @@ export const buildTransaction = async (
   if (!transaction.feePerByte) {
     throw new FeeNotLoaded();
   }
-  const walletAccount = await getWalletAccount(account);
+  const walletAccount = getWalletAccount(account);
   const utxoPickingStrategy = selectUtxoPickingStrategy(
     walletAccount,
     transaction.utxoStrategy

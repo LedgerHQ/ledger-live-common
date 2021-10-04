@@ -63,4 +63,6 @@ export interface IStorage {
   }): Promise<void>;
   export(): Promise<unknown>;
   load(data: unknown): Promise<void>;
+  exportSync(): unknown;
+  loadSync(data: unknown): void;
 }

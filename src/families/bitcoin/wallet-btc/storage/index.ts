@@ -164,7 +164,7 @@ class BitcoinLikeStorage implements IStorage {
     await this.appendTxs(txsToReAdd);
   }
 
-  async export() {
+  exportSync() {
     return {
       txs: this.txs,
       primaryIndex: this.primaryIndex,
@@ -172,7 +172,7 @@ class BitcoinLikeStorage implements IStorage {
     };
   }
 
-  async load(data: {
+  loadSync(data: {
     txs: TX[];
     primaryIndex: { [key: string]: number };
     unspentUtxos: { [key: string]: Output[] };
@@ -180,6 +180,18 @@ class BitcoinLikeStorage implements IStorage {
     this.txs = data.txs;
     this.primaryIndex = data.primaryIndex;
     this.unspentUtxos = data.unspentUtxos;
+  }
+
+  async export() {
+    return this.exportSync();
+  }
+
+  async load(data: {
+    txs: TX[];
+    primaryIndex: { [key: string]: number };
+    unspentUtxos: { [key: string]: Output[] };
+  }) {
+    return this.loadSync(data);
   }
 }
 
