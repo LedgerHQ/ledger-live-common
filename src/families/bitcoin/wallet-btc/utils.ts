@@ -50,7 +50,7 @@ export function compressPublicKey(publicKey: any) {
   let compressedKeyIndex;
   if (publicKey.substring(0, 2) !== "04") {
     // eslint-disable-next-line no-throw-literal
-    throw "Invalid public key format";
+    throw new Error("Invalid public key format");
   }
   if (parseInt(publicKey.substring(128, 130), 16) % 2 !== 0) {
     compressedKeyIndex = "03";

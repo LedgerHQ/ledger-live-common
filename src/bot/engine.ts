@@ -227,7 +227,7 @@ export async function runWithAppSpec<T extends Transaction>(
     appReport.mutations = mutationReports;
     appReport.accountsAfter = accounts;
   } catch (e: any) {
-    console.warn(e);
+    console.error(e);
     appReport.fatalError = e;
     log("engine", `spec ${spec.name} failed with ${String(e)}`);
   } finally {
@@ -314,6 +314,7 @@ export async function runOnAccount<T extends Transaction>({
           updates: r.updates,
         });
       } catch (error: any) {
+        console.error(error);
         unavailableMutationReasons.push({
           mutation,
           error,

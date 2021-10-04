@@ -1326,10 +1326,10 @@
     "@ledgerhq/errors" "^5.50.0"
     events "^3.3.0"
 
-"@ledgerhq/json-bignumber@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/json-bignumber/-/json-bignumber-1.0.2.tgz#c08f7fa00316b0065b0ea153d6153808a302e0b1"
-  integrity sha512-jIh4Fe8ZQzAoYP93MJvmbv0I1GVYrqQZ+Rvk6h69E/1st67JES11z+tZx4NVEGNBmR3OFO32dtDX7ip1uwsScQ==
+"@ledgerhq/json-bignumber@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/json-bignumber/-/json-bignumber-1.1.0.tgz#8d3e38118060565191518ab06bd9aa5b22b25b58"
+  integrity sha512-FxWFC3UrYF077OV8eXLZ+2ymnr0IEVICdBk5SgplcIM1T4aZWMAJ+KvCVIxUB+DirygBaCYeUwWBrs5twxHUXA==
   dependencies:
     bignumber.js "^9.0.1"
 
@@ -2440,10 +2440,10 @@ axe-core@^4.0.2:
   resolved "https://registry.yarnpkg.com/axe-core/-/axe-core-4.0.2.tgz#c7cf7378378a51fcd272d3c09668002a4990b1cb"
   integrity sha512-arU1h31OGFu+LPrOLGZ7nB45v940NMDMEJeNmbutu57P+UFDVnkZg3e+J1I2HJRZ9hT7gO8J91dn/PMrAiKakA==
 
-axios-retry@^3.1.9:
-  version "3.1.9"
-  resolved "https://registry.yarnpkg.com/axios-retry/-/axios-retry-3.1.9.tgz#6c30fc9aeb4519aebaec758b90ef56fa03fe72e8"
-  integrity sha512-NFCoNIHq8lYkJa6ku4m+V1837TP6lCa7n79Iuf8/AqATAHYB0ISaAS1eyIenDOfHOLtym34W65Sjke2xjg2fsA==
+axios-retry@^3.2.0:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/axios-retry/-/axios-retry-3.2.0.tgz#eb48e72f90b177fde62329b2896aa8476cfb90ba"
+  integrity sha512-RK2cLMgIsAQBDhlIsJR5dOhODPigvel18XUv1dDXW+4k1FzebyfRk+C+orot6WPZOYFKSfhLwHPwVmTVOODQ5w==
   dependencies:
     is-retry-allowed "^1.1.0"
 
@@ -2697,10 +2697,10 @@ bitcoinjs-lib@^5.2.0:
     varuint-bitcoin "^1.0.4"
     wif "^2.0.1"
 
-bitcore-lib-cash@^8.25.10:
-  version "8.25.10"
-  resolved "https://registry.yarnpkg.com/bitcore-lib-cash/-/bitcore-lib-cash-8.25.10.tgz#0444482c1e617d832f749b130fab712c55f3d75e"
-  integrity sha512-1fSY2oqUtYVe34nWYLsSy7us5n1hqkuOo1yo76fuv4lLhfADwjfyB332uA85btCajSMhXak6WZTty5pRDRfaQw==
+bitcore-lib-cash@^8.25.21:
+  version "8.25.21"
+  resolved "https://registry.yarnpkg.com/bitcore-lib-cash/-/bitcore-lib-cash-8.25.21.tgz#46c7eba4e0f55fb0fcaeb0302e7d06dacd707479"
+  integrity sha512-1AZ5YirhgbbYxfj8/5HuIo3wIybyheSxFC8l/T3R7P2CtMLv4cbrlSbKr5tAqAGYiEAyo7UCX6WC8tVgBxJU5g==
   dependencies:
     bitcore-lib "^8.25.10"
     bn.js "=4.11.8"
