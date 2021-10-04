@@ -20,7 +20,7 @@ const estimateMaxSpendable = async ({
   transaction: Transaction | null | undefined;
 }): Promise<BigNumber> => {
   const mainAccount = getMainAccount(account, parentAccount);
-  const walletAccount = await getWalletAccount(mainAccount);
+  const walletAccount = getWalletAccount(mainAccount);
   let feePerByte = transaction?.feePerByte;
   if (!feePerByte) {
     const networkInfo = await getAccountNetworkInfo(mainAccount);

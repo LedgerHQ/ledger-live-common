@@ -13,6 +13,7 @@ import { DeepFirst } from "./pickingstrategies/DeepFirst";
 import { Merge } from "./pickingstrategies/Merge";
 import { isValidAddress } from "./utils";
 
+import type { Account as WalletAccount } from "./account";
 import type { Account as LiveAccount } from "./../../../types";
 
 export {
@@ -34,20 +35,19 @@ export {
 };
 
 let wallet: BitcoinLikeWallet | null = null;
-export const getWalletAccount = async (account: LiveAccount) => {
-  const walletData = account.bitcoinResources?.serializedData;
-  if (!walletData) {
+
+export const getWalletAccount = (account: LiveAccount): WalletAccount => {
+  const walletAccount = account.bitcoinResources?.walletAccount;
+  if (!walletAccount) {
     throw new Error("bitcoin wallet account expected");
   }
-  const walletInstance = getWallet();
-  return await walletInstance.importFromSerializedAccount(walletData);
+  return walletAccount;
 };
 
 const getWallet = () => {
   if (!wallet) {
     wallet = new BitcoinLikeWallet();
   }
-
   return wallet;
 };
 

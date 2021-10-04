@@ -1,5 +1,8 @@
 import type { BigNumber } from "bignumber.js";
-import type { SerializedAccount as WalletSerializedAccount } from "./wallet-btc";
+import type {
+  Account as WalletAccount,
+  SerializedAccount as WalletAccountRaw,
+} from "./wallet-btc";
 
 import type {
   TransactionCommon,
@@ -46,11 +49,11 @@ export type BitcoinOutputRaw = [
 ];
 export type BitcoinResources = {
   utxos: BitcoinOutput[];
-  serializedData: WalletSerializedAccount;
+  walletAccount?: WalletAccount;
 };
 export type BitcoinResourcesRaw = {
   utxos: BitcoinOutputRaw[];
-  serializedData: WalletSerializedAccount;
+  walletAccount?: WalletAccountRaw;
 };
 
 export const BitcoinLikeFeePolicy = Object.freeze({

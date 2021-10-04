@@ -1,6 +1,5 @@
 import Prando from "prando";
 import { BigNumber } from "bignumber.js";
-import type { SerializedAccount as WalletSerializedAccount } from "../families/bitcoin/wallet-btc";
 import {
   listCryptoCurrencies,
   listTokensForCryptoCurrency,
@@ -413,7 +412,7 @@ export function genAccount(
   if (currency.family === "bitcoin") {
     account.bitcoinResources = {
       utxos: [],
-      serializedData: {} as WalletSerializedAccount,
+      walletAccount: undefined,
     };
   }
 

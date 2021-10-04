@@ -278,22 +278,20 @@ const getAccountShape: GetAccountShape = async (info) => {
     throw new Error(`Unsupported explorer version ${explorer.version}`);
   }
 
-  const walletAccount = initialAccount?.bitcoinResources?.serializedData
-    ? await wallet.importFromSerializedAccount(
-        initialAccount.bitcoinResources.serializedData
-      )
-    : await wallet.generateAccount({
-        xpub,
-        path: rootPath,
-        index,
-        currency: <Currency>currency.id,
-        network: walletNetwork,
-        derivationMode: walletDerivationMode,
-        explorer: `ledger${explorer.version}`,
-        explorerURI: `${explorer.endpoint}/blockchain/${explorer.version}/${explorer.id}`,
-        storage: "mock",
-        storageParams: [],
-      });
+  const walletAccount =
+    initialAccount?.bitcoinResources?.walletAccount ||
+    (await wallet.generateAccount({
+      xpub,
+      path: rootPath,
+      index,
+      currency: <Currency>currency.id,
+      network: walletNetwork,
+      derivationMode: walletDerivationMode,
+      explorer: `ledger${explorer.version}`,
+      explorerURI: `${explorer.endpoint}/blockchain/${explorer.version}/${explorer.id}`,
+      storage: "mock",
+      storageParams: [],
+    }));
 
   const oldOperations = initialAccount?.operations || [];
   await wallet.syncAccount(walletAccount);
@@ -331,7 +329,6 @@ const getAccountShape: GetAccountShape = async (info) => {
   const operations = mergeOps(oldOperations, newUniqueOperations);
   const rawUtxos = await wallet.getAccountUnspentUtxos(walletAccount);
   const utxos = rawUtxos.map(fromWalletUtxo);
-  const serializedData = await wallet.exportToSerializedAccount(walletAccount);
   return {
     id: accountId,
     xpub,
@@ -342,7 +339,7 @@ const getAccountShape: GetAccountShape = async (info) => {
     blockHeight,
     bitcoinResources: {
       utxos,
-      serializedData,
+      walletAccount,
     },
   };
 };

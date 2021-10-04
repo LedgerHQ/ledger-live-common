@@ -14,7 +14,7 @@ const broadcast = async ({
   signedOperation: SignedOperation;
 }): Promise<Operation> => {
   const { signature, operation } = signedOperation;
-  const walletAccount = await getWalletAccount(account);
+  const walletAccount = getWalletAccount(account);
   const hash = await wallet.broadcastTx(walletAccount, signature);
   return patchOperationWithHash(operation, hash);
 };

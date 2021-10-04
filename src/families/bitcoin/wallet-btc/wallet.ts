@@ -52,6 +52,51 @@ class BitcoinLikeWallet {
     return this.explorerInstances[id];
   }
 
+  async generateXpub(
+    btc: Btc,
+    currency: Currency,
+    path: string,
+    index: number
+  ): Promise<string> {
+    const parentDerivation = await btc.getWalletPublicKey(`${path}`);
+    const accountDerivation = await btc.getWalletPublicKey(`${path}/${index}'`);
+
+    // parent
+    const publicKeyParentCompressed = utils.compressPublicKey(
+      parentDerivation.publicKey
+    );
+    const publicKeyParentCompressedHex = utils.parseHexString(
+      publicKeyParentCompressed
+    );
+    let result = bitcoin.crypto.sha256(
+      Buffer.from(publicKeyParentCompressedHex)
+    );
+    result = bitcoin.crypto.ripemd160(result);
+    // eslint-disable-next-line no-bitwise
+    const fingerprint =
+      ((result[0] << 24) | (result[1] << 16) | (result[2] << 8) | result[3]) >>>
+      0;
+
+    // account
+    const publicKeyAccountCompressed = utils.compressPublicKey(
+      accountDerivation.publicKey
+    );
+    // eslint-disable-next-line no-bitwise
+    const childnum = (0x80000000 | index) >>> 0;
+
+    const { network } = cryptoFactory(currency);
+    const xpubRaw = utils.createXPUB(
+      3,
+      fingerprint,
+      childnum,
+      accountDerivation.chainCode,
+      publicKeyAccountCompressed,
+      network.bip32.public
+    );
+
+    return utils.encodeBase58Check(xpubRaw);
+  }
+
   async generateAccount(params: {
     xpub?: string;
     btc?: Btc;
@@ -103,94 +148,6 @@ class BitcoinLikeWallet {
         xpub,
         derivationMode: params.derivationMode,
       }),
-    };
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  async exportToSerializedAccount(
-    account: Account
-  ): Promise<SerializedAccount> {
-    const data = await account.xpub.storage.export();
-
-    return {
-      ...account,
-      xpub: {
-        xpub: account.xpub.xpub,
-        data,
-      },
-    };
-  }
-
-  async generateXpub(
-    btc: Btc,
-    currency: Currency,
-    path: string,
-    index: number
-  ): Promise<string> {
-    const parentDerivation = await btc.getWalletPublicKey(`${path}`);
-    const accountDerivation = await btc.getWalletPublicKey(`${path}/${index}'`);
-
-    // parent
-    const publicKeyParentCompressed = utils.compressPublicKey(
-      parentDerivation.publicKey
-    );
-    const publicKeyParentCompressedHex = utils.parseHexString(
-      publicKeyParentCompressed
-    );
-    let result = bitcoin.crypto.sha256(
-      Buffer.from(publicKeyParentCompressedHex)
-    );
-    result = bitcoin.crypto.ripemd160(result);
-    // eslint-disable-next-line no-bitwise
-    const fingerprint =
-      ((result[0] << 24) | (result[1] << 16) | (result[2] << 8) | result[3]) >>>
-      0;
-
-    // account
-    const publicKeyAccountCompressed = utils.compressPublicKey(
-      accountDerivation.publicKey
-    );
-    // eslint-disable-next-line no-bitwise
-    const childnum = (0x80000000 | index) >>> 0;
-
-    const { network } = cryptoFactory(currency);
-    const xpubRaw = utils.createXPUB(
-      3,
-      fingerprint,
-      childnum,
-      accountDerivation.chainCode,
-      publicKeyAccountCompressed,
-      network.bip32.public
-    );
-
-    return utils.encodeBase58Check(xpubRaw);
-  }
-
-  async importFromSerializedAccount(
-    account: SerializedAccount
-  ): Promise<Account> {
-    const crypto = cryptoFactory(account.params.currency);
-    const storage = this.accountStorages[account.params.storage](
-      ...account.params.storageParams
-    );
-    const explorer = this.getExplorer(
-      account.params.explorer,
-      account.params.explorerURI
-    );
-
-    const xpub = new Xpub({
-      storage,
-      explorer,
-      crypto,
-      xpub: account.xpub.xpub,
-      derivationMode: account.params.derivationMode,
-    });
-
-    await xpub.storage.load(account.xpub.data);
-
-    return {
-      ...account,
-      xpub,
     };
   }
 
@@ -389,6 +346,77 @@ class BitcoinLikeWallet {
   async broadcastTx(fromAccount: Account, tx: string) {
     const res = await fromAccount.xpub.broadcastTx(tx);
     return res.data.result;
+  }
+
+  instantiateXpubFromSerializedAccount(account: SerializedAccount): Xpub {
+    const crypto = cryptoFactory(account.params.currency);
+    const storage = this.accountStorages[account.params.storage](
+      ...account.params.storageParams
+    );
+    const explorer = this.getExplorer(
+      account.params.explorer,
+      account.params.explorerURI
+    );
+
+    return new Xpub({
+      storage,
+      explorer,
+      crypto,
+      xpub: account.xpub.xpub,
+      derivationMode: account.params.derivationMode,
+    });
+  }
+
+  async importFromSerializedAccount(
+    account: SerializedAccount
+  ): Promise<Account> {
+    const xpub = this.instantiateXpubFromSerializedAccount(account);
+
+    await xpub.storage.load(account.xpub.data);
+
+    return {
+      ...account,
+      xpub,
+    };
+  }
+
+  importFromSerializedAccountSync(account: SerializedAccount): Account {
+    const xpub = this.instantiateXpubFromSerializedAccount(account);
+
+    xpub.storage.loadSync(account.xpub.data);
+
+    return {
+      ...account,
+      xpub,
+    };
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  async exportToSerializedAccount(
+    account: Account
+  ): Promise<SerializedAccount> {
+    const data = await account.xpub.storage.export();
+
+    return {
+      ...account,
+      xpub: {
+        xpub: account.xpub.xpub,
+        data,
+      },
+    };
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  exportToSerializedAccountSync(account: Account): SerializedAccount {
+    const data = account.xpub.storage.exportSync();
+
+    return {
+      ...account,
+      xpub: {
+        xpub: account.xpub.xpub,
+        data,
+      },
+    };
   }
 }
 

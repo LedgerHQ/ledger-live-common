@@ -18,7 +18,7 @@ export function avoidDups(nums: Array<BigNumber>): Array<BigNumber> {
 export async function getAccountNetworkInfo(
   account: Account
 ): Promise<NetworkInfo> {
-  const walletAccount = await getWalletAccount(account);
+  const walletAccount = getWalletAccount(account);
   const rawFees = await walletAccount.xpub.explorer.getFees();
   // Convoluted logic to convert from:
   // { "2": 2435, "3": 1241, "6": 1009, "last_updated": 1627973170 }

@@ -7,7 +7,6 @@ import { promiseAllBatched } from "../../promise";
 import { parseBitcoinUTXO, perCoinLogic } from "./transaction";
 import { isSatStackEnabled, checkDescriptorExists } from "./satstack";
 import { inferDescriptorFromAccount } from "./descriptor";
-import type { SerializedAccount as WalletSerializedAccount } from "./wallet-btc";
 
 const postBuildAccount = async ({
   account,
@@ -37,7 +36,7 @@ const postBuildAccount = async ({
   let bitcoinResources: BitcoinResources = {
     ...account.bitcoinResources,
     utxos,
-    serializedData: {} as WalletSerializedAccount,
+    walletAccount: undefined,
   };
 
   if (perCoin) {

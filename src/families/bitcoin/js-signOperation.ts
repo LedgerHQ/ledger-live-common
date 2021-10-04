@@ -27,7 +27,7 @@ const signOperation = ({
       const { currency } = account;
       const transport = await open(deviceId);
       const hwApp = new Btc(transport);
-      const walletAccount = await getWalletAccount(account);
+      const walletAccount = getWalletAccount(account);
 
       try {
         log("hw", `signTransaction ${currency.id} for account ${account.id}`);
