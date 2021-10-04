@@ -283,8 +283,6 @@ const getAccountShape: GetAccountShape = async (info) => {
         initialAccount.bitcoinResources.serializedData
       )
     : await wallet.generateAccount({
-        // TODO remove btc param, not required anymore since we now have the xpub
-        btc: (!paramXpub && transport && new Btc(transport)) || undefined,
         xpub,
         path: rootPath,
         index,

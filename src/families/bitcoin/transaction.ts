@@ -119,7 +119,7 @@ ${[
     .join("")}`;
 };
 
-// TODO vvvvv DEPRECATED, TO BE REMOVED vvvvv
+// vvvvv DEPRECATED - used only by legacy libcore implementation vvvvv
 
 function bchExplicit(str: string): string {
   const explicit = str.includes(":") ? str : "bitcoincash:" + str;

@@ -3,7 +3,7 @@ import { Input, IStorage, Output, TX, Address } from "./types";
 
 // a mock storage class that just use js objects
 // sql.js would be perfect for the job
-class Mock implements IStorage {
+class BitcoinLikeStorage implements IStorage {
   txs: TX[] = [];
 
   // indexes
@@ -183,4 +183,4 @@ class Mock implements IStorage {
   }
 }
 
-export default Mock;
+export default BitcoinLikeStorage;

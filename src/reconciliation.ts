@@ -156,14 +156,22 @@ const shouldRefreshBalanceHistory = (
   );
 };
 
-function shouldRefreshBitcoinResources(updatedRaw, account) {
+function shouldRefreshBitcoinResources(
+  updatedRaw: AccountRaw,
+  account: Account
+) {
   if (!updatedRaw.bitcoinResources) return false;
-  if (account.bitcoinResources === updatedRaw.bitcoinResources) return false;
   if (!account.bitcoinResources) return true;
   if (updatedRaw.blockHeight !== account.blockHeight) return true;
   if (updatedRaw.operations.length !== account.operations.length) return true;
   const { bitcoinResources: existing } = account;
   const { bitcoinResources: raw } = updatedRaw;
+  if (
+    raw.serializedData &&
+    existing.serializedData &&
+    !isEqual(raw.serializedData.xpub.data, existing.serializedData.xpub.data)
+  )
+    return true;
   return raw.utxos.length !== existing.utxos.length;
 }
 
