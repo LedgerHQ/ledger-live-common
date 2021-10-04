@@ -167,9 +167,7 @@ function shouldRefreshBitcoinResources(
   const { bitcoinResources: existing } = account;
   const { bitcoinResources: raw } = updatedRaw;
   if (
-    raw.serializedData &&
-    existing.serializedData &&
-    !isEqual(raw.serializedData.xpub.data, existing.serializedData.xpub.data)
+    !isEqual(raw.serializedData.xpub?.data, existing.serializedData.xpub?.data)
   )
     return true;
   return raw.utxos.length !== existing.utxos.length;
