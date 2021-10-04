@@ -90,15 +90,24 @@ describe("usePickDefaultAccount", () => {
   test("returns the ethereum enabled account with the highest balance", () => {
     const ethAccount = getEthAccount();
     const ethAccount2 = getEthAccount();
+    const ethAccount3 = getEthAccount();
+    const ethAccount4 = getEthAccount();
+    const ethAccount5 = getEthAccount();
 
-    ethAccount.amount = new BigNumber(1000);
+    ethAccount.amount = new BigNumber(0.2);
     ethAccount2.amount = new BigNumber(0);
+    ethAccount3.amount = new BigNumber(0.001);
+    ethAccount4.amount = new BigNumber(0.0001);
+    ethAccount5.amount = new BigNumber(0.0006);
 
     const accounts: Account[] = [
       { ...getEthAccount(), disabled: true },
       ethAccount,
       getBtcAccount(),
       ethAccount2,
+      ethAccount3,
+      ethAccount4,
+      ethAccount5,
     ];
 
     renderHook(() =>
