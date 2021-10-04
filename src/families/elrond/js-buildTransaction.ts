@@ -18,12 +18,15 @@ export const buildTransaction = async (
 ) => {
   const address = a.freshAddress;
   const nonce = getNonce(a);
-  const { gasPrice, gasLimit, chainId } = await getNetworkConfig();
+  let { gasPrice, gasLimit, chainId } = await getNetworkConfig();
   const transactionType = signUsingHash ? HASH_TRANSACTION : RAW_TRANSACTION;
   let data;
   if (ta) {
     const tokenIdentifierHex = ta.id.split('/')[2];
-    data = `ESDTTransfer@${tokenIdentifierHex}@${t.amount.toString(16)}`;
+    data = Buffer.from(`ESDTTransfer@${tokenIdentifierHex}@${t.amount.toString(16)}`).toString('base64');
+    t.amount = new BigNumber(0); //amount of EGLD to be sent should be 0
+    t.data = data;
+    gasLimit = 600000; //gasLimit for and ESDT transfer
   }
 
   const unsigned = {
@@ -35,8 +38,8 @@ export const buildTransaction = async (
     sender: address,
     gasPrice,
     gasLimit,
-    chainID: chainId,
     data: data,
+    chainID: chainId,
     ...transactionType,
   };
   // Will likely be a call to Elrond SDK

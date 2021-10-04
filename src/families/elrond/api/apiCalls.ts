@@ -70,14 +70,21 @@ export default class ElrondApi {
   }
 
   async submit({ operation, signature, signUsingHash }) {
-    const { chainId, gasLimit, gasPrice } = await this.getNetworkConfig();
+    let { chainId, gasLimit, gasPrice } = await this.getNetworkConfig();
     const transactionType = signUsingHash ? HASH_TRANSACTION : RAW_TRANSACTION;
     const {
       senders: [sender],
       recipients: [receiver],
       value,
       transactionSequenceNumber: nonce,
+      extra: { data },
     } = operation;
+
+    if (data) {
+    // gasLimit for an ESDT transfer
+      gasLimit = 600000;
+    }
+
     const {
       data: {
         data: { txHash: hash },
@@ -94,6 +101,7 @@ export default class ElrondApi {
         gasLimit,
         chainID: chainId,
         signature,
+        data,
         ...transactionType,
       },
     });

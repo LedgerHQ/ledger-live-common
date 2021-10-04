@@ -33,6 +33,7 @@ const buildOptimisticOperation = (
     date: new Date(),
     extra: {
       signUsingHash,
+      data: transaction.data,
     },
   };
   return operation;
@@ -73,9 +74,8 @@ const signOperation = ({
 
         if (tokenAccount) {
           const tokenIdentifier = tokenAccount.id.split('+')[1];
-          const token = findTokenById(`elrond/esdt/${tokenIdentifier}`);
-          const message = await elrond.provideESDTInfo(token?.ticker || '', token?.id.split(',')[2] || '', token?.units[0].magnitude || 18, 'T', token?.ledgerSignature || '');
-          console.log({message});
+          const token = findTokenById(`${tokenIdentifier}`);
+          const message: Buffer = await elrond.provideESDTInfo(token?.ticker || '', token?.id.split('/')[2] || '', token?.units[0].magnitude || 18, 'T', token?.ledgerSignature || '');
         }
         const { version } = await elrond.getAppConfiguration();
         const signUsingHash = compareVersions(version, "1.0.11") >= 0;
@@ -86,6 +86,9 @@ const signOperation = ({
           transaction,
           signUsingHash
         );
+
+        console.log(unsigned);
+
         o.next({
           type: "device-signature-requested",
         });
