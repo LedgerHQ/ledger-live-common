@@ -18,7 +18,7 @@ import type { Operation, TokenAccount, Account, NFT } from "../../types";
 import { API, apiForCurrency, Tx } from "../../api/Ethereum";
 import { digestTokenAccounts, prepareTokenAccounts } from "./modules";
 import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";
-import { encodeNftId } from "../../nft";
+import { encodeNftId, nftsFromOperations } from "../../nft";
 import { getEnv } from "../../env";
 
 export const getAccountShape: GetAccountShape = async (
@@ -609,40 +609,8 @@ async function loadERC20Balances(tokenAccounts, address, api) {
 }
 
 function getNfts(nftOperations: Operation[]): NFT[] {
-  const nftBalance: Record<string, Operation> = nftOperations.reduce(
-    (acc, op) => {
-      // Creating a "token for a contract" unique key
-      const nftKey = op.contract! + op.tokenId!;
-      const lastAmount = acc[nftKey]?.amount ?? new BigNumber(0);
-
-      if (op.type === "IN") {
-        acc[nftKey] = { ...op, amount: lastAmount.plus(op.value) };
-      } else if (op.type === "OUT") {
-        acc[nftKey] = { ...op, amount: lastAmount.minus(op.value) };
-      }
-
-      return acc;
-    },
-    {}
-  );
-
-  return Object.values(nftBalance)
-    .map((op) => {
-      if (!op || !op?.value.gt(0)) return null;
-
-      const contract = eip55.encode(op.contract!);
-      const { tokenId, standard, value: amount, id } = op;
-      return {
-        id,
-        tokenId,
-        amount,
-        collection: {
-          contract,
-          standard,
-        },
-      } as NFT;
-    })
-    .filter(Boolean) as NFT[];
+  const nfts: NFT[] = nftsFromOperations(nftOperations);
+  return nfts.filter((nft) => nft.amount.gt(0));
 }
 
 const SAFE_REORG_THRESHOLD = 80;
