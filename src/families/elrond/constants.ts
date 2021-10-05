@@ -8,3 +8,4 @@ export const RAW_TRANSACTION = {
 };
 export const METACHAIN_SHARD = 4294967295;
 export const TRANSACTIONS_SIZE = 10000;
+export const ESDT_TRANSFER_GAS = 600000;
