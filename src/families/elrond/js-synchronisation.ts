@@ -1,7 +1,7 @@
 import type { Account, TokenAccount } from "../../types";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { makeSync, makeScanAccounts, mergeOps } from "../../bridge/jsHelpers";
-import { getAccount, getAccountESDTTokens, getOperations } from "./api";
+import { getAccount, getOperations, hasESDTTokens } from "./api";
 import elrondBuildESDTTokenAccounts from "./js-buildSubAccounts";
 
 const getAccountShape: GetAccountShape = async (info) => {
@@ -19,7 +19,7 @@ const getAccountShape: GetAccountShape = async (info) => {
   const operations = mergeOps(oldOperations, newOperations);
   
   let subAccounts: TokenAccount[] | undefined = [];
-  if ((await getAccountESDTTokens(address)).length) {
+  if (await hasESDTTokens(address)) {
     subAccounts = await elrondBuildESDTTokenAccounts({
       currency,
       accountId: id,

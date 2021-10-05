@@ -109,6 +109,10 @@ export const getAccountESDTTokens = async (
   return await api.getESDTTokensForAddress(address);
 }
 
+export const hasESDTTokens = async(address: string): Promise<boolean> => {
+  return (await getAccountESDTTokens(address)).length > 0;
+}
+
 export const getAccountESDTOperations = async (
   accountId: string,
   address: string,
