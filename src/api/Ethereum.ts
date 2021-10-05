@@ -1,4 +1,3 @@
-import setWith from "lodash/setWith";
 import URL from "url";
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
@@ -78,10 +77,12 @@ export type ERC20BalanceOutput = Array<{
   contract: string;
   balance: BigNumber;
 }>;
-export type NFTMetadataInput = Array<{
-  contract: string;
-  tokenId: string;
-}>;
+export type NFTMetadataInput = Readonly<
+  Array<{
+    contract: string;
+    tokenId: string;
+  }>
+>;
 // NFTMetadata are grouped : { [contract] : [tokenId] : NFTMetadata }
 export type NFTMetadataOutput = Record<string, Record<string, NFTMetadata>>;
 export type API = {
@@ -97,7 +98,7 @@ export type API = {
   getAccountNonce: (address: string) => Promise<number>;
   broadcastTransaction: (signedTransaction: string) => Promise<string>;
   getERC20Balances: (input: ERC20BalancesInput) => Promise<ERC20BalanceOutput>;
-  getNFTMetadata: (input: NFTMetadataInput) => Promise<NFTMetadataOutput>;
+  getNFTMetadata: (input: NFTMetadataInput) => Promise<NFTMetadata[]>;
   getAccountBalance: (address: string) => Promise<BigNumber>;
   roughlyEstimateGasLimit: (address: string) => Promise<BigNumber>;
   getERC20ApprovalsPerContract: (
@@ -215,16 +216,7 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
         data: input,
       });
 
-      return data.reduce(
-        (acc, curr) =>
-          setWith(
-            acc,
-            [curr.contract?.toLowerCase?.(), curr.tokenId?.toLowerCase?.()],
-            curr,
-            Object
-          ),
-        {}
-      );
+      return data;
     },
 
     async getERC20ApprovalsPerContract(owner, contract) {
