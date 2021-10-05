@@ -6,6 +6,8 @@ import elrond from "../../families/elrond/bridge/js";
 
 import ethereum from "../../families/ethereum/bridge/js";
 
+import filecoin from "../../families/filecoin/bridge/js";
+
 import neo from "../../families/neo/bridge/js";
 
 import polkadot from "../../families/polkadot/bridge/js";
@@ -24,6 +26,7 @@ export default {
   crypto_org,
   elrond,
   ethereum,
+  filecoin,
   neo,
   polkadot,
   ripple,
