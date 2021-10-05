@@ -28,13 +28,32 @@ describe("testing estimateMaxSpendable", () => {
 
   it("should estimate max spendable correctly", async () => {
     await wallet.syncAccount(account);
-    let maxSpendable = await wallet.estimateAccountMaxSpendable(account, 0);
+    let maxSpendable = await wallet.estimateAccountMaxSpendable(
+      account,
+      0,
+      [],
+      true
+    );
     const balance = 109088;
     expect(maxSpendable.toNumber()).toEqual(balance);
+    const maxSpendableExcludeUtxo = await wallet.estimateAccountMaxSpendable(
+      account,
+      0,
+      [
+        {
+          hash: "f80246be50064bb254d2cad82fb0d4ce7768582b99c113694e72411f8032fd7a",
+          outputIndex: 0,
+        },
+      ],
+      true
+    );
+    expect(maxSpendableExcludeUtxo.toNumber()).toEqual(balance - 1000);
     let feesPerByte = 100;
     maxSpendable = await wallet.estimateAccountMaxSpendable(
       account,
-      feesPerByte
+      feesPerByte,
+      [],
+      true
     );
     expect(maxSpendable.toNumber()).toEqual(
       balance -
@@ -49,7 +68,9 @@ describe("testing estimateMaxSpendable", () => {
     feesPerByte = 10000;
     maxSpendable = await wallet.estimateAccountMaxSpendable(
       account,
-      feesPerByte
+      feesPerByte,
+      [],
+      true
     );
     expect(maxSpendable.toNumber()).toEqual(0);
   }, 60000);
