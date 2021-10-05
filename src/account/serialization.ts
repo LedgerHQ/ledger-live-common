@@ -855,8 +855,8 @@ export function toAccountRaw({
     currencyId: currency.id,
     unitMagnitude: unit.magnitude,
     lastSyncDate: lastSyncDate.toISOString(),
-    balance: balance.toString(),
-    spendableBalance: spendableBalance.toString(),
+    balance: balance.toFixed(),
+    spendableBalance: spendableBalance.toFixed(),
   };
 
   if (balanceHistory) {
