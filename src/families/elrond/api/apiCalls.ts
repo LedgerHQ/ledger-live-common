@@ -73,7 +73,7 @@ export default class ElrondApi {
     };
   }
 
-  async submit({ operation, signature, signUsingHash }) {
+  async submit({ operation, signature, signUsingHash }): Promise<string> {
     let { chainID, gasLimit, gasPrice } = await this.getNetworkConfig();
 
     const transactionType = signUsingHash ? HASH_TRANSACTION : RAW_TRANSACTION;
@@ -114,9 +114,7 @@ export default class ElrondApi {
       data: transaction,
     });
 
-    return {
-      hash,
-    };
+    return hash;
   }
 
   async getHistory(addr: string, startAt: number): Promise<Transaction[]> {
