@@ -22,8 +22,8 @@ export const buildTransaction = async (
   const transactionType = signUsingHash ? HASH_TRANSACTION : RAW_TRANSACTION;
  
   if (ta) {
-    t.amount = new BigNumber(0); //amount of EGLD to be sent should be 0 in an ESDT transafer
     t.data = encodeESDTTransfer(t, ta);
+    t.amount = new BigNumber(0); //amount of EGLD to be sent should be 0 in an ESDT transafer
     gasLimit = ESDT_TRANSFER_GAS; //gasLimit for and ESDT transfer
   }
 

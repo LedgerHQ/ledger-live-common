@@ -1,5 +1,4 @@
 import { BigNumber } from "bignumber.js";
-import type { Account } from "../../types";
 import type { Transaction } from "./types";
 import { getFees } from "./api";
 
@@ -9,16 +8,8 @@ import { getFees } from "./api";
  * @param {Account} a
  * @param {Transaction} t
  */
-const getEstimatedFees = async ({
-  a,
-  t,
-  signUsingHash = true,
-}: {
-  a: Account;
-  t: Transaction;
-  signUsingHash: boolean | undefined;
-}): Promise<BigNumber> => {
-  return await getFees(t.data);
+const getEstimatedFees = async (t: Transaction): Promise<BigNumber> => {
+  return await getFees(t);
 };
 
 export default getEstimatedFees;

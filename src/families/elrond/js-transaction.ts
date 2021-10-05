@@ -43,11 +43,7 @@ export const updateTransaction = (
  */
 export const prepareTransaction = async (a: Account, t: Transaction) => {
   let fees = t.fees;
-  fees = await getEstimatedFees({
-    a,
-    t,
-    signUsingHash: true,
-  });
+  fees = await getEstimatedFees(t);
 
   if (!sameFees(t.fees, fees)) {
     return { ...t, fees };

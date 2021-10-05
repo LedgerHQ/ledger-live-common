@@ -5,6 +5,7 @@ import type { Operation, OperationType } from "../../../types";
 import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";
 import { getTransactionParams } from "../cache";
+import { ESDT_TRANSFER_GAS } from "../constants";
 const api = new ElrondApi(getEnv("ELROND_API_ENDPOINT"));
 
 /**
@@ -121,14 +122,18 @@ export const getAccountESDTOperations = async (
 /**
  * Obtain fees from blockchain
  */
-export const getFees = async (data?: string): Promise<BigNumber> => {
-  const { gasLimit, gasPerByte, gasPrice } = await getTransactionParams();
+export const getFees = async (t: Transaction): Promise<BigNumber> => {
+  let { gasLimit, gasPerByte, gasPrice } = await getTransactionParams();
 
-  if (!data) {
+  if (t.subAccountId) {
+    gasLimit = ESDT_TRANSFER_GAS;
+  }
+
+  if (!t.data) {
     return new BigNumber(gasLimit * gasPrice);
   }
 
-  return new BigNumber((gasLimit + gasPerByte * data.length) * gasPrice);
+  return new BigNumber((gasLimit + gasPerByte * t.data.length) * gasPrice);
 };
 
 /**

@@ -25,11 +25,7 @@ const estimateMaxSpendable = async ({
     ...transaction,
     amount: a.spendableBalance,
   };
-  const fees = await getEstimatedFees({
-    a,
-    t,
-    signUsingHash: true,
-  });
+  const fees = await getEstimatedFees(t);
 
   if (fees.gt(a.spendableBalance)) {
     return new BigNumber(0);
