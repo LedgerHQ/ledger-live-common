@@ -61,9 +61,6 @@ const signOperation = ({
         }
         // Collect data for an ESDT transfer
         const { subAccounts } = account;
-        if (subAccounts) {
-          transaction.subAccountId = subAccounts[0].id;
-        }
         const { subAccountId } = transaction;
         const tokenAccount = !subAccountId
           ? null
