@@ -190,7 +190,11 @@ export async function runWithAppSpec<T extends Transaction>(
         );
         // resync all accounts (necessary between mutations)
         t = now();
-        accounts = await promiseAllBatched(5, accounts, syncAccount);
+        accounts = await promiseAllBatched(
+          getEnv("SYNC_MAX_CONCURRENT"),
+          accounts,
+          syncAccount
+        );
         appReport.accountsAfter = accounts;
         const syncAllAccountsTime = now() - t;
         const account = accounts[i];
@@ -226,7 +230,11 @@ export async function runWithAppSpec<T extends Transaction>(
       mutationsCount = {};
     }
 
-    accounts = await promiseAllBatched(5, accounts, syncAccount);
+    accounts = await promiseAllBatched(
+      getEnv("SYNC_MAX_CONCURRENT"),
+      accounts,
+      syncAccount
+    );
     appReport.mutations = mutationReports;
     appReport.accountsAfter = accounts;
   } catch (e: any) {

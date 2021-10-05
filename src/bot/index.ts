@@ -75,7 +75,7 @@ export async function bot({ currency, family, mutation }: Arg = {}) {
   }
 
   const results: Array<SpecReport<any>> = await promiseAllBatched(
-    6,
+    getEnv("BOT_MAX_CONCURRENT"),
     specs,
     (spec) => {
       const logs: string[] = [];
