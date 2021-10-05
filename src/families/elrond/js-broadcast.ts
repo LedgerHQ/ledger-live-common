@@ -14,12 +14,12 @@ const broadcast = async ({
   const {
     extra: { signUsingHash },
   } = operation;
-  const { hash } = await broadcastTransaction({
+  const txHash = await broadcastTransaction({
     operation,
     signature,
     signUsingHash,
   });
-  return patchOperationWithHash(operation, hash);
+  return patchOperationWithHash(operation, txHash);
 };
 
 export default broadcast;
