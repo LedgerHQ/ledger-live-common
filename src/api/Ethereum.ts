@@ -1,4 +1,3 @@
-import setWith from "lodash/setWith";
 import URL from "url";
 import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
@@ -78,10 +77,12 @@ export type ERC20BalanceOutput = Array<{
   contract: string;
   balance: BigNumber;
 }>;
-export type NFTMetadataInput = Array<{
-  contract: string;
-  tokenId: string;
-}>;
+export type NFTMetadataInput = Readonly<
+  Array<{
+    contract: string;
+    tokenId: string;
+  }>
+>;
 export type API = {
   getTransactions: (
     address: string,
