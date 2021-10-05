@@ -2,7 +2,6 @@ import { BigNumber } from "bignumber.js";
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
 import { getFees } from "./api";
-import { buildTransaction } from "./js-buildTransaction";
 
 /**
  * Fetch the transaction fees for a transaction
@@ -19,8 +18,7 @@ const getEstimatedFees = async ({
   t: Transaction;
   signUsingHash: boolean | undefined;
 }): Promise<BigNumber> => {
-  const unsigned = await buildTransaction(a, null, t, signUsingHash);
-  return await getFees(JSON.parse(unsigned));
+  return await getFees(t.data);
 };
 
 export default getEstimatedFees;

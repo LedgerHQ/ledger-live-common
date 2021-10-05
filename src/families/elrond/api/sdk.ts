@@ -121,8 +121,7 @@ export const getAccountESDTOperations = async (
 /**
  * Obtain fees from blockchain
  */
-export const getFees = async (unsigned): Promise<BigNumber> => {
-  const { data } = unsigned;
+export const getFees = async (data?: string): Promise<BigNumber> => {
   const { gasLimit, gasPerByte, gasPrice } = await getTransactionParams();
 
   if (!data) {
