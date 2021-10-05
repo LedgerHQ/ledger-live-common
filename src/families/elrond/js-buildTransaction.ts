@@ -1,8 +1,8 @@
-import type { Transaction } from "./types";
+import type { ElrondProtocolTransaction, NetworkInfo, Transaction } from "./types";
 import type { Account, SubAccount } from "../../types";
-import { getNonce } from "./logic";
+import { encodeESDTTransfer, getNonce } from "./logic";
 import { getNetworkConfig } from "./api";
-import { HASH_TRANSACTION, RAW_TRANSACTION } from "./constants";
+import { ESDT_TRANSFER_GAS, HASH_TRANSACTION, RAW_TRANSACTION } from "./constants";
 import BigNumber from "bignumber.js";
 
 /**
@@ -18,28 +18,28 @@ export const buildTransaction = async (
 ) => {
   const address = a.freshAddress;
   const nonce = getNonce(a);
-  let { gasPrice, gasLimit, chainId } = await getNetworkConfig();
+  let { gasPrice, gasLimit, chainID }: NetworkInfo = await getNetworkConfig();
   const transactionType = signUsingHash ? HASH_TRANSACTION : RAW_TRANSACTION;
-  let data;
+ 
   if (ta) {
-    const tokenIdentifierHex = ta.id.split('/')[2];
-    data = Buffer.from(`ESDTTransfer@${tokenIdentifierHex}@${t.amount.toString(16)}`).toString('base64');
-    t.amount = new BigNumber(0); //amount of EGLD to be sent should be 0
-    t.data = data;
-    gasLimit = 600000; //gasLimit for and ESDT transfer
+    t.amount = new BigNumber(0); //amount of EGLD to be sent should be 0 in an ESDT transafer
+    t.data = encodeESDTTransfer(t, ta);
+    gasLimit = ESDT_TRANSFER_GAS; //gasLimit for and ESDT transfer
   }
 
-  const unsigned = {
+  const transactionValue = t.useAllAmount
+  ? a.balance.minus(t.fees ? t.fees : new BigNumber(0))
+  : t.amount;
+
+  const unsigned: ElrondProtocolTransaction = {
     nonce,
-    value: t.useAllAmount
-      ? a.balance.minus(t.fees ? t.fees : new BigNumber(0))
-      : t.amount,
+    value: transactionValue.toString(),
     receiver: t.recipient,
     sender: address,
     gasPrice,
     gasLimit,
-    data: data,
-    chainID: chainId,
+    data: t.data,
+    chainID,
     ...transactionType,
   };
   // Will likely be a call to Elrond SDK

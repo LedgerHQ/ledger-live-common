@@ -1,4 +1,4 @@
-import type { Account } from "../../types";
+import type { Account, SubAccount } from "../../types";
 import type { Transaction } from "./types";
 import * as bech32 from "bech32";
 
@@ -90,3 +90,8 @@ export const getNonce = (a: Account): number => {
   );
   return nonce;
 };
+
+export const encodeESDTTransfer = (t: Transaction, ta: SubAccount): string => {
+  const tokenIdentifierHex = ta.id.split('/')[2];
+  return Buffer.from(`ESDTTransfer@${tokenIdentifierHex}@${t.amount.toString(16)}`).toString('base64');
+}
