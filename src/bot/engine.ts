@@ -184,7 +184,10 @@ export async function runWithAppSpec<T extends Transaction>(
     const totalTries = spec.multipleRuns || 1;
     for (let t = 0; t < totalTries; t++) {
       for (let i = 0; i < length; i++) {
-        log("engine", `spec ${spec.name} sync all accounts`);
+        log(
+          "engine",
+          `spec ${spec.name} sync all accounts (try ${t} run ${i})`
+        );
         // resync all accounts (necessary between mutations)
         t = now();
         accounts = await promiseAllBatched(5, accounts, syncAccount);
