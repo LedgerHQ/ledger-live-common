@@ -187,7 +187,12 @@ class BitcoinLikeWallet {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  async estimateAccountMaxSpendable(account: Account, feePerByte: number) {
+  async estimateAccountMaxSpendable(
+    account: Account,
+    feePerByte: number,
+    excludeUTXOs: Array<{ hash: string; outputIndex: number }>,
+    pickUnconfirmedRBF: boolean
+  ) {
     const addresses = await account.xpub.getXpubAddresses();
     const utxos = flatten(
       await Promise.all(
@@ -196,7 +201,20 @@ class BitcoinLikeWallet {
         )
       )
     );
-    const balance = await account.xpub.getXpubBalance();
+    let balance = new BigNumber(0);
+    utxos.forEach((utxo) => {
+      if (
+        !excludeUTXOs.find(
+          (excludeUtxo) =>
+            excludeUtxo.hash === utxo.output_hash &&
+            excludeUtxo.outputIndex === utxo.output_index
+        )
+      ) {
+        if (pickUnconfirmedRBF || !utxo.rbf) {
+          balance = balance.plus(utxo.value);
+        }
+      }
+    });
     // fees if we use all utxo
     const fees =
       feePerByte *
