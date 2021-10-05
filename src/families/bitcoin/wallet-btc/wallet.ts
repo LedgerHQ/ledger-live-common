@@ -210,7 +210,7 @@ class BitcoinLikeWallet {
             excludeUtxo.outputIndex === utxo.output_index
         )
       ) {
-        if (pickUnconfirmedRBF || !utxo.rbf) {
+        if ((pickUnconfirmedRBF && utxo.rbf) || utxo.block_height !== null) {
           balance = balance.plus(utxo.value);
         }
       }

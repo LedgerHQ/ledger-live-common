@@ -42,7 +42,8 @@ export const buildTransaction = async (
   const maxSpendable = await wallet.estimateAccountMaxSpendable(
     walletAccount,
     transaction.feePerByte.toNumber(), //!\ wallet-btc handles fees as JS number
-    transaction.utxoStrategy.excludeUTXOs
+    transaction.utxoStrategy.excludeUTXOs,
+    transaction.utxoStrategy.pickUnconfirmedRBF
   );
 
   const txInfo = await wallet.buildAccountTx({
