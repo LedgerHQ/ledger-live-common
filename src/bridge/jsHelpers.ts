@@ -101,7 +101,7 @@ Operation[] {
 
   for (const o of existing) {
     // prepend all the new ops that have higher date
-    while (newOps.length > 0 && newOps[0].date > o.date) {
+    while (newOps.length > 0 && newOps[0].date >= o.date) {
       all.push(newOps.shift() as Operation);
     }
 
