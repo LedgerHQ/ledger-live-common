@@ -1,6 +1,6 @@
 import { BigNumber } from "bignumber.js";
 import ElrondApi from "./apiCalls";
-import type { Transaction } from "../types";
+import type { ESDTToken, ESDTTransaction, NetworkInfo, Transaction } from "../types";
 import type { Operation, OperationType } from "../../../types";
 import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";
@@ -25,7 +25,7 @@ export const getValidators = async () => {
     validators,
   };
 };
-export const getNetworkConfig = async () => {
+export const getNetworkConfig = async (): Promise<NetworkInfo> => {
   return await api.getNetworkConfig();
 };
 
@@ -49,7 +49,7 @@ function getOperationType(
 /**
  * Map transaction to a correct Operation Value (affecting account balance)
  */
-function getOperationValue(transaction: Transaction, addr: string): BigNumber {
+function getOperationValue(transaction: Transaction | ESDTTransaction, addr: string): BigNumber {
   return isSender(transaction, addr)
     ? new BigNumber(transaction.value ?? 0).plus(transaction.fee ?? 0)
     : new BigNumber(transaction.value ?? 0);
@@ -104,7 +104,7 @@ export const getOperations = async (
 
 export const getAccountESDTTokens = async (
   address: string,
-): Promise<any[]> => {
+): Promise<ESDTToken[]> => {
   return await api.getESDTTokensForAddress(address);
 }
 

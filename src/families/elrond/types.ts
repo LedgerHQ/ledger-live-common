@@ -19,6 +19,19 @@ export type ElrondResourcesRaw = {
   nonce: number;
 };
 
+export type ElrondProtocolTransaction = {
+  nonce: number;
+  value: string;
+  receiver: string;
+  sender: string;
+  gasPrice: number;
+  gasLimit: number;
+  chainID: string;
+  signature?: string;
+  data?: string; //for ESDT or stake transactions
+  version: number;
+  options: number;
+}
 /**
  * Elrond transaction
  */
@@ -40,6 +53,18 @@ export type Transaction = TransactionCommon & {
   miniBlockHash?: string;
   data?: string;
 };
+
+export type ESDTTransaction = Transaction & {
+  type: 'ESDT'
+  tokenIdentifier?: string;
+  tokenValue?: string;
+}
+
+export type ESDTToken = {
+  identifier: string;
+  name: string;
+  balance: string;
+}
 
 /**
  * Elrond transaction from a raw JSON
@@ -64,12 +89,21 @@ export type ElrondValidator = {
 };
 
 export type NetworkInfo = {
-  family: "elrond";
-  gasPrice: Range;
+  family?: "elrond";
+  chainID: string;
+  denomination: number;
+  gasLimit: number;
+  gasPrice: number;
+  gasPerByte: number;
 };
+
 export type NetworkInfoRaw = {
-  family: "elrond";
-  gasPrice: RangeRaw;
+  family?: "elrond";
+  chainID: string;
+  denomination: number;
+  gasLimit: number;
+  gasPrice: number;
+  gasPerByte: number;
 };
 
 export type ElrondPreloadData = {

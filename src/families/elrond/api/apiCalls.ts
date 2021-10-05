@@ -4,7 +4,9 @@ import {
   RAW_TRANSACTION,
   METACHAIN_SHARD,
   TRANSACTIONS_SIZE,
+  ESDT_TRANSFER_GAS,
 } from "../constants";
+import { ElrondProtocolTransaction, ESDTToken, ESDTTransaction, NetworkInfo, Transaction } from "../types";
 export default class ElrondApi {
   private API_URL: string;
 
@@ -19,6 +21,7 @@ export default class ElrondApi {
       method: "GET",
       url: `${this.API_URL}/accounts/${addr}`,
     });
+
     return {
       balance,
       nonce,
@@ -43,7 +46,7 @@ export default class ElrondApi {
     return data;
   }
 
-  async getNetworkConfig() {
+  async getNetworkConfig(): Promise<NetworkInfo> {
     const {
       data: {
         data: {
@@ -60,8 +63,9 @@ export default class ElrondApi {
       method: "GET",
       url: `${this.API_URL}/network/config`,
     });
+
     return {
-      chainId,
+      chainID: chainId,
       denomination,
       gasLimit,
       gasPrice,
@@ -70,8 +74,10 @@ export default class ElrondApi {
   }
 
   async submit({ operation, signature, signUsingHash }) {
-    let { chainId, gasLimit, gasPrice } = await this.getNetworkConfig();
+    let { chainID, gasLimit, gasPrice } = await this.getNetworkConfig();
+
     const transactionType = signUsingHash ? HASH_TRANSACTION : RAW_TRANSACTION;
+
     const {
       senders: [sender],
       recipients: [receiver],
@@ -82,7 +88,20 @@ export default class ElrondApi {
 
     if (data) {
     // gasLimit for an ESDT transfer
-      gasLimit = 600000;
+      gasLimit = ESDT_TRANSFER_GAS;
+    }
+
+    const transaction: ElrondProtocolTransaction = {
+      nonce,
+      value,
+      receiver,
+      sender,
+      gasPrice,
+      gasLimit,
+      chainID,
+      signature,
+      data,
+      ...transactionType
     }
 
     const {
@@ -92,31 +111,21 @@ export default class ElrondApi {
     } = await network({
       method: "POST",
       url: `${this.API_URL}/transaction/send`,
-      data: {
-        nonce,
-        value,
-        receiver,
-        sender,
-        gasPrice,
-        gasLimit,
-        chainID: chainId,
-        signature,
-        data,
-        ...transactionType,
-      },
+      data: transaction,
     });
+
     return {
       hash,
     };
   }
 
-  async getHistory(addr: string, startAt: number) {
+  async getHistory(addr: string, startAt: number): Promise<Transaction[]> {
     const { data: transactionsCount } = await network({
       method: "GET",
       url: `${this.API_URL}/transactions/count?condition=should&sender=${addr}&receiver=${addr}&after=${startAt}`,
     });
 
-    let allTransactions: any[] = [];
+    let allTransactions: Transaction[] = [];
     let from = 0;
     while (from <= transactionsCount) {
       const { data: transactions } = await network({
@@ -132,7 +141,7 @@ export default class ElrondApi {
     return allTransactions;
   }
 
-  async getESDTTransactionsForAddress(addr: string, token: string) {
+  async getESDTTransactionsForAddress(addr: string, token: string): Promise<ESDTTransaction[]> {
     const { data: transactions } = await network({
       method: "GET",
       url: `${this.API_URL}/transactions?sender=${addr}&receiver=${addr}&condition=should`
@@ -141,7 +150,7 @@ export default class ElrondApi {
     return transactions.filter(({tokenIdentifier}) => tokenIdentifier && tokenIdentifier==token);
   }
 
-  async getESDTTokensForAddress(addr: string) {
+  async getESDTTokensForAddress(addr: string): Promise<ESDTToken[]> {
     const { data: tokens } = await network({
       method: "GET",
       url: `${this.API_URL}/accounts/${addr}/tokens`
@@ -150,7 +159,7 @@ export default class ElrondApi {
     return tokens;
   }
 
-  async getBlockchainBlockHeight() {
+  async getBlockchainBlockHeight(): Promise<number> {
     const {
       data: [{ round: blockHeight }],
     } = await network({
