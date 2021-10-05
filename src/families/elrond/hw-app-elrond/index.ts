@@ -212,12 +212,17 @@ export default class Elrond {
   }
 
   async provideESDTInfo(
-    ticker: string,
-    id: string,
-    decimals: number,
-    chainId: string,
-    signature: string
+    ticker?: string,
+    id?: string,
+    decimals?: number,
+    chainId?: string,
+    signature?: string
   ): Promise<any> {
+
+    if (!ticker || !id || !decimals || !chainId || !signature) {
+      throw new Error("Invalid ESDT token credentials!");
+    }
+
     const data = this.serializeESDTInfo(
       ticker,
       id,

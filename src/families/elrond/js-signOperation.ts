@@ -75,26 +75,24 @@ const signOperation = ({
         if (tokenAccount) {
           const tokenIdentifier = tokenAccount.id.split('+')[1];
           const token = findTokenById(`${tokenIdentifier}`);
-          const message: Buffer = await elrond.provideESDTInfo(token?.ticker || '', token?.id.split('/')[2] || '', token?.units[0].magnitude || 18, 'T', token?.ledgerSignature || '');
+          await elrond.provideESDTInfo(token?.ticker, token?.id.split('/')[2], token?.units[0].magnitude, 'T', token?.ledgerSignature);
         }
         const { version } = await elrond.getAppConfiguration();
         const signUsingHash = compareVersions(version, "1.0.11") >= 0;
 
-        const unsigned = await buildTransaction(
+        const unsignedTx: string = await buildTransaction(
           account,
           tokenAccount,
           transaction,
           signUsingHash
         );
 
-        console.log(unsigned);
-
         o.next({
           type: "device-signature-requested",
         });
         const r = await elrond.signTransaction(
           account.freshAddressPath,
-          unsigned,
+          unsignedTx,
           signUsingHash
         );
         o.next({
