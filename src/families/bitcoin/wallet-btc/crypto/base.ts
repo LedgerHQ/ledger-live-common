@@ -43,7 +43,8 @@ class Base implements ICrypto {
   }
 
   protected getPubkeyAt(xpub: string, account: number, index: number): Buffer {
-    return bip32.fromBase58(xpub, this.network).derive(account).derive(index).publicKey;
+    return bip32.fromBase58(xpub, this.network).derive(account).derive(index)
+      .publicKey;
   }
   // derive legacy address at account and index positions
   getLegacyAddress(xpub: string, account: number, index: number): string {
@@ -96,7 +97,7 @@ class Base implements ICrypto {
   }
 
   // infer address type from its syntax
-  getDerivationMode(address: string) {
+  getDerivationMode(address: string): DerivationModes {
     if (address.match("^(bc1|tb1).*")) {
       return this.derivationMode.NATIVE_SEGWIT;
     }
@@ -111,7 +112,7 @@ class Base implements ICrypto {
     );
   }
 
-  toOutputScript(address: string) {
+  toOutputScript(address: string): Buffer {
     return toOutputScript(address, this.network);
   }
 

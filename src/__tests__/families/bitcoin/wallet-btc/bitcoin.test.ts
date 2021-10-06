@@ -83,7 +83,6 @@ describe("Unit tests for various bitcoin functions", () => {
   });
 
   it("Test taproot address generation", () => {
-
     const bitcoin = cryptoFactory("bitcoin_testnet");
     // Test data taken from project app-bitcoin-new, file test_get_wallet_address.py
     // Also generated using eg
@@ -193,7 +192,8 @@ describe("Unit tests for various bitcoin functions", () => {
       "tb1p6k25sjnpy45hz28z2r83e4s7wltvrwzs2pvzmkjkmnve07es344s5xkw6j",
       "tb1pv59ynddpeapvkaehf5mgj5vdduwk0y00xgg9wwjj2dpz56sedzjqyryarz",
       "tb1pmhgk6pkng5hmmlug9xvmh4yahrha8ghqn99m2ghzy73s7ar9h56shl0zxm",
-      "tb1pk9xj7e3ywvjfpdgr6xdx0ek5tacn3a0eeqdtctx4j83zcfhe5ndqy4fgjt"];
+      "tb1pk9xj7e3ywvjfpdgr6xdx0ek5tacn3a0eeqdtctx4j83zcfhe5ndqy4fgjt",
+    ];
 
     const changeAddrs = [
       "tb1pmr60r5vfjmdkrwcu4a2z8h39mzs7a6wf2rfhuml6qgcp940x9cxs7t9pdy",
@@ -296,19 +296,30 @@ describe("Unit tests for various bitcoin functions", () => {
       "tb1p3272tayue3s46qt2fpl7972wlvlaussesj0gmn4q863u2fadkgzsphclqa",
       "tb1p4zypzsqgdq4hj3029aqhqu95gz9mrrw7l3t7udp9fappqtfwjgfq3km29m",
       "tb1pkhlmr4xz5w8x8py8x7670zp9lzykhepw74jltvpleff3qpxc3m2sgsmgnu",
-      "tb1ptp5mua0w462ahk56y8uvqgkv3pxk44dz67vjtax4jnu4ajm8ykgqd80ndj"
+      "tb1ptp5mua0w462ahk56y8uvqgkv3pxk44dz67vjtax4jnu4ajm8ykgqd80ndj",
     ];
 
-    const xpub = "tpubDDKYE6BREvDsSWMazgHoyQWiJwYaDDYPbCFjYxN3HFXJP5fokeiK4hwK5tTLBNEDBwrDXn8cQ4v9b2xdW62Xr5yxoQdMu1v6c7UDXYVH27U";
+    const xpub =
+      "tpubDDKYE6BREvDsSWMazgHoyQWiJwYaDDYPbCFjYxN3HFXJP5fokeiK4hwK5tTLBNEDBwrDXn8cQ4v9b2xdW62Xr5yxoQdMu1v6c7UDXYVH27U";
     extAddrs.forEach((expected, index) => {
-      expect(bitcoin.getAddress(DerivationModes.TAPROOT, xpub, 0, index)).toEqual(expected);
-    })
+      expect(
+        bitcoin.getAddress(DerivationModes.TAPROOT, xpub, 0, index)
+      ).toEqual(expected);
+    });
     changeAddrs.forEach((expected, index) => {
-      expect(bitcoin.getAddress(DerivationModes.TAPROOT, xpub, 1, index)).toEqual(expected);
-    })
+      expect(
+        bitcoin.getAddress(DerivationModes.TAPROOT, xpub, 1, index)
+      ).toEqual(expected);
+    });
 
-    expect(bitcoin.getAddress(DerivationModes.NATIVE_SEGWIT, xpub, 0, 0).slice(0, 4)).toEqual("tb1q");
-    expect(bitcoin.getAddress(DerivationModes.LEGACY, xpub, 0, 0).slice(0, 1)).toMatch(new RegExp("[mn]"));
-    expect(bitcoin.getAddress(DerivationModes.SEGWIT, xpub, 0, 0).slice(0, 1)).toEqual("2");    
-  })
+    expect(
+      bitcoin.getAddress(DerivationModes.NATIVE_SEGWIT, xpub, 0, 0).slice(0, 4)
+    ).toEqual("tb1q");
+    expect(
+      bitcoin.getAddress(DerivationModes.LEGACY, xpub, 0, 0).slice(0, 1)
+    ).toMatch(new RegExp("[mn]"));
+    expect(
+      bitcoin.getAddress(DerivationModes.SEGWIT, xpub, 0, 0).slice(0, 1)
+    ).toEqual("2");
+  });
 });

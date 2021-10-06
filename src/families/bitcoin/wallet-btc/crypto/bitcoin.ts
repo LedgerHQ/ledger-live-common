@@ -1,7 +1,6 @@
 // from https://github.com/LedgerHQ/xpub-scan/blob/master/src/actions/deriveAddresses.ts
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { DerivationType } from "@taquito/ledger-signer";
 import { bech32, bech32m } from "bech32";
 import * as bjs from "bitcoinjs-lib";
 import { publicKeyTweakAdd } from "secp256k1";
@@ -88,7 +87,7 @@ function toOutputScriptTemporary(
 }
 
 class Bitcoin extends Base {
-  toOutputScript(address: string) {
+  toOutputScript(address: string): Buffer {
     // Make sure the address is valid on this network
     // otherwise we can't call toOutputScriptTemporary.
     if (!this.validateAddress(address)) {
@@ -176,11 +175,15 @@ class Bitcoin extends Base {
   private hashTapTweak(x: Buffer): Buffer {
     // hash_tag(x) = SHA256(SHA256(tag) || SHA256(tag) || x), see BIP340
     // See https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki#specification
-    const h = bjs.crypto.sha256(Buffer.from("TapTweak", 'utf-8'));
+    const h = bjs.crypto.sha256(Buffer.from("TapTweak", "utf-8"));
     return bjs.crypto.sha256(Buffer.concat([h, h, x]));
   }
 
-  private getTaprootAddress(xpub: string, account: number, index: number): string {
+  private getTaprootAddress(
+    xpub: string,
+    account: number,
+    index: number
+  ): string {
     const ecdsaPubkey = this.getPubkeyAt(xpub, account, index);
     // A BIP32 derived key can be converted to a schnorr pubkey by dropping
     // the first byte, which represent the oddness/evenness. In schnorr all
@@ -188,11 +191,16 @@ class Bitcoin extends Base {
     // https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki#public-key-conversion
     const schnorrInternalPubkey = ecdsaPubkey.slice(1);
 
-    const evenEcdsaPubkey = Buffer.concat([Buffer.of(0x02), schnorrInternalPubkey]);
+    const evenEcdsaPubkey = Buffer.concat([
+      Buffer.of(0x02),
+      schnorrInternalPubkey,
+    ]);
     const tweak = this.hashTapTweak(schnorrInternalPubkey);
 
     // Q = P + int(hash_TapTweak(bytes(P)))G
-    const outputEcdsaKey = Buffer.from(publicKeyTweakAdd(evenEcdsaPubkey, tweak));
+    const outputEcdsaKey = Buffer.from(
+      publicKeyTweakAdd(evenEcdsaPubkey, tweak)
+    );
     // Convert to schnorr.
     const outputSchnorrKey = outputEcdsaKey.slice(1);
     // Create address
