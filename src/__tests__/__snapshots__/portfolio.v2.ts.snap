@@ -1774,8 +1774,8 @@ Object {
         },
       },
       "bitcoinResources": Object {
-        "walletAccount": Object {},
         "utxos": Array [],
+        "walletAccount": undefined,
       },
       "blockHeight": 132858,
       "creationDate": 2018-03-11T18:09:49.798Z,
@@ -4111,8 +4111,8 @@ Object {
         },
       },
       "bitcoinResources": Object {
-        "walletAccount": Object {},
         "utxos": Array [],
+        "walletAccount": undefined,
       },
       "blockHeight": 132858,
       "creationDate": 2018-03-11T18:09:49.798Z,
@@ -4747,8 +4747,8 @@ Object {
         },
       },
       "bitcoinResources": Object {
-        "walletAccount": Object {},
         "utxos": Array [],
+        "walletAccount": undefined,
       },
       "blockHeight": 132858,
       "creationDate": 2018-03-11T18:09:49.798Z,
