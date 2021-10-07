@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Account, TokenAccount } from "../../../types";
 import { useCurrenciesByMarketcap } from "../../../currencies/sortByMarketcap";
-import { listSupportedCurrencies } from "../../../currencies";
+import { listCryptoCurrencies, listTokens } from "../../../currencies";
 import { getAccountCurrency } from "../../../account";
 
 // Pick a default source account if none are selected.
@@ -10,15 +10,20 @@ export const usePickDefaultAccount = (
   fromAccount: Account | TokenAccount | null | undefined,
   setFromAccount: (account: Account | TokenAccount) => void
 ): void => {
-  const supportedCurrencies = listSupportedCurrencies();
-  const allCurrencies = useCurrenciesByMarketcap(supportedCurrencies);
+  const list = [...listCryptoCurrencies(), ...listTokens()];
+  const allCurrencies = useCurrenciesByMarketcap(list);
 
   useEffect(() => {
-    if (!fromAccount) {
+    if (!fromAccount && allCurrencies.length > 0) {
       const defaultAccount: Account | TokenAccount | undefined = allCurrencies
         .map(({ id }) =>
           accounts
-            .filter((acc) => getAccountCurrency(acc)?.id === id)
+            .filter(
+              (acc) =>
+                getAccountCurrency(acc)?.id === id &&
+                acc.balance.gt(0) &&
+                !acc.disabled
+            )
             .sort((a, b) => b.balance.minus(a.balance).toNumber())
         )
         .flat(1)
