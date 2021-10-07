@@ -84,6 +84,15 @@ import { Transaction as rippleTransaction } from "../families/ripple/types";
 import { TransactionRaw as rippleTransactionRaw } from "../families/ripple/types";
 import { NetworkInfo as rippleNetworkInfo } from "../families/ripple/types";
 import { NetworkInfoRaw as rippleNetworkInfoRaw } from "../families/ripple/types";
+import { reflect as solanaReflect } from "../families/solana/types";
+import { CoreStatics as CoreStatics_solana } from "../families/solana/types";
+import { CoreAccountSpecifics as CoreAccountSpecifics_solana } from "../families/solana/types";
+import { CoreOperationSpecifics as CoreOperationSpecifics_solana } from "../families/solana/types";
+import { CoreCurrencySpecifics as CoreCurrencySpecifics_solana } from "../families/solana/types";
+import { Transaction as solanaTransaction } from "../families/solana/types";
+import { TransactionRaw as solanaTransactionRaw } from "../families/solana/types";
+import { NetworkInfo as solanaNetworkInfo } from "../families/solana/types";
+import { NetworkInfoRaw as solanaNetworkInfoRaw } from "../families/solana/types";
 import { reflect as stellarReflect } from "../families/stellar/types";
 import { CoreStatics as CoreStatics_stellar } from "../families/stellar/types";
 import { CoreAccountSpecifics as CoreAccountSpecifics_stellar } from "../families/stellar/types";
@@ -123,6 +132,7 @@ export type SpecificStatics = {}
 & CoreStatics_neo
 & CoreStatics_polkadot
 & CoreStatics_ripple
+& CoreStatics_solana
 & CoreStatics_stellar
 & CoreStatics_tezos
 & CoreStatics_tron
@@ -137,6 +147,7 @@ export type CoreAccountSpecifics = {}
 & CoreAccountSpecifics_neo
 & CoreAccountSpecifics_polkadot
 & CoreAccountSpecifics_ripple
+& CoreAccountSpecifics_solana
 & CoreAccountSpecifics_stellar
 & CoreAccountSpecifics_tezos
 & CoreAccountSpecifics_tron
@@ -151,6 +162,7 @@ export type CoreOperationSpecifics = {}
 & CoreOperationSpecifics_neo
 & CoreOperationSpecifics_polkadot
 & CoreOperationSpecifics_ripple
+& CoreOperationSpecifics_solana
 & CoreOperationSpecifics_stellar
 & CoreOperationSpecifics_tezos
 & CoreOperationSpecifics_tron
@@ -165,6 +177,7 @@ export type CoreCurrencySpecifics = {}
 & CoreCurrencySpecifics_neo
 & CoreCurrencySpecifics_polkadot
 & CoreCurrencySpecifics_ripple
+& CoreCurrencySpecifics_solana
 & CoreCurrencySpecifics_stellar
 & CoreCurrencySpecifics_tezos
 & CoreCurrencySpecifics_tron
@@ -179,6 +192,7 @@ export type Transaction =
   | neoTransaction
   | polkadotTransaction
   | rippleTransaction
+  | solanaTransaction
   | stellarTransaction
   | tezosTransaction
   | tronTransaction
@@ -193,6 +207,7 @@ export type TransactionRaw =
   | neoTransactionRaw
   | polkadotTransactionRaw
   | rippleTransactionRaw
+  | solanaTransactionRaw
   | stellarTransactionRaw
   | tezosTransactionRaw
   | tronTransactionRaw
@@ -205,6 +220,7 @@ export type NetworkInfo =
   | filecoinNetworkInfo
   | neoNetworkInfo
   | rippleNetworkInfo
+  | solanaNetworkInfo
   | stellarNetworkInfo
   | tezosNetworkInfo
   | tronNetworkInfo
@@ -217,6 +233,7 @@ export type NetworkInfoRaw =
   | filecoinNetworkInfoRaw
   | neoNetworkInfoRaw
   | rippleNetworkInfoRaw
+  | solanaNetworkInfoRaw
   | stellarNetworkInfoRaw
   | tezosNetworkInfoRaw
   | tronNetworkInfoRaw
@@ -231,6 +248,7 @@ export const reflectSpecifics = (declare: any): Array<{ OperationMethods: Record
   neoReflect(declare),
   polkadotReflect(declare),
   rippleReflect(declare),
+  solanaReflect(declare),
   stellarReflect(declare),
   tezosReflect(declare),
   tronReflect(declare),
