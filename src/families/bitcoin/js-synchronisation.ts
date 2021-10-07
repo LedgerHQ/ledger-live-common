@@ -23,6 +23,7 @@ import { encodeOperationId } from "../../operation";
 import { BitcoinOutput } from "./types";
 import { perCoinLogic } from "./logic";
 import wallet from "./wallet-btc";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 
 // Map LL's DerivationMode to wallet-btc's
 const toWalletDerivationMode = (
@@ -46,7 +47,7 @@ const toWalletDerivationMode = (
 
 // Map LL's currency ID to wallet-btc's Account.params.network
 const toWalletNetwork = (currencyId: string): "testnet" | "mainnet" => {
-  return ["bitcoin_testnet"].includes(currencyId) ? "testnet" : "mainnet";
+  return getCryptoCurrencyById(currencyId).isTestnetFor ? "testnet" : "mainnet";
 };
 
 // Map wallet-btc's Output to LL's BitcoinOutput

@@ -8,10 +8,6 @@ const initialExplorerConfig: FullConfig = {
     id: "btc",
     stable: {
       base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
-      base: "EXPLORER",
       version: "v3",
     },
   },
@@ -51,20 +47,12 @@ const initialExplorerConfig: FullConfig = {
     id: "dash",
     stable: {
       base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
-      base: "EXPLORER",
       version: "v3",
     },
   },
   decred: {
     id: "dcr",
     stable: {
-      base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
       base: "EXPLORER",
       version: "v3",
     },
@@ -113,10 +101,6 @@ const initialExplorerConfig: FullConfig = {
   litecoin: {
     id: "ltc",
     stable: {
-      base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
       base: "EXPLORER",
       version: "v3",
     },
@@ -179,20 +163,12 @@ const initialExplorerConfig: FullConfig = {
       base: "EXPLORER",
       version: "v2",
     },
-    experimental: {
-      base: "EXPLORER",
-      version: "v3",
-    },
   },
   stealthcoin: {
     id: "xst",
     stable: {
       base: "EXPLORER",
       version: "v2",
-    },
-    experimental: {
-      base: "EXPLORER",
-      version: "v3",
     },
   },
   vertcoin: {
@@ -253,10 +229,6 @@ const initialExplorerConfig: FullConfig = {
   bsc: {
     id: "bnb",
     stable: {
-      base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
       base: "EXPLORER",
       version: "v3",
     },

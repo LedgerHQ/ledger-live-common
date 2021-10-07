@@ -7,11 +7,9 @@ import {
   FeeTooHigh,
   FeeRequired,
 } from "@ledgerhq/errors";
-import { LowerThanMinimumRelayFee } from "./../../errors";
 import type { Account, TransactionStatus } from "./../../types";
 import type { Transaction } from "./types";
 import { calculateFees, validateRecipient } from "./cache";
-import { getMinRelayFee } from "./logic";
 
 const getTransactionStatus = async (
   a: Account,
@@ -93,14 +91,7 @@ const getTransactionStatus = async (
       : new AmountRequired();
   }
 
-  if (
-    process.env.EXPERIMENTAL_MIN_RELAY_FEE &&
-    estimatedFees &&
-    estimatedFees.gt(0) &&
-    estimatedFees.lt(getMinRelayFee(a.currency))
-  ) {
-    warnings.feePerByte = new LowerThanMinimumRelayFee();
-  } else if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
+  if (amount.gt(0) && estimatedFees.times(10).gt(amount)) {
     warnings.feeTooHigh = new FeeTooHigh();
   }
 
