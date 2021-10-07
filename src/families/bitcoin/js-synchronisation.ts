@@ -137,7 +137,7 @@ const mapTxToOperations = (
           if (
             (recipients.length === 0 &&
               output.output_hash ===
-                tx.outputs[tx.outputs.length - 1].output_hash) || // Is that condition safe?
+                tx.outputs[tx.outputs.length - 1].output_hash) ||
             hasSpentNothing
           ) {
             recipients.push(

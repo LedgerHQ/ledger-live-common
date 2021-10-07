@@ -73,7 +73,7 @@ const signOperation = ({
 
         const segwit = isSegwitDerivationMode(account.derivationMode);
 
-        // FIXME Call to explorer needed to set timestamp
+        // FIXME Call to explorer needed to set timestamp (https://ledgerhq.atlassian.net/browse/LL-7539)
         // cf. https://github.com/LedgerHQ/lib-ledger-core/blob/fc9d762b83fc2b269d072b662065747a64ab2816/core/src/wallet/bitcoin/transaction_builders/BitcoinLikeUtxoPicker.cpp#L150-L154
         /*
         const hasTimestamp = networkParams.usesTimestampedTransaction;
