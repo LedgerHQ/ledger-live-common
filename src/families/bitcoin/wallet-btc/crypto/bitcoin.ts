@@ -4,7 +4,7 @@
 import { bech32, bech32m } from "bech32";
 import * as bjs from "bitcoinjs-lib";
 import { publicKeyTweakAdd } from "secp256k1";
-import { DerivationModes } from "..";
+import { DerivationModes } from "../types";
 import Base from "./base";
 
 /**
