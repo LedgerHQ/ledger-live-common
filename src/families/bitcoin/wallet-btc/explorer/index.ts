@@ -97,7 +97,7 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
 
     // TODO add a test for failure (at the sync level)
     const client = await this.client.acquire();
-    const res = (await client.client.get(url)).data;
+    const res: any = (await client.client.get(url)).data;
     await this.client.release(client);
 
     this.emit("fetched-transaction-tx", { url, tx: res[0] });
@@ -111,7 +111,7 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
     this.emit("fetching-block", { url });
 
     const client = await this.client.acquire();
-    const res = (await client.client.get(url)).data;
+    const res: any = (await client.client.get(url)).data;
     await this.client.release(client);
 
     this.emit("fetched-block", { url, block: res });
@@ -135,7 +135,7 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
     this.emit("fetching-block", { url, height });
 
     const client = await this.client.acquire();
-    const res = (await client.client.get(url)).data;
+    const res: any = (await client.client.get(url)).data;
     await this.client.release(client);
 
     this.emit("fetched-block", { url, block: res[0] });
