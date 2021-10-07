@@ -1,13 +1,14 @@
 // from https://github.com/LedgerHQ/xpub-scan/blob/master/src/actions/deriveAddresses.ts
-
-import * as bjs from "bitcoinjs-lib";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { bech32, bech32m } from "bech32";
+import * as bjs from "bitcoinjs-lib";
+import { publicKeyTweakAdd } from "secp256k1";
+import { DerivationModes } from "../types";
 import Base from "./base";
 
 /**
- * Temporarily copied from bitcoinjs-lib master branch (as of 2021-09-02,
+ * Temporarily copied fromBech32 and toBech32 from bitcoinjs-lib master branch (as of 2021-09-02,
  * commit 7b753caad6a5bf13d40ffb6ae28c2b00f7f5f585) so that we can make use of the
  * updated bech32 lib version 2.0.0 that supports bech32m. bitcoinjs-lib version 5.2.0
  * as currently used by wallet-btc uses an older version of bech32 that lacks bech32m support.
@@ -47,6 +48,19 @@ function fromBech32(address: string): {
     data: Buffer.from(data),
   };
 }
+
+function toBech32(
+  data: Buffer,
+  version: number,
+  prefix: string,
+): string {
+  const words = bech32.toWords(data);
+  words.unshift(version);
+
+  return version === 0
+    ? bech32.encode(prefix, words)
+    : bech32m.encode(prefix, words);
+}
 /* eslint-enable */
 
 // This function expects a valid base58check address or a valid
@@ -73,7 +87,7 @@ function toOutputScriptTemporary(
 }
 
 class Bitcoin extends Base {
-  toOutputScript(address: string) {
+  toOutputScript(address: string): Buffer {
     // Make sure the address is valid on this network
     // otherwise we can't call toOutputScriptTemporary.
     if (!this.validateAddress(address)) {
@@ -104,6 +118,21 @@ class Bitcoin extends Base {
       return this.tryBase58(address);
     } catch {
       return false;
+    }
+  }
+
+  // get address given an address type
+  getAddress(
+    derivationMode: string,
+    xpub: string,
+    account: number,
+    index: number
+  ): string {
+    switch (derivationMode) {
+      case DerivationModes.TAPROOT:
+        return this.getTaprootAddress(xpub, account, index);
+      default:
+        return super.getAddress(derivationMode, xpub, account, index);
     }
   }
 
@@ -141,6 +170,41 @@ class Bitcoin extends Base {
       return true;
     }
     return false;
+  }
+
+  private hashTapTweak(x: Buffer): Buffer {
+    // hash_tag(x) = SHA256(SHA256(tag) || SHA256(tag) || x), see BIP340
+    // See https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki#specification
+    const h = bjs.crypto.sha256(Buffer.from("TapTweak", "utf-8"));
+    return bjs.crypto.sha256(Buffer.concat([h, h, x]));
+  }
+
+  private getTaprootAddress(
+    xpub: string,
+    account: number,
+    index: number
+  ): string {
+    const ecdsaPubkey = this.getPubkeyAt(xpub, account, index);
+    // A BIP32 derived key can be converted to a schnorr pubkey by dropping
+    // the first byte, which represent the oddness/evenness. In schnorr all
+    // pubkeys are even.
+    // https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki#public-key-conversion
+    const schnorrInternalPubkey = ecdsaPubkey.slice(1);
+
+    const evenEcdsaPubkey = Buffer.concat([
+      Buffer.of(0x02),
+      schnorrInternalPubkey,
+    ]);
+    const tweak = this.hashTapTweak(schnorrInternalPubkey);
+
+    // Q = P + int(hash_TapTweak(bytes(P)))G
+    const outputEcdsaKey = Buffer.from(
+      publicKeyTweakAdd(evenEcdsaPubkey, tweak)
+    );
+    // Convert to schnorr.
+    const outputSchnorrKey = outputEcdsaKey.slice(1);
+    // Create address
+    return toBech32(outputSchnorrKey, 1, this.network.bech32);
   }
 }
 

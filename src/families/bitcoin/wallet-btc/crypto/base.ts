@@ -42,11 +42,14 @@ class Base implements ICrypto {
     this.network.usesTimestampedTransaction = false;
   }
 
+  protected getPubkeyAt(xpub: string, account: number, index: number): Buffer {
+    return bip32.fromBase58(xpub, this.network).derive(account).derive(index)
+      .publicKey;
+  }
   // derive legacy address at account and index positions
   getLegacyAddress(xpub: string, account: number, index: number): string {
     const { address } = bjs.payments.p2pkh({
-      pubkey: bip32.fromBase58(xpub, this.network).derive(account).derive(index)
-        .publicKey,
+      pubkey: this.getPubkeyAt(xpub, account, index),
       network: this.network,
     });
 
@@ -56,8 +59,7 @@ class Base implements ICrypto {
   // derive native SegWit at account and index positions
   getNativeSegWitAddress(xpub: string, account: number, index: number): string {
     const { address } = bjs.payments.p2wpkh({
-      pubkey: bip32.fromBase58(xpub, this.network).derive(account).derive(index)
-        .publicKey,
+      pubkey: this.getPubkeyAt(xpub, account, index),
       network: this.network,
     });
 
@@ -68,10 +70,7 @@ class Base implements ICrypto {
   getSegWitAddress(xpub: string, account: number, index: number): string {
     const { address } = bjs.payments.p2sh({
       redeem: bjs.payments.p2wpkh({
-        pubkey: bip32
-          .fromBase58(xpub, this.network)
-          .derive(account)
-          .derive(index).publicKey,
+        pubkey: this.getPubkeyAt(xpub, account, index),
         network: this.network,
       }),
     });
@@ -98,7 +97,7 @@ class Base implements ICrypto {
   }
 
   // infer address type from its syntax
-  getDerivationMode(address: string) {
+  getDerivationMode(address: string): DerivationModes {
     if (address.match("^(bc1|tb1).*")) {
       return this.derivationMode.NATIVE_SEGWIT;
     }
@@ -113,7 +112,7 @@ class Base implements ICrypto {
     );
   }
 
-  toOutputScript(address: string) {
+  toOutputScript(address: string): Buffer {
     return toOutputScript(address, this.network);
   }
 
