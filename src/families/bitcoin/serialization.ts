@@ -40,20 +40,20 @@ export function toBitcoinOutputRaw({
   outputIndex,
   blockHeight,
   address,
-  isChange,
   path,
   value,
   rbf,
+  isChange,
 }: BitcoinOutput): BitcoinOutputRaw {
   return [
     hash,
     outputIndex,
     blockHeight,
     address,
-    isChange ? 1 : 0,
     path,
     value.toString(),
     rbf ? 1 : 0,
+    isChange ? 1 : 0,
   ];
 }
 export function fromBitcoinOutputRaw([
@@ -61,20 +61,20 @@ export function fromBitcoinOutputRaw([
   outputIndex,
   blockHeight,
   address,
-  isChange,
   path,
   value,
   rbf,
+  isChange,
 ]: BitcoinOutputRaw): BitcoinOutput {
   return {
     hash,
     outputIndex,
     blockHeight: blockHeight || undefined,
     address: address || undefined,
-    isChange: !!isChange,
     path: path || undefined,
     value: new BigNumber(value),
     rbf: !!rbf,
+    isChange: !!isChange,
   };
 }
 export function toBitcoinResourcesRaw(
