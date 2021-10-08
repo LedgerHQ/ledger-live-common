@@ -138,6 +138,8 @@ async function scanNextAccount(props: {
   }
 }
 
+const libcoreBlacklist = ["taproot"];
+
 export const scanAccounts = ({
   currency,
   deviceId,
@@ -166,6 +168,10 @@ export const scanAccounts = ({
           if (scheme !== undefined) {
             derivationModes = derivationModes.filter((mode) => mode === scheme);
           }
+
+          derivationModes = derivationModes.filter(
+            (m) => !libcoreBlacklist.includes(m)
+          );
 
           for (let i = 0; i < derivationModes.length; i++) {
             const derivationMode = derivationModes[i];

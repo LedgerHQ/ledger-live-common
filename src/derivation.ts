@@ -156,6 +156,12 @@ const modes = Object.freeze({
     tag: "native segwit",
     isSegwit: true,
   },
+  taproot: {
+    purpose: 86,
+    addressFormat: "bech32m",
+    tag: "taproot",
+    isSegwit: true,
+  },
   segwit: {
     isSegwit: true,
     purpose: 49,

@@ -27,6 +27,7 @@ import { isChangeOutput, perCoinLogic } from "../transaction";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 import { requiresSatStackReady } from "../satstack";
 import * as explorerConfigAPI from "../../../api/explorerConfig";
+
 const receive = makeAccountBridgeReceive({
   injectGetAddressParams: (account) => {
     const perCoin = perCoinLogic[account.currency.id];
