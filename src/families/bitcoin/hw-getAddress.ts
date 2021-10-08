@@ -19,6 +19,7 @@ const resolver: Resolver = async (
     format === "legacy" ||
       format === "p2sh" ||
       format === "bech32" ||
+      format === "bech32m" ||
       format === "cashaddr",
     "unsupported format %s",
     format

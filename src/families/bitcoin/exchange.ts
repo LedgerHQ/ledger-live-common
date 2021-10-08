@@ -7,6 +7,7 @@ const addressFormatMap = {
   p2sh: 1,
   bech32: 2,
   bitcoin_cash: 3,
+  bech32m: 3,
 };
 
 const getSerializedAddressParameters = (
