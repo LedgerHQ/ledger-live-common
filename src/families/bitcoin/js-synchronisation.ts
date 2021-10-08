@@ -29,6 +29,7 @@ import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 const toWalletDerivationMode = (
   mode: DerivationMode
 ): WalletDerivationModes => {
+  // FIXME really bad to maintain this. we should either add it into derivation.ts or use better way like "isSegwit"
   switch (mode) {
     case "segwit":
     case "segwit_on_legacy":
@@ -39,6 +40,9 @@ const toWalletDerivationMode = (
 
     case "native_segwit":
       return WalletDerivationModes.NATIVE_SEGWIT;
+
+    case "taproot":
+      return WalletDerivationModes.TAPROOT;
 
     default:
       return WalletDerivationModes.LEGACY;

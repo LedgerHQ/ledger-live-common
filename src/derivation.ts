@@ -451,15 +451,15 @@ export const getDerivationModesForCurrency = (
     all.push("legacy_on_native_segwit");
   }
 
+  if (currency.supportsNativeSegwit) {
+    all.push("native_segwit");
+  }
+
   // taproot logic. FIXME should move per family
   if (currency.family === "bitcoin") {
     if (currency.id === "bitcoin_testnet") {
       all.push("taproot");
     }
-  }
-
-  if (currency.supportsNativeSegwit) {
-    all.push("native_segwit");
   }
 
   if (currency.supportsSegwit) {
