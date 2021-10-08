@@ -29,11 +29,11 @@ export const SolanaMemoType = [
 
 export type Transaction = TransactionCommon & {
     family: "solana";
-    networkInfo: NetworkInfo | null | undefined;
-    fees: BigNumber | null | undefined;
-    baseReserve: BigNumber | null | undefined;
-    memoType: string | null | undefined;
-    memoValue: string | null | undefined;
+    //networkInfo: NetworkInfo | null | undefined;
+    //fees: BigNumber | null | undefined;
+    //baseReserve: BigNumber | null | undefined;
+    //memoType: string | null | undefined;
+    //memoValue: string | null | undefined;
 };
 export type TransactionRaw = TransactionCommonRaw & {
     family: "solana";
