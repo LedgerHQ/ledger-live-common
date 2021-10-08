@@ -1,131 +1,115 @@
 import { BigNumber } from "bignumber.js";
 import {
-  AmountRequired,
-  NotEnoughBalance,
-  FeeNotLoaded,
-  InvalidAddress,
-  InvalidAddressBecauseDestinationIsAlsoSource,
-  NotEnoughSpendableBalance,
-  NotEnoughBalanceBecauseDestinationNotCreated,
-  RecipientRequired,
+    AmountRequired,
+    NotEnoughBalance,
+    FeeNotLoaded,
+    InvalidAddress,
+    InvalidAddressBecauseDestinationIsAlsoSource,
+    NotEnoughSpendableBalance,
+    NotEnoughBalanceBecauseDestinationNotCreated,
+    RecipientRequired,
 } from "@ledgerhq/errors";
 import {
-  StellarWrongMemoFormat,
-  SourceHasMultiSign,
-  AccountAwaitingSendPendingOperations,
+    StellarWrongMemoFormat,
+    SourceHasMultiSign,
+    AccountAwaitingSendPendingOperations,
 } from "../../errors";
 import { formatCurrencyUnit } from "../../currencies";
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
-import {
-  isAddressValid,
-  checkRecipientExist,
-  isAccountMultiSign,
-  isMemoValid,
-} from "./logic";
+import { isAddressValid, checkRecipientExist } from "./logic";
+import { checkOnChainAccountExists } from "./api/web3";
 
 const getTransactionStatus = async (
-  a: Account,
-  t: Transaction
+    a: Account,
+    t: Transaction
 ): Promise<{
-  errors: Record<string, Error>;
-  warnings: Record<string, Error>;
-  estimatedFees: BigNumber;
-  amount: BigNumber;
-  totalSpent: BigNumber;
+    errors: Record<string, Error>;
+    warnings: Record<string, Error>;
+    estimatedFees: BigNumber;
+    amount: BigNumber;
+    totalSpent: BigNumber;
 }> => {
-  const errors: Record<string, Error> = {};
-  const warnings: Record<string, Error> = {};
-  const useAllAmount = !!t.useAllAmount;
+    const errors: Record<string, Error> = {};
+    const warnings: Record<string, Error> = {};
+    const useAllAmount = !!t.useAllAmount;
 
-  if (a.pendingOperations.length > 0) {
-    throw new AccountAwaitingSendPendingOperations();
-  }
+    /*
+        * TODO: check if we need that
+    if (a.pendingOperations.length > 0) {
+        throw new AccountAwaitingSendPendingOperations();
+    }
+    */
 
-  if (!t.recipient) {
-    errors.recipient = new RecipientRequired("");
-  } else if (a.freshAddress === t.recipient) {
-    errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
-  } else if (!isAddressValid(t.recipient)) {
-    errors.recipient = new InvalidAddress("");
-  }
+    //TODO: check if ledger is checking that
+    if (!t.recipient) {
+        errors.recipient = new RecipientRequired("");
+    } else if (a.freshAddress === t.recipient) {
+        // TODO: what if I still want to ?
+        errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
+    } else if (!isAddressValid(t.recipient)) {
+        errors.recipient = new InvalidAddress("");
+    }
 
-  if (await isAccountMultiSign(a)) {
-    errors.recipient = new SourceHasMultiSign("", {
-      currencyName: a.currency.name,
-    });
-  }
+    /*
+        * TODO: check multi sig
+    if (await isAccountMultiSign(a)) {
+        errors.recipient = new SourceHasMultiSign("", {
+            currencyName: a.currency.name,
+        });
+    }
+    */
 
-  if (!t.fees || !t.baseReserve) {
-    errors.fees = new FeeNotLoaded();
-  }
+    const estimatedFees = t.fees;
 
-  const estimatedFees = !t.fees ? new BigNumber(0) : t.fees;
-  const baseReserve = !t.baseReserve ? new BigNumber(0) : t.baseReserve;
-  let amount = !useAllAmount
-    ? t.amount
-    : a.balance.minus(baseReserve).minus(estimatedFees);
-  let totalSpent = !useAllAmount
-    ? amount.plus(estimatedFees)
-    : a.balance.minus(baseReserve);
+    if (estimatedFees.lte(0)) {
+        errors.fees = new FeeNotLoaded();
+    } else {
+        const minRequiredBalance = useAllAmount
+            ? estimatedFees
+            : estimatedFees.plus(t.amount);
 
-  if (totalSpent.gt(a.balance.minus(baseReserve))) {
-    errors.amount = new NotEnoughSpendableBalance(undefined, {
-      minimumAmount: formatCurrencyUnit(a.currency.units[0], baseReserve, {
-        disableRounding: true,
-        showCode: true,
-      }),
-    });
-  }
+        if (minRequiredBalance.gt(a.balance)) {
+            errors.amount = new NotEnoughSpendableBalance();
+        }
+    }
 
-  if (
-    !errors.amount &&
-    amount.plus(estimatedFees).plus(baseReserve).gt(a.balance)
-  ) {
-    errors.amount = new NotEnoughBalance();
-  }
+    /*
+    if (wantsToSpendAmount)
+        if (totalSpent.gt(a.balance.minus(baseReserve))) {
+            errors.amount = new NotEnoughSpendableBalance(undefined, {
+                minimumAmount: formatCurrencyUnit(
+                    a.currency.units[0],
+                    baseReserve,
+                    {
+                        disableRounding: true,
+                        showCode: true,
+                    }
+                ),
+            });
+        }
+        */
 
-  if (
-    !errors.recipient &&
-    !errors.amount &&
-    (amount.lt(0) || totalSpent.gt(a.balance))
-  ) {
-    errors.amount = new NotEnoughBalance();
-    totalSpent = new BigNumber(0);
-    amount = new BigNumber(0);
-  }
+    // TODO: non existent token account ?
+    if (await checkOnChainAccountExists(t.recipient)) {
+        errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated();
+    }
 
-  if (!errors.amount && amount.eq(0)) {
-    errors.amount = new AmountRequired();
-  }
+    const amount = errors.amount
+        ? new BigNumber(0)
+        : useAllAmount
+        ? a.balance.minus(estimatedFees)
+        : t.amount;
 
-  // if amount < 1.0 you can't send to an empty address
-  if (
-    !errors.recipient &&
-    t.recipient &&
-    !errors.amount &&
-    !(await checkRecipientExist({
-      account: a,
-      recipient: t.recipient,
-    })) &&
-    amount.lt(10000000)
-  ) {
-    errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {
-      minimalAmount: "1 XLM",
-    });
-  }
+    const totalSpent = amount.plus(t.fees);
 
-  if (t.memoType && t.memoValue && !isMemoValid(t.memoType, t.memoValue)) {
-    errors.transaction = new StellarWrongMemoFormat();
-  }
-
-  return Promise.resolve({
-    errors,
-    warnings,
-    estimatedFees,
-    amount,
-    totalSpent,
-  });
+    return {
+        errors,
+        warnings,
+        estimatedFees,
+        amount,
+        totalSpent,
+    };
 };
 
 export default getTransactionStatus;

@@ -7,15 +7,10 @@ import type { Transaction } from "./types";
  * @returns {Transaction}
  */
 const createTransaction = (): Transaction => ({
-  family: "stellar",
-  amount: new BigNumber(0),
-  baseReserve: null,
-  networkInfo: null,
-  fees: null,
-  recipient: "",
-  memoValue: null,
-  memoType: null,
-  useAllAmount: false,
+    family: "solana",
+    amount: new BigNumber(0),
+    recipient: "",
+    fees: new BigNumber(0),
 });
 
 export default createTransaction;

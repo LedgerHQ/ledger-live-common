@@ -8,6 +8,7 @@ export type CoreAccountSpecifics = Record<string, never>;
 export type CoreOperationSpecifics = Record<string, never>;
 export type CoreCurrencySpecifics = Record<string, never>;
 
+/*
 export type NetworkInfo = {
     family: "solana";
     fees: BigNumber;
@@ -26,21 +27,22 @@ export const SolanaMemoType = [
     "MEMO_HASH",
     "MEMO_RETURN",
 ];
+*/
 
 export type Transaction = TransactionCommon & {
     family: "solana";
     //networkInfo: NetworkInfo | null | undefined;
-    //fees: BigNumber | null | undefined;
+    fees: BigNumber;
     //baseReserve: BigNumber | null | undefined;
     //memoType: string | null | undefined;
     //memoValue: string | null | undefined;
 };
 export type TransactionRaw = TransactionCommonRaw & {
     family: "solana";
-    networkInfo: NetworkInfoRaw | null | undefined;
-    fees: string | null | undefined;
-    baseReserve: string | null | undefined;
-    memoType: string | null | undefined;
-    memoValue: string | null | undefined;
+    //networkInfo: NetworkInfoRaw | null | undefined;
+    fees: string;
+    //baseReserve: string | null | undefined;
+    //memoType: string | null | undefined;
+    //memoValue: string | null | undefined;
 };
 export const reflect = (_declare: any): void => {};

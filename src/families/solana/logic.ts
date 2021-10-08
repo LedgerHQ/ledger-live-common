@@ -1,9 +1,21 @@
-import { AccountInfo } from "@solana/web3.js";
+import { AccountInfo, PublicKey } from "@solana/web3.js";
 
+/*
 export const getAccountSpendableBalance = async (
-    account: AccountInfo
+    balance: number,
+    transactionFee: number
 ): Promise<number> => {
-    const fees = account;
-    const baseFee = await fetchBaseFee();
-    return BigNumber.max(balance.minus(minimumBalance).minus(baseFee), 0);
+    return balance - transactionFee;
 };
+*/
+
+export const isAddressValid = (address: string) => {
+    try {
+        const _ = new PublicKey(address);
+        return true;
+    } catch (_) {
+        return false;
+    }
+};
+
+export const checkRecipientExist = (address: string) => {};

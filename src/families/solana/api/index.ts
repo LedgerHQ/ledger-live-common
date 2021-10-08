@@ -1,1 +1,1 @@
-export { getAccount, getOperations } from "./web3";
+export { getAccount, getOperations, getTransactionFee } from "./web3";
