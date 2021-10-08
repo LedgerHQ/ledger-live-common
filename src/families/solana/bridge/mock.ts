@@ -23,6 +23,7 @@ const createTransaction = (): Transaction => ({
     family: "solana",
     amount: new BigNumber(0),
     recipient: "",
+    fees: new BigNumber(0),
 });
 
 const updateTransaction = (t: Transaction, patch: Partial<Transaction>) => ({

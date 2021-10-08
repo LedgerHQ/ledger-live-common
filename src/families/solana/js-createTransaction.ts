@@ -11,6 +11,7 @@ const createTransaction = (): Transaction => ({
     amount: new BigNumber(0),
     recipient: "",
     fees: new BigNumber(0),
+    recentBlockhash: "",
 });
 
 export default createTransaction;

@@ -1,1 +1,7 @@
-export { getAccount, getOperations, getTransactionFee } from "./web3";
+export {
+    getAccount,
+    getOperations,
+    getTxFeeAndRecentBlockhash,
+    buildOnChainTransferTransaction,
+    addSignatureToTransaction,
+} from "./web3";

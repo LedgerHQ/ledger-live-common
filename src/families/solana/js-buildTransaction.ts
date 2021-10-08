@@ -4,38 +4,47 @@ import StellarSdk from "stellar-sdk";
 import { AmountRequired, FeeNotLoaded, NetworkDown } from "@ledgerhq/errors";
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
+import { addSignatureToTransaction } from "./api";
+/*
 import {
     buildPaymentOperation,
     buildCreateAccountOperation,
     buildTransactionBuilder,
     loadAccount,
 } from "./api";
-import { addressExists } from "./logic";
+*/
+//import { addressExists } from "./logic";
+import { buildOnChainTransferTransaction } from "./api/web3";
 
 /**
  * @param {Account} a
  * @param {Transaction} t
  */
-export const buildOnChainTransaction = async (
+export const buildOnChainTransaction = (
     account: Account,
     transaction: Transaction
-): Promise<any> => {
-    const { recipient, useAllAmount, networkInfo, fees, memoType, memoValue } =
-        transaction;
+) => {
+    const { recipient, useAllAmount, recentBlockhash } = transaction;
 
-    if (!fees) {
-        throw new FeeNotLoaded();
-    }
+    const tx = buildOnChainTransferTransaction({
+        fromAddress: account.freshAddress,
+        toAddress: recipient,
+        amount: useAllAmount ? account.balance : transaction.amount,
+        recentBlockhash,
+    });
 
-    invariant(
-        networkInfo && networkInfo.family === "stellar",
-        "stellar family"
-    );
-    let amount = new BigNumber(0);
-    amount =
-        useAllAmount && networkInfo
-            ? account.balance.minus(networkInfo.baseReserve).minus(fees)
-            : transaction.amount;
+    return [
+        tx.compileMessage().serialize(),
+        (signature: Buffer) => {
+            return addSignatureToTransaction({
+                tx,
+                address: account.freshAddress,
+                signature,
+            });
+        },
+    ] as const;
+
+    /*
     if (!amount) throw new AmountRequired();
     const source = await loadAccount(account.freshAddress);
     if (!source) throw new NetworkDown();
@@ -52,31 +61,13 @@ export const buildOnChainTransaction = async (
     transactionBuilder.addOperation(operation);
     let memo = null;
 
-    if (memoType && memoValue) {
-        switch (memoType) {
-            case "MEMO_TEXT":
-                memo = StellarSdk.Memo.text(memoValue);
-                break;
-
-            case "MEMO_ID":
-                memo = StellarSdk.Memo.id(memoValue);
-                break;
-
-            case "MEMO_HASH":
-                memo = StellarSdk.Memo.hash(memoValue);
-                break;
-
-            case "MEMO_RETURN":
-                memo = StellarSdk.Memo.return(memoValue);
-                break;
-        }
-    }
-
     if (memo) {
         transactionBuilder.addMemo(memo);
     }
 
     const built = transactionBuilder.setTimeout(0).build();
     return built;
+    */
 };
+
 export default buildOnChainTransaction;

@@ -33,6 +33,7 @@ export type Transaction = TransactionCommon & {
     family: "solana";
     //networkInfo: NetworkInfo | null | undefined;
     fees: BigNumber;
+    recentBlockhash: string;
     //baseReserve: BigNumber | null | undefined;
     //memoType: string | null | undefined;
     //memoValue: string | null | undefined;
@@ -41,6 +42,7 @@ export type TransactionRaw = TransactionCommonRaw & {
     family: "solana";
     //networkInfo: NetworkInfoRaw | null | undefined;
     fees: string;
+    recentBlockhash: string;
     //baseReserve: string | null | undefined;
     //memoType: string | null | undefined;
     //memoValue: string | null | undefined;

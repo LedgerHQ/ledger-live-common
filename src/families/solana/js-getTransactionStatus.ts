@@ -60,14 +60,12 @@ const getTransactionStatus = async (
     }
     */
 
-    const estimatedFees = t.fees;
+    const fees = t.fees;
 
-    if (estimatedFees.lte(0)) {
+    if (fees.lte(0)) {
         errors.fees = new FeeNotLoaded();
     } else {
-        const minRequiredBalance = useAllAmount
-            ? estimatedFees
-            : estimatedFees.plus(t.amount);
+        const minRequiredBalance = useAllAmount ? fees : fees.plus(t.amount);
 
         if (minRequiredBalance.gt(a.balance)) {
             errors.amount = new NotEnoughSpendableBalance();
@@ -91,17 +89,21 @@ const getTransactionStatus = async (
         */
 
     // TODO: non existent token account ?
-    if (await checkOnChainAccountExists(t.recipient)) {
+    if (!(await checkOnChainAccountExists(t.recipient))) {
         errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated();
     }
 
-    const amount = errors.amount
-        ? new BigNumber(0)
-        : useAllAmount
-        ? a.balance.minus(estimatedFees)
-        : t.amount;
+    const amount =
+        errors.amount || errors.fees
+            ? new BigNumber(0)
+            : useAllAmount
+            ? a.balance.minus(fees)
+            : t.amount;
 
-    const totalSpent = amount.plus(t.fees);
+    const totalSpent =
+        errors.amount || errors.fees ? new BigNumber(0) : amount.plus(fees);
+
+    const estimatedFees = errors.fees ? new BigNumber(0) : fees;
 
     return {
         errors,
