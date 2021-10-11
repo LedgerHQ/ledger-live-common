@@ -1,10 +1,10 @@
-import invariant from "invariant";
 import Btc, { AddressFormat } from "@ledgerhq/hw-app-btc";
 import { log } from "@ledgerhq/logs";
 import { BtcUnmatchedApp, UpdateYourApp } from "@ledgerhq/errors";
 import getBitcoinLikeInfo from "../../hw/getBitcoinLikeInfo";
 import { getAddressFormatDerivationMode } from "../../derivation";
 import type { Resolver } from "../../hw/getAddress/types";
+import { UnsupportedDerivation } from "../../errors";
 const oldP2SH = {
   digibyte: 5,
 };
@@ -15,22 +15,18 @@ const resolver: Resolver = async (
 ) => {
   const btc = new Btc(transport);
   const format = forceFormat || getAddressFormatDerivationMode(derivationMode);
-  invariant(
-    format === "legacy" ||
-      format === "p2sh" ||
-      format === "bech32" ||
-      format === "bech32m" ||
-      format === "cashaddr",
-    "unsupported format %s",
-    format
-  );
-  const { bitcoinAddress, publicKey, chainCode } = await btc.getWalletPublicKey(
-    path,
-    {
+  let result;
+  try {
+    result = await btc.getWalletPublicKey(path, {
       verify,
       format: format as AddressFormat,
+    });
+  } catch (e: any) {
+    if (e && e.message && e.message.includes("invalid format")) {
+      throw new UnsupportedDerivation();
     }
-  );
+  }
+  const { bitcoinAddress, publicKey, chainCode } = result;
 
   if (!skipAppFailSafeCheck) {
     const { bitcoinLikeInfo } = currency;

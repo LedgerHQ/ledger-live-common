@@ -26,7 +26,7 @@ import {
   recalculateAccountBalanceHistories,
   encodeAccountId,
 } from "../account";
-import { FreshAddressIndexInvalid } from "../errors";
+import { FreshAddressIndexInvalid, UnsupportedDerivation } from "../errors";
 import type {
   Operation,
   Account,
@@ -294,12 +294,23 @@ export const makeScanAccounts =
             let result = derivationsCache[path];
 
             if (!result) {
-              result = await getAddress(transport, {
-                currency,
-                path,
-                derivationMode,
-              });
-              derivationsCache[path] = result;
+              try {
+                result = await getAddress(transport, {
+                  currency,
+                  path,
+                  derivationMode,
+                });
+                derivationsCache[path] = result;
+              } catch (e) {
+                if (e instanceof UnsupportedDerivation) {
+                  log(
+                    "scanAccounts",
+                    "ignore derivationMode=" + derivationMode
+                  );
+                  continue;
+                }
+                throw e;
+              }
             }
 
             if (!result) continue;
