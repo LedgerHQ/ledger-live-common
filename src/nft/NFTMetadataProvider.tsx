@@ -87,6 +87,15 @@ export function useNFTMetadata(contract: string, tokenId: string): NFTResource {
   }
 }
 
+export function useNFTAPI(): NFTMetadataContextAPI {
+  const { clearCache, loadNFTMetadata } = useContext(NFTMetadataContext);
+
+  return {
+    clearCache,
+    loadNFTMetadata,
+  };
+}
+
 type NFTMetadataProviderProps = {
   children: React.ReactNode;
 };
