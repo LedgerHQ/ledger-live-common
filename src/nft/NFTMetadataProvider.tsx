@@ -12,8 +12,8 @@ import { NFTMetadata } from "../types";
 const currency: Currency = findCryptoCurrencyById("ethereum")!;
 const ethApi: API = apiForCurrency(currency);
 
-type NFTResourceIdle = {
-  status: "idle";
+type NFTResourceQueued = {
+  status: "queued";
 };
 
 type NFTResourceLoading = {
@@ -37,7 +37,7 @@ type NFTResourceNoData = {
 };
 
 type NFTResource =
-  | NFTResourceIdle
+  | NFTResourceQueued
   | NFTResourceLoading
   | NFTResourceLoaded
   | NFTResourceError
@@ -82,7 +82,7 @@ export function useNFTMetadata(contract: string, tokenId: string): NFTResource {
     return cached;
   } else {
     return {
-      status: "idle",
+      status: "queued",
     };
   }
 }
