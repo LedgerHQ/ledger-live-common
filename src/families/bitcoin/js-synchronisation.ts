@@ -20,6 +20,11 @@ import { makeSync, makeScanAccounts, mergeOps } from "../../bridge/jsHelpers";
 import { findCurrencyExplorer } from "../../api/Ledger";
 import { encodeAccountId } from "../../account";
 import { encodeOperationId } from "../../operation";
+import {
+  isSegwitDerivationMode,
+  isNativeSegwitDerivationMode,
+  isTaprootDerivationMode,
+} from "../../derivation";
 import { BitcoinOutput } from "./types";
 import { perCoinLogic } from "./logic";
 import wallet from "./wallet-btc";
@@ -29,20 +34,16 @@ import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 const toWalletDerivationMode = (
   mode: DerivationMode
 ): WalletDerivationModes => {
-  switch (mode) {
-    case "segwit":
-    case "segwit_on_legacy":
-    case "segwit_unsplit":
-    case "bch_on_bitcoin_segwit":
-    case "vertcoin_128_segwit":
-      return WalletDerivationModes.SEGWIT;
-
-    case "native_segwit":
-      return WalletDerivationModes.NATIVE_SEGWIT;
-
-    default:
-      return WalletDerivationModes.LEGACY;
+  if (isTaprootDerivationMode(mode)) {
+    return WalletDerivationModes.TAPROOT;
   }
+  if (isNativeSegwitDerivationMode(mode)) {
+    return WalletDerivationModes.NATIVE_SEGWIT;
+  }
+  if (isSegwitDerivationMode(mode)) {
+    return WalletDerivationModes.SEGWIT;
+  }
+  return WalletDerivationModes.LEGACY;
 };
 
 // Map LL's currency ID to wallet-btc's Account.params.network

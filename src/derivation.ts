@@ -21,6 +21,8 @@ export type ModeSpec = {
   overridesDerivation?: string;
   libcoreConfig?: LibcoreConfig;
   isSegwit?: boolean;
+  isNativeSegwit?: boolean;
+  isTaproot?: boolean;
   // TODO drop
   isUnsplit?: boolean;
   // TODO drop
@@ -147,6 +149,13 @@ const modes = Object.freeze({
       TEZOS_XPUB_CURVE: "ED25519",
     },
   },
+  taproot: {
+    purpose: 86,
+    addressFormat: "bech32m",
+    tag: "taproot",
+    isSegwit: true,
+    isTaproot: true,
+  },
   native_segwit: {
     purpose: 84,
     libcoreConfig: {
@@ -155,6 +164,7 @@ const modes = Object.freeze({
     addressFormat: "bech32",
     tag: "native segwit",
     isSegwit: true,
+    isNativeSegwit: true,
   },
   segwit: {
     isSegwit: true,
@@ -255,6 +265,15 @@ export const isSegwitDerivationMode = (
   derivationMode: DerivationMode
 ): boolean =>
   (modes[derivationMode] as { isSegwit: boolean }).isSegwit || false;
+export const isNativeSegwitDerivationMode = (
+  derivationMode: DerivationMode
+): boolean =>
+  (modes[derivationMode] as { isNativeSegwit: boolean }).isNativeSegwit ||
+  false;
+export const isTaprootDerivationMode = (
+  derivationMode: DerivationMode
+): boolean =>
+  (modes[derivationMode] as { isTaproot: boolean }).isTaproot || false;
 export const getLibcoreConfig = (
   currency: CryptoCurrency,
   derivationMode: DerivationMode
@@ -445,15 +464,15 @@ export const getDerivationModesForCurrency = (
     all.push("legacy_on_native_segwit");
   }
 
+  if (currency.supportsNativeSegwit) {
+    all.push("native_segwit");
+  }
+
   // taproot logic. FIXME should move per family
   if (currency.family === "bitcoin") {
     if (currency.id === "bitcoin_testnet") {
       all.push("taproot");
     }
-  }
-
-  if (currency.supportsNativeSegwit) {
-    all.push("native_segwit");
   }
 
   if (currency.supportsSegwit) {
