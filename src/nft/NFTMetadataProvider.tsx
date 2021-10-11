@@ -65,6 +65,64 @@ function getNFTId(contract: string, tokenId: string) {
   return `${contract}-${tokenId}`;
 }
 
+type BatchElement = {
+  couple: {
+    contract: string;
+    tokenId: string;
+  };
+  resolve: (value: NFTMetadata) => void;
+  reject: (reason?: Error) => void;
+};
+
+type Batch = {
+  couples: Array<BatchElement["couple"]>;
+  resolvers: Array<BatchElement["resolve"]>;
+  rejecters: Array<BatchElement["reject"]>;
+};
+
+const batcher: any = (() => {
+  const batch: BatchElement[] = [];
+
+  let timer;
+  const timeoutBatchCall = () => {
+    clearTimeout(timer);
+
+    timer = setTimeout(() => {
+      const { couples, resolvers, rejecters } = batch.reduce(
+        (acc, { couple, resolve, reject }) => {
+          acc.couples.push(couple);
+          acc.resolvers.push(resolve);
+          acc.rejecters.push(reject);
+
+          return acc;
+        },
+        { couples: [], resolvers: [], rejecters: [] } as Batch
+      );
+
+      batch.length = 0;
+
+      ethApi
+        .getNFTMetadata(couples)
+        .then((res) => {
+          res.forEach((metadata, index) => resolvers[index](metadata));
+        })
+        .catch((err) => {
+          rejecters.forEach((reject) => reject(err));
+        });
+    });
+  };
+
+  return {
+    load: ({ contract, tokenId }) => {
+      return new Promise((resolve, reject) => {
+        batch.push({ couple: { contract, tokenId }, resolve, reject });
+
+        timeoutBatchCall();
+      });
+    },
+  };
+})();
+
 export function useNFTMetadata(contract: string, tokenId: string): NFTResource {
   const { cache, loadNFTMetadata } = useContext(NFTMetadataContext);
 
@@ -121,9 +179,7 @@ export function NFTMetadataProvider({ children }: NFTMetadataProviderProps) {
         }));
 
         try {
-          const [metadata] = await ethApi.getNFTMetadata([
-            { contract, tokenId },
-          ]);
+          const metadata = await batcher.load({ contract, tokenId });
 
           setState((oldState) => ({
             ...oldState,
