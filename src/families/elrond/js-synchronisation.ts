@@ -1,4 +1,4 @@
-import type { Account, Operation } from "../../types";
+import type { Account } from "../../types";
 import { encodeAccountId } from "../../account";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { makeSync, makeScanAccounts, mergeOps } from "../../bridge/jsHelpers";
@@ -13,17 +13,11 @@ const getAccountShape: GetAccountShape = async (info) => {
     xpubOrAddress: address,
     derivationMode,
   });
-  let oldOperations = initialAccount?.operations || [];
+  const oldOperations = initialAccount?.operations || [];
   // Needed for incremental synchronisation
-  let startAt = 0;
-  if (oldOperations.length) {
-    oldOperations = oldOperations.sort(
-      (a: Operation, b: Operation) => b.date.getTime() - a.date.getTime()
-    );
-    startAt = oldOperations[0].blockHeight
-      ? (new Date(oldOperations[0].date).getTime() / 1000 || 0) + 1
-      : 0;
-  }
+  const startAt = oldOperations.length
+    ? oldOperations[0].date.getTime() / 1000 + 1
+    : 0;
 
   // get the current account balance state depending your api implementation
   const { blockHeight, balance, nonce } = await getAccount(address);
