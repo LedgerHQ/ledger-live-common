@@ -1,5 +1,3 @@
-import { DerivationModes } from "../types";
-
 export interface ICrypto {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   network: any;
