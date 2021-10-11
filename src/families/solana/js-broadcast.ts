@@ -1,19 +1,19 @@
 import { patchOperationWithHash } from "../../operation";
 import type { Operation, SignedOperation } from "../../types";
-import { broadcastTransaction as apiBroadcast } from "./api";
+import { broadcastTransaction } from "./api";
 
 /**
  * Broadcast a signed transaction
  * @param {signature: string, operation: string} signedOperation
  */
 const broadcast = async ({
-  signedOperation,
+    signedOperation,
 }: {
-  signedOperation: SignedOperation;
+    signedOperation: SignedOperation;
 }): Promise<Operation> => {
-  const { signature, operation } = signedOperation;
-  const hash = await apiBroadcast(signature);
-  return patchOperationWithHash(operation, hash);
+    const { signature, operation } = signedOperation;
+    const txId = await broadcastTransaction(Buffer.from(signature, "hex"));
+    return patchOperationWithHash(operation, txId);
 };
 
 export default broadcast;

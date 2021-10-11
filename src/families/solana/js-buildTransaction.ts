@@ -40,7 +40,9 @@ export const buildOnChainTransaction = (
                 tx,
                 address: account.freshAddress,
                 signature,
-            });
+            })
+                .compileMessage()
+                .serialize();
         },
     ] as const;
 

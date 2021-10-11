@@ -24,6 +24,7 @@ const createTransaction = (): Transaction => ({
     amount: new BigNumber(0),
     recipient: "",
     fees: new BigNumber(0),
+    recentBlockhash: "",
 });
 
 const updateTransaction = (t: Transaction, patch: Partial<Transaction>) => ({

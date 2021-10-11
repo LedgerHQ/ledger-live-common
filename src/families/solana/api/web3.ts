@@ -89,6 +89,10 @@ export const addSignatureToTransaction = ({
     return tx;
 };
 
+export const broadcastTransaction = (rawTx: Buffer) => {
+    return conn.sendRawTransaction(rawTx);
+};
+
 async function go() {
     return new PublicKey("hui");
     const acc = await getAccount(

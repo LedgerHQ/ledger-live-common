@@ -1,19 +1,29 @@
-import { BigNumber } from "bignumber.js";
 import { Observable } from "rxjs";
-import Stellar from "@ledgerhq/hw-app-str";
-import { FeeNotLoaded } from "@ledgerhq/errors";
 import type { Account, Operation, SignOperationEvent } from "../../types";
 import { open, close } from "../../hw";
 import type { Transaction } from "./types";
 import { buildOnChainTransaction } from "./js-buildTransaction";
-import { fetchSequence } from "./api";
 import Solana from "@ledgerhq/hw-app-solana";
-import { transport } from "winston";
 
 const buildOptimisticOperation = async (
     account: Account,
     transaction: Transaction
 ): Promise<Operation> => {
+    return {
+        id: `${account.id}--OUT`,
+        hash: "",
+        accountId: account.id,
+        type: "OUT",
+        fee: transaction.fees,
+        senders: [account.freshAddress],
+        recipients: [transaction.recipient],
+        date: new Date(),
+        value: transaction.amount.plus(transaction.fees),
+        blockHash: null,
+        blockHeight: null,
+        extra: {},
+    };
+    /*
     const transactionSequenceNumber = await fetchSequence(account);
     const fees = transaction.fees ?? new BigNumber(0);
     const operation: Operation = {
@@ -40,6 +50,7 @@ const buildOptimisticOperation = async (
         extra: {},
     };
     return operation;
+    */
 };
 
 /**
@@ -77,13 +88,17 @@ const signOperation = ({
                     type: "device-signature-granted",
                 });
 
-                const singedOnChainTx = singOnChainTransaction(signature);
+                const singedOnChainTxBytes = singOnChainTransaction(signature);
 
                 subsriber.next({
                     type: "signed",
                     signedOperation: {
-                        operation: {},
-                        signature: signature.toString("hex"),
+                        operation: await buildOptimisticOperation(
+                            account,
+                            transaction
+                        ),
+                        signature: singedOnChainTxBytes.toString("hex"),
+                        expirationDate: null,
                     },
                 });
             } finally {

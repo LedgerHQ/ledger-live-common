@@ -4,4 +4,5 @@ export {
     getTxFeeAndRecentBlockhash,
     buildOnChainTransferTransaction,
     addSignatureToTransaction,
+    broadcastTransaction,
 } from "./web3";
