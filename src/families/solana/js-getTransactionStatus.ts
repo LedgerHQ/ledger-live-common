@@ -26,6 +26,10 @@ const getTransactionStatus = async (
     const warnings: Record<string, Error> = {};
     const useAllAmount = !!t.useAllAmount;
 
+    console.log("account balance", a.balance.toNumber());
+    console.log("use all amount?", useAllAmount);
+    console.log("want to spend", t.amount.toNumber());
+
     /* TODO: check if we need that
     if (a.pendingOperations.length > 0) {
         throw new AccountAwaitingSendPendingOperations();
@@ -53,6 +57,8 @@ const getTransactionStatus = async (
     const totalSpent = useAllAmount
         ? a.balance
         : new BigNumber(t.amount).plus(estimatedFees);
+
+    console.log("total spent", totalSpent.toNumber());
 
     const amount = totalSpent.minus(estimatedFees);
 
