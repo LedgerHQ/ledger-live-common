@@ -27,12 +27,11 @@ export const getAccount = async (address: string) => {
 };
 
 export const getNetworkInfo = async (): Promise<NetworkInfo> => {
-    const { blockhash, feeCalculator } = await conn.getRecentBlockhash();
+    const { feeCalculator } = await conn.getRecentBlockhash();
 
     return {
         family: "solana",
         lamportsPerSignature: new BigNumber(feeCalculator.lamportsPerSignature),
-        recentBlockhash: blockhash,
     };
 };
 
@@ -52,16 +51,14 @@ export const checkOnChainAccountExists = async (address: string) => {
     return !!(await conn.getAccountInfo(pubKey));
 };
 
-export const buildTransferTransaction = ({
+export const buildTransferTransaction = async ({
     fromAddress,
     toAddress,
     amount,
-    recentBlockhash,
 }: {
     fromAddress: string;
     toAddress: string;
     amount: BigNumber;
-    recentBlockhash: string;
 }) => {
     const fromPublicKey = new PublicKey(fromAddress);
     const toPublicKey = new PublicKey(toAddress);
@@ -71,6 +68,8 @@ export const buildTransferTransaction = ({
         toPubkey: toPublicKey,
         lamports: amount.toNumber(),
     });
+
+    const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
 
     return new Transaction({
         feePayer: fromPublicKey,

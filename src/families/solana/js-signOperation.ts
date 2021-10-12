@@ -10,18 +10,17 @@ const buildOptimisticOperation = async (
     account: Account,
     transaction: Transaction
 ): Promise<Operation> => {
-    const fee =
-        transaction.networkInfo?.lamportsPerSignature || new BigNumber(0);
+    const fees = transaction.fees || new BigNumber(0);
     return {
         id: `${account.id}--OUT`,
         hash: "",
         accountId: account.id,
         type: "OUT",
-        fee: fee,
+        fee: fees,
         senders: [account.freshAddress],
         recipients: [transaction.recipient],
         date: new Date(),
-        value: transaction.amount.plus(fee),
+        value: transaction.amount.plus(fees),
         blockHash: null,
         blockHeight: null,
         extra: {},
@@ -45,15 +44,8 @@ const signOperation = ({
             const transport = await open(deviceId);
 
             try {
-                if (transaction.networkInfo === undefined) {
-                    throw Error("Network info is required");
-                }
-
                 const [msgToHardwareBytes, singOnChainTransaction] =
-                    buildOnChainTransferTransaction(account, {
-                        ...transaction,
-                        networkInfo: transaction.networkInfo!,
-                    });
+                    await buildOnChainTransferTransaction(account, transaction);
 
                 const hwApp = new Solana(transport);
 

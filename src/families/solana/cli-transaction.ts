@@ -1,4 +1,5 @@
-import BigNumber from "bignumber.js";
+import invariant from "invariant";
+import { flatMap } from "lodash";
 import type { Transaction, AccountLike } from "../../types";
 
 const options = [
@@ -11,45 +12,15 @@ const options = [
 
 function inferTransactions(
     transactions: Array<{ account: AccountLike; transaction: Transaction }>,
-    opts: any
+    opts: Record<string, string>
 ): Transaction[] {
-    return transactions.map(({ account, transaction }) => {
-        console.log("--- tx to infer from ---", transaction);
-        console.log("--- tx amount ---", transaction.amount.toExponential());
-        console.log("--- acc to infer from ---", account);
-        return {
-            ...transaction,
-            family: "solana",
-            networkInfo: undefined,
-            mode: opts.mode || "send",
-        };
-    });
-    /*
+    const mode = opts.mode || "send";
+    invariant(mode === "send", "Only send mode is supported");
     return flatMap(transactions, ({ transaction, account }) => {
-        if (!transaction.family !== "solana") {
-            throw new Error("transaction is not of type Solana");
-        }
-
-        if (account.type === "Account" && !account.myCoinResources) {
-            throw new Error("unactivated account");
-        }
-
-        return {
-            ...transaction,
-            family: "solana",
-            mode: opts.mode || "send",
-        };
-
-        return {
-            ...transaction,
-            family: "solana",
-            networkInfo: {},
-            mode: opts.mode || "send",
-        };
+        invariant(transaction.family === "solana", "solana family");
+        return transaction;
     });
-    */
 }
-
 export default {
     options,
     inferTransactions,

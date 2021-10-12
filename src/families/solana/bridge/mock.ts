@@ -35,10 +35,10 @@ const prepareTransaction = async (
     t: Transaction
 ): Promise<Transaction> => ({
     ...t,
+    fees: new BigNumber(1),
     networkInfo: {
         family: "solana",
         lamportsPerSignature: new BigNumber(1),
-        recentBlockhash: "333",
     },
 });
 

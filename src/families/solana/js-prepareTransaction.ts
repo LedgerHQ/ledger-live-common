@@ -7,12 +7,17 @@ const prepareTransaction = async (
     a: Account,
     tx: Transaction
 ): Promise<Transaction> => {
-    return tx.networkInfo
-        ? tx
-        : {
-              ...tx,
-              networkInfo: await getNetworkInfo(),
-          };
+    if (tx.networkInfo) {
+        return tx;
+    }
+
+    const networkInfo = await getNetworkInfo();
+
+    return {
+        ...tx,
+        fees: networkInfo.lamportsPerSignature,
+        networkInfo,
+    };
 };
 
 export default prepareTransaction;

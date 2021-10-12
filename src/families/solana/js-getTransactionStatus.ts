@@ -7,6 +7,7 @@ import {
     NotEnoughBalanceBecauseDestinationNotCreated,
     RecipientRequired,
     AmountRequired,
+    FeeTooHigh,
 } from "@ledgerhq/errors";
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
@@ -26,12 +27,6 @@ const getTransactionStatus = async (
     const warnings: Record<string, Error> = {};
     const useAllAmount = !!t.useAllAmount;
 
-    console.log("account balance", a.balance.toNumber());
-    console.log("use all amount?", useAllAmount);
-    console.log("want to spend", t.amount.toNumber());
-
-    console.log("network info", t.networkInfo);
-
     /* TODO: check if we need that
     if (a.pendingOperations.length > 0) {
         throw new AccountAwaitingSendPendingOperations();
@@ -46,7 +41,7 @@ const getTransactionStatus = async (
         errors.recipient = new InvalidAddress();
     }
 
-    if (!t.networkInfo) {
+    if (t.fees === undefined) {
         errors.fees = new FeeNotLoaded();
     }
 
@@ -54,20 +49,13 @@ const getTransactionStatus = async (
      * TODO: check if acc is multi sign
      */
 
-    const estimatedFees =
-        t.networkInfo?.lamportsPerSignature || new BigNumber(0);
-
-    console.log("estimated fees is: ", estimatedFees);
+    const estimatedFees = t.fees || new BigNumber(0);
 
     const totalSpent = useAllAmount
         ? a.balance
         : new BigNumber(t.amount).plus(estimatedFees);
 
-    console.log("total spent", totalSpent.toNumber());
-
     const amount = totalSpent.minus(estimatedFees);
-
-    console.log("amount is ", amount);
 
     if (amount.lte(0)) {
         errors.emount = new AmountRequired();
@@ -75,6 +63,10 @@ const getTransactionStatus = async (
 
     if (totalSpent.gt(a.balance)) {
         errors.amount = new NotEnoughBalance();
+    }
+
+    if (t.fees && t.fees.gte(amount.times(10))) {
+        errors.fees = new FeeTooHigh();
     }
 
     if (!(await checkRecipientExist(t.recipient))) {

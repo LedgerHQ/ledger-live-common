@@ -1,22 +1,21 @@
 import type { Account } from "../../types";
-import type { NetworkInfo, Transaction } from "./types";
+import type { Transaction } from "./types";
 import { addSignatureToTransaction, buildTransferTransaction } from "./api";
 
 /**
  * @param {Account} a
  * @param {Transaction} t
  */
-export const buildOnChainTransferTransaction = (
+export const buildOnChainTransferTransaction = async (
     account: Account,
-    transaction: Transaction & { networkInfo: NetworkInfo }
+    transaction: Transaction
 ) => {
-    const { recipient, useAllAmount, networkInfo } = transaction;
+    const { recipient, useAllAmount } = transaction;
 
-    const tx = buildTransferTransaction({
+    const tx = await buildTransferTransaction({
         fromAddress: account.freshAddress,
         toAddress: recipient,
         amount: useAllAmount ? account.balance : transaction.amount,
-        recentBlockhash: networkInfo.recentBlockhash,
     });
 
     return [

@@ -50,12 +50,12 @@ const dataset: DatasetTest<Transaction> = {
                         {
                             name: "test",
                             transaction: {
+                                fees: new BigNumber(1),
                                 family: "solana",
                                 amount: new BigNumber(1),
                                 networkInfo: {
                                     family: "solana",
                                     lamportsPerSignature: new BigNumber(0),
-                                    recentBlockhash: "333",
                                 },
                                 recipient: "some recipient",
                             },
