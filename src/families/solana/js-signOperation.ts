@@ -10,7 +10,8 @@ const buildOptimisticOperation = async (
     account: Account,
     transaction: Transaction
 ): Promise<Operation> => {
-    const fee = transaction.networkInfo?.feeSOLPerSignature || new BigNumber(0);
+    const fee =
+        transaction.networkInfo?.lamportsPerSignature || new BigNumber(0);
     return {
         id: `${account.id}--OUT`,
         hash: "",

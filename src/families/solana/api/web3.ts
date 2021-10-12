@@ -1,6 +1,5 @@
 import {
     Connection,
-    LAMPORTS_PER_SOL,
     PublicKey,
     SystemProgram,
     Transaction,
@@ -13,19 +12,17 @@ const conn = new Connection("https://api.devnet.solana.com/");
 
 export const getAccount = async (address: string) => {
     const pubKey = new PublicKey(address);
-    const [balanceLamports, transactionFeeSOL] = await Promise.all([
+    const [balanceLamports, lamportPerSignature] = await Promise.all([
         conn.getBalance(pubKey),
-        getNetworkInfo().then((res) => res.feeSOLPerSignature),
+        getNetworkInfo().then((res) => res.lamportsPerSignature),
     ]);
 
-    const balanceSOL = new BigNumber(balanceLamports).div(LAMPORTS_PER_SOL);
-    const spendableBalanceSOL = new BigNumber(balanceSOL).minus(
-        transactionFeeSOL
-    );
+    const balance = new BigNumber(balanceLamports);
+    const spendableBalance = balance.minus(lamportPerSignature);
 
     return {
-        balance: balanceSOL,
-        spendableBalance: spendableBalanceSOL,
+        balance,
+        spendableBalance,
     };
 };
 
@@ -34,9 +31,7 @@ export const getNetworkInfo = async (): Promise<NetworkInfo> => {
 
     return {
         family: "solana",
-        feeSOLPerSignature: new BigNumber(
-            feeCalculator.lamportsPerSignature
-        ).div(LAMPORTS_PER_SOL),
+        lamportsPerSignature: new BigNumber(feeCalculator.lamportsPerSignature),
         recentBlockhash: blockhash,
     };
 };
@@ -74,7 +69,7 @@ export const buildTransferTransaction = ({
     const transferTx = SystemProgram.transfer({
         fromPubkey: fromPublicKey,
         toPubkey: toPublicKey,
-        lamports: amount.multipliedBy(LAMPORTS_PER_SOL).toNumber(),
+        lamports: amount.toNumber(),
     });
 
     return new Transaction({

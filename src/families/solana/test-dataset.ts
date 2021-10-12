@@ -54,7 +54,7 @@ const dataset: DatasetTest<Transaction> = {
                                 amount: new BigNumber(1),
                                 networkInfo: {
                                     family: "solana",
-                                    feeSOLPerSignature: new BigNumber(0),
+                                    lamportsPerSignature: new BigNumber(0),
                                     recentBlockhash: "333",
                                 },
                                 recipient: "some recipient",

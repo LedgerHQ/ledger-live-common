@@ -12,13 +12,13 @@ export type CoreCurrencySpecifics = Record<string, never>;
 
 export type NetworkInfo = {
     family: "solana";
-    feeSOLPerSignature: BigNumber;
+    lamportsPerSignature: BigNumber;
     recentBlockhash: string;
 };
 
 export type NetworkInfoRaw = {
     family: "solana";
-    feeSOLPerSignature: string;
+    lamportPerSignature: string;
     recentBlockhash: string;
 };
 

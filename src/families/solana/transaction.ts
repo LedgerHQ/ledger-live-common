@@ -15,7 +15,9 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
         ...common,
         networkInfo: networkInfo && {
             family: "solana",
-            feeSOLPerSignature: new BigNumber(networkInfo.feeSOLPerSignature),
+            lamportsPerSignature: new BigNumber(
+                networkInfo.lamportPerSignature
+            ),
             recentBlockhash: networkInfo.recentBlockhash,
         },
         family: tr.family,
@@ -29,18 +31,25 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
         ...common,
         networkInfo: networkInfo && {
             family: "solana",
-            feeSOLPerSignature: networkInfo.feeSOLPerSignature.toString(),
+            lamportPerSignature: networkInfo.lamportsPerSignature.toString(),
             recentBlockhash: networkInfo.recentBlockhash,
         },
         family: t.family,
     };
 };
 
+const lamportsToSOL = (account: Account, lamports: BigNumber) => {
+    return formatCurrencyUnit(getAccountUnit(account), lamports, {
+        showCode: true,
+        disableRounding: true,
+    });
+};
+
 export const formatTransaction = (
     t: Transaction,
     mainAccount: Account
 ): string => `
-  SEND ${t.amount} SOL
+  SEND ${t.useAllAmount ? "MAX" : lamportsToSOL(mainAccount, t.amount)}
   TO ${t.recipient}`;
 
 export default {

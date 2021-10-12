@@ -37,7 +37,7 @@ const prepareTransaction = async (
     ...t,
     networkInfo: {
         family: "solana",
-        feeSOLPerSignature: new BigNumber(1),
+        lamportsPerSignature: new BigNumber(1),
         recentBlockhash: "333",
     },
 });

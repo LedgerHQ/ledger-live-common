@@ -28,7 +28,7 @@
     "@ledgerhq/hw-transport-node-ble": "5.7.0"
   },
   "dependencies": {
-    "@ledgerhq/cryptoassets": "6.9.0",
+    "@ledgerhq/cryptoassets": "file:.yalc/@ledgerhq/cryptoassets",
     "@ledgerhq/errors": "6.2.0",
     "@ledgerhq/hw-app-btc": "6.7.0",
     "@ledgerhq/hw-transport-http": "6.7.0",

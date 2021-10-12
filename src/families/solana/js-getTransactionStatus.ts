@@ -30,6 +30,8 @@ const getTransactionStatus = async (
     console.log("use all amount?", useAllAmount);
     console.log("want to spend", t.amount.toNumber());
 
+    console.log("network info", t.networkInfo);
+
     /* TODO: check if we need that
     if (a.pendingOperations.length > 0) {
         throw new AccountAwaitingSendPendingOperations();
@@ -52,7 +54,10 @@ const getTransactionStatus = async (
      * TODO: check if acc is multi sign
      */
 
-    const estimatedFees = t.networkInfo?.feeSOLPerSignature || new BigNumber(0);
+    const estimatedFees =
+        t.networkInfo?.lamportsPerSignature || new BigNumber(0);
+
+    console.log("estimated fees is: ", estimatedFees);
 
     const totalSpent = useAllAmount
         ? a.balance
@@ -61,6 +66,8 @@ const getTransactionStatus = async (
     console.log("total spent", totalSpent.toNumber());
 
     const amount = totalSpent.minus(estimatedFees);
+
+    console.log("amount is ", amount);
 
     if (amount.lte(0)) {
         errors.emount = new AmountRequired();
