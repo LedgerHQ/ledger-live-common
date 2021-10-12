@@ -49,7 +49,7 @@ const signOperation = ({
                     throw Error("Network info is required");
                 }
 
-                const [unsignedOnChainTxBytes, singOnChainTransaction] =
+                const [msgToHardwareBytes, singOnChainTransaction] =
                     buildOnChainTransferTransaction(account, {
                         ...transaction,
                         networkInfo: transaction.networkInfo!,
@@ -63,7 +63,7 @@ const signOperation = ({
 
                 const { signature } = await hwApp.signTransaction(
                     account.freshAddressPath,
-                    unsignedOnChainTxBytes
+                    msgToHardwareBytes
                 );
 
                 subsriber.next({

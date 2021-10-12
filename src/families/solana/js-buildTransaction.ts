@@ -26,9 +26,7 @@ export const buildOnChainTransferTransaction = (
                 tx,
                 address: account.freshAddress,
                 signature,
-            })
-                .compileMessage()
-                .serialize();
+            }).serialize();
         },
     ] as const;
 };
