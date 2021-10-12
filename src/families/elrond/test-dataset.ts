@@ -52,6 +52,14 @@ const elrond: CurrenciesData<Transaction> = {
             amount: "100000000",
             mode: "send",
             fees: null,
+            txHash: "",
+            sender:
+              "erd1frj909pfums4m8aza596595l9pl56crwdj077vs2aqcw6ynl28wsfkw9rd",
+            timestamp: Date.now(),
+            nonce: 0,
+            status: "failed",
+            round: 0,
+            miniBlockHash: "",
           }),
           expectedStatus: {
             amount: new BigNumber("100000000"),
@@ -69,6 +77,14 @@ const elrond: CurrenciesData<Transaction> = {
             amount: "100000000",
             mode: "send",
             fees: null,
+            txHash: "",
+            sender:
+              "erd1frj909pfums4m8aza596595l9pl56crwdj077vs2aqcw6ynl28wsfkw9rd",
+            timestamp: Date.now(),
+            nonce: 0,
+            status: "failed",
+            round: 0,
+            miniBlockHash: "",
           }),
           expectedStatus: {
             errors: {
@@ -86,6 +102,13 @@ const elrond: CurrenciesData<Transaction> = {
             amount: "1000000000000000000000000",
             mode: "send",
             fees: null,
+            txHash: "",
+            sender: `${TEST_ADDRESS}`,
+            timestamp: Date.now(),
+            nonce: 0,
+            status: "failed",
+            round: 0,
+            miniBlockHash: "",
           }),
           expectedStatus: {
             errors: {

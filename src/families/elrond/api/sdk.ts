@@ -51,8 +51,8 @@ function getOperationType(
  */
 function getOperationValue(transaction: Transaction, addr: string): BigNumber {
   return isSender(transaction, addr)
-    ? new BigNumber(transaction.value ?? 0).plus(transaction.fee ?? 0)
-    : new BigNumber(transaction.value ?? 0);
+    ? new BigNumber(transaction.amount ?? 0).plus(transaction.fees ?? 0)
+    : new BigNumber(transaction.amount ?? 0);
 }
 
 /**
@@ -65,18 +65,18 @@ function transactionToOperation(
 ): Operation {
   const type = getOperationType(transaction, addr);
   return {
-    id: encodeOperationId(accountId, transaction.txHash ?? "", type),
+    id: encodeOperationId(accountId, transaction.txHash, type),
     accountId,
-    fee: new BigNumber(transaction.fee || 0),
+    fee: transaction.fees ? transaction.fees : new BigNumber(0),
     value: getOperationValue(transaction, addr),
     type,
-    hash: transaction.txHash ?? "",
+    hash: transaction.txHash,
     blockHash: transaction.miniBlockHash,
     blockHeight: transaction.round,
-    date: new Date(transaction.timestamp ? transaction.timestamp * 1000 : 0),
+    date: new Date(transaction.timestamp * 1000),
     extra: {},
-    senders: [transaction.sender ?? ""],
-    recipients: transaction.receiver ? [transaction.receiver] : [],
+    senders: [transaction.sender],
+    recipients: [transaction.recipient],
     transactionSequenceNumber: isSender(transaction, addr)
       ? transaction.nonce
       : undefined,

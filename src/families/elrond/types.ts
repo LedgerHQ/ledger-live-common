@@ -8,6 +8,7 @@ export type CoreStatics = Record<string, never>;
 export type CoreAccountSpecifics = Record<string, never>;
 export type CoreOperationSpecifics = Record<string, never>;
 export type CoreCurrencySpecifics = Record<string, never>;
+
 export type ElrondResources = {
   nonce: number;
 };
@@ -26,18 +27,13 @@ export type Transaction = TransactionCommon & {
   mode: string;
   family: "elrond";
   fees: BigNumber | null | undefined;
-  txHash?: string;
-  sender?: string;
-  receiver?: string;
-  value?: BigNumber;
-  blockHash?: string;
-  blockHeight?: number;
-  timestamp?: number;
-  nonce?: number;
-  status?: string;
-  fee?: BigNumber;
-  round?: number;
-  miniBlockHash?: string;
+  txHash: string;
+  sender: string;
+  timestamp: number;
+  nonce: number;
+  status: string;
+  round: number;
+  miniBlockHash: string;
 };
 
 /**
@@ -47,7 +43,15 @@ export type TransactionRaw = TransactionCommonRaw & {
   family: "elrond";
   mode: string;
   fees: string | null | undefined;
+  txHash: string;
+  sender: string;
+  timestamp: number;
+  nonce: number;
+  status: string;
+  round: number;
+  miniBlockHash: string;
 };
+
 export type ElrondValidator = {
   bls: string;
   identity: string;

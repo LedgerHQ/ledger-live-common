@@ -12,19 +12,18 @@ import { getNonce, compareVersions } from "./logic";
 const buildOptimisticOperation = (
   account: Account,
   transaction: Transaction,
-  fee: BigNumber,
   signUsingHash: boolean
 ): Operation => {
   const type = "OUT";
   const value = new BigNumber(transaction.amount);
   const operation: Operation = {
-    id: encodeOperationId(account.id, "", type),
-    hash: "",
+    id: encodeOperationId(account.id, transaction.txHash, type),
+    hash: transaction.txHash,
     type,
     value,
-    fee,
-    blockHash: null,
-    blockHeight: account.blockHeight,
+    fee: transaction.fees ?? new BigNumber(0),
+    blockHash: transaction.miniBlockHash,
+    blockHeight: transaction.round,
     senders: [account.freshAddress],
     recipients: [transaction.recipient].filter(Boolean),
     accountId: account.id,
@@ -81,9 +80,9 @@ const signOperation = ({
         const operation = buildOptimisticOperation(
           account,
           transaction,
-          transaction.fees ?? new BigNumber(0),
           signUsingHash
         );
+
         o.next({
           type: "signed",
           signedOperation: {

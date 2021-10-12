@@ -5,6 +5,7 @@ import {
   METACHAIN_SHARD,
   TRANSACTIONS_SIZE,
 } from "../constants";
+import { Transaction } from "../types";
 export default class ElrondApi {
   private API_URL: string;
 
@@ -102,21 +103,31 @@ export default class ElrondApi {
     };
   }
 
-  async getHistory(addr: string, startAt: number) {
+  async getHistory(addr: string, startAt: number): Promise<Transaction[]> {
     const { data: transactionsCount } = await network({
       method: "GET",
       url: `${this.API_URL}/transactions/count?condition=should&sender=${addr}&receiver=${addr}&after=${startAt}`,
     });
 
-    let allTransactions: any[] = [];
+    let allTransactions: Transaction[] = [];
     let from = 0;
-    while (from <= transactionsCount) {
+    while (from < transactionsCount) {
       const { data: transactions } = await network({
         method: "GET",
         url: `${this.API_URL}/transactions?condition=should&sender=${addr}&receiver=${addr}&after=${startAt}&from=${from}&size=${TRANSACTIONS_SIZE}`,
       });
 
-      allTransactions = [...allTransactions, ...transactions];
+      allTransactions = [
+        ...allTransactions,
+        ...transactions.map((elrondTransaction: any) => {
+          const transaction: Transaction = elrondTransaction;
+          transaction.amount = elrondTransaction.value;
+          transaction.fees = elrondTransaction.fee;
+          transaction.recipient = elrondTransaction.receiver;
+
+          return transaction;
+        }),
+      ];
 
       from = from + TRANSACTIONS_SIZE;
     }
