@@ -91,6 +91,8 @@ import { CoreOperationSpecifics as CoreOperationSpecifics_solana } from "../fami
 import { CoreCurrencySpecifics as CoreCurrencySpecifics_solana } from "../families/solana/types";
 import { Transaction as solanaTransaction } from "../families/solana/types";
 import { TransactionRaw as solanaTransactionRaw } from "../families/solana/types";
+import { NetworkInfo as solanaNetworkInfo } from "../families/solana/types";
+import { NetworkInfoRaw as solanaNetworkInfoRaw } from "../families/solana/types";
 import { reflect as stellarReflect } from "../families/stellar/types";
 import { CoreStatics as CoreStatics_stellar } from "../families/stellar/types";
 import { CoreAccountSpecifics as CoreAccountSpecifics_stellar } from "../families/stellar/types";
@@ -218,6 +220,7 @@ export type NetworkInfo =
   | filecoinNetworkInfo
   | neoNetworkInfo
   | rippleNetworkInfo
+  | solanaNetworkInfo
   | stellarNetworkInfo
   | tezosNetworkInfo
   | tronNetworkInfo
@@ -230,6 +233,7 @@ export type NetworkInfoRaw =
   | filecoinNetworkInfoRaw
   | neoNetworkInfoRaw
   | rippleNetworkInfoRaw
+  | solanaNetworkInfoRaw
   | stellarNetworkInfoRaw
   | tezosNetworkInfoRaw
   | tronNetworkInfoRaw

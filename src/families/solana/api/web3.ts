@@ -6,8 +6,8 @@ import {
     Transaction,
 } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
-import { Account, Operation } from "../../../types";
-//import { getAccountSpendableBalance } from "../logic";
+import { Operation } from "../../../types";
+import { NetworkInfo } from "../types";
 
 const conn = new Connection("https://api.devnet.solana.com/");
 
@@ -15,25 +15,29 @@ export const getAccount = async (address: string) => {
     const pubKey = new PublicKey(address);
     const [balanceLamports, transactionFeeSOL] = await Promise.all([
         conn.getBalance(pubKey),
-        getTxFeeAndRecentBlockhash().then((res) => res.txFee),
+        getNetworkInfo().then((res) => res.feeSOLPerSignature),
     ]);
 
-    const balanceSOL = balanceLamports / LAMPORTS_PER_SOL;
-    const spendableBalanceSOL = balanceSOL - transactionFeeSOL;
+    const balanceSOL = new BigNumber(balanceLamports).div(LAMPORTS_PER_SOL);
+    const spendableBalanceSOL = new BigNumber(balanceSOL).minus(
+        transactionFeeSOL
+    );
 
-    // TODO: check if spendable balance needs to be here
     return {
-        balance: new BigNumber(balanceSOL),
-        spendableBalance: new BigNumber(spendableBalanceSOL),
+        balance: balanceSOL,
+        spendableBalance: spendableBalanceSOL,
     };
 };
 
-export const getTxFeeAndRecentBlockhash = async () => {
-    const response = await conn.getRecentBlockhash();
+export const getNetworkInfo = async (): Promise<NetworkInfo> => {
+    const { blockhash, feeCalculator } = await conn.getRecentBlockhash();
 
     return {
-        txFee: response.feeCalculator.lamportsPerSignature / LAMPORTS_PER_SOL,
-        recentBlockhash: response.blockhash,
+        family: "solana",
+        feeSOLPerSignature: new BigNumber(
+            feeCalculator.lamportsPerSignature
+        ).div(LAMPORTS_PER_SOL),
+        recentBlockhash: blockhash,
     };
 };
 
@@ -44,6 +48,7 @@ export const getOperations = async (
 ): Promise<Operation[]> => {
     const pubKey = new PublicKey(address);
     const signatures = await conn.getSignaturesForAddress(pubKey);
+    //return signatures.map((signature) => {});
     return [];
 };
 
@@ -52,7 +57,7 @@ export const checkOnChainAccountExists = async (address: string) => {
     return !!(await conn.getAccountInfo(pubKey));
 };
 
-export const buildOnChainTransferTransaction = ({
+export const buildTransferTransaction = ({
     fromAddress,
     toAddress,
     amount,
@@ -63,15 +68,18 @@ export const buildOnChainTransferTransaction = ({
     amount: BigNumber;
     recentBlockhash: string;
 }) => {
+    const fromPublicKey = new PublicKey(fromAddress);
+    const toPublicKey = new PublicKey(toAddress);
+
     const transferTx = SystemProgram.transfer({
-        fromPubkey: new PublicKey(fromAddress),
-        toPubkey: new PublicKey(toAddress),
-        lamports: amount.toNumber() * LAMPORTS_PER_SOL,
+        fromPubkey: fromPublicKey,
+        toPubkey: toPublicKey,
+        lamports: amount.multipliedBy(LAMPORTS_PER_SOL).toNumber(),
     });
 
     return new Transaction({
-        //re
-        //feePayer
+        feePayer: fromPublicKey,
+        recentBlockhash,
     }).add(transferTx);
 };
 
@@ -92,16 +100,3 @@ export const addSignatureToTransaction = ({
 export const broadcastTransaction = (rawTx: Buffer) => {
     return conn.sendRawTransaction(rawTx);
 };
-
-/*
-async function go() {
-    return new PublicKey("hui");
-    const acc = await getAccount(
-        "3tgkMfug2gs82sy2wexQjMkR12JzFcX9rSLd9yM9m38g"
-    );
-    console.log(acc);
-}
-
-go();
-
-*/

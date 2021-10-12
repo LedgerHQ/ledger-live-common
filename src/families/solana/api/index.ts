@@ -1,8 +1,8 @@
 export {
     getAccount,
     getOperations,
-    getTxFeeAndRecentBlockhash,
-    buildOnChainTransferTransaction,
+    getNetworkInfo,
+    buildTransferTransaction,
     addSignatureToTransaction,
     broadcastTransaction,
 } from "./web3";

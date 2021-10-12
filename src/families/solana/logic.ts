@@ -1,13 +1,5 @@
-import { AccountInfo, PublicKey } from "@solana/web3.js";
-
-/*
-export const getAccountSpendableBalance = async (
-    balance: number,
-    transactionFee: number
-): Promise<number> => {
-    return balance - transactionFee;
-};
-*/
+import { PublicKey } from "@solana/web3.js";
+import { checkOnChainAccountExists } from "./api/web3";
 
 export const isAddressValid = (address: string) => {
     try {
@@ -18,4 +10,4 @@ export const isAddressValid = (address: string) => {
     }
 };
 
-export const checkRecipientExist = (address: string) => {};
+export const checkRecipientExist = checkOnChainAccountExists;

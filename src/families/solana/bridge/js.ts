@@ -1,14 +1,10 @@
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
-import type {
-    AccountBridge,
-    //CryptoCurrency,
-    CurrencyBridge,
-} from "../../../types";
+import type { AccountBridge, CurrencyBridge } from "../../../types";
 import type { Transaction } from "../types";
 import { scanAccounts, sync } from "../js-synchronization";
 import getTransactionStatus from "../js-getTransactionStatus";
 import estimateMaxSpendable from "../js-estimateMaxSpendable";
-import createTransaction from "../js-createTransaction";
+import createTransaction, { updateTransaction } from "../js-createTransaction";
 import prepareTransaction from "../js-prepareTransaction";
 import signOperation from "../js-signOperation";
 import broadcast from "../js-broadcast";
@@ -19,16 +15,7 @@ const hydrate = (): void => {};
 
 const receive = makeAccountBridgeReceive();
 
-const updateTransaction = (
-    t: Transaction,
-    patch: Transaction
-): Transaction => ({ ...t, ...patch });
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-//export const getPreloadStrategy = (currency: CryptoCurrency): any => ({});
-
 const currencyBridge: CurrencyBridge = {
-    //getPreloadStrategy,
     preload,
     hydrate,
     scanAccounts,

@@ -23,8 +23,6 @@ const createTransaction = (): Transaction => ({
     family: "solana",
     amount: new BigNumber(0),
     recipient: "",
-    fees: new BigNumber(0),
-    recentBlockhash: "",
 });
 
 const updateTransaction = (t: Transaction, patch: Partial<Transaction>) => ({
@@ -32,14 +30,26 @@ const updateTransaction = (t: Transaction, patch: Partial<Transaction>) => ({
     ...patch,
 });
 
-const prepareTransaction = async (a: Account, t: Transaction) => t;
+const prepareTransaction = async (
+    a: Account,
+    t: Transaction
+): Promise<Transaction> => ({
+    ...t,
+    networkInfo: {
+        family: "solana",
+        feeSOLPerSignature: new BigNumber(1),
+        recentBlockhash: "333",
+    },
+});
 
-const estimateMaxSpendable = ({ account, parentAccount, transaction }) => {
+const estimateMaxSpendable = async ({
+    account,
+    parentAccount,
+    transaction,
+}) => {
     const mainAccount = getMainAccount(account, parentAccount);
     const estimatedFees = transaction?.fees || new BigNumber(5000);
-    return Promise.resolve(
-        BigNumber.max(0, mainAccount.balance.minus(estimatedFees))
-    );
+    return BigNumber.max(0, mainAccount.balance.minus(estimatedFees));
 };
 
 const getTransactionStatus = (account, t) => {

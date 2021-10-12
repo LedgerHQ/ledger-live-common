@@ -2,55 +2,29 @@ import { Observable } from "rxjs";
 import type { Account, Operation, SignOperationEvent } from "../../types";
 import { open, close } from "../../hw";
 import type { Transaction } from "./types";
-import { buildOnChainTransaction } from "./js-buildTransaction";
+import { buildOnChainTransferTransaction } from "./js-buildTransaction";
 import Solana from "@ledgerhq/hw-app-solana";
+import BigNumber from "bignumber.js";
 
 const buildOptimisticOperation = async (
     account: Account,
     transaction: Transaction
 ): Promise<Operation> => {
+    const fee = transaction.networkInfo?.feeSOLPerSignature || new BigNumber(0);
     return {
         id: `${account.id}--OUT`,
         hash: "",
         accountId: account.id,
         type: "OUT",
-        fee: transaction.fees,
+        fee: fee,
         senders: [account.freshAddress],
         recipients: [transaction.recipient],
         date: new Date(),
-        value: transaction.amount.plus(transaction.fees),
+        value: transaction.amount.plus(fee),
         blockHash: null,
         blockHeight: null,
         extra: {},
     };
-    /*
-    const transactionSequenceNumber = await fetchSequence(account);
-    const fees = transaction.fees ?? new BigNumber(0);
-    const operation: Operation = {
-        id: `${account.id}--OUT`,
-        hash: "",
-        type: "OUT",
-        value:
-            transaction.useAllAmount && transaction.networkInfo
-                ? account.balance
-                      .minus(transaction.networkInfo.baseReserve)
-                      .minus(fees)
-                : transaction.amount.plus(fees),
-        fee: fees,
-        blockHash: null,
-        blockHeight: null,
-        senders: [account.freshAddress],
-        recipients: [transaction.recipient],
-        accountId: account.id,
-        date: new Date(),
-        // FIXME: Javascript number may be not precise enough
-        transactionSequenceNumber: transactionSequenceNumber
-            ?.plus(1)
-            .toNumber(),
-        extra: {},
-    };
-    return operation;
-    */
 };
 
 /**
@@ -70,8 +44,15 @@ const signOperation = ({
             const transport = await open(deviceId);
 
             try {
+                if (transaction.networkInfo === undefined) {
+                    throw Error("Network info is required");
+                }
+
                 const [unsignedOnChainTxBytes, singOnChainTransaction] =
-                    buildOnChainTransaction(account, transaction);
+                    buildOnChainTransferTransaction(account, {
+                        ...transaction,
+                        networkInfo: transaction.networkInfo!,
+                    });
 
                 const hwApp = new Solana(transport);
 
@@ -111,62 +92,5 @@ const signOperation = ({
             (e) => subsriber.error(e)
         );
     });
-
-/*
-Observable.create((o) => {
-    async function main() {
-        const transport = await open(deviceId);
-
-        try {
-            o.next({
-                type: "device-signature-requested",
-            });
-
-            // Fees are loaded during prepareTransaction
-            if (!transaction.fees) {
-                throw new FeeNotLoaded();
-            }
-
-            const unsigned = await buildOnChainTransaction(
-                account,
-                transaction
-            );
-            const unsignedPayload = unsigned.signatureBase();
-            // Sign by device
-            const hwApp = new Stellar(transport);
-            const { signature } = await hwApp.signTransaction(
-                account.freshAddressPath,
-                unsignedPayload
-            );
-            unsigned.addSignature(
-                account.freshAddress,
-                signature.toString("base64")
-            );
-            o.next({
-                type: "device-signature-granted",
-            });
-            const operation = await buildOptimisticOperation(
-                account,
-                transaction
-            );
-            o.next({
-                type: "signed",
-                signedOperation: {
-                    operation,
-                    signature: unsigned.toXDR(),
-                    expirationDate: null,
-                },
-            });
-        } finally {
-            close(transport, deviceId);
-        }
-    }
-
-    main().then(
-        () => o.complete(),
-        (e) => o.error(e)
-    );
-});
-*/
 
 export default signOperation;

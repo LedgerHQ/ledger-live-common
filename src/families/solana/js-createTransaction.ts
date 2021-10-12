@@ -10,8 +10,11 @@ const createTransaction = (): Transaction => ({
     family: "solana",
     amount: new BigNumber(0),
     recipient: "",
-    fees: new BigNumber(0),
-    recentBlockhash: "",
 });
+
+export const updateTransaction = (
+    t: Transaction,
+    patch: Transaction
+): Transaction => ({ ...t, ...patch });
 
 export default createTransaction;

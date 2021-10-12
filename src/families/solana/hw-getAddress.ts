@@ -8,10 +8,11 @@ const resolver: Resolver = async (transport, { path, verify }) => {
 
     const { address } = await solana.getAddress(path, verify);
 
+    const publicKey = bs58.encode(address);
+
     return {
-        address: bs58.encode(address),
-        // TODO: fix pubkey
-        publicKey: "dummy public key",
+        address: publicKey,
+        publicKey,
         path,
     };
 };
