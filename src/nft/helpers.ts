@@ -73,3 +73,7 @@ export const nftsByCollections = (
 
   return Object.values(collectionMap);
 };
+
+export const getNftKey = (contract: string, tokenId: string): string => {
+  return `${contract}-${tokenId}`;
+};
