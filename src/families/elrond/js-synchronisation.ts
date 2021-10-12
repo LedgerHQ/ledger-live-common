@@ -22,7 +22,6 @@ const getAccountShape: GetAccountShape = async (info) => {
   // Merge new operations with the previously synced ones
   const newOperations = await getOperations(accountId, address, startAt);
   const operations = mergeOps(oldOperations, newOperations);
-
   const shape = {
     id: accountId,
     balance,

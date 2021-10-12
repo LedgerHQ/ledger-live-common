@@ -29,13 +29,6 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     family: tr.family,
     mode: tr.mode,
     fees: tr.fees ? new BigNumber(tr.fees) : null,
-    txHash: tr.txHash,
-    sender: tr.sender,
-    timestamp: tr.timestamp,
-    nonce: tr.nonce,
-    status: tr.status,
-    round: tr.round,
-    miniBlockHash: tr.miniBlockHash,
   };
 };
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
@@ -45,13 +38,6 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
     family: t.family,
     mode: t.mode,
     fees: t.fees?.toString() || null,
-    txHash: t.txHash,
-    sender: t.sender,
-    timestamp: t.timestamp,
-    nonce: t.nonce,
-    status: t.status,
-    round: t.round,
-    miniBlockHash: t.miniBlockHash,
   };
 };
 export default {

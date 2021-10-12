@@ -19,13 +19,6 @@ export const createTransaction = (): Transaction => {
     recipient: "",
     useAllAmount: false,
     fees: new BigNumber(50000),
-    txHash: "",
-    sender: "",
-    timestamp: 0,
-    nonce: 0,
-    status: "",
-    round: 0,
-    miniBlockHash: "",
   };
 };
 
