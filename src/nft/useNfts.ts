@@ -1,7 +1,7 @@
 import Dataloader from "dataloader";
 import { Currency, findCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { useEffect, useMemo, useState } from "react";
-import { nftsFromOperations } from "./nftHelpers";
+import { nftsFromOperations } from "./helpers";
 import { API, apiForCurrency, NFTMetadataInput } from "../api/Ethereum";
 import { Operation, NFT, NFTWithMetadata, NFTMetadata } from "../types";
 import { mergeNfts } from "../bridge/jsHelpers";

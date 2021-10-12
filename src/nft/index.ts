@@ -1,3 +1,3 @@
 export * from "./nftId";
-export * from "./nftHelpers";
+export * from "./helpers";
 export * from "./useNfts";
