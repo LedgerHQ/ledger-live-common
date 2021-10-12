@@ -315,10 +315,7 @@ class Xpub extends EventEmitter {
         address: utxo.address,
         output_hash: utxo.output_hash,
         output_index: utxo.output_index,
-        sequence:
-          params.sequence && Number.isInteger(params.sequence)
-            ? params.sequence
-            : null,
+        sequence: params.sequence === undefined ? null : params.sequence,
       };
     });
     const associatedDerivations: [number, number][] = unspentUtxoSelected.map(
