@@ -7,7 +7,7 @@ const prepareTransaction = async (
     a: Account,
     tx: Transaction
 ): Promise<Transaction> => {
-    if (tx.networkInfo) {
+    if (tx.fees) {
         return tx;
     }
 

@@ -11,6 +11,9 @@ const buildOptimisticOperation = async (
     transaction: Transaction
 ): Promise<Operation> => {
     const fees = transaction.fees || new BigNumber(0);
+    const value = transaction.useAllAmount
+        ? account.balance
+        : transaction.amount.plus(fees);
     return {
         id: `${account.id}--OUT`,
         hash: "",
@@ -20,7 +23,7 @@ const buildOptimisticOperation = async (
         senders: [account.freshAddress],
         recipients: [transaction.recipient],
         date: new Date(),
-        value: transaction.amount.plus(fees),
+        value,
         blockHash: null,
         blockHeight: null,
         extra: {},
