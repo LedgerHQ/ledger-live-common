@@ -39,39 +39,43 @@ const getTransactionStatus = async (
         errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
     } else if (!isAddressValid(t.recipient)) {
         errors.recipient = new InvalidAddress();
+    } else if (!(await checkRecipientExist(t.recipient))) {
+        errors.recipient = new NotEnoughBalanceBecauseDestinationNotCreated();
     }
+    // TODO: check if acc is multi sign
 
     if (t.fees === undefined || t.fees.lt(0)) {
         errors.fees = new FeeNotLoaded();
     }
 
-    /*
-     * TODO: check if acc is multi sign
-     */
+    const estimatedFees = t.fees ?? new BigNumber(0);
 
-    const estimatedFees = t.fees || new BigNumber(0);
-
-    const totalSpent = useAllAmount
-        ? a.balance
-        : new BigNumber(t.amount).plus(estimatedFees);
-
-    const amount = totalSpent.minus(estimatedFees);
-
-    if (amount.lte(0)) {
-        errors.emount = new AmountRequired();
+    // TODO: check solana transfer ALL with just 1 lamport (not enough to pay fees)
+    if (!errors.fees) {
+        if (useAllAmount) {
+            if (a.balance.lte(estimatedFees)) {
+                errors.amount = new NotEnoughBalance();
+            }
+        } else {
+            if (t.amount.lte(0)) {
+                errors.amount = new AmountRequired();
+            } else if (t.amount.plus(estimatedFees).gt(a.balance)) {
+                errors.amount = new NotEnoughBalance();
+            } else if (estimatedFees.gte(t.amount.times(10))) {
+                errors.fees = new FeeTooHigh();
+            }
+        }
     }
 
-    if (totalSpent.gt(a.balance)) {
-        errors.amount = new NotEnoughBalance();
-    }
+    const amount = errors.amount
+        ? new BigNumber(0)
+        : useAllAmount
+        ? a.balance.minus(estimatedFees)
+        : t.amount;
 
-    if (t.fees && t.fees.gte(amount.times(10))) {
-        errors.fees = new FeeTooHigh();
-    }
-
-    if (!(await checkRecipientExist(t.recipient))) {
-        errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated();
-    }
+    const totalSpent = errors.amount
+        ? new BigNumber(0)
+        : amount.plus(estimatedFees);
 
     return {
         errors,
