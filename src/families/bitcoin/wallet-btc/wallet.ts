@@ -251,7 +251,7 @@ class BitcoinLikeWallet {
     amount: BigNumber;
     feePerByte: number;
     utxoPickingStrategy: PickingStrategy;
-    sequence?: number;
+    sequence: number;
   }): Promise<TransactionInfo> {
     const changeAddress = await params.fromAccount.xpub.getNewAddress(1, 1);
     const txInfo = await params.fromAccount.xpub.buildTx({
