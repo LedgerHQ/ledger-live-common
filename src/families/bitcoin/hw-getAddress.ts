@@ -25,7 +25,9 @@ const resolver: Resolver = async (
     if (e && e.message && e.message.includes("invalid format")) {
       throw new UnsupportedDerivation();
     }
+    throw e;
   }
+
   const { bitcoinAddress, publicKey, chainCode } = result;
 
   if (!skipAppFailSafeCheck) {
