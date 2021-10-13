@@ -41,7 +41,7 @@ const getTransactionStatus = async (
         errors.recipient = new InvalidAddress();
     }
 
-    if (t.fees === undefined) {
+    if (t.fees === undefined || t.fees.lt(0)) {
         errors.fees = new FeeNotLoaded();
     }
 
