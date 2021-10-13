@@ -252,7 +252,7 @@ class Xpub extends EventEmitter {
     feePerByte: number;
     changeAddress: Address;
     utxoPickingStrategy: PickingStrategy;
-    sequence?: number;
+    sequence: number;
   }): Promise<TransactionInfo> {
     await this.whenSynced("all");
 
@@ -315,10 +315,7 @@ class Xpub extends EventEmitter {
         address: utxo.address,
         output_hash: utxo.output_hash,
         output_index: utxo.output_index,
-        sequence:
-          params.sequence && Number.isInteger(params.sequence)
-            ? params.sequence
-            : null,
+        sequence: params.sequence,
       };
     });
     const associatedDerivations: [number, number][] = unspentUtxoSelected.map(

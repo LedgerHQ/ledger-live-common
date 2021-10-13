@@ -56,6 +56,7 @@ describe("testing wallet", () => {
       amount: new BigNumber(100000),
       feePerByte: 5,
       utxoPickingStrategy,
+      sequence: 0,
     });
     const tx = await wallet.signAccountTx({
       btc: new MockBtc(),
@@ -79,6 +80,7 @@ describe("testing wallet", () => {
       amount: new BigNumber(100000),
       feePerByte: 5,
       utxoPickingStrategy,
+      sequence: 0,
     });
     const tx = await wallet.signAccountTx({
       btc: new MockBtc(),
