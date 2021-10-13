@@ -420,7 +420,7 @@ const disableBIP44 = {
 const seedIdentifierPath = {
   neo: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
   filecoin: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
-  _: ({ purpose, coinType }) => `${purpose}'/${coinType}'`,
+  _: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'`,
 };
 export const getSeedIdentifierDerivation = (
   currency: CryptoCurrency,
