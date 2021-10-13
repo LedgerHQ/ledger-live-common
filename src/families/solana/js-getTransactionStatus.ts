@@ -50,7 +50,6 @@ const getTransactionStatus = async (
 
     const estimatedFees = t.fees ?? new BigNumber(0);
 
-    // TODO: check solana transfer ALL with just 1 lamport (not enough to pay fees)
     if (!errors.fees) {
         if (useAllAmount) {
             if (a.balance.lte(estimatedFees)) {
