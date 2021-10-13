@@ -9,6 +9,7 @@ import { DerivationModes as WalletDerivationModes } from "./wallet-btc";
 import { BigNumber } from "bignumber.js";
 import Btc from "@ledgerhq/hw-app-btc";
 import { log } from "@ledgerhq/logs";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import type {
   Account,
   Operation,
@@ -28,7 +29,6 @@ import {
 import { BitcoinOutput } from "./types";
 import { perCoinLogic } from "./logic";
 import wallet from "./wallet-btc";
-import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 
 // Map LL's DerivationMode to wallet-btc's
 const toWalletDerivationMode = (
@@ -242,6 +242,7 @@ const getAccountShape: GetAccountShape = async (info) => {
   // 44'/0'/0'/0/0 --> 44'/0'
   // FIXME Only the CLI provides a full derivationPath: why?
   const rootPath = derivationPath.split("/", 2).join("/");
+  const accountPath = `${rootPath}/${index}'`;
 
   const paramXpub = initialAccount?.xpub;
 
@@ -251,14 +252,16 @@ const getAccountShape: GetAccountShape = async (info) => {
 
     if (!transport) {
       // hwapp not provided
-      throw new Error("generateXpub needs a hwapp");
+      throw new Error("hwapp required to generate the xpub");
     }
-    generatedXpub = await wallet.generateXpub(
-      new Btc(transport),
-      <Currency>currency.id,
-      rootPath,
-      index
-    );
+    const btc = new Btc(transport);
+    const { bitcoinLikeInfo } = currency;
+    const { XPUBVersion: xpubVersion } = bitcoinLikeInfo as {
+      // FIXME It's supposed to be optional
+      //XPUBVersion?: number;
+      XPUBVersion: number;
+    };
+    generatedXpub = await btc.getWalletXpub({ path: accountPath, xpubVersion });
   }
   const xpub = paramXpub || generatedXpub;
 

@@ -52,54 +52,9 @@ class BitcoinLikeWallet {
     return this.explorerInstances[id];
   }
 
-  async generateXpub(
-    btc: Btc,
-    currency: Currency,
-    path: string,
-    index: number
-  ): Promise<string> {
-    const parentDerivation = await btc.getWalletPublicKey(`${path}`);
-    const accountDerivation = await btc.getWalletPublicKey(`${path}/${index}'`);
-
-    // parent
-    const publicKeyParentCompressed = utils.compressPublicKey(
-      parentDerivation.publicKey
-    );
-    const publicKeyParentCompressedHex = utils.parseHexString(
-      publicKeyParentCompressed
-    );
-    let result = bitcoin.crypto.sha256(
-      Buffer.from(publicKeyParentCompressedHex)
-    );
-    result = bitcoin.crypto.ripemd160(result);
-    // eslint-disable-next-line no-bitwise
-    const fingerprint =
-      ((result[0] << 24) | (result[1] << 16) | (result[2] << 8) | result[3]) >>>
-      0;
-
-    // account
-    const publicKeyAccountCompressed = utils.compressPublicKey(
-      accountDerivation.publicKey
-    );
-    // eslint-disable-next-line no-bitwise
-    const childnum = (0x80000000 | index) >>> 0;
-
-    const { network } = cryptoFactory(currency);
-    const xpubRaw = utils.createXPUB(
-      3,
-      fingerprint,
-      childnum,
-      accountDerivation.chainCode,
-      publicKeyAccountCompressed,
-      network.bip32.public
-    );
-
-    return utils.encodeBase58Check(xpubRaw);
-  }
 
   async generateAccount(params: {
-    xpub?: string;
-    btc?: Btc;
+    xpub: string;
     path: string;
     index: number;
     currency: Currency;
@@ -113,28 +68,6 @@ class BitcoinLikeWallet {
   }): Promise<Account> {
     const crypto = cryptoFactory(params.currency);
 
-    let { xpub } = params;
-
-    if (!xpub) {
-      // Xpub not provided, generate it using the hwapp
-
-      if (!params.btc) {
-        // hwapp not provided
-        throw new Error("generateAccount need either a hwapp or xpub");
-      }
-
-      xpub = await this.generateXpub(
-        params.btc,
-        params.currency,
-        params.path,
-        params.index
-      );
-    }
-
-    if (!xpub) {
-      throw new Error("Error while generating the xpub");
-    }
-
     const storage = this.accountStorages[params.storage](
       ...params.storageParams
     );
@@ -145,7 +78,7 @@ class BitcoinLikeWallet {
         storage,
         explorer,
         crypto,
-        xpub,
+        xpub: params.xpub,
         derivationMode: params.derivationMode,
       }),
     };
