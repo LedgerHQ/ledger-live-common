@@ -1,8 +1,8 @@
 export {
-    getAccount,
-    getOperations,
-    getNetworkInfo,
-    buildTransferTransaction,
-    addSignatureToTransaction,
-    broadcastTransaction,
+  getAccount,
+  getOperations,
+  getNetworkInfo,
+  buildTransferTransaction,
+  addSignatureToTransaction,
+  broadcastTransaction,
 } from "./web3";

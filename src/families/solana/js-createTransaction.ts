@@ -7,14 +7,14 @@ import type { Transaction } from "./types";
  * @returns {Transaction}
  */
 const createTransaction = (): Transaction => ({
-    family: "solana",
-    amount: new BigNumber(0),
-    recipient: "",
+  family: "solana",
+  amount: new BigNumber(0),
+  recipient: "",
 });
 
 export const updateTransaction = (
-    t: Transaction,
-    patch: Transaction
+  t: Transaction,
+  patch: Transaction
 ): Transaction => ({ ...t, ...patch });
 
 export default createTransaction;

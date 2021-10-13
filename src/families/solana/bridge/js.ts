@@ -16,24 +16,24 @@ const hydrate = (): void => {};
 const receive = makeAccountBridgeReceive();
 
 const currencyBridge: CurrencyBridge = {
-    preload,
-    hydrate,
-    scanAccounts,
+  preload,
+  hydrate,
+  scanAccounts,
 };
 
 const accountBridge: AccountBridge<Transaction> = {
-    createTransaction,
-    updateTransaction,
-    prepareTransaction,
-    estimateMaxSpendable,
-    getTransactionStatus,
-    sync,
-    receive,
-    signOperation,
-    broadcast,
+  createTransaction,
+  updateTransaction,
+  prepareTransaction,
+  estimateMaxSpendable,
+  getTransactionStatus,
+  sync,
+  receive,
+  signOperation,
+  broadcast,
 };
 
 export default {
-    currencyBridge,
-    accountBridge,
+  currencyBridge,
+  accountBridge,
 };

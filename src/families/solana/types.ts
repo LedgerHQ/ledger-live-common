@@ -1,7 +1,7 @@
 import type { BigNumber } from "bignumber.js";
 import type {
-    TransactionCommon,
-    TransactionCommonRaw,
+  TransactionCommon,
+  TransactionCommonRaw,
 } from "../../types/transaction";
 
 // for legacy reasons export the types
@@ -11,24 +11,24 @@ export type CoreOperationSpecifics = Record<string, never>;
 export type CoreCurrencySpecifics = Record<string, never>;
 
 export type NetworkInfo = {
-    family: "solana";
-    lamportsPerSignature: BigNumber;
+  family: "solana";
+  lamportsPerSignature: BigNumber;
 };
 
 export type NetworkInfoRaw = {
-    family: "solana";
-    lamportPerSignature: string;
+  family: "solana";
+  lamportPerSignature: string;
 };
 
 export type Transaction = TransactionCommon & {
-    family: "solana";
-    fees?: BigNumber;
-    networkInfo?: NetworkInfo;
+  family: "solana";
+  fees?: BigNumber;
+  networkInfo?: NetworkInfo;
 };
 export type TransactionRaw = TransactionCommonRaw & {
-    family: "solana";
-    fees?: string;
-    networkInfo?: NetworkInfoRaw;
+  family: "solana";
+  fees?: string;
+  networkInfo?: NetworkInfoRaw;
 };
 
 export const reflect = (_declare: any): void => {};

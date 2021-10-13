@@ -7,13 +7,13 @@ import { broadcastTransaction } from "./api";
  * @param {signature: string, operation: string} signedOperation
  */
 const broadcast = async ({
-    signedOperation,
+  signedOperation,
 }: {
-    signedOperation: SignedOperation;
+  signedOperation: SignedOperation;
 }): Promise<Operation> => {
-    const { signature, operation } = signedOperation;
-    const txId = await broadcastTransaction(Buffer.from(signature, "hex"));
-    return patchOperationWithHash(operation, txId);
+  const { signature, operation } = signedOperation;
+  const txId = await broadcastTransaction(Buffer.from(signature, "hex"));
+  return patchOperationWithHash(operation, txId);
 };
 
 export default broadcast;
