@@ -52,7 +52,6 @@ class BitcoinLikeWallet {
     return this.explorerInstances[id];
   }
 
-
   async generateAccount(params: {
     xpub: string;
     path: string;
