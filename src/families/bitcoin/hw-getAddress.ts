@@ -24,8 +24,10 @@ const resolver: Resolver = async (
   } catch (e: any) {
     // TODO Should normalize error returned from ledgerjs
     if (
-      (e && e.message && e.message.includes("invalid format")) ||
-      e.message.includes("Unsupported address format")
+      e &&
+      e.message &&
+      (e.message.includes("invalid format") ||
+        e.message.includes("Unsupported address format"))
     ) {
       throw new UnsupportedDerivation();
     }
