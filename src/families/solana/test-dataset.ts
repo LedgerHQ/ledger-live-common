@@ -4,13 +4,24 @@ import type { DatasetTest } from "../../types";
 import { Transaction } from "./types";
 
 import scanAccounts1 from "./datasets/solana.scanAccounts.1";
+import {
+  FeeNotLoaded,
+  InvalidAddressBecauseDestinationIsAlsoSource,
+} from "@ledgerhq/errors";
 
+// do not change real properties or the test will break
 const testOnChainData = {
-  accAddress: "6D8GtWkKJgToM5UoiByHqjQCCC9Dq1Hh7iNmU4jKSs12", // real address
-  balance: new BigNumber(5000000), // real balance
-  fees: new BigNumber(5000), // may be outdated fee. fine for tests
+  // real props
+  senderAddress: "6D8GtWkKJgToM5UoiByHqjQCCC9Dq1Hh7iNmU4jKSs12",
+  balance: new BigNumber(5000000),
+  // maybe outdated or not real, fine for tests
+  fees: new BigNumber(5000),
+  recipientAddress: "7NmQKgPPDM6EjZSLbSVRXDd6UvPN7azaXF5YJNUJpqG9",
 };
 
+const zero = new BigNumber(0);
+
+// Some general tests like empty/invalid recipient are automatically run, no need to write them.
 const dataset: DatasetTest<Transaction> = {
   implementations: ["js"],
   currencies: {
@@ -18,14 +29,14 @@ const dataset: DatasetTest<Transaction> = {
       scanAccounts: [scanAccounts1],
       accounts: [
         {
-          raw: makeAccount(testOnChainData.accAddress),
+          raw: makeAccount(testOnChainData.senderAddress),
           FIXME_tests: ["balance is sum of ops"],
           transactions: [
             {
-              name: "status is success",
+              name: "status is success: not all amount",
               transaction: {
                 amount: testOnChainData.balance.dividedBy(2),
-                recipient: "7NmQKgPPDM6EjZSLbSVRXDd6UvPN7azaXF5YJNUJpqG9",
+                recipient: testOnChainData.recipientAddress,
                 fees: testOnChainData.fees,
                 family: "solana",
               },
@@ -39,24 +50,61 @@ const dataset: DatasetTest<Transaction> = {
                   .plus(testOnChainData.fees),
               },
             },
-            /*
             {
-              name: "status is error: source == destination",
-              transaction: fromTransactionRaw({
-                amount: "10000000",
-                recipient: "6D8GtWkKJgToM5UoiByHqjQCCC9Dq1Hh7iNmU4jKSs12",
-                fees: "5000",
+              name: "status is success: all amount",
+              transaction: {
+                useAllAmount: true,
+                amount: zero,
+                recipient: testOnChainData.recipientAddress,
+                fees: testOnChainData.fees,
                 family: "solana",
-              }),
+              },
               expectedStatus: {
                 errors: {},
                 warnings: {},
-                estimatedFees: new BigNumber("5000"),
-                amount: new BigNumber("10000000"),
-                totalSpent: new BigNumber("10005000"),
+                estimatedFees: testOnChainData.fees,
+                amount: testOnChainData.balance.minus(testOnChainData.fees),
+                totalSpent: testOnChainData.balance,
               },
             },
-            */
+            {
+              name: "status is error: source == destination",
+              transaction: {
+                amount: testOnChainData.balance,
+                recipient: testOnChainData.senderAddress,
+                fees: testOnChainData.fees,
+                family: "solana",
+              },
+              expectedStatus: {
+                errors: {
+                  recipient: new InvalidAddressBecauseDestinationIsAlsoSource(),
+                },
+                warnings: {},
+                estimatedFees: zero,
+                amount: zero,
+                totalSpent: zero,
+              },
+            },
+            // if fees is undefined then prepareTransaction will load fees
+            {
+              name: "status is error: negative fee",
+              transaction: {
+                amount: testOnChainData.balance,
+                recipient: testOnChainData.recipientAddress,
+                fees: new BigNumber(-1),
+                family: "solana",
+              },
+              expectedStatus: {
+                errors: {
+                  fees: new FeeNotLoaded(),
+                },
+                warnings: {},
+                estimatedFees: zero,
+                amount: zero,
+                totalSpent: zero,
+              },
+            },
+            // TODO: check recipient exists ?
           ],
         },
       ],

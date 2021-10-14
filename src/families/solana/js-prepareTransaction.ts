@@ -7,7 +7,7 @@ const prepareTransaction = async (
   a: Account,
   tx: Transaction
 ): Promise<Transaction> => {
-  if (tx.fees) {
+  if (tx.fees !== undefined) {
     return tx;
   }
 

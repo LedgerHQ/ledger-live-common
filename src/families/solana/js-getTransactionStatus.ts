@@ -48,33 +48,35 @@ const getTransactionStatus = async (
     errors.fees = new FeeNotLoaded();
   }
 
-  const estimatedFees = t.fees ?? new BigNumber(0);
+  const fees = t.fees ?? new BigNumber(0);
 
   if (!errors.fees) {
     if (useAllAmount) {
-      if (a.balance.lte(estimatedFees)) {
+      if (a.balance.lte(fees)) {
         errors.amount = new NotEnoughBalance();
       }
     } else {
       if (t.amount.lte(0)) {
         errors.amount = new AmountRequired();
-      } else if (t.amount.plus(estimatedFees).gt(a.balance)) {
+      } else if (t.amount.plus(fees).gt(a.balance)) {
         errors.amount = new NotEnoughBalance();
-      } else if (estimatedFees.gte(t.amount.times(10))) {
+      } else if (fees.gte(t.amount.times(10))) {
         errors.fees = new FeeTooHigh();
       }
     }
   }
 
-  const amount = errors.amount
+  const isError = Object.keys(errors).length > 0;
+
+  const amount = isError
     ? new BigNumber(0)
     : useAllAmount
-    ? a.balance.minus(estimatedFees)
+    ? a.balance.minus(fees)
     : t.amount;
 
-  const totalSpent = errors.amount
-    ? new BigNumber(0)
-    : amount.plus(estimatedFees);
+  const totalSpent = isError ? new BigNumber(0) : amount.plus(fees);
+
+  const estimatedFees = isError ? new BigNumber(0) : fees;
 
   return {
     errors,
