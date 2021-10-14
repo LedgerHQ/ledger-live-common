@@ -13,6 +13,7 @@ const resolver: Resolver = async (
   transport,
   { currency, path, verify, derivationMode, forceFormat, skipAppFailSafeCheck }
 ) => {
+  console.log("XXX - hw-getAddress on path=", path);
   const btc = new Btc(transport);
   const format = forceFormat || getAddressFormatDerivationMode(derivationMode);
   let result;
@@ -22,7 +23,11 @@ const resolver: Resolver = async (
       format: format as AddressFormat,
     });
   } catch (e: any) {
-    if (e && e.message && e.message.includes("invalid format")) {
+    // TODO Should normalize error returned from ledgerjs
+    if (
+      (e && e.message && e.message.includes("invalid format")) ||
+      e.message.includes("Unsupported address format")
+    ) {
       throw new UnsupportedDerivation();
     }
     throw e;
