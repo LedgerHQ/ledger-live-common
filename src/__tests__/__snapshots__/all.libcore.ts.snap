@@ -57295,7 +57295,7 @@ Array [
 exports[`solana currency bridge scanAccounts solana seed 1 1`] = `
 Array [
   Object {
-    "balance": "6939970000",
+    "balance": "5000000",
     "currencyId": "solana",
     "derivationMode": "",
     "freshAddress": "6D8GtWkKJgToM5UoiByHqjQCCC9Dq1Hh7iNmU4jKSs12",
@@ -57312,7 +57312,7 @@ Array [
     "operationsCount": 0,
     "pendingOperations": Array [],
     "seedIdentifier": "7NmQKgPPDM6EjZSLbSVRXDd6UvPN7azaXF5YJNUJpqG9",
-    "spendableBalance": "6939965000",
+    "spendableBalance": "4995000",
     "starred": false,
     "swapHistory": Array [],
     "syncHash": undefined,
