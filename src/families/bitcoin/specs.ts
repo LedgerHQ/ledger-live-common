@@ -277,6 +277,7 @@ const bitcoinTestnet: AppSpec<Transaction> = {
   appQuery: {
     model: DeviceModelId.nanoS,
     appName: "Bitcoin Test",
+    appVersion: "2.0.0-alpha",
   },
   test: genericTest,
   mutations: bitcoinLikeMutations({
