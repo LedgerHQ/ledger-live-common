@@ -48,7 +48,7 @@
     "@ledgerhq/devices": "6.7.0",
     "@ledgerhq/errors": "6.2.0",
     "@ledgerhq/hw-app-algorand": "6.7.0",
-    "@ledgerhq/hw-app-btc": "6.7.0",
+    "@ledgerhq/hw-app-btc": "taproot",
     "@ledgerhq/hw-app-cosmos": "6.7.0",
     "@ledgerhq/hw-app-eth": "6.9.0",
     "@ledgerhq/hw-app-polkadot": "6.7.0",
