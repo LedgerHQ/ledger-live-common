@@ -6,11 +6,11 @@ import { getAccount, getOperations } from "./api";
 const getAccountShape: GetAccountShape = async (info) => {
   const { id, address, initialAccount } = info;
   const oldOperations = initialAccount?.operations || [];
-  const startAt = oldOperations.length
-    ? (oldOperations[0].blockHeight || 0) + 1
-    : 0;
+  const untilTxSignature = oldOperations.length
+    ? oldOperations[0].hash
+    : undefined;
   const { balance, spendableBalance } = await getAccount(address);
-  const newOperations = await getOperations(id, address, startAt);
+  const newOperations = await getOperations(address, untilTxSignature);
   const operations = mergeOps(oldOperations, newOperations);
   const shape = {
     id,

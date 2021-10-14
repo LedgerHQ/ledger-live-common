@@ -4,8 +4,11 @@ import {
   SystemProgram,
   Transaction,
   clusterApiUrl,
+  ConfirmedSignatureInfo,
+  ConfirmedTransaction,
 } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
+import { chunk } from "lodash";
 import { getEnv } from "../../../env";
 import { Operation } from "../../../types";
 import { NetworkInfo } from "../types";
@@ -41,15 +44,66 @@ export const getNetworkInfo = async (): Promise<NetworkInfo> => {
   };
 };
 
+async function* getSignaturesForAddressBatched(
+  address: PublicKey,
+  beforeSignature?: string,
+  untilSignature?: string
+): AsyncGenerator<ConfirmedSignatureInfo[], void, unknown> {
+  const batchSize = 1000;
+  const signatures = await conn.getSignaturesForAddress(address, {
+    before: beforeSignature,
+    until: untilSignature,
+    limit: batchSize,
+  });
+  yield signatures;
+  if (signatures.length >= batchSize) {
+    yield* getSignaturesForAddressBatched(
+      address,
+      signatures[signatures.length - 1].signature,
+      untilSignature
+    );
+  }
+}
+
+async function* getOperationsBatched(
+  pubKey: PublicKey,
+  untilTxSignature?: string
+): AsyncGenerator<Operation[], void, unknown> {
+  const batchSize = 20;
+
+  for await (const signatures of getSignaturesForAddressBatched(
+    pubKey,
+    untilTxSignature
+  )) {
+    for (const batch of chunk(signatures, batchSize)) {
+      const transactions = await conn.getParsedConfirmedTransactions(
+        batch.map((tx) => tx.signature)
+      );
+      const operations = transactions.reduce((acc, tx) => {
+        if (tx) {
+          tx.transaction;
+        }
+        return acc;
+      }, [] as Operation[]);
+
+      yield operations;
+    }
+  }
+}
+
 export const getOperations = async (
-  id: string,
   address: string,
-  startAt: number
+  untilTxSignature?: string
 ): Promise<Operation[]> => {
   const pubKey = new PublicKey(address);
-  const signatures = await conn.getSignaturesForAddress(pubKey);
-  //return signatures.map((signature) => {});
-  return [];
+
+  const operations: Operation[] = [];
+
+  for await (const batch of getOperationsBatched(pubKey, untilTxSignature)) {
+    operations.push(...batch);
+  }
+
+  return operations;
 };
 
 export const checkOnChainAccountExists = async (address: string) => {
