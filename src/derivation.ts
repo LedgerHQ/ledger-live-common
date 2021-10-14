@@ -489,7 +489,12 @@ export const getDerivationModesForCurrency = (
 
   return all;
 };
-const preferredList = ["native_segwit", "segwit", ""];
+const preferredList: DerivationMode[] = [
+  "taproot",
+  "native_segwit",
+  "segwit",
+  "",
+];
 // null => no settings
 // [ .. ]
 export const getPreferredNewAccountScheme = (
