@@ -13,7 +13,6 @@ const resolver: Resolver = async (
   transport,
   { currency, path, verify, derivationMode, forceFormat, skipAppFailSafeCheck }
 ) => {
-  console.log("XXX - hw-getAddress on path=", path);
   const btc = new Btc(transport);
   const format = forceFormat || getAddressFormatDerivationMode(derivationMode);
   let result;
