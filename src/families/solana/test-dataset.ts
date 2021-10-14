@@ -5,8 +5,11 @@ import { Transaction } from "./types";
 
 import scanAccounts1 from "./datasets/solana.scanAccounts.1";
 import {
+  AmountRequired,
   FeeNotLoaded,
+  FeeTooHigh,
   InvalidAddressBecauseDestinationIsAlsoSource,
+  NotEnoughBalance,
 } from "@ledgerhq/errors";
 
 // do not change real properties or the test will break
@@ -68,6 +71,79 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
+              name: "status is error: not enough balance, not all amount",
+              transaction: {
+                amount: testOnChainData.balance,
+                recipient: testOnChainData.recipientAddress,
+                fees: testOnChainData.fees,
+                family: "solana",
+              },
+              expectedStatus: {
+                errors: {
+                  amount: new NotEnoughBalance(),
+                },
+                warnings: {},
+                estimatedFees: zero,
+                amount: zero,
+                totalSpent: zero,
+              },
+            },
+            {
+              name: "status is error: not enough balance, all amount",
+              transaction: {
+                useAllAmount: true,
+                amount: zero,
+                recipient: testOnChainData.recipientAddress,
+                fees: testOnChainData.balance,
+                family: "solana",
+              },
+              expectedStatus: {
+                errors: {
+                  amount: new NotEnoughBalance(),
+                },
+                warnings: {},
+                estimatedFees: zero,
+                amount: zero,
+                totalSpent: zero,
+              },
+            },
+            {
+              name: "status is error: amount is 0",
+              transaction: {
+                amount: zero,
+                recipient: testOnChainData.recipientAddress,
+                fees: testOnChainData.balance,
+                family: "solana",
+              },
+              expectedStatus: {
+                errors: {
+                  amount: new AmountRequired(),
+                },
+                warnings: {},
+                estimatedFees: zero,
+                amount: zero,
+                totalSpent: zero,
+              },
+            },
+            {
+              name: "status is error: amount is negative",
+              transaction: {
+                amount: new BigNumber(-1),
+                recipient: testOnChainData.recipientAddress,
+                fees: testOnChainData.balance,
+                family: "solana",
+              },
+              expectedStatus: {
+                errors: {
+                  amount: new AmountRequired(),
+                },
+                warnings: {},
+                estimatedFees: zero,
+                amount: zero,
+                totalSpent: zero,
+              },
+            },
+            {
               name: "status is error: source == destination",
               transaction: {
                 amount: testOnChainData.balance,
@@ -97,6 +173,24 @@ const dataset: DatasetTest<Transaction> = {
               expectedStatus: {
                 errors: {
                   fees: new FeeNotLoaded(),
+                },
+                warnings: {},
+                estimatedFees: zero,
+                amount: zero,
+                totalSpent: zero,
+              },
+            },
+            {
+              name: "status is error: fee is too high",
+              transaction: {
+                amount: new BigNumber(1),
+                recipient: testOnChainData.recipientAddress,
+                fees: new BigNumber(10),
+                family: "solana",
+              },
+              expectedStatus: {
+                errors: {
+                  fees: new FeeTooHigh(),
                 },
                 warnings: {},
                 estimatedFees: zero,
