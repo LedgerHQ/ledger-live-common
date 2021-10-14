@@ -5,7 +5,6 @@ import BigNumber from "bignumber.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { BufferWriter } from "bitcoinjs-lib/src/bufferutils";
-import * as bitcoin from "bitcoinjs-lib";
 
 import Btc from "@ledgerhq/hw-app-btc";
 import { log } from "@ledgerhq/logs";
