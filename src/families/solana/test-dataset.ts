@@ -3,63 +3,44 @@ import type { DatasetTest } from "../../types";
 
 import { Transaction } from "./types";
 
+import { fromTransactionRaw } from "./transaction";
+
+import scanAccounts1 from "./datasets/solana.scanAccounts.1";
+
 const dataset: DatasetTest<Transaction> = {
-  implementations: ["js"],
+  implementations: ["mock", "js"],
   currencies: {
     solana: {
-      scanAccounts: [
-        {
-          name: "solana seed 1",
-          apdus: `
-                    => e005000009028000002c800001f5
-                    <= 5eb9862fe23e544a2a0969cc157cb31fd72901cc2824d536a67fb8ee911e02369000
-                    => e005000015058000002c800001f5800000008000000080000000
-                    <= 4d65a10662b9759d62bb59048366705454654cf4f9b4b3525cf314429e46c6919000
-                    => e005000015058000002c800001f5800000018000000080000000
-                    <= d7ca6918d6747bf39cf8cf8a104f7a6f0ea7b13eb16971bdc40c90454155ba059000
-                    `,
-        },
-      ],
+      scanAccounts: [scanAccounts1],
       accounts: [
         {
-          raw: {
-            id: "js:2:tron:TRqkRnAj6ceJFYAn2p1eE7aWrgBBwtdhS9:",
-            seedIdentifier: "seed",
-            name: "Tron 1",
-            derivationMode: "",
-            index: 0,
-            freshAddress: "fresh",
-            freshAddressPath: "44'/195'/0'/0/0",
-            pendingOperations: [],
-            currencyId: "solana",
-            unitMagnitude: 18,
-            balance: "26000197",
-            spendableBalance: "197",
-            subAccounts: [],
-            operations: [],
-            freshAddresses: [
-              {
-                address: "fresh",
-                derivationPath: "44'/501'/0'/0/0",
-              },
-            ],
-            lastSyncDate: "",
-            blockHeight: 0,
-          },
+          raw: makeAccount("6D8GtWkKJgToM5UoiByHqjQCCC9Dq1Hh7iNmU4jKSs12"),
+          FIXME_tests: ["balance is sum of ops"],
           transactions: [
             {
-              name: "test",
-              transaction: {
-                fees: new BigNumber(1),
+              name: "NO_NAME",
+              transaction: fromTransactionRaw({
+                amount: "10000000",
+                recipient: "7NmQKgPPDM6EjZSLbSVRXDd6UvPN7azaXF5YJNUJpqG9",
+                fees: "5000",
                 family: "solana",
-                amount: new BigNumber(1),
-                networkInfo: {
-                  family: "solana",
-                  lamportsPerSignature: new BigNumber(0),
-                },
-                recipient: "some recipient",
+              }),
+              expectedStatus: {
+                errors: {},
+                warnings: {},
+                estimatedFees: new BigNumber("5000"),
+                amount: new BigNumber("10000000"),
+                totalSpent: new BigNumber("10005000"),
               },
-              expectedStatus: {},
+              /*
+              expectedStatus: (account, transaction) => ({
+                errors: {},
+                warnings: {},
+                estimatedFees: new BigNumber("5000"),
+                amount: new BigNumber("10000000"),
+                totalSpent: new BigNumber("10005000"),
+              }),
+              */
             },
           ],
         },
@@ -69,3 +50,23 @@ const dataset: DatasetTest<Transaction> = {
 };
 
 export default dataset;
+
+function makeAccount(freshAddress: string) {
+  return {
+    id: `js:2:solana:${freshAddress}:`,
+    seedIdentifier: "",
+    name: "Solana 1",
+    derivationMode: "" as const,
+    index: 0,
+    freshAddress,
+    freshAddressPath: "",
+    freshAddresses: [],
+    blockHeight: 0,
+    operations: [],
+    pendingOperations: [],
+    currencyId: "solana",
+    unitMagnitude: 9,
+    lastSyncDate: "",
+    balance: "0",
+  };
+}
