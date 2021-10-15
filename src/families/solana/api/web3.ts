@@ -80,7 +80,7 @@ function tryParseAsTransferIxInfo(ix: ParsedMessage["instructions"][number]) {
           type({
             source: string(),
             destination: string(),
-            lamprots: number(),
+            lamports: number(),
           })
         );
       }
@@ -107,7 +107,7 @@ function onChainTxToOperations(
           const ixId = `${txDetails.info.signature}:ix:${ixIndex}`;
           const isOut = accountAddress === transferInfo.source;
           const fee = new BigNumber(txDetails.parsed.meta?.fee ?? 0);
-          const txLamports = new BigNumber(transferInfo.lamprots);
+          const txLamports = new BigNumber(transferInfo.lamports);
           acc.push({
             id: ixId,
             hash: ixId,
