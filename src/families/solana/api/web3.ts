@@ -6,12 +6,16 @@ import {
   clusterApiUrl,
   ConfirmedSignatureInfo,
   ConfirmedTransaction,
+  ParsedConfirmedTransaction,
+  ParsedMessage,
 } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { chunk } from "lodash";
 import { getEnv } from "../../../env";
 import { Operation } from "../../../types";
 import { NetworkInfo } from "../types";
+
+import { create, type, string, number } from "superstruct";
 
 const isDevMode = !!getEnv("DEVELOPMENT_MODE");
 const conn = new Connection(
@@ -57,6 +61,8 @@ async function* getSignaturesForAddressBatched(
   });
   yield signatures;
   if (signatures.length >= batchSize) {
+    // TODO: limit history shown in ledger?
+    // TODO: use a timeout?
     yield* getSignaturesForAddressBatched(
       address,
       signatures[signatures.length - 1].signature,
@@ -65,33 +71,106 @@ async function* getSignaturesForAddressBatched(
   }
 }
 
-async function* getOperationsBatched(
+function tryParseAsTransferIxInfo(ix: ParsedMessage["instructions"][number]) {
+  if ("parsed" in ix && ix.program === "system") {
+    try {
+      if (ix.parsed.type === "transfer") {
+        return create(
+          ix.parsed.info,
+          type({
+            source: string(),
+            destination: string(),
+            lamprots: number(),
+          })
+        );
+      }
+    } catch (e) {
+      // TODO: notify error?
+      console.error(e);
+    }
+  }
+}
+
+function onChainTxToOperations(
+  txDetails: TransactionDetails,
+  accountId: string,
+  accountAddress: string
+) {
+  return txDetails.parsed.transaction.message.instructions.reduce(
+    (acc, ix, ixIndex) => {
+      const transferInfo = tryParseAsTransferIxInfo(ix);
+      if (transferInfo !== undefined) {
+        if (
+          accountAddress === transferInfo.source ||
+          accountAddress === transferInfo.destination
+        ) {
+          const ixId = `${txDetails.info.signature}:ix:${ixIndex}`;
+          const isOut = accountAddress === transferInfo.source;
+          const fee = new BigNumber(txDetails.parsed.meta?.fee ?? 0);
+          const txLamports = new BigNumber(transferInfo.lamprots);
+          acc.push({
+            id: ixId,
+            hash: ixId,
+            accountId,
+            //TODO: what if block time is 0?
+            date: new Date((txDetails.info.blockTime ?? 0) * 1000),
+            senders: [transferInfo.source],
+            recipients: [transferInfo.destination],
+            // TODO: fix type
+            type: isOut ? "OUT" : "IN",
+            // TODO: what if fee is not there?
+            blockHeight: null,
+            blockHash: null,
+            extra: {},
+            fee,
+            value: isOut ? txLamports.plus(fee) : txLamports,
+          });
+        } else {
+          // just a fees op?
+        }
+      }
+      return acc;
+    },
+    [] as Operation[]
+  );
+}
+
+type TransactionDetails = {
+  parsed: ParsedConfirmedTransaction;
+  info: ConfirmedSignatureInfo;
+};
+
+async function* getSuccessfullTransactionsDetailsBatched(
   pubKey: PublicKey,
   untilTxSignature?: string
-): AsyncGenerator<Operation[], void, unknown> {
+): AsyncGenerator<TransactionDetails[], void, unknown> {
   const batchSize = 20;
 
   for await (const signatures of getSignaturesForAddressBatched(
     pubKey,
     untilTxSignature
   )) {
-    for (const batch of chunk(signatures, batchSize)) {
+    for (const signaturesInfoBatch of chunk(signatures, batchSize)) {
       const transactions = await conn.getParsedConfirmedTransactions(
-        batch.map((tx) => tx.signature)
+        signaturesInfoBatch.map((tx) => tx.signature)
       );
-      const operations = transactions.reduce((acc, tx) => {
-        if (tx) {
-          tx.transaction;
+      const txsDetails = transactions.reduce((acc, tx, index) => {
+        if (tx && !tx.meta?.err) {
+          acc.push({
+            info: signaturesInfoBatch[index],
+            parsed: tx,
+          });
         }
         return acc;
-      }, [] as Operation[]);
+      }, [] as TransactionDetails[]);
 
-      yield operations;
+      yield txsDetails;
     }
   }
 }
 
 export const getOperations = async (
+  accountId: string,
   address: string,
   untilTxSignature?: string
 ): Promise<Operation[]> => {
@@ -99,8 +178,15 @@ export const getOperations = async (
 
   const operations: Operation[] = [];
 
-  for await (const batch of getOperationsBatched(pubKey, untilTxSignature)) {
-    operations.push(...batch);
+  for await (const txDetailsBatch of getSuccessfullTransactionsDetailsBatched(
+    pubKey,
+    untilTxSignature
+  )) {
+    operations.push(
+      ...txDetailsBatch.flatMap((txDetails) =>
+        onChainTxToOperations(txDetails, accountId, address)
+      )
+    );
   }
 
   return operations;

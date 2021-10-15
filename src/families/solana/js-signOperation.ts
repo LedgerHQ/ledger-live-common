@@ -5,6 +5,7 @@ import type { Transaction } from "./types";
 import { buildOnChainTransferTransaction } from "./js-buildTransaction";
 import Solana from "@ledgerhq/hw-app-solana";
 import BigNumber from "bignumber.js";
+import { encodeOperationId } from "../../operation";
 
 const buildOptimisticOperation = async (
   account: Account,
@@ -15,7 +16,7 @@ const buildOptimisticOperation = async (
     ? account.balance
     : transaction.amount.plus(fees);
   return {
-    id: `${account.id}--OUT`,
+    id: encodeOperationId(account.id, "", "OUT"),
     hash: "",
     accountId: account.id,
     type: "OUT",

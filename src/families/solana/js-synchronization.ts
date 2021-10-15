@@ -10,7 +10,7 @@ const getAccountShape: GetAccountShape = async (info) => {
     ? oldOperations[0].hash
     : undefined;
   const { balance, spendableBalance } = await getAccount(address);
-  const newOperations = await getOperations(address, untilTxSignature);
+  const newOperations = await getOperations(id, address, untilTxSignature);
   const operations = mergeOps(oldOperations, newOperations);
   const shape = {
     id,
