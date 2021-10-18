@@ -29,6 +29,7 @@ import {
 import { BitcoinOutput } from "./types";
 import { perCoinLogic } from "./logic";
 import wallet from "./wallet-btc";
+import { getAddressWithBtcInstance } from "./hw-getAddress";
 
 // Map LL's DerivationMode to wallet-btc's
 const toWalletDerivationMode = (
@@ -384,5 +385,10 @@ const postSync = (initial: Account, synced: Account) => {
   return synced;
 };
 
-export const scanAccounts = makeScanAccounts(getAccountShape);
+const getAddressFn = (transport) => {
+  const btc = new Btc(transport);
+  return (opts) => getAddressWithBtcInstance(transport, btc, opts);
+};
+
+export const scanAccounts = makeScanAccounts(getAccountShape, getAddressFn);
 export const sync = makeSync(getAccountShape, postSync);
