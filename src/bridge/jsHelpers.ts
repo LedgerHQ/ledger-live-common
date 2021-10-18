@@ -37,6 +37,7 @@ import type {
 } from "../types";
 import type { CurrencyBridge, AccountBridge } from "../types/bridge";
 import getAddress from "../hw/getAddress";
+import type { Result, GetAddressOptions } from "../hw/getAddress/types";
 import { open, close } from "../hw";
 import { withDevice } from "../hw/deviceAccess";
 
@@ -183,7 +184,12 @@ export const makeSync =
     });
 
 export const makeScanAccounts =
-  (getAccountShape: GetAccountShape): CurrencyBridge["scanAccounts"] =>
+  (
+    getAccountShape: GetAccountShape,
+    getAddressFn?: (
+      transport: Transport
+    ) => (opts: GetAddressOptions) => Promise<Result>
+  ): CurrencyBridge["scanAccounts"] =>
   ({ currency, deviceId, syncConfig }): Observable<ScanAccountEvent> =>
     Observable.create((o) => {
       let finished = false;
@@ -282,6 +288,9 @@ export const makeScanAccounts =
 
         try {
           transport = await open(deviceId);
+          const getAddr = getAddressFn
+            ? getAddressFn(transport)
+            : (opts) => getAddress(transport, opts);
           const derivationModes = getDerivationModesForCurrency(currency);
 
           for (const derivationMode of derivationModes) {
@@ -295,7 +304,7 @@ export const makeScanAccounts =
 
             if (!result) {
               try {
-                result = await getAddress(transport, {
+                result = await getAddr({
                   currency,
                   path,
                   derivationMode,
