@@ -33,6 +33,7 @@ import { remapLibcoreErrors, isNonExistingAccountError } from "./errors";
 import { GetAppAndVersionUnsupportedFormat } from "../errors";
 import nativeSegwitAppsVersionsMap from "./nativeSegwitAppsVersionsMap";
 import type { Core, CoreWallet } from "./types";
+import { GetAddressOptions, Result } from "../hw/getAddress/types";
 
 async function scanNextAccount(props: {
   core: Core;
@@ -145,11 +146,13 @@ export const scanAccounts = ({
   deviceId,
   scheme,
   syncConfig,
+  getAddressFn,
 }: {
   currency: CryptoCurrency;
   deviceId: string;
   scheme?: DerivationMode | null | undefined;
   syncConfig: SyncConfig;
+  getAddressFn?: (Transport) => (opts: GetAddressOptions) => Promise<Result>;
 }): Observable<ScanAccountEvent> =>
   withDevice(deviceId)((transport) =>
     Observable.create((o) => {
@@ -163,6 +166,10 @@ export const scanAccounts = ({
 
       const main = withLibcoreF((core) => async () => {
         try {
+          const getAddr = getAddressFn
+            ? getAddressFn(transport)
+            : (opts) => getAddress(transport, opts);
+
           let derivationModes = getDerivationModesForCurrency(currency);
 
           if (scheme !== undefined) {
@@ -208,11 +215,7 @@ export const scanAccounts = ({
             }
 
             try {
-              result = await getAddress(transport, {
-                currency,
-                path,
-                derivationMode,
-              });
+              result = await getAddr({ currency, path, derivationMode });
             } catch (e) {
               // feature detection: some old app will specifically returns this code for segwit case and we ignore it
               // we also feature detect any denying case that could happen

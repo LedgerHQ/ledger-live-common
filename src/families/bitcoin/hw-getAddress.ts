@@ -10,13 +10,15 @@ import type {
 } from "../../hw/getAddress/types";
 import { UnsupportedDerivation } from "../../errors";
 import Transport from "@ledgerhq/hw-transport";
+import BtcOld from "@ledgerhq/hw-app-btc/lib/BtcOld";
+
 const oldP2SH = {
   digibyte: 5,
 };
 
 export const getAddressWithBtcInstance = async (
   transport: Transport,
-  btc: Btc,
+  btc: Btc | BtcOld,
   {
     currency,
     path,
