@@ -74,7 +74,10 @@ export function testBridgeOnlyLibcore<T extends Transaction>(
   data: DatasetTest<T>
 ) {
   const implementations = data.implementations.filter((i) => i === "libcore");
-  if (implementations.length === 0) return;
+  if (implementations.length === 0) {
+    test.skip("No JS implementation to test dataset of " + family, () => {});
+    return;
+  }
   testBridge(family, { ...data, implementations });
 }
 export function testBridgeWithoutLibcore<T extends Transaction>(
@@ -82,7 +85,13 @@ export function testBridgeWithoutLibcore<T extends Transaction>(
   data: DatasetTest<T>
 ) {
   const implementations = data.implementations.filter((i) => i !== "libcore");
-  if (implementations.length === 0) return;
+  if (implementations.length === 0) {
+    test.skip(
+      "No libcore implementation to test dataset of " + family,
+      () => {}
+    );
+    return;
+  }
   testBridge(family, { ...data, implementations });
 }
 
@@ -90,7 +99,6 @@ export function testBridge<T extends Transaction>(
   family: string,
   data: DatasetTest<T>
 ) {
-  test("dummy", () => expect(true).toBe(true)); // test to avoid error on "no test on this file"
   // covers all bridges through many different accounts
   // to test the common shared properties of bridges.
   const accountsRelated: Array<{
@@ -104,6 +112,7 @@ export function testBridge<T extends Transaction>(
     currency: CryptoCurrency;
   }> = [];
   const { implementations, currencies } = data;
+
   Object.keys(currencies).forEach((currencyId) => {
     const currencyData = currencies[currencyId];
     const currency = getCryptoCurrencyById(currencyId);
