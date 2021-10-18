@@ -1243,7 +1243,7 @@
     "@ledgerhq/hw-transport" "^6.7.0"
     bip32-path "^0.4.2"
 
-"@ledgerhq/hw-app-btc@taproot":
+"@ledgerhq/hw-app-btc@^6.9.1-taproot.0":
   version "6.9.1-taproot.0"
   resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-btc/-/hw-app-btc-6.9.1-taproot.0.tgz#fca23179f4ee831990b8b15eca70f8c6fd5e47f3"
   integrity sha512-8pWpPNhU9YYvv5qUZZqZC4yAkse8uaS+YuGmQFGRbNqTzWYFrn+Udpa0rMwB/AM/BuoO7CDt6QcCmvzDDqF5hQ==
