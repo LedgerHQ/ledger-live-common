@@ -7,7 +7,7 @@ import { log } from "@ledgerhq/logs";
 import { setup } from "./test-helpers/libcore-setup";
 import { withLibcore, afterLibcoreGC } from "../libcore/access";
 import { delay } from "../promise";
-import { testBridge } from "./test-helpers/bridge";
+import { testBridgeOnlyLibcore } from "./test-helpers/bridge";
 import dataset from "../generated/test-dataset";
 import specifics from "../generated/test-specifics";
 import type { DatasetTest } from "../types";
@@ -35,7 +35,7 @@ families
     if (process.env.FAMILY && process.env.FAMILY !== family) return;
     if (shouldExcludeFamilies && maybeFamilyToOnlyRun !== family) return;
     const data: DatasetTest<any> = dataset[family];
-    return testBridge(family, data);
+    return testBridgeOnlyLibcore(family, data);
   })
   .filter(Boolean);
 // FIXME overkill atm but could help perf

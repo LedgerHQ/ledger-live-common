@@ -69,6 +69,23 @@ export function syncAccount<T extends Transaction>(
     .toPromise();
 }
 
+export function testBridgeOnlyLibcore<T extends Transaction>(
+  family: string,
+  data: DatasetTest<T>
+) {
+  const implementations = data.implementations.filter((i) => i === "libcore");
+  if (implementations.length === 0) return;
+  testBridge(family, { ...data, implementations });
+}
+export function testBridgeWithoutLibcore<T extends Transaction>(
+  family: string,
+  data: DatasetTest<T>
+) {
+  const implementations = data.implementations.filter((i) => i !== "libcore");
+  if (implementations.length === 0) return;
+  testBridge(family, { ...data, implementations });
+}
+
 export function testBridge<T extends Transaction>(
   family: string,
   data: DatasetTest<T>
