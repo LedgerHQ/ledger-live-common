@@ -93,7 +93,7 @@ function onChainTxToOperations(
           const txLamports = new BigNumber(transferInfo.lamports);
           acc.push({
             id: ixId,
-            hash: ixId,
+            hash: txHash,
             accountId,
             date: new Date(txDetails.info.blockTime * 1000),
             senders: [transferInfo.source],
