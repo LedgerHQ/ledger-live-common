@@ -15,7 +15,7 @@ import {
   PolkadotAllFundsWarning,
   PolkadotDoMaxSendInstead,
 } from "./errors";
-import type { DatasetTest } from "../../types";
+import type { CurrenciesData, DatasetTest } from "../../types";
 import { fromTransactionRaw } from "./transaction";
 import type { Transaction } from "./types";
 const ACCOUNT_SAME_STASHCONTROLLER =
@@ -27,7 +27,7 @@ const ACCOUNT_WITH_NO_OPERATION =
   "12EsPA79dvhtjp1bYvCiEWPsQmmdKGss44GzE3CT9tTo9g4Q";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const polkadot = {
+const polkadot: CurrenciesData<Transaction> = {
   FIXME_ignoreAccountFields: [
     "polkadotResources.unlockings", // Due to completion date that change everyday (estimated time)
     "polkadotResources.nominations", // TODO: try to only ignore status
@@ -685,7 +685,7 @@ const polkadot = {
 const dataset: DatasetTest<Transaction> = {
   implementations: ["js"],
   currencies: {
-    // polkadot, // LL-7806
+    polkadot,
   },
 };
 export default dataset;
