@@ -90,6 +90,7 @@ export function testBridge<T extends Transaction>(
   family: string,
   data: DatasetTest<T>
 ) {
+  test("dummy", () => expect(true).toBe(true)); // test to avoid error on "no test on this file"
   // covers all bridges through many different accounts
   // to test the common shared properties of bridges.
   const accountsRelated: Array<{
