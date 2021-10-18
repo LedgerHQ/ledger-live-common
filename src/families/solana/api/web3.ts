@@ -5,37 +5,42 @@ import {
   Transaction,
   clusterApiUrl,
   ConfirmedSignatureInfo,
-  ConfirmedTransaction,
   ParsedConfirmedTransaction,
   ParsedMessage,
 } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { chunk } from "lodash";
-import { getEnv } from "../../../env";
 import { Operation } from "../../../types";
 import { NetworkInfo } from "../types";
 
 import { create, type, string, number } from "superstruct";
+import { encodeOperationId } from "../../../operation";
 
-const isDevMode = !!getEnv("DEVELOPMENT_MODE");
-const conn = new Connection(
+const isDevMode = true;
+const conn2 = new Connection(
   clusterApiUrl(isDevMode ? "devnet" : "mainnet-beta"),
-  "confirmed"
+  "finalized"
 );
+
+const conn = new Connection("http://api.devnet.solana.com/", "finalized");
 
 export const getAccount = async (address: string) => {
   const pubKey = new PublicKey(address);
-  const [balanceLamports, lamportPerSignature] = await Promise.all([
-    conn.getBalance(pubKey),
+
+  const [balanceLamportsWithContext, lamportPerSignature] = await Promise.all([
+    conn.getBalanceAndContext(pubKey),
     getNetworkInfo().then((res) => res.lamportsPerSignature),
   ]);
 
-  const balance = new BigNumber(balanceLamports);
+  const balance = new BigNumber(balanceLamportsWithContext.value);
   const spendableBalance = BigNumber.max(balance.minus(lamportPerSignature), 0);
+  // how to get the block height for the account
+  const blockHeight = balanceLamportsWithContext.context.slot;
 
   return {
     balance,
     spendableBalance,
+    blockHeight,
   };
 };
 
@@ -47,29 +52,6 @@ export const getNetworkInfo = async (): Promise<NetworkInfo> => {
     lamportsPerSignature: new BigNumber(feeCalculator.lamportsPerSignature),
   };
 };
-
-async function* getSignaturesForAddressBatched(
-  address: PublicKey,
-  beforeSignature?: string,
-  untilSignature?: string
-): AsyncGenerator<ConfirmedSignatureInfo[], void, unknown> {
-  const batchSize = 1000;
-  const signatures = await conn.getSignaturesForAddress(address, {
-    before: beforeSignature,
-    until: untilSignature,
-    limit: batchSize,
-  });
-  yield signatures;
-  if (signatures.length >= batchSize) {
-    // TODO: limit history shown in ledger?
-    // TODO: use a timeout?
-    yield* getSignaturesForAddressBatched(
-      address,
-      signatures[signatures.length - 1].signature,
-      untilSignature
-    );
-  }
-}
 
 function tryParseAsTransferIxInfo(ix: ParsedMessage["instructions"][number]) {
   if ("parsed" in ix && ix.program === "system") {
@@ -99,34 +81,35 @@ function onChainTxToOperations(
   return txDetails.parsed.transaction.message.instructions.reduce(
     (acc, ix, ixIndex) => {
       const transferInfo = tryParseAsTransferIxInfo(ix);
-      if (transferInfo !== undefined) {
+      if (transferInfo !== undefined && txDetails.info.blockTime) {
         if (
           accountAddress === transferInfo.source ||
           accountAddress === transferInfo.destination
         ) {
-          const ixId = `${txDetails.info.signature}:ix:${ixIndex}`;
-          const isOut = accountAddress === transferInfo.source;
+          const txHash = `${txDetails.info.signature}:ix:${ixIndex}`;
+          const txType = accountAddress === transferInfo.source ? "OUT" : "IN";
+          const ixId = encodeOperationId(accountId, txHash, txType);
           const fee = new BigNumber(txDetails.parsed.meta?.fee ?? 0);
           const txLamports = new BigNumber(transferInfo.lamports);
           acc.push({
             id: ixId,
             hash: ixId,
             accountId,
-            //TODO: what if block time is 0?
-            date: new Date((txDetails.info.blockTime ?? 0) * 1000),
+            date: new Date(txDetails.info.blockTime * 1000),
             senders: [transferInfo.source],
             recipients: [transferInfo.destination],
-            // TODO: fix type
-            type: isOut ? "OUT" : "IN",
-            // TODO: what if fee is not there?
-            blockHeight: null,
-            blockHash: null,
+            type: txType,
+            // TODO: double check if block height === slot here
+            blockHeight: txDetails.info.slot,
+            // TODO: aslo double check that
+            blockHash: txDetails.parsed.transaction.message.recentBlockhash,
             extra: {},
+            // fee is actually lamports _per_ signature, is it multiplied in meta.fee ?
             fee,
-            value: isOut ? txLamports.plus(fee) : txLamports,
+            value: txType === "OUT" ? txLamports.plus(fee) : txLamports,
           });
         } else {
-          // just a fees op?
+          // ignore for now non transfer ops
         }
       }
       return acc;
@@ -144,39 +127,42 @@ async function* getSuccessfullTransactionsDetailsBatched(
   pubKey: PublicKey,
   untilTxSignature?: string
 ): AsyncGenerator<TransactionDetails[], void, unknown> {
-  const batchSize = 20;
+  const signatures = await conn.getSignaturesForAddress(pubKey, {
+    until: untilTxSignature,
+    limit: 1000,
+  });
 
-  for await (const signatures of getSignaturesForAddressBatched(
-    pubKey,
-    untilTxSignature
-  )) {
-    for (const signaturesInfoBatch of chunk(signatures, batchSize)) {
-      const transactions = await conn.getParsedConfirmedTransactions(
-        signaturesInfoBatch.map((tx) => tx.signature)
-      );
-      const txsDetails = transactions.reduce((acc, tx, index) => {
-        if (tx && !tx.meta?.err) {
-          acc.push({
-            info: signaturesInfoBatch[index],
-            parsed: tx,
-          });
-        }
-        return acc;
-      }, [] as TransactionDetails[]);
+  //TODO: check if payload for 1000 txs is > 50kb
+  const batchSize = 1000;
 
-      yield txsDetails;
-    }
+  for (const signaturesInfoBatch of chunk(signatures, batchSize)) {
+    const transactions = await conn.getParsedConfirmedTransactions(
+      signaturesInfoBatch.map((tx) => tx.signature)
+    );
+    const txsDetails = transactions.reduce((acc, tx, index) => {
+      if (tx && !tx.meta?.err && tx.blockTime) {
+        acc.push({
+          info: signaturesInfoBatch[index],
+          parsed: tx,
+        });
+      }
+      return acc;
+    }, [] as TransactionDetails[]);
+
+    yield txsDetails;
   }
 }
 
 export const getOperations = async (
   accountId: string,
   address: string,
-  untilTxSignature?: string
+  untilTxHash?: string
 ): Promise<Operation[]> => {
   const pubKey = new PublicKey(address);
 
   const operations: Operation[] = [];
+
+  const untilTxSignature = untilTxHash?.split(":")[0];
 
   for await (const txDetailsBatch of getSuccessfullTransactionsDetailsBatched(
     pubKey,

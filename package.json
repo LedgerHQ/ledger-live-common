@@ -31,7 +31,8 @@
     "lib",
     "src",
     "react.js",
-    "reactNative.js"
+    "reactNative.js",
+    ".yalc"
   ],
   "peerDependencies": {
     "react": ">=16",
@@ -65,6 +66,7 @@
     "@ledgerhq/logs": "6.2.0",
     "@polkadot/types": "6.3.1",
     "@polkadot/types-known": "6.3.1",
+    "@solana/web3.js": "^1.29.2",
     "@taquito/ledger-signer": "^10.2.0",
     "@taquito/taquito": "10.2.0",
     "@types/bchaddrjs": "^0.4.0",

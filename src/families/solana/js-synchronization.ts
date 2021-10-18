@@ -1,19 +1,26 @@
 import { makeScanAccounts, makeSync, mergeOps } from "../../bridge/jsHelpers";
-import type { Account } from "../../types";
+import { Account, encodeAccountId } from "../../types";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { getAccount, getOperations } from "./api";
 
 const getAccountShape: GetAccountShape = async (info) => {
-  const { id, address, initialAccount } = info;
+  const { address, initialAccount, currency, derivationMode } = info;
   const oldOperations = initialAccount?.operations || [];
-  const untilTxSignature = oldOperations.length
-    ? oldOperations[0].hash
-    : undefined;
-  const { balance, spendableBalance } = await getAccount(address);
-  const newOperations = await getOperations(id, address, untilTxSignature);
+  const untilTxHash = oldOperations.length ? oldOperations[0].hash : undefined;
+  const { blockHeight, balance, spendableBalance } = await getAccount(address);
+  const accountId = encodeAccountId({
+    type: "js",
+    version: "2",
+    currencyId: currency.id,
+    xpubOrAddress: address,
+    derivationMode,
+  });
+
+  const newOperations = await getOperations(accountId, address, untilTxHash);
   const operations = mergeOps(oldOperations, newOperations);
   const shape = {
-    id,
+    id: accountId,
+    blockHeight,
     balance,
     spendableBalance,
     operationsCount: operations.length,

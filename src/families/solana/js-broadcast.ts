@@ -12,8 +12,9 @@ const broadcast = async ({
   signedOperation: SignedOperation;
 }): Promise<Operation> => {
   const { signature, operation } = signedOperation;
-  const txId = await broadcastTransaction(Buffer.from(signature, "hex"));
-  return patchOperationWithHash(operation, txId);
+  const txSignature = await broadcastTransaction(Buffer.from(signature, "hex"));
+  const txHash = `${txSignature}:ix:0`;
+  return patchOperationWithHash(operation, txHash);
 };
 
 export default broadcast;
