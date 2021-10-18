@@ -258,17 +258,22 @@ class BitcoinLikeWallet {
       null,
     ]);
 
+    const lastOutputIndex = txInfo.outputs.length - 1;
+
     log("hw", `createPaymentTransactionNew`, {
+      inputs,
       associatedKeysets,
       outputScriptHex,
-      lockTime,
-      sigHashType,
-      segwit,
+      ...(params.lockTime && { lockTime: params.lockTime }),
+      ...(params.sigHashType && { sigHashType: params.sigHashType }),
+      ...(params.segwit && { segwit: params.segwit }),
+      // initialTimestamp,
+      ...(params.expiryHeight && { expiryHeight: params.expiryHeight }),
+      ...(txInfo.outputs[lastOutputIndex]?.isChange && {
+        changePath: `${fromAccount.params.path}/${fromAccount.params.index}'/${txInfo.changeAddress.account}/${txInfo.changeAddress.index}`,
+      }),
       additionals: additionals || [],
-      expiryHeight: expiryHeight && expiryHeight.toString("hex"),
     });
-
-    const lastOutputIndex = txInfo.outputs.length - 1;
 
     const tx = await btc.createPaymentTransactionNew({
       inputs,
