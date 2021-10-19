@@ -47,8 +47,10 @@ export function releaseMockDevice(id: string) {
   const store = recordStores[id];
   invariant(store, "MockDevice does not exist (%s)", id);
   try {
-    // FIXME: I don't understand with the Queue is not empty
     store.ensureQueueEmpty();
+  } catch (e) {
+    console.error(e);
+    throw e;
   } finally {
     delete recordStores[id];
     delete mockTransports[id];
