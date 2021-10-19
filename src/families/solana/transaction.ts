@@ -10,7 +10,7 @@ import { formatCurrencyUnit } from "../../currencies";
 
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
-  const { networkInfo, fees, family } = tr;
+  const { networkInfo, fees, family, memo } = tr;
   return {
     ...common,
     fees: fees === undefined ? undefined : new BigNumber(fees),
@@ -19,12 +19,13 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
       lamportsPerSignature: new BigNumber(networkInfo.lamportPerSignature),
     },
     family,
+    memo,
   };
 };
 
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
-  const { networkInfo, family, fees } = t;
+  const { networkInfo, family, fees, memo } = t;
   return {
     ...common,
     fees: fees && fees.toString(),
@@ -33,6 +34,7 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
       lamportPerSignature: networkInfo.lamportsPerSignature.toString(),
     },
     family: t.family,
+    memo,
   };
 };
 
@@ -46,9 +48,14 @@ const lamportsToSOL = (account: Account, lamports: BigNumber) => {
 export const formatTransaction = (
   t: Transaction,
   mainAccount: Account
-): string => `
-  SEND ${t.useAllAmount ? "MAX" : lamportsToSOL(mainAccount, t.amount)}
-  TO ${t.recipient}`;
+): string =>
+  [
+    `SEND ${t.useAllAmount ? "MAX" : lamportsToSOL(mainAccount, t.amount)}`,
+    `TO ${t.recipient}`,
+    t.memo ? `MEMO ${t.memo}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
 
 export default {
   formatTransaction,

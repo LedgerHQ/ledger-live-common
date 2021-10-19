@@ -39,6 +39,7 @@ const getTransactionStatus = async (
     errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
   } else if (!isAddressValid(t.recipient)) {
     errors.recipient = new InvalidAddress();
+    // TODO: should we check that?
   } else if (!(await checkRecipientExist(t.recipient))) {
     errors.recipient = new NotEnoughBalanceBecauseDestinationNotCreated();
   }
