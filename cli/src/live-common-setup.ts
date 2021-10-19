@@ -48,9 +48,6 @@ export function releaseMockDevice(id: string) {
   invariant(store, "MockDevice does not exist (%s)", id);
   try {
     store.ensureQueueEmpty();
-  } catch (e) {
-    console.error(e);
-    throw e;
   } finally {
     delete recordStores[id];
     delete mockTransports[id];
