@@ -19,7 +19,6 @@ export class DerivationsCache {
 type F = (arg0: {
   core: Core;
   wallet: CoreWallet;
-  transport: Transport;
   currency: CryptoCurrency;
   index: number;
   derivationMode: DerivationMode;
@@ -31,7 +30,6 @@ type F = (arg0: {
 export const createAccountFromDevice: F = async ({
   core,
   wallet,
-  transport,
   currency,
   derivationMode,
   isUnsubscribed,

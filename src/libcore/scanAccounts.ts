@@ -84,7 +84,6 @@ async function scanNextAccount(props: {
     coreAccount = await createAccountFromDevice({
       core,
       wallet,
-      transport,
       currency,
       index: accountIndex,
       derivationMode,
