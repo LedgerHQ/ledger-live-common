@@ -13,7 +13,7 @@ const broadcast = async ({
 }): Promise<Operation> => {
   const { signature, operation } = signedOperation;
   const txSignature = await broadcastTransaction(Buffer.from(signature, "hex"));
-  const txHash = `${txSignature}:ix:0`;
+  const txHash = txSignature;
   return patchOperationWithHash(operation, txHash);
 };
 

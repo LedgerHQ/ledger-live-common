@@ -120,7 +120,6 @@ function onChainTxToOperation(
               ixHash,
               transferDirection
             );
-            const fee = new BigNumber(0);
             const ixLamports = new BigNumber(transferInfo.lamports);
             acc.push({
               id: ixId,
@@ -136,7 +135,7 @@ function onChainTxToOperation(
               blockHash: txDetails.parsed.transaction.message.recentBlockhash,
               extra: {},
               // fee is actually lamports _per_ signature, is it multiplied in meta.fee ?
-              fee,
+              fee: new BigNumber(0),
               //value: transferDirection === "OUT" ? txLamports.plus(fee) : txLamports,
               value: ixLamports,
             });
@@ -171,20 +170,19 @@ function onChainTxToOperation(
     }
   );
 
+  const txHash = txDetails.info.signature;
+
   // TODO: might not be accurate
   const isFeePayer =
     txDetails.parsed.transaction.message.accountKeys[0].pubkey.toBase58() ===
     accountAddress;
   // TODO: check if signer is account address
 
-  const fee = new BigNumber(txDetails.parsed.meta?.fee ?? 0);
-  const txHash = txDetails.info.signature;
+  const fee = new BigNumber(isFeePayer ? txDetails.parsed.meta?.fee ?? 0 : 0);
 
-  const totalTransfered = transferSummary.in
-    .minus(transferSummary.out)
-    .minus(isFeePayer ? fee : 0);
+  const totalDelta = transferSummary.in.minus(transferSummary.out).minus(fee);
 
-  const transferDirection = totalTransfered.lte(0) ? "OUT" : "IN";
+  const transferDirection = totalDelta.lte(0) ? "OUT" : "IN";
 
   return {
     id: encodeOperationId(accountId, txHash, transferDirection),
@@ -201,9 +199,9 @@ function onChainTxToOperation(
     extra: {},
     // fee is actually lamports _per_ signature, is it multiplied in meta.fee ?
     fee,
-    internalOperations: internalTransferOperations,
+    subOperations: internalTransferOperations,
     //value: transferDirection === "OUT" ? txLamports.plus(fee) : txLamports,
-    value: totalTransfered.abs(),
+    value: totalDelta.abs(),
   };
 }
 
@@ -251,7 +249,7 @@ export const getOperations = async (
 
   const operations: Operation[] = [];
 
-  const untilTxSignature = untilTxHash?.split(":")[0];
+  const untilTxSignature = untilTxHash;
 
   for await (const txDetailsBatch of getSuccessfullTransactionsDetailsBatched(
     pubKey,
