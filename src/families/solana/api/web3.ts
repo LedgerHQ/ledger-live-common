@@ -7,13 +7,14 @@ import {
   ConfirmedSignatureInfo,
   ParsedConfirmedTransaction,
   ParsedMessage,
+  SystemInstruction,
 } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
-import { chunk } from "lodash";
+import { chunk, sum } from "lodash";
 import { Operation } from "../../../types";
 import { NetworkInfo } from "../types";
 
-import { create, type, string, number } from "superstruct";
+import { create, type, string, number, Infer } from "superstruct";
 import { encodeOperationId } from "../../../operation";
 
 const isDevMode = true;
@@ -53,69 +54,157 @@ export const getNetworkInfo = async (): Promise<NetworkInfo> => {
   };
 };
 
-function tryParseAsTransferIxInfo(ix: ParsedMessage["instructions"][number]) {
+type TransferInfo = Infer<typeof TransferInfo>;
+const TransferInfo = type({
+  source: string(),
+  destination: string(),
+  lamports: number(),
+});
+
+type TransferWithSeedInfo = Infer<typeof TransferWithSeedInfo>;
+const TransferWithSeedInfo = type({
+  source: string(),
+  sourceBase: string(),
+  destination: string(),
+  lamports: number(),
+  sourceSeed: string(),
+  sourceOwner: string(),
+});
+
+function tryParseAsTransferIxInfo(
+  ix: ParsedMessage["instructions"][number]
+): TransferInfo | TransferWithSeedInfo | undefined {
   if ("parsed" in ix && ix.program === "system") {
     try {
-      if (ix.parsed.type === "transfer") {
-        return create(
-          ix.parsed.info,
-          type({
-            source: string(),
-            destination: string(),
-            lamports: number(),
-          })
-        );
+      switch (ix.parsed.type) {
+        case "transfer":
+          return create(ix.parsed.info, TransferInfo);
+        case "transferWithSeed":
+          return create(ix.parsed.info, TransferWithSeedInfo);
       }
     } catch (e) {
-      // TODO: notify error?
       console.error(e);
     }
   }
 }
 
-function onChainTxToOperations(
+function onChainTxToOperation(
   txDetails: TransactionDetails,
   accountId: string,
   accountAddress: string
-) {
-  return txDetails.parsed.transaction.message.instructions.reduce(
-    (acc, ix, ixIndex) => {
-      const transferInfo = tryParseAsTransferIxInfo(ix);
-      if (transferInfo !== undefined && txDetails.info.blockTime) {
-        if (
-          accountAddress === transferInfo.source ||
-          accountAddress === transferInfo.destination
-        ) {
-          const txHash = `${txDetails.info.signature}:ix:${ixIndex}`;
-          const txType = accountAddress === transferInfo.source ? "OUT" : "IN";
-          const ixId = encodeOperationId(accountId, txHash, txType);
-          const fee = new BigNumber(txDetails.parsed.meta?.fee ?? 0);
-          const txLamports = new BigNumber(transferInfo.lamports);
-          acc.push({
-            id: ixId,
-            hash: txHash,
-            accountId,
-            date: new Date(txDetails.info.blockTime * 1000),
-            senders: [transferInfo.source],
-            recipients: [transferInfo.destination],
-            type: txType,
-            // TODO: double check if block height === slot here
-            blockHeight: txDetails.info.slot,
-            // TODO: aslo double check that
-            blockHash: txDetails.parsed.transaction.message.recentBlockhash,
-            extra: {},
-            // fee is actually lamports _per_ signature, is it multiplied in meta.fee ?
-            fee,
-            value: txType === "OUT" ? txLamports.plus(fee) : txLamports,
-          });
-        } else {
-          // ignore for now non transfer ops
+): Operation | undefined {
+  const blockTime = txDetails.info.blockTime;
+
+  if (!blockTime) {
+    return undefined;
+  }
+
+  if (txDetails.info.err) {
+    return undefined;
+  }
+
+  const internalTransferOperations =
+    txDetails.parsed.transaction.message.instructions.reduce(
+      (acc, ix, ixIndex) => {
+        const transferInfo = tryParseAsTransferIxInfo(ix);
+        if (transferInfo !== undefined && txDetails.info.blockTime) {
+          if (
+            accountAddress === transferInfo.source ||
+            accountAddress === transferInfo.destination
+          ) {
+            const ixHash = `${txDetails.info.signature}:ix:${ixIndex}`;
+            const transferDirection =
+              accountAddress === transferInfo.source ? "OUT" : "IN";
+            const ixId = encodeOperationId(
+              accountId,
+              ixHash,
+              transferDirection
+            );
+            const fee = new BigNumber(0);
+            const ixLamports = new BigNumber(transferInfo.lamports);
+            acc.push({
+              id: ixId,
+              hash: ixHash,
+              accountId,
+              date: new Date(blockTime * 1000),
+              senders: [transferInfo.source],
+              recipients: [transferInfo.destination],
+              type: transferDirection,
+              // TODO: double check if block height === slot here
+              blockHeight: txDetails.info.slot,
+              // TODO: aslo double check that
+              blockHash: txDetails.parsed.transaction.message.recentBlockhash,
+              extra: {},
+              // fee is actually lamports _per_ signature, is it multiplied in meta.fee ?
+              fee,
+              //value: transferDirection === "OUT" ? txLamports.plus(fee) : txLamports,
+              value: ixLamports,
+            });
+          } else {
+            // ignore for now non transfer ops
+          }
         }
-      }
-      return acc;
+        return acc;
+      },
+      [] as Operation[]
+    );
+
+  if (internalTransferOperations.length === 0) {
+    return undefined;
+  }
+
+  const transferSummary = internalTransferOperations.reduce(
+    (summary, op) => {
+      summary.senders.add(op.senders[0]);
+      summary.recipients.add(op.recipients[0]);
+      return {
+        ...summary,
+        in: op.type === "IN" ? summary.in.plus(op.value) : summary.in,
+        out: op.type === "OUT" ? summary.out.plus(op.value) : summary.out,
+      };
     },
-    [] as Operation[]
+    {
+      in: new BigNumber(0),
+      out: new BigNumber(0),
+      senders: new Set<string>(),
+      recipients: new Set<string>(),
+    }
   );
+
+  // TODO: might not be accurate
+  const isFeePayer =
+    txDetails.parsed.transaction.message.accountKeys[0].pubkey.toBase58() ===
+    accountAddress;
+  // TODO: check if signer is account address
+
+  const fee = new BigNumber(txDetails.parsed.meta?.fee ?? 0);
+  const txHash = txDetails.info.signature;
+
+  const totalTransfered = transferSummary.in
+    .minus(transferSummary.out)
+    .minus(isFeePayer ? fee : 0);
+
+  const transferDirection = totalTransfered.lte(0) ? "OUT" : "IN";
+
+  return {
+    id: encodeOperationId(accountId, txHash, transferDirection),
+    hash: txHash,
+    accountId,
+    date: new Date(blockTime * 1000),
+    senders: [...transferSummary.senders],
+    recipients: [...transferSummary.recipients],
+    type: transferDirection,
+    // TODO: double check if block height === slot here
+    blockHeight: txDetails.info.slot,
+    // TODO: aslo double check that
+    blockHash: txDetails.parsed.transaction.message.recentBlockhash,
+    extra: {},
+    // fee is actually lamports _per_ signature, is it multiplied in meta.fee ?
+    fee,
+    internalOperations: internalTransferOperations,
+    //value: transferDirection === "OUT" ? txLamports.plus(fee) : txLamports,
+    value: totalTransfered.abs(),
+  };
 }
 
 type TransactionDetails = {
@@ -169,9 +258,13 @@ export const getOperations = async (
     untilTxSignature
   )) {
     operations.push(
-      ...txDetailsBatch.flatMap((txDetails) =>
-        onChainTxToOperations(txDetails, accountId, address)
-      )
+      ...txDetailsBatch.reduce((acc, txDetails) => {
+        const op = onChainTxToOperation(txDetails, accountId, address);
+        if (op) {
+          acc.push(op);
+        }
+        return acc;
+      }, [] as Operation[])
     );
   }
 
@@ -201,6 +294,7 @@ export const buildTransferTransaction = async ({
     lamports: amount.toNumber(),
   });
 
+  // TODO: move to broadcast ?
   const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
 
   return new Transaction({
