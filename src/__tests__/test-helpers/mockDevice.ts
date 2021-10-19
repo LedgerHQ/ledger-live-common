@@ -12,8 +12,8 @@ export function releaseMockDevice(id: string) {
   invariant(store, "MockDevice does not exist (%s)", id);
   try {
     store.ensureQueueEmpty();
-  } catch (e) {
-    console.error(e);
+  } catch (e: any) {
+    e && console.error(e.message);
     throw e;
   } finally {
     delete recordStores[id];
@@ -22,7 +22,7 @@ export function releaseMockDevice(id: string) {
 }
 export async function mockDeviceWithAPDUs(apdus: string) {
   const id = `mock:${++idCounter}`;
-  const store = RecordStore.fromString(apdus);
+  const store = RecordStore.fromString(apdus, { autoSkipUnknownApdu: true });
   recordStores[id] = store;
   transports[id] = await openTransportReplayer(store);
   return id;
