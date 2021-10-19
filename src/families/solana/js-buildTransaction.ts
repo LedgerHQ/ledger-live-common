@@ -23,6 +23,7 @@ export const buildOnChainTransferTransaction = async (
     amount: useAllAmount
       ? account.balance.minus(transaction.fees)
       : transaction.amount,
+    memo: transaction.memo,
   });
 
   return [

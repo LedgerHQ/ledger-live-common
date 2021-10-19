@@ -7,7 +7,7 @@ import {
   ConfirmedSignatureInfo,
   ParsedConfirmedTransaction,
   ParsedMessage,
-  SystemInstruction,
+  TransactionInstruction,
 } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { chunk, sum } from "lodash";
@@ -107,7 +107,7 @@ function onChainTxToOperation(
     txDetails.parsed.transaction.message.instructions.reduce(
       (acc, ix, ixIndex) => {
         const transferInfo = tryParseAsTransferIxInfo(ix);
-        if (transferInfo !== undefined && txDetails.info.blockTime) {
+        if (transferInfo !== undefined) {
           if (
             accountAddress === transferInfo.source ||
             accountAddress === transferInfo.destination
@@ -133,7 +133,9 @@ function onChainTxToOperation(
               blockHeight: txDetails.info.slot,
               // TODO: aslo double check that
               blockHash: txDetails.parsed.transaction.message.recentBlockhash,
-              extra: {},
+              extra: {
+                memo: txDetails.info.memo,
+              },
               // fee is actually lamports _per_ signature, is it multiplied in meta.fee ?
               fee: new BigNumber(0),
               //value: transferDirection === "OUT" ? txLamports.plus(fee) : txLamports,
@@ -278,27 +280,42 @@ export const buildTransferTransaction = async ({
   fromAddress,
   toAddress,
   amount,
+  memo,
 }: {
   fromAddress: string;
   toAddress: string;
   amount: BigNumber;
+  memo?: string;
 }) => {
   const fromPublicKey = new PublicKey(fromAddress);
   const toPublicKey = new PublicKey(toAddress);
 
-  const transferTx = SystemProgram.transfer({
+  // TODO: move to broadcast ?
+  const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
+
+  const onChainTx = new Transaction({
+    feePayer: fromPublicKey,
+    recentBlockhash,
+  });
+
+  const transferIx = SystemProgram.transfer({
     fromPubkey: fromPublicKey,
     toPubkey: toPublicKey,
     lamports: amount.toNumber(),
   });
 
-  // TODO: move to broadcast ?
-  const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
+  onChainTx.add(transferIx);
 
-  return new Transaction({
-    feePayer: fromPublicKey,
-    recentBlockhash,
-  }).add(transferTx);
+  if (memo) {
+    const memoIx = new TransactionInstruction({
+      keys: [],
+      programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+      data: Buffer.from(memo),
+    });
+    onChainTx.add(memoIx);
+  }
+
+  return onChainTx;
 };
 
 export const addSignatureToTransaction = ({
