@@ -49,6 +49,7 @@ async function scanNextAccount(props: {
   emptyCount?: number;
   syncConfig: SyncConfig;
   derivationsCache: DerivationsCache;
+  getAddr: (opts: GetAddressOptions) => Promise<Result>;
 }) {
   const logId = newSyncLogId();
   const {
@@ -64,6 +65,7 @@ async function scanNextAccount(props: {
     isUnsubscribed,
     syncConfig,
     derivationsCache,
+    getAddr,
   } = props;
   log(
     "libcore",
@@ -88,6 +90,7 @@ async function scanNextAccount(props: {
       derivationMode,
       isUnsubscribed,
       derivationsCache,
+      getAddress: getAddr,
     });
   }
 
@@ -166,10 +169,6 @@ export const scanAccounts = ({
 
       const main = withLibcoreF((core) => async () => {
         try {
-          const getAddr = getAddressFn
-            ? getAddressFn(transport)
-            : (opts) => getAddress(transport, opts);
-
           let derivationModes = getDerivationModesForCurrency(currency);
 
           if (scheme !== undefined) {
@@ -213,6 +212,10 @@ export const scanAccounts = ({
                 }
               }
             }
+
+            const getAddr = getAddressFn
+              ? getAddressFn(transport)
+              : (opts) => getAddress(transport, opts);
 
             try {
               result = await getAddr({ currency, path, derivationMode });
@@ -264,6 +267,7 @@ export const scanAccounts = ({
               isUnsubscribed,
               syncConfig,
               derivationsCache: new DerivationsCache(),
+              getAddr,
             });
           }
 
