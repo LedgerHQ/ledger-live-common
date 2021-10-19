@@ -490,8 +490,8 @@ export const getDerivationModesForCurrency = (
   return all;
 };
 const preferredList: DerivationMode[] = [
-  "taproot",
   "native_segwit",
+  "taproot",
   "segwit",
   "",
 ];
