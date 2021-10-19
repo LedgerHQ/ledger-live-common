@@ -38,7 +38,6 @@ import { GetAddressOptions, Result } from "../hw/getAddress/types";
 async function scanNextAccount(props: {
   core: Core;
   wallet: CoreWallet;
-  transport: Transport;
   currency: CryptoCurrency;
   accountIndex: number;
   onAccountScanned: (arg0: Account) => any;
@@ -55,7 +54,6 @@ async function scanNextAccount(props: {
   const {
     core,
     wallet,
-    transport,
     currency,
     accountIndex,
     onAccountScanned,
@@ -154,7 +152,9 @@ export const scanAccounts = ({
   deviceId: string;
   scheme?: DerivationMode | null | undefined;
   syncConfig: SyncConfig;
-  getAddressFn?: (Transport) => (opts: GetAddressOptions) => Promise<Result>;
+  getAddressFn?: (
+    transport: Transport
+  ) => (opts: GetAddressOptions) => Promise<Result>;
 }): Observable<ScanAccountEvent> =>
   withDevice(deviceId)((transport) =>
     Observable.create((o) => {
@@ -256,7 +256,6 @@ export const scanAccounts = ({
             await scanNextAccount({
               core,
               wallet,
-              transport,
               currency,
               accountIndex: 0,
               onAccountScanned,

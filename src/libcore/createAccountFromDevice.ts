@@ -1,5 +1,4 @@
 import { log } from "@ledgerhq/logs";
-import Transport from "@ledgerhq/hw-transport";
 import type { Core, CoreWallet, CoreAccount } from "./types";
 import type { CryptoCurrency } from "../types";
 import type { DerivationMode } from "../derivation";
