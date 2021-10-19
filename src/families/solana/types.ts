@@ -25,12 +25,14 @@ export type Transaction = TransactionCommon & {
   fees?: BigNumber;
   networkInfo?: NetworkInfo;
   memo?: string;
+  allowNotCreatedRecipient?: boolean;
 };
 export type TransactionRaw = TransactionCommonRaw & {
   family: "solana";
   fees?: string;
   networkInfo?: NetworkInfoRaw;
   memo?: string;
+  allowNotCreatedRecipient?: boolean;
 };
 
 export const reflect = (_declare: any): void => {};

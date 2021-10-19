@@ -27,22 +27,22 @@ const getTransactionStatus = async (
   const warnings: Record<string, Error> = {};
   const useAllAmount = !!t.useAllAmount;
 
-  /* TODO: check if we need that
-    if (a.pendingOperations.length > 0) {
-        throw new AccountAwaitingSendPendingOperations();
-    }
-    */
-
   if (!t.recipient) {
     errors.recipient = new RecipientRequired();
   } else if (a.freshAddress === t.recipient) {
     errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
   } else if (!isAddressValid(t.recipient)) {
     errors.recipient = new InvalidAddress();
-    // TODO: should we check that?
-  } else if (!(await checkRecipientExist(t.recipient))) {
-    errors.recipient = new NotEnoughBalanceBecauseDestinationNotCreated();
+  } else if (
+    !t.allowNotCreatedRecipient &&
+    !(await checkRecipientExist(t.recipient))
+  ) {
+    // the message seems to be ignored though
+    errors.recipient = new NotEnoughBalanceBecauseDestinationNotCreated(
+      "Recipient account is not created"
+    );
   }
+
   // TODO: check if acc is multi sign
 
   if (t.fees === undefined || t.fees.lt(0)) {
