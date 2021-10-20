@@ -6,25 +6,16 @@ import {
   clusterApiUrl,
   ConfirmedSignatureInfo,
   ParsedConfirmedTransaction,
-  ParsedMessage,
   TransactionInstruction,
 } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
-import { chunk, sum } from "lodash";
+import { chunk } from "lodash";
 import { Operation } from "../../../types";
 import { NetworkInfo } from "../types";
 
-import { create, type, string, number, Infer } from "superstruct";
-import { encodeOperationId } from "../../../operation";
 import { parseIxNames } from "./instructions/parser";
 
-const isDevMode = true;
-const conn2 = new Connection(
-  clusterApiUrl(isDevMode ? "devnet" : "mainnet-beta"),
-  "finalized"
-);
-
-const conn = new Connection("http://api.devnet.solana.com/", "finalized");
+const conn = new Connection(clusterApiUrl("mainnet-beta"), "finalized");
 
 export const getAccount = async (address: string) => {
   const pubKey = new PublicKey(address);
@@ -53,40 +44,6 @@ export const getNetworkInfo = async (): Promise<NetworkInfo> => {
     lamportsPerSignature: new BigNumber(feeCalculator.lamportsPerSignature),
   };
 };
-
-type TransferInfo = Infer<typeof TransferInfo>;
-const TransferInfo = type({
-  source: string(),
-  destination: string(),
-  lamports: number(),
-});
-
-type TransferWithSeedInfo = Infer<typeof TransferWithSeedInfo>;
-const TransferWithSeedInfo = type({
-  source: string(),
-  sourceBase: string(),
-  destination: string(),
-  lamports: number(),
-  sourceSeed: string(),
-  sourceOwner: string(),
-});
-
-function tryParseAsTransferIxInfo(
-  ix: ParsedMessage["instructions"][number]
-): TransferInfo | TransferWithSeedInfo | undefined {
-  if ("parsed" in ix && ix.program === "system") {
-    try {
-      switch (ix.parsed.type) {
-        case "transfer":
-          return create(ix.parsed.info, TransferInfo);
-        case "transferWithSeed":
-          return create(ix.parsed.info, TransferWithSeedInfo);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }
-}
 
 function onChainTxToOperation(
   txDetails: TransactionDetails,
