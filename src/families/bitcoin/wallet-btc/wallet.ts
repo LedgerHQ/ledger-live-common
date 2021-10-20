@@ -133,6 +133,7 @@ class BitcoinLikeWallet {
       )
     );
     let balance = new BigNumber(0);
+    log("btcwallet", "estimateAccountMaxSpendable utxos", utxos);
     utxos.forEach((utxo) => {
       if (
         !excludeUTXOs.find(
@@ -155,6 +156,8 @@ class BitcoinLikeWallet {
         account.xpub.crypto,
         account.xpub.derivationMode
       );
+    log("btcwallet", "estimateAccountMaxSpendable balance", balance);
+    log("btcwallet", "estimateAccountMaxSpendable fees", fees);
     const maxSpendable = balance.minus(fees);
     return maxSpendable.lt(0) ? new BigNumber(0) : maxSpendable;
   }
