@@ -93,117 +93,78 @@ function onChainTxToOperation(
   accountId: string,
   accountAddress: string
 ): Operation | undefined {
-  const blockTime = txDetails.info.blockTime;
-
-  if (!blockTime) {
+  if (!txDetails.info.blockTime) {
     return undefined;
   }
 
-  if (txDetails.info.err) {
+  if (!txDetails.parsed.meta) {
     return undefined;
   }
 
-  const internalTransferOperations =
-    txDetails.parsed.transaction.message.instructions.reduce(
-      (acc, ix, ixIndex) => {
-        const transferInfo = tryParseAsTransferIxInfo(ix);
-        if (transferInfo !== undefined) {
-          if (
-            accountAddress === transferInfo.source ||
-            accountAddress === transferInfo.destination
-          ) {
-            const ixHash = `${txDetails.info.signature}:ix:${ixIndex}`;
-            const transferDirection =
-              accountAddress === transferInfo.source ? "OUT" : "IN";
-            const ixId = encodeOperationId(
-              accountId,
-              ixHash,
-              transferDirection
-            );
-            const ixLamports = new BigNumber(transferInfo.lamports);
-            acc.push({
-              id: ixId,
-              hash: ixHash,
-              accountId,
-              date: new Date(blockTime * 1000),
-              senders: [transferInfo.source],
-              recipients: [transferInfo.destination],
-              type: transferDirection,
-              // TODO: double check if block height === slot here
-              blockHeight: txDetails.info.slot,
-              // TODO: aslo double check that
-              blockHash: txDetails.parsed.transaction.message.recentBlockhash,
-              extra: {
-                memo: txDetails.info.memo,
-              },
-              // fee is actually lamports _per_ signature, is it multiplied in meta.fee ?
-              fee: new BigNumber(0),
-              //value: transferDirection === "OUT" ? txLamports.plus(fee) : txLamports,
-              value: ixLamports,
-            });
-          } else {
-            // ignore for now non transfer ops
-          }
+  const accountIndex =
+    txDetails.parsed.transaction.message.accountKeys.findIndex(
+      (pma) => pma.pubkey.toBase58() === accountAddress
+    );
+
+  if (accountIndex < 0) {
+    return undefined;
+  }
+
+  const { preBalances, postBalances } = txDetails.parsed.meta;
+
+  const balanceDelta = new BigNumber(postBalances[accountIndex]).minus(
+    new BigNumber(preBalances[accountIndex])
+  );
+
+  const txDirection = balanceDelta.lt(0)
+    ? "OUT"
+    : balanceDelta.gt(0)
+    ? "IN"
+    : "NONE";
+
+  const { senders, recipients } =
+    txDetails.parsed.transaction.message.accountKeys.reduce(
+      (acc, account, i) => {
+        const balanceDelta = new BigNumber(postBalances[i]).minus(
+          new BigNumber(preBalances[i])
+        );
+        if (balanceDelta.lt(0)) {
+          acc.senders.push(account.pubkey.toBase58());
+        } else if (balanceDelta.gt(0)) {
+          acc.recipients.push(account.pubkey.toBase58());
         }
         return acc;
       },
-      [] as Operation[]
+      {
+        senders: [] as string[],
+        recipients: [] as string[],
+      }
     );
-
-  if (internalTransferOperations.length === 0) {
-    return undefined;
-  }
-
-  const transferSummary = internalTransferOperations.reduce(
-    (summary, op) => {
-      summary.senders.add(op.senders[0]);
-      summary.recipients.add(op.recipients[0]);
-      return {
-        ...summary,
-        in: op.type === "IN" ? summary.in.plus(op.value) : summary.in,
-        out: op.type === "OUT" ? summary.out.plus(op.value) : summary.out,
-      };
-    },
-    {
-      in: new BigNumber(0),
-      out: new BigNumber(0),
-      senders: new Set<string>(),
-      recipients: new Set<string>(),
-    }
-  );
-
-  const txHash = txDetails.info.signature;
 
   // TODO: might not be accurate
   const isFeePayer =
     txDetails.parsed.transaction.message.accountKeys[0].pubkey.toBase58() ===
     accountAddress;
-  // TODO: check if signer is account address
 
-  const fee = new BigNumber(isFeePayer ? txDetails.parsed.meta?.fee ?? 0 : 0);
+  const fee = new BigNumber(isFeePayer ? txDetails.parsed.meta.fee : 0);
 
-  const totalDelta = transferSummary.in.minus(transferSummary.out).minus(fee);
-
-  const transferDirection = totalDelta.lte(0) ? "OUT" : "IN";
-
+  const txHash = txDetails.info.signature;
   return {
-    id: encodeOperationId(accountId, txHash, transferDirection),
+    id: txHash,
     hash: txHash,
     accountId,
-    date: new Date(blockTime * 1000),
-    senders: [...transferSummary.senders],
-    recipients: [...transferSummary.recipients],
-    type: transferDirection,
-    // TODO: double check if block height === slot here
+    hasFailed: !!txDetails.info.err,
     blockHeight: txDetails.info.slot,
-    // TODO: aslo double check that
     blockHash: txDetails.parsed.transaction.message.recentBlockhash,
-    extra: {},
-    // fee is actually lamports _per_ signature, is it multiplied in meta.fee ?
+    extra: {
+      memo: txDetails.info.memo,
+    },
+    type: txDirection,
+    senders,
+    recipients,
+    date: new Date(txDetails.info.blockTime * 1000),
+    value: balanceDelta.abs().minus(fee),
     fee,
-    subOperations: internalTransferOperations,
-    //value: transferDirection === "OUT" ? txLamports.plus(fee) : txLamports,
-    value: totalDelta.abs(),
   };
 }
 
