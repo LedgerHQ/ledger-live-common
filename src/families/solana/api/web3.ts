@@ -142,7 +142,6 @@ function onChainTxToOperation(
       }
     );
 
-  // TODO: might not be accurate, check cli
   const isFeePayer =
     txDetails.parsed.transaction.message.accountKeys[0].pubkey.toBase58() ===
     accountAddress;
@@ -151,15 +150,12 @@ function onChainTxToOperation(
 
   const instructionNames =
     txDetails.parsed.transaction.message.instructions.map((ix) => {
-      const undefinedName = "Unknown";
-      const ixNames: [string, string] =
+      const [programName, typeName] =
         "parsed" in ix
-          ? [ix.program, ix.parsed?.type ?? undefinedName]
-          : (parseIxNames(ix).map((name) => name ?? undefinedName) as [
-              string,
-              string
-            ]);
-      return ixNames.join(" :: ");
+          ? [ix.program, ix.parsed?.type as string | undefined]
+          : parseIxNames(ix);
+
+      return `${programName || "Unknown"}${typeName ? `.${typeName}` : ""}`;
     });
 
   const txHash = txDetails.info.signature;
@@ -172,7 +168,7 @@ function onChainTxToOperation(
     blockHash: txDetails.parsed.transaction.message.recentBlockhash,
     extra: {
       memo: txDetails.info.memo ?? undefined,
-      instructions: instructionNames.join("\n"),
+      instructions: instructionNames.join(", "),
     },
     type: txDirection,
     senders,
