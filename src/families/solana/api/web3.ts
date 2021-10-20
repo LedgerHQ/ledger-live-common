@@ -36,7 +36,6 @@ export const getAccount = async (address: string) => {
 
   const balance = new BigNumber(balanceLamportsWithContext.value);
   const spendableBalance = BigNumber.max(balance.minus(lamportPerSignature), 0);
-  // how to get the block height for the account
   const blockHeight = balanceLamportsWithContext.context.slot;
 
   return {
@@ -262,7 +261,6 @@ export const buildTransferTransaction = async ({
   const fromPublicKey = new PublicKey(fromAddress);
   const toPublicKey = new PublicKey(toAddress);
 
-  // TODO: move to broadcast ?
   const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
 
   const onChainTx = new Transaction({

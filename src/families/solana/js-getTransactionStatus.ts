@@ -34,7 +34,7 @@ const getTransactionStatus = async (
   } else if (!isAddressValid(t.recipient)) {
     errors.recipient = new InvalidAddress();
   } else if (!(await checkRecipientExist(t.recipient))) {
-    // the message seems to be ignored though
+    // TODO: the message seems to be ignored though
     const error = new NotEnoughBalanceBecauseDestinationNotCreated(
       "Recipient account is not created"
     );
@@ -44,8 +44,6 @@ const getTransactionStatus = async (
       warnings.recipient = error;
     }
   }
-
-  // TODO: check if acc is multi sign
 
   if (t.fees === undefined || t.fees.lt(0)) {
     errors.fees = new FeeNotLoaded();

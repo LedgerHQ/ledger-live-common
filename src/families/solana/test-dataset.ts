@@ -198,7 +198,6 @@ const dataset: DatasetTest<Transaction> = {
                 totalSpent: zero,
               },
             },
-            // TODO: check recipient exists ?
           ],
         },
       ],
