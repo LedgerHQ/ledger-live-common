@@ -16,6 +16,7 @@ import { NetworkInfo } from "../types";
 
 import { create, type, string, number, Infer } from "superstruct";
 import { encodeOperationId } from "../../../operation";
+import { parseIxNames } from "./instructions/parser";
 
 const isDevMode = true;
 const conn2 = new Connection(
@@ -141,12 +142,25 @@ function onChainTxToOperation(
       }
     );
 
-  // TODO: might not be accurate
+  // TODO: might not be accurate, check cli
   const isFeePayer =
     txDetails.parsed.transaction.message.accountKeys[0].pubkey.toBase58() ===
     accountAddress;
 
   const fee = new BigNumber(isFeePayer ? txDetails.parsed.meta.fee : 0);
+
+  const instructionNames =
+    txDetails.parsed.transaction.message.instructions.map((ix) => {
+      const undefinedName = "Unknown";
+      const ixNames: [string, string] =
+        "parsed" in ix
+          ? [ix.program, ix.parsed?.type ?? undefinedName]
+          : (parseIxNames(ix).map((name) => name ?? undefinedName) as [
+              string,
+              string
+            ]);
+      return ixNames.join(" :: ");
+    });
 
   const txHash = txDetails.info.signature;
   return {
@@ -157,7 +171,8 @@ function onChainTxToOperation(
     blockHeight: txDetails.info.slot,
     blockHash: txDetails.parsed.transaction.message.recentBlockhash,
     extra: {
-      memo: txDetails.info.memo,
+      memo: txDetails.info.memo ?? undefined,
+      instructions: instructionNames.join("\n"),
     },
     type: txDirection,
     senders,
