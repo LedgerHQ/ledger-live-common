@@ -117,7 +117,7 @@ function onChainTxToOperation(
     new BigNumber(preBalances[accountIndex])
   );
 
-  const txDirection = balanceDelta.lt(0)
+  const txType = balanceDelta.lt(0)
     ? "OUT"
     : balanceDelta.gt(0)
     ? "IN"
@@ -170,7 +170,7 @@ function onChainTxToOperation(
       memo: txDetails.info.memo ?? undefined,
       instructions: instructionNames.join(", "),
     },
-    type: txDirection,
+    type: txType,
     senders,
     recipients,
     date: new Date(txDetails.info.blockTime * 1000),
