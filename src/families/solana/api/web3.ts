@@ -144,13 +144,15 @@ async function* getSuccessfullTransactionsDetailsBatched(
   pubKey: PublicKey,
   untilTxSignature?: string
 ): AsyncGenerator<TransactionDetails[], void, unknown> {
+  // TODO: double check with Ledger team - last 1000 operations is a sane limit
   const signatures = await conn.getSignaturesForAddress(pubKey, {
     until: untilTxSignature,
     limit: 1000,
   });
 
-  //TODO: check if payload for 1000 txs is > 50kb
-  const batchSize = 1000;
+  // max req payload is 50K, around 200 transactions atm
+  // requesting 100 at a time to give some space for payload to change in future
+  const batchSize = 100;
 
   for (const signaturesInfoBatch of chunk(signatures, batchSize)) {
     const transactions = await conn.getParsedConfirmedTransactions(
