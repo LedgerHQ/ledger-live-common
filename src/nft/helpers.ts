@@ -1,14 +1,13 @@
 import eip55 from "eip55";
 import BigNumber from "bignumber.js";
-import { NFT, NFTWithMetadata, Operation } from "../types";
+import { NFT, Operation } from "../types";
 
-type AnyNFT = NFT | NFTWithMetadata;
-type Collection = NFT["collection"] | NFTWithMetadata["collection"];
+type Collection = NFT["collection"];
 
 type CollectionMap<C> = Record<string, C>;
 
 export type CollectionWithNFT = Collection & {
-  nfts: Array<Omit<AnyNFT, "collection">>;
+  nfts: Array<Omit<NFT, "collection">>;
 };
 
 export const nftsFromOperations = (ops: Operation[]): NFT[] => {
@@ -50,7 +49,7 @@ export const nftsFromOperations = (ops: Operation[]): NFT[] => {
 };
 
 export const nftsByCollections = (
-  nfts: AnyNFT[] = [],
+  nfts: NFT[] = [],
   collectionAddress?: string
 ): CollectionWithNFT[] => {
   const filteredNfts = collectionAddress
@@ -58,7 +57,7 @@ export const nftsByCollections = (
     : nfts;
 
   const collectionMap = filteredNfts.reduce(
-    (acc: CollectionMap<CollectionWithNFT>, nft: AnyNFT) => {
+    (acc: CollectionMap<CollectionWithNFT>, nft: NFT) => {
       const { collection, ...nftWithoutCollection } = nft;
 
       if (!acc[collection.contract]) {

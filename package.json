@@ -90,7 +90,6 @@
     "cbor": "^8.0.2",
     "coininfo": "^5.1.0",
     "crypto-js": "^4.1.1",
-    "dataloader": "^2.0.0",
     "eip55": "^2.1.0",
     "eth-sig-util": "3.0.1",
     "ethereumjs-abi": "^0.6.8",

@@ -36,19 +36,3 @@ export type NFTMetadataResponse = {
     links: Record<NFTMetadataLinksProviders, string>;
   } | null;
 };
-
-export type NFTWithMetadata = NFT & {
-  // Nft name (from metadata)
-  nftName: string | null;
-  // url
-  picture: string | null;
-  /** @warning we don't know if it's going to be the nft description or collection description */
-  description: string | null;
-  // Array of properties (as trait name are not unique so it can't be a simple Object)
-  // based on the OpenSea standard: https://docs.opensea.io/docs/metadata-standards
-  properties: Array<Record<string, string>> | null;
-  collection: Pick<NFT, "collection"> & {
-    // Name of the collection
-    tokenName: string | null;
-  };
-};

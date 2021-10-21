@@ -36,7 +36,6 @@ import type {
   CryptoCurrency,
   DerivationMode,
   NFT,
-  NFTWithMetadata,
 } from "../types";
 import type { CurrencyBridge, AccountBridge } from "../types/bridge";
 import getAddress from "../hw/getAddress";
@@ -120,15 +119,16 @@ Operation[] {
 }
 
 export const mergeNfts = (
-  oldNfts: NFT[] | NFTWithMetadata[] | undefined,
-  newNfts: NFT[] | NFTWithMetadata[] | undefined
-): NFT[] | NFTWithMetadata[] => {
+  oldNfts: NFT[] | undefined,
+  newNfts: NFT[] | undefined
+): NFT[] => {
   if (!newNfts?.length) return oldNfts ?? [];
 
   // Getting a map of id => NFT
-  const newNftsPerId: Record<string, NFT | NFTWithMetadata> = (
-    newNfts as Array<NFT | NFTWithMetadata>
-  ).reduce((acc, curr) => setWith(acc, curr.id, curr, Object), {});
+  const newNftsPerId: Record<string, NFT> = (newNfts as NFT[]).reduce(
+    (acc, curr) => setWith(acc, curr.id, curr, Object),
+    {}
+  );
 
   // copying the argument to avoid mutating it
   const nfts = oldNfts?.slice() ?? [];
