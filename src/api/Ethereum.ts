@@ -209,8 +209,7 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
     async getNFTMetadata(input) {
       const { data }: { data: NFTMetadataResponse[] } = await network({
         method: "POST",
-        /** @important FIXME: metadata are mocked while we are waiting for the API */
-        url: "https://mock-nft-metadata-api.vercel.app/v1/chains/eth/contracts/tokens/infos",
+        url: getEnv("NFT_ETH_METADATA_SERVICE"),
         data: input,
       });
 

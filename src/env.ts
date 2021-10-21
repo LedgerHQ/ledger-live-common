@@ -381,6 +381,11 @@ const envDefinitions = {
     parser: boolParser,
     desc: "synchronizing nfts",
   },
+  NFT_ETH_METADATA_SERVICE: {
+    def: "https://nft.staging.aws.ledger.fr/v1/ethereum/1/contracts/tokens/infos",
+    parser: stringParser,
+    desc: "service uri used to get the metadata of an nft",
+  },
   OPERATION_ADDRESSES_LIMIT: {
     def: 100,
     parser: intParser,
