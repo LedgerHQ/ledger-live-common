@@ -54,4 +54,5 @@ setSupportedCurrencies([
   "crypto_org_croeseid",
   "crypto_org",
   "filecoin",
+  "solana",
 ]);
