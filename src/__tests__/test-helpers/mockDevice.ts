@@ -20,9 +20,12 @@ export function releaseMockDevice(id: string) {
     delete transports[id];
   }
 }
-export async function mockDeviceWithAPDUs(apdus: string) {
+export async function mockDeviceWithAPDUs(
+  apdus: string,
+  opts?: { autoSkipUnknownApdu: boolean }
+) {
   const id = `mock:${++idCounter}`;
-  const store = RecordStore.fromString(apdus, { autoSkipUnknownApdu: true });
+  const store = RecordStore.fromString(apdus, opts);
   recordStores[id] = store;
   transports[id] = await openTransportReplayer(store);
   return id;
