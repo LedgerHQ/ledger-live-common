@@ -369,7 +369,7 @@ export const makeScanAccounts =
                 });
                 derivationsCache[freshAddressPath] = res;
               }
-
+              log("scanAccounts", "derivationsCache", res);
               const account = await stepAccount(
                 index,
                 res,
