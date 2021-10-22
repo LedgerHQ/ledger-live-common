@@ -12,8 +12,8 @@ type ExtendedXHRConfig = AxiosRequestConfig & { metadata?: Metadata };
 export const requestInterceptor = (
   request: AxiosRequestConfig
 ): ExtendedXHRConfig => {
-  const { url, method = "", data } = request;
-  log("network", `${method} ${url}`, { data });
+  const { baseURL, url, method = "", data } = request;
+  log("network", `${method} ${baseURL || ""}${url}`, { data });
 
   // $FlowFixMe (LLD side)
   const req: ExtendedXHRConfig = request;
@@ -30,26 +30,24 @@ export const responseInterceptor = (
     config: ExtendedXHRConfig;
   } & AxiosResponse<any>
 ) => {
-  const { url, method = "", metadata } = response.config;
+  const { baseURL, url, method = "", metadata } = response.config;
   const { startTime = 0 } = metadata || {};
 
   log(
     "network-success",
-    `${response.status} ${method} ${url} (${(Date.now() - startTime).toFixed(
-      0
-    )}ms)`,
+    `${response.status} ${method} ${baseURL || ""}${url} (${(
+      Date.now() - startTime
+    ).toFixed(0)}ms)`,
     getEnv("DEBUG_HTTP_RESPONSE") ? { data: response.data } : undefined
   );
 
   return response;
 };
 
-export const errorInterceptor = (
-  error: {
-    config: ExtendedXHRConfig;
-  } & AxiosError<any>
-) => {
-  const { url, method = "", metadata } = error.config;
+export const errorInterceptor = (error: AxiosError<any>) => {
+  const config = error?.response?.config as ExtendedXHRConfig | null;
+  if (!config) throw error;
+  const { baseURL, url, method = "", metadata } = config;
   const { startTime = 0 } = metadata || {};
 
   let errorToThrow;
@@ -75,16 +73,18 @@ export const errorInterceptor = (
     }
     log(
       "network-error",
-      `${status} ${method} ${url} (${(Date.now() - startTime).toFixed(0)}ms): ${
-        errorToThrow.message
-      }`,
+      `${status} ${method} ${baseURL || ""}${url} (${(
+        Date.now() - startTime
+      ).toFixed(0)}ms): ${errorToThrow.message}`,
       getEnv("DEBUG_HTTP_RESPONSE") ? { data: data } : {}
     );
     throw errorToThrow;
   } else if (error.request) {
     log(
       "network-down",
-      `DOWN ${method} ${url} (${(Date.now() - startTime).toFixed(0)}ms)`
+      `DOWN ${method} ${baseURL || ""}${url} (${(
+        Date.now() - startTime
+      ).toFixed(0)}ms)`
     );
     throw new NetworkDown();
   }
@@ -110,9 +110,12 @@ const makeError = (msg, status, url, method) => {
 const getErrorMessage = (
   data: Record<string, any>
 ): string | null | undefined => {
-  return (
-    data.cause || data.error_message || data.error || data.message || data.msg
-  );
+  if (!data) return "";
+  if (typeof data === "string") return data;
+  if (data.errors) {
+    return getErrorMessage(data.errors[0]);
+  }
+  return data.message || data.error_message || data.error || data.msg;
 };
 
 const extractErrorMessage = (raw: string): string | undefined => {
