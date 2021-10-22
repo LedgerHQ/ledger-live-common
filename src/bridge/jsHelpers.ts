@@ -380,6 +380,7 @@ export const makeScanAccounts =
               // Bitcoin needs to compute the freshAddressPath itself,
               // so we update it afterwards
               if (account?.freshAddressPath) {
+                res.address = account.freshAddress;
                 derivationsCache[account.freshAddressPath] = res;
               }
               log("scanAccounts", "derivationsCache", res);
