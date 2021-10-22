@@ -1,5 +1,8 @@
-import { MARKETS } from "@project-serum/serum";
+//import { MARKETS } from "@project-serum/serum";
 import { TransactionInstruction } from "@solana/web3.js";
+
+// TODO: do we need to bring the whole package just for the markets list?
+const MARKETS: any[] = [];
 
 const SERUM_PROGRAM_IDS = [
   "4ckmDgGdxQoPDLUkDT3vHgSAkzA3QRdNq5ywwY4sUSJn",

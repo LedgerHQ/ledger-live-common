@@ -1,5 +1,14 @@
-import { Config } from "@blockworks-foundation/mango-client";
+//import { Config } from "@blockworks-foundation/mango-client";
 import { TransactionInstruction } from "@solana/web3.js";
+
+// TODO: do we need to bring the whole package just for the config list?
+const Config = {
+  ids: () => {
+    return {
+      groups: [] as any[],
+    };
+  },
+};
 
 // note: mainnet.1 suffices since its a superset of mainnet.0
 const mangoGroups = Config.ids().groups.filter(
