@@ -246,10 +246,7 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
       // eslint-disable-next-line no-param-reassign
       output.block_height = tx.block ? tx.block.height : null;
       // Definition of replaceable, per the standard: https://github.com/bitcoin/bips/blob/61ccc84930051e5b4a99926510d0db4a8475a4e6/bip-0125.mediawiki#summary
-      // eslint-disable-next-line no-param-reassign
-      output.rbf = !!(
-        tx.inputs[0]?.sequence && tx.inputs[0].sequence < 0xffffffff
-      );
+      output.rbf = tx.inputs[0].sequence < 0xffffffff;
     });
   }
 
