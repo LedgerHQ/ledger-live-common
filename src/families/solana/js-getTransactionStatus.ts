@@ -4,14 +4,25 @@ import {
   FeeNotLoaded,
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
-  NotEnoughBalanceBecauseDestinationNotCreated,
   RecipientRequired,
   AmountRequired,
   FeeTooHigh,
 } from "@ledgerhq/errors";
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
-import { checkRecipientExist, isAddressValid } from "./logic";
+import {
+  checkRecipientExist,
+  isAccountNotFunded,
+  isValidBase58Address,
+  isEd25519Address,
+  MAX_MEMO_LENGTH,
+} from "./logic";
+import {
+  SolanaAccountNotFunded,
+  SolanaAccountNotFound,
+  SolanaAddressOffEd25519,
+  SolanaMemoIsTooLong,
+} from "./errors";
 
 const getTransactionStatus = async (
   a: Account,
@@ -31,18 +42,25 @@ const getTransactionStatus = async (
     errors.recipient = new RecipientRequired();
   } else if (a.freshAddress === t.recipient) {
     errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
-  } else if (!isAddressValid(t.recipient)) {
+  } else if (!isValidBase58Address(t.recipient)) {
     errors.recipient = new InvalidAddress();
+  } else if (!isEd25519Address(t.recipient)) {
+    errors.recipient = new SolanaAddressOffEd25519();
   } else if (!(await checkRecipientExist(t.recipient))) {
-    // TODO: the message seems to be ignored though
-    const error = new NotEnoughBalanceBecauseDestinationNotCreated(
-      "Recipient account is not created"
-    );
-    if (!t.allowNotCreatedRecipient) {
-      errors.recipient = error;
-    } else {
+    const error = new SolanaAccountNotFound();
+    if (t.allowNotCreatedRecipient) {
       warnings.recipient = error;
+    } else {
+      errors.recipient = error;
     }
+  } else if (await isAccountNotFunded(t.recipient)) {
+    warnings.recipient = new SolanaAccountNotFunded();
+  }
+
+  if (t.memo && t.memo.length > MAX_MEMO_LENGTH) {
+    errors.memo = errors.memo = new SolanaMemoIsTooLong(undefined, {
+      maxLength: MAX_MEMO_LENGTH,
+    });
   }
 
   if (t.fees === undefined || t.fees.lt(0)) {

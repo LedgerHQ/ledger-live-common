@@ -16,8 +16,12 @@ import { NetworkInfo } from "../types";
 import { parseIxNames } from "./instructions/parser";
 
 // https fails with "certificate has expired atm"
-//const conn = new Connection(clusterApiUrl("devnet"), "finalized");
+//const conn = new Connection(clusterApiUrl("mainnet-beta"), "finalized");
 const conn = new Connection("http://api.devnet.solana.com", "finalized");
+//
+
+export const getBalance = (address: string) =>
+  conn.getBalance(new PublicKey(address));
 
 export const getAccount = async (address: string) => {
   const pubKey = new PublicKey(address);

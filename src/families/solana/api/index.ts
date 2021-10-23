@@ -5,4 +5,6 @@ export {
   buildTransferTransaction,
   addSignatureToTransaction,
   broadcastTransaction,
+  getBalance,
+  checkOnChainAccountExists,
 } from "./web3";
