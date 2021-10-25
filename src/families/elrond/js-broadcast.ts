@@ -15,7 +15,7 @@ const broadcast = async ({
     operation,
     signature,
   });
-  
+
   return patchOperationWithHash(operation, hash);
 };
 

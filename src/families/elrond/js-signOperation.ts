@@ -12,7 +12,7 @@ import { getNonce } from "./logic";
 const buildOptimisticOperation = (
   account: Account,
   transaction: Transaction,
-  fee: BigNumber,
+  fee: BigNumber
 ): Operation => {
   const type = "OUT";
   const value = new BigNumber(transaction.amount);
@@ -29,7 +29,7 @@ const buildOptimisticOperation = (
     accountId: account.id,
     transactionSequenceNumber: getNonce(account),
     date: new Date(),
-    extra: { }
+    extra: {},
   };
   return operation;
 };
@@ -58,10 +58,7 @@ const signOperation = ({
         const elrond = new Elrond(transport);
         await elrond.setAddress(account.freshAddressPath);
 
-        const unsigned = await buildTransaction(
-          account,
-          transaction,
-        );
+        const unsigned = await buildTransaction(account, transaction);
 
         o.next({
           type: "device-signature-requested",
@@ -80,7 +77,7 @@ const signOperation = ({
         const operation = buildOptimisticOperation(
           account,
           transaction,
-          transaction.fees ?? new BigNumber(0),
+          transaction.fees ?? new BigNumber(0)
         );
         o.next({
           type: "signed",
