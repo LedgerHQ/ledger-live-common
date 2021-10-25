@@ -10,7 +10,7 @@ import { formatCurrencyUnit } from "../../currencies";
 
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
-  const { networkInfo, fees, family, memo, allowNotCreatedRecipient } = tr;
+  const { networkInfo, fees, family, memo, allowNotFundedRecipient } = tr;
   return {
     ...common,
     fees: fees === undefined ? undefined : new BigNumber(fees),
@@ -20,13 +20,13 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     },
     family,
     memo,
-    allowNotCreatedRecipient,
+    allowNotFundedRecipient,
   };
 };
 
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
-  const { networkInfo, family, fees, memo, allowNotCreatedRecipient } = t;
+  const { networkInfo, family, fees, memo, allowNotFundedRecipient } = t;
   return {
     ...common,
     fees: fees && fees.toString(),
@@ -36,7 +36,7 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
     },
     family: t.family,
     memo,
-    allowNotCreatedRecipient,
+    allowNotFundedRecipient,
   };
 };
 
@@ -55,7 +55,7 @@ export const formatTransaction = (
     `SEND ${t.useAllAmount ? "MAX" : lamportsToSOL(mainAccount, t.amount)}`,
     `TO ${t.recipient}`,
     t.memo ? `MEMO ${t.memo}` : "",
-    t.allowNotCreatedRecipient ? "ALLOW NOT CREATED RECIPIENT: TRUE" : "",
+    t.allowNotFundedRecipient ? "ALLOW NOT CREATED RECIPIENT: TRUE" : "",
   ]
     .filter(Boolean)
     .join("\n");

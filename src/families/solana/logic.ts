@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { checkOnChainAccountExists, getBalance } from "./api";
+import { getBalance } from "./api";
 
 export const MAX_MEMO_LENGTH = 500;
 
@@ -15,8 +15,6 @@ export const isValidBase58Address = (address: string) => {
 export const isEd25519Address = (address: string) => {
   return PublicKey.isOnCurve(new PublicKey(address).toBytes());
 };
-
-export const checkRecipientExist = checkOnChainAccountExists;
 
 export const isAccountNotFunded = async (address: string) =>
   (await getBalance(address)) <= 0;

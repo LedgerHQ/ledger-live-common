@@ -207,11 +207,6 @@ export const getOperations = async (
   return operations;
 };
 
-export const checkOnChainAccountExists = async (address: string) => {
-  const pubKey = new PublicKey(address);
-  return !!(await conn.getAccountInfo(pubKey));
-};
-
 export const buildTransferTransaction = async ({
   fromAddress,
   toAddress,

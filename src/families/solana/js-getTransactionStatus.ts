@@ -11,7 +11,6 @@ import {
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
 import {
-  checkRecipientExist,
   isAccountNotFunded,
   isValidBase58Address,
   isEd25519Address,
@@ -19,7 +18,6 @@ import {
 } from "./logic";
 import {
   SolanaAccountNotFunded,
-  SolanaAccountNotFound,
   SolanaAddressOffEd25519,
   SolanaMemoIsTooLong,
 } from "./errors";
@@ -46,15 +44,13 @@ const getTransactionStatus = async (
     errors.recipient = new InvalidAddress();
   } else if (!isEd25519Address(t.recipient)) {
     errors.recipient = new SolanaAddressOffEd25519();
-  } else if (!(await checkRecipientExist(t.recipient))) {
-    const error = new SolanaAccountNotFound();
-    if (t.allowNotCreatedRecipient) {
+  } else if (await isAccountNotFunded(t.recipient)) {
+    const error = new SolanaAccountNotFunded();
+    if (t.allowNotFundedRecipient) {
       warnings.recipient = error;
     } else {
       errors.recipient = error;
     }
-  } else if (await isAccountNotFunded(t.recipient)) {
-    warnings.recipient = new SolanaAccountNotFunded();
   }
 
   if (t.memo && t.memo.length > MAX_MEMO_LENGTH) {

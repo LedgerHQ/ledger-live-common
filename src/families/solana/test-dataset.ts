@@ -13,7 +13,7 @@ import {
   NotEnoughBalance,
 } from "@ledgerhq/errors";
 import {
-  SolanaAccountNotFound,
+  SolanaAccountNotFunded,
   SolanaAddressOffEd25519,
   SolanaMemoIsTooLong,
 } from "./errors";
@@ -209,7 +209,7 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "status is error: account not found without allowNotCreatedRecipient",
+              name: "status is error: account not funded without allowNotFundedRecipient",
               transaction: {
                 amount: new BigNumber(1),
                 recipient: testOnChainData.nonExistingAddress,
@@ -218,7 +218,7 @@ const dataset: DatasetTest<Transaction> = {
               },
               expectedStatus: {
                 errors: {
-                  recipient: new SolanaAccountNotFound(),
+                  recipient: new SolanaAccountNotFunded(),
                 },
                 warnings: {},
                 estimatedFees: zero,
@@ -227,18 +227,18 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "status is warning: account not found with allowNotCreatedRecipient",
+              name: "status is warning: account not funded with allowNotFundedRecipient",
               transaction: {
                 amount: new BigNumber(1),
                 recipient: testOnChainData.nonExistingAddress,
-                allowNotCreatedRecipient: true,
+                allowNotFundedRecipient: true,
                 fees: new BigNumber(10),
                 family: "solana",
               },
               expectedStatus: {
                 errors: {},
                 warnings: {
-                  recipient: new SolanaAccountNotFound(),
+                  recipient: new SolanaAccountNotFunded(),
                 },
                 estimatedFees: zero,
                 amount: zero,

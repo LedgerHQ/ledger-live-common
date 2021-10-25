@@ -1,9 +1,5 @@
 import { createCustomErrorClass } from "@ledgerhq/errors";
 
-export const SolanaAccountNotFound = createCustomErrorClass(
-  "SolanaAccountNotFound"
-);
-
 export const SolanaAccountNotFunded = createCustomErrorClass(
   "SolanaAccountNotFunded"
 );
