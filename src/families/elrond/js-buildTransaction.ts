@@ -13,12 +13,11 @@ import BigNumber from "bignumber.js";
 export const buildTransaction = async (
   a: Account,
   t: Transaction,
-  signUsingHash = true
 ) => {
   const address = a.freshAddress;
   const nonce = getNonce(a);
   const { gasPrice, gasLimit, chainId } = await getNetworkConfig();
-  const transactionType = signUsingHash ? HASH_TRANSACTION : RAW_TRANSACTION;
+ 
   const unsigned = {
     nonce,
     value: t.useAllAmount
@@ -29,7 +28,7 @@ export const buildTransaction = async (
     gasPrice,
     gasLimit,
     chainID: chainId,
-    ...transactionType,
+    ...HASH_TRANSACTION,
   };
   // Will likely be a call to Elrond SDK
   return JSON.stringify(unsigned);
