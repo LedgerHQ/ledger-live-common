@@ -231,7 +231,7 @@ const dataset: DatasetTest<Transaction> = {
               transaction: {
                 amount: new BigNumber(1),
                 recipient: testOnChainData.nonExistingAddress,
-                allowNotFundedRecipient: true,
+                allowUnFundedRecipient: true,
                 fees: new BigNumber(10),
                 family: "solana",
               },

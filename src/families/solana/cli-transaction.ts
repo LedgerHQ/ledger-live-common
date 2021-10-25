@@ -8,6 +8,16 @@ const options = [
     type: String,
     desc: "mode of transaction: send",
   },
+  {
+    name: "memo",
+    type: String,
+    desc: "transaction note",
+  },
+  {
+    name: "allow-unfunded-recipient",
+    type: String,
+    desc: "wether allow or not transfer to zero balance account",
+  },
 ];
 
 function inferTransactions(
@@ -18,7 +28,11 @@ function inferTransactions(
   invariant(mode === "send", "Only send mode is supported");
   return flatMap(transactions, ({ transaction, account }) => {
     invariant(transaction.family === "solana", "solana family");
-    return transaction;
+    return {
+      ...transaction,
+      memo: opts.memo,
+      allowUnFundedRecipient: opts["allow-unfunded-recipient"] !== undefined,
+    };
   });
 }
 export default {

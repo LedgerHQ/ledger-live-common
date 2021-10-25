@@ -46,7 +46,7 @@ const getTransactionStatus = async (
     errors.recipient = new SolanaAddressOffEd25519();
   } else if (await isAccountNotFunded(t.recipient)) {
     const error = new SolanaAccountNotFunded();
-    if (t.allowNotFundedRecipient) {
+    if (t.allowUnFundedRecipient) {
       warnings.recipient = error;
     } else {
       errors.recipient = error;
