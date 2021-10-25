@@ -1,7 +1,6 @@
 import network from "../../../network";
 import {
   HASH_TRANSACTION,
-  RAW_TRANSACTION,
   METACHAIN_SHARD,
   TRANSACTIONS_SIZE,
 } from "../constants";
