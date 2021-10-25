@@ -7,7 +7,7 @@ import { open, close } from "../../hw";
 import { encodeOperationId } from "../../operation";
 import Elrond from "./hw-app-elrond";
 import { buildTransaction } from "./js-buildTransaction";
-import { getNonce, compareVersions } from "./logic";
+import { getNonce } from "./logic";
 
 const buildOptimisticOperation = (
   account: Account,
