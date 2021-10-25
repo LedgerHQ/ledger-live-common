@@ -3,17 +3,23 @@ import { from } from "rxjs";
 import secp256k1 from "secp256k1";
 import { TransportStatusError, WrongDeviceForAccount } from "@ledgerhq/errors";
 import { delay } from "../../promise";
-import ExchangeTransport from "../hw-app-exchange/Exchange";
+import ExchangeTransport, {
+  TRANSACTION_TYPES,
+} from "../hw-app-exchange/Exchange";
 import perFamily from "../../generated/exchange";
 import { getAccountCurrency, getMainAccount } from "../../account";
 import { getAccountBridge } from "../../bridge";
 import { TransactionRefusedOnDevice } from "../../errors";
-import type { CompleteExchangeRequestEvent, Exchange } from "./types";
+
 import { Observable } from "rxjs";
 import { withDevice } from "../../hw/deviceAccess";
-import { getProviderNameAndSignature } from "./";
+
 import { getCurrencyExchangeConfig } from "../";
-import { Transaction } from "../../types";
+import type { Transaction } from "../../types";
+import type { CompleteExchangeRequestEvent, Exchange } from "./types";
+
+import { getProviderNameAndSignature as getProviderNameAndSignatureSwap } from "../swap";
+import { getProvider as getProviderNameAndSignatureSell } from "../sell";
 
 const withDevicePromise = (deviceId, fn) =>
   withDevice(deviceId)((transport) => from(fn(transport))).toPromise();
@@ -29,6 +35,27 @@ type CompleteExchangeInput = {
   rateType: number;
 };
 
+const getProviderNameAndSignature =
+  (exchangeType: number) => (provider: string) => {
+    switch (exchangeType) {
+      case TRANSACTION_TYPES.SWAP:
+        return getProviderNameAndSignatureSwap(provider);
+
+      case TRANSACTION_TYPES.SELL:
+        return getProviderNameAndSignatureSell(provider);
+    }
+  };
+
+const getGoodSignature = (exchangeType: number) => (signature: string) => {
+  switch (exchangeType) {
+    case TRANSACTION_TYPES.SWAP:
+      return <Buffer>secp256k1.signatureExport(Buffer.from(signature, "hex"));
+
+    case TRANSACTION_TYPES.SELL:
+      return Buffer.from(signature, "base64");
+  }
+};
+
 const completeExchange = (
   input: CompleteExchangeInput
 ): Observable<CompleteExchangeRequestEvent> => {
@@ -41,7 +68,7 @@ const completeExchange = (
     binaryPayload,
     signature,
     exchangeType,
-    rateType = 0x00, // TODO Pass fixed/float for UI switch ?
+    rateType, // TODO Pass fixed/float for UI switch ?
   } = input;
 
   const { fromAccount, fromParentAccount } = exchange;
@@ -53,19 +80,23 @@ const completeExchange = (
 
     const confirmExchange = async () => {
       await withDevicePromise(deviceId, async (transport) => {
-        const providerNameAndSignature = getProviderNameAndSignature(provider);
+        const providerNameAndSignature =
+          getProviderNameAndSignature(exchangeType)(provider);
+
+        if (!providerNameAndSignature)
+          throw new Error("Could not get provider infos");
+
         const exchange = new ExchangeTransport(
           transport,
           exchangeType,
           rateType
         );
         const refundAccount = getMainAccount(fromAccount, fromParentAccount);
-        const payoutAccount = getMainAccount(toAccount, toParentAccount);
+
         const accountBridge = getAccountBridge(refundAccount);
-        const mainPayoutCurrency = getAccountCurrency(payoutAccount);
+
         const refundCurrency = getAccountCurrency(refundAccount);
-        if (mainPayoutCurrency.type !== "CryptoCurrency")
-          throw new Error("This should be a cryptocurrency");
+
         if (refundCurrency.type !== "CryptoCurrency")
           throw new Error("This should be a cryptocurrency");
 
@@ -73,7 +104,6 @@ const completeExchange = (
           refundAccount,
           transaction
         );
-
         if (unsubscribed) return;
 
         const { errors, estimatedFees } =
@@ -90,30 +120,35 @@ const completeExchange = (
         if (unsubscribed) return;
 
         await exchange.processTransaction(
-          Buffer.from(binaryPayload, "hex"),
+          Buffer.from(
+            binaryPayload,
+            exchangeType === TRANSACTION_TYPES.SWAP ? "hex" : "ascii"
+          ),
           estimatedFees
         );
         if (unsubscribed) return;
 
-        const goodSign = <Buffer>(
-          secp256k1.signatureExport(Buffer.from(signature, "hex"))
-        );
+        const goodSign = getGoodSignature(exchangeType)(signature);
+        if (!goodSign) {
+          throw new Error("Could not check provider signature");
+        }
+
         await exchange.checkTransactionSignature(goodSign);
         if (unsubscribed) return;
 
         const payoutAddressParameters = await perFamily[
-          mainPayoutCurrency.family
+          refundCurrency.family
         ].getSerializedAddressParameters(
-          payoutAccount.freshAddressPath,
-          payoutAccount.derivationMode,
-          mainPayoutCurrency.id
+          refundAccount.freshAddressPath,
+          refundAccount.derivationMode,
+          refundCurrency.id
         );
         if (unsubscribed) return;
 
         const {
           config: payoutAddressConfig,
           signature: payoutAddressConfigSignature,
-        } = getCurrencyExchangeConfig(mainPayoutCurrency);
+        } = getCurrencyExchangeConfig(refundCurrency);
 
         try {
           await exchange.checkPayoutAddress(
@@ -125,21 +160,31 @@ const completeExchange = (
           // @ts-expect-error TransportStatusError to be typed on ledgerjs
           if (e instanceof TransportStatusError && e.statusCode === 0x6a83) {
             throw new WrongDeviceForAccount(undefined, {
-              accountName: payoutAccount.name,
+              accountName: refundAccount.name,
             });
           }
 
           throw e;
         }
-        if (exchangeType === 0x00) {
+        if (exchangeType === TRANSACTION_TYPES.SWAP) {
           // Swap specific checks to confirm the refund address is correct.
+          if (!toAccount) {
+            throw new Error("toAccount requested for SWAP exchange type");
+          }
+
+          const payoutAccount = getMainAccount(toAccount, toParentAccount);
+          const mainPayoutCurrency = getAccountCurrency(payoutAccount);
+
+          if (mainPayoutCurrency.type !== "CryptoCurrency")
+            throw new Error("This should be a cryptocurrency");
+
           if (unsubscribed) return;
           const refundAddressParameters = await perFamily[
-            refundCurrency.family
+            mainPayoutCurrency.family
           ].getSerializedAddressParameters(
-            refundAccount.freshAddressPath,
-            refundAccount.derivationMode,
-            refundCurrency.id
+            payoutAccount.freshAddressPath,
+            payoutAccount.derivationMode,
+            mainPayoutCurrency.id
           );
           if (unsubscribed) return;
 
