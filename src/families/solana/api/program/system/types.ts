@@ -1,5 +1,5 @@
 import { enums, number, type, string, Infer } from "superstruct";
-import { PublicKeyFromString } from "../../utils/pubkey";
+import { PublicKeyFromString } from "../utils/pubkey";
 
 export type CreateAccountInfo = Infer<typeof CreateAccountInfo>;
 export const CreateAccountInfo = type({
@@ -109,3 +109,56 @@ export const SystemInstructionType = enums([
   "initializeNonce",
   "transferWithSeed",
 ]);
+
+export type SystemProgram = {
+  kind: "system";
+  instruction:
+    | {
+        kind: "createAccount";
+        info: CreateAccountInfo;
+      }
+    | {
+        kind: "createAccountWithSeed";
+        info: CreateAccountWithSeedInfo;
+      }
+    | {
+        kind: "allocate";
+        info: AllocateInfo;
+      }
+    | {
+        kind: "allocateWithSeed";
+        info: AllocateWithSeedInfo;
+      }
+    | {
+        kind: "assign";
+        info: AssignInfo;
+      }
+    | {
+        kind: "assignWithSeed";
+        info: AssignWithSeedInfo;
+      }
+    | {
+        kind: "transfer";
+        info: TransferInfo;
+      }
+    | {
+        kind: "advanceNonce";
+        info: AdvanceNonceInfo;
+      }
+    | {
+        kind: "withdrawNonce";
+        info: WithdrawNonceInfo;
+      }
+    | {
+        kind: "authorizeNonce";
+        info: AuthorizeNonceInfo;
+      }
+    | {
+        kind: "initializeNonce";
+        info: InitializeNonceInfo;
+      }
+    | {
+        kind: "transferWithSeed";
+        info: TransferWithSeedInfo;
+      };
+};

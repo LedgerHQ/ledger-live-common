@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-redeclare */
 
 import { enums, number, type, string, Infer } from "superstruct";
-import { PublicKeyFromString } from "../../utils/pubkey";
+import { PublicKeyFromString } from "../utils/pubkey";
 
 export type InitializeInfo = Infer<typeof InitializeInfo>;
 export const InitializeInfo = type({
@@ -73,3 +73,36 @@ export const StakeInstructionType = enums([
   "deactivate",
   "merge",
 ]);
+
+export type StakeProgram = {
+  kind: "stake";
+  instruction:
+    | {
+        kind: "initialize";
+        info: InitializeInfo;
+      }
+    | {
+        kind: "delegate";
+        info: DelegateInfo;
+      }
+    | {
+        kind: "authorize";
+        info: AuthorizeInfo;
+      }
+    | {
+        kind: "split";
+        info: SplitInfo;
+      }
+    | {
+        kind: "withdraw";
+        info: WithdrawInfo;
+      }
+    | {
+        kind: "deactivate";
+        info: DeactivateInfo;
+      }
+    | {
+        kind: "merge";
+        info: MergeInfo;
+      };
+};

@@ -1,3 +1,4 @@
+import { ParsedInstruction } from "@solana/web3.js";
 import {
   enums,
   type,
@@ -8,14 +9,13 @@ import {
   array,
   nullable,
   union,
-  coerce,
-  instance,
+  create,
 } from "superstruct";
+import { ParsedInfo } from "../../validators";
 
-import { PublicKey } from "@solana/web3.js";
-import { PublicKeyFromString } from "../../utils/pubkey";
+import { PublicKeyFromString } from "../utils/pubkey";
 
-export type TokenAmountUi = Infer<typeof TokenAmountUi>;
+//export type TokenAmountUi = Infer<typeof TokenAmountUi>;
 export const TokenAmountUi = type({
   amount: string(),
   decimals: number(),
@@ -44,8 +44,7 @@ const InitializeMultisig = type({
   m: number(),
 });
 
-export type Transfer = Infer<typeof Transfer>;
-export const Transfer = type({
+const Transfer = type({
   source: PublicKeyFromString,
   destination: PublicKeyFromString,
   amount: union([string(), number()]),
@@ -129,7 +128,6 @@ const ThawAccount = type({
   signers: optional(array(PublicKeyFromString)),
 });
 
-export type TransferChecked = Infer<typeof TransferChecked>;
 export const TransferChecked = type({
   source: PublicKeyFromString,
   mint: PublicKeyFromString,
@@ -213,7 +211,7 @@ export const IX_STRUCTS = {
   approveChecked: ApproveChecked,
   mintToChecked: MintToChecked,
   burnChecked: BurnChecked,
-};
+} as const;
 
 export const IX_TITLES = {
   initializeMint: "Initialize Mint",
@@ -236,4 +234,28 @@ export const IX_TITLES = {
   approveChecked: "Approve (Checked)",
   mintToChecked: "Mint To (Checked)",
   burnChecked: "Burn (Checked)",
-};
+} as const;
+
+type SplTokenInstructionDescriptor = {
+  [K in TokenInstructionType]: {
+    title: typeof IX_TITLES[K];
+    type: K;
+    info: Infer<typeof IX_STRUCTS[K]>;
+  };
+}[TokenInstructionType];
+
+export function parseSplTokenInstruction(
+  ix: ParsedInstruction & { program: "spl-token" }
+): SplTokenInstructionDescriptor {
+  const parsed = create(ix.parsed, ParsedInfo);
+  const { type: rawType, info } = parsed;
+  const type = create(rawType, TokenInstructionType);
+  const title = IX_TITLES[type];
+  const struct = IX_STRUCTS[type];
+
+  return {
+    type,
+    title: title as any,
+    info: create(info, struct as any) as any,
+  };
+}

@@ -1,3 +1,4 @@
+import { FinalizeInfo, WriteInfo } from "./instructions/bpf-loader/types";
 import { IX_STRUCTS, TokenInstructionType } from "./instructions/token/types";
 
 type SplToken<T extends TokenInstructionType> = {
@@ -5,8 +6,11 @@ type SplToken<T extends TokenInstructionType> = {
   info: typeof IX_STRUCTS[T];
 };
 
+const g = "spl-token";
+
 type BpfLoader = {
   program: "bpf-loader";
+  info: WriteInfo | FinalizeInfo;
 };
 
 type BpfUpgradableLoader = {

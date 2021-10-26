@@ -1,4 +1,5 @@
 import bs58 from "bs58";
+import { create } from "superstruct";
 
 import {
   AccountMeta,
@@ -7,38 +8,52 @@ import {
   PartiallyDecodedInstruction,
   TransactionInstruction,
 } from "@solana/web3.js";
+import { parseSplTokenInstruction } from "./token/types";
+
+function isProgram<T extends string>(
+  ix: ParsedInstruction,
+  program: T
+): ix is typeof ix & { program: T } {
+  return ix.program === program;
+}
 
 export const parse = (
   ix: ParsedInstruction | PartiallyDecodedInstruction,
   tx: ParsedTransaction
 ) => {
   if ("parsed" in ix) {
+    if (isProgram(ix, "spl-token")) {
+      return parseSplTokenInstruction(ix);
+    }
+
+    if (isProgram(ix, "bpf-loader")) {
+    }
     switch (ix.program) {
       case "spl-token":
-        return <TokenDetailsCard {...props} />;
+        return parseSplTokenInstruction(ix);
       case "bpf-loader":
-        return <BpfLoaderDetailsCard {...props} />;
+        return parseBpfLoaderInstruction();
       case "bpf-upgradeable-loader":
-        return <BpfUpgradeableLoaderDetailsCard {...props} />;
+        return parseBpfUpgradeableLoaderInstruction();
       case "system":
-        return <SystemDetailsCard {...props} />;
+        return parseSystemInstruction();
       case "stake":
-        return <StakeDetailsCard {...props} />;
+        return parseStakeInstruction();
       case "spl-memo":
-        return <MemoDetailsCard {...props} />;
+        return parseMemoInstruction();
       case "spl-associated-token-account":
-        return <AssociatedTokenDetailsCard {...props} />;
+        return parseSplAssociatedTokenAccountInstruction();
       case "vote":
-        return <VoteDetailsCard {...props} />;
+        return parseVoteInstruction();
       default:
-        return <UnknownDetailsCard {...props} />;
+        return undefined;
     }
   }
 
   const transactionIx = intoTransactionInstruction(tx, ix);
 
   if (isBonfidaBotInstruction(transactionIx)) {
-    return <BonfidaBotDetailsCard key={key} {...props} />;
+    return parseBonfidaBotInstruction();
   } else if (isMangoInstruction(transactionIx)) {
     return <MangoDetailsCard key={key} {...props} />;
   } else if (isSerumInstruction(transactionIx)) {

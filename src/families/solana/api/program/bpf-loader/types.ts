@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-redeclare */
 
 import { enums, number, type, string, Infer } from "superstruct";
-import { PublicKeyFromString } from "../../utils/pubkey";
+import { PublicKeyFromString } from "../utils/pubkey";
 
 export type WriteInfo = Infer<typeof WriteInfo>;
 export const WriteInfo = type({
@@ -17,3 +17,16 @@ export const FinalizeInfo = type({
 
 export type BpfLoaderInstructionType = Infer<typeof BpfLoaderInstructionType>;
 export const BpfLoaderInstructionType = enums(["write", "finalize"]);
+
+export type BpfLoaderProgram = {
+  kind: "bpf-loader";
+  instruction:
+    | {
+        kind: "write";
+        info: WriteInfo;
+      }
+    | {
+        kind: "finalize";
+        info: FinalizeInfo;
+      };
+};
