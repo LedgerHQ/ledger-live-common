@@ -17,6 +17,7 @@ import {
   NFTMetadataContextType,
   NFTResource,
 } from "./types";
+import { isOutdated } from "./logic";
 
 const currency: Currency = findCryptoCurrencyById("ethereum")!;
 const ethApi: API = apiForCurrency(currency);
@@ -81,16 +82,16 @@ export function useNftMetadata(contract: string, tokenId: string): NFTResource {
 
   const key = getNftKey(contract, tokenId);
 
-  const cached = cache[key];
+  const cachedData = cache[key];
 
   useEffect(() => {
-    if (!cached) {
+    if (!cachedData || isOutdated(cachedData)) {
       loadNFTMetadata(contract, tokenId);
     }
-  }, [contract, tokenId, cached, loadNFTMetadata]);
+  }, [contract, tokenId, cachedData, loadNFTMetadata]);
 
-  if (cached) {
-    return cached;
+  if (cachedData) {
+    return cachedData;
   } else {
     return {
       status: "queued",

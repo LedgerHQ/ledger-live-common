@@ -22,6 +22,7 @@ export type NFTResourceError = {
 
 export type NFTResourceNoData = {
   status: "nodata";
+  updatedAt: number;
 };
 
 export type NFTResource =
