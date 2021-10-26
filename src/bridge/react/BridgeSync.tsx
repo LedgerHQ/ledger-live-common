@@ -165,7 +165,6 @@ function useSyncQueue({
           if (event === "SyncSuccess") {
             // Nb Only emit SyncSuccess/SyncSuccessToken event once per launch
             if (lastTimeSuccessSyncPerAccountId[accountId]) {
-              log("bridge", "skip sync tracking for " + accountId);
               return;
             }
             lastTimeSuccessSyncPerAccountId[accountId] = startSyncTime;
