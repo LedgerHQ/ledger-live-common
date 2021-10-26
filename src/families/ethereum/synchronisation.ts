@@ -20,6 +20,7 @@ import { API, apiForCurrency, Tx } from "../../api/Ethereum";
 import { digestTokenAccounts, prepareTokenAccounts } from "./modules";
 import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";
 import { encodeNftId, nftsFromOperations } from "../../nft";
+import { NFT_VERSION } from "./versions";
 import { getEnv } from "../../env";
 
 export const getAccountShape: GetAccountShape = async (
@@ -57,7 +58,8 @@ export const getAccountShape: GetAccountShape = async (
     areAllOperationsLoaded(initialAccount) &&
     mostRecentStableOperation &&
     !outdatedBlacklist &&
-    !firstNftSync
+    !firstNftSync &&
+    NFT_VERSION
       ? mostRecentStableOperation.blockHash
       : undefined;
   const txsP = fetchAllTransactions(api, address, pullFromBlockHash);
