@@ -22,14 +22,17 @@ import { MAX_MEMO_LENGTH } from "./logic";
 // do not change real properties or the test will break
 const testOnChainData = {
   // real props
-  senderAddress: "6D8GtWkKJgToM5UoiByHqjQCCC9Dq1Hh7iNmU4jKSs12",
-  nonExistingAddress: "4nFjHzLkZ2uYCvutUitvjfxuWStHt7bPoW65TQbFohX6",
+  // seed
+  unfundedAddress: "7b6Q3ap8qRzfyvDw1Qce3fUV8C7WgFNzJQwYNTJm3KQo",
+  // m'/501'/0/0
+  fundedSenderAddress: "7CZgkK494jMdoY8xpXY3ViLjpDGMbNikCzMtAT5cAjKk",
+  fundedSenderBalance: new BigNumber(98985000),
+  // m'/501'/1000/0
+  fundedAddress: "ARRKL4FT4LMwpkhUw4xNbfiHqR7UdePtzGLvkszgydqZ",
+  // maybe outdated or not real, fine for tests
   offEd25519Address: "6D8GtWkKJgToM5UoiByHqjQCCC9Dq1Hh7iNmU4jKSs14",
   offEd25519Address2: "12rqwuEgBYiGhBrDJStCiqEtzQpTTiZbh7teNVLuYcFA",
-  balance: new BigNumber(5000000),
-  // maybe outdated or not real, fine for tests
   fees: new BigNumber(5000),
-  recipientAddress: "7NmQKgPPDM6EjZSLbSVRXDd6UvPN7azaXF5YJNUJpqG9",
 };
 
 const zero = new BigNumber(0);
@@ -42,14 +45,14 @@ const dataset: DatasetTest<Transaction> = {
       scanAccounts: [scanAccounts1],
       accounts: [
         {
-          raw: makeAccount(testOnChainData.senderAddress),
+          raw: makeAccount(testOnChainData.fundedSenderAddress),
           FIXME_tests: ["balance is sum of ops"],
           transactions: [
             {
               name: "status is success: not all amount",
               transaction: {
-                amount: testOnChainData.balance.dividedBy(2),
-                recipient: testOnChainData.recipientAddress,
+                amount: testOnChainData.fundedSenderBalance.dividedBy(2),
+                recipient: testOnChainData.fundedAddress,
                 fees: testOnChainData.fees,
                 family: "solana",
               },
@@ -57,8 +60,8 @@ const dataset: DatasetTest<Transaction> = {
                 errors: {},
                 warnings: {},
                 estimatedFees: new BigNumber(testOnChainData.fees),
-                amount: testOnChainData.balance.dividedBy(2),
-                totalSpent: testOnChainData.balance
+                amount: testOnChainData.fundedSenderBalance.dividedBy(2),
+                totalSpent: testOnChainData.fundedSenderBalance
                   .dividedBy(2)
                   .plus(testOnChainData.fees),
               },
@@ -68,7 +71,7 @@ const dataset: DatasetTest<Transaction> = {
               transaction: {
                 useAllAmount: true,
                 amount: zero,
-                recipient: testOnChainData.recipientAddress,
+                recipient: testOnChainData.fundedAddress,
                 fees: testOnChainData.fees,
                 family: "solana",
               },
@@ -76,15 +79,17 @@ const dataset: DatasetTest<Transaction> = {
                 errors: {},
                 warnings: {},
                 estimatedFees: testOnChainData.fees,
-                amount: testOnChainData.balance.minus(testOnChainData.fees),
-                totalSpent: testOnChainData.balance,
+                amount: testOnChainData.fundedSenderBalance.minus(
+                  testOnChainData.fees
+                ),
+                totalSpent: testOnChainData.fundedSenderBalance,
               },
             },
             {
               name: "status is error: not enough balance, not all amount",
               transaction: {
-                amount: testOnChainData.balance,
-                recipient: testOnChainData.recipientAddress,
+                amount: testOnChainData.fundedSenderBalance,
+                recipient: testOnChainData.fundedAddress,
                 fees: testOnChainData.fees,
                 family: "solana",
               },
@@ -103,8 +108,8 @@ const dataset: DatasetTest<Transaction> = {
               transaction: {
                 useAllAmount: true,
                 amount: zero,
-                recipient: testOnChainData.recipientAddress,
-                fees: testOnChainData.balance,
+                recipient: testOnChainData.fundedAddress,
+                fees: testOnChainData.fundedSenderBalance,
                 family: "solana",
               },
               expectedStatus: {
@@ -121,8 +126,8 @@ const dataset: DatasetTest<Transaction> = {
               name: "status is error: amount is 0",
               transaction: {
                 amount: zero,
-                recipient: testOnChainData.recipientAddress,
-                fees: testOnChainData.balance,
+                recipient: testOnChainData.fundedAddress,
+                fees: testOnChainData.fundedSenderBalance,
                 family: "solana",
               },
               expectedStatus: {
@@ -139,8 +144,8 @@ const dataset: DatasetTest<Transaction> = {
               name: "status is error: amount is negative",
               transaction: {
                 amount: new BigNumber(-1),
-                recipient: testOnChainData.recipientAddress,
-                fees: testOnChainData.balance,
+                recipient: testOnChainData.fundedAddress,
+                fees: testOnChainData.fundedSenderBalance,
                 family: "solana",
               },
               expectedStatus: {
@@ -156,8 +161,8 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is error: source == destination",
               transaction: {
-                amount: testOnChainData.balance,
-                recipient: testOnChainData.senderAddress,
+                amount: testOnChainData.fundedSenderBalance,
+                recipient: testOnChainData.fundedSenderAddress,
                 fees: testOnChainData.fees,
                 family: "solana",
               },
@@ -175,8 +180,8 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is error: negative fee",
               transaction: {
-                amount: testOnChainData.balance,
-                recipient: testOnChainData.recipientAddress,
+                amount: testOnChainData.fundedSenderBalance,
+                recipient: testOnChainData.fundedAddress,
                 fees: new BigNumber(-1),
                 family: "solana",
               },
@@ -194,7 +199,7 @@ const dataset: DatasetTest<Transaction> = {
               name: "status is error: fee is too high",
               transaction: {
                 amount: new BigNumber(1),
-                recipient: testOnChainData.recipientAddress,
+                recipient: testOnChainData.fundedAddress,
                 fees: new BigNumber(10),
                 family: "solana",
               },
@@ -212,7 +217,7 @@ const dataset: DatasetTest<Transaction> = {
               name: "status is error: account not funded without allowNotFundedRecipient",
               transaction: {
                 amount: new BigNumber(1),
-                recipient: testOnChainData.nonExistingAddress,
+                recipient: testOnChainData.unfundedAddress,
                 fees: new BigNumber(10),
                 family: "solana",
               },
@@ -230,7 +235,7 @@ const dataset: DatasetTest<Transaction> = {
               name: "status is warning: account not funded with allowNotFundedRecipient",
               transaction: {
                 amount: new BigNumber(1),
-                recipient: testOnChainData.nonExistingAddress,
+                recipient: testOnChainData.unfundedAddress,
                 allowUnFundedRecipient: true,
                 fees: new BigNumber(10),
                 family: "solana",
@@ -285,7 +290,7 @@ const dataset: DatasetTest<Transaction> = {
               name: "status is error: memo is too long",
               transaction: {
                 amount: new BigNumber(1),
-                recipient: testOnChainData.senderAddress,
+                recipient: testOnChainData.fundedSenderAddress,
                 fees: new BigNumber(10),
                 memo: Buffer.alloc(MAX_MEMO_LENGTH + 1).toString("hex"),
                 family: "solana",
@@ -300,7 +305,6 @@ const dataset: DatasetTest<Transaction> = {
                 totalSpent: zero,
               },
             },
-            // TODO: add zero balance not funded check
           ],
         },
       ],
