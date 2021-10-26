@@ -6,7 +6,6 @@ import BigNumber from "bignumber.js";
 const estimateMaxSpendable = async ({
   account,
   parentAccount,
-  transaction,
 }: {
   account: AccountLike;
   parentAccount?: Account;

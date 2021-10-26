@@ -1,15 +1,13 @@
-import type { AccountLike, Account, TransactionStatus } from "../../types";
+import type { AccountLike, Account } from "../../types";
 import type { Transaction } from "./types";
 import type { DeviceTransactionField } from "../../transaction";
 
 function getDeviceTransactionConfig({
-  status: { amount, estimatedFees },
   transaction,
 }: {
   account: AccountLike;
   parentAccount: Account | null | undefined;
   transaction: Transaction;
-  status: TransactionStatus;
 }): Array<DeviceTransactionField> {
   const fields: Array<DeviceTransactionField> = [];
 

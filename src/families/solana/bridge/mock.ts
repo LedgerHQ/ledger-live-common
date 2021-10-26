@@ -104,7 +104,7 @@ const accountBridge: AccountBridge<Transaction> = {
 
 const currencyBridge: CurrencyBridge = {
   scanAccounts,
-  preload: async (currency: any) => ({} as any),
+  preload: async (_: any) => ({} as any),
   hydrate: () => {},
 };
 

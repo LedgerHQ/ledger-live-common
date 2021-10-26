@@ -26,7 +26,7 @@ function inferTransactions(
 ): Transaction[] {
   const mode = opts.mode || "send";
   invariant(mode === "send", "Only send mode is supported");
-  return flatMap(transactions, ({ transaction, account }) => {
+  return flatMap(transactions, ({ transaction }) => {
     invariant(transaction.family === "solana", "solana family");
     return {
       ...transaction,
