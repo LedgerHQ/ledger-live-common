@@ -4,4 +4,6 @@ export { isMangoInstruction, parseMangoInstructionTitle } from "./types";
 
 export const parseMangoInstruction = (
   transactionIx: TransactionInstruction
-) => {};
+) => {
+  return undefined;
+};

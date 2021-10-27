@@ -7,4 +7,6 @@ export {
 
 export const parseBonfidaBotInstruction = (
   transactionIx: TransactionInstruction
-) => {};
+) => {
+  return undefined;
+};

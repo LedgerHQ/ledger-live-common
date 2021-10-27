@@ -4,4 +4,6 @@ export { isWormholeInstruction, parsWormholeInstructionTitle } from "./types";
 
 export const parseWormholeInstruction = (
   transactionIx: TransactionInstruction
-) => {};
+) => {
+  return undefined;
+};

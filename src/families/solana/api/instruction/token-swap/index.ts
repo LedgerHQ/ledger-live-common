@@ -7,4 +7,6 @@ export {
 
 export const parseTokenSwapInstruction = (
   transactionIx: TransactionInstruction
-) => {};
+) => {
+  return undefined;
+};

@@ -4,4 +4,6 @@ export { isSerumInstruction, parseSerumInstructionTitle } from "./types";
 
 export const parseSerumInstruction = (
   transactionIx: TransactionInstruction
-) => {};
+) => {
+  return undefined;
+};

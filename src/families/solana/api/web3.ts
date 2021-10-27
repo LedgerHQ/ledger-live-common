@@ -10,8 +10,9 @@ import {
 } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { chunk } from "lodash";
-import { Operation } from "../../../types";
+import { Operation, OperationType } from "../../../types";
 import { NetworkInfo } from "../types";
+import { parse } from "./program";
 
 const conn = new Connection(clusterApiUrl("mainnet-beta"), "finalized");
 
@@ -59,10 +60,11 @@ function onChainTxToOperation(
     return undefined;
   }
 
-  const accountIndex =
-    txDetails.parsed.transaction.message.accountKeys.findIndex(
-      (pma) => pma.pubkey.toBase58() === accountAddress
-    );
+  const { message } = txDetails.parsed.transaction;
+
+  const accountIndex = message.accountKeys.findIndex(
+    (pma) => pma.pubkey.toBase58() === accountAddress
+  );
 
   if (accountIndex < 0) {
     return undefined;
@@ -74,46 +76,70 @@ function onChainTxToOperation(
     new BigNumber(preBalances[accountIndex])
   );
 
-  const txType = balanceDelta.lt(0)
-    ? "OUT"
-    : balanceDelta.gt(0)
-    ? "IN"
-    : "NONE";
-
-  const { senders, recipients } =
-    txDetails.parsed.transaction.message.accountKeys.reduce(
-      (acc, account, i) => {
-        const balanceDelta = new BigNumber(postBalances[i]).minus(
-          new BigNumber(preBalances[i])
-        );
-        if (balanceDelta.lt(0)) {
-          acc.senders.push(account.pubkey.toBase58());
-        } else if (balanceDelta.gt(0)) {
-          acc.recipients.push(account.pubkey.toBase58());
-        }
-        return acc;
-      },
-      {
-        senders: [] as string[],
-        recipients: [] as string[],
-      }
-    );
-
   const isFeePayer =
-    txDetails.parsed.transaction.message.accountKeys[0].pubkey.toBase58() ===
-    accountAddress;
+    message.accountKeys[0].pubkey.toBase58() === accountAddress;
 
   const fee = new BigNumber(isFeePayer ? txDetails.parsed.meta.fee : 0);
 
-  const instructionNames =
-    txDetails.parsed.transaction.message.instructions.map((ix) => {
-      const [programName, typeName] =
-        "parsed" in ix
-          ? [ix.program, ix.parsed?.type as string | undefined]
-          : "TODO";
+  const txType: OperationType =
+    isFeePayer && balanceDelta.eq(fee)
+      ? "FEES"
+      : balanceDelta.lt(0)
+      ? "OUT"
+      : balanceDelta.gt(0)
+      ? "IN"
+      : "NONE";
 
-      return `${programName || "Unknown"}${typeName ? `.${typeName}` : ""}`;
-    });
+  const { senders, recipients } = message.accountKeys.reduce(
+    (acc, account, i) => {
+      const balanceDelta = new BigNumber(postBalances[i]).minus(
+        new BigNumber(preBalances[i])
+      );
+      if (balanceDelta.lt(0)) {
+        acc.senders.push(account.pubkey.toBase58());
+      } else if (balanceDelta.gt(0)) {
+        acc.recipients.push(account.pubkey.toBase58());
+      }
+      return acc;
+    },
+    {
+      senders: [] as string[],
+      recipients: [] as string[],
+    }
+  );
+
+  const txDate = new Date(txDetails.info.blockTime * 1000);
+
+  const internalOperations = message.instructions.reduce((acc, ix, ixIndex) => {
+    try {
+      const ixDescriptor = parse(ix, txDetails.parsed.transaction);
+      if (ixDescriptor) {
+        const partialOp = ixDescriptorToPartialOperation(ixDescriptor);
+        const op: Operation = {
+          id: `${txHash}:ix:${ixIndex}`,
+          hash: txHash,
+          accountId,
+          hasFailed: !!txDetails.info.err,
+          blockHeight: txDetails.info.slot,
+          blockHash: message.recentBlockhash,
+          extra: {
+            memo: txDetails.info.memo ?? undefined,
+          },
+          date: txDate,
+          senders: [],
+          recipients: [],
+          fee: new BigNumber(0),
+          value: partialOp.value ?? new BigNumber(0),
+          type: partialOp.type ?? "NONE",
+        };
+
+        acc.push(op);
+      }
+    } catch (_) {
+    } finally {
+      return acc;
+    }
+  }, [] as Operation[]);
 
   const txHash = txDetails.info.signature;
   return {
@@ -122,16 +148,16 @@ function onChainTxToOperation(
     accountId,
     hasFailed: !!txDetails.info.err,
     blockHeight: txDetails.info.slot,
-    blockHash: txDetails.parsed.transaction.message.recentBlockhash,
+    blockHash: message.recentBlockhash,
     extra: {
       memo: txDetails.info.memo ?? undefined,
-      instructions: instructionNames.join(", "),
     },
     type: txType,
     senders,
     recipients,
-    date: new Date(txDetails.info.blockTime * 1000),
+    date: txDate,
     value: balanceDelta.abs().minus(fee),
+    internalOperations,
     fee,
   };
 }
@@ -260,3 +286,20 @@ export const addSignatureToTransaction = ({
 export const broadcastTransaction = (rawTx: Buffer) => {
   return conn.sendRawTransaction(rawTx);
 };
+
+function ixDescriptorToPartialOperation(
+  ixDescriptor: Exclude<ReturnType<typeof parse>, undefined>
+): Partial<Operation> {
+  // TODO: show it more nicely
+
+  const extra = {
+    program: ixDescriptor.title,
+    instruction: ixDescriptor.instruction?.title,
+    info: ixDescriptor.instruction?.info,
+  };
+
+  return {
+    type: "NONE",
+    extra,
+  };
+}
