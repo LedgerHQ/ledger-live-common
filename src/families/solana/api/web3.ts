@@ -286,12 +286,20 @@ export const broadcastTransaction = (rawTx: Buffer) => {
 function ixDescriptorToPartialOperation(
   ixDescriptor: Exclude<ReturnType<typeof parse>, undefined>
 ): Partial<Operation> {
-  // TODO: show it more nicely
+  const { info } = ixDescriptor.instruction ?? {};
+
+  // TODO: fix poor man display
+  const infoStrValues =
+    info &&
+    Object.keys(info).reduce((acc, key) => {
+      acc[key] = info[key].toString();
+      return acc;
+    }, {});
 
   const extra = {
     program: ixDescriptor.title,
     instruction: ixDescriptor.instruction?.title,
-    info: ixDescriptor.instruction?.info,
+    info: JSON.stringify(infoStrValues, null, 2),
   };
 
   return {
