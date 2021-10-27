@@ -13,8 +13,6 @@ import { chunk } from "lodash";
 import { Operation } from "../../../types";
 import { NetworkInfo } from "../types";
 
-import { parseIxNames } from "./instructions/parser";
-
 const conn = new Connection(clusterApiUrl("mainnet-beta"), "finalized");
 
 export const getBalance = (address: string) =>
@@ -112,7 +110,7 @@ function onChainTxToOperation(
       const [programName, typeName] =
         "parsed" in ix
           ? [ix.program, ix.parsed?.type as string | undefined]
-          : parseIxNames(ix);
+          : "TODO";
 
       return `${programName || "Unknown"}${typeName ? `.${typeName}` : ""}`;
     });

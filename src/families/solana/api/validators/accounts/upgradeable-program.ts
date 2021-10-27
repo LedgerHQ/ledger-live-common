@@ -11,8 +11,8 @@ import {
   create,
   any,
 } from "superstruct";
-import { ParsedInfo } from "validators";
-import { PublicKeyFromString } from "validators/pubkey";
+import { ParsedInfo } from "../";
+import { PublicKeyFromString } from "../pubkey";
 
 export type ProgramAccountInfo = Infer<typeof ProgramAccountInfo>;
 export const ProgramAccountInfo = type({
