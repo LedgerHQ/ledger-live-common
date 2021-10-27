@@ -13,6 +13,7 @@ import { chunk } from "lodash";
 import { Operation, OperationType } from "../../../types";
 import { NetworkInfo } from "../types";
 import { parse } from "./program";
+import { parseQuiet } from "./program/parser";
 
 const conn = new Connection(clusterApiUrl("mainnet-beta"), "finalized");
 
@@ -108,40 +109,35 @@ function onChainTxToOperation(
     }
   );
 
+  const txHash = txDetails.info.signature;
   const txDate = new Date(txDetails.info.blockTime * 1000);
 
   const internalOperations = message.instructions.reduce((acc, ix, ixIndex) => {
-    try {
-      const ixDescriptor = parse(ix, txDetails.parsed.transaction);
-      if (ixDescriptor) {
-        const partialOp = ixDescriptorToPartialOperation(ixDescriptor);
-        const op: Operation = {
-          id: `${txHash}:ix:${ixIndex}`,
-          hash: txHash,
-          accountId,
-          hasFailed: !!txDetails.info.err,
-          blockHeight: txDetails.info.slot,
-          blockHash: message.recentBlockhash,
-          extra: {
-            memo: txDetails.info.memo ?? undefined,
-          },
-          date: txDate,
-          senders: [],
-          recipients: [],
-          fee: new BigNumber(0),
-          value: partialOp.value ?? new BigNumber(0),
-          type: partialOp.type ?? "NONE",
-        };
+    const ixDescriptor = parseQuiet(ix, txDetails.parsed.transaction);
+    const partialOp = ixDescriptorToPartialOperation(ixDescriptor);
+    const op: Operation = {
+      id: `${txHash}:ix:${ixIndex}`,
+      hash: txHash,
+      accountId,
+      hasFailed: !!txDetails.info.err,
+      blockHeight: txDetails.info.slot,
+      blockHash: message.recentBlockhash,
+      extra: {
+        memo: txDetails.info.memo ?? undefined,
+        ...partialOp.extra,
+      },
+      date: txDate,
+      senders: [],
+      recipients: [],
+      fee: new BigNumber(0),
+      value: partialOp.value ?? new BigNumber(0),
+      type: partialOp.type ?? "NONE",
+    };
 
-        acc.push(op);
-      }
-    } catch (_) {
-    } finally {
-      return acc;
-    }
+    acc.push(op);
+    return acc;
   }, [] as Operation[]);
 
-  const txHash = txDetails.info.signature;
   return {
     id: txHash,
     hash: txHash,

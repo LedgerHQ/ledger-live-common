@@ -124,18 +124,14 @@ export const parse = (
         };
       default:
         const _: never = program;
-        return {
-          program,
-          title: "Unknown",
-          instruction: undefined,
-        };
+        return unknown();
     }
   }
 
   const transactionIx = intoTransactionInstruction(tx, ix);
 
   if (!transactionIx) {
-    return;
+    return unknown();
   }
 
   if (isBonfidaBotInstruction(transactionIx)) {
@@ -181,6 +177,8 @@ export const parse = (
       instruction: parseWormholeInstruction(transactionIx),
     };
   }
+
+  return unknown();
 };
 
 function intoTransactionInstruction(
@@ -206,4 +204,24 @@ function intoTransactionInstruction(
     keys: keys,
     programId: instruction.programId,
   });
+}
+
+export const parseQuiet = (
+  ix: ParsedInstruction | PartiallyDecodedInstruction,
+  tx: ParsedTransaction
+) => {
+  try {
+    return parse(ix, tx);
+  } catch (_) {
+    // TODO: log it ?
+    return unknown();
+  }
+};
+
+function unknown() {
+  return {
+    program: "Unknown",
+    title: "Unknown",
+    instruction: undefined,
+  } as const;
 }
