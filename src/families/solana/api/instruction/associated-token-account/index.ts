@@ -7,7 +7,7 @@ import {
   IX_TITLES,
 } from "./types";
 
-import { PARSED_PROGRAMS } from "../../constants";
+import { PARSED_PROGRAMS } from "../../program/constants";
 
 export function parseAssociatedTokenAccountInstruction(
   ix: ParsedInstruction & {

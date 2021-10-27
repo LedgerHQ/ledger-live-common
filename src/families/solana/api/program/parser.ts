@@ -8,7 +8,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import { parseSplTokenInstruction } from "../instruction/token";
-import { NON_PARSED_PROGRAMS, PARSED_PROGRAMS } from "../constants";
+import { NON_PARSED_PROGRAMS, PARSED_PROGRAMS } from "./constants";
 import { parseAssociatedTokenAccountInstruction } from "../instruction/associated-token-account";
 import { parseBpfLoaderInstruction } from "../instruction/bpf-loader";
 import { parseBpfUpgradeableLoaderInstruction } from "../instruction/bpf-upgradeable-loader";

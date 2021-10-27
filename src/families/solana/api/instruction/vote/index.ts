@@ -3,7 +3,7 @@ import { IX_STRUCTS, IX_TITLES, VoteInstructionType } from "./types";
 
 import { ParsedInfo } from "../../validators";
 import { create, Infer } from "superstruct";
-import { PARSED_PROGRAMS } from "../../constants";
+import { PARSED_PROGRAMS } from "../../program/constants";
 
 export function parseVoteInstruction(
   ix: ParsedInstruction & { program: typeof PARSED_PROGRAMS.VOTE }
