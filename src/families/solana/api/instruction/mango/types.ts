@@ -107,6 +107,7 @@ export type Deposit = {
   quantity: number;
 };
 
+/*
 export const decodeDeposit = (ix: TransactionInstruction): Deposit => {
   const decoded = MangoInstructionLayout.decode(ix.data);
   const deposit: Deposit = {
@@ -428,3 +429,4 @@ export function spotMarketFromIndex(
   }
   return spotMarketConfigs[0].name;
 }
+*/

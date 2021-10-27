@@ -4,8 +4,8 @@ import { decodeInstruction, MARKETS } from "@project-serum/serum";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import BN from "bn.js";
 import { enums, number, optional, type, Infer, create } from "superstruct";
-import { BigNumFromString } from "validators/bignum";
-import { PublicKeyFromString } from "validators/pubkey";
+import { BigNumFromString } from "../../validators/bignum";
+import { PublicKeyFromString } from "../../validators/pubkey";
 
 const SERUM_PROGRAM_IDS = [
   "4ckmDgGdxQoPDLUkDT3vHgSAkzA3QRdNq5ywwY4sUSJn",
