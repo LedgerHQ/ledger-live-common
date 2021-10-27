@@ -7,8 +7,12 @@ import {
   IX_TITLES,
 } from "./types";
 
+import { PROGRAMS } from "../../constants";
+
 export function parseAssociatedTokenAccountInstruction(
-  ix: ParsedInstruction & { program: "spl-associated-token-account" }
+  ix: ParsedInstruction & {
+    program: typeof PROGRAMS.SPL_ASSOCIATED_TOKEN_ACCOUNT;
+  }
 ): AssociatedTokenAccountInstructionDescriptor {
   // TODO: check this
   const parsed = create(ix.parsed, ParsedInfo);

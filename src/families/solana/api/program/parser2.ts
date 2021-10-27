@@ -1,5 +1,4 @@
 import bs58 from "bs58";
-import { create } from "superstruct";
 
 import {
   AccountMeta,
@@ -8,68 +7,183 @@ import {
   PartiallyDecodedInstruction,
   TransactionInstruction,
 } from "@solana/web3.js";
-import { parseSplTokenInstruction } from "./token/types";
-
-function isProgram<T extends string>(
-  ix: ParsedInstruction,
-  program: T
-): ix is typeof ix & { program: T } {
-  return ix.program === program;
-}
+import { parseSplTokenInstruction } from "../instruction/token";
+import { NON_PARSED_PROGRAMS, PARSED_PROGRAMS } from "../constants";
+import { parseAssociatedTokenAccountInstruction } from "../instruction/associated-token-account";
+import { parseBpfLoaderInstruction } from "../instruction/bpf-loader";
+import { parseBpfUpgradeableLoaderInstruction } from "../instruction/bpf-upgradeable-loader";
+import { parseSplMemoInstruction } from "../instruction/memo";
+import { parseStakeInstruction } from "../instruction/stake";
+import { parseSystemInstruction } from "../instruction/system";
+import { parseVoteInstruction } from "../instruction/vote";
+import {
+  isBonfidaBotInstruction,
+  parseBonfidaBotInstruction,
+} from "../instruction/bonfida-bot";
+import {
+  isMangoInstruction,
+  parseMangoInstruction,
+} from "../instruction/mango";
+import {
+  isSerumInstruction,
+  parseSerumInstruction,
+} from "../instruction/serum";
+import {
+  isTokenSwapInstruction,
+  parseTokenSwapInstruction,
+} from "../instruction/token-swap";
+import {
+  isTokenLendingInstruction,
+  parseTokenLendingInstruction,
+} from "../instruction/token-lending";
+import {
+  isWormholeInstruction,
+  parseWormholeInstruction,
+} from "../instruction/wormhole";
 
 export const parse = (
   ix: ParsedInstruction | PartiallyDecodedInstruction,
   tx: ParsedTransaction
 ) => {
   if ("parsed" in ix) {
-    if (isProgram(ix, "spl-token")) {
-      return parseSplTokenInstruction(ix);
-    }
+    const program: typeof PARSED_PROGRAMS[keyof typeof PARSED_PROGRAMS] =
+      ix.program as any;
 
-    if (isProgram(ix, "bpf-loader")) {
-    }
-    switch (ix.program) {
-      case "spl-token":
-        return parseSplTokenInstruction(ix);
-      case "bpf-loader":
-        return parseBpfLoaderInstruction();
-      case "bpf-upgradeable-loader":
-        return parseBpfUpgradeableLoaderInstruction();
-      case "system":
-        return parseSystemInstruction();
-      case "stake":
-        return parseStakeInstruction();
-      case "spl-memo":
-        return parseMemoInstruction();
+    switch (program) {
       case "spl-associated-token-account":
-        return parseSplAssociatedTokenAccountInstruction();
+        return {
+          program,
+          title: "Associated Token Account",
+          instruction: parseAssociatedTokenAccountInstruction({
+            ...ix,
+            program,
+          }),
+        };
+      case "bpf-loader":
+        return {
+          program,
+          title: "BPF Loader 2",
+          instruction: parseBpfLoaderInstruction({
+            ...ix,
+            program,
+          }),
+        };
+      case "bpf-upgradeable-loader":
+        return {
+          program,
+          title: "BPF Upgradeable Loader",
+          instruction: parseBpfUpgradeableLoaderInstruction({
+            ...ix,
+            program,
+          }),
+        };
+      case "spl-memo":
+        return {
+          program,
+          title: "Memo",
+          instruction: parseSplMemoInstruction({
+            ...ix,
+            program,
+          }),
+        };
+      case "stake":
+        return {
+          program,
+          title: "Stake",
+          instruction: parseStakeInstruction({
+            ...ix,
+            program,
+          }),
+        };
+      case "system":
+        return {
+          program,
+          title: "System",
+          instruction: parseSystemInstruction({
+            ...ix,
+            program,
+          }),
+        };
+      case "spl-token":
+        return {
+          program,
+          title: "Token",
+          instruction: parseSplTokenInstruction({
+            ...ix,
+            program,
+          }),
+        };
       case "vote":
-        return parseVoteInstruction();
+        return {
+          program,
+          title: "Vote",
+          instruction: parseVoteInstruction({
+            ...ix,
+            program,
+          }),
+        };
       default:
-        return undefined;
+        const _: never = program;
+        return {
+          program,
+          title: "Unknown",
+          instruction: undefined,
+        };
     }
   }
 
   const transactionIx = intoTransactionInstruction(tx, ix);
 
+  if (!transactionIx) {
+    return;
+  }
+
   if (isBonfidaBotInstruction(transactionIx)) {
-    return parseBonfidaBotInstruction();
-  } else if (isMangoInstruction(transactionIx)) {
-    return <MangoDetailsCard key={key} {...props} />;
-  } else if (isSerumInstruction(transactionIx)) {
-    return <SerumDetailsCard key={key} {...props} />;
-  } else if (isTokenSwapInstruction(transactionIx)) {
-    return <TokenSwapDetailsCard key={key} {...props} />;
-  } else if (isTokenLendingInstruction(transactionIx)) {
-    return <TokenLendingDetailsCard key={key} {...props} />;
-  } else if (isWormholeInstruction(transactionIx)) {
-    return <WormholeDetailsCard key={key} {...props} />;
-  } else {
-    return <UnknownDetailsCard key={key} {...props} />;
+    return {
+      program: NON_PARSED_PROGRAMS.BONFIDA_BOT,
+      title: "Bonfida Bot",
+      instruction: parseBonfidaBotInstruction(transactionIx),
+    };
+  }
+
+  if (isMangoInstruction(transactionIx)) {
+    return {
+      program: NON_PARSED_PROGRAMS.MANGO,
+      title: "Mango",
+      instruction: parseMangoInstruction(transactionIx),
+    };
+  }
+  if (isSerumInstruction(transactionIx)) {
+    return {
+      program: NON_PARSED_PROGRAMS.SERUM,
+      title: "Serum",
+      instruction: parseSerumInstruction(transactionIx),
+    };
+  }
+  if (isTokenSwapInstruction(transactionIx)) {
+    return {
+      program: NON_PARSED_PROGRAMS.TOKEN_SWAP,
+      title: "Token Swap",
+      instruction: parseTokenSwapInstruction(transactionIx),
+    };
+  }
+  if (isTokenLendingInstruction(transactionIx)) {
+    return {
+      program: NON_PARSED_PROGRAMS.TOKEN_LENDING,
+      title: "Token Lending",
+      instruction: parseTokenLendingInstruction(transactionIx),
+    };
+  }
+  if (isWormholeInstruction(transactionIx)) {
+    return {
+      program: NON_PARSED_PROGRAMS.WORMHOLE,
+      title: "Wormhole",
+      instruction: parseWormholeInstruction(transactionIx),
+    };
   }
 };
 
-export function intoTransactionInstruction(
+function intoTransactionInstruction(
   tx: ParsedTransaction,
   instruction: PartiallyDecodedInstruction
 ): TransactionInstruction | undefined {

@@ -3,9 +3,10 @@ import { IX_STRUCTS, IX_TITLES, SystemInstructionType } from "./types";
 
 import { ParsedInfo } from "../../validators";
 import { create, Infer } from "superstruct";
+import { PROGRAMS } from "../../constants";
 
 export function parseSystemInstruction(
-  ix: ParsedInstruction & { program: "system" }
+  ix: ParsedInstruction & { program: typeof PROGRAMS.SYSTEM }
 ): SystemInstructionDescriptor {
   const parsed = create(ix.parsed, ParsedInfo);
   const { type: rawType, info } = parsed;

@@ -2,9 +2,10 @@ import { ParsedInfo } from "../../validators";
 import { create, Infer } from "superstruct";
 import { ParsedInstruction } from "@solana/web3.js";
 import { StakeInstructionType, IX_STRUCTS, IX_TITLES } from "./types";
+import { PROGRAMS } from "../../constants";
 
 export function parseStakeInstruction(
-  ix: ParsedInstruction & { program: "stake" }
+  ix: ParsedInstruction & { program: typeof PROGRAMS.STAKE }
 ): StakeInstructionDescriptor {
   const parsed = create(ix.parsed, ParsedInfo);
   const { type: rawType, info } = parsed;

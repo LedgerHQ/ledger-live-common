@@ -1,9 +1,10 @@
 import { ParsedInstruction } from "@solana/web3.js";
 import { IX_STRUCTS, IX_TITLES, MemoInstructionType } from "./types";
 import { Infer } from "superstruct";
+import { PROGRAMS } from "../../constants";
 
-export function parseMemoInstruction(
-  ix: ParsedInstruction & { program: "spl-memo" }
+export function parseSplMemoInstruction(
+  ix: ParsedInstruction & { program: typeof PROGRAMS.SPL_MEMO }
 ): MemoInstructionDescriptor {
   return {
     title: "Save",
