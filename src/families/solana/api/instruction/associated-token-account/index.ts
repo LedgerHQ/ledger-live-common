@@ -7,11 +7,11 @@ import {
   IX_TITLES,
 } from "./types";
 
-import { PROGRAMS } from "../../constants";
+import { PARSED_PROGRAMS } from "../../constants";
 
 export function parseAssociatedTokenAccountInstruction(
   ix: ParsedInstruction & {
-    program: typeof PROGRAMS.SPL_ASSOCIATED_TOKEN_ACCOUNT;
+    program: typeof PARSED_PROGRAMS.SPL_ASSOCIATED_TOKEN_ACCOUNT;
   }
 ): AssociatedTokenAccountInstructionDescriptor {
   // TODO: check this

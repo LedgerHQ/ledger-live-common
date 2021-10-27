@@ -3,10 +3,10 @@ import { IX_STRUCTS, IX_TITLES, VoteInstructionType } from "./types";
 
 import { ParsedInfo } from "../../validators";
 import { create, Infer } from "superstruct";
-import { PROGRAMS } from "../../constants";
+import { PARSED_PROGRAMS } from "../../constants";
 
 export function parseVoteInstruction(
-  ix: ParsedInstruction & { program: typeof PROGRAMS.VOTE }
+  ix: ParsedInstruction & { program: typeof PARSED_PROGRAMS.VOTE }
 ): VoteInstructionDescriptor {
   const parsed = create(ix.parsed, ParsedInfo);
   const { type: rawType, info } = parsed;

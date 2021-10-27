@@ -3,10 +3,10 @@ import { IX_STRUCTS, IX_TITLES, TokenInstructionType } from "./types";
 
 import { ParsedInfo } from "../../validators";
 import { create, Infer } from "superstruct";
-import { PROGRAMS } from "../../constants";
+import { PARSED_PROGRAMS } from "../../constants";
 
 export function parseSplTokenInstruction(
-  ix: ParsedInstruction & { program: typeof PROGRAMS.SPL_TOKEN }
+  ix: ParsedInstruction & { program: typeof PARSED_PROGRAMS.SPL_TOKEN }
 ): TokenInstructionDescriptor {
   const parsed = create(ix.parsed, ParsedInfo);
   const { type: rawType, info } = parsed;

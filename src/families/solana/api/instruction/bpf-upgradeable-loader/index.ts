@@ -6,10 +6,12 @@ import {
   IX_STRUCTS,
   IX_TITLES,
 } from "./types";
-import { PROGRAMS } from "../../constants";
+import { PARSED_PROGRAMS } from "../../constants";
 
 export function parseBpfUpgradeableLoaderInstruction(
-  ix: ParsedInstruction & { program: typeof PROGRAMS.BPF_UPGRADEABLE_LOADER }
+  ix: ParsedInstruction & {
+    program: typeof PARSED_PROGRAMS.BPF_UPGRADEABLE_LOADER;
+  }
 ): BpfUpgradeableLoaderInstructionDescriptor {
   const parsed = create(ix.parsed, ParsedInfo);
   const { type: rawType, info } = parsed;
