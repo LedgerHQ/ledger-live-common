@@ -88,20 +88,32 @@ export const formatTransaction = (
     mainAccount;
 
   const header = (() => {
-    if (t.mode === "erc721.transfer") {
-      return `${t.mode.toUpperCase()} Collection: ${t.collection} TokenId: ${
-        t.tokenId
-      }`;
+    switch (t.mode) {
+      case "erc721.transfer":
+        return `${t.mode.toUpperCase()} Collection: ${t.collection} TokenId: ${
+          t.tokenIds?.[0]
+        }`;
+      case "erc1155.transfer":
+        return (
+          `${t.mode.toUpperCase()} Collection: ${t.collection}` +
+          t.tokenIds
+            ?.map((tokenId, index) => {
+              return `\n  - TokenId: ${tokenId} Quantity: ${
+                t.quantities?.[index]?.toFixed() ?? 0
+              }`;
+            })
+            .join(",")
+        );
+      default:
+        return `${t.mode.toUpperCase()} ${
+          t.useAllAmount
+            ? "MAX"
+            : formatCurrencyUnit(getAccountUnit(account), t.amount, {
+                showCode: true,
+                disableRounding: true,
+              })
+        }`;
     }
-
-    return `${t.mode.toUpperCase()} ${
-      t.useAllAmount
-        ? "MAX"
-        : formatCurrencyUnit(getAccountUnit(account), t.amount, {
-            showCode: true,
-            disableRounding: true,
-          })
-    }`;
   })();
 
   return `
