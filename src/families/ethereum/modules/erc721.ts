@@ -43,7 +43,8 @@ const erc721Transfer: ModeModule = {
       if (
         !a.nfts?.find?.(
           (n) =>
-            n.tokenId === t.tokenId && n.collection.contract === t.collection
+            n.tokenId === t.tokenIds?.[0] &&
+            n.collection.contract === t.collection
         )
       ) {
         result.errors.amount = new notOwnedNft();
@@ -70,7 +71,7 @@ const erc721Transfer: ModeModule = {
     fields.push({
       type: "text",
       label: "Token ID",
-      value: input.transaction.tokenId ?? "",
+      value: input.transaction.tokenIds?.[0] ?? "",
     });
   },
 
@@ -97,7 +98,7 @@ function serializeTransactionData(
     "safeTransferFrom(address,address,uint256)",
     from,
     to,
-    transaction.tokenId
+    transaction.tokenIds?.[0]
   );
 }
 

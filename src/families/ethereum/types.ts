@@ -38,7 +38,8 @@ export type Transaction = TransactionCommon & {
   networkInfo: NetworkInfo | null | undefined;
   allowZeroAmount?: boolean;
   collection?: string;
-  tokenId?: string;
+  tokenIds?: string[];
+  quantities?: BigNumber[];
 };
 export type TransactionRaw = TransactionCommonRaw & {
   family: "ethereum";
