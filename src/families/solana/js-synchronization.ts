@@ -21,8 +21,19 @@ import {
   emptyHistoryCache,
 } from "../../account";
 import { getTransactions, TransactionDescriptor } from "./api/web3";
+import {
+  findCryptoCurrencyById,
+  getCryptoCurrencyById,
+} from "@ledgerhq/cryptoassets";
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
+
+type NonEmptyArray<T> = Array<T> & {
+  0: T;
+};
+
+const isNonEmptyArray = <T>(arr: Array<T>): arr is NonEmptyArray<T> =>
+  arr.length > 0;
 
 type OnChainTokenAccount = Awaited<
   ReturnType<typeof getAccount>
@@ -87,36 +98,27 @@ const getAccountShape: GetAccountShape = async (info) => {
     )
   );
 
-  function newSubAcc(
-    tokenAcc: OnChainTokenAccount,
-    txs: TransactionDescriptor[]
-  ): TokenAccount {
-    return {};
-  }
+  const nextSubAccs = tokenAccSubAccNewTxsList.map(
+    ([tokenAcc, subAcc, newTxs]) => {
+      if (isNonEmptyArray(newTxs)) {
+        const parsedInfo = tokenAcc.account.data.parsed.info;
+        const tokenAccInfo = parseTokenAccountInfoQuiet(parsedInfo);
 
-  function patchSubAcc(
-    subAcc: TokenAccount,
-    tokenAcc: OnChainTokenAccount,
-    txs: TransactionDescriptor[]
-  ): TokenAccount {
-    return {} as any;
-  }
-
-  const nextSubAccs = tokenAccSubAccNewTxsList.reduce(
-    (accum, [tokenAcc, subAcc, newTxs]) => {
-      if (newTxs.length <= 0 && subAcc === undefined) {
+        // if parsing failed, skip
+        if (tokenAccInfo !== undefined) {
+          return subAcc === undefined
+            ? newSubAcc(mainAccountId, tokenAcc, tokenAccInfo, newTxs)
+            : patchSubAcc(subAcc, tokenAccInfo, newTxs);
+        }
+      } else if (subAcc === undefined) {
         // TODO: remove, should never happen though
-        throw new Error("unexpected combination of subAcc and new txs");
-        return accum;
+        throw new Error(
+          "unexpected combination of undefined subAcc and empty new txs"
+        );
       }
-      const nextSubAcc =
-        subAcc === undefined
-          ? newSubAcc(tokenAcc, newTxs)
-          : patchSubAcc(subAcc, tokenAcc, newTxs);
-      accum.push(nextSubAcc);
-      return accum;
-    },
-    [] as SubAccount[]
+
+      return subAcc;
+    }
   );
 
   const mainAccountLastTxSignature = mainInitialAcc?.operations[0]?.hash;
@@ -207,7 +209,8 @@ function parseTokenAccountInfoQuiet(info: any) {
   try {
     return create(info, TokenAccountInfo);
   } catch (e) {
-    // TODO: throw away
+    // TODO: remove throw
+    throw e;
     console.error(e);
     return undefined;
   }
@@ -217,14 +220,15 @@ const postSync = (initial: Account, parent: Account) => {
   return parent;
 };
 
-const fakeTokenCurrency = (
-  parentCurrency: CryptoCurrency,
-  info?: TokenAccountInfo
-): TokenCurrency => {
+const fakeTokenCurrency = (info?: TokenAccountInfo): TokenCurrency => {
+  const parentCurrency = findCryptoCurrencyById("solana");
+  if (!parentCurrency) {
+    throw new Error("solana crypto currency not found");
+  }
   return {
     // TODO: check that
     contractAddress: info?.owner.toBase58() ?? "some contract address",
-    parentCurrency: parentCurrency,
+    parentCurrency,
     id: info?.mint.toBase58() ?? "some id here",
     // TODO: fix
     name: "N/A",
@@ -257,12 +261,67 @@ function decodeAccountIdWithTokenAccountAddress(
   };
 }
 
+//function encodeTokenAccou
+
 async function drainAsyncGen<T>(asyncGen: AsyncGenerator<T>) {
   const items: T[] = [];
   for await (const item of asyncGen) {
     items.push(item);
   }
   return items;
+}
+
+function newSubAcc(
+  mainAccId: string,
+  tokenAcc: OnChainTokenAccount,
+  tokenAccInfo: TokenAccountInfo,
+  txs: NonEmptyArray<TransactionDescriptor>
+): TokenAccount {
+  // TODO: check the order of txs
+  const firstTx = txs[txs.length - 1];
+  // best effort
+  const creationDate = new Date(
+    firstTx.info.blockTime ?? (Date.now() / 1000) * 1000
+  );
+
+  // TODO: fix
+  const tokenCurrency = fakeTokenCurrency(tokenAccInfo);
+
+  const id = encodeAccountIdWithTokenAccountAddress(
+    mainAccId,
+    tokenAcc.pubkey.toBase58()
+  );
+
+  const balance = new BigNumber(tokenAccInfo.tokenAmount.uiAmountString);
+  return {
+    balance,
+    balanceHistoryCache: emptyHistoryCache,
+    creationDate,
+    id: id,
+    parentId: mainAccId,
+    // TODO: map txs to token acc operations
+    operations: txs.map(txToTokenOperation),
+    // TODO: fix
+    operationsCount: txs.length,
+    pendingOperations: [],
+    spendableBalance: balance,
+    starred: false,
+    swapHistory: [],
+    token: tokenCurrency,
+    type: "TokenAccount",
+  };
+}
+
+function patchSubAcc(
+  subAcc: TokenAccount,
+  tokenAccInfo: TokenAccountInfo,
+  txs: TransactionDescriptor[]
+): TokenAccount {
+  return {} as any;
+}
+
+function txToTokenOperation(txs: TransactionDescriptor): Operation {
+  return {} as any;
 }
 
 export const sync = makeSync(getAccountShape, postSync);
