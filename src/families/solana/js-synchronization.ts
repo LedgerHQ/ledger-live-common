@@ -5,12 +5,13 @@ import {
   encodeAccountId,
   encodeTokenAccountId,
   Operation,
+  OperationType,
   SubAccount,
   TokenAccount,
   TokenCurrency,
 } from "../../types";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
-import { getAccount, getOperations } from "./api";
+import { getAccount } from "./api";
 import BigNumber from "bignumber.js";
 import { TokenAccountInfo } from "./api/validators/accounts/token";
 
@@ -25,6 +26,8 @@ import {
   findCryptoCurrencyById,
   getCryptoCurrencyById,
 } from "@ledgerhq/cryptoassets";
+import { encodeOperationId } from "../../operation";
+import { parseQuiet } from "./api/program/parser";
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
 
@@ -47,6 +50,7 @@ const getAccountShape: GetAccountShape = async (info) => {
     derivationMode,
   } = info;
   const {
+    //TODO: switch to slot?
     blockHeight,
     balance: mainAccBalance,
     spendableBalance: mainAccSpendableBalance,
@@ -98,8 +102,8 @@ const getAccountShape: GetAccountShape = async (info) => {
     )
   );
 
-  const nextSubAccs = tokenAccSubAccNewTxsList.map(
-    ([tokenAcc, subAcc, newTxs]) => {
+  const nextSubAccs = tokenAccSubAccNewTxsList
+    .map(([tokenAcc, subAcc, newTxs]) => {
       if (isNonEmptyArray(newTxs)) {
         const parsedInfo = tokenAcc.account.data.parsed.info;
         const tokenAccInfo = parseTokenAccountInfoQuiet(parsedInfo);
@@ -108,7 +112,7 @@ const getAccountShape: GetAccountShape = async (info) => {
         if (tokenAccInfo !== undefined) {
           return subAcc === undefined
             ? newSubAcc(mainAccountId, tokenAcc, tokenAccInfo, newTxs)
-            : patchSubAcc(subAcc, tokenAccInfo, newTxs);
+            : patchedSubAcc(subAcc, tokenAccInfo, newTxs);
         }
       } else if (subAcc === undefined) {
         // TODO: remove, should never happen though
@@ -118,11 +122,12 @@ const getAccountShape: GetAccountShape = async (info) => {
       }
 
       return subAcc;
-    }
-  );
+    })
+    .filter((subAcc): subAcc is TokenAccount => subAcc !== undefined);
 
   const mainAccountLastTxSignature = mainInitialAcc?.operations[0]?.hash;
 
+  /*
   const addressNewOperationsPairList = await tokenAccounts.value
     .map((tacc) => {
       const address = tacc.pubkey.toBase58();
@@ -136,6 +141,7 @@ const getAccountShape: GetAccountShape = async (info) => {
       await getOperations(address, lastTxSignature);
       return accum;
     }, Promise.resolve([] as [string, Operation[]][]));
+    */
 
   const mainAccountId = encodeAccountId({
     type: "js",
@@ -145,12 +151,20 @@ const getAccountShape: GetAccountShape = async (info) => {
     derivationMode,
   });
 
-  const newOperations = await getOperations(
-    mainAccountId,
-    mainAccAddress,
-    untilTxHash
+  const newMainAccTxs = await drainAsyncGen(
+    getTransactions(mainAccAddress, mainAccountLastTxSignature)
   );
 
+  const newMainAccOps = newMainAccTxs
+    .map((tx) => txToMainAccOperation(tx, mainAccountId, mainAccAddress))
+    .filter((op): op is Operation => op !== undefined);
+
+  const mainAccTotalOperations = mergeOps(
+    mainInitialAcc?.operations ?? [],
+    newMainAccOps
+  );
+
+  /*
   const newTokenAccountOperations = newOperations
     .flatMap((op) => op.subOperations ?? [])
     .reduce((acc, subOp) => {
@@ -161,7 +175,9 @@ const getAccountShape: GetAccountShape = async (info) => {
       acc.set(subOp.accountId, subOps);
       return acc;
     }, new Map<string, Operation[]>());
+    */
 
+  /*
   const subAccounts = tokenAccounts.value.reduce((acc, accountInfo) => {
     const parsedInfo = accountInfo.account.data.parsed.info;
     const info = parseTokenAccountInfoQuiet(parsedInfo);
@@ -193,16 +209,19 @@ const getAccountShape: GetAccountShape = async (info) => {
   }, [] as TokenAccount[]);
 
   const operations = mergeOps(oldOperations, newOperations);
+  */
 
   const shape: Partial<Account> = {
-    subAccounts,
+    subAccounts: nextSubAccs,
     id: mainAccountId,
     blockHeight,
     balance: mainAccBalance,
     spendableBalance: mainAccSpendableBalance,
-    operationsCount: operations.length,
+    operations: mainAccTotalOperations,
+    operationsCount: mainAccTotalOperations.length,
   };
-  return { ...shape, operations };
+
+  return shape;
 };
 
 function parseTokenAccountInfoQuiet(info: any) {
@@ -281,7 +300,7 @@ function newSubAcc(
   const firstTx = txs[txs.length - 1];
   // best effort
   const creationDate = new Date(
-    firstTx.info.blockTime ?? (Date.now() / 1000) * 1000
+    (firstTx.info.blockTime ?? Date.now() / 1000) * 1000
   );
 
   // TODO: fix
@@ -300,7 +319,7 @@ function newSubAcc(
     id: id,
     parentId: mainAccId,
     // TODO: map txs to token acc operations
-    operations: txs.map(txToTokenOperation),
+    operations: txs.map((tx) => txToTokenAccOperation(tx, id)),
     // TODO: fix
     operationsCount: txs.length,
     pendingOperations: [],
@@ -312,16 +331,197 @@ function newSubAcc(
   };
 }
 
-function patchSubAcc(
+function patchedSubAcc(
   subAcc: TokenAccount,
   tokenAccInfo: TokenAccountInfo,
-  txs: TransactionDescriptor[]
+  txs: NonEmptyArray<TransactionDescriptor>
 ): TokenAccount {
-  return {} as any;
+  const balance = new BigNumber(tokenAccInfo.tokenAmount.uiAmountString);
+  const newOps = txs.map((tx) => txToTokenAccOperation(tx, subAcc.id));
+  const totalOps = mergeOps(subAcc.operations, newOps);
+  return {
+    ...subAcc,
+    balance,
+    spendableBalance: balance,
+    operations: totalOps,
+    operationsCount: totalOps.length,
+  };
 }
 
-function txToTokenOperation(txs: TransactionDescriptor): Operation {
-  return {} as any;
+function txToMainAccOperation(
+  tx: TransactionDescriptor,
+  accountId: string,
+  accountAddress: string
+): Operation | undefined {
+  if (!tx.info.blockTime || !tx.parsed.meta) {
+    return undefined;
+  }
+
+  const { message } = tx.parsed.transaction;
+
+  const accountIndex = message.accountKeys.findIndex(
+    (pma) => pma.pubkey.toBase58() === accountAddress
+  );
+
+  if (accountIndex < 0) {
+    return undefined;
+  }
+
+  const { preBalances, postBalances } = tx.parsed.meta;
+
+  const balanceDelta = new BigNumber(postBalances[accountIndex]).minus(
+    new BigNumber(preBalances[accountIndex])
+  );
+
+  const isFeePayer =
+    message.accountKeys[0].pubkey.toBase58() === accountAddress;
+
+  const fee = new BigNumber(isFeePayer ? tx.parsed.meta.fee : 0);
+
+  const txType: OperationType =
+    isFeePayer && balanceDelta.eq(fee)
+      ? "FEES"
+      : balanceDelta.lt(0)
+      ? "OUT"
+      : balanceDelta.gt(0)
+      ? "IN"
+      : "NONE";
+
+  const { senders, recipients } = message.accountKeys.reduce(
+    (acc, account, i) => {
+      const balanceDelta = new BigNumber(postBalances[i]).minus(
+        new BigNumber(preBalances[i])
+      );
+      if (balanceDelta.lt(0)) {
+        acc.senders.push(account.pubkey.toBase58());
+      } else if (balanceDelta.gt(0)) {
+        acc.recipients.push(account.pubkey.toBase58());
+      }
+      return acc;
+    },
+    {
+      senders: [] as string[],
+      recipients: [] as string[],
+    }
+  );
+
+  const txHash = tx.info.signature;
+  const txDate = new Date(tx.info.blockTime * 1000);
+
+  const { internalOperations, subOperations } = message.instructions.reduce(
+    (acc, ix, ixIndex) => {
+      const ixDescriptor = parseQuiet(ix, tx.parsed.transaction);
+      const partialOp = ixDescriptorToPartialOperation(ixDescriptor);
+      const op: Operation = {
+        id: `${txHash}:ix:${ixIndex}`,
+        hash: txHash,
+        accountId,
+        hasFailed: !!tx.info.err,
+        blockHeight: tx.info.slot,
+        blockHash: message.recentBlockhash,
+        extra: {
+          memo: tx.info.memo ?? undefined,
+          info: (ix as any).parsed?.info,
+          //...partialOp.extra,
+        },
+        date: txDate,
+        senders: [],
+        recipients: [],
+        fee: new BigNumber(0),
+        value: partialOp.value ?? new BigNumber(0),
+        type: partialOp.type ?? "NONE",
+      };
+
+      if (ixDescriptor.program === "spl-token") {
+        // TODO: should we bother about sub operations at all?
+        acc.subOperations.push(op);
+      } else {
+        acc.internalOperations.push(op);
+      }
+      return acc;
+    },
+    {
+      internalOperations: [] as Operation[],
+      subOperations: [] as Operation[],
+    }
+  );
+
+  return {
+    id: encodeOperationId(accountId, txHash, txType),
+    hash: txHash,
+    accountId: accountId,
+    hasFailed: !!tx.info.err,
+    blockHeight: tx.info.slot,
+    blockHash: message.recentBlockhash,
+    extra: {
+      memo: tx.info.memo ?? undefined,
+    },
+    type: txType,
+    senders,
+    recipients,
+    date: txDate,
+    value: balanceDelta.abs().minus(fee),
+    internalOperations,
+    subOperations,
+    fee,
+  };
+}
+
+function txToTokenAccOperation(
+  tx: TransactionDescriptor,
+  accountId: string
+): Operation {
+  const hash = tx.info.signature;
+  // TODO: fix
+  const type = "NONE";
+  return {
+    id: encodeOperationId(accountId, hash, type),
+    accountId,
+    type,
+    hash,
+    date: new Date((tx.info.blockTime ?? Date.now() / 1000) * 1000),
+    blockHeight: tx.info.slot,
+    // TODO: fix
+    fee: new BigNumber(0),
+    // TODO: fix
+    recipients: [],
+    // TODO: fix
+    senders: [],
+    // TODO: fix
+    value: new BigNumber(0),
+    hasFailed: !!tx.info.err,
+    extra: {
+      memo: tx.info.memo ?? undefined,
+    },
+    blockHash: tx.parsed.transaction.message.recentBlockhash,
+  };
+}
+
+function ixDescriptorToPartialOperation(
+  ixDescriptor: Exclude<ReturnType<typeof parseQuiet>, undefined>
+): Partial<Operation> {
+  const { info } = ixDescriptor.instruction ?? {};
+
+  // TODO: fix poor man display
+  /*
+  const infoStrValues =
+    info &&
+    Object.keys(info).reduce((acc, key) => {
+      acc[key] = info[key].toString();
+      return acc;
+    }, {});
+  */
+
+  const extra = {
+    program: ixDescriptor.title,
+    instruction: ixDescriptor.instruction?.title,
+    //info: JSON.stringify(infoStrValues, null, 2),
+  };
+
+  return {
+    type: "NONE",
+    extra,
+  };
 }
 
 export const sync = makeSync(getAccountShape, postSync);
