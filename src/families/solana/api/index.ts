@@ -1,6 +1,6 @@
 export {
   getAccount,
-  getOperations,
+  getTransaction as getOperations,
   getNetworkInfo,
   buildTransferTransaction,
   addSignatureToTransaction,

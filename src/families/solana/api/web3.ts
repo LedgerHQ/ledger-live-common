@@ -10,12 +10,14 @@ import {
 } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { chunk } from "lodash";
+import { encodeOperationId } from "../../../operation";
 import { Operation, OperationType } from "../../../types";
 import { NetworkInfo } from "../types";
 import { parse } from "./program";
 import { parseQuiet } from "./program/parser";
 
-const conn = new Connection(clusterApiUrl("mainnet-beta"), "finalized");
+//const conn = new Connection(clusterApiUrl("mainnet-beta"), "finalized");
+const conn = new Connection("http://api.devnet.solana.com");
 
 export const getBalance = (address: string) =>
   conn.getBalance(new PublicKey(address));
@@ -23,16 +25,30 @@ export const getBalance = (address: string) =>
 export const getAccount = async (address: string) => {
   const pubKey = new PublicKey(address);
 
-  const [balanceLamportsWithContext, lamportPerSignature] = await Promise.all([
-    conn.getBalanceAndContext(pubKey),
-    getNetworkInfo().then((res) => res.lamportsPerSignature),
-  ]);
+  const TOKEN_PROGRAM_ID = new PublicKey(
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+  );
+
+  const [balanceLamportsWithContext, lamportPerSignature, tokenAccounts] =
+    await Promise.all([
+      conn.getBalanceAndContext(pubKey),
+      getNetworkInfo().then((res) => res.lamportsPerSignature),
+      conn.getParsedTokenAccountsByOwner(pubKey, {
+        programId: TOKEN_PROGRAM_ID,
+      }),
+    ]);
+
+  console.log("token accs");
+
+  console.dir(tokenAccounts, { depth: null });
 
   const balance = new BigNumber(balanceLamportsWithContext.value);
   const spendableBalance = BigNumber.max(balance.minus(lamportPerSignature), 0);
+  // TODO: check that
   const blockHeight = balanceLamportsWithContext.context.slot;
 
   return {
+    tokenAccounts,
     balance,
     spendableBalance,
     blockHeight,
@@ -49,8 +65,8 @@ export const getNetworkInfo = async (): Promise<NetworkInfo> => {
 };
 
 function onChainTxToOperation(
-  txDetails: TransactionDetails,
-  accountId: string,
+  txDetails: TransactionDescriptor,
+  mainAccountId: string,
   accountAddress: string
 ): Operation | undefined {
   if (!txDetails.info.blockTime) {
@@ -112,36 +128,50 @@ function onChainTxToOperation(
   const txHash = txDetails.info.signature;
   const txDate = new Date(txDetails.info.blockTime * 1000);
 
-  const internalOperations = message.instructions.reduce((acc, ix, ixIndex) => {
-    const ixDescriptor = parseQuiet(ix, txDetails.parsed.transaction);
-    const partialOp = ixDescriptorToPartialOperation(ixDescriptor);
-    const op: Operation = {
-      id: `${txHash}:ix:${ixIndex}`,
-      hash: txHash,
-      accountId,
-      hasFailed: !!txDetails.info.err,
-      blockHeight: txDetails.info.slot,
-      blockHash: message.recentBlockhash,
-      extra: {
-        memo: txDetails.info.memo ?? undefined,
-        ...partialOp.extra,
-      },
-      date: txDate,
-      senders: [],
-      recipients: [],
-      fee: new BigNumber(0),
-      value: partialOp.value ?? new BigNumber(0),
-      type: partialOp.type ?? "NONE",
-    };
+  const { internalOperations, subOperations } = message.instructions.reduce(
+    (acc, ix, ixIndex) => {
+      const ixDescriptor = parseQuiet(ix, txDetails.parsed.transaction);
+      const partialOp = ixDescriptorToPartialOperation(ixDescriptor);
+      //TODO: use encodeTokenAccountId here
+      //const accountId = ixDescriptor.program === "spl-token" ? txd : "";
+      const accountId = mainAccountId;
+      const op: Operation = {
+        id: `${txHash}:ix:${ixIndex}`,
+        hash: txHash,
+        accountId,
+        hasFailed: !!txDetails.info.err,
+        blockHeight: txDetails.info.slot,
+        blockHash: message.recentBlockhash,
+        extra: {
+          memo: txDetails.info.memo ?? undefined,
+          info: (ix as any).parsed?.info,
+          //...partialOp.extra,
+        },
+        date: txDate,
+        senders: [],
+        recipients: [],
+        fee: new BigNumber(0),
+        value: partialOp.value ?? new BigNumber(0),
+        type: partialOp.type ?? "NONE",
+      };
 
-    acc.push(op);
-    return acc;
-  }, [] as Operation[]);
+      if (ixDescriptor.program === "spl-token") {
+        acc.subOperations.push(op);
+      } else {
+        acc.internalOperations.push(op);
+      }
+      return acc;
+    },
+    {
+      internalOperations: [] as Operation[],
+      subOperations: [] as Operation[],
+    }
+  );
 
   return {
-    id: txHash,
+    id: encodeOperationId(mainAccountId, txHash, txType),
     hash: txHash,
-    accountId,
+    accountId: mainAccountId,
     hasFailed: !!txDetails.info.err,
     blockHeight: txDetails.info.slot,
     blockHash: message.recentBlockhash,
@@ -154,23 +184,25 @@ function onChainTxToOperation(
     date: txDate,
     value: balanceDelta.abs().minus(fee),
     internalOperations,
+    subOperations,
     fee,
   };
 }
 
-type TransactionDetails = {
+export type TransactionDescriptor = {
   parsed: ParsedConfirmedTransaction;
   info: ConfirmedSignatureInfo;
 };
 
-async function* getSuccessfullTransactionsDetailsBatched(
+async function* getTransactionsBatched(
   pubKey: PublicKey,
   untilTxSignature?: string
-): AsyncGenerator<TransactionDetails[], void, unknown> {
+): AsyncGenerator<TransactionDescriptor[], void, unknown> {
   // TODO: double check with Ledger team - last 1000 operations is a sane limit
   const signatures = await conn.getSignaturesForAddress(pubKey, {
     until: untilTxSignature,
-    limit: 1000,
+    //TODO: 1000 ?
+    limit: 100,
   });
 
   // max req payload is 50K, around 200 transactions atm
@@ -189,27 +221,25 @@ async function* getSuccessfullTransactionsDetailsBatched(
         });
       }
       return acc;
-    }, [] as TransactionDetails[]);
+    }, [] as TransactionDescriptor[]);
 
     yield txsDetails;
   }
 }
 
-export const getOperations = async (
-  accountId: string,
+export async function* getTransactions(
   address: string,
-  untilTxHash?: string
-): Promise<Operation[]> => {
+  untilTxSignature?: string
+) {
   const pubKey = new PublicKey(address);
 
-  const operations: Operation[] = [];
-
-  const untilTxSignature = untilTxHash;
-
-  for await (const txDetailsBatch of getSuccessfullTransactionsDetailsBatched(
+  for await (const txDetailsBatch of getTransactionsBatched(
     pubKey,
     untilTxSignature
   )) {
+    yield* txDetailsBatch;
+  }
+  /*
     operations.push(
       ...txDetailsBatch.reduce((acc, txDetails) => {
         const op = onChainTxToOperation(txDetails, accountId, address);
@@ -219,10 +249,10 @@ export const getOperations = async (
         return acc;
       }, [] as Operation[])
     );
-  }
+    */
 
-  return operations;
-};
+  //return operations;
+}
 
 export const buildTransferTransaction = async ({
   fromAddress,
@@ -289,17 +319,19 @@ function ixDescriptorToPartialOperation(
   const { info } = ixDescriptor.instruction ?? {};
 
   // TODO: fix poor man display
+  /*
   const infoStrValues =
     info &&
     Object.keys(info).reduce((acc, key) => {
       acc[key] = info[key].toString();
       return acc;
     }, {});
+  */
 
   const extra = {
     program: ixDescriptor.title,
     instruction: ixDescriptor.instruction?.title,
-    info: JSON.stringify(infoStrValues, null, 2),
+    //info: JSON.stringify(infoStrValues, null, 2),
   };
 
   return {
