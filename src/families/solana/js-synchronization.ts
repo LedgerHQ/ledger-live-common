@@ -57,6 +57,14 @@ const getAccountShape: GetAccountShape = async (info) => {
     tokenAccounts,
   } = await getAccount(mainAccAddress);
 
+  const mainAccountId = encodeAccountId({
+    type: "js",
+    version: "2",
+    currencyId: currency.id,
+    xpubOrAddress: mainAccAddress,
+    derivationMode,
+  });
+
   const addressSubAccountPairList =
     mainInitialAcc?.subAccounts
       ?.filter(
@@ -142,14 +150,6 @@ const getAccountShape: GetAccountShape = async (info) => {
       return accum;
     }, Promise.resolve([] as [string, Operation[]][]));
     */
-
-  const mainAccountId = encodeAccountId({
-    type: "js",
-    version: "2",
-    currencyId: currency.id,
-    xpubOrAddress: mainAccAddress,
-    derivationMode,
-  });
 
   const newMainAccTxs = await drainAsyncGen(
     getTransactions(mainAccAddress, mainAccountLastTxSignature)
@@ -253,7 +253,7 @@ const fakeTokenCurrency = (info?: TokenAccountInfo): TokenCurrency => {
     name: "N/A",
     // TODO: fix
     ticker: "N/A",
-    tokenType: "solana",
+    tokenType: "spl-token",
     type: "TokenCurrency",
     // TODO: fix
     units: [
@@ -421,7 +421,7 @@ function txToMainAccOperation(
         blockHash: message.recentBlockhash,
         extra: {
           memo: tx.info.memo ?? undefined,
-          info: (ix as any).parsed?.info,
+          info: JSON.stringify((ix as any).parsed?.info),
           //...partialOp.extra,
         },
         date: txDate,
