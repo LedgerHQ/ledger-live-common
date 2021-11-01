@@ -2,7 +2,7 @@ import { Observable } from "rxjs";
 import type { Account, Operation, SignOperationEvent } from "../../types";
 import { open, close } from "../../hw";
 import type { Transaction } from "./types";
-import { buildOnChainTransferTransaction } from "./js-buildTransaction";
+import { buildOnChainTransaction } from "./js-buildTransaction";
 import Solana from "@ledgerhq/hw-app-solana";
 import BigNumber from "bignumber.js";
 import { encodeOperationId } from "../../operation";
@@ -49,7 +49,7 @@ const signOperation = ({
 
       try {
         const [msgToHardwareBytes, singOnChainTransaction] =
-          await buildOnChainTransferTransaction(account, transaction);
+          await buildOnChainTransaction(account, transaction);
 
         const hwApp = new Solana(transport);
 

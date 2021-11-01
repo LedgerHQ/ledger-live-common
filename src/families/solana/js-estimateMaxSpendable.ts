@@ -11,8 +11,15 @@ const estimateMaxSpendable = async ({
   parentAccount?: Account;
   transaction?: Transaction;
 }): Promise<BigNumber> => {
-  const mainAccount = getMainAccount(account, parentAccount);
-  return mainAccount.spendableBalance;
+  // TODO: fix for token accs
+  //const mainAccount = getMainAccount(account, parentAccount);
+
+  if (account.type === "Account" || account.type === "TokenAccount") {
+    return account.spendableBalance;
+  }
+
+  throw Error("not supported account type");
+  //return mainAccount.spendableBalance;
 };
 
 export default estimateMaxSpendable;

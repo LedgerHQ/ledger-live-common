@@ -20,6 +20,7 @@ import { makeAccountBridgeReceive } from "../../../bridge/mockHelpers";
 const receive = makeAccountBridgeReceive();
 
 const createTransaction = (): Transaction => ({
+  mode: { kind: "native" },
   family: "solana",
   amount: new BigNumber(0),
   recipient: "",

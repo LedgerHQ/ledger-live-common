@@ -6,4 +6,5 @@ export {
   addSignatureToTransaction,
   broadcastTransaction,
   getBalance,
+  findAssociatedTokenAddress,
 } from "./web3";

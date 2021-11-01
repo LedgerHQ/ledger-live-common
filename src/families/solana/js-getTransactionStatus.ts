@@ -19,8 +19,11 @@ import {
 import {
   SolanaAccountNotFunded,
   SolanaAddressOffEd25519,
+  SolanaAssociatedTokenAccountNotFunded,
   SolanaMemoIsTooLong,
 } from "./errors";
+import { findAssociatedTokenAddress } from "./api";
+import { assert } from "console";
 
 const getTransactionStatus = async (
   a: Account,
@@ -50,6 +53,25 @@ const getTransactionStatus = async (
       warnings.recipient = error;
     } else {
       errors.recipient = error;
+    }
+  }
+
+  if (t.subAccountId) {
+    const tokenAcc = a.subAccounts?.find((acc) => acc.id === t.subAccountId);
+
+    if (tokenAcc?.type !== "TokenAccount") {
+      errors.sender = new InvalidAddress("token sub acc not found");
+    } else {
+      // TODO: move to prepare tx
+      const associatedTokenAccAddress = await findAssociatedTokenAddress(
+        a.freshAddress,
+        tokenAcc.token.id
+      );
+
+      if (await isAccountNotFunded(associatedTokenAccAddress)) {
+        // TODO: ui to allow to create it and notify the fee increased
+        errors.recipient = new SolanaAssociatedTokenAccountNotFunded();
+      }
     }
   }
 

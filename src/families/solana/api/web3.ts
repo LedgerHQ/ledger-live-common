@@ -15,6 +15,7 @@ import { Operation, OperationType } from "../../../types";
 import { NetworkInfo } from "../types";
 import { parse } from "./program";
 import { parseQuiet } from "./program/parser";
+import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 
 //const conn = new Connection(clusterApiUrl("mainnet-beta"), "finalized");
 const conn = new Connection("http://api.devnet.solana.com");
@@ -291,6 +292,70 @@ export const buildTransferTransaction = async ({
   return onChainTx;
 };
 
+export const buildTokenTransferTransaction = async ({
+  fromAddress,
+  mintAddress,
+  toAddress,
+  amount,
+  decimals,
+  memo,
+}: {
+  fromAddress: string;
+  mintAddress: string;
+  toAddress: string;
+  amount: BigNumber;
+  decimals: number;
+  memo?: string;
+}) => {
+  const fromPubkey = new PublicKey(fromAddress);
+  const mintPubkey = new PublicKey(mintAddress);
+
+  const fromAssociatedTokenAddress = await findAssociatedTokenAddress(
+    fromAddress,
+    mintAddress
+  );
+  const fromAssociatedTokenPubKey = new PublicKey(fromAssociatedTokenAddress);
+
+  const toAssociatedTokenAddress = await findAssociatedTokenAddress(
+    toAddress,
+    mintAddress
+  );
+
+  const toAssociatedTokenPubKey = new PublicKey(toAssociatedTokenAddress);
+
+  const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
+
+  const onChainTx = new Transaction({
+    feePayer: fromPubkey,
+    recentBlockhash,
+  });
+
+  const tokenTransferIx = Token.createTransferCheckedInstruction(
+    TOKEN_PROGRAM_ID,
+    fromAssociatedTokenPubKey,
+    mintPubkey,
+    toAssociatedTokenPubKey,
+    fromPubkey,
+    [],
+    amount.toNumber(),
+    decimals
+  );
+
+  onChainTx.add(tokenTransferIx);
+
+  if (memo) {
+    const memoIx = new TransactionInstruction({
+      //keys: [{ pubkey: fromPubkey, isSigner: true, isWritable: false }],
+      keys: [],
+      programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+      data: Buffer.from(memo),
+    });
+    onChainTx.add(memoIx);
+  }
+
+  return onChainTx;
+};
+
 export const addSignatureToTransaction = ({
   tx,
   address,
@@ -334,4 +399,26 @@ function ixDescriptorToPartialOperation(
     type: "NONE",
     extra,
   };
+}
+
+const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: PublicKey = new PublicKey(
+  "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+);
+
+export async function findAssociatedTokenAddress(
+  walletAddress: string,
+  tokenMintAddress: string
+) {
+  const walletPubKey = new PublicKey(walletAddress);
+  const tokenMintPubKey = new PublicKey(tokenMintAddress);
+  return (
+    await PublicKey.findProgramAddress(
+      [
+        walletPubKey.toBuffer(),
+        TOKEN_PROGRAM_ID.toBuffer(),
+        tokenMintPubKey.toBuffer(),
+      ],
+      SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
+    )
+  )[0].toBase58();
 }

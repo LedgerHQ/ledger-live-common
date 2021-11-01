@@ -4,6 +4,10 @@ export const SolanaAccountNotFunded = createCustomErrorClass(
   "SolanaAccountNotFunded"
 );
 
+export const SolanaAssociatedTokenAccountNotFunded = createCustomErrorClass(
+  "SolanaAssociatedTokenAccountNotFunded"
+);
+
 export const SolanaMemoIsTooLong = createCustomErrorClass(
   "SolanaMemoIsTooLong"
 );
