@@ -88,26 +88,8 @@ const getAccountShape: GetAccountShape = async (info) => {
     ] as const;
   });
 
-  const tokenAccSubAccNewTxsList = await tokenAccSubAccPairList.reduce(
-    async (asyncAccum, [tokenAcc, subAcc]) => {
-      const accum = await asyncAccum;
-      const address = tokenAcc.pubkey.toBase58();
-      const latestLoadedTxSignature = subAcc?.operations?.[0]?.hash;
-      const accsWithTxs = [
-        tokenAcc,
-        subAcc,
-        await drainAsyncGen(getTransactions(address, latestLoadedTxSignature)),
-      ] as const;
-      accum.push(accsWithTxs);
-      return accum;
-    },
-    Promise.resolve(
-      [] as (readonly [
-        OnChainTokenAccount,
-        TokenAccount | undefined,
-        TransactionDescriptor[]
-      ])[]
-    )
+  const tokenAccSubAccNewTxsList = await drainAsyncGen(
+    enrichWithNewTransactions(tokenAccSubAccPairList)
   );
 
   const nextSubAccs = tokenAccSubAccNewTxsList
@@ -224,6 +206,22 @@ const getAccountShape: GetAccountShape = async (info) => {
   return shape;
 };
 
+async function* enrichWithNewTransactions(
+  accPairList: (readonly [OnChainTokenAccount, TokenAccount?])[]
+) {
+  for (const [tokenAcc, subAcc] of accPairList) {
+    const address = tokenAcc.pubkey.toBase58();
+    console.log("token acc address", address);
+    const latestLoadedTxSignature = subAcc?.operations?.[0]?.hash;
+    const accsWithTxs = [
+      tokenAcc,
+      subAcc,
+      await drainAsyncGen(getTransactions(address, latestLoadedTxSignature)),
+    ] as const;
+    yield accsWithTxs;
+  }
+}
+
 function parseTokenAccountInfoQuiet(info: any) {
   try {
     return create(info, TokenAccountInfo);
@@ -267,20 +265,18 @@ function encodeAccountIdWithTokenAccountAddress(
   accountId: string,
   address: string
 ) {
-  return `${accountId}:${address}`;
+  return `${accountId}+${address}`;
 }
 
 function decodeAccountIdWithTokenAccountAddress(
   accountIdWithTokenAccountAddress: string
 ) {
-  const lastColonIndex = accountIdWithTokenAccountAddress.lastIndexOf(":");
+  const lastColonIndex = accountIdWithTokenAccountAddress.lastIndexOf("+");
   return {
     accountId: accountIdWithTokenAccountAddress.slice(0, lastColonIndex),
     address: accountIdWithTokenAccountAddress.slice(lastColonIndex + 1),
   };
 }
-
-//function encodeTokenAccou
 
 async function drainAsyncGen<T>(asyncGen: AsyncGenerator<T>) {
   const items: T[] = [];
@@ -319,7 +315,10 @@ function newSubAcc(
     id: id,
     parentId: mainAccId,
     // TODO: map txs to token acc operations
-    operations: txs.map((tx) => txToTokenAccOperation(tx, id)),
+    operations: mergeOps(
+      [],
+      txs.map((tx) => txToTokenAccOperation(tx, id))
+    ),
     // TODO: fix
     operationsCount: txs.length,
     pendingOperations: [],
@@ -473,7 +472,7 @@ function txToTokenAccOperation(
 ): Operation {
   const hash = tx.info.signature;
   // TODO: fix
-  const type = "NONE";
+  const type = "IN";
   return {
     id: encodeOperationId(accountId, hash, type),
     accountId,
@@ -526,3 +525,25 @@ function ixDescriptorToPartialOperation(
 
 export const sync = makeSync(getAccountShape, postSync);
 export const scanAccounts = makeScanAccounts(getAccountShape);
+
+/*
+
+addTokens([
+  {
+    contractAddress: "some contracts add",
+    id: "G6nE3kXycaWnWVsDy3H1DjBJ3hHA4cWDLfJphR4cpPzY",
+    name: "Fake Solana Token",
+    ticker: "FAK TICKER",
+    parentCurrency: (0, currencies_1.getCryptoCurrencyById)('solana'),
+    tokenType: "spl-token",
+    type: "TokenCurrency",
+    units: [
+      {
+        code: "FAK CODE",
+        magnitude: 9,
+        name: "FAK NAME",
+      },
+    ],
+  },
+]);
+*/

@@ -38,10 +38,6 @@ export const getAccount = async (address: string) => {
       }),
     ]);
 
-  console.log("token accs");
-
-  console.dir(tokenAccounts, { depth: null });
-
   const balance = new BigNumber(balanceLamportsWithContext.value);
   const spendableBalance = BigNumber.max(balance.minus(lamportPerSignature), 0);
   // TODO: check that
