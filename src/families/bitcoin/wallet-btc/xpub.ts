@@ -78,9 +78,7 @@ class Xpub extends EventEmitter {
 
     // TODO handle eventual reorg case using lastBlock
 
-    let added = 0;
     let total = 0;
-
     try {
       // TODO perf: bad : looping in the tx array
       await this.checkAddressReorg(account, index);
@@ -95,20 +93,7 @@ class Xpub extends EventEmitter {
       if (hasPendings) {
         await this.storage.removePendingTxs({ account, index });
       }
-
-      // eslint-disable-next-line no-cond-assign,no-await-in-loop
-      while (
-        (added = await this.fetchHydrateAndStoreNewTxs(address, account, index))
-      ) {
-        total += added;
-      }
-
-      const pendingTxs = await this.explorer.getPendings({
-        address,
-        account,
-        index,
-      });
-      await this.storage.appendTxs(pendingTxs);
+      total = await this.fetchHydrateAndStoreNewTxs(address, account, index);
     } catch (e) {
       this.emitSyncedFailed(data);
       throw e;
@@ -193,7 +178,8 @@ class Xpub extends EventEmitter {
 
     try {
       // eslint-disable-next-line no-await-in-loop
-      while (await this.syncAccount(account)) {
+      while (account < 2 && (await this.syncAccount(account))) {
+        // account=0 for receive address; account=1 for change address. No need to handle account>1
         account += 1;
       }
     } catch (e) {
