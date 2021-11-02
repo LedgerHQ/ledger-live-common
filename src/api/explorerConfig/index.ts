@@ -83,10 +83,6 @@ const initialExplorerConfig: FullConfig = {
     id: "kmd",
     stable: {
       base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
-      base: "EXPLORER",
       version: "v3",
     },
   },
@@ -129,10 +125,6 @@ const initialExplorerConfig: FullConfig = {
   stakenet: {
     id: "xsn",
     stable: {
-      base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
       base: "EXPLORER",
       version: "v3",
     },
@@ -209,6 +201,13 @@ const initialExplorerConfig: FullConfig = {
   },
   ethereum_classic: {
     id: "etc",
+    stable: {
+      base: "EXPLORER",
+      version: "v3",
+    },
+  },
+  polygon: {
+    id: "matic",
     stable: {
       base: "EXPLORER",
       version: "v3",
