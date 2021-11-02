@@ -7,6 +7,7 @@ import {
   RecipientRequired,
   AmountRequired,
   FeeTooHigh,
+  NotEnoughBalanceInParentAccount,
 } from "@ledgerhq/errors";
 import type { Account, TokenAccount } from "../../types";
 import type { Transaction } from "./types";
@@ -43,7 +44,7 @@ const getTransactionStatus = async (
   }
 
   if (!errors.fees && mainAccount.balance.lte(fees)) {
-    errors.fees = new NotEnoughBalance();
+    errors.amount = new NotEnoughBalance();
   }
 
   if (!t.recipient) {
@@ -133,6 +134,10 @@ async function getTokenTransactionStatus(
   const amount = t.useAllAmount ? account.balance : t.amount;
   const totalSpent = amount;
 
+  if (!errors.amount && totalSpent.gt(account.balance)) {
+    errors.amount = new NotEnoughBalance();
+  }
+
   return {
     errors,
     warnings,
@@ -151,17 +156,17 @@ function getNativeTransactionStatus(
   const warnings: Record<string, Error> = { ...(currentStatus.warnings ?? {}) };
   const estimatedFees = currentStatus.estimatedFees ?? new BigNumber(0);
 
-  if (!errors.amount && t.amount.plus(estimatedFees).gt(account.balance)) {
-    errors.amount = new NotEnoughBalance();
-  } else if (!errors.fees && estimatedFees.gte(t.amount.times(10))) {
-    errors.fees = new FeeTooHigh();
-  }
-
   const amount = t.useAllAmount
     ? account.balance.minus(estimatedFees)
     : t.amount;
 
   const totalSpent = amount.plus(estimatedFees);
+
+  if (!errors.amount && totalSpent.gt(account.balance)) {
+    errors.amount = new NotEnoughBalance();
+  } else if (!errors.fees && estimatedFees.gte(amount.times(10))) {
+    errors.fees = new FeeTooHigh();
+  }
 
   return {
     errors,
