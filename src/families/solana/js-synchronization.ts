@@ -2,16 +2,20 @@ import { makeScanAccounts, makeSync, mergeOps } from "../../bridge/jsHelpers";
 import {
   Account,
   CryptoCurrency,
+  CurrencyBridge,
   encodeAccountId,
   encodeTokenAccountId,
   Operation,
   OperationType,
+  ScanAccountEvent,
   SubAccount,
+  SyncConfig,
   TokenAccount,
   TokenCurrency,
 } from "../../types";
+import { open, close } from "../../hw";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
-import { getAccount } from "./api";
+import { getAccount, getBalance } from "./api";
 import BigNumber from "bignumber.js";
 import { TokenAccountInfo } from "./api/validators/accounts/token";
 
@@ -28,6 +32,19 @@ import {
 } from "@ledgerhq/cryptoassets";
 import { encodeOperationId } from "../../operation";
 import { parseQuiet } from "./api/program/parser";
+import {
+  BehaviorSubject,
+  defer,
+  from,
+  Observable,
+  range,
+  Subject,
+  generate,
+} from "rxjs";
+import { finalize, switchMap } from "rxjs/operators";
+import Transport from "@ledgerhq/hw-transport";
+import Solana from "@ledgerhq/hw-app-solana";
+import bs58 from "bs58";
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
 
@@ -524,8 +541,138 @@ function ixDescriptorToPartialOperation(
 }
 
 export const sync = makeSync(getAccountShape, postSync);
-export const scanAccounts = makeScanAccounts(getAccountShape);
 
+export const scanAccounts = makeScanAccounts(getAccountShape);
+export const scanAccounts2: CurrencyBridge["scanAccounts"] = ({
+  currency,
+  deviceId,
+  syncConfig,
+}) => {
+  return from(open(deviceId)).pipe(
+    switchMap((transport) => {
+      const subject = new Subject<ScanAccountEvent>();
+
+      //new Promise((res, rej))(async () => {})();
+
+      const routine = async () => {};
+
+      return subject;
+    })
+  );
+
+  /*return new Observable((subsriber) => {
+    const routine = async () => {};
+
+    routine();
+  });
+  */
+};
+
+async function* scanDerivedAddresses(
+  hwApp: Solana,
+  basePath: string,
+  suffix: number[]
+): AsyncGenerator<
+  { path: string; address: string },
+  void,
+  { inc: boolean; extend: boolean }
+> {
+  const path = basePath + suffix.map((num) => `/${num}`).join("");
+  const { address: addressBuffer } = await hwApp.getAddress(path);
+  const address = bs58.encode(addressBuffer);
+
+  const { inc, extend } = (yield { path, address }) ?? {};
+
+  if (extend) {
+    yield* scanDerivedAddresses(hwApp, basePath, [...suffix, 0]);
+  }
+
+  if (inc && suffix.length) {
+    const lastElem = suffix[suffix.length - 1];
+    yield* scanDerivedAddresses(hwApp, basePath, [
+      ...suffix.slice(0, -1),
+      lastElem + 1,
+    ]);
+  }
+}
+
+async function* scan({
+  transport,
+  currency,
+  syncConfig,
+}: {
+  transport: Transport;
+  currency: CryptoCurrency;
+  syncConfig: SyncConfig;
+}) {
+  const hwApp = new Solana(transport);
+  const basePath = "44'/501'";
+  const scanGen = scanDerivedAddresses(hwApp, basePath, []);
+
+  let genState = await scanGen.next();
+
+  while (!genState.done) {
+    const { address, path: derivationPath } = genState.value;
+    const shape = getAccountShape(
+      {
+        address,
+        currency,
+        derivationMode: "",
+        derivationPath,
+        index: 0,
+      },
+      syncConfig
+    );
+  }
+}
+
+async function buildAccount(address: string, balance): Promise<Account> {
+  //const freshAddress = address;
+  const shape = getAccountShape({ address, currency });
+  const account: Account = {
+    type: "Account",
+    id: accountShape.id,
+    seedIdentifier: "",
+    freshAddress,
+    freshAddressPath,
+    freshAddresses: [
+      {
+        address: freshAddress,
+        derivationPath: freshAddressPath,
+      },
+    ],
+    derivationMode: "",
+    name: "",
+    starred: false,
+    used: false,
+    index,
+    currency,
+    operationsCount,
+    operations: [],
+    swapHistory: [],
+    pendingOperations: [],
+    unit: currency.units[0],
+    lastSyncDate: new Date(),
+    creationDate,
+    // overrides
+    balance,
+    spendableBalance,
+    blockHeight: 0,
+    balanceHistoryCache: emptyHistoryCache,
+  };
+
+  /*
+  if (account.balanceHistoryCache === emptyHistoryCache) {
+    account.balanceHistoryCache = generateHistoryFromOperations(account);
+  }
+
+  if (!account.used) {
+    account.used = !isAccountEmpty(account);
+  }
+  */
+
+  return account;
+}
 /*
 
 addTokens([
