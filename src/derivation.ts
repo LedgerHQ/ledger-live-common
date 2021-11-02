@@ -221,8 +221,12 @@ const modes = Object.freeze({
   filecoin: {
     overridesDerivation: "44'/461'/0'/0/<account>",
   },
-  solana: {
-    overridesDerivation: "44'/501'/<account>'/<node>'",
+  solanaMain: {
+    isNonIterable: true,
+    overridesDerivation: "44'/501'",
+  },
+  solanaSub: {
+    overridesDerivation: "44'/501'/<account>'",
   },
 });
 modes as Record<DerivationMode, ModeSpec>; // eslint-disable-line
@@ -239,7 +243,6 @@ const legacyDerivations: Record<CryptoCurrencyIds, DerivationMode[]> = {
   stellar: ["sep5"],
   polkadot: ["polkadotbip44"],
   filecoin: ["filecoin"],
-  solana: ["solana"],
 };
 
 const legacyDerivationsPerFamily: Record<string, DerivationMode[]> = {
@@ -420,11 +423,13 @@ const disableBIP44 = {
   // current workaround, device app does not seem to support bip44
   stellar: true,
   polkadot: true,
-  solana: true,
+  solanaMain: true,
+  solanaSub: true,
 };
 const seedIdentifierPath = {
   neo: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
   filecoin: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
+  solana: ({ purpose, coinType }) => `${purpose}'/${coinType}'`,
   _: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'`,
 };
 export const getSeedIdentifierDerivation = (
@@ -486,6 +491,10 @@ export const getDerivationModesForCurrency = (
 
   if (!disableBIP44[currency.id]) {
     all.push("");
+  }
+
+  if (currency.family === "solana") {
+    all.push("solanaMain", "solanaSub");
   }
 
   if (!getEnv("SCAN_FOR_INVALID_PATHS")) {
