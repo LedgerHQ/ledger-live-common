@@ -138,7 +138,6 @@ async function* enrichWithNewTransactions(
 ) {
   for (const [tokenAcc, subAcc] of accPairList) {
     const address = tokenAcc.pubkey.toBase58();
-    console.log("token acc address", address);
     const latestLoadedTxSignature = subAcc?.operations?.[0]?.hash;
     const accsWithTxs = [
       tokenAcc,
@@ -182,8 +181,8 @@ const fakeTokenCurrency = (info?: TokenAccountInfo): TokenCurrency => {
     type: "TokenCurrency",
     // TODO: fix
     units: [
-      { code: "N/A", magnitude: info?.tokenAmount.decimals || 0, name: "N/A" },
-      { code: "N/A", magnitude: 0, name: "N/A" },
+      { code: "FAK", magnitude: info?.tokenAmount.decimals || 0, name: "N/A" },
+      { code: "fakes", magnitude: 0, name: "N/A" },
     ],
   };
 };
@@ -234,7 +233,7 @@ function newSubAcc(
     tokenAcc.pubkey.toBase58()
   );
 
-  const balance = new BigNumber(tokenAccInfo.tokenAmount.uiAmountString);
+  const balance = new BigNumber(tokenAccInfo.tokenAmount.amount);
   return {
     balance,
     balanceHistoryCache: emptyHistoryCache,
@@ -262,7 +261,7 @@ function patchedSubAcc(
   tokenAccInfo: TokenAccountInfo,
   txs: NonEmptyArray<TransactionDescriptor>
 ): TokenAccount {
-  const balance = new BigNumber(tokenAccInfo.tokenAmount.uiAmountString);
+  const balance = new BigNumber(tokenAccInfo.tokenAmount.amount);
   const newOps = txs.map((tx) => txToTokenAccOperation(tx, subAcc.id));
   const totalOps = mergeOps(subAcc.operations, newOps);
   return {
