@@ -20,6 +20,7 @@ export type NetworkInfoRaw = {
   lamportPerSignature: string;
 };
 
+/*
 type TokenTransactionSpec = {
   kind: "prepared";
   mintAddress: string;
@@ -42,10 +43,11 @@ type NativeTransactionMode = {
 };
 
 export type TransactionMode = NativeTransactionMode | TokenTransactionMode;
+*/
 
 export type Transaction = TransactionCommon & {
   family: "solana";
-  mode: TransactionMode;
+  //mode: TransactionMode;
   fees?: BigNumber;
   networkInfo?: NetworkInfo;
   memo?: string;
@@ -53,7 +55,7 @@ export type Transaction = TransactionCommon & {
 };
 export type TransactionRaw = TransactionCommonRaw & {
   family: "solana";
-  mode: TransactionMode;
+  //mode: TransactionMode;
   fees?: string;
   networkInfo?: NetworkInfoRaw;
   memo?: string;

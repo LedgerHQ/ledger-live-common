@@ -31,34 +31,34 @@ function build(account: Account, transaction: Transaction) {
     throw new FeeNotLoaded();
   }
 
-  const { recipient, useAllAmount, mode } = transaction;
+  const { recipient, useAllAmount /*mode*/ } = transaction;
 
-  switch (mode.kind) {
-    case "native":
-      return buildTransferTransaction({
-        fromAddress: account.freshAddress,
-        toAddress: recipient,
-        amount: useAllAmount
-          ? account.balance.minus(transaction.fees)
-          : transaction.amount,
-        memo: transaction.memo,
-      });
-    case "token":
-      if (mode.spec.kind !== "prepared") {
-        throw new Error("unprepared transaction");
-      }
-      return buildTokenTransferTransaction({
-        fromAddress: account.freshAddress,
-        toAddress: recipient,
-        mintAddress: mode.spec.mintAddress,
-        amount: useAllAmount ? account.balance : transaction.amount,
-        decimals: mode.spec.decimals,
-        memo: transaction.memo,
-      });
-    default:
-      const _: never = mode;
-      throw new Error("unsupported tx mode");
+  if (transaction.subAccountId) {
+    const tokenAcc = account.subAccounts?.find(
+      (acc) => acc.id === transaction.subAccountId
+    );
+
+    if (!tokenAcc || tokenAcc.type !== "TokenAccount") {
+      throw new Error("sub account not found");
+    }
+    return buildTokenTransferTransaction({
+      fromAddress: account.freshAddress,
+      toAddress: recipient,
+      mintAddress: tokenAcc.token.id,
+      amount: useAllAmount ? account.balance : transaction.amount,
+      decimals: tokenAcc.token.units[0].magnitude,
+      memo: transaction.memo,
+    });
   }
+
+  return buildTransferTransaction({
+    fromAddress: account.freshAddress,
+    toAddress: recipient,
+    amount: useAllAmount
+      ? account.balance.minus(transaction.fees)
+      : transaction.amount,
+    memo: transaction.memo,
+  });
 }
 
 export default buildOnChainTransaction;

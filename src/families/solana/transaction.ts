@@ -10,10 +10,11 @@ import { formatCurrencyUnit } from "../../currencies";
 
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
-  const { networkInfo, fees, family, memo, allowUnFundedRecipient, mode } = tr;
+  const { networkInfo, fees, family, memo, allowUnFundedRecipient /*mode*/ } =
+    tr;
   return {
     ...common,
-    mode,
+    //mode,
     fees: fees === undefined ? undefined : new BigNumber(fees),
     networkInfo: networkInfo && {
       family,
@@ -27,10 +28,11 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
 
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
-  const { networkInfo, family, fees, memo, allowUnFundedRecipient, mode } = t;
+  const { networkInfo, family, fees, memo, allowUnFundedRecipient /*mode*/ } =
+    t;
   return {
     ...common,
-    mode,
+    //mode,
     fees: fees && fees.toString(),
     networkInfo: networkInfo && {
       family: family,

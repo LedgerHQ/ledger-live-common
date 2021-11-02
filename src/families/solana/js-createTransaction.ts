@@ -1,5 +1,5 @@
 import { BigNumber } from "bignumber.js";
-import type { Transaction, TransactionMode } from "./types";
+import type { Transaction /* TransactionMode */ } from "./types";
 import { log } from "@ledgerhq/logs";
 import { Account } from "../../types";
 
@@ -10,7 +10,7 @@ import { Account } from "../../types";
  */
 const createTransaction = (account: Account): Transaction => {
   return {
-    mode: { kind: "native" },
+    //mode: { kind: "native" },
     family: "solana",
     amount: new BigNumber(0),
     recipient: "",

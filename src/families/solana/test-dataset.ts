@@ -51,7 +51,7 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is success: not all amount",
               transaction: {
-                mode: { kind: "native" },
+                //mode: { kind: "native" },
                 amount: testOnChainData.fundedSenderBalance.dividedBy(2),
                 recipient: testOnChainData.fundedAddress,
                 fees: testOnChainData.fees,
@@ -70,7 +70,7 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is success: all amount",
               transaction: {
-                mode: { kind: "native" },
+                //mode: { kind: "native" },
                 useAllAmount: true,
                 amount: zero,
                 recipient: testOnChainData.fundedAddress,
@@ -90,7 +90,7 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is error: not enough balance, not all amount",
               transaction: {
-                mode: { kind: "native" },
+                //mode: { kind: "native" },
                 amount: testOnChainData.fundedSenderBalance,
                 recipient: testOnChainData.fundedAddress,
                 fees: testOnChainData.fees,
@@ -109,7 +109,7 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is error: not enough balance, all amount",
               transaction: {
-                mode: { kind: "native" },
+                //mode: { kind: "native" },
                 useAllAmount: true,
                 amount: zero,
                 recipient: testOnChainData.fundedAddress,
@@ -129,7 +129,7 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is error: amount is 0",
               transaction: {
-                mode: { kind: "native" },
+                //mode: { kind: "native" },
                 amount: zero,
                 recipient: testOnChainData.fundedAddress,
                 fees: testOnChainData.fundedSenderBalance,
@@ -148,7 +148,7 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is error: amount is negative",
               transaction: {
-                mode: { kind: "native" },
+                //mode: { kind: "native" },
                 amount: new BigNumber(-1),
                 recipient: testOnChainData.fundedAddress,
                 fees: testOnChainData.fundedSenderBalance,
@@ -167,7 +167,7 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is error: source == destination",
               transaction: {
-                mode: { kind: "native" },
+                //mode: { kind: "native" },
                 amount: testOnChainData.fundedSenderBalance,
                 recipient: testOnChainData.fundedSenderAddress,
                 fees: testOnChainData.fees,
@@ -187,7 +187,7 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is error: negative fee",
               transaction: {
-                mode: { kind: "native" },
+                //mode: { kind: "native" },
                 amount: testOnChainData.fundedSenderBalance,
                 recipient: testOnChainData.fundedAddress,
                 fees: new BigNumber(-1),
@@ -206,7 +206,7 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is error: fee is too high",
               transaction: {
-                mode: { kind: "native" },
+                //mode: { kind: "native" },
                 amount: new BigNumber(1),
                 recipient: testOnChainData.fundedAddress,
                 fees: new BigNumber(10),
@@ -225,7 +225,7 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is error: account not funded without allowNotFundedRecipient",
               transaction: {
-                mode: { kind: "native" },
+                //mode: { kind: "native" },
                 amount: new BigNumber(1),
                 recipient: testOnChainData.unfundedAddress,
                 fees: new BigNumber(10),
@@ -244,7 +244,7 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is warning: account not funded with allowNotFundedRecipient",
               transaction: {
-                mode: { kind: "native" },
+                //mode: { kind: "native" },
                 amount: new BigNumber(1),
                 recipient: testOnChainData.unfundedAddress,
                 allowUnFundedRecipient: true,
@@ -264,7 +264,7 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is error: recipient is not valid base58 address",
               transaction: {
-                mode: { kind: "native" },
+                //mode: { kind: "native" },
                 amount: new BigNumber(1),
                 recipient: "0",
                 fees: new BigNumber(10),
@@ -283,7 +283,7 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is error: recipient address is off ed25519",
               transaction: {
-                mode: { kind: "native" },
+                //mode: { kind: "native" },
                 amount: new BigNumber(1),
                 recipient: testOnChainData.offEd25519Address,
                 fees: new BigNumber(10),
@@ -302,7 +302,7 @@ const dataset: DatasetTest<Transaction> = {
             {
               name: "status is error: memo is too long",
               transaction: {
-                mode: { kind: "native" },
+                //mode: { kind: "native" },
                 amount: new BigNumber(1),
                 recipient: testOnChainData.fundedSenderAddress,
                 fees: new BigNumber(10),
