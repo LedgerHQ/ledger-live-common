@@ -445,7 +445,6 @@ const bsc: AppSpec<Transaction> = {
   ]),
 };
 
-
 const polygon: AppSpec<Transaction> = {
   name: "Polygon",
   currency: getCryptoCurrencyById("polygon"),
