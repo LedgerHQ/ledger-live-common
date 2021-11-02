@@ -56,22 +56,20 @@ const getTransactionStatus = async (
     }
   }
 
-  if (t.subAccountId) {
-    const tokenAcc = a.subAccounts?.find((acc) => acc.id === t.subAccountId);
-
-    if (tokenAcc?.type !== "TokenAccount") {
-      errors.sender = new InvalidAddress("token sub acc not found");
-    } else {
-      // TODO: move to prepare tx
+  if (t.mode.kind === "token") {
+    if (t.mode.spec.kind === "prepared") {
+      const { mintAddress } = t.mode.spec;
       const associatedTokenAccAddress = await findAssociatedTokenAddress(
         a.freshAddress,
-        tokenAcc.token.id
+        mintAddress
       );
-
       if (await isAccountNotFunded(associatedTokenAccAddress)) {
         // TODO: ui to allow to create it and notify the fee increased
         errors.recipient = new SolanaAssociatedTokenAccountNotFunded();
       }
+    } else {
+      //TODO: switch to real error
+      errors.recipient = new InvalidAddress();
     }
   }
 
@@ -97,7 +95,7 @@ const getTransactionStatus = async (
         errors.amount = new AmountRequired();
       } else if (t.amount.plus(fees).gt(a.balance)) {
         errors.amount = new NotEnoughBalance();
-      } else if (fees.gte(t.amount.times(10))) {
+      } else if (fees.gte(t.amount.times(10)) && t.mode.kind === "native") {
         errors.fees = new FeeTooHigh();
       }
     }
