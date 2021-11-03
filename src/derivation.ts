@@ -470,7 +470,9 @@ export const getDerivationModesForCurrency = (
 
   // taproot logic. FIXME should move per family
   if (currency.family === "bitcoin") {
-    all.push("taproot");
+    if (currency.id === "bitcoin" || currency.id === "bitcoin_testnet") {
+      all.push("taproot");
+    }
   }
 
   if (currency.supportsSegwit) {
