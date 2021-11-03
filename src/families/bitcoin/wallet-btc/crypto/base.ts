@@ -39,13 +39,10 @@ class Base implements ICrypto {
     this.network.usesTimestampedTransaction = false;
   }
 
-  public static addCacheXpubBech32(xpub: string, network: any) {
-    if (!Base.bech32Cache[xpub]) {
-      Base.bech32Cache[xpub] = bip32.fromBase58(xpub, network);
-    }
-  }
-
   protected getPubkeyAt(xpub: string, account: number, index: number): Buffer {
+    if (!Base.bech32Cache[xpub]) {
+      Base.bech32Cache[xpub] = bip32.fromBase58(xpub, this.network);
+    }
     if (Base.publickeyCache[`${xpub}-${account}-${index}`]) {
       return Base.publickeyCache[`${xpub}-${account}-${index}`];
     }
