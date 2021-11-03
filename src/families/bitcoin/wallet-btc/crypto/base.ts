@@ -27,8 +27,9 @@ export function fallbackValidateAddress(address: string): boolean {
 class Base implements ICrypto {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   network: any;
-  static publickeyCache = {};
-  static addressCache = {};
+  protected static publickeyCache = {}; // xpub + account + index to publicKey
+  protected static addressCache = {}; // derivationMode + xpub + account + index to address
+  protected static bech32Cache = {}; // xpub to bech32 interface
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor({ network }: { network: any }) {
@@ -38,14 +39,26 @@ class Base implements ICrypto {
     this.network.usesTimestampedTransaction = false;
   }
 
+  public static addCacheXpubBech32(xpub: string, network: any) {
+    if (!Base.bech32Cache[xpub]) {
+      Base.bech32Cache[xpub] = bip32.fromBase58(xpub, network);
+    }
+  }
+
   protected getPubkeyAt(xpub: string, account: number, index: number): Buffer {
     if (Base.publickeyCache[`${xpub}-${account}-${index}`]) {
       return Base.publickeyCache[`${xpub}-${account}-${index}`];
     }
-    const publicKey = bip32
-      .fromBase58(xpub, this.network)
-      .derive(account)
-      .derive(index).publicKey;
+    if (Base.publickeyCache[`${xpub}-${account}`]) {
+      const publicKey =
+        Base.publickeyCache[`${xpub}-${account}`].derive(index).publicKey;
+      Base.publickeyCache[`${xpub}-${account}-${index}`] = publicKey;
+      return publicKey;
+    }
+    Base.publickeyCache[`${xpub}-${account}`] =
+      Base.bech32Cache[xpub].derive(account);
+    const publicKey =
+      Base.publickeyCache[`${xpub}-${account}`].derive(index).publicKey;
     Base.publickeyCache[`${xpub}-${account}-${index}`] = publicKey;
     return publicKey;
   }

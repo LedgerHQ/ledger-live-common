@@ -7,6 +7,7 @@ import { ICrypto } from "./crypto/types";
 import { PickingStrategy } from "./pickingstrategies/types";
 import * as utils from "./utils";
 import { TransactionInfo, InputInfo, OutputInfo } from "./types";
+import Base from "./crypto/base";
 
 // names inside this class and discovery logic respect BIP32 standard
 class Xpub extends EventEmitter {
@@ -157,11 +158,10 @@ class Xpub extends EventEmitter {
   // TODO : test fail case + incremental
   async sync() {
     await this.whenSynced("all");
-
     this.emitSyncing({ type: "all" });
     this.freshAddressIndex = 0;
+    Base.addCacheXpubBech32(this.xpub, this.crypto.network);
     let account = 0;
-
     try {
       // eslint-disable-next-line no-await-in-loop
       while (account < 2 && (await this.syncAccount(account))) {
