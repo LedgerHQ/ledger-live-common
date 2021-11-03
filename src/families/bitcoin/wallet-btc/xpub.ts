@@ -20,9 +20,9 @@ class Xpub extends EventEmitter {
 
   derivationMode: string;
 
-  freshAddress: { [key: string]: string } = {};
+  freshAddress: string;
 
-  freshAddressIndex: { [key: string]: number } = {};
+  freshAddressIndex: number;
 
   // https://github.com/bitcoinjs/bitcoinjs-lib/blob/27a840aac4a12338f1e40c54f3759bbd7a559944/src/bufferutils.js#L24
   // only works with number so we need to be sure to pass correct numbers
@@ -54,6 +54,8 @@ class Xpub extends EventEmitter {
     this.crypto = crypto;
     this.xpub = xpub;
     this.derivationMode = derivationMode;
+    this.freshAddress = "";
+    this.freshAddressIndex = 0;
   }
 
   async syncAddress(account: number, index: number) {
@@ -105,11 +107,8 @@ class Xpub extends EventEmitter {
       account,
       index,
     });
-    if (lastTx) {
-      this.freshAddressIndex[account] = Math.max(
-        this.freshAddressIndex[account],
-        index + 1
-      );
+    if (account === 0 && lastTx) {
+      this.freshAddressIndex = Math.max(this.freshAddressIndex, index + 1);
     }
     return !!lastTx;
   }
@@ -122,13 +121,6 @@ class Xpub extends EventEmitter {
   }
 
   async syncAccount(account: number) {
-    this.freshAddressIndex[account] = 0;
-    this.freshAddress[account] = this.crypto.getAddress(
-      this.derivationMode,
-      this.xpub,
-      account,
-      0
-    );
     await this.whenSynced("account", account.toString());
 
     this.emitSyncing({
@@ -159,12 +151,6 @@ class Xpub extends EventEmitter {
       account,
       index,
     });
-    this.freshAddress[account] = this.crypto.getAddress(
-      this.derivationMode,
-      this.xpub,
-      account,
-      this.freshAddressIndex[account]
-    );
     return index;
   }
 
@@ -173,7 +159,7 @@ class Xpub extends EventEmitter {
     await this.whenSynced("all");
 
     this.emitSyncing({ type: "all" });
-
+    this.freshAddressIndex = 0;
     let account = 0;
 
     try {
@@ -188,7 +174,12 @@ class Xpub extends EventEmitter {
     }
 
     this.emitSynced({ type: "all", account });
-
+    this.freshAddress = this.crypto.getAddress(
+      this.derivationMode,
+      this.xpub,
+      0,
+      this.freshAddressIndex
+    );
     return account;
   }
 
