@@ -151,6 +151,9 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
     },
     allowZeroAmount: tr.allowZeroAmount,
     feesStrategy: tr.feesStrategy,
+    tokenIds: tr.tokenIds,
+    collection: tr.collection,
+    quantities: tr.quantities?.map((q) => new BigNumber(q)),
   };
 };
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
@@ -175,6 +178,9 @@ export const toTransactionRaw = (t: Transaction): TransactionRaw => {
     },
     allowZeroAmount: t.allowZeroAmount,
     feesStrategy: t.feesStrategy,
+    tokenIds: t.tokenIds,
+    collection: t.collection,
+    quantities: t.quantities?.map((q) => q.toString()),
   };
 };
 

@@ -52,6 +52,9 @@ export type TransactionRaw = TransactionCommonRaw & {
   feeCustomUnit: Unit | null | undefined;
   networkInfo: NetworkInfoRaw | null | undefined;
   allowZeroAmount?: boolean;
+  tokenIds?: string[];
+  collection?: string;
+  quantities?: string[];
 };
 export type TypedMessage = {
   types: {
