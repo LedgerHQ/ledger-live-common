@@ -430,9 +430,11 @@ class Xpub extends EventEmitter {
         { address, account, index },
         lastTx
       );
-      pendingTxs = pendingTxs.concat(txs.filter((tx) => !tx.block));
+      if (pendingTxs.length === 0) {
+        pendingTxs = txs.filter((tx) => !tx.block);
+      }
       inserted += await this.storage.appendTxs(txs.filter((tx) => tx.block)); // only insert not pending tx
-    } while (txs.length >= this.txsSyncArraySize); // check whether page is full, if not, it is the last page
+    } while (txs.length - pendingTxs.length >= this.txsSyncArraySize); // check whether page is full, if not, it is the last page
     inserted += await this.storage.appendTxs(pendingTxs);
     return inserted;
   }
