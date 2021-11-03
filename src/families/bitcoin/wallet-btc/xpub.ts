@@ -1,13 +1,12 @@
 import { maxBy, range, some } from "lodash";
 import BigNumber from "bignumber.js";
-import { Address, IStorage } from "./storage/types";
+import { TX, Address, IStorage } from "./storage/types";
 import EventEmitter from "./utils/eventemitter";
 import { IExplorer } from "./explorer/types";
 import { ICrypto } from "./crypto/types";
 import { PickingStrategy } from "./pickingstrategies/types";
 import * as utils from "./utils";
 import { TransactionInfo, InputInfo, OutputInfo } from "./types";
-import Base from "./crypto/base";
 
 // names inside this class and discovery logic respect BIP32 standard
 class Xpub extends EventEmitter {
@@ -160,7 +159,6 @@ class Xpub extends EventEmitter {
     await this.whenSynced("all");
     this.emitSyncing({ type: "all" });
     this.freshAddressIndex = 0;
-    Base.addCacheXpubBech32(this.xpub, this.crypto.network);
     let account = 0;
     try {
       // eslint-disable-next-line no-await-in-loop
@@ -417,18 +415,25 @@ class Xpub extends EventEmitter {
     account: number,
     index: number
   ) {
-    const lastTx = await this.storage.getLastTx({
-      account,
-      index,
-      confirmed: true,
-    });
+    let pendingTxs: TX[] = [];
+    let txs: TX[] = [];
+    let inserted = 0;
+    do {
+      const lastTx = await this.storage.getLastTx({
+        account,
+        index,
+        confirmed: true,
+      });
 
-    const txs = await this.explorer.getAddressTxsSinceLastTxBlock(
-      this.txsSyncArraySize,
-      { address, account, index },
-      lastTx
-    );
-    const inserted = await this.storage.appendTxs(txs);
+      txs = await this.explorer.getAddressTxsSinceLastTxBlock(
+        this.txsSyncArraySize,
+        { address, account, index },
+        lastTx
+      );
+      pendingTxs = pendingTxs.concat(txs.filter((tx) => !tx.block));
+      inserted += await this.storage.appendTxs(txs.filter((tx) => tx.block)); // only insert not pending tx
+    } while (txs.length >= this.txsSyncArraySize); // check whether page is full, if not, it is the last page
+    inserted += await this.storage.appendTxs(pendingTxs);
     return inserted;
   }
 
