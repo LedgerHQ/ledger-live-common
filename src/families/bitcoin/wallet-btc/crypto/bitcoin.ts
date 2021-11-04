@@ -202,6 +202,11 @@ class Bitcoin extends Base {
     // Create address
     return toBech32(outputSchnorrKey, 1, this.network.bech32);
   }
+
+  isTaprootAddress(address: string): boolean {
+    // TODO
+    return true;
+  }
 }
 
 export default Bitcoin;
