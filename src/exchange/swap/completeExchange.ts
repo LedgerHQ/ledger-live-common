@@ -13,26 +13,16 @@ import { withDevice } from "../../hw/deviceAccess";
 import { getProviderNameAndSignature } from "./";
 import { getCurrencyExchangeConfig } from "../";
 
-import type { Transaction } from "../../types";
-import type { Exchange } from "./types";
-import type { CompleteExchangeRequestEvent } from "../platform/types";
+import type {
+  CompleteExchangeInputSwap,
+  CompleteExchangeRequestEvent,
+} from "../platform/types";
 
 const withDevicePromise = (deviceId, fn) =>
   withDevice(deviceId)((transport) => from(fn(transport))).toPromise();
 
-type CompleteExchangeInput = {
-  exchange: Exchange;
-  deviceId: string;
-  provider: string;
-  binaryPayload: string;
-  signature: string;
-  transaction: Transaction;
-  exchangeType: number;
-  rateType: number;
-};
-
 const completeExchange = (
-  input: CompleteExchangeInput
+  input: CompleteExchangeInputSwap
 ): Observable<CompleteExchangeRequestEvent> => {
   let { transaction } = input; // TODO build a tx from the data
 
