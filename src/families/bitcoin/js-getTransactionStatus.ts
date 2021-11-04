@@ -1,4 +1,3 @@
-import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import { log } from "@ledgerhq/logs";
 import {
