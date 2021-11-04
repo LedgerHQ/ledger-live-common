@@ -1,26 +1,21 @@
 import { Observable } from "rxjs";
 
-import type { Transaction } from "../../types";
-import type { CompleteExchangeRequestEvent, Exchange } from "./types";
+import type {
+  CompleteExchangeInputSell,
+  CompleteExchangeInputSwap,
+  CompleteExchangeRequestEvent,
+} from "./types";
 
 import completeExchangeSwap from "../swap/completeExchange";
 import completeExchangeSell from "../sell/completeExchange";
 
-import type { Exchange as ExchangeSwap } from "../swap/types";
-import { ExchangeTypes, RateTypes } from "../hw-app-exchange/Exchange";
+import { ExchangeTypes } from "../hw-app-exchange/Exchange";
 
-type CompleteExchangeInput = {
-  exchange: Exchange; // FIXME: exchange: ExchangeSwap | ExchangeSell
-  deviceId: string;
-  provider: string;
-  binaryPayload: string;
-  signature: string;
-  transaction: Transaction;
-  exchangeType: number; // FIXME: make a TS enum with available exchange types
-  rateType: number; // FIXME: make a TS enum with available rate types
-};
+type CompleteExchangeInput =
+  | CompleteExchangeInputSell
+  | CompleteExchangeInputSwap;
 
-// FIXME: trim down input for each flow. exchangeType not needed pass the switch case
+// FIXME: could trim down input for each flow. exchangeType might not needed pass the switch case 🤷‍♂️
 
 const completeExchange = (
   input: CompleteExchangeInput
@@ -31,10 +26,7 @@ const completeExchange = (
         throw new Error("'toAccount' requested for SWAP exchange");
       }
 
-      return completeExchangeSwap({
-        ...input,
-        exchange: input.exchange as ExchangeSwap,
-      });
+      return completeExchangeSwap(input);
 
     case ExchangeTypes.SELL:
       return completeExchangeSell(input);
