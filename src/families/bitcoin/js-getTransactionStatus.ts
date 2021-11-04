@@ -35,11 +35,15 @@ const getTransactionStatus = async (
 
   // Safeguard before Taproot activation
   if (
+    t.recipient &&
+    !errors.recipient &&
     a.currency.id === "bitcoin" &&
-    a.blockHeight <= 709632 &&
-    isTaprootRecipient(a.currency, t.recipient)
+    a.blockHeight <= 709632
   ) {
-    errors.recipient = new TaprootNotActivated();
+    const isTaproot = await isTaprootRecipient(a.currency, t.recipient);
+    if (isTaproot) {
+      errors.recipient = new TaprootNotActivated();
+    }
   }
 
   let txInputs;
