@@ -1,5 +1,3 @@
-import { TRANSACTION_TYPES } from "../hw-app-exchange/Exchange";
-
 import { Observable } from "rxjs";
 
 import type { Transaction } from "../../types";
@@ -9,6 +7,7 @@ import completeExchangeSwap from "../swap/completeExchange";
 import completeExchangeSell from "../sell/completeExchange";
 
 import type { Exchange as ExchangeSwap } from "../swap/types";
+import { ExchangeTypes, RateTypes } from "../hw-app-exchange/Exchange";
 
 type CompleteExchangeInput = {
   exchange: Exchange; // FIXME: exchange: ExchangeSwap | ExchangeSell
@@ -27,7 +26,7 @@ const completeExchange = (
   input: CompleteExchangeInput
 ): Observable<CompleteExchangeRequestEvent> => {
   switch (input.exchangeType) {
-    case TRANSACTION_TYPES.SWAP:
+    case ExchangeTypes.SWAP:
       if (!input.exchange.toAccount) {
         throw new Error("'toAccount' requested for SWAP exchange");
       }
@@ -37,7 +36,7 @@ const completeExchange = (
         exchange: input.exchange as ExchangeSwap,
       });
 
-    case TRANSACTION_TYPES.SELL:
+    case ExchangeTypes.SELL:
       return completeExchangeSell(input);
 
     default:
