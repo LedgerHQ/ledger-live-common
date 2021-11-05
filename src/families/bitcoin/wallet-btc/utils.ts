@@ -83,12 +83,12 @@ export function byteSize(count: number) {
     return 1;
   }
   if (count <= 0xffff) {
-    return 2;
+    return 3;
   }
   if (count <= 0xffffffff) {
-    return 4;
+    return 5;
   }
-  return 8;
+  return 9;
 }
 
 // refer to https://github.com/LedgerHQ/lib-ledger-core/blob/fc9d762b83fc2b269d072b662065747a64ab2816/core/src/wallet/bitcoin/api_impl/BitcoinLikeTransactionApi.cpp#L217
@@ -106,6 +106,9 @@ export function estimateTxSize(
   fixedSize += byteSize(inputCount); // Number of inputs
   fixedSize += byteSize(outputCount); // Number of outputs
   fixedSize += 4; // Timelock
+  if (derivationMode !== DerivationModes.LEGACY) {
+    fixedSize += 0.5; // Segwit marker & segwit flag
+  }
   // refer to https://medium.com/coinmonks/on-bitcoin-transaction-sizes-part-2-9445373d17f4
   // and https://bitcoin.stackexchange.com/questions/96017/what-are-the-sizes-of-single-sig-and-2-of-3-multisig-taproot-inputs
   if (derivationMode === DerivationModes.TAPROOT) {
@@ -120,12 +123,12 @@ export function estimateTxSize(
     // P2SH: 32 PrevTxHash + 4 Index + 23 scriptPubKey + 4 sequence
     const isNativeSegwit = derivationMode === DerivationModes.NATIVE_SEGWIT;
     const inputSize = isNativeSegwit ? 41 : 63;
-    const noWitness = fixedSize + inputSize * inputCount + 34 * outputCount;
+    const noWitness = fixedSize + inputSize * inputCount + 43 * outputCount; //43 is the biggest output(taproot output) size, we use the biggest one for safety
     // Include flag and marker size (one byte each)
     const witnessSize = noWitness + 108 * inputCount + 2;
     txSize = (noWitness * 3 + witnessSize) / 4;
   } else {
-    txSize = fixedSize + 148 * inputCount + 34 * outputCount;
+    txSize = fixedSize + 148 * inputCount + 43 * outputCount;
   }
   return Math.ceil(txSize); // We don't allow floating value
 }
