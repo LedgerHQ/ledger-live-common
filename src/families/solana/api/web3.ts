@@ -3,19 +3,24 @@ import {
   PublicKey,
   SystemProgram,
   Transaction,
-  clusterApiUrl,
   ConfirmedSignatureInfo,
   ParsedConfirmedTransaction,
   TransactionInstruction,
 } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
-import { chunk } from "lodash";
+import { chunk, sortBy } from "lodash";
 import { encodeOperationId } from "../../../operation";
 import { Operation, OperationType } from "../../../types";
 import { NetworkInfo } from "../types";
 import { parse } from "./program";
 import { parseQuiet } from "./program/parser";
-import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import {
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  Token,
+} from "@solana/spl-token";
+import { parseTokenAccountInfo } from "./account/parser";
+import { TokenAccountInfo } from "./validators/accounts/token";
 
 //const conn = new Connection(clusterApiUrl("mainnet-beta"), "finalized");
 const conn = new Connection("http://api.devnet.solana.com");
@@ -25,10 +30,6 @@ export const getBalance = (address: string) =>
 
 export const getAccount = async (address: string) => {
   const pubKey = new PublicKey(address);
-
-  const TOKEN_PROGRAM_ID = new PublicKey(
-    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-  );
 
   const [balanceLamportsWithContext, lamportPerSignature, tokenAccounts] =
     await Promise.all([
@@ -195,11 +196,10 @@ async function* getTransactionsBatched(
   pubKey: PublicKey,
   untilTxSignature?: string
 ): AsyncGenerator<TransactionDescriptor[], void, unknown> {
-  // TODO: double check with Ledger team - last 1000 operations is a sane limit
+  // as per Ledger team - last 1000 operations is a sane limit
   const signatures = await conn.getSignaturesForAddress(pubKey, {
     until: untilTxSignature,
-    //TODO: 1000 ?
-    limit: 100,
+    limit: 1000,
   });
 
   // max req payload is 50K, around 200 transactions atm
@@ -236,19 +236,6 @@ export async function* getTransactions(
   )) {
     yield* txDetailsBatch;
   }
-  /*
-    operations.push(
-      ...txDetailsBatch.reduce((acc, txDetails) => {
-        const op = onChainTxToOperation(txDetails, accountId, address);
-        if (op) {
-          acc.push(op);
-        }
-        return acc;
-      }, [] as Operation[])
-    );
-    */
-
-  //return operations;
 }
 
 export const buildTransferTransaction = async ({
@@ -292,6 +279,7 @@ export const buildTransferTransaction = async ({
   return onChainTx;
 };
 
+// TODO: ancillary accs and gc!
 export const buildTokenTransferTransaction = async ({
   fromAddress,
   mintAddress,
@@ -401,24 +389,134 @@ function ixDescriptorToPartialOperation(
   };
 }
 
-const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: PublicKey = new PublicKey(
-  "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
-);
+export async function isTokenAccount(address: string) {
+  const accountInfo = await conn.getAccountInfo(new PublicKey(address));
+
+  return accountInfo?.owner;
+}
 
 export async function findAssociatedTokenAddress(
-  walletAddress: string,
-  tokenMintAddress: string
+  ownerAddress: string,
+  mintAddress: string
 ) {
-  const walletPubKey = new PublicKey(walletAddress);
-  const tokenMintPubKey = new PublicKey(tokenMintAddress);
-  return (
-    await PublicKey.findProgramAddress(
-      [
-        walletPubKey.toBuffer(),
-        TOKEN_PROGRAM_ID.toBuffer(),
-        tokenMintPubKey.toBuffer(),
-      ],
-      SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
-    )
-  )[0].toBase58();
+  const ownerPubKey = new PublicKey(ownerAddress);
+  const mintPubkey = new PublicKey(mintAddress);
+
+  return Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    mintPubkey,
+    ownerPubKey
+  );
+}
+
+export async function estimateTokenSpendableBalance(
+  ownerAddress: string,
+  mintAddress: string,
+  destAddress?: string
+): Promise<BigNumber> {
+  const ownerPubkey = new PublicKey(ownerAddress);
+  const mintPubkey = new PublicKey(mintAddress);
+  const destPubkey =
+    destAddress === undefined ? PublicKey.default : new PublicKey(destAddress);
+
+  const tokenAccs = await getTokenAccountsByMint(ownerAddress, mintAddress);
+
+  const sourceableTokenAccs = sortBy(
+    tokenAccs.filter((acc) => {
+      return (
+        acc.tokenAccInfo.state === "initialized" &&
+        acc.tokenAccInfo.tokenAmount.amount !== "0"
+      );
+    }),
+    (info) => -Number(info.tokenAccInfo.tokenAmount.amount)
+  );
+
+  // simulation data should be as real as possible
+  const { blockhash } = await conn.getRecentBlockhash();
+
+  const dummyTx = new Transaction({
+    feePayer: ownerPubkey,
+    recentBlockhash: blockhash,
+  });
+
+  const { transferableAmount } = sourceableTokenAccs.reduce(
+    (accum, acc) => {
+      if (accum.overflow) {
+        return accum;
+      }
+
+      try {
+        const tokenAmount = Number(acc.tokenAccInfo.tokenAmount.amount);
+        const nextTx = accum.tx.add(
+          Token.createTransferCheckedInstruction(
+            TOKEN_PROGRAM_ID,
+            acc.info.pubkey,
+            mintPubkey,
+            destPubkey,
+            ownerPubkey,
+            [],
+            tokenAmount,
+            acc.tokenAccInfo.tokenAmount.decimals
+          )
+        );
+        const _ = accum.tx.serialize({
+          requireAllSignatures: false,
+          verifySignatures: false,
+        });
+
+        return {
+          ...accum,
+          tx: nextTx,
+          transferableAmount: accum.transferableAmount + tokenAmount,
+          overflow: false,
+        };
+      } catch (e) {
+        // expected throw if tx is too large
+        return {
+          ...accum,
+          overflow: true,
+        };
+      }
+    },
+    {
+      tx: dummyTx,
+      transferableAmount: 0,
+      overflow: false,
+    }
+  );
+
+  return new BigNumber(transferableAmount);
+}
+
+async function getTokenAccountsByMint(
+  ownerAddress: string,
+  mintAddress: string
+) {
+  const ownerPubkey = new PublicKey(ownerAddress);
+  const mintPubkey = new PublicKey(mintAddress);
+
+  const { value: onChainTokenAccInfoList } =
+    await conn.getParsedTokenAccountsByOwner(ownerPubkey, {
+      mint: mintPubkey,
+    });
+
+  type Info = {
+    info: typeof onChainTokenAccInfoList[number];
+    tokenAccInfo: TokenAccountInfo;
+  };
+
+  return onChainTokenAccInfoList
+    .map((info) => {
+      const parsedInfo = info.account.data.parsed?.info;
+      const tokenAccInfo = parseTokenAccountInfo(parsedInfo);
+
+      return tokenAccInfo instanceof Error
+        ? undefined
+        : {
+            info: info,
+            tokenAccInfo,
+          };
+    })
+    .filter((value): value is Info => value !== undefined);
 }

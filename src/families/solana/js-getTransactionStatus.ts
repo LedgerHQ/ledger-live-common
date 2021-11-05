@@ -16,6 +16,7 @@ import {
   isValidBase58Address,
   isEd25519Address,
   MAX_MEMO_LENGTH,
+  decodeAccountIdWithTokenAccountAddress,
 } from "./logic";
 import {
   SolanaAccountNotFunded,
@@ -23,7 +24,7 @@ import {
   SolanaAssociatedTokenAccountNotFunded,
   SolanaMemoIsTooLong,
 } from "./errors";
-import { findAssociatedTokenAddress } from "./api";
+import { findAssociatedTokenAddress, getAccount } from "./api";
 
 const getTransactionStatus = async (
   mainAccount: Account,
@@ -56,12 +57,7 @@ const getTransactionStatus = async (
   } else if (!isEd25519Address(t.recipient)) {
     errors.recipient = new SolanaAddressOffEd25519();
   } else if (await isAccountNotFunded(t.recipient)) {
-    const error = new SolanaAccountNotFunded();
-    if (t.allowUnFundedRecipient) {
-      warnings.recipient = error;
-    } else {
-      errors.recipient = error;
-    }
+    warnings.recipient = new SolanaAccountNotFunded();
   }
 
   if (t.memo && t.memo.length > MAX_MEMO_LENGTH) {
@@ -113,23 +109,29 @@ async function getTokenTransactionStatus(
   if (!account || account.type !== "TokenAccount") {
     throw new Error("sub account not found");
   }
+  // t.recipient is token acc or main?
+  // check if recipient is a token account
 
+  //getAccount
+
+  /*
   const associatedTokenAccAddress = await findAssociatedTokenAddress(
     mainAccount.freshAddress,
     account.token.id
   );
+  */
 
-  if (await isAccountNotFunded(associatedTokenAccAddress)) {
-    errors.recipient = new SolanaAssociatedTokenAccountNotFunded();
+  /*
+  if (await isAccountNotFunded(tokenAccAddress)) {
+    warnings.recipient = new SolanaAssociatedTokenAccountNotFunded();
     // TODO: ui to allow to create it and notify the fee increased
-    /*
       if (t.mode.fundRecipient) {
         warnings.recipient = new SolanaAssociatedTokenAccountNotFunded();
       } else {
         errors.recipient = new SolanaAssociatedTokenAccountNotFunded();
       }
-      */
   }
+  */
 
   const amount = t.useAllAmount ? account.balance : t.amount;
   const totalSpent = amount;

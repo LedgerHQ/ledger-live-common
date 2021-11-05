@@ -1,25 +1,44 @@
-import { getMainAccount } from "../../account";
-import type { Account, AccountLike } from "../../types";
+import type { Account, AccountLike, TokenAccount } from "../../types";
 import type { Transaction } from "./types";
 import BigNumber from "bignumber.js";
+import { estimateTokenSpendableBalance } from "./api/web3";
 
 const estimateMaxSpendable = async ({
   account,
   parentAccount,
+  transaction,
 }: {
   account: AccountLike;
   parentAccount?: Account;
   transaction?: Transaction;
 }): Promise<BigNumber> => {
-  // TODO: fix for token accs
-  //const mainAccount = getMainAccount(account, parentAccount);
-
-  if (account.type === "Account" || account.type === "TokenAccount") {
-    return account.spendableBalance;
+  switch (account.type) {
+    case "Account":
+      return account.spendableBalance;
+    case "TokenAccount":
+      if (!parentAccount) {
+        throw new Error("parent account required");
+      }
+      return tokenAccountSpendableBalance(
+        account,
+        parentAccount,
+        transaction?.recipient
+      );
   }
 
-  throw Error("not supported account type");
-  //return mainAccount.spendableBalance;
+  throw new Error("not supported account type");
 };
+
+function tokenAccountSpendableBalance(
+  tokenAcc: TokenAccount,
+  mainAcc: Account,
+  destAddress?: string
+) {
+  return estimateTokenSpendableBalance(
+    mainAcc.freshAddress,
+    tokenAcc.token.id,
+    destAddress
+  );
+}
 
 export default estimateMaxSpendable;

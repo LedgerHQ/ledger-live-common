@@ -18,6 +18,10 @@ import { getTransactions, TransactionDescriptor } from "./api/web3";
 import { findCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { encodeOperationId } from "../../operation";
 import { parseQuiet } from "./api/program/parser";
+import {
+  decodeAccountIdWithTokenAccountAddress,
+  encodeAccountIdWithTokenAccountAddress,
+} from "./logic";
 
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
 
@@ -182,27 +186,9 @@ const fakeTokenCurrency = (info?: TokenAccountInfo): TokenCurrency => {
     // TODO: fix
     units: [
       { code: "FAK", magnitude: info?.tokenAmount.decimals || 0, name: "N/A" },
-      { code: "fakes", magnitude: 0, name: "N/A" },
     ],
   };
 };
-
-function encodeAccountIdWithTokenAccountAddress(
-  accountId: string,
-  address: string
-) {
-  return `${accountId}+${address}`;
-}
-
-function decodeAccountIdWithTokenAccountAddress(
-  accountIdWithTokenAccountAddress: string
-) {
-  const lastColonIndex = accountIdWithTokenAccountAddress.lastIndexOf("+");
-  return {
-    accountId: accountIdWithTokenAccountAddress.slice(0, lastColonIndex),
-    address: accountIdWithTokenAccountAddress.slice(lastColonIndex + 1),
-  };
-}
 
 async function drainAsyncGen<T>(asyncGen: AsyncGenerator<T>) {
   const items: T[] = [];
