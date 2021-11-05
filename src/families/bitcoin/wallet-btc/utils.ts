@@ -111,8 +111,9 @@ export function estimateTxSize(
   }
   // refer to https://medium.com/coinmonks/on-bitcoin-transaction-sizes-part-2-9445373d17f4
   // and https://bitcoin.stackexchange.com/questions/96017/what-are-the-sizes-of-single-sig-and-2-of-3-multisig-taproot-inputs
+  // and https://bitcoinops.org/en/tools/calc-size/
   if (derivationMode === DerivationModes.TAPROOT) {
-    txSize = fixedSize + 57.5 * inputCount + 43 * outputCount;
+    txSize = fixedSize + 57.75 * inputCount + 43 * outputCount;
     return Math.ceil(txSize);
   }
   const isSegwit =
