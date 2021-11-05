@@ -35,9 +35,11 @@ export const getAccount = async (address: string) => {
     await Promise.all([
       conn.getBalanceAndContext(pubKey),
       getNetworkInfo().then((res) => res.lamportsPerSignature),
-      conn.getParsedTokenAccountsByOwner(pubKey, {
-        programId: TOKEN_PROGRAM_ID,
-      }),
+      conn
+        .getParsedTokenAccountsByOwner(pubKey, {
+          programId: TOKEN_PROGRAM_ID,
+        })
+        .then((res) => res.value),
     ]);
 
   const balance = new BigNumber(balanceLamportsWithContext.value);
