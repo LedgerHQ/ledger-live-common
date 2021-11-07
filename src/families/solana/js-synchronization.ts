@@ -30,17 +30,12 @@ import {
 import _, { groupBy, reduce } from "lodash";
 import { parseTokenAccountInfo } from "./api/account/parser";
 
+import { reduceDefined } from "./utils";
+
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
 
 type NonEmptyArray<T> = Array<T> & {
   0: T;
-};
-
-const reduceDefined = <E, T>(
-  mapper: (el: E) => T | undefined,
-  coll: E[]
-): T[] => {
-  return coll.map(mapper).filter((item): item is T => item !== undefined);
 };
 
 const isNonEmptyArray = <T>(arr: Array<T>): arr is NonEmptyArray<T> =>

@@ -6,5 +6,8 @@ export {
   addSignatureToTransaction,
   broadcastTransaction,
   getBalance,
-  findAssociatedTokenAddress,
+  //TODO: rename
+  findAssociatedTokenPubkey as findAssociatedTokenAddress,
+  getOnChainTokenAccountsByMint,
+  getTokenTransferSpec,
 } from "./web3";

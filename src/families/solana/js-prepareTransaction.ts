@@ -1,40 +1,37 @@
-import type { Account } from "../../types";
-import { getNetworkInfo } from "./api";
+import { findSubAccountById } from "../../account";
+import type { Account, TokenAccount } from "../../types";
+import {
+  getNetworkInfo,
+  getOnChainTokenAccountsByMint,
+  findAssociatedTokenAddress,
+  getTokenTransferSpec,
+} from "./api";
 
-import type { Transaction } from "./types";
+import type {
+  AncillaryTokenAccountOperation,
+  TokenTransferCommand,
+  Transaction,
+} from "./types";
 
 const prepareTransaction = async (
-  a: Account,
+  mainAccount: Account,
   tx: Transaction
 ): Promise<Transaction> => {
   const patch: Partial<Transaction> = {};
 
-  /*
   if (tx.subAccountId) {
-    const { mode } = tx;
-    const tokenAcc = a.subAccounts?.find((acc) => acc.id === tx.subAccountId);
-    if (tokenAcc && tokenAcc.type === "TokenAccount") {
-      patch.mode = {
-        fundRecipient: mode.kind === "token" && mode.fundRecipient,
-        kind: "token",
-        spec: {
-          kind: "prepared",
-          //tokenAcc,
-          mintAddress: tokenAcc.token.id,
-          // TODO: figure out units for token accs
-          decimals: tokenAcc.token.units[0].magnitude,
-        },
-      };
-    } else {
-      throw Error("toke sub account not found");
+    if (tx.command.kind !== "token.transfer") {
+      const subAccount = findSubAccountById(mainAccount, tx.subAccountId);
+      if (!subAccount || subAccount.type !== "TokenAccount") {
+        throw new Error("subaccount not found");
+      }
+      patch.command = await prepareTokenTransfer(mainAccount, subAccount, tx);
     }
-  }
-  */
-
-  if (tx.fees === undefined) {
-    const networkInfo = await getNetworkInfo();
-    patch.networkInfo = networkInfo;
-    patch.fees = networkInfo.lamportsPerSignature;
+  } else {
+    // native sol transfer
+    if (tx.command.kind !== "transfer") {
+      patch.command = { kind: "transfer" };
+    }
   }
 
   return Object.keys(patch).length > 0
@@ -43,6 +40,35 @@ const prepareTransaction = async (
         ...patch,
       }
     : tx;
+};
+
+const prepareTokenTransfer = async (
+  mainAccount: Account,
+  subAccount: TokenAccount,
+  tx: Transaction
+): Promise<TokenTransferCommand> => {
+  const tokenIdParts = subAccount.id.split("/");
+  const mintAddress = tokenIdParts[tokenIdParts.length - 1];
+  const mintDecimals = subAccount.token.units[0].magnitude;
+
+  const { ancillaryTokenAccOps, totalTransferableAmountIn1Tx } =
+    await getTokenTransferSpec(
+      mainAccount.freshAddress,
+      mintAddress,
+      // TODO: what if a wallet address! - must get token ass account!
+      tx.recipient,
+      tx.useAllAmount
+        ? subAccount.spendableBalance.toNumber()
+        : tx.amount.toNumber(),
+      mintDecimals
+    );
+
+  return {
+    kind: "token.transfer",
+    mintAddress,
+    ancillaryTokenAccOps,
+    totalTransferableAmountIn1Tx,
+  };
 };
 
 export default prepareTransaction;
