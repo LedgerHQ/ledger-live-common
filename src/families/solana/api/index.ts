@@ -10,4 +10,5 @@ export {
   findAssociatedTokenPubkey as findAssociatedTokenAddress,
   getOnChainTokenAccountsByMint,
   getTokenTransferSpec,
+  getTxFees,
 } from "./web3";

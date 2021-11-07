@@ -57,13 +57,27 @@ export const getAccount = async (address: string) => {
   };
 };
 
-export const getNetworkInfo = async (): Promise<NetworkInfo> => {
+export const getTxFees = async () => {
+  const res = await conn.getRecentBlockhash();
+  return res.feeCalculator.lamportsPerSignature;
+};
+
+//export const getNetworkInfo = async (): Promise<NetworkInfo> => {
+export const getNetworkInfo = async (): Promise<{
+  lamportsPerSignature: BigNumber;
+}> => {
   const { feeCalculator } = await conn.getRecentBlockhash();
 
+  return {
+    lamportsPerSignature: new BigNumber(-1),
+  };
+
+  /*
   return {
     family: "solana",
     lamportsPerSignature: new BigNumber(feeCalculator.lamportsPerSignature),
   };
+  */
 };
 
 function onChainTxToOperation(
@@ -395,6 +409,7 @@ function ixDescriptorToPartialOperation(
 
 export async function isTokenAccount(address: string) {
   const accountInfo = await conn.getAccountInfo(new PublicKey(address));
+  //accountInfo.
 
   return accountInfo?.owner;
 }

@@ -1,3 +1,10 @@
+import {
+  AmountRequired,
+  InvalidAddress,
+  InvalidAddressBecauseDestinationIsAlsoSource,
+  NotEnoughBalance,
+  RecipientRequired,
+} from "@ledgerhq/errors";
 import { findSubAccountById } from "../../account";
 import type { Account, TokenAccount } from "../../types";
 import {
@@ -5,7 +12,15 @@ import {
   getOnChainTokenAccountsByMint,
   findAssociatedTokenAddress,
   getTokenTransferSpec,
+  getTxFees,
 } from "./api";
+import { SolanaAccountNotFunded, SolanaAddressOffEd25519 } from "./errors";
+import {
+  isAccountFunded,
+  isEd25519Address,
+  isValidBase58Address,
+  MAX_MEMO_LENGTH,
+} from "./logic";
 
 import type {
   AncillaryTokenAccountOperation,
@@ -18,6 +33,40 @@ const prepareTransaction = async (
   tx: Transaction
 ): Promise<Transaction> => {
   const patch: Partial<Transaction> = {};
+  const errors: Record<string, Error> = {};
+  const warnings: Record<string, Error> = {};
+
+  const fees = tx.fees ?? (await getTxFees());
+
+  if (tx.fees === undefined) {
+    patch.fees = fees;
+  }
+
+  if (!tx.useAllAmount && tx.amount.lte(0)) {
+    errors.amount = new AmountRequired();
+  }
+
+  if (!errors.amount && mainAccount.balance.lte(fees)) {
+    errors.amount = new NotEnoughBalance();
+  }
+
+  if (!tx.recipient) {
+    errors.recipient = new RecipientRequired();
+  } else if (mainAccount.freshAddress === tx.recipient) {
+    errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
+  } else if (!isValidBase58Address(tx.recipient)) {
+    errors.recipient = new InvalidAddress();
+  } else if (!isEd25519Address(tx.recipient)) {
+    errors.recipient = new SolanaAddressOffEd25519();
+  } else if (!(await isAccountFunded(tx.recipient))) {
+    warnings.recipient = new SolanaAccountNotFunded();
+  }
+
+  if (tx.memo && tx.memo.length > MAX_MEMO_LENGTH) {
+    errors.memo = errors.memo = new SolanaMemoIsTooLong(undefined, {
+      maxLength: MAX_MEMO_LENGTH,
+    });
+  }
 
   if (tx.subAccountId) {
     if (tx.command.kind !== "token.transfer") {
@@ -25,11 +74,15 @@ const prepareTransaction = async (
       if (!subAccount || subAccount.type !== "TokenAccount") {
         throw new Error("subaccount not found");
       }
-      patch.command = await prepareTokenTransfer(mainAccount, subAccount, tx);
+      try {
+        patch.command = await prepareTokenTransfer(mainAccount, subAccount, tx);
+      } catch (e) {
+        throw e;
+      }
     }
   } else {
     // native sol transfer
-    if (tx.command.kind !== "transfer") {
+    if (tx.command === undefined || tx.command.kind !== "transfer") {
       patch.command = { kind: "transfer" };
     }
   }

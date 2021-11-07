@@ -1,5 +1,5 @@
 import { BigNumber } from "bignumber.js";
-import type { Command, Transaction, TransactionRaw } from "./types";
+import type { CommandDescriptor, Transaction, TransactionRaw } from "./types";
 import {
   fromTransactionCommonRaw,
   toTransactionCommonRaw,
@@ -10,11 +10,12 @@ import { formatCurrencyUnit } from "../../currencies";
 
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
-  const { family, commandRaw } = tr;
+  const { family, commandDescriptorRaw, fees } = tr;
   return {
     ...common,
     family,
-    command: JSON.parse(commandRaw),
+    commandDescriptor: JSON.parse(commandDescriptorRaw),
+    fees,
     //family: 'solana'
     //mode,
     //fees: fees === undefined ? undefined : new BigNumber(fees),
@@ -28,13 +29,15 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   };
 };
 
+// TODO: not to serialize errors and warnings!
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
-  const { family, command } = t;
+  const { family, commandDescriptor, fees } = t;
   return {
     ...common,
     family,
-    commandRaw: JSON.stringify(command),
+    commandDescriptorRaw: JSON.stringify(commandDescriptor),
+    fees,
     //mode,
     /*
     fees: fees && fees.toString(),

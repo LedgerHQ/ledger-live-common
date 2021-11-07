@@ -50,7 +50,7 @@ export type TransactionMode = NativeTransactionMode | TokenTransactionMode;
 type TransferCommand = {
   kind: "transfer";
   memo?: string;
-  needToFundMainWallet: boolean;
+  recipientWalletIsUnfunded: boolean;
 };
 
 type AncillaryTokenAccountTransferOperation = {
@@ -71,27 +71,39 @@ export type AncillaryTokenAccountOperation =
 export type TokenTransferCommand = {
   kind: "token.transfer";
   mintAddress: string;
+  amount: number;
+  commandFees?: number;
   totalTransferableAmountIn1Tx: number;
   ancillaryTokenAccOps: AncillaryTokenAccountOperation[];
   memo?: string;
-  needToFundMainWallet: boolean;
-  needToFundAssocTokenAccount: boolean;
+  recipientWalletIsUnfunded: boolean;
+  recipientAssociatedTokenAccountIsUnfunded: boolean;
 };
 
-export type Command = TransferCommand | TokenTransferCommand;
+export type CommandDescriptor =
+  | {
+      state: "valid";
+      command: TransferCommand | TokenTransferCommand;
+      warnings?: Record<string, Error>;
+    }
+  | {
+      state: "invalid";
+      errors: Record<string, Error>;
+    };
 
 export type Transaction = TransactionCommon & {
   family: "solana";
-  command: Command;
+  commandDescriptor: CommandDescriptor;
   //mode: TransactionMode;
-  //fees?: BigNumber;
+  fees?: number;
   //networkInfo?: NetworkInfo;
   //memo?: string;
   //allowUnFundedRecipient?: boolean;
 };
 export type TransactionRaw = TransactionCommonRaw & {
-  commandRaw: string;
+  commandDescriptorRaw: string;
   family: "solana";
+  fees?: number;
   //mode: TransactionMode;
   //fees?: string;
   //networkInfo?: NetworkInfoRaw;

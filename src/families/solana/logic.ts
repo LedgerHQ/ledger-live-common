@@ -15,8 +15,8 @@ export const isEd25519Address = (address: string) => {
   return PublicKey.isOnCurve(new PublicKey(address).toBytes());
 };
 
-export const isAccountNotFunded = async (address: string) =>
-  (await getBalance(address)) <= 0;
+export const isAccountFunded = async (address: string) =>
+  (await getBalance(address)) > 0;
 
 export function encodeAccountIdWithTokenAccountAddress(
   accountId: string,
