@@ -42,6 +42,7 @@ import getAddress from "../hw/getAddress";
 import type { Result, GetAddressOptions } from "../hw/getAddress/types";
 import { open, close } from "../hw";
 import { withDevice } from "../hw/deviceAccess";
+import { TaprootNotActivated } from "../families/bitcoin/errors";
 
 export type GetAccountShapeArg0 = {
   currency: CryptoCurrency;
@@ -499,6 +500,15 @@ export function makeAccountBridgeReceive({
       if (freshAddress === undefined) {
         throw new FreshAddressIndexInvalid();
       }
+    }
+
+    // FIXME Temproray safeguard for taproot activation, can be removed as soon as BTC block 709632 is reached
+    if (
+      account.currency.id === "bitcoin" &&
+      account.derivationMode === "taproot" &&
+      account.blockHeight <= 709632
+    ) {
+      throw new TaprootNotActivated();
     }
 
     const arg = {
