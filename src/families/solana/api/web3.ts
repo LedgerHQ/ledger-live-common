@@ -17,11 +17,15 @@ import { AncillaryTokenAccountOperation } from "../types";
 import { parse } from "./program";
 import { parseQuiet } from "./program/parser";
 import {
+  AccountLayout,
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
 } from "@solana/spl-token";
-import { parseTokenAccountInfo } from "./account/parser";
+import {
+  tryParseAsTokenAccount,
+  parseTokenAccountInfo,
+} from "./account/parser";
 import { TokenAccountInfo } from "./validators/accounts/token";
 
 //const conn = new Connection(clusterApiUrl("mainnet-beta"), "finalized");
@@ -29,6 +33,12 @@ const conn = new Connection("http://api.devnet.solana.com");
 
 export const getBalance = (address: string) =>
   conn.getBalance(new PublicKey(address));
+
+/*
+export const accountExists = async (address: string) => {
+  return (await conn.getAccountInfo(new PublicKey(address))) !== null;
+};
+*/
 
 export const getAccount = async (address: string) => {
   const pubKey = new PublicKey(address);
@@ -407,13 +417,6 @@ function ixDescriptorToPartialOperation(
   };
 }
 
-export async function isTokenAccount(address: string) {
-  const accountInfo = await conn.getAccountInfo(new PublicKey(address));
-  //accountInfo.
-
-  return accountInfo?.owner;
-}
-
 export async function findAssociatedTokenPubkey(
   ownerAddress: string,
   mintAddress: string
@@ -449,6 +452,10 @@ export async function getTokenTransferSpec(
     ownerAddress,
     mintAddress
   );
+
+  const totalBalance = tokenAccs.reduce((sum, info) => {
+    return sum + Number(info.tokenAccInfo.tokenAmount.amount);
+  }, 0);
 
   const assocTokenAcc = tokenAccs.find((acc) =>
     acc.info.pubkey.equals(ownerAssocTokenAccPubkey)
@@ -495,6 +502,7 @@ export async function getTokenTransferSpec(
   );
 
   return {
+    totalBalance,
     totalTransferableAmountIn1Tx:
       totalTransferableAmountFromAncillaryAccs + assocTokenAccAmount,
     ancillaryTokenAccOps,
@@ -714,4 +722,23 @@ function toTransferableAmount(op: AncillaryTokenAccountOperation): number {
       const _: never = op;
       throw new Error("unexpected op kind");
   }
+}
+
+export async function getTokenAccountWithNativeBalance(address: string) {
+  const accInfo = (await conn.getParsedAccountInfo(new PublicKey(address)))
+    .value;
+
+  const tokenAccount =
+    accInfo !== null && "parsed" in accInfo.data
+      ? tryParseAsTokenAccount(accInfo.data)
+      : undefined;
+
+  return {
+    balance: accInfo?.lamports ?? 0,
+    tokenAccount,
+  };
+}
+
+export function getAssociatedTokenAccountCreationFee() {
+  return Token.getMinBalanceRentForExemptAccount(conn);
 }

@@ -1,6 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
 import { getBalance } from "./api";
 
+export type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
+
 export const MAX_MEMO_LENGTH = 500;
 
 export const isValidBase58Address = (address: string) => {

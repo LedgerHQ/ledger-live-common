@@ -47,9 +47,11 @@ type NativeTransactionMode = {
 export type TransactionMode = NativeTransactionMode | TokenTransactionMode;
 */
 
-type TransferCommand = {
+export type TransferCommand = {
   kind: "transfer";
   memo?: string;
+  recipient: string;
+  amount: number;
   recipientWalletIsUnfunded: boolean;
 };
 
@@ -68,34 +70,52 @@ export type AncillaryTokenAccountOperation =
   | AncillaryTokenAccountTransferOperation
   | AncillaryTokenAccountCloseOperation;
 
+export type TokenRecipientDescriptor =
+  | {
+      kind: "account";
+      associatedTokenAccountAddress: string;
+      shouldCreateAssociatedTokenAccount: boolean;
+    }
+  | {
+      kind: "token-account";
+    };
 export type TokenTransferCommand = {
   kind: "token.transfer";
-  mintAddress: string;
+  recipientDescriptor: TokenRecipientDescriptor;
+  //destinationAddress: string;
   amount: number;
-  commandFees?: number;
-  totalTransferableAmountIn1Tx: number;
+  mintAddress: string;
+  mintDecimals: number;
+  // TODO: recalc total balance here as well
+  //totalTransferableAmountIn1Tx: number;
   ancillaryTokenAccOps: AncillaryTokenAccountOperation[];
   memo?: string;
-  recipientWalletIsUnfunded: boolean;
-  recipientAssociatedTokenAccountIsUnfunded: boolean;
+  //recipientWalletIsUnfunded: boolean;
+  //recipientAssociatedTokenAccountIsUnfunded: boolean;
 };
 
-export type CommandDescriptor =
+type Command = TransferCommand | TokenTransferCommand;
+export type CommandDescriptor<C extends Command> =
   | {
-      state: "valid";
-      command: TransferCommand | TokenTransferCommand;
+      status: "valid";
+      command: C;
+      fees?: number;
       warnings?: Record<string, Error>;
     }
   | {
-      state: "invalid";
+      status: "invalid";
+      // TODO: partial command here?
+      //command: TransferCommand | TokenTransferCommand;
       errors: Record<string, Error>;
+      //warnings?: Record<string, Error>;
     };
 
 export type Transaction = TransactionCommon & {
   family: "solana";
-  commandDescriptor: CommandDescriptor;
+  commandDescriptor: CommandDescriptor<Command>;
   //mode: TransactionMode;
   fees?: number;
+  memo?: string;
   //networkInfo?: NetworkInfo;
   //memo?: string;
   //allowUnFundedRecipient?: boolean;
@@ -104,6 +124,7 @@ export type TransactionRaw = TransactionCommonRaw & {
   commandDescriptorRaw: string;
   family: "solana";
   fees?: number;
+  memo?: string;
   //mode: TransactionMode;
   //fees?: string;
   //networkInfo?: NetworkInfoRaw;

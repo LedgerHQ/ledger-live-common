@@ -7,8 +7,10 @@ export {
   broadcastTransaction,
   getBalance,
   //TODO: rename
-  findAssociatedTokenPubkey as findAssociatedTokenAddress,
+  findAssociatedTokenPubkey,
   getOnChainTokenAccountsByMint,
   getTokenTransferSpec,
   getTxFees,
+  getAssociatedTokenAccountCreationFee,
+  getTokenAccountWithNativeBalance,
 } from "./web3";

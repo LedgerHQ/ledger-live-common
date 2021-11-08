@@ -24,6 +24,7 @@ import {
 import { encodeOperationId } from "../../operation";
 import { parseQuiet } from "./api/program/parser";
 import {
+  Awaited,
   decodeAccountIdWithTokenAccountAddress,
   encodeAccountIdWithTokenAccountAddress,
 } from "./logic";
@@ -32,7 +33,7 @@ import { parseTokenAccountInfo } from "./api/account/parser";
 
 import { reduceDefined } from "./utils";
 
-type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
+//type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
 
 type NonEmptyArray<T> = Array<T> & {
   0: T;

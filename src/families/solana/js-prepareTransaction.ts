@@ -5,17 +5,28 @@ import {
   NotEnoughBalance,
   RecipientRequired,
 } from "@ledgerhq/errors";
+import { sum } from "lodash";
 import { findSubAccountById } from "../../account";
 import type { Account, TokenAccount } from "../../types";
 import {
   getNetworkInfo,
   getOnChainTokenAccountsByMint,
-  findAssociatedTokenAddress,
+  findAssociatedTokenPubkey,
   getTokenTransferSpec,
   getTxFees,
+  getTokenAccountWithNativeBalance,
+  getAssociatedTokenAccountCreationFee,
 } from "./api";
-import { SolanaAccountNotFunded, SolanaAddressOffEd25519 } from "./errors";
 import {
+  SolanaMainAccountNotFunded,
+  SolanaAddressOffEd25519,
+  SolanaMemoIsTooLong,
+  SolanaAmountNotTransferableIn1Tx,
+  SolanaTokenAccountHoldsAnotherToken,
+  SolanaAssociatedTokenAccountWillBeFunded,
+} from "./errors";
+import {
+  Awaited,
   isAccountFunded,
   isEd25519Address,
   isValidBase58Address,
@@ -24,8 +35,11 @@ import {
 
 import type {
   AncillaryTokenAccountOperation,
+  CommandDescriptor,
+  TokenRecipientDescriptor,
   TokenTransferCommand,
   Transaction,
+  TransferCommand,
 } from "./types";
 
 const prepareTransaction = async (
@@ -34,8 +48,9 @@ const prepareTransaction = async (
 ): Promise<Transaction> => {
   const patch: Partial<Transaction> = {};
   const errors: Record<string, Error> = {};
-  const warnings: Record<string, Error> = {};
+  //const warnings: Record<string, Error> = {};
 
+  // TODO: move fees to command altogether ?
   const fees = tx.fees ?? (await getTxFees());
 
   if (tx.fees === undefined) {
@@ -46,6 +61,7 @@ const prepareTransaction = async (
     errors.amount = new AmountRequired();
   }
 
+  // TODO: remove from here, since fees will go to command itself
   if (!errors.amount && mainAccount.balance.lte(fees)) {
     errors.amount = new NotEnoughBalance();
   }
@@ -58,8 +74,6 @@ const prepareTransaction = async (
     errors.recipient = new InvalidAddress();
   } else if (!isEd25519Address(tx.recipient)) {
     errors.recipient = new SolanaAddressOffEd25519();
-  } else if (!(await isAccountFunded(tx.recipient))) {
-    warnings.recipient = new SolanaAccountNotFunded();
   }
 
   if (tx.memo && tx.memo.length > MAX_MEMO_LENGTH) {
@@ -68,24 +82,30 @@ const prepareTransaction = async (
     });
   }
 
-  if (tx.subAccountId) {
-    if (tx.command.kind !== "token.transfer") {
+  if (Object.keys(errors).length > 0) {
+    patch.commandDescriptor = {
+      status: "invalid",
+      errors,
+    };
+  } else {
+    if (tx.subAccountId) {
+      // TODO: check all info if changed = revalidate
       const subAccount = findSubAccountById(mainAccount, tx.subAccountId);
       if (!subAccount || subAccount.type !== "TokenAccount") {
         throw new Error("subaccount not found");
       }
-      try {
-        patch.command = await prepareTokenTransfer(mainAccount, subAccount, tx);
-      } catch (e) {
-        throw e;
-      }
-    }
-  } else {
-    // native sol transfer
-    if (tx.command === undefined || tx.command.kind !== "transfer") {
-      patch.command = { kind: "transfer" };
+      patch.commandDescriptor = await prepareTokenTransfer(
+        mainAccount,
+        subAccount,
+        tx
+      );
+    } else {
+      patch.commandDescriptor = await prepareTransfer(mainAccount, tx);
     }
   }
+
+  // TODO: check fees is enough to pay or show the error
+  // TODO: recalc fees here, pass to prepare*** fn
 
   return Object.keys(patch).length > 0
     ? {
@@ -99,29 +119,161 @@ const prepareTokenTransfer = async (
   mainAccount: Account,
   subAccount: TokenAccount,
   tx: Transaction
-): Promise<TokenTransferCommand> => {
+): Promise<CommandDescriptor<TokenTransferCommand>> => {
+  const errors: Record<string, Error> = {};
+  const warnings: Record<string, Error> = {};
+
   const tokenIdParts = subAccount.id.split("/");
   const mintAddress = tokenIdParts[tokenIdParts.length - 1];
   const mintDecimals = subAccount.token.units[0].magnitude;
 
-  const { ancillaryTokenAccOps, totalTransferableAmountIn1Tx } =
+  const txAmount = tx.useAllAmount
+    ? subAccount.spendableBalance.toNumber()
+    : tx.amount.toNumber();
+
+  if (txAmount > subAccount.spendableBalance.toNumber()) {
+    errors.amount = new NotEnoughBalance();
+    return toInvalidStatus(errors);
+  }
+
+  const accInfo = await getTokenAccountWithNativeBalance(tx.recipient);
+
+  const fees: number[] = [];
+
+  if (accInfo.tokenAccount instanceof Error) {
+    throw accInfo.tokenAccount;
+  }
+
+  let recipientDescriptor: TokenRecipientDescriptor | undefined = undefined;
+
+  if (accInfo.tokenAccount === undefined) {
+    // get ata and if not exists look down
+
+    const associatedTokenAccPubkey = await findAssociatedTokenPubkey(
+      tx.recipient,
+      mintAddress
+    );
+
+    const associatedTokenAccountAddress = associatedTokenAccPubkey.toBase58();
+
+    const shouldCreateAssociatedTokenAccount = !isAccountFunded(
+      associatedTokenAccountAddress
+    );
+
+    if (shouldCreateAssociatedTokenAccount) {
+      warnings.associatedTokenAccount =
+        new SolanaAssociatedTokenAccountWillBeFunded();
+      fees.push(await getAssociatedTokenAccountCreationFee());
+    }
+
+    recipientDescriptor = {
+      kind: "account",
+      //owner: tx.recipient,
+      associatedTokenAccountAddress,
+      shouldCreateAssociatedTokenAccount,
+    };
+  } else {
+    if (accInfo.tokenAccount.mint.toBase58() === mintAddress) {
+      // destination is the recipient!
+      recipientDescriptor = {
+        kind: "token-account",
+      };
+    } else {
+      errors.recipient = new SolanaTokenAccountHoldsAnotherToken();
+      return toInvalidStatus(errors);
+    }
+  }
+
+  if (accInfo.balance <= 0) {
+    warnings.recipient = new SolanaMainAccountNotFunded();
+  }
+
+  // TODO: remove total balance
+  const { totalBalance, totalTransferableAmountIn1Tx, ancillaryTokenAccOps } =
     await getTokenTransferSpec(
       mainAccount.freshAddress,
       mintAddress,
       // TODO: what if a wallet address! - must get token ass account!
       tx.recipient,
-      tx.useAllAmount
-        ? subAccount.spendableBalance.toNumber()
-        : tx.amount.toNumber(),
+      txAmount,
       mintDecimals
     );
 
+  if (txAmount > totalTransferableAmountIn1Tx) {
+    errors.amount = new SolanaAmountNotTransferableIn1Tx();
+    return toInvalidStatus(errors);
+  }
+
+  if (ancillaryTokenAccOps.length > 0) {
+    //TODO: think of it...
+    warnings.ancillaryOps = new Error(JSON.stringify(ancillaryTokenAccOps));
+  }
+
+  // TODO: think of it...
+  if (recipientDescriptor === undefined) {
+    throw new Error("should not happen");
+  }
+
   return {
-    kind: "token.transfer",
-    mintAddress,
-    ancillaryTokenAccOps,
-    totalTransferableAmountIn1Tx,
+    status: "valid",
+    command: {
+      kind: "token.transfer",
+      amount: txAmount,
+      ancillaryTokenAccOps,
+      mintAddress,
+      mintDecimals,
+      recipientDescriptor: recipientDescriptor,
+      memo: tx.memo,
+    },
+    fees: sum(fees),
+    warnings,
   };
 };
+
+async function prepareTransfer(
+  mainAccount: Account,
+  tx: Transaction
+): Promise<CommandDescriptor<TransferCommand>> {
+  // TODO: check if need to run validation again, recipient changed etc..
+  const recipientWalletIsUnfunded = !(await isAccountFunded(tx.recipient));
+  const warnings: Record<string, Error> = {};
+
+  // TODO: check if changed! CHECK if recipient is main wallet!
+
+  // TODO: check amount < balance
+
+  if (recipientWalletIsUnfunded) {
+    warnings.recipient = new SolanaMainAccountNotFunded();
+  }
+
+  const txAmount = tx.useAllAmount
+    ? mainAccount.spendableBalance.toNumber()
+    : tx.amount.toNumber();
+
+  return {
+    status: "valid",
+    command: {
+      kind: "transfer",
+      recipient: tx.recipient,
+      amount: txAmount,
+      recipientWalletIsUnfunded,
+      memo: tx.memo,
+    },
+    warnings: Object.keys(warnings).length > 0 ? warnings : undefined,
+  };
+}
+
+function getTokenRecipient(
+  accInfo: Awaited<ReturnType<typeof getTokenAccountWithNativeBalance>>
+) {
+  throw new Error("Function not implemented.");
+}
+
+function toInvalidStatus(errors: Record<string, Error>) {
+  return {
+    status: "invalid" as const,
+    errors,
+  };
+}
 
 export default prepareTransaction;

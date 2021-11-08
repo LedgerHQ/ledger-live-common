@@ -10,12 +10,13 @@ import { formatCurrencyUnit } from "../../currencies";
 
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
-  const { family, commandDescriptorRaw, fees } = tr;
+  const { family, commandDescriptorRaw, fees, memo } = tr;
   return {
     ...common,
     family,
     commandDescriptor: JSON.parse(commandDescriptorRaw),
     fees,
+    memo,
     //family: 'solana'
     //mode,
     //fees: fees === undefined ? undefined : new BigNumber(fees),
@@ -32,12 +33,13 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
 // TODO: not to serialize errors and warnings!
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
-  const { family, commandDescriptor, fees } = t;
+  const { family, commandDescriptor, fees, memo } = t;
   return {
     ...common,
     family,
     commandDescriptorRaw: JSON.stringify(commandDescriptor),
     fees,
+    memo,
     //mode,
     /*
     fees: fees && fees.toString(),
