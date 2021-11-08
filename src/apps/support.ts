@@ -31,6 +31,7 @@ const appVersionsRequired = {
   Algorand: ">= 1.2.9",
   Polkadot: ">= 8.9100.0",
   Elrond: ">= 1.0.11",
+  Bitcoin: ">= 2.0.0",
 };
 export function mustUpgrade(
   deviceModel: DeviceModelId,
