@@ -11,9 +11,9 @@ import type { Account, TokenAccount } from "../../types";
 import {
   getNetworkInfo,
   getOnChainTokenAccountsByMint,
-  findAssociatedTokenPubkey,
+  findAssociatedTokenAccountPubkey,
   getTokenTransferSpec,
-  getTxFees,
+  getTxFeeCalculator,
   getTokenAccountWithNativeBalance,
   getAssociatedTokenAccountCreationFee,
 } from "./api";
@@ -24,6 +24,7 @@ import {
   SolanaAmountNotTransferableIn1Tx,
   SolanaTokenAccountHoldsAnotherToken,
   SolanaAssociatedTokenAccountWillBeFunded,
+  SolanaNotEnoughBalanceToPayFees,
 } from "./errors";
 import {
   Awaited,
@@ -41,6 +42,7 @@ import type {
   Transaction,
   TransferCommand,
 } from "./types";
+import { assertUnreachable } from "./utils";
 
 const prepareTransaction = async (
   mainAccount: Account,
@@ -48,22 +50,15 @@ const prepareTransaction = async (
 ): Promise<Transaction> => {
   const patch: Partial<Transaction> = {};
   const errors: Record<string, Error> = {};
-  //const warnings: Record<string, Error> = {};
 
-  // TODO: move fees to command altogether ?
-  const fees = tx.fees ?? (await getTxFees());
+  const feeCalculator = tx.feeCalculator ?? (await getTxFeeCalculator());
 
-  if (tx.fees === undefined) {
-    patch.fees = fees;
+  if (tx.feeCalculator === undefined) {
+    patch.feeCalculator = feeCalculator;
   }
 
   if (!tx.useAllAmount && tx.amount.lte(0)) {
     errors.amount = new AmountRequired();
-  }
-
-  // TODO: remove from here, since fees will go to command itself
-  if (!errors.amount && mainAccount.balance.lte(fees)) {
-    errors.amount = new NotEnoughBalance();
   }
 
   if (!tx.recipient) {
@@ -83,29 +78,56 @@ const prepareTransaction = async (
   }
 
   if (Object.keys(errors).length > 0) {
-    patch.commandDescriptor = {
-      status: "invalid",
-      errors,
-    };
-  } else {
-    if (tx.subAccountId) {
-      // TODO: check all info if changed = revalidate
-      const subAccount = findSubAccountById(mainAccount, tx.subAccountId);
-      if (!subAccount || subAccount.type !== "TokenAccount") {
-        throw new Error("subaccount not found");
-      }
-      patch.commandDescriptor = await prepareTokenTransfer(
-        mainAccount,
-        subAccount,
-        tx
-      );
-    } else {
-      patch.commandDescriptor = await prepareTransfer(mainAccount, tx);
-    }
+    return toInvalidTx(tx, patch, errors);
   }
 
-  // TODO: check fees is enough to pay or show the error
-  // TODO: recalc fees here, pass to prepare*** fn
+  if (tx.subAccountId) {
+    // TODO: check all info if changed = revalidate
+    const subAccount = findSubAccountById(mainAccount, tx.subAccountId);
+    if (!subAccount || subAccount.type !== "TokenAccount") {
+      throw new Error("subaccount not found");
+    }
+
+    if (tx.amount > subAccount.spendableBalance) {
+      errors.amount = new NotEnoughBalance();
+      return toInvalidTx(tx, patch, errors);
+    }
+
+    patch.commandDescriptor = await prepareTokenTransfer(
+      mainAccount,
+      subAccount,
+      tx
+    );
+  } else {
+    if (tx.amount > mainAccount.spendableBalance) {
+      errors.amount = new NotEnoughBalance();
+      return toInvalidTx(tx, patch, errors);
+    }
+    patch.commandDescriptor = await prepareTransfer(mainAccount, tx);
+  }
+
+  const { commandDescriptor } = patch;
+
+  if (commandDescriptor.status === "invalid") {
+    return toInvalidTx(tx, patch, errors);
+  }
+
+  const command = commandDescriptor.command;
+  switch (command.kind) {
+    case "transfer":
+      // TODO: SWITCH TO BIGNUMBER!!!!!
+      const totalSpend = command.amount + feeCalculator.lamportsPerSignature;
+      if (mainAccount.balance.lt(totalSpend)) {
+        errors.amount = new NotEnoughBalance();
+      }
+      break;
+    default:
+      const totalFees =
+        feeCalculator.lamportsPerSignature + (commandDescriptor.fees ?? 0);
+      if (mainAccount.balance.lt(totalFees)) {
+        errors.amount = new SolanaNotEnoughBalanceToPayFees();
+      }
+  }
 
   return Object.keys(patch).length > 0
     ? {
@@ -133,7 +155,7 @@ const prepareTokenTransfer = async (
 
   if (txAmount > subAccount.spendableBalance.toNumber()) {
     errors.amount = new NotEnoughBalance();
-    return toInvalidStatus(errors);
+    return toInvalidStatusCommand(errors);
   }
 
   const accInfo = await getTokenAccountWithNativeBalance(tx.recipient);
@@ -149,7 +171,7 @@ const prepareTokenTransfer = async (
   if (accInfo.tokenAccount === undefined) {
     // get ata and if not exists look down
 
-    const associatedTokenAccPubkey = await findAssociatedTokenPubkey(
+    const associatedTokenAccPubkey = await findAssociatedTokenAccountPubkey(
       tx.recipient,
       mintAddress
     );
@@ -180,7 +202,7 @@ const prepareTokenTransfer = async (
       };
     } else {
       errors.recipient = new SolanaTokenAccountHoldsAnotherToken();
-      return toInvalidStatus(errors);
+      return toInvalidStatusCommand(errors);
     }
   }
 
@@ -201,7 +223,7 @@ const prepareTokenTransfer = async (
 
   if (txAmount > totalTransferableAmountIn1Tx) {
     errors.amount = new SolanaAmountNotTransferableIn1Tx();
-    return toInvalidStatus(errors);
+    return toInvalidStatusCommand(errors);
   }
 
   if (ancillaryTokenAccOps.length > 0) {
@@ -269,7 +291,19 @@ function getTokenRecipient(
   throw new Error("Function not implemented.");
 }
 
-function toInvalidStatus(errors: Record<string, Error>) {
+function toInvalidTx(
+  tx: Transaction,
+  patch: Partial<Transaction>,
+  errors: Record<string, Error>
+): Transaction {
+  return {
+    ...tx,
+    ...patch,
+    commandDescriptor: toInvalidStatusCommand(errors),
+  };
+}
+
+function toInvalidStatusCommand(errors: Record<string, Error>) {
   return {
     status: "invalid" as const,
     errors,

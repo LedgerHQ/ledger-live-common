@@ -67,9 +67,10 @@ export const getAccount = async (address: string) => {
   };
 };
 
-export const getTxFees = async () => {
+export const getTxFeeCalculator = async () => {
   const res = await conn.getRecentBlockhash();
-  return res.feeCalculator.lamportsPerSignature;
+  return res.feeCalculator;
+  //return res.feeCalculator.lamportsPerSignature;
 };
 
 //export const getNetworkInfo = async (): Promise<NetworkInfo> => {
@@ -326,13 +327,13 @@ export const buildTokenTransferTransaction = async ({
   const fromPubkey = new PublicKey(fromAddress);
   const mintPubkey = new PublicKey(mintAddress);
 
-  const fromAssociatedTokenAddress = await findAssociatedTokenPubkey(
+  const fromAssociatedTokenAddress = await findAssociatedTokenAccountPubkey(
     fromAddress,
     mintAddress
   );
   const fromAssociatedTokenPubKey = new PublicKey(fromAssociatedTokenAddress);
 
-  const toAssociatedTokenAddress = await findAssociatedTokenPubkey(
+  const toAssociatedTokenAddress = await findAssociatedTokenAccountPubkey(
     toAddress,
     mintAddress
   );
@@ -417,7 +418,7 @@ function ixDescriptorToPartialOperation(
   };
 }
 
-export async function findAssociatedTokenPubkey(
+export async function findAssociatedTokenAccountPubkey(
   ownerAddress: string,
   mintAddress: string
 ) {
@@ -443,7 +444,7 @@ export async function getTokenTransferSpec(
   const mintPubkey = new PublicKey(mintAddress);
   const destPubkey = new PublicKey(destAddress);
 
-  const ownerAssocTokenAccPubkey = await findAssociatedTokenPubkey(
+  const ownerAssocTokenAccPubkey = await findAssociatedTokenAccountPubkey(
     ownerAddress,
     mintAddress
   );

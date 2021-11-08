@@ -10,12 +10,12 @@ import { formatCurrencyUnit } from "../../currencies";
 
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
-  const { family, commandDescriptorRaw, fees, memo } = tr;
+  const { family, commandDescriptorRaw, feeCalculator, memo } = tr;
   return {
     ...common,
     family,
     commandDescriptor: JSON.parse(commandDescriptorRaw),
-    fees,
+    feeCalculator,
     memo,
     //family: 'solana'
     //mode,
@@ -33,12 +33,12 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
 // TODO: not to serialize errors and warnings!
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
-  const { family, commandDescriptor, fees, memo } = t;
+  const { family, commandDescriptor, feeCalculator, memo } = t;
   return {
     ...common,
     family,
     commandDescriptorRaw: JSON.stringify(commandDescriptor),
-    fees,
+    feeCalculator,
     memo,
     //mode,
     /*

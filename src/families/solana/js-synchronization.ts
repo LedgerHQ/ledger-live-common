@@ -8,7 +8,7 @@ import {
   TokenCurrency,
 } from "../../types";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
-import { getAccount } from "./api";
+import { getAccount, findAssociatedTokenAccountPubkey } from "./api";
 import BigNumber from "bignumber.js";
 import { TokenAccountInfo as OnChainTokenAccountInfo } from "./api/validators/accounts/token";
 
@@ -28,7 +28,7 @@ import {
   decodeAccountIdWithTokenAccountAddress,
   encodeAccountIdWithTokenAccountAddress,
 } from "./logic";
-import _, { groupBy, reduce } from "lodash";
+import _, { filter, groupBy, identity, includes, reduce, sumBy } from "lodash";
 import { parseTokenAccountInfo } from "./api/account/parser";
 
 import { reduceDefined } from "./utils";
@@ -124,14 +124,38 @@ const getAccountShape: GetAccountShape = async (info) => {
 
   const perMint = await drainAsyncGen(...perMintAsync);
 
-  const nextSubAccs = reduceDefined(({ subAcc, onChainTokenAccs, newTxs }) => {
-    if (isNonEmptyArray(newTxs)) {
-      return subAcc === undefined
-        ? newSubAcc(mainAccountId, onChainTokenAccs, newTxs)
-        : patchedSubAcc(subAcc, onChainTokenAccs, newTxs);
+  const nextSubAccsAsync = perMint.map(
+    ({ subAcc, onChainTokenAccs, newTxs }) => {
+      return toAsyncGenerator(async () => {
+        if (isNonEmptyArray(newTxs)) {
+          if (subAcc === undefined) {
+            const mintAddress = onChainTokenAccs[0].info.mint.toBase58();
+            const ownerAddress = onChainTokenAccs[0].info.owner.toBase58();
+            const associatedTokenAccPubkey =
+              await findAssociatedTokenAccountPubkey(ownerAddress, mintAddress);
+            const associatedTokenAccountExists = onChainTokenAccs.some((acc) =>
+              acc.tokenAcc.pubkey.equals(associatedTokenAccPubkey)
+            );
+            return associatedTokenAccountExists
+              ? newSubAcc(
+                  mainAccountId,
+                  onChainTokenAccs,
+                  associatedTokenAccPubkey.toBase58(),
+                  newTxs
+                )
+              : undefined;
+          }
+          return patchedSubAcc(subAcc, onChainTokenAccs, newTxs);
+        }
+        return subAcc;
+      });
     }
-    return undefined;
-  }, perMint);
+  );
+
+  const nextSubAccs = reduceDefined(
+    (v) => v,
+    await drainAsyncGen(...nextSubAccsAsync)
+  );
 
   const mainAccountLastTxSignature = mainInitialAcc?.operations[0]?.hash;
 
@@ -241,6 +265,7 @@ function newSubAcc(
     tokenAcc: OnChainTokenAccount;
     info: OnChainTokenAccountInfo;
   }>,
+  associatedTokenAccountAddress: string,
   txs: NonEmptyArray<TransactionDescriptor>
 ): TokenAccount {
   // TODO: check the order of txs
@@ -250,15 +275,18 @@ function newSubAcc(
     (firstTx.info.blockTime ?? Date.now() / 1000) * 1000
   );
 
-  // TODO: fix
-  const tokenCurrency = fakeTokenCurrency(tokenAccInfo);
+  // show only associated token accounts!
+  const tokenCurrency = fakeTokenCurrency(onChainTokenAccs[0].info);
 
   const id = encodeAccountIdWithTokenAccountAddress(
     mainAccId,
-    tokenAcc.pubkey.toBase58()
+    associatedTokenAccountAddress
   );
 
-  const balance = new BigNumber(tokenAccInfo.tokenAmount.amount);
+  const balance = new BigNumber(
+    sumBy(onChainTokenAccs, (acc) => Number(acc.info.tokenAmount.amount))
+  );
+
   return {
     balance,
     balanceHistoryCache: emptyHistoryCache,
@@ -289,7 +317,10 @@ function patchedSubAcc(
   }>,
   txs: NonEmptyArray<TransactionDescriptor>
 ): TokenAccount {
-  const balance = new BigNumber(tokenAccInfo.tokenAmount.amount);
+  const balance = new BigNumber(
+    sumBy(onChainTokenAccs, (acc) => Number(acc.info.tokenAmount.amount))
+  );
+
   const newOps = txs.map((tx) => txToTokenAccOperation(tx, subAcc.id));
   const totalOps = mergeOps(subAcc.operations, newOps);
   return {

@@ -1,5 +1,8 @@
 import { BigNumber } from "bignumber.js";
-import type { Command, Transaction /* TransactionMode */ } from "./types";
+import type {
+  CommandDescriptor,
+  Transaction /* TransactionMode */,
+} from "./types";
 import { log } from "@ledgerhq/logs";
 import { Account, AccountLike } from "../../types";
 
@@ -13,8 +16,14 @@ const createTransaction = (mainAccount: Account): Transaction => {
     family: "solana",
     amount: new BigNumber(0),
     recipient: "",
-    command: {
-      kind: "transfer",
+    commandDescriptor: {
+      status: "valid",
+      command: {
+        kind: "transfer",
+        amount: 0,
+        recipient: "",
+        recipientWalletIsUnfunded: false,
+      },
     },
   };
 };

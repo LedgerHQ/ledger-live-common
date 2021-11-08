@@ -3,6 +3,7 @@ import type {
   TransactionCommon,
   TransactionCommonRaw,
 } from "../../types/transaction";
+import { getTxFeeCalculator } from "./api";
 
 // for legacy reasons export the types
 export type CoreStatics = Record<string, never>;
@@ -114,7 +115,9 @@ export type Transaction = TransactionCommon & {
   family: "solana";
   commandDescriptor: CommandDescriptor<Command>;
   //mode: TransactionMode;
-  fees?: number;
+  feeCalculator?: {
+    lamportsPerSignature: number;
+  };
   memo?: string;
   //networkInfo?: NetworkInfo;
   //memo?: string;
@@ -123,7 +126,9 @@ export type Transaction = TransactionCommon & {
 export type TransactionRaw = TransactionCommonRaw & {
   commandDescriptorRaw: string;
   family: "solana";
-  fees?: number;
+  feeCalculator?: {
+    lamportsPerSignature: number;
+  };
   memo?: string;
   //mode: TransactionMode;
   //fees?: string;

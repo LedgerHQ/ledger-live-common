@@ -6,11 +6,10 @@ export {
   addSignatureToTransaction,
   broadcastTransaction,
   getBalance,
-  //TODO: rename
-  findAssociatedTokenPubkey,
+  findAssociatedTokenAccountPubkey,
   getOnChainTokenAccountsByMint,
   getTokenTransferSpec,
-  getTxFees,
+  getTxFeeCalculator,
   getAssociatedTokenAccountCreationFee,
   getTokenAccountWithNativeBalance,
 } from "./web3";
