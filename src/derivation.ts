@@ -423,8 +423,7 @@ const disableBIP44 = {
   // current workaround, device app does not seem to support bip44
   stellar: true,
   polkadot: true,
-  solanaMain: true,
-  solanaSub: true,
+  solana: true,
 };
 const seedIdentifierPath = {
   neo: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,

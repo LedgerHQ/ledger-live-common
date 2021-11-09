@@ -95,21 +95,25 @@ export type TokenTransferCommand = {
   //recipientAssociatedTokenAccountIsUnfunded: boolean;
 };
 
-type Command = TransferCommand | TokenTransferCommand;
+export type Command = TransferCommand | TokenTransferCommand;
+export type ValidCommandDescriptor<C extends Command> = {
+  status: "valid";
+  command: C;
+  fees?: number;
+  warnings?: Record<string, Error>;
+};
+
+export type InvalidCommandDescriptor = {
+  status: "invalid";
+  // TODO: partial command here?
+  //command: TransferCommand | TokenTransferCommand;
+  errors: Record<string, Error>;
+  //warnings?: Record<string, Error>;
+};
+
 export type CommandDescriptor<C extends Command> =
-  | {
-      status: "valid";
-      command: C;
-      fees?: number;
-      warnings?: Record<string, Error>;
-    }
-  | {
-      status: "invalid";
-      // TODO: partial command here?
-      //command: TransferCommand | TokenTransferCommand;
-      errors: Record<string, Error>;
-      //warnings?: Record<string, Error>;
-    };
+  | ValidCommandDescriptor<C>
+  | InvalidCommandDescriptor;
 
 export type Transaction = TransactionCommon & {
   family: "solana";

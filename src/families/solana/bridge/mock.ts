@@ -24,6 +24,10 @@ const createTransaction = (): Transaction => ({
   family: "solana",
   amount: new BigNumber(0),
   recipient: "",
+  commandDescriptor: {
+    status: "invalid",
+    errors: {},
+  },
 });
 
 const updateTransaction = (t: Transaction, patch: Partial<Transaction>) => ({
@@ -36,11 +40,13 @@ const prepareTransaction = async (
   t: Transaction
 ): Promise<Transaction> => ({
   ...t,
-  fees: new BigNumber(1),
+  //feeCalculator: new BigNumber(1),
+  /*
   networkInfo: {
     family: "solana",
     lamportsPerSignature: new BigNumber(1),
   },
+  */
 });
 
 const estimateMaxSpendable = async ({

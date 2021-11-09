@@ -11,7 +11,7 @@ const buildOptimisticOperation = async (
   account: Account,
   transaction: Transaction
 ): Promise<Operation> => {
-  const fees = transaction.fees || new BigNumber(0);
+  const fees = new BigNumber(0);
   const value = transaction.useAllAmount
     ? account.balance
     : transaction.amount.plus(fees);

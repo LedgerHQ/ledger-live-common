@@ -46,7 +46,9 @@ export const getAccount = async (address: string) => {
   const [balanceLamportsWithContext, lamportPerSignature, tokenAccounts] =
     await Promise.all([
       conn.getBalanceAndContext(pubKey),
-      getNetworkInfo().then((res) => res.lamportsPerSignature),
+      conn
+        .getRecentBlockhash()
+        .then((res) => res.feeCalculator.lamportsPerSignature),
       conn
         .getParsedTokenAccountsByOwner(pubKey, {
           programId: TOKEN_PROGRAM_ID,

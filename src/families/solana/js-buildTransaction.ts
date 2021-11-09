@@ -1,7 +1,6 @@
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
 import { addSignatureToTransaction, buildTransferTransaction } from "./api";
-import { FeeNotLoaded } from "@ledgerhq/errors";
 import { buildTokenTransferTransaction } from "./api/web3";
 
 /**
@@ -27,9 +26,11 @@ export const buildOnChainTransaction = async (
 };
 
 function build(account: Account, transaction: Transaction) {
-  if (transaction.fees === undefined || transaction.fees.lt(0)) {
+  /*
+  if (transaction.feeCalculator? === undefined || transaction.feeCalculator?.lt(0)) {
     throw new FeeNotLoaded();
   }
+  */
 
   const { recipient, useAllAmount /*mode*/ } = transaction;
 
@@ -55,7 +56,8 @@ function build(account: Account, transaction: Transaction) {
     fromAddress: account.freshAddress,
     toAddress: recipient,
     amount: useAllAmount
-      ? account.balance.minus(transaction.fees)
+      ? //? account.balance.minus(transaction.feeCalculator?)
+        account.balance
       : transaction.amount,
     memo: transaction.memo,
   });

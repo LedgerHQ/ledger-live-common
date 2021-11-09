@@ -51,6 +51,8 @@ const prepareTransaction = async (
   const patch: Partial<Transaction> = {};
   const errors: Record<string, Error> = {};
 
+  debugger;
+
   const feeCalculator = tx.feeCalculator ?? (await getTxFeeCalculator());
 
   if (tx.feeCalculator === undefined) {
@@ -88,7 +90,7 @@ const prepareTransaction = async (
       throw new Error("subaccount not found");
     }
 
-    if (tx.amount > subAccount.spendableBalance) {
+    if (tx.amount.gt(subAccount.spendableBalance)) {
       errors.amount = new NotEnoughBalance();
       return toInvalidTx(tx, patch, errors);
     }
@@ -99,7 +101,7 @@ const prepareTransaction = async (
       tx
     );
   } else {
-    if (tx.amount > mainAccount.spendableBalance) {
+    if (tx.amount.gt(mainAccount.spendableBalance)) {
       errors.amount = new NotEnoughBalance();
       return toInvalidTx(tx, patch, errors);
     }

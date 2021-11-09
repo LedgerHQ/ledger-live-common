@@ -74,6 +74,8 @@ const getAccountShape: GetAccountShape = async (info) => {
     const info = parseTokenAccountInfo(parsedInfo);
     return info instanceof Error ? undefined : { tokenAcc, info };
   }, onChaintokenAccounts).filter(({ info }) => {
+    return fakeTokenCurrency(info);
+    //TODO: revert
     return (
       findTokenById(`solana/spl/${info.mint.toBase58()}`)?.type ===
       "TokenCurrency"
@@ -152,6 +154,7 @@ const getAccountShape: GetAccountShape = async (info) => {
     }
   );
 
+  //TODO: replacw with compact
   const nextSubAccs = reduceDefined(
     (v) => v,
     await drainAsyncGen(...nextSubAccsAsync)
