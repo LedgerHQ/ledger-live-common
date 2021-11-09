@@ -51,8 +51,6 @@ const prepareTransaction = async (
   const patch: Partial<Transaction> = {};
   const errors: Record<string, Error> = {};
 
-  debugger;
-
   const feeCalculator = tx.feeCalculator ?? (await getTxFeeCalculator());
 
   if (tx.feeCalculator === undefined) {
@@ -147,7 +145,7 @@ const prepareTokenTransfer = async (
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
 
-  const tokenIdParts = subAccount.id.split("/");
+  const tokenIdParts = subAccount.token.id.split("/");
   const mintAddress = tokenIdParts[tokenIdParts.length - 1];
   const mintDecimals = subAccount.token.units[0].magnitude;
 

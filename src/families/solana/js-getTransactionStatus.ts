@@ -20,7 +20,7 @@ const getTransactionStatus = async (
   const commandDescriptor = tx.commandDescriptor;
   const command = commandDescriptor.command;
   const amount = getAmount(tx, command);
-  const totalSpent = amount.plus(txFees);
+  const totalSpent = amount.plus(command.kind === "transfer" ? txFees : 0);
   const estimatedFees = txFees.plus(commandDescriptor.fees ?? 0);
 
   return {
