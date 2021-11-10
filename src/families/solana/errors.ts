@@ -9,9 +9,8 @@ export const SolanaNotEnoughBalanceToPayFees = createCustomErrorClass(
   "SolanaNotEnoughBalanceToPayFees"
 );
 
-export const SolanaAssociatedTokenAccountWillBeFunded = createCustomErrorClass(
-  "SolanaAssociatedTokenAccountWillBeFunded"
-);
+export const SolanaRecipientAssociatedTokenAccountWillBeFunded =
+  createCustomErrorClass("SolanaAssociatedTokenAccountWillBeFunded");
 
 export const SolanaMemoIsTooLong = createCustomErrorClass(
   "SolanaMemoIsTooLong"
@@ -27,4 +26,8 @@ export const SolanaTokenAccountHoldsAnotherToken = createCustomErrorClass(
 
 export const SolanaAddressOffEd25519 = createCustomErrorClass(
   "SolanaAddressOfEd25519"
+);
+
+export const SolanaTokenRecipientIsSenderATA = createCustomErrorClass(
+  "SolanaTokenRecipientIsSenderATA"
 );

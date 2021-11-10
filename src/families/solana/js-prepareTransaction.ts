@@ -14,7 +14,7 @@ import {
   findAssociatedTokenAccountPubkey,
   getTokenTransferSpec,
   getTxFeeCalculator,
-  getTokenAccountWithNativeBalance,
+  getMaybeTokenAccountWithNativeBalance,
   getAssociatedTokenAccountCreationFee,
 } from "./api";
 import {
@@ -23,11 +23,13 @@ import {
   SolanaMemoIsTooLong,
   SolanaAmountNotTransferableIn1Tx,
   SolanaTokenAccountHoldsAnotherToken,
-  SolanaAssociatedTokenAccountWillBeFunded,
+  SolanaRecipientAssociatedTokenAccountWillBeFunded,
   SolanaNotEnoughBalanceToPayFees,
+  SolanaTokenRecipientIsSenderATA,
 } from "./errors";
 import {
   Awaited,
+  decodeAccountIdWithTokenAccountAddress,
   isAccountFunded,
   isEd25519Address,
   isValidBase58Address,
@@ -158,90 +160,107 @@ const prepareTokenTransfer = async (
     return toInvalidStatusCommand(errors);
   }
 
-  const accInfo = await getTokenAccountWithNativeBalance(tx.recipient);
+  const senderAssociatedTokenAccountAddress =
+    decodeAccountIdWithTokenAccountAddress(subAccount.id).address;
+
+  if (tx.recipient === senderAssociatedTokenAccountAddress) {
+    errors.recipient = new SolanaTokenRecipientIsSenderATA();
+    return toInvalidStatusCommand(errors);
+  }
+
+  const maybeRecipientTokenAccInfo =
+    await getMaybeTokenAccountWithNativeBalance(tx.recipient);
+
+  if (maybeRecipientTokenAccInfo.tokenAccount instanceof Error) {
+    throw maybeRecipientTokenAccInfo.tokenAccount;
+  }
+
+  const recipientAssociatedTokenAccPubkey =
+    await findAssociatedTokenAccountPubkey(tx.recipient, mintAddress);
+
+  const recipientAssociatedTokenAccountAddress =
+    recipientAssociatedTokenAccPubkey.toBase58();
 
   const fees: number[] = [];
 
-  if (accInfo.tokenAccount instanceof Error) {
-    throw accInfo.tokenAccount;
-  }
-
   let recipientDescriptor: TokenRecipientDescriptor | undefined = undefined;
+  let shouldCreateRecipientAssociatedTokenAccount = false;
 
-  if (accInfo.tokenAccount === undefined) {
-    // get ata and if not exists look down
+  if (maybeRecipientTokenAccInfo.tokenAccount === undefined) {
+    // TODO: check that acc exists instead?
+    if (!(await isAccountFunded(recipientAssociatedTokenAccountAddress))) {
+      shouldCreateRecipientAssociatedTokenAccount = true;
+    }
 
-    const associatedTokenAccPubkey = await findAssociatedTokenAccountPubkey(
-      tx.recipient,
-      mintAddress
-    );
-
-    const associatedTokenAccountAddress = associatedTokenAccPubkey.toBase58();
-
-    const shouldCreateAssociatedTokenAccount = !isAccountFunded(
-      associatedTokenAccountAddress
-    );
-
-    if (shouldCreateAssociatedTokenAccount) {
-      warnings.associatedTokenAccount =
-        new SolanaAssociatedTokenAccountWillBeFunded();
+    if (shouldCreateRecipientAssociatedTokenAccount) {
+      warnings.recipientAssociatedTokenAccount =
+        new SolanaRecipientAssociatedTokenAccountWillBeFunded();
       fees.push(await getAssociatedTokenAccountCreationFee());
+
+      if (maybeRecipientTokenAccInfo.nativeBalance <= 0) {
+        warnings.recipient = new SolanaMainAccountNotFunded();
+      }
     }
 
     recipientDescriptor = {
-      kind: "account",
-      //owner: tx.recipient,
-      associatedTokenAccountAddress,
-      shouldCreateAssociatedTokenAccount,
+      kind: "associated-token-account",
+      shouldCreate: shouldCreateRecipientAssociatedTokenAccount,
+      address: recipientAssociatedTokenAccountAddress,
     };
   } else {
-    if (accInfo.tokenAccount.mint.toBase58() === mintAddress) {
-      // destination is the recipient!
-      recipientDescriptor = {
-        kind: "token-account",
-      };
+    if (
+      maybeRecipientTokenAccInfo.tokenAccount.mint.toBase58() === mintAddress
+    ) {
+      recipientDescriptor =
+        tx.recipient === recipientAssociatedTokenAccountAddress
+          ? {
+              kind: "associated-token-account",
+              address: tx.recipient,
+              shouldCreate: false,
+            }
+          : {
+              kind: "ancillary-token-account",
+              address: tx.recipient,
+            };
     } else {
       errors.recipient = new SolanaTokenAccountHoldsAnotherToken();
       return toInvalidStatusCommand(errors);
     }
   }
-
-  if (accInfo.balance <= 0) {
-    warnings.recipient = new SolanaMainAccountNotFunded();
-  }
-
   // TODO: remove total balance
-  const { totalBalance, totalTransferableAmountIn1Tx, ancillaryTokenAccOps } =
-    await getTokenTransferSpec(
-      mainAccount.freshAddress,
-      mintAddress,
-      // TODO: what if a wallet address! - must get token ass account!
-      tx.recipient,
-      txAmount,
-      mintDecimals
-    );
+  const {
+    totalBalance,
+    totalTransferableAmountIn1Tx,
+    ancillaryTokenAccOps: ownerAncillaryTokenAccOps,
+  } = await getTokenTransferSpec(
+    mainAccount.freshAddress,
+    senderAssociatedTokenAccountAddress,
+    mintAddress,
+    recipientDescriptor,
+    txAmount,
+    mintDecimals
+  );
 
   if (txAmount > totalTransferableAmountIn1Tx) {
     errors.amount = new SolanaAmountNotTransferableIn1Tx();
     return toInvalidStatusCommand(errors);
   }
 
-  if (ancillaryTokenAccOps.length > 0) {
+  if (ownerAncillaryTokenAccOps.length > 0) {
     //TODO: think of it...
-    warnings.ancillaryOps = new Error(JSON.stringify(ancillaryTokenAccOps));
-  }
-
-  // TODO: think of it...
-  if (recipientDescriptor === undefined) {
-    throw new Error("should not happen");
+    warnings.ancillaryOps = new Error(
+      JSON.stringify(ownerAncillaryTokenAccOps)
+    );
   }
 
   return {
     status: "valid",
     command: {
       kind: "token.transfer",
+      ownerAddress: mainAccount.freshAddress,
+      ownerAssociatedTokenAccountAddress: senderAssociatedTokenAccountAddress,
       amount: txAmount,
-      ancillaryTokenAccOps,
+      ownerAncillaryTokenAccOps,
       mintAddress,
       mintDecimals,
       recipientDescriptor: recipientDescriptor,
@@ -276,19 +295,13 @@ async function prepareTransfer(
     status: "valid",
     command: {
       kind: "transfer",
+      sender: mainAccount.freshAddress,
       recipient: tx.recipient,
       amount: txAmount,
-      recipientWalletIsUnfunded,
       memo: tx.memo,
     },
     warnings: Object.keys(warnings).length > 0 ? warnings : undefined,
   };
-}
-
-function getTokenRecipient(
-  accInfo: Awaited<ReturnType<typeof getTokenAccountWithNativeBalance>>
-) {
-  throw new Error("Function not implemented.");
 }
 
 function toInvalidTx(

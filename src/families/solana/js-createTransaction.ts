@@ -19,10 +19,10 @@ const createTransaction = (mainAccount: Account): Transaction => {
     commandDescriptor: {
       status: "valid",
       command: {
+        sender: mainAccount.freshAddress,
         kind: "transfer",
         amount: 0,
         recipient: "",
-        recipientWalletIsUnfunded: false,
       },
     },
   };

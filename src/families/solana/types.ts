@@ -50,10 +50,10 @@ export type TransactionMode = NativeTransactionMode | TokenTransactionMode;
 
 export type TransferCommand = {
   kind: "transfer";
-  memo?: string;
+  sender: string;
   recipient: string;
   amount: number;
-  recipientWalletIsUnfunded: boolean;
+  memo?: string;
 };
 
 type AncillaryTokenAccountTransferOperation = {
@@ -73,15 +73,18 @@ export type AncillaryTokenAccountOperation =
 
 export type TokenRecipientDescriptor =
   | {
-      kind: "account";
-      associatedTokenAccountAddress: string;
-      shouldCreateAssociatedTokenAccount: boolean;
+      kind: "associated-token-account";
+      shouldCreate: boolean;
+      address: string;
     }
   | {
-      kind: "token-account";
+      kind: "ancillary-token-account";
+      address: string;
     };
 export type TokenTransferCommand = {
   kind: "token.transfer";
+  ownerAddress: string;
+  ownerAssociatedTokenAccountAddress: string;
   recipientDescriptor: TokenRecipientDescriptor;
   //destinationAddress: string;
   amount: number;
@@ -89,9 +92,8 @@ export type TokenTransferCommand = {
   mintDecimals: number;
   // TODO: recalc total balance here as well
   //totalTransferableAmountIn1Tx: number;
-  ancillaryTokenAccOps: AncillaryTokenAccountOperation[];
+  ownerAncillaryTokenAccOps: AncillaryTokenAccountOperation[];
   memo?: string;
-  //recipientWalletIsUnfunded: boolean;
   //recipientAssociatedTokenAccountIsUnfunded: boolean;
 };
 

@@ -1,7 +1,9 @@
 import type { Account } from "../../types";
-import type { Transaction } from "./types";
+import type { Command, Transaction } from "./types";
 import { addSignatureToTransaction, buildTransferTransaction } from "./api";
 import { buildTokenTransferTransaction } from "./api/web3";
+import { assertUnreachable } from "./utils";
+import { Transaction as OnChainTransaction } from "@solana/web3.js";
 
 /**
  * @param {Account} a
@@ -11,7 +13,7 @@ export const buildOnChainTransaction = async (
   account: Account,
   transaction: Transaction
 ) => {
-  const tx = await build(account, transaction);
+  const tx = await build(transaction);
 
   return [
     tx.compileMessage().serialize(),
@@ -25,42 +27,26 @@ export const buildOnChainTransaction = async (
   ] as const;
 };
 
-function build(account: Account, transaction: Transaction) {
-  /*
-  if (transaction.feeCalculator? === undefined || transaction.feeCalculator?.lt(0)) {
-    throw new FeeNotLoaded();
+function build(tx: Transaction) {
+  switch (tx.commandDescriptor.status) {
+    case "valid":
+      return buildForCommand(tx.commandDescriptor.command);
+    case "invalid":
+      throw new Error("invalid command");
+    default:
+      return assertUnreachable(tx.commandDescriptor);
   }
-  */
+}
 
-  const { recipient, useAllAmount /*mode*/ } = transaction;
-
-  if (transaction.subAccountId) {
-    const tokenAcc = account.subAccounts?.find(
-      (acc) => acc.id === transaction.subAccountId
-    );
-
-    if (!tokenAcc || tokenAcc.type !== "TokenAccount") {
-      throw new Error("sub account not found");
-    }
-    return buildTokenTransferTransaction({
-      fromAddress: account.freshAddress,
-      toAddress: recipient,
-      mintAddress: tokenAcc.token.id,
-      amount: useAllAmount ? account.balance : transaction.amount,
-      decimals: tokenAcc.token.units[0].magnitude,
-      memo: transaction.memo,
-    });
+async function buildForCommand(command: Command): Promise<OnChainTransaction> {
+  switch (command.kind) {
+    case "transfer":
+      return buildTransferTransaction(command);
+    case "token.transfer":
+      return buildTokenTransferTransaction(command);
+    default:
+      return assertUnreachable(command);
   }
-
-  return buildTransferTransaction({
-    fromAddress: account.freshAddress,
-    toAddress: recipient,
-    amount: useAllAmount
-      ? //? account.balance.minus(transaction.feeCalculator?)
-        account.balance
-      : transaction.amount,
-    memo: transaction.memo,
-  });
 }
 
 export default buildOnChainTransaction;

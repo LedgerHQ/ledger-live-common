@@ -13,7 +13,12 @@ import BigNumber from "bignumber.js";
 import _, { chain, chunk, flow, reduce, sortBy } from "lodash";
 import { encodeOperationId } from "../../../operation";
 import { Operation, OperationType } from "../../../types";
-import { AncillaryTokenAccountOperation } from "../types";
+import {
+  AncillaryTokenAccountOperation,
+  TokenRecipientDescriptor,
+  TokenTransferCommand,
+  TransferCommand,
+} from "../types";
 import { parse } from "./program";
 import { parseQuiet } from "./program/parser";
 import {
@@ -27,6 +32,7 @@ import {
   parseTokenAccountInfo,
 } from "./account/parser";
 import { TokenAccountInfo } from "./validators/accounts/token";
+import { assertUnreachable } from "../utils";
 
 //const conn = new Connection(clusterApiUrl("mainnet-beta"), "finalized");
 const conn = new Connection("http://api.devnet.solana.com");
@@ -269,19 +275,15 @@ export async function* getTransactions(
   }
 }
 
+// TODO: AMOUNT AS BIGNUMBER?
 export const buildTransferTransaction = async ({
-  fromAddress,
-  toAddress,
+  sender,
+  recipient,
   amount,
   memo,
-}: {
-  fromAddress: string;
-  toAddress: string;
-  amount: BigNumber;
-  memo?: string;
-}) => {
-  const fromPublicKey = new PublicKey(fromAddress);
-  const toPublicKey = new PublicKey(toAddress);
+}: TransferCommand) => {
+  const fromPublicKey = new PublicKey(sender);
+  const toPublicKey = new PublicKey(recipient);
 
   const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
 
@@ -293,7 +295,8 @@ export const buildTransferTransaction = async ({
   const transferIx = SystemProgram.transfer({
     fromPubkey: fromPublicKey,
     toPubkey: toPublicKey,
-    lamports: amount.toNumber(),
+    //lamports: amount.toNumber(),
+    lamports: amount,
   });
 
   onChainTx.add(transferIx);
@@ -301,6 +304,7 @@ export const buildTransferTransaction = async ({
   if (memo) {
     const memoIx = new TransactionInstruction({
       keys: [],
+      // TODO: switch to spl memo id
       programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
       data: Buffer.from(memo),
     });
@@ -310,62 +314,76 @@ export const buildTransferTransaction = async ({
   return onChainTx;
 };
 
-// TODO: ancillary accs and gc!
-export const buildTokenTransferTransaction = async ({
-  fromAddress,
-  mintAddress,
-  toAddress,
-  amount,
-  decimals,
-  memo,
-}: {
-  fromAddress: string;
-  mintAddress: string;
-  toAddress: string;
-  amount: BigNumber;
-  decimals: number;
-  memo?: string;
-}) => {
-  const fromPubkey = new PublicKey(fromAddress);
-  const mintPubkey = new PublicKey(mintAddress);
-
-  const fromAssociatedTokenAddress = await findAssociatedTokenAccountPubkey(
-    fromAddress,
-    mintAddress
-  );
-  const fromAssociatedTokenPubKey = new PublicKey(fromAssociatedTokenAddress);
-
-  const toAssociatedTokenAddress = await findAssociatedTokenAccountPubkey(
-    toAddress,
-    mintAddress
-  );
-
-  const toAssociatedTokenPubKey = new PublicKey(toAssociatedTokenAddress);
-
+export const buildTokenTransferTransaction = async (
+  command: TokenTransferCommand
+) => {
+  const {
+    ownerAddress,
+    ownerAssociatedTokenAccountAddress,
+    amount,
+    recipientDescriptor,
+    mintAddress,
+    mintDecimals,
+    ownerAncillaryTokenAccOps,
+    memo,
+  } = command;
   const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
 
+  const ownerPubkey = new PublicKey(ownerAddress);
+
+  const destinationPubkey = new PublicKey(recipientDescriptor.address);
+
   const onChainTx = new Transaction({
-    feePayer: fromPubkey,
+    feePayer: ownerPubkey,
     recentBlockhash,
   });
 
+  const ancillaryTokenAccIxs = ownerAncillaryTokenAccOps.map((op) =>
+    ancillaryTokenAccOpToIx(op, command)
+  );
+
+  onChainTx.add(...ancillaryTokenAccIxs);
+
+  const mintPubkey = new PublicKey(mintAddress);
+
+  switch (recipientDescriptor.kind) {
+    case "associated-token-account":
+      if (recipientDescriptor.shouldCreate) {
+        onChainTx.add(
+          Token.createAssociatedTokenAccountInstruction(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            mintPubkey,
+            destinationPubkey,
+            ownerPubkey,
+            ownerPubkey
+          )
+        );
+      }
+      break;
+    case "ancillary-token-account":
+      break;
+    default:
+      return assertUnreachable(recipientDescriptor);
+  }
+
   const tokenTransferIx = Token.createTransferCheckedInstruction(
     TOKEN_PROGRAM_ID,
-    fromAssociatedTokenPubKey,
+    new PublicKey(ownerAssociatedTokenAccountAddress),
     mintPubkey,
-    toAssociatedTokenPubKey,
-    fromPubkey,
+    destinationPubkey,
+    ownerPubkey,
     [],
-    amount.toNumber(),
-    decimals
+    amount,
+    mintDecimals
   );
 
   onChainTx.add(tokenTransferIx);
 
   if (memo) {
     const memoIx = new TransactionInstruction({
-      //keys: [{ pubkey: fromPubkey, isSigner: true, isWritable: false }],
       keys: [],
+      // TODO: switch to spl id
       programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
       data: Buffer.from(memo),
     });
@@ -437,18 +455,18 @@ export async function findAssociatedTokenAccountPubkey(
 
 export async function getTokenTransferSpec(
   ownerAddress: string,
+  ownerAssociatedTokenAccountAddress: string,
   mintAddress: string,
-  destAddress: string,
+  recipientDescriptor: TokenRecipientDescriptor,
   amount: number,
   decimals: number
 ) {
   const ownerPubkey = new PublicKey(ownerAddress);
   const mintPubkey = new PublicKey(mintAddress);
-  const destPubkey = new PublicKey(destAddress);
+  const recipientPubkey = new PublicKey(recipientDescriptor.address);
 
-  const ownerAssocTokenAccPubkey = await findAssociatedTokenAccountPubkey(
-    ownerAddress,
-    mintAddress
+  const ownerAssocTokenAccPubkey = new PublicKey(
+    ownerAssociatedTokenAccountAddress
   );
 
   const tokenAccs = await getOnChainTokenAccountsByMint(
@@ -478,13 +496,29 @@ export async function getTokenTransferSpec(
       TOKEN_PROGRAM_ID,
       ownerAssocTokenAccPubkey,
       mintPubkey,
-      destPubkey,
+      recipientPubkey,
       ownerPubkey,
       [],
       amount,
       decimals
     )
   );
+
+  if (
+    recipientDescriptor.kind === "associated-token-account" &&
+    recipientDescriptor.shouldCreate
+  ) {
+    dummyTx.add(
+      Token.createAssociatedTokenAccountInstruction(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        mintPubkey,
+        recipientPubkey,
+        ownerPubkey,
+        ownerPubkey
+      )
+    );
+  }
 
   const {
     totalTransferableAmount: totalTransferableAmountFromAncillaryAccs,
@@ -529,8 +563,7 @@ function getActionableAncillaryTokenAccs(
       case "frozen":
         return false;
       default:
-        const _: never = acc.tokenAccInfo.state;
-        throw new Error("unexpected state");
+        return assertUnreachable(acc.tokenAccInfo.state);
     }
   });
 }
@@ -722,12 +755,11 @@ function toTransferableAmount(op: AncillaryTokenAccountOperation): number {
     case "ancillary.token.close":
       return 0;
     default:
-      const _: never = op;
-      throw new Error("unexpected op kind");
+      return assertUnreachable(op);
   }
 }
 
-export async function getTokenAccountWithNativeBalance(address: string) {
+export async function getMaybeTokenAccountWithNativeBalance(address: string) {
   const accInfo = (await conn.getParsedAccountInfo(new PublicKey(address)))
     .value;
 
@@ -737,9 +769,38 @@ export async function getTokenAccountWithNativeBalance(address: string) {
       : undefined;
 
   return {
-    balance: accInfo?.lamports ?? 0,
+    nativeBalance: accInfo?.lamports ?? 0,
     tokenAccount,
   };
+}
+
+function ancillaryTokenAccOpToIx(
+  op: AncillaryTokenAccountOperation,
+  command: TokenTransferCommand
+) {
+  switch (op.kind) {
+    case "ancillary.token.transfer":
+      return Token.createTransferCheckedInstruction(
+        TOKEN_PROGRAM_ID,
+        new PublicKey(op.sourceTokenAccAddress),
+        new PublicKey(command.mintAddress),
+        new PublicKey(command.recipientDescriptor.address),
+        new PublicKey(command.ownerAddress),
+        [],
+        op.amount,
+        command.mintDecimals
+      );
+    case "ancillary.token.close":
+      return Token.createCloseAccountInstruction(
+        TOKEN_PROGRAM_ID,
+        new PublicKey(op.tokenAccAddress),
+        new PublicKey(command.ownerAddress),
+        new PublicKey(command.ownerAddress),
+        []
+      );
+    default:
+      return assertUnreachable(op);
+  }
 }
 
 export function getAssociatedTokenAccountCreationFee() {

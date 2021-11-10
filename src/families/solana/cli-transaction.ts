@@ -25,7 +25,16 @@ function inferTransactions(
   opts: Record<string, string>
 ): Transaction[] {
   const mode = opts.mode || "send";
+  //console.log(transactions[0]);
+  return [
+    {
+      ...transactions[0].transaction,
+      subAccountId:
+        "js:2:solana:AQbkEagmPgmsdAfS4X8V8UyJnXXjVPMvjeD15etqQ3Jh:solanaMain+Msaq5fkgcLAHHxbA2fF3eajmanNnBfMCPji2hm3kkDi",
+    },
+  ];
   invariant(mode === "send", "Only send mode is supported");
+  /*
   return flatMap(transactions, ({ transaction }) => {
     invariant(transaction.family === "solana", "solana family");
     return {
@@ -34,7 +43,9 @@ function inferTransactions(
       allowUnFundedRecipient: opts["allow-unfunded-recipient"] !== undefined,
     };
   });
+  */
 }
+
 export default {
   options,
   inferTransactions,

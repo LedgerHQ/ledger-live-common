@@ -62,17 +62,19 @@ const lamportsToSOL = (account: Account, lamports: BigNumber) => {
 };
 
 export const formatTransaction = (
-  t: Transaction,
+  tx: Transaction,
   mainAccount: Account
-): string =>
-  [
-    `SEND ${t.useAllAmount ? "MAX" : lamportsToSOL(mainAccount, t.amount)}`,
-    `TO ${t.recipient}`,
+): string => {
+  console.log(tx);
+  return [
+    `SEND ${tx.useAllAmount ? "ALL" : lamportsToSOL(mainAccount, tx.amount)}`,
+    `TO ${tx.recipient}`,
     //t.memo ? `MEMO ${t.memo}` : "",
     //t.allowUnFundedRecipient ? "ALLOW UNFUNDED RECIPIENT: TRUE" : "",
   ]
     .filter(Boolean)
     .join("\n");
+};
 
 export default {
   formatTransaction,
