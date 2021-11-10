@@ -331,7 +331,7 @@ export const buildTokenTransferTransaction = async (
 
   const ownerPubkey = new PublicKey(ownerAddress);
 
-  const destinationPubkey = new PublicKey(recipientDescriptor.address);
+  const destinationPubkey = new PublicKey(recipientDescriptor.tokenAccAddress);
 
   const onChainTx = new Transaction({
     feePayer: ownerPubkey,
@@ -355,7 +355,7 @@ export const buildTokenTransferTransaction = async (
         TOKEN_PROGRAM_ID,
         mintPubkey,
         destinationPubkey,
-        ownerPubkey,
+        new PublicKey(recipientDescriptor.walletAddress),
         ownerPubkey
       )
     );
@@ -458,7 +458,7 @@ export async function getTokenTransferSpec(
 ) {
   const ownerPubkey = new PublicKey(ownerAddress);
   const mintPubkey = new PublicKey(mintAddress);
-  const recipientPubkey = new PublicKey(recipientDescriptor.address);
+  const recipientPubkey = new PublicKey(recipientDescriptor.tokenAccAddress);
 
   const ownerAssocTokenAccPubkey = new PublicKey(
     ownerAssociatedTokenAccountAddress
@@ -773,7 +773,7 @@ function ancillaryTokenAccOpToIx(
         TOKEN_PROGRAM_ID,
         new PublicKey(op.sourceTokenAccAddress),
         new PublicKey(command.mintAddress),
-        new PublicKey(command.recipientDescriptor.address),
+        new PublicKey(command.recipientDescriptor.tokenAccAddress),
         new PublicKey(command.ownerAddress),
         [],
         op.amount,

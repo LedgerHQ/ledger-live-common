@@ -260,16 +260,18 @@ async function getTokenRecipient(
     ));
 
     return {
+      walletAddress: recipientAddress,
       shouldCreateAsAssociatedTokenAccount,
-      address: recipientAssociatedTokenAccountAddress,
+      tokenAccAddress: recipientAssociatedTokenAccountAddress,
     };
   } else if (recipientTokenAccount.mint.toBase58() !== mintAddress) {
     return new SolanaTokenAccountHoldsAnotherToken();
   }
 
   return {
+    walletAddress: recipientTokenAccount.owner.toBase58(),
     shouldCreateAsAssociatedTokenAccount: false,
-    address: recipientAddress,
+    tokenAccAddress: recipientAddress,
   };
 }
 
