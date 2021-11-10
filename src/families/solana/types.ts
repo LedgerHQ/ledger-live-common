@@ -71,7 +71,11 @@ export type AncillaryTokenAccountOperation =
   | AncillaryTokenAccountTransferOperation
   | AncillaryTokenAccountCloseOperation;
 
-export type TokenRecipientDescriptor =
+export type TokenRecipientDescriptor = {
+  address: string;
+  shouldCreateAsAssociatedTokenAccount: boolean;
+};
+/*
   | {
       kind: "associated-token-account";
       shouldCreate: boolean;
@@ -81,6 +85,7 @@ export type TokenRecipientDescriptor =
       kind: "ancillary-token-account";
       address: string;
     };
+    */
 export type TokenTransferCommand = {
   kind: "token.transfer";
   ownerAddress: string;

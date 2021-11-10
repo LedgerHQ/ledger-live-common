@@ -27,6 +27,7 @@ export function encodeAccountIdWithTokenAccountAddress(
   return `${accountId}+${address}`;
 }
 
+// TODO: rename to assoc token account addr..
 export function decodeAccountIdWithTokenAccountAddress(
   accountIdWithTokenAccountAddress: string
 ) {

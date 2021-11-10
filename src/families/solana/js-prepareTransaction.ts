@@ -14,8 +14,9 @@ import {
   findAssociatedTokenAccountPubkey,
   getTokenTransferSpec,
   getTxFeeCalculator,
-  getMaybeTokenAccountWithNativeBalance,
+  getMaybeTokenAccount,
   getAssociatedTokenAccountCreationFee,
+  getBalance,
 } from "./api";
 import {
   SolanaMainAccountNotFunded,
@@ -69,8 +70,6 @@ const prepareTransaction = async (
     errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
   } else if (!isValidBase58Address(tx.recipient)) {
     errors.recipient = new InvalidAddress();
-  } else if (!isEd25519Address(tx.recipient)) {
-    errors.recipient = new SolanaAddressOffEd25519();
   }
 
   if (tx.memo && tx.memo.length > MAX_MEMO_LENGTH) {
@@ -168,65 +167,29 @@ const prepareTokenTransfer = async (
     return toInvalidStatusCommand(errors);
   }
 
-  const maybeRecipientTokenAccInfo =
-    await getMaybeTokenAccountWithNativeBalance(tx.recipient);
+  const recipientDescriptor = await getTokenRecipient(
+    tx.recipient,
+    mintAddress
+  );
 
-  if (maybeRecipientTokenAccInfo.tokenAccount instanceof Error) {
-    throw maybeRecipientTokenAccInfo.tokenAccount;
+  if (recipientDescriptor instanceof Error) {
+    errors.recipient = recipientDescriptor;
+    return toInvalidStatusCommand(errors);
   }
 
-  const recipientAssociatedTokenAccPubkey =
-    await findAssociatedTokenAccountPubkey(tx.recipient, mintAddress);
+  const fees = recipientDescriptor.shouldCreateAsAssociatedTokenAccount
+    ? await getAssociatedTokenAccountCreationFee()
+    : 0;
 
-  const recipientAssociatedTokenAccountAddress =
-    recipientAssociatedTokenAccPubkey.toBase58();
+  if (recipientDescriptor.shouldCreateAsAssociatedTokenAccount) {
+    warnings.recipientAssociatedTokenAccount =
+      new SolanaRecipientAssociatedTokenAccountWillBeFunded();
 
-  const fees: number[] = [];
-
-  let recipientDescriptor: TokenRecipientDescriptor | undefined = undefined;
-  let shouldCreateRecipientAssociatedTokenAccount = false;
-
-  if (maybeRecipientTokenAccInfo.tokenAccount === undefined) {
-    // TODO: check that acc exists instead?
-    if (!(await isAccountFunded(recipientAssociatedTokenAccountAddress))) {
-      shouldCreateRecipientAssociatedTokenAccount = true;
-    }
-
-    if (shouldCreateRecipientAssociatedTokenAccount) {
-      warnings.recipientAssociatedTokenAccount =
-        new SolanaRecipientAssociatedTokenAccountWillBeFunded();
-      fees.push(await getAssociatedTokenAccountCreationFee());
-
-      if (maybeRecipientTokenAccInfo.nativeBalance <= 0) {
-        warnings.recipient = new SolanaMainAccountNotFunded();
-      }
-    }
-
-    recipientDescriptor = {
-      kind: "associated-token-account",
-      shouldCreate: shouldCreateRecipientAssociatedTokenAccount,
-      address: recipientAssociatedTokenAccountAddress,
-    };
-  } else {
-    if (
-      maybeRecipientTokenAccInfo.tokenAccount.mint.toBase58() === mintAddress
-    ) {
-      recipientDescriptor =
-        tx.recipient === recipientAssociatedTokenAccountAddress
-          ? {
-              kind: "associated-token-account",
-              address: tx.recipient,
-              shouldCreate: false,
-            }
-          : {
-              kind: "ancillary-token-account",
-              address: tx.recipient,
-            };
-    } else {
-      errors.recipient = new SolanaTokenAccountHoldsAnotherToken();
-      return toInvalidStatusCommand(errors);
+    if (!(await isAccountFunded(tx.recipient))) {
+      warnings.recipient = new SolanaMainAccountNotFunded();
     }
   }
+
   // TODO: remove total balance
   const {
     totalBalance,
@@ -266,15 +229,61 @@ const prepareTokenTransfer = async (
       recipientDescriptor: recipientDescriptor,
       memo: tx.memo,
     },
-    fees: sum(fees),
+    fees,
     warnings,
   };
 };
+
+async function getTokenRecipient(
+  recipientAddress: string,
+  mintAddress: string
+): Promise<TokenRecipientDescriptor | Error> {
+  const recipientTokenAccount = await getMaybeTokenAccount(recipientAddress);
+
+  if (recipientTokenAccount instanceof Error) {
+    throw recipientTokenAccount;
+  }
+
+  if (recipientTokenAccount === undefined) {
+    if (!isEd25519Address(recipientAddress)) {
+      return new InvalidAddress();
+    }
+
+    const recipientAssociatedTokenAccPubkey =
+      await findAssociatedTokenAccountPubkey(recipientAddress, mintAddress);
+
+    const recipientAssociatedTokenAccountAddress =
+      recipientAssociatedTokenAccPubkey.toBase58();
+
+    // TODO: check that acc exists instead?
+    const shouldCreateAsAssociatedTokenAccount = !(await isAccountFunded(
+      recipientAssociatedTokenAccountAddress
+    ));
+
+    return {
+      shouldCreateAsAssociatedTokenAccount,
+      address: recipientAssociatedTokenAccountAddress,
+    };
+  } else if (recipientTokenAccount.mint.toBase58() !== mintAddress) {
+    return new SolanaTokenAccountHoldsAnotherToken();
+  }
+
+  return {
+    shouldCreateAsAssociatedTokenAccount: false,
+    address: recipientAddress,
+  };
+}
 
 async function prepareTransfer(
   mainAccount: Account,
   tx: Transaction
 ): Promise<CommandDescriptor<TransferCommand>> {
+  if (!isEd25519Address(tx.recipient)) {
+    toInvalidStatusCommand({
+      recipient: new SolanaAddressOffEd25519(),
+    });
+  }
+
   // TODO: check if need to run validation again, recipient changed etc..
   const recipientWalletIsUnfunded = !(await isAccountFunded(tx.recipient));
   const warnings: Record<string, Error> = {};

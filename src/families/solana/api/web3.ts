@@ -342,29 +342,23 @@ export const buildTokenTransferTransaction = async (
     ancillaryTokenAccOpToIx(op, command)
   );
 
-  onChainTx.add(...ancillaryTokenAccIxs);
+  if (ancillaryTokenAccIxs.length > 0) {
+    onChainTx.add(...ancillaryTokenAccIxs);
+  }
 
   const mintPubkey = new PublicKey(mintAddress);
 
-  switch (recipientDescriptor.kind) {
-    case "associated-token-account":
-      if (recipientDescriptor.shouldCreate) {
-        onChainTx.add(
-          Token.createAssociatedTokenAccountInstruction(
-            ASSOCIATED_TOKEN_PROGRAM_ID,
-            TOKEN_PROGRAM_ID,
-            mintPubkey,
-            destinationPubkey,
-            ownerPubkey,
-            ownerPubkey
-          )
-        );
-      }
-      break;
-    case "ancillary-token-account":
-      break;
-    default:
-      return assertUnreachable(recipientDescriptor);
+  if (recipientDescriptor.shouldCreateAsAssociatedTokenAccount) {
+    onChainTx.add(
+      Token.createAssociatedTokenAccountInstruction(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        mintPubkey,
+        destinationPubkey,
+        ownerPubkey,
+        ownerPubkey
+      )
+    );
   }
 
   const tokenTransferIx = Token.createTransferCheckedInstruction(
@@ -445,6 +439,7 @@ export async function findAssociatedTokenAccountPubkey(
   const ownerPubKey = new PublicKey(ownerAddress);
   const mintPubkey = new PublicKey(mintAddress);
 
+  // TODO: it might throw!!! switch to undefined on error?
   return Token.getAssociatedTokenAddress(
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
@@ -504,10 +499,7 @@ export async function getTokenTransferSpec(
     )
   );
 
-  if (
-    recipientDescriptor.kind === "associated-token-account" &&
-    recipientDescriptor.shouldCreate
-  ) {
+  if (recipientDescriptor.shouldCreateAsAssociatedTokenAccount) {
     dummyTx.add(
       Token.createAssociatedTokenAccountInstruction(
         ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -759,7 +751,7 @@ function toTransferableAmount(op: AncillaryTokenAccountOperation): number {
   }
 }
 
-export async function getMaybeTokenAccountWithNativeBalance(address: string) {
+export async function getMaybeTokenAccount(address: string) {
   const accInfo = (await conn.getParsedAccountInfo(new PublicKey(address)))
     .value;
 
@@ -768,10 +760,7 @@ export async function getMaybeTokenAccountWithNativeBalance(address: string) {
       ? tryParseAsTokenAccount(accInfo.data)
       : undefined;
 
-  return {
-    nativeBalance: accInfo?.lamports ?? 0,
-    tokenAccount,
-  };
+  return tokenAccount;
 }
 
 function ancillaryTokenAccOpToIx(

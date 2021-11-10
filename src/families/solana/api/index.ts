@@ -11,5 +11,5 @@ export {
   getTokenTransferSpec,
   getTxFeeCalculator,
   getAssociatedTokenAccountCreationFee,
-  getMaybeTokenAccountWithNativeBalance,
+  getMaybeTokenAccount,
 } from "./web3";
