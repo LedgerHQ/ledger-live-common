@@ -53,15 +53,12 @@ const prepareTransaction = async (
 ): Promise<Transaction> => {
   const patch: Partial<Transaction> = {};
   const errors: Record<string, Error> = {};
+  const warnings: Record<string, Error> = {};
 
   const feeCalculator = tx.feeCalculator ?? (await getTxFeeCalculator());
 
   if (tx.feeCalculator === undefined) {
     patch.feeCalculator = feeCalculator;
-  }
-
-  if (!tx.useAllAmount && tx.amount.lte(0)) {
-    errors.amount = new AmountRequired();
   }
 
   if (!tx.recipient) {
@@ -79,7 +76,7 @@ const prepareTransaction = async (
   }
 
   if (Object.keys(errors).length > 0) {
-    return toInvalidTx(tx, patch, errors);
+    return toInvalidTx(tx, patch, errors, warnings);
   }
 
   if (tx.subAccountId) {
@@ -89,28 +86,25 @@ const prepareTransaction = async (
       throw new Error("subaccount not found");
     }
 
-    if (tx.amount.gt(subAccount.spendableBalance)) {
-      errors.amount = new NotEnoughBalance();
-      return toInvalidTx(tx, patch, errors);
-    }
-
     patch.commandDescriptor = await prepareTokenTransfer(
       mainAccount,
       subAccount,
       tx
     );
   } else {
-    if (tx.amount.gt(mainAccount.spendableBalance)) {
-      errors.amount = new NotEnoughBalance();
-      return toInvalidTx(tx, patch, errors);
-    }
     patch.commandDescriptor = await prepareTransfer(mainAccount, tx);
   }
 
   const { commandDescriptor } = patch;
 
   if (commandDescriptor.status === "invalid") {
-    return toInvalidTx(tx, patch, errors);
+    // TODO: return back!
+    return toInvalidTx(
+      tx,
+      patch,
+      commandDescriptor.errors,
+      commandDescriptor.warnings ?? {}
+    );
   }
 
   const command = commandDescriptor.command;
@@ -150,21 +144,12 @@ const prepareTokenTransfer = async (
   const mintAddress = tokenIdParts[tokenIdParts.length - 1];
   const mintDecimals = subAccount.token.units[0].magnitude;
 
-  const txAmount = tx.useAllAmount
-    ? subAccount.spendableBalance.toNumber()
-    : tx.amount.toNumber();
-
-  if (txAmount > subAccount.spendableBalance.toNumber()) {
-    errors.amount = new NotEnoughBalance();
-    return toInvalidStatusCommand(errors);
-  }
-
   const senderAssociatedTokenAccountAddress =
     decodeAccountIdWithTokenAccountAddress(subAccount.id).address;
 
   if (tx.recipient === senderAssociatedTokenAccountAddress) {
     errors.recipient = new SolanaTokenRecipientIsSenderATA();
-    return toInvalidStatusCommand(errors);
+    return toInvalidStatusCommand(errors, warnings);
   }
 
   const recipientDescriptor = await getTokenRecipient(
@@ -174,7 +159,7 @@ const prepareTokenTransfer = async (
 
   if (recipientDescriptor instanceof Error) {
     errors.recipient = recipientDescriptor;
-    return toInvalidStatusCommand(errors);
+    return toInvalidStatusCommand(errors, warnings);
   }
 
   const fees = recipientDescriptor.shouldCreateAsAssociatedTokenAccount
@@ -188,6 +173,20 @@ const prepareTokenTransfer = async (
     if (!(await isAccountFunded(tx.recipient))) {
       warnings.recipient = new SolanaMainAccountNotFunded();
     }
+  }
+
+  if (!tx.useAllAmount && tx.amount.lte(0)) {
+    errors.amount = new AmountRequired();
+    return toInvalidStatusCommand(errors, warnings);
+  }
+
+  const txAmount = tx.useAllAmount
+    ? subAccount.spendableBalance.toNumber()
+    : tx.amount.toNumber();
+
+  if (txAmount > subAccount.spendableBalance.toNumber()) {
+    errors.amount = new NotEnoughBalance();
+    return toInvalidStatusCommand(errors, warnings);
   }
 
   // TODO: remove total balance
@@ -204,16 +203,16 @@ const prepareTokenTransfer = async (
     mintDecimals
   );
 
-  if (txAmount > totalTransferableAmountIn1Tx) {
-    errors.amount = new SolanaAmountNotTransferableIn1Tx();
-    return toInvalidStatusCommand(errors);
-  }
-
   if (ownerAncillaryTokenAccOps.length > 0) {
     //TODO: think of it...
     warnings.ancillaryOps = new Error(
       JSON.stringify(ownerAncillaryTokenAccOps)
     );
+  }
+
+  if (txAmount > totalTransferableAmountIn1Tx) {
+    errors.amount = new SolanaAmountNotTransferableIn1Tx();
+    return toInvalidStatusCommand(errors, warnings);
   }
 
   return {
@@ -278,27 +277,31 @@ async function prepareTransfer(
   mainAccount: Account,
   tx: Transaction
 ): Promise<CommandDescriptor<TransferCommand>> {
+  const errors: Record<string, Error> = {};
+  const warnings: Record<string, Error> = {};
+
   if (!isEd25519Address(tx.recipient)) {
-    toInvalidStatusCommand({
-      recipient: new SolanaAddressOffEd25519(),
-    });
+    errors.recipient = new SolanaAddressOffEd25519();
+    return toInvalidStatusCommand(errors, warnings);
   }
 
   // TODO: check if need to run validation again, recipient changed etc..
   const recipientWalletIsUnfunded = !(await isAccountFunded(tx.recipient));
-  const warnings: Record<string, Error> = {};
-
-  // TODO: check if changed! CHECK if recipient is main wallet!
-
-  // TODO: check amount < balance
-
   if (recipientWalletIsUnfunded) {
     warnings.recipient = new SolanaMainAccountNotFunded();
   }
 
-  const txAmount = tx.useAllAmount
-    ? mainAccount.spendableBalance.toNumber()
-    : tx.amount.toNumber();
+  if (!tx.useAllAmount && tx.amount.lte(0)) {
+    errors.amount = new AmountRequired();
+    return toInvalidStatusCommand(errors, warnings);
+  }
+
+  const txAmount = tx.useAllAmount ? mainAccount.spendableBalance : tx.amount;
+
+  if (txAmount.gt(mainAccount.spendableBalance)) {
+    errors.amount = new NotEnoughBalance();
+    return toInvalidStatusCommand(errors, warnings);
+  }
 
   return {
     status: "valid",
@@ -306,7 +309,7 @@ async function prepareTransfer(
       kind: "transfer",
       sender: mainAccount.freshAddress,
       recipient: tx.recipient,
-      amount: txAmount,
+      amount: txAmount.toNumber(),
       memo: tx.memo,
     },
     warnings: Object.keys(warnings).length > 0 ? warnings : undefined,
@@ -316,19 +319,24 @@ async function prepareTransfer(
 function toInvalidTx(
   tx: Transaction,
   patch: Partial<Transaction>,
-  errors: Record<string, Error>
+  errors: Record<string, Error>,
+  warnings?: Record<string, Error>
 ): Transaction {
   return {
     ...tx,
     ...patch,
-    commandDescriptor: toInvalidStatusCommand(errors),
+    commandDescriptor: toInvalidStatusCommand(errors, warnings),
   };
 }
 
-function toInvalidStatusCommand(errors: Record<string, Error>) {
+function toInvalidStatusCommand(
+  errors: Record<string, Error>,
+  warnings?: Record<string, Error>
+) {
   return {
     status: "invalid" as const,
     errors,
+    warnings,
   };
 }
 

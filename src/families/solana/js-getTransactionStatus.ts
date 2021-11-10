@@ -11,9 +11,9 @@ const getTransactionStatus = async (
     return {
       amount: new BigNumber(tx.amount),
       errors: tx.commandDescriptor.errors,
-      warnings: {},
+      warnings: tx.commandDescriptor.warnings ?? {},
       estimatedFees: txFees,
-      totalSpent: tx.amount.plus(txFees),
+      totalSpent: new BigNumber(0),
     };
   }
 

@@ -115,7 +115,7 @@ export type InvalidCommandDescriptor = {
   // TODO: partial command here?
   //command: TransferCommand | TokenTransferCommand;
   errors: Record<string, Error>;
-  //warnings?: Record<string, Error>;
+  warnings?: Record<string, Error>;
 };
 
 export type CommandDescriptor<C extends Command> =
