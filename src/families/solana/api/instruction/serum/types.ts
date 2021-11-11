@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-redeclare */
 
-import { decodeInstruction, MARKETS } from "@project-serum/serum";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import BN from "bn.js";
 import { enums, number, optional, type, Infer, create } from "superstruct";
 import { BigNumFromString } from "../../validators/bignum";
 import { PublicKeyFromString } from "../../validators/pubkey";
+//import { decodeInstruction, MARKETS } from "@project-serum/serum";
 
 const SERUM_PROGRAM_IDS = [
   "4ckmDgGdxQoPDLUkDT3vHgSAkzA3QRdNq5ywwY4sUSJn",
@@ -20,6 +20,7 @@ export const Side = enums(["buy", "sell"]);
 export type OrderType = Infer<typeof OrderType>;
 export const OrderType = enums(["limit", "ioc", "postOnly"]);
 
+/*
 export type InitializeMarket = {
   market: PublicKey;
   requestQueue: PublicKey;
@@ -353,3 +354,5 @@ export function parseSerumInstructionTitle(
 
   return SERUM_CODE_LOOKUP[code];
 }
+
+*/

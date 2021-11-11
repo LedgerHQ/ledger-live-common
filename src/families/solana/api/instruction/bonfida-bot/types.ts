@@ -12,11 +12,13 @@ import {
   coerce,
   any,
 } from "superstruct";
+/*
 import {
   Instruction,
   decodeInstruction,
   BONFIDABOT_PROGRAM_ID,
 } from "@bonfida/bot";
+*/
 
 export const SERUM_DECODED_MAX = 6;
 
@@ -27,6 +29,8 @@ export type OrderType = Infer<typeof OrderType>;
 export const OrderType = enums([0, 1, 2]);
 
 const PublicKeyToString = coerce(string(), any(), (value) => value.toBase58());
+
+/*
 
 export type InitializeBot = {
   systemProgramAccount: PublicKey;
@@ -431,3 +435,4 @@ export const parseBonfidaBotInstructionTitle = (
   }
   return INSTRUCTION_LOOKUP[code];
 };
+*/
