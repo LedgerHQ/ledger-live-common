@@ -27,6 +27,7 @@ import {
   fromTezosResourcesRaw,
   fromElrondResourcesRaw,
   fromCryptoOrgResourcesRaw,
+  fromNFTRaw,
 } from "./account";
 import consoleWarnExpectToEqual from "./consoleWarnExpectToEqual";
 
@@ -168,7 +169,8 @@ function shouldRefreshBitcoinResources(
   const { bitcoinResources: raw } = updatedRaw;
   // FIXME Need more typing in wallet-btc to have a meaningful comparison
   //if (!isEqual(raw.walletAccount?.xpub?.data, existing.walletAccount?.xpub?.data)) return true;
-  return raw.utxos.length !== existing.utxos.length;
+  if (raw.utxos.length !== existing.utxos.length) return true;
+  return !isEqual(raw.utxos, existing.utxos);
 }
 
 export function patchAccount(
@@ -378,6 +380,12 @@ export function patchAccount(
     next.cryptoOrgResources = fromCryptoOrgResourcesRaw(
       updatedRaw.cryptoOrgResources
     );
+    changed = true;
+  }
+
+  const nfts = updatedRaw?.nfts?.map(fromNFTRaw);
+  if (updatedRaw.nfts && !isEqual(account.nfts, nfts)) {
+    next.nfts = nfts;
     changed = true;
   }
 

@@ -70,6 +70,11 @@ class BitcoinCash implements ICrypto {
   validateAddress(address: string): boolean {
     return bchaddr.isValidAddress(address);
   }
+
+  // eslint-disable-next-line
+  isTaprootAddress(address: string): boolean {
+    return false;
+  }
 }
 
 export default BitcoinCash;

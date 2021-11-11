@@ -11,10 +11,11 @@ import { TX, Input, Output } from "./storage/types";
 import { CoinSelect } from "./pickingstrategies/CoinSelect";
 import { DeepFirst } from "./pickingstrategies/DeepFirst";
 import { Merge } from "./pickingstrategies/Merge";
-import { isValidAddress } from "./utils";
+import { isValidAddress, isTaprootAddress } from "./utils";
 
 import type { Account as WalletAccount } from "./account";
 import type { Account as LiveAccount } from "./../../../types";
+import { AccountNeedResync } from "../../../errors";
 
 export {
   BitcoinLikeWallet,
@@ -31,6 +32,7 @@ export {
   DeepFirst,
   Merge,
   isValidAddress,
+  isTaprootAddress,
   Currency,
 };
 
@@ -38,8 +40,8 @@ let wallet: BitcoinLikeWallet | null = null;
 
 export const getWalletAccount = (account: LiveAccount): WalletAccount => {
   const walletAccount = account.bitcoinResources?.walletAccount;
-  if (!walletAccount) {
-    throw new Error("bitcoin wallet account expected");
+  if (account.id.startsWith("libcore") || !walletAccount) {
+    throw new AccountNeedResync();
   }
   return walletAccount;
 };

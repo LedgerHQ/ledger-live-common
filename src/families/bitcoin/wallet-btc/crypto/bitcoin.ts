@@ -124,9 +124,16 @@ class Bitcoin extends Base {
     account: number,
     index: number
   ): string {
+    if (Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`]) {
+      return Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`];
+    }
     switch (derivationMode) {
       case DerivationModes.TAPROOT:
-        return this.getTaprootAddress(xpub, account, index);
+        Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`] =
+          this.getTaprootAddress(xpub, account, index);
+        return Base.addressCache[
+          `${derivationMode}-${xpub}-${account}-${index}`
+        ];
       default:
         return super.getAddress(derivationMode, xpub, account, index);
     }
@@ -188,7 +195,7 @@ class Bitcoin extends Base {
     const schnorrInternalPubkey = ecdsaPubkey.slice(1);
 
     const evenEcdsaPubkey = Buffer.concat([
-      Buffer.of(0x02),
+      Buffer.from([0x02]),
       schnorrInternalPubkey,
     ]);
     const tweak = this.hashTapTweak(schnorrInternalPubkey);
@@ -201,6 +208,19 @@ class Bitcoin extends Base {
     const outputSchnorrKey = outputEcdsaKey.slice(1);
     // Create address
     return toBech32(outputSchnorrKey, 1, this.network.bech32);
+  }
+
+  isTaprootAddress(address: string): boolean {
+    // This prefix check is to avoid returning false in cases where a valid base58 address also happens
+    // to be a valid bech32(m) string (but invalid segwit address).
+    if (address.toLowerCase().startsWith(`${this.network.bech32}1`)) {
+      try {
+        bjs.address.fromBech32(address);
+      } catch {
+        return true;
+      }
+    }
+    return false;
   }
 }
 
