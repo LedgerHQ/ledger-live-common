@@ -1,7 +1,15 @@
 import type { Account } from "../../types";
-import type { Command, Transaction } from "./types";
-import { addSignatureToTransaction, buildTransferTransaction } from "./api";
-import { buildTokenTransferTransaction } from "./api/web3";
+import type {
+  Command,
+  CreateAssociatedTokenAccountCommand,
+  Transaction,
+} from "./types";
+import {
+  addSignatureToTransaction,
+  buildTransferTransaction,
+  buildTokenTransferTransaction,
+  buildAssociatedTokenAccountTransaction,
+} from "./api";
 import { assertUnreachable } from "./utils";
 import { Transaction as OnChainTransaction } from "@solana/web3.js";
 
@@ -52,10 +60,8 @@ async function buildForCommand(command: Command): Promise<OnChainTransaction> {
     case "token.transfer":
       return buildTokenTransferTransaction(command);
     case "token.createAssociatedTokenAccount":
-      throw new Error("no implemented yet");
+      return buildAssociatedTokenAccountTransaction(command);
     default:
       return assertUnreachable(command);
   }
 }
-
-export default buildOnChainTransaction;

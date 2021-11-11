@@ -3,6 +3,8 @@ export {
   getTransactions,
   getNetworkInfo,
   buildTransferTransaction,
+  buildTokenTransferTransaction,
+  buildAssociatedTokenAccountTransaction,
   addSignatureToTransaction,
   broadcastTransaction,
   getBalance,

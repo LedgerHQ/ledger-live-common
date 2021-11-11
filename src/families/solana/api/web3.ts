@@ -15,6 +15,7 @@ import { encodeOperationId } from "../../../operation";
 import { Operation, OperationType } from "../../../types";
 import {
   AncillaryTokenAccountOperation,
+  CreateAssociatedTokenAccountCommand,
   TokenRecipientDescriptor,
   TokenTransferCommand,
   TransferCommand,
@@ -439,7 +440,6 @@ export async function findAssociatedTokenAccountPubkey(
   const ownerPubKey = new PublicKey(ownerAddress);
   const mintPubkey = new PublicKey(mintAddress);
 
-  // TODO: it might throw!!! switch to undefined on error?
   return Token.getAssociatedTokenAddress(
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
@@ -790,6 +790,39 @@ function ancillaryTokenAccOpToIx(
     default:
       return assertUnreachable(op);
   }
+}
+
+export async function buildAssociatedTokenAccountTransaction({
+  mint,
+  owner,
+}: CreateAssociatedTokenAccountCommand): Promise<Transaction> {
+  const ownerPubKey = new PublicKey(owner);
+  const mintPubkey = new PublicKey(mint);
+
+  const associatedTokenAccountPubkey = await findAssociatedTokenAccountPubkey(
+    owner,
+    mint
+  );
+
+  const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
+
+  const onChainTx = new Transaction({
+    feePayer: ownerPubKey,
+    recentBlockhash,
+  });
+
+  onChainTx.add(
+    Token.createAssociatedTokenAccountInstruction(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      mintPubkey,
+      associatedTokenAccountPubkey,
+      ownerPubKey,
+      ownerPubKey
+    )
+  );
+
+  return onChainTx;
 }
 
 export function getAssociatedTokenAccountCreationFee() {

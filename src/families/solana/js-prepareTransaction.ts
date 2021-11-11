@@ -1,3 +1,4 @@
+import { findTokenById, getTokenById } from "@ledgerhq/cryptoassets";
 import {
   AmountRequired,
   InvalidAddress,
@@ -42,10 +43,12 @@ import type {
   Command,
   CommandDescriptor,
   PreparedTransactionState,
+  CreateAssociatedTokenAccountCommand,
   TokenRecipientDescriptor,
   TokenTransferCommand,
   Transaction,
   TransferCommand,
+  UnpreparedCreateAssociatedTokenAccountTransactionMode,
   UnpreparedTokenTransferTransactionMode,
   UnpreparedTransactionMode,
   UnpreparedTransferTransactionMode,
@@ -83,8 +86,10 @@ async function deriveCommandDescriptor(
         ? deriveTransaferCommandDescriptor(mainAccount, tx, mode)
         : deriveTokenTransferDescriptor(mainAccount, tx, mode);
     case "token.createAssociatedTokenAccount":
-      // TODO: fix
-      return {} as any;
+      return deriveCreateAssociatedTokenAccountCommandDescriptor(
+        mainAccount,
+        mode
+      );
     default:
       return assertUnreachable(mode);
   }
@@ -299,6 +304,27 @@ async function getTokenRecipient(
     walletAddress: recipientTokenAccount.owner.toBase58(),
     shouldCreateAsAssociatedTokenAccount: false,
     tokenAccAddress: recipientAddress,
+  };
+}
+
+async function deriveCreateAssociatedTokenAccountCommandDescriptor(
+  mainAccount: Account,
+  mode: UnpreparedCreateAssociatedTokenAccountTransactionMode
+): Promise<CommandDescriptor<CreateAssociatedTokenAccountCommand>> {
+  const token = getTokenById(mode.tokenId);
+  const tokenIdParts = token.id.split("/");
+  const mint = tokenIdParts[tokenIdParts.length - 1];
+
+  const fees = await getAssociatedTokenAccountCreationFee();
+
+  return {
+    status: "valid",
+    fees,
+    command: {
+      kind: mode.kind,
+      mint: mint,
+      owner: mainAccount.freshAddress,
+    },
   };
 }
 

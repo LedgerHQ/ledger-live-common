@@ -56,7 +56,7 @@ export type TransferCommand = {
   memo?: string;
 };
 
-export type TokenCreateAssociatedTokenAccountCommand = {
+export type CreateAssociatedTokenAccountCommand = {
   kind: "token.createAssociatedTokenAccount";
   owner: string;
   mint: string;
@@ -103,7 +103,7 @@ export type TokenTransferCommand = {
 export type Command =
   | TransferCommand
   | TokenTransferCommand
-  | TokenCreateAssociatedTokenAccountCommand;
+  | CreateAssociatedTokenAccountCommand;
 
 export type ValidCommandDescriptor<C extends Command> = {
   status: "valid";
@@ -134,7 +134,7 @@ export type UnpreparedTokenTransferTransactionMode = {
 };
 
 export type UnpreparedCreateAssociatedTokenAccountTransactionMode = {
-  kind: TokenCreateAssociatedTokenAccountCommand["kind"];
+  kind: CreateAssociatedTokenAccountCommand["kind"];
   tokenId: string;
 };
 
