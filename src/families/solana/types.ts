@@ -56,6 +56,13 @@ export type TransferCommand = {
   memo?: string;
 };
 
+export type TokenCreateAssociatedTokenAccountCommand = {
+  kind: "token.createAssociatedTokenAccount";
+  owner: string;
+  mint: string;
+  //tokenId: string;
+};
+
 type AncillaryTokenAccountTransferOperation = {
   kind: "ancillary.token.transfer";
   sourceTokenAccAddress: string;
@@ -93,7 +100,11 @@ export type TokenTransferCommand = {
   //recipientAssociatedTokenAccountIsUnfunded: boolean;
 };
 
-export type Command = TransferCommand | TokenTransferCommand;
+export type Command =
+  | TransferCommand
+  | TokenTransferCommand
+  | TokenCreateAssociatedTokenAccountCommand;
+
 export type ValidCommandDescriptor<C extends Command> = {
   status: "valid";
   command: C;
@@ -103,8 +114,6 @@ export type ValidCommandDescriptor<C extends Command> = {
 
 export type InvalidCommandDescriptor = {
   status: "invalid";
-  // TODO: partial command here?
-  //command: TransferCommand | TokenTransferCommand;
   errors: Record<string, Error>;
   warnings?: Record<string, Error>;
 };
@@ -113,30 +122,55 @@ export type CommandDescriptor<C extends Command> =
   | ValidCommandDescriptor<C>
   | InvalidCommandDescriptor;
 
+export type UnpreparedTransferTransactionMode = {
+  kind: TransferCommand["kind"];
+  memo?: string;
+};
+
+export type UnpreparedTokenTransferTransactionMode = {
+  kind: TokenTransferCommand["kind"];
+  subAccountId: string;
+  memo?: string;
+};
+
+export type UnpreparedCreateAssociatedTokenAccountTransactionMode = {
+  kind: TokenCreateAssociatedTokenAccountCommand["kind"];
+  tokenId: string;
+};
+
+export type UnpreparedTransactionMode =
+  | UnpreparedTransferTransactionMode
+  | UnpreparedTokenTransferTransactionMode
+  | UnpreparedCreateAssociatedTokenAccountTransactionMode;
+
+export type UnpreparedTransactionState = {
+  kind: "unprepared";
+  mode: UnpreparedTransactionMode;
+};
+
+export type PreparedTransactionState = {
+  kind: "prepared";
+  commandDescriptor: CommandDescriptor<Command>;
+};
+
+export type TransactionState =
+  | PreparedTransactionState
+  | UnpreparedTransactionState;
+
 export type Transaction = TransactionCommon & {
   family: "solana";
-  commandDescriptor: CommandDescriptor<Command>;
-  //mode: TransactionMode;
+  state: TransactionState;
   feeCalculator?: {
     lamportsPerSignature: number;
   };
-  memo?: string;
-  //networkInfo?: NetworkInfo;
-  //memo?: string;
-  //allowUnFundedRecipient?: boolean;
 };
+
 export type TransactionRaw = TransactionCommonRaw & {
-  commandDescriptorRaw: string;
   family: "solana";
+  state: string;
   feeCalculator?: {
     lamportsPerSignature: number;
   };
-  memo?: string;
-  //mode: TransactionMode;
-  //fees?: string;
-  //networkInfo?: NetworkInfoRaw;
-  //memo?: string;
-  //allowUnFundedRecipient?: boolean;
 };
 
 export const reflect = (_declare: any): void => {};

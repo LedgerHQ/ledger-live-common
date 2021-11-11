@@ -24,9 +24,11 @@ const createTransaction = (): Transaction => ({
   family: "solana",
   amount: new BigNumber(0),
   recipient: "",
-  commandDescriptor: {
-    status: "invalid",
-    errors: {},
+  state: {
+    kind: "unprepared",
+    mode: {
+      kind: "transfer",
+    },
   },
 });
 

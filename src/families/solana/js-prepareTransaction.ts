@@ -39,13 +39,56 @@ import {
 
 import type {
   AncillaryTokenAccountOperation,
+  Command,
   CommandDescriptor,
+  PreparedTransactionState,
   TokenRecipientDescriptor,
   TokenTransferCommand,
   Transaction,
   TransferCommand,
+  UnpreparedTokenTransferTransactionMode,
+  UnpreparedTransactionMode,
+  UnpreparedTransferTransactionMode,
 } from "./types";
 import { assertUnreachable } from "./utils";
+
+async function deriveCommandDescriptor(
+  mainAccount: Account,
+  tx: Transaction,
+  mode: UnpreparedTransactionMode
+): Promise<CommandDescriptor<Command>> {
+  const errors: Record<string, Error> = {};
+  switch (mode.kind) {
+    case "transfer":
+    case "token.transfer":
+      if (!tx.recipient) {
+        errors.recipient = new RecipientRequired();
+      } else if (mainAccount.freshAddress === tx.recipient) {
+        errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
+      } else if (!isValidBase58Address(tx.recipient)) {
+        errors.recipient = new InvalidAddress();
+      }
+
+      if (mode.memo && mode.memo.length > MAX_MEMO_LENGTH) {
+        errors.memo = errors.memo = new SolanaMemoIsTooLong(undefined, {
+          maxLength: MAX_MEMO_LENGTH,
+        });
+      }
+
+      if (Object.keys(errors).length > 0) {
+        return toInvalidStatusCommand(errors);
+      }
+
+      return mode.kind === "transfer"
+        ? deriveTransaferCommandDescriptor(mainAccount, tx, mode)
+        : deriveTokenTransferDescriptor(mainAccount, tx, mode);
+    case "token.createAssociatedTokenAccount":
+      // TODO: fix
+      return {} as any;
+    default:
+      return assertUnreachable(mode);
+  }
+}
 
 const prepareTransaction = async (
   mainAccount: Account,
@@ -53,7 +96,6 @@ const prepareTransaction = async (
 ): Promise<Transaction> => {
   const patch: Partial<Transaction> = {};
   const errors: Record<string, Error> = {};
-  const warnings: Record<string, Error> = {};
 
   const feeCalculator = tx.feeCalculator ?? (await getTxFeeCalculator());
 
@@ -61,49 +103,20 @@ const prepareTransaction = async (
     patch.feeCalculator = feeCalculator;
   }
 
-  if (!tx.recipient) {
-    errors.recipient = new RecipientRequired();
-  } else if (mainAccount.freshAddress === tx.recipient) {
-    errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
-  } else if (!isValidBase58Address(tx.recipient)) {
-    errors.recipient = new InvalidAddress();
-  }
+  const mode = deriveMode(tx);
 
-  if (tx.memo && tx.memo.length > MAX_MEMO_LENGTH) {
-    errors.memo = errors.memo = new SolanaMemoIsTooLong(undefined, {
-      maxLength: MAX_MEMO_LENGTH,
-    });
-  }
-
-  if (Object.keys(errors).length > 0) {
-    return toInvalidTx(tx, patch, errors, warnings);
-  }
-
-  if (tx.subAccountId) {
-    // TODO: check all info if changed = revalidate
-    const subAccount = findSubAccountById(mainAccount, tx.subAccountId);
-    if (!subAccount || subAccount.type !== "TokenAccount") {
-      throw new Error("subaccount not found");
-    }
-
-    patch.commandDescriptor = await prepareTokenTransfer(
-      mainAccount,
-      subAccount,
-      tx
-    );
-  } else {
-    patch.commandDescriptor = await prepareTransfer(mainAccount, tx);
-  }
-
-  const { commandDescriptor } = patch;
+  const commandDescriptor = await deriveCommandDescriptor(
+    mainAccount,
+    tx,
+    mode
+  );
 
   if (commandDescriptor.status === "invalid") {
-    // TODO: return back!
     return toInvalidTx(
       tx,
       patch,
       commandDescriptor.errors,
-      commandDescriptor.warnings ?? {}
+      commandDescriptor.warnings
     );
   }
 
@@ -124,6 +137,15 @@ const prepareTransaction = async (
       }
   }
 
+  if (Object.keys(errors).length > 0) {
+    return toInvalidTx(tx, patch, errors);
+  }
+
+  patch.state = {
+    kind: "prepared",
+    commandDescriptor,
+  };
+
   return Object.keys(patch).length > 0
     ? {
         ...tx,
@@ -132,13 +154,18 @@ const prepareTransaction = async (
     : tx;
 };
 
-const prepareTokenTransfer = async (
+const deriveTokenTransferDescriptor = async (
   mainAccount: Account,
-  subAccount: TokenAccount,
-  tx: Transaction
+  tx: Transaction,
+  mode: UnpreparedTokenTransferTransactionMode
 ): Promise<CommandDescriptor<TokenTransferCommand>> => {
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
+  // TODO: check all info if changed = revalidate
+  const subAccount = findSubAccountById(mainAccount, mode.subAccountId);
+  if (!subAccount || subAccount.type !== "TokenAccount") {
+    throw new Error("subaccount not found");
+  }
 
   const tokenIdParts = subAccount.token.id.split("/");
   const mintAddress = tokenIdParts[tokenIdParts.length - 1];
@@ -226,7 +253,7 @@ const prepareTokenTransfer = async (
       mintAddress,
       mintDecimals,
       recipientDescriptor: recipientDescriptor,
-      memo: tx.memo,
+      memo: mode.memo,
     },
     fees,
     warnings,
@@ -275,9 +302,10 @@ async function getTokenRecipient(
   };
 }
 
-async function prepareTransfer(
+async function deriveTransaferCommandDescriptor(
   mainAccount: Account,
-  tx: Transaction
+  tx: Transaction,
+  mode: UnpreparedTransferTransactionMode
 ): Promise<CommandDescriptor<TransferCommand>> {
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
@@ -312,7 +340,7 @@ async function prepareTransfer(
       sender: mainAccount.freshAddress,
       recipient: tx.recipient,
       amount: txAmount.toNumber(),
-      memo: tx.memo,
+      memo: mode.memo,
     },
     warnings: Object.keys(warnings).length > 0 ? warnings : undefined,
   };
@@ -327,7 +355,10 @@ function toInvalidTx(
   return {
     ...tx,
     ...patch,
-    commandDescriptor: toInvalidStatusCommand(errors, warnings),
+    state: {
+      kind: "prepared",
+      commandDescriptor: toInvalidStatusCommand(errors, warnings),
+    },
   };
 }
 
@@ -340,6 +371,24 @@ function toInvalidStatusCommand(
     errors,
     warnings,
   };
+}
+
+function deriveMode(tx: Transaction): UnpreparedTransactionMode {
+  switch (tx.state.kind) {
+    case "prepared":
+      return tx.subAccountId
+        ? {
+            kind: "token.transfer",
+            subAccountId: tx.subAccountId,
+          }
+        : {
+            kind: "transfer",
+          };
+    case "unprepared":
+      return tx.state.mode;
+    default:
+      return assertUnreachable(tx.state);
+  }
 }
 
 export default prepareTransaction;

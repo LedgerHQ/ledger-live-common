@@ -16,13 +16,10 @@ const createTransaction = (mainAccount: Account): Transaction => {
     family: "solana",
     amount: new BigNumber(0),
     recipient: "",
-    commandDescriptor: {
-      status: "valid",
-      command: {
-        sender: mainAccount.freshAddress,
+    state: {
+      kind: "unprepared",
+      mode: {
         kind: "transfer",
-        amount: 0,
-        recipient: "",
       },
     },
   };

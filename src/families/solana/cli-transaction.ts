@@ -1,3 +1,4 @@
+import BigNumber from "bignumber.js";
 import invariant from "invariant";
 import { flatMap } from "lodash";
 import type { Transaction, AccountLike } from "../../types";
@@ -26,11 +27,12 @@ function inferTransactions(
 ): Transaction[] {
   const mode = opts.mode || "send";
   //console.log(transactions[0]);
+  debugger;
   return [
     {
       ...transactions[0].transaction,
-      subAccountId:
-        "js:2:solana:AQbkEagmPgmsdAfS4X8V8UyJnXXjVPMvjeD15etqQ3Jh:solanaMain+Msaq5fkgcLAHHxbA2fF3eajmanNnBfMCPji2hm3kkDi",
+      amount: new BigNumber(1000000000),
+      //subAccountId: "js:2:solana:AQbkEagmPgmsdAfS4X8V8UyJnXXjVPMvjeD15etqQ3Jh:solanaMain+Msaq5fkgcLAHHxbA2fF3eajmanNnBfMCPji2hm3kkDi",
     },
   ];
   invariant(mode === "send", "Only send mode is supported");

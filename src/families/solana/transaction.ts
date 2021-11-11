@@ -10,47 +10,24 @@ import { formatCurrencyUnit } from "../../currencies";
 
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
-  const { family, commandDescriptorRaw, feeCalculator, memo } = tr;
+  const { family, state, feeCalculator } = tr;
   return {
     ...common,
     family,
-    commandDescriptor: JSON.parse(commandDescriptorRaw),
+    state: JSON.parse(state),
     feeCalculator,
-    memo,
-    //family: 'solana'
-    //mode,
-    //fees: fees === undefined ? undefined : new BigNumber(fees),
-    /*
-    networkInfo: networkInfo && {
-      family,
-      lamportsPerSignature: new BigNumber(networkInfo.lamportPerSignature),
-    },
-    */
-    //allowUnFundedRecipient,
   };
 };
 
-// TODO: not to serialize errors and warnings!
+// TODO: not to serialize errors and warnings?
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
-  const { family, commandDescriptor, feeCalculator, memo } = t;
+  const { family, state, feeCalculator } = t;
   return {
     ...common,
     family,
-    commandDescriptorRaw: JSON.stringify(commandDescriptor),
+    state: JSON.stringify(state),
     feeCalculator,
-    memo,
-    //mode,
-    /*
-    fees: fees && fees.toString(),
-    networkInfo: networkInfo && {
-      family: family,
-      lamportPerSignature: networkInfo.lamportsPerSignature.toString(),
-    },
-    family: t.family,
-    memo,
-    allowUnFundedRecipient,
-    */
   };
 };
 
