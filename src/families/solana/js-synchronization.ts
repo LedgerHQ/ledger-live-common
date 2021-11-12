@@ -364,7 +364,7 @@ function txToMainAccOperation(
   const fee = new BigNumber(isFeePayer ? tx.parsed.meta.fee : 0);
 
   const txType: OperationType =
-    isFeePayer && balanceDelta.eq(fee)
+    isFeePayer && balanceDelta.negated().eq(fee)
       ? "FEES"
       : balanceDelta.lt(0)
       ? "OUT"
@@ -446,8 +446,8 @@ function txToMainAccOperation(
     recipients,
     date: txDate,
     value: balanceDelta.abs().minus(fee),
-    internalOperations,
-    subOperations,
+    //internalOperations,
+    //subOperations,
     fee,
   };
 }
