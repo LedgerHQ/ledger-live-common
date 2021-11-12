@@ -28,7 +28,17 @@ import {
   decodeAccountIdWithTokenAccountAddress,
   encodeAccountIdWithTokenAccountAddress,
 } from "./logic";
-import _, { filter, groupBy, identity, includes, reduce, sumBy } from "lodash";
+import _, {
+  compact,
+  filter,
+  groupBy,
+  identity,
+  includes,
+  keyBy,
+  reduce,
+  sum,
+  sumBy,
+} from "lodash";
 import { parseTokenAccountInfo } from "./api/account/parser";
 
 import { reduceDefined } from "./utils";
@@ -271,12 +281,11 @@ function newSubAcc(
 ): TokenAccount {
   // TODO: check the order of txs
   const firstTx = txs[txs.length - 1];
-  // best effort
+
   const creationDate = new Date(
     (firstTx.info.blockTime ?? Date.now() / 1000) * 1000
   );
 
-  // show only associated token accounts!
   const tokenCurrency = fakeTokenCurrency(onChainTokenAccs[0].info);
 
   const id = encodeAccountIdWithTokenAccountAddress(
@@ -288,17 +297,17 @@ function newSubAcc(
     sumBy(onChainTokenAccs, (acc) => Number(acc.info.tokenAmount.amount))
   );
 
+  const newOps = compact(
+    txs.map((tx) => txToTokenAccOperation(tx, onChainTokenAccs, id))
+  );
+
   return {
     balance,
     balanceHistoryCache: emptyHistoryCache,
     creationDate,
     id: id,
     parentId: mainAccId,
-    // TODO: map txs to token acc operations
-    operations: mergeOps(
-      [],
-      txs.map((tx) => txToTokenAccOperation(tx, id))
-    ),
+    operations: mergeOps([], newOps),
     // TODO: fix
     operationsCount: txs.length,
     pendingOperations: [],
@@ -322,7 +331,12 @@ function patchedSubAcc(
     sumBy(onChainTokenAccs, (acc) => Number(acc.info.tokenAmount.amount))
   );
 
-  const newOps = txs.map((tx) => txToTokenAccOperation(tx, subAcc.id));
+  const owner = onChainTokenAccs[0].info.owner.toBase58();
+
+  const newOps = compact(
+    txs.map((tx) => txToTokenAccOperation(tx, onChainTokenAccs, subAcc.id))
+  );
+
   const totalOps = mergeOps(subAcc.operations, newOps);
   return {
     ...subAcc,
@@ -454,26 +468,65 @@ function txToMainAccOperation(
 
 function txToTokenAccOperation(
   tx: TransactionDescriptor,
+  onChainTokenAccs: NonEmptyArray<{
+    tokenAcc: OnChainTokenAccount;
+    info: OnChainTokenAccountInfo;
+  }>,
   accountId: string
-): Operation {
-  const hash = tx.info.signature;
-  // TODO: fix
-  const type = "IN";
+): Operation | undefined {
+  if (!tx.info.blockTime || !tx.parsed.meta) {
+    return undefined;
+  }
+
+  const tokenAccIndices = [
+    ...tx.parsed.transaction.message.accountKeys.entries(),
+  ]
+    .filter(([_, accKey]) =>
+      onChainTokenAccs.some((acc) => acc.tokenAcc.pubkey.equals(accKey.pubkey))
+    )
+    .map(([index, _]) => index);
+
+  const { preTokenBalances, postTokenBalances } = tx.parsed.meta;
+
+  const tokenAccPreTokenBalances = (preTokenBalances ?? []).filter(
+    (tokenBalance) => tokenAccIndices.includes(tokenBalance.accountIndex)
+  );
+
+  const tokenAccPostTokenBalances = (postTokenBalances ?? []).filter(
+    (tokenBalance) => tokenAccIndices.includes(tokenBalance.accountIndex)
+  );
+
+  const delta =
+    sum(
+      tokenAccPostTokenBalances.map((value) =>
+        Number(value.uiTokenAmount.amount)
+      )
+    ) -
+    sum(
+      tokenAccPreTokenBalances.map((value) =>
+        Number(value.uiTokenAmount.amount)
+      )
+    );
+
+  const txType = delta === 0 ? "NONE" : delta > 0 ? "IN" : "OUT";
+
+  const txHash = tx.info.signature;
+
+  const owner = onChainTokenAccs[0].info.owner.toBase58();
+
   return {
-    id: encodeOperationId(accountId, hash, type),
+    id: encodeOperationId(accountId, txHash, txType),
     accountId,
-    type,
-    hash,
-    date: new Date((tx.info.blockTime ?? Date.now() / 1000) * 1000),
+    type: txType,
+    hash: txHash,
+    date: new Date(tx.info.blockTime * 1000),
     blockHeight: tx.info.slot,
     // TODO: fix
     fee: new BigNumber(0),
-    // TODO: fix
-    recipients: [],
+    recipients: [owner],
     // TODO: fix
     senders: [],
-    // TODO: fix
-    value: new BigNumber(0),
+    value: new BigNumber(delta).abs(),
     hasFailed: !!tx.info.err,
     extra: {
       memo: tx.info.memo ?? undefined,

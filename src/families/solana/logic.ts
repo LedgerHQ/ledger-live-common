@@ -37,3 +37,11 @@ export function decodeAccountIdWithTokenAccountAddress(
     address: accountIdWithTokenAccountAddress.slice(lastColonIndex + 1),
   };
 }
+
+export function toTokenId(mint: string) {
+  return `solana/spl/${mint}`;
+}
+
+export function toTokenMint(tokenId: string) {
+  return tokenId.split("/")[2];
+}
