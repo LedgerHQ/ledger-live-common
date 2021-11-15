@@ -116,7 +116,7 @@ export default class ElrondApi {
   async getHistory(addr: string, startAt: number): Promise<Transaction[]> {
     const { data: transactionsCount } = await network({
       method: "GET",
-      url: `${this.API_URL}/transactions/count?condition=should&sender=${addr}&receiver=${addr}&after=${startAt}`,
+      url: `${this.API_URL}/accounts/${addr}/transactions/count?after=${startAt}`,
     });
 
     let allTransactions: Transaction[] = [];
@@ -124,7 +124,7 @@ export default class ElrondApi {
     while (from <= transactionsCount) {
       const { data: transactions } = await network({
         method: "GET",
-        url: `${this.API_URL}/transactions?condition=should&sender=${addr}&receiver=${addr}&after=${startAt}&from=${from}&size=${TRANSACTIONS_SIZE}`,
+        url: `${this.API_URL}/accounts/${addr}/transactions?after=${startAt}&from=${from}&size=${TRANSACTIONS_SIZE}`,
       });
 
       allTransactions = [...allTransactions, ...transactions];
@@ -135,11 +135,8 @@ export default class ElrondApi {
     return allTransactions;
   }
 
-  async getESDTTransactionsForAddress(addr: string, token: string): Promise<ESDTTransaction[]> {
-    const { data: transactions } = await network({
-      method: "GET",
-      url: `${this.API_URL}/transactions?sender=${addr}&receiver=${addr}&condition=should`
-    });
+  async getESDTTransactionsForAddress(addr: string, token: string): Promise<Transaction[]> {
+    const transactions = await this.getHistory(addr, 0);
 
     return transactions.filter(({tokenIdentifier}) => tokenIdentifier && tokenIdentifier==token);
   }

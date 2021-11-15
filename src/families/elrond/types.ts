@@ -52,6 +52,8 @@ export type Transaction = TransactionCommon & {
   round?: number;
   miniBlockHash?: string;
   data?: string;
+  tokenIdentifier?: string;
+  tokenValue?: string;
 };
 
 export type ESDTTransaction = Transaction & {
