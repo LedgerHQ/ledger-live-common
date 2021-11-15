@@ -227,8 +227,9 @@ function parseTokenAccountInfoQuiet(info: any) {
   }
 }
 
-const postSync = (initial: Account, parent: Account) => {
-  return parent;
+const postSync = (initial: Account, synced: Account) => {
+  //const ops = (synced.subAccounts ?? []).flatMap(acc => acc.pen)
+  return synced;
 };
 
 const fakeTokenCurrency = (info?: OnChainTokenAccountInfo): TokenCurrency => {
