@@ -1,6 +1,6 @@
 import type { Account, SubAccount } from "../../types";
 import type { Transaction } from "./types";
-import * as bech32 from "bech32";
+import { bech32 } from "bech32";
 
 /**
  * The human-readable-part of the bech32 addresses.
@@ -11,30 +11,6 @@ const HRP = "erd";
  * The length (in bytes) of a public key (from which a bech32 address can be obtained).
  */
 const PUBKEY_LENGTH = 32;
-
-export const compareVersions = (versionA: string, versionB: string): number => {
-  let i, diff;
-  const regExStrip0 = /(\.0+)+$/;
-  const segmentsA = versionA.replace(regExStrip0, "").split(".");
-  const segmentsB = versionB.replace(regExStrip0, "").split(".");
-  const minVersionLength = Math.min(segmentsA.length, segmentsB.length);
-
-  for (i = 0; i < minVersionLength; i++) {
-    diff = parseInt(segmentsA[i], 10) - parseInt(segmentsB[i], 10);
-
-    if (diff == 0) {
-      continue;
-    }
-
-    if (diff < 0) {
-      return -1;
-    }
-
-    return 1;
-  }
-
-  return segmentsA.length - segmentsB.length;
-};
 
 function fromBech32(value: string): string {
   let decoded;

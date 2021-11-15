@@ -2,7 +2,7 @@ import type { ElrondProtocolTransaction, NetworkInfo, Transaction } from "./type
 import type { Account, SubAccount } from "../../types";
 import { encodeESDTTransfer, getNonce } from "./logic";
 import { getNetworkConfig } from "./api";
-import { ESDT_TRANSFER_GAS, HASH_TRANSACTION, RAW_TRANSACTION } from "./constants";
+import { ESDT_TRANSFER_GAS, HASH_TRANSACTION } from "./constants";
 import BigNumber from "bignumber.js";
 
 /**
@@ -14,13 +14,11 @@ export const buildTransaction = async (
   a: Account,
   ta: SubAccount | null | undefined,
   t: Transaction,
-  signUsingHash = true
 ) => {
   const address = a.freshAddress;
   const nonce = getNonce(a);
   let { gasPrice, gasLimit, chainID }: NetworkInfo = await getNetworkConfig();
-  const transactionType = signUsingHash ? HASH_TRANSACTION : RAW_TRANSACTION;
- 
+
   if (ta) {
     t.data = encodeESDTTransfer(t, ta);
     t.amount = new BigNumber(0); //amount of EGLD to be sent should be 0 in an ESDT transafer
@@ -40,7 +38,7 @@ export const buildTransaction = async (
     gasLimit,
     data: t.data,
     chainID,
-    ...transactionType,
+    ...HASH_TRANSACTION,
   };
   // Will likely be a call to Elrond SDK
   return JSON.stringify(unsigned);

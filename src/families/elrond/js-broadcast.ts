@@ -11,15 +11,12 @@ const broadcast = async ({
 }: {
   signedOperation: SignedOperation;
 }): Promise<Operation> => {
-  const {
-    extra: { signUsingHash },
-  } = operation;
-  const txHash = await broadcastTransaction({
+  const hash = await broadcastTransaction({
     operation,
     signature,
-    signUsingHash,
   });
-  return patchOperationWithHash(operation, txHash);
+
+  return patchOperationWithHash(operation, hash);
 };
 
 export default broadcast;

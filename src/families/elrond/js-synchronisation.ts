@@ -1,28 +1,34 @@
 import type { Account, TokenAccount } from "../../types";
+import { encodeAccountId } from "../../account";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { makeSync, makeScanAccounts, mergeOps } from "../../bridge/jsHelpers";
 import { getAccount, getOperations, hasESDTTokens } from "./api";
 import elrondBuildESDTTokenAccounts from "./js-buildSubAccounts";
 
 const getAccountShape: GetAccountShape = async (info) => {
-  const { id, address, initialAccount, currency } = info;
+  const { address, initialAccount, currency, derivationMode } = info;
+  const accountId = encodeAccountId({
+    type: "js",
+    version: "2",
+    currencyId: currency.id,
+    xpubOrAddress: address,
+    derivationMode,
+  });
   const oldOperations = initialAccount?.operations || [];
   // Needed for incremental synchronisation
-  const startAt =
-    oldOperations.length && oldOperations[0].blockHeight
-      ? (new Date(oldOperations[0].date).getTime() / 1000 || 0) + 1
-      : 0;
+  const startAt = 0;
+
   // get the current account balance state depending your api implementation
   const { blockHeight, balance, nonce } = await getAccount(address);
   // Merge new operations with the previously synced ones
-  const newOperations = await getOperations(id, address, startAt);
+  const newOperations = await getOperations(accountId, address, startAt);
   const operations = mergeOps(oldOperations, newOperations);
   
   let subAccounts: TokenAccount[] | undefined = [];
   if (await hasESDTTokens(address)) {
     subAccounts = await elrondBuildESDTTokenAccounts({
       currency,
-      accountId: id,
+      accountId: accountId,
       accountAddress: address,
       existingAccount: initialAccount,
       syncConfig: {
@@ -32,7 +38,7 @@ const getAccountShape: GetAccountShape = async (info) => {
   }
 
   const shape = {
-    id,
+    id: accountId,
     balance,
     spendableBalance: balance,
     operationsCount: operations.length,

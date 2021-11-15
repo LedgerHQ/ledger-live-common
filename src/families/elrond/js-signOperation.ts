@@ -7,17 +7,18 @@ import { open, close } from "../../hw";
 import { encodeOperationId } from "../../operation";
 import Elrond from "./hw-app-elrond";
 import { buildTransaction } from "./js-buildTransaction";
-import { getNonce, compareVersions } from "./logic";
+import { getNonce } from "./logic";
 import { findTokenById } from "@ledgerhq/cryptoassets";
 
 const buildOptimisticOperation = (
   account: Account,
   transaction: Transaction,
-  fee: BigNumber,
-  signUsingHash: boolean
+  fee: BigNumber
 ): Operation => {
   const type = "OUT";
-  const value = new BigNumber(transaction.amount);
+  const value = transaction.useAllAmount
+    ? account.balance.minus(fee)
+    : new BigNumber(transaction.amount);
   const operation: Operation = {
     id: encodeOperationId(account.id, "", type),
     hash: "",
@@ -32,7 +33,6 @@ const buildOptimisticOperation = (
     transactionSequenceNumber: getNonce(account),
     date: new Date(),
     extra: {
-      signUsingHash,
       data: transaction.data,
     },
   };
@@ -74,32 +74,31 @@ const signOperation = ({
           const token = findTokenById(`${tokenIdentifier}`);
           await elrond.provideESDTInfo(token?.ticker, token?.id.split('/')[2], token?.units[0].magnitude, 'T', token?.ledgerSignature);
         }
-        const { version } = await elrond.getAppConfiguration();
-        const signUsingHash = compareVersions(version, "1.0.11") >= 0;
 
         const unsignedTx: string = await buildTransaction(
           account,
           tokenAccount,
           transaction,
-          signUsingHash
         );
 
         o.next({
           type: "device-signature-requested",
         });
+
         const r = await elrond.signTransaction(
           account.freshAddressPath,
           unsignedTx,
-          signUsingHash
+          true
         );
+
         o.next({
           type: "device-signature-granted",
         });
+
         const operation = buildOptimisticOperation(
           account,
           transaction,
-          transaction.fees ?? new BigNumber(0),
-          signUsingHash
+          transaction.fees ?? new BigNumber(0)
         );
         o.next({
           type: "signed",

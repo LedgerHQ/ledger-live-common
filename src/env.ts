@@ -67,8 +67,13 @@ const envDefinitions = {
   },
   API_RIPPLE_WS: {
     parser: stringParser,
-    def: "wss://xrplcluster.com",
+    def: "wss://xrplcluster.com/ledgerlive",
     desc: "XRP Ledger full history open WebSocket endpoint",
+  },
+  API_FILECOIN_ENDPOINT: {
+    parser: stringParser,
+    def: "https://live.ledger.dev.zondax.net/blockchain/filecoin", // FIXME Filecoin - Set the correct value for ledger proxy
+    desc: "Filecoin API url",
   },
   API_POLKADOT_INDEXER: {
     parser: stringParser,
@@ -106,7 +111,7 @@ const envDefinitions = {
     desc: "Ledger explorer API for tezos",
   },
   API_TEZOS_TZKT_API: {
-    def: "http://51.210.220.222:5000",
+    def: "http://xtz-tzkt-explorer.api-01.live.ledger-stg.com",
     parser: stringParser,
     desc: "tzkt.io explorer",
   },
@@ -161,9 +166,9 @@ const envDefinitions = {
     desc: "location of the crypto.org indexer testnet API",
   },
   CRYPTO_ORG_RPC_URL: {
-    def: "",
+    def: "https://rpc.mainnet.crypto.org",
     parser: stringParser,
-    desc: "location of the crypto.org indexer API",
+    desc: "location of the crypto.org chain node",
   },
   CRYPTO_ORG_TESTNET_RPC_URL: {
     def: "https://testnet-croeseid-4.crypto.org:26657",
@@ -366,6 +371,11 @@ const envDefinitions = {
     parser: stringParser,
     desc: "switch the app into a MOCK mode for test purpose, the value will be used as a seed for the rng. Avoid falsy values.",
   },
+  MOCK_SWAP_KYC: {
+    def: "",
+    parser: stringParser,
+    desc: "mock the server response for the exchange KYC check, options are 'open', 'pending', 'closed' or 'approved'.",
+  },
   OPERATION_ADDRESSES_LIMIT: {
     def: 100,
     parser: intParser,
@@ -440,6 +450,11 @@ const envDefinitions = {
     def: 4,
     parser: intParser,
     desc: "maximum limit to synchronize accounts concurrently to limit overload",
+  },
+  BOT_MAX_CONCURRENT: {
+    def: 4,
+    parser: intParser,
+    desc: "maximum limit to run bot spec in parallel",
   },
   USER_ID: {
     def: "",

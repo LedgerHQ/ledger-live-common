@@ -21,6 +21,8 @@ export type ModeSpec = {
   overridesDerivation?: string;
   libcoreConfig?: LibcoreConfig;
   isSegwit?: boolean;
+  isNativeSegwit?: boolean;
+  isTaproot?: boolean;
   // TODO drop
   isUnsplit?: boolean;
   // TODO drop
@@ -147,6 +149,13 @@ const modes = Object.freeze({
       TEZOS_XPUB_CURVE: "ED25519",
     },
   },
+  taproot: {
+    purpose: 86,
+    addressFormat: "bech32m",
+    tag: "taproot",
+    isSegwit: true,
+    isTaproot: true,
+  },
   native_segwit: {
     purpose: 84,
     libcoreConfig: {
@@ -155,6 +164,7 @@ const modes = Object.freeze({
     addressFormat: "bech32",
     tag: "native segwit",
     isSegwit: true,
+    isNativeSegwit: true,
   },
   segwit: {
     isSegwit: true,
@@ -208,6 +218,9 @@ const modes = Object.freeze({
   polkadotbip44: {
     overridesDerivation: "44'/354'/<account>'/0'/<address>'",
   },
+  filecoin: {
+    overridesDerivation: "44'/461'/0'/0/<account>",
+  },
 });
 modes as Record<DerivationMode, ModeSpec>; // eslint-disable-line
 
@@ -222,6 +235,7 @@ const legacyDerivations: Record<CryptoCurrencyIds, DerivationMode[]> = {
   tezos: ["galleonL", "tezboxL", "tezosbip44h", "tezbox"],
   stellar: ["sep5"],
   polkadot: ["polkadotbip44"],
+  filecoin: ["filecoin"],
 };
 
 const legacyDerivationsPerFamily: Record<string, DerivationMode[]> = {
@@ -251,6 +265,15 @@ export const isSegwitDerivationMode = (
   derivationMode: DerivationMode
 ): boolean =>
   (modes[derivationMode] as { isSegwit: boolean }).isSegwit || false;
+export const isNativeSegwitDerivationMode = (
+  derivationMode: DerivationMode
+): boolean =>
+  (modes[derivationMode] as { isNativeSegwit: boolean }).isNativeSegwit ||
+  false;
+export const isTaprootDerivationMode = (
+  derivationMode: DerivationMode
+): boolean =>
+  (modes[derivationMode] as { isTaproot: boolean }).isTaproot || false;
 export const getLibcoreConfig = (
   currency: CryptoCurrency,
   derivationMode: DerivationMode
@@ -396,7 +419,8 @@ const disableBIP44 = {
 };
 const seedIdentifierPath = {
   neo: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
-  _: ({ purpose, coinType }) => `${purpose}'/${coinType}'`,
+  filecoin: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
+  _: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'`,
 };
 export const getSeedIdentifierDerivation = (
   currency: CryptoCurrency,
@@ -444,6 +468,13 @@ export const getDerivationModesForCurrency = (
     all.push("native_segwit");
   }
 
+  // taproot logic. FIXME should move per family
+  if (currency.family === "bitcoin") {
+    if (currency.id === "bitcoin_testnet") {
+      all.push("taproot");
+    }
+  }
+
   if (currency.supportsSegwit) {
     all.push("segwit");
   }
@@ -458,7 +489,12 @@ export const getDerivationModesForCurrency = (
 
   return all;
 };
-const preferredList = ["native_segwit", "segwit", ""];
+const preferredList: DerivationMode[] = [
+  "native_segwit",
+  "taproot",
+  "segwit",
+  "",
+];
 // null => no settings
 // [ .. ]
 export const getPreferredNewAccountScheme = (

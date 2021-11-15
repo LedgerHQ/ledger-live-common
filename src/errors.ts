@@ -8,6 +8,7 @@ export const ConnectManagerTimeout = createCustomErrorClass(
 export const GetAppAndVersionUnsupportedFormat = createCustomErrorClass(
   "GetAppAndVersionUnsupportedFormat"
 );
+export const AccountNeedResync = createCustomErrorClass("AccountNeedResync");
 
 export const LatestFirmwareVersionRequired = createCustomErrorClass(
   "LatestFirmwareVersionRequired"
@@ -196,4 +197,9 @@ export const OutdatedApp = createCustomErrorClass("OutdatedApp");
 export const FreshAddressIndexInvalid = createCustomErrorClass(
   "FreshAddressIndexInvalid"
 );
+
+export const UnsupportedDerivation = createCustomErrorClass(
+  "UnsupportedDerivation"
+);
+
 export * from "./families/polkadot/errors";

@@ -56,7 +56,7 @@ function expectBalanceIsOpsSum(a) {
 
 const defaultSyncConfig = {
   paginationConfig: {},
-  blacklistedTokenIds: ["ethereum/erc20/ampleforth"],
+  blacklistedTokenIds: ["ethereum/erc20/ampleforth", "ethereum/erc20/steth"],
 };
 export function syncAccount<T extends Transaction>(
   bridge: AccountBridge<T>,
@@ -125,8 +125,10 @@ export function testBridge<T extends Transaction>(
     const bridge = getCurrencyBridge(currency);
 
     const scanAccounts = async (apdus) => {
-      const deviceId = await mockDeviceWithAPDUs(apdus);
-
+      const deviceId = await mockDeviceWithAPDUs(
+        apdus,
+        currencyData.mockDeviceOptions
+      );
       try {
         const accounts = await bridge
           .scanAccounts({
@@ -141,6 +143,9 @@ export function testBridge<T extends Transaction>(
           )
           .toPromise();
         return implicitMigration(accounts);
+      } catch (e: any) {
+        console.error(e.message);
+        throw e;
       } finally {
         releaseMockDevice(deviceId);
       }
@@ -627,7 +632,7 @@ export function testBridge<T extends Transaction>(
               const account = await getSynced();
               const t = { ...bridge.createTransaction(account) };
               const status = await bridge.getTransactionStatus(account, t);
-              expect(status.errors.recipient).toEqual(new RecipientRequired());
+              expect(status.errors.recipient).toBeInstanceOf(RecipientRequired);
             }
           );
           makeTest("invalid recipient have a recipientError", async () => {
@@ -637,7 +642,7 @@ export function testBridge<T extends Transaction>(
               recipient: "invalidADDRESS",
             };
             const status = await bridge.getTransactionStatus(account, t);
-            expect(status.errors.recipient).toEqual(new InvalidAddress());
+            expect(status.errors.recipient).toBeInstanceOf(InvalidAddress);
           });
           const accountDataTest = accountData.test;
 
