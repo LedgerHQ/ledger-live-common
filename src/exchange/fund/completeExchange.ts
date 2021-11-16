@@ -76,21 +76,18 @@ const completeExchange = (
         if (errorsKeys.length > 0) throw errors[errorsKeys[0]]; // throw the first error
 
         await exchange.setPartnerKey(providerNameAndSignature.nameAndPubkey);
-
         if (unsubscribed) return;
 
         await exchange.checkPartner(providerNameAndSignature.signature);
-
         if (unsubscribed) return;
 
         await exchange.processTransaction(
-          Buffer.from(binaryPayload, "ascii"),
+          Buffer.from(binaryPayload, "hex"),
           estimatedFees
         );
-
         if (unsubscribed) return;
 
-        const goodSign = Buffer.from(signature, "base64");
+        const goodSign = Buffer.from(signature, "hex");
 
         if (!goodSign) {
           throw new Error("Could not check provider signature");
