@@ -211,6 +211,7 @@ class BitcoinLikeWallet {
     txInfo: TransactionInfo;
     lockTime?: number;
     sigHashType?: number;
+    segwit?: boolean;
     additionals?: Array<string>;
     expiryHeight?: Buffer;
     hasExtraData?: boolean;
