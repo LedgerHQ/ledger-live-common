@@ -20,6 +20,7 @@ import {
   findTokenByAddress,
   findTokenById,
   findTokenByTicker,
+  getTokenById,
 } from "@ledgerhq/cryptoassets";
 import { encodeOperationId } from "../../operation";
 import { parseQuiet } from "./api/program/parser";
@@ -232,29 +233,6 @@ const postSync = (initial: Account, synced: Account) => {
   return synced;
 };
 
-const fakeTokenCurrency = (info?: OnChainTokenAccountInfo): TokenCurrency => {
-  const parentCurrency = findCryptoCurrencyById("solana");
-  if (!parentCurrency) {
-    throw new Error("solana crypto currency not found");
-  }
-  return {
-    // TODO: check that
-    contractAddress: info?.owner.toBase58() ?? "some contract address",
-    parentCurrency,
-    id: "solana/spl/" + info?.mint.toBase58() ?? "some id here",
-    // TODO: fix
-    name: "N/A",
-    // TODO: fix
-    ticker: "N/A",
-    tokenType: "spl-token",
-    type: "TokenCurrency",
-    // TODO: fix
-    units: [
-      { code: "FAK", magnitude: info?.tokenAmount.decimals || 0, name: "N/A" },
-    ],
-  };
-};
-
 function toAsyncGenerator<T>(promise: () => Promise<T>) {
   return (async function* AsyncGenerator() {
     yield await promise();
@@ -287,7 +265,8 @@ function newSubAcc(
     (firstTx.info.blockTime ?? Date.now() / 1000) * 1000
   );
 
-  const tokenCurrency = fakeTokenCurrency(onChainTokenAccs[0].info);
+  const tokenId = `solana/spl/${onChainTokenAccs[0].info.mint.toBase58()}`;
+  const tokenCurrency = getTokenById(tokenId);
 
   const id = encodeAccountIdWithTokenAccountAddress(
     mainAccId,
@@ -565,24 +544,3 @@ function ixDescriptorToPartialOperation(
 
 export const sync = makeSync(getAccountShape, postSync);
 export const scanAccounts = makeScanAccounts(getAccountShape);
-
-/*
-addTokens([
-  {
-    contractAddress: "some contracts add",
-    id: "G6nE3kXycaWnWVsDy3H1DjBJ3hHA4cWDLfJphR4cpPzY",
-    name: "Fake Solana Token",
-    ticker: "FAK TICKER",
-    parentCurrency: (0, currencies_1.getCryptoCurrencyById)('solana'),
-    tokenType: "spl-token",
-    type: "TokenCurrency",
-    units: [
-      {
-        code: "FAK CODE",
-        magnitude: 9,
-        name: "FAK NAME",
-      },
-    ],
-  },
-]);
-*/
