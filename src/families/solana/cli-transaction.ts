@@ -127,11 +127,11 @@ function inferAccounts(
         throw new Error("only 1 token at a time supported for solana");
       }
 
-      const token = tokens[0].toLowerCase();
+      const token = tokens[0];
 
       const subAccount = mainAccount.subAccounts?.find((subAcc) => {
         const currency = getAccountCurrency(subAcc);
-        return token === currency.ticker.toLowerCase() || token === currency.id;
+        return token === currency.ticker || token === currency.id;
       });
 
       if (subAccount === undefined) {

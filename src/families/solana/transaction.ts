@@ -13,7 +13,7 @@ import {
   toTransactionCommonRaw,
 } from "../../transaction/common";
 import type { Account } from "../../types";
-import { getAccountUnit } from "../../account";
+import { findSubAccountById, getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
 import { assertUnreachable } from "./utils";
 
@@ -111,7 +111,30 @@ function formatTokenTransfer(
   tx: Transaction,
   command: TokenTransferCommand
 ) {
-  return "not implemented yet";
+  if (!tx.subAccountId) {
+    throw new Error("expected subaccountId on transaction");
+  }
+  const subAccount = findSubAccountById(mainAccount, tx.subAccountId);
+  if (!subAccount || subAccount.type !== "TokenAccount") {
+    throw new Error("token subaccount expected");
+  }
+  const amount = formatCurrencyUnit(
+    getAccountUnit(subAccount),
+    new BigNumber(command.amount),
+    {
+      showCode: true,
+      disableRounding: true,
+    }
+  );
+  const recipient = command.recipientDescriptor.walletAddress;
+  const str = [
+    `  SEND: ${amount}${tx.useAllAmount ? " (ALL)" : ""}`,
+    `  TO: ${recipient}`,
+    command.memo ? `  MEMO: ${command.memo}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+  return "\n" + str;
 }
 
 function formatCreateATA(
