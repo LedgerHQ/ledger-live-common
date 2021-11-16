@@ -10,7 +10,7 @@ import type {
 import { Transaction as SolanaTransaction } from "./types";
 import { assertUnreachable } from "./utils";
 
-const modes = ["send", "create-assoc-acc"] as const;
+const modes = ["send", "optIn"] as const;
 type Mode = typeof modes[number];
 
 // options already specified in other blockchains like ethereum.
@@ -74,7 +74,7 @@ function inferTransactions(
           };
           return solanaTx;
         }
-      case "create-assoc-acc":
+      case "optIn":
         if (token === undefined) {
           throw new Error("token required");
         }
@@ -145,7 +145,7 @@ function inferAccounts(
         );
       }
       return [subAccount];
-    case "create-assoc-acc":
+    case "optIn":
       return [mainAccount];
     default:
       return assertUnreachable(mode);

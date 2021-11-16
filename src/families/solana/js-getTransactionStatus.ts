@@ -23,11 +23,9 @@ const getTransactionStatus = async (
         case "valid":
           const commandDescriptor = tx.state.commandDescriptor;
           const command = commandDescriptor.command;
-          const amount = getAmount(tx, command);
-          const totalSpent = amount.plus(
-            command.kind === "transfer" ? txFees : 0
-          );
           const estimatedFees = txFees.plus(commandDescriptor.fees ?? 0);
+          const amount = getAmount(tx, command);
+          const totalSpent = getTotalSpent(command, amount, estimatedFees);
 
           return {
             amount,
@@ -67,6 +65,23 @@ function getAmount(tx: Transaction, command: Command) {
       return new BigNumber(command.amount);
     default:
       return tx.amount;
+  }
+}
+
+function getTotalSpent(
+  command: Command,
+  amount: BigNumber,
+  estimatedFees: BigNumber
+) {
+  switch (command.kind) {
+    case "transfer":
+      return amount.plus(estimatedFees);
+    case "token.transfer":
+      return amount;
+    case "token.createAssociatedTokenAccount":
+      return estimatedFees;
+    default:
+      return assertUnreachable(command);
   }
 }
 

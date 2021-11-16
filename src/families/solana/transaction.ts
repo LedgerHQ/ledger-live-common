@@ -14,8 +14,9 @@ import {
 } from "../../transaction/common";
 import type { Account } from "../../types";
 import { findSubAccountById, getAccountUnit } from "../../account";
-import { formatCurrencyUnit } from "../../currencies";
+import { formatCurrencyUnit, getTokenById } from "../../currencies";
 import { assertUnreachable } from "./utils";
+import { toTokenId } from "./logic";
 
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
@@ -142,7 +143,9 @@ function formatCreateATA(
   tx: Transaction,
   command: CreateAssociatedTokenAccountCommand
 ) {
-  return "not implemented yet";
+  const token = getTokenById(toTokenId(command.mint));
+  const str = [`  OPT IN TOKEN: ${token.ticker}`].filter(Boolean).join("\n");
+  return "\n" + str;
 }
 
 export default {
