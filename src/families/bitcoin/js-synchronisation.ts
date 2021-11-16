@@ -128,18 +128,42 @@ const mapTxToOperations = (
   // All inputs of a same transaction have the same sequence
   const transactionSequenceNumber =
     (accountInputs.length > 0 && accountInputs[0].sequence) || undefined;
+
   const hasSpentNothing = value.eq(0);
+  // Change output is always the last one
+  const changeOutputIndex = tx.outputs
+    .map((o) => o.output_index)
+    .reduce((p, c) => (p > c ? p : c));
 
   for (const output of tx.outputs) {
     if (output.address) {
-      if (accountAddresses.includes(output.address)) {
+      if (!accountAddresses.includes(output.address)) {
+        // The output doesn't belong to this account
+        if (output.output_index < changeOutputIndex) {
+          // The output isn't the change output
+          recipients.push(
+            syncReplaceAddress
+              ? syncReplaceAddress(output.address)
+              : output.address
+          );
+        }
+      } else {
+        // The output belongs to this account
         accountOutputs.push(output);
 
-        if (changeAddresses.includes(output.address)) {
+        if (!changeAddresses.includes(output.address)) {
+          // The output isn't a change output of this account
+          recipients.push(
+            syncReplaceAddress
+              ? syncReplaceAddress(output.address)
+              : output.address
+          );
+        } else {
+          // The output is a change output of this account,
+          // we count it as a recipient only in some special cases
           if (
             (recipients.length === 0 &&
-              output.output_hash ===
-                tx.outputs[tx.outputs.length - 1].output_hash) ||
+              output.output_index >= changeOutputIndex) ||
             hasSpentNothing
           ) {
             recipients.push(
@@ -148,19 +172,7 @@ const mapTxToOperations = (
                 : output.address
             );
           }
-        } else {
-          recipients.push(
-            syncReplaceAddress
-              ? syncReplaceAddress(output.address)
-              : output.address
-          );
         }
-      } else {
-        recipients.push(
-          syncReplaceAddress
-            ? syncReplaceAddress(output.address)
-            : output.address
-        );
       }
     }
   }

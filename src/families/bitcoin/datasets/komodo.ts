@@ -1,6 +1,10 @@
 import type { CurrenciesData } from "../../../types";
 import type { Transaction } from "../types";
 const dataset: CurrenciesData<Transaction> = {
+  FIXME_ignoreAccountFields: [
+    "bitcoinResources.walletAccount", // it is not "stable"
+    "bitcoinResources.utxos", // TODO: fix ordering
+  ],
   scanAccounts: [
     {
       name: "komodo seed 1",
