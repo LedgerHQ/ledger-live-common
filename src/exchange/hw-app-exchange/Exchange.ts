@@ -63,7 +63,10 @@ export default class Exchange {
     );
     maybeThrowProtocolError(result);
 
-    if (this.transactionType === ExchangeTypes.SELL) {
+    if (
+      this.transactionType === ExchangeTypes.SELL ||
+      this.transactionType === ExchangeTypes.FUND
+    ) {
       return result.subarray(0, 32).toString("base64");
     }
 

@@ -61,6 +61,11 @@ export interface CompleteExchangeInputSell extends CompleteExchangeInputCommon {
   exchange: ExchangeSell;
 }
 
+export interface CompleteExchangeInputFund extends CompleteExchangeInputCommon {
+  readonly exchangeType: ExchangeTypes.FUND;
+  exchange: ExchangeSell;
+}
+
 export interface CompleteExchangeInputSwap extends CompleteExchangeInputCommon {
   readonly exchangeType: ExchangeTypes.SWAP;
   exchange: ExchangeSwap;

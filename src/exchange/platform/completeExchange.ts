@@ -1,6 +1,7 @@
 import { Observable } from "rxjs";
 
 import type {
+  CompleteExchangeInputFund,
   CompleteExchangeInputSell,
   CompleteExchangeInputSwap,
   CompleteExchangeRequestEvent,
@@ -8,12 +9,14 @@ import type {
 
 import completeExchangeSwap from "../swap/completeExchange";
 import completeExchangeSell from "../sell/completeExchange";
+import completeExchangeFund from "../fund/completeExchange";
 
 import { ExchangeTypes } from "../hw-app-exchange/Exchange";
 
 type CompleteExchangeInput =
   | CompleteExchangeInputSell
-  | CompleteExchangeInputSwap;
+  | CompleteExchangeInputSwap
+  | CompleteExchangeInputFund;
 
 // FIXME: could trim down input for each flow. exchangeType might not needed pass the switch case 🤷‍♂️
 
@@ -30,6 +33,9 @@ const completeExchange = (
 
     case ExchangeTypes.SELL:
       return completeExchangeSell(input);
+
+    case ExchangeTypes.FUND:
+      return completeExchangeFund(input);
 
     default:
       throw new Error("exchangeType not handled");
