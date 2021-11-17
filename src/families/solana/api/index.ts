@@ -4,7 +4,7 @@ export {
   getNetworkInfo,
   buildTransferTransaction,
   buildTokenTransferTransaction,
-  buildAssociatedTokenAccountTransaction,
+  buildCreateAssociatedTokenAccountTransaction,
   addSignatureToTransaction,
   broadcastTransaction,
   getBalance,

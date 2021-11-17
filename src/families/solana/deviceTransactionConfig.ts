@@ -1,6 +1,16 @@
 import type { AccountLike, Account } from "../../types";
-import type { Transaction } from "./types";
+import type {
+  Command,
+  CreateAssociatedTokenAccountCommand,
+  TokenTransferCommand,
+  Transaction,
+  TransferCommand,
+  ValidCommandDescriptor,
+} from "./types";
 import type { DeviceTransactionField } from "../../transaction";
+import { assertUnreachable } from "./utils";
+
+// do not show fields like 'To', 'Recipient', etc., as per Ledger policy
 
 function getDeviceTransactionConfig({
   transaction,
@@ -9,32 +19,147 @@ function getDeviceTransactionConfig({
   parentAccount: Account | null | undefined;
   transaction: Transaction;
 }): Array<DeviceTransactionField> {
+  switch (transaction.state.kind) {
+    case "prepared":
+      const { commandDescriptor } = transaction.state;
+      switch (commandDescriptor.status) {
+        case "valid":
+          return fieldsForCommand(commandDescriptor);
+        case "invalid":
+          throw new Error("unexpected invalid command");
+        default:
+          return assertUnreachable(commandDescriptor);
+      }
+    case "unprepared":
+      throw new Error("unexpected unprepared transaction");
+    default:
+      return assertUnreachable(transaction.state);
+  }
+}
+
+export default getDeviceTransactionConfig;
+function fieldsForCommand(
+  commandDescriptor: ValidCommandDescriptor<Command>
+): DeviceTransactionField[] {
+  const { command } = commandDescriptor;
+  switch (command.kind) {
+    case "transfer":
+      return fieldsForTransfer(command);
+    case "token.transfer":
+      return fieldsForTokenTransfer(command);
+    case "token.createAssociatedTokenAccount":
+      return fieldsForCreateATA(command);
+    default:
+      return assertUnreachable(command);
+  }
+}
+
+function fieldsForTransfer(command: TransferCommand): DeviceTransactionField[] {
   const fields: Array<DeviceTransactionField> = [];
 
-  if (transaction.useAllAmount) {
+  fields.push({
+    type: "amount",
+    label: "Transfer",
+  });
+
+  fields.push({
+    type: "address",
+    address: command.sender,
+    label: "Sender",
+  });
+
+  fields.push({
+    type: "text",
+    label: "Fee payer",
+    value: "Sender",
+  });
+
+  return fields;
+}
+function fieldsForTokenTransfer(
+  command: TokenTransferCommand
+): DeviceTransactionField[] {
+  const fields: Array<DeviceTransactionField> = [];
+
+  if (command.recipientDescriptor.shouldCreateAsAssociatedTokenAccount) {
     fields.push({
-      type: "text",
-      label: "Method",
-      value: "Transfer All",
+      type: "address",
+      label: "Create token acct",
+      address: command.recipientDescriptor.tokenAccAddress,
     });
-  } else {
+
     fields.push({
-      type: "text",
-      label: "Method",
-      value: "Transfer",
+      type: "address",
+      label: "From mint",
+      address: command.mintAddress,
     });
     fields.push({
-      type: "amount",
-      label: "Amount",
+      type: "address",
+      label: "Funded by",
+      address: command.ownerAddress,
     });
   }
 
   fields.push({
-    type: "fees",
-    label: "Fees",
+    type: "amount",
+    label: "Transfer tokens",
+  });
+
+  fields.push({
+    type: "address",
+    address: command.ownerAssociatedTokenAccountAddress,
+    label: "From",
+  });
+
+  fields.push({
+    type: "address",
+    address: command.ownerAddress,
+    label: "Owner",
+  });
+
+  fields.push({
+    type: "address",
+    address: command.ownerAddress,
+    label: "Fee payer",
   });
 
   return fields;
 }
 
-export default getDeviceTransactionConfig;
+function fieldsForCreateATA(
+  command: CreateAssociatedTokenAccountCommand
+): DeviceTransactionField[] {
+  const fields: Array<DeviceTransactionField> = [];
+
+  fields.push({
+    type: "address",
+    label: "Create token acct",
+    address: command.associatedTokenAccountAddress,
+  });
+
+  fields.push({
+    type: "address",
+    label: "From mint",
+    address: command.mint,
+  });
+
+  fields.push({
+    type: "address",
+    label: "Owned by",
+    address: command.owner,
+  });
+
+  fields.push({
+    type: "address",
+    label: "Funded by",
+    address: command.owner,
+  });
+
+  fields.push({
+    type: "address",
+    label: "Fee payer",
+    address: command.owner,
+  });
+
+  return fields;
+}

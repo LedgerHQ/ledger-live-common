@@ -20,6 +20,10 @@ export const SolanaTokenAccountHoldsAnotherToken = createCustomErrorClass(
   "SolanaTokenAccountHoldsAnotherToken"
 );
 
+export const SolanaTokenAccounNotInitialized = createCustomErrorClass(
+  "SolanaTokenAccounNotInitialized"
+);
+
 export const SolanaAddressOffEd25519 = createCustomErrorClass(
   "SolanaAddressOfEd25519"
 );

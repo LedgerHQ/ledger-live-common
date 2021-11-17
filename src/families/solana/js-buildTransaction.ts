@@ -4,7 +4,7 @@ import {
   addSignatureToTransaction,
   buildTransferTransaction,
   buildTokenTransferTransaction,
-  buildAssociatedTokenAccountTransaction,
+  buildCreateAssociatedTokenAccountTransaction,
 } from "./api";
 import { assertUnreachable } from "./utils";
 import { Transaction as OnChainTransaction } from "@solana/web3.js";
@@ -56,7 +56,7 @@ async function buildForCommand(command: Command): Promise<OnChainTransaction> {
     case "token.transfer":
       return buildTokenTransferTransaction(command);
     case "token.createAssociatedTokenAccount":
-      return buildAssociatedTokenAccountTransaction(command);
+      return buildCreateAssociatedTokenAccountTransaction(command);
     default:
       return assertUnreachable(command);
   }

@@ -58,6 +58,7 @@ export type CreateAssociatedTokenAccountCommand = {
   kind: "token.createAssociatedTokenAccount";
   owner: string;
   mint: string;
+  associatedTokenAccountAddress: string;
 };
 
 export type TokenRecipientDescriptor = {

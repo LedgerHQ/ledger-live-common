@@ -26,6 +26,7 @@ import {
   SolanaRecipientAssociatedTokenAccountWillBeFunded,
   SolanaNotEnoughBalanceToPayFees,
   SolanaTokenRecipientIsSenderATA,
+  SolanaTokenAccounNotInitialized,
 } from "./errors";
 import {
   Awaited,
@@ -169,7 +170,6 @@ const deriveTokenTransferCommandDescriptor = async (
     throw new Error("subaccount not found");
   }
 
-  // TODO: to token id
   const tokenIdParts = subAccount.token.id.split("/");
   const mintAddress = tokenIdParts[tokenIdParts.length - 1];
   const mintDecimals = subAccount.token.units[0].magnitude;
@@ -248,7 +248,7 @@ async function getTokenRecipient(
 
   if (recipientTokenAccount === undefined) {
     if (!isEd25519Address(recipientAddress)) {
-      return new InvalidAddress();
+      return new SolanaAddressOffEd25519();
     }
 
     const recipientAssociatedTokenAccPubkey =
@@ -257,7 +257,6 @@ async function getTokenRecipient(
     const recipientAssociatedTokenAccountAddress =
       recipientAssociatedTokenAccPubkey.toBase58();
 
-    // TODO: check that acc exists instead?
     const shouldCreateAsAssociatedTokenAccount = !(await isAccountFunded(
       recipientAssociatedTokenAccountAddress
     ));
@@ -267,8 +266,13 @@ async function getTokenRecipient(
       shouldCreateAsAssociatedTokenAccount,
       tokenAccAddress: recipientAssociatedTokenAccountAddress,
     };
-  } else if (recipientTokenAccount.mint.toBase58() !== mintAddress) {
-    return new SolanaTokenAccountHoldsAnotherToken();
+  } else {
+    if (recipientTokenAccount.mint.toBase58() !== mintAddress) {
+      return new SolanaTokenAccountHoldsAnotherToken();
+    }
+    if (recipientTokenAccount.state !== "initialized") {
+      return new SolanaTokenAccounNotInitialized();
+    }
   }
 
   return {
@@ -286,6 +290,13 @@ async function deriveCreateAssociatedTokenAccountCommandDescriptor(
   const tokenIdParts = token.id.split("/");
   const mint = tokenIdParts[tokenIdParts.length - 1];
 
+  const associatedTokenAccountPubkey = await findAssociatedTokenAccountPubkey(
+    mainAccount.freshAddress,
+    mint
+  );
+
+  const associatedTokenAccountAddress = associatedTokenAccountPubkey.toBase58();
+
   const fees = await getAssociatedTokenAccountCreationFee();
 
   return {
@@ -295,6 +306,7 @@ async function deriveCreateAssociatedTokenAccountCommandDescriptor(
       kind: mode.kind,
       mint: mint,
       owner: mainAccount.freshAddress,
+      associatedTokenAccountAddress,
     },
   };
 }

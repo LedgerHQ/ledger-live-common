@@ -6,16 +6,13 @@ import {
   ConfirmedSignatureInfo,
   ParsedConfirmedTransaction,
   TransactionInstruction,
-  AccountInfo,
-  ParsedAccountData,
 } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
-import _, { chunk, flow, reduce, sortBy } from "lodash";
+import { chunk } from "lodash";
 import { encodeOperationId } from "../../../operation";
 import { Operation, OperationType } from "../../../types";
 import {
   CreateAssociatedTokenAccountCommand,
-  TokenRecipientDescriptor,
   TokenTransferCommand,
   TransferCommand,
 } from "../types";
@@ -31,7 +28,7 @@ import {
   parseTokenAccountInfo,
 } from "./account/parser";
 import { TokenAccountInfo } from "./validators/accounts/token";
-import { assertUnreachable, drainSeqAsyncGen } from "../utils";
+import { drainSeqAsyncGen } from "../utils";
 import { map } from "lodash/fp";
 import { Awaited } from "../logic";
 
@@ -466,7 +463,6 @@ export async function getOnChainTokenAccountsByMint(
     tokenAccInfo: TokenAccountInfo;
   };
 
-  // TODO: reduceDefined!
   return onChainTokenAccInfoList
     .map((info) => {
       const parsedInfo = info.account.data.parsed?.info;
@@ -493,17 +489,14 @@ export async function getMaybeTokenAccount(address: string) {
   return tokenAccount;
 }
 
-export async function buildAssociatedTokenAccountTransaction({
+export async function buildCreateAssociatedTokenAccountTransaction({
   mint,
   owner,
+  associatedTokenAccountAddress,
 }: CreateAssociatedTokenAccountCommand): Promise<Transaction> {
   const ownerPubKey = new PublicKey(owner);
   const mintPubkey = new PublicKey(mint);
-
-  const associatedTokenAccountPubkey = await findAssociatedTokenAccountPubkey(
-    owner,
-    mint
-  );
+  const associatedTokenAccPubkey = new PublicKey(associatedTokenAccountAddress);
 
   const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
 
@@ -517,7 +510,7 @@ export async function buildAssociatedTokenAccountTransaction({
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       mintPubkey,
-      associatedTokenAccountPubkey,
+      associatedTokenAccPubkey,
       ownerPubKey,
       ownerPubKey
     )
