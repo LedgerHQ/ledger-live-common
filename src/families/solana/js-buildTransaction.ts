@@ -1,9 +1,5 @@
 import type { Account } from "../../types";
-import type {
-  Command,
-  CreateAssociatedTokenAccountCommand,
-  Transaction,
-} from "./types";
+import type { Command, Transaction } from "./types";
 import {
   addSignatureToTransaction,
   buildTransferTransaction,

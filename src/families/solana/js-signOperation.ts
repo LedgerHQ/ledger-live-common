@@ -1,5 +1,10 @@
 import { Observable } from "rxjs";
-import type { Account, Operation, SignOperationEvent } from "../../types";
+import type {
+  Account,
+  Operation,
+  OperationType,
+  SignOperationEvent,
+} from "../../types";
 import { open, close } from "../../hw";
 import type {
   Command,
@@ -99,6 +104,7 @@ const signOperation = ({
   });
 
 export default signOperation;
+
 function buildOptimisticOperationForCommand(
   account: Account,
   transaction: Transaction,
@@ -190,13 +196,15 @@ function optimisticOpForCATA(
   transaction: Transaction,
   commandDescriptor: ValidCommandDescriptor<CreateAssociatedTokenAccountCommand>
 ): Operation {
+  const opType: OperationType = "OPT_IN";
+
   return {
     ...optimisticOpcommons(transaction, commandDescriptor),
-    id: encodeOperationId(account.id, "", "FEES"),
-    type: "FEES",
+    id: encodeOperationId(account.id, "", opType),
+    type: opType,
     accountId: account.id,
-    senders: [account.freshAddress],
-    recipients: [transaction.recipient],
+    senders: [],
+    recipients: [],
     value: new BigNumber(commandDescriptor.fees ?? 0),
   };
 }
