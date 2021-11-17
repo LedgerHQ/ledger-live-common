@@ -1,6 +1,6 @@
 import { BigNumber } from "bignumber.js";
 import ElrondApi from "./apiCalls";
-import type { ESDTToken, ESDTTransaction, NetworkInfo, Transaction } from "../types";
+import { ElrondTransferOptions, ESDTToken, NetworkInfo, Transaction } from "../types";
 import type { Operation, OperationType } from "../../../types";
 import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";
@@ -50,10 +50,16 @@ function getOperationType(
 /**
  * Map transaction to a correct Operation Value (affecting account balance)
  */
-function getOperationValue(transaction: Transaction | ESDTTransaction, addr: string): BigNumber {
-  return isSender(transaction, addr)
-    ? new BigNumber(transaction.value ?? 0).plus(transaction.fee ?? 0)
-    : new BigNumber(transaction.value ?? 0);
+function getOperationValue(transaction: Transaction, addr: string): BigNumber {
+  if (transaction.transfer === ElrondTransferOptions.esdt) {
+    return new BigNumber(transaction.tokenValue ?? 0);
+  }
+
+  if (!isSender(transaction, addr)) {
+    return new BigNumber(transaction.value ?? 0);
+  }
+
+  return new BigNumber(transaction.value ?? 0).plus(transaction.fee ?? 0)
 }
 
 /**

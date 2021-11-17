@@ -37,6 +37,7 @@ export type ElrondProtocolTransaction = {
  */
 export type Transaction = TransactionCommon & {
   mode: string;
+  transfer?: ElrondTransferOptions;
   family: "elrond";
   fees: BigNumber | null | undefined;
   txHash?: string;
@@ -56,10 +57,9 @@ export type Transaction = TransactionCommon & {
   tokenValue?: string;
 };
 
-export type ESDTTransaction = Transaction & {
-  type: 'ESDT'
-  tokenIdentifier?: string;
-  tokenValue?: string;
+export enum ElrondTransferOptions {
+  egld = 'egld',
+  esdt = 'esdt',
 }
 
 export type ESDTToken = {

@@ -5,7 +5,7 @@ import {
   TRANSACTIONS_SIZE,
   ESDT_TRANSFER_GAS,
 } from "../constants";
-import { ElrondProtocolTransaction, ESDTToken, ESDTTransaction, NetworkInfo, Transaction } from "../types";
+import { ElrondProtocolTransaction, ElrondTransferOptions, ESDTToken, NetworkInfo, Transaction } from "../types";
 export default class ElrondApi {
   private API_URL: string;
 
@@ -138,7 +138,13 @@ export default class ElrondApi {
   async getESDTTransactionsForAddress(addr: string, token: string): Promise<Transaction[]> {
     const transactions = await this.getHistory(addr, 0);
 
-    return transactions.filter(({tokenIdentifier}) => tokenIdentifier && tokenIdentifier==token);
+    const esdtTransactions = transactions.filter(({tokenIdentifier}) => tokenIdentifier && tokenIdentifier==token);
+
+    for (let esdtTransaction of esdtTransactions) {
+      esdtTransaction.transfer = ElrondTransferOptions.esdt;
+    }
+
+    return esdtTransactions;
   }
 
   async getESDTTokensForAddress(addr: string): Promise<ESDTToken[]> {
