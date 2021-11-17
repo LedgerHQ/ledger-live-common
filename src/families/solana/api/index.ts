@@ -10,7 +10,6 @@ export {
   getBalance,
   findAssociatedTokenAccountPubkey,
   getOnChainTokenAccountsByMint,
-  getTokenTransferSpec,
   getTxFeeCalculator,
   getAssociatedTokenAccountCreationFee,
   getMaybeTokenAccount,

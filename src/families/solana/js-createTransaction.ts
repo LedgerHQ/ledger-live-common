@@ -1,10 +1,6 @@
 import { BigNumber } from "bignumber.js";
-import type {
-  CommandDescriptor,
-  Transaction /* TransactionMode */,
-} from "./types";
-import { log } from "@ledgerhq/logs";
-import { Account, AccountLike } from "../../types";
+import type { Transaction /* TransactionMode */ } from "./types";
+import { Account } from "../../types";
 
 /**
  * Create an empty transaction
@@ -31,12 +27,5 @@ export const updateTransaction = (
 ): Transaction => {
   return { ...t, ...patch };
 };
-
-function switchExpr<T extends string | number, S>(
-  value: T,
-  record: Record<T, S>
-) {
-  return record[value];
-}
 
 export default createTransaction;

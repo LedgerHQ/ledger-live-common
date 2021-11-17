@@ -1,9 +1,7 @@
-import type { BigNumber } from "bignumber.js";
 import type {
   TransactionCommon,
   TransactionCommonRaw,
 } from "../../types/transaction";
-import { getTxFeeCalculator } from "./api";
 
 // for legacy reasons export the types
 export type CoreStatics = Record<string, never>;
@@ -60,23 +58,7 @@ export type CreateAssociatedTokenAccountCommand = {
   kind: "token.createAssociatedTokenAccount";
   owner: string;
   mint: string;
-  //tokenId: string;
 };
-
-type AncillaryTokenAccountTransferOperation = {
-  kind: "ancillary.token.transfer";
-  sourceTokenAccAddress: string;
-  amount: number;
-};
-
-type AncillaryTokenAccountCloseOperation = {
-  kind: "ancillary.token.close";
-  tokenAccAddress: string;
-};
-
-export type AncillaryTokenAccountOperation =
-  | AncillaryTokenAccountTransferOperation
-  | AncillaryTokenAccountCloseOperation;
 
 export type TokenRecipientDescriptor = {
   walletAddress: string;
@@ -89,15 +71,10 @@ export type TokenTransferCommand = {
   ownerAddress: string;
   ownerAssociatedTokenAccountAddress: string;
   recipientDescriptor: TokenRecipientDescriptor;
-  //destinationAddress: string;
   amount: number;
   mintAddress: string;
   mintDecimals: number;
-  // TODO: recalc total balance here as well
-  //totalTransferableAmountIn1Tx: number;
-  ownerAncillaryTokenAccOps: AncillaryTokenAccountOperation[];
   memo?: string;
-  //recipientAssociatedTokenAccountIsUnfunded: boolean;
 };
 
 export type Command =

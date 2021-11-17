@@ -3,11 +3,13 @@ import { create } from "superstruct";
 import { ParsedInfo } from "../validators";
 import { TokenAccount, TokenAccountInfo } from "../validators/accounts/token";
 
-export function parseTokenAccountInfo(info: unknown): TokenAccountInfo | Error {
+export function parseTokenAccountInfo(info: unknown): TokenAccountInfo {
+  return create(info, TokenAccountInfo);
+  /*
   const routine = () => {
-    return create(info, TokenAccountInfo);
   };
   return onThrowReturnError(routine);
+  */
 }
 
 export function tryParseAsTokenAccount(data: ParsedAccountData) {

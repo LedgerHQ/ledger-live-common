@@ -5,53 +5,23 @@ import {
   Operation,
   OperationType,
   TokenAccount,
-  TokenCurrency,
 } from "../../types";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { getAccount, findAssociatedTokenAccountPubkey } from "./api";
 import BigNumber from "bignumber.js";
-import { TokenAccountInfo as OnChainTokenAccountInfo } from "./api/validators/accounts/token";
 
-import { create } from "superstruct";
-import { decodeTokenAccountId, emptyHistoryCache } from "../../account";
+import { emptyHistoryCache } from "../../account";
 import { getTransactions, TransactionDescriptor } from "./api/web3";
-import {
-  findCryptoCurrencyById,
-  findTokenByAddress,
-  findTokenById,
-  findTokenByTicker,
-  getTokenById,
-} from "@ledgerhq/cryptoassets";
+import { getTokenById } from "@ledgerhq/cryptoassets";
 import { encodeOperationId } from "../../operation";
-import { parseQuiet } from "./api/program/parser";
 import {
   Awaited,
-  decodeAccountIdWithTokenAccountAddress,
   encodeAccountIdWithTokenAccountAddress,
+  tokenIsListedOnLedger,
+  toTokenId,
+  toTokenMint,
 } from "./logic";
-import _, {
-  compact,
-  filter,
-  groupBy,
-  identity,
-  includes,
-  keyBy,
-  reduce,
-  sum,
-  sumBy,
-} from "lodash";
-import { parseTokenAccountInfo } from "./api/account/parser";
-
-import { reduceDefined } from "./utils";
-
-//type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
-
-type NonEmptyArray<T> = Array<T> & {
-  0: T;
-};
-
-const isNonEmptyArray = <T>(arr: Array<T>): arr is NonEmptyArray<T> =>
-  arr.length > 0;
+import _, { compact, filter, groupBy, keyBy, toPairs, pipe } from "lodash/fp";
 
 type OnChainTokenAccount = Awaited<
   ReturnType<typeof getAccount>
@@ -80,99 +50,69 @@ const getAccountShape: GetAccountShape = async (info) => {
     derivationMode,
   });
 
-  const knownOnChainTokenAccs = reduceDefined((tokenAcc) => {
-    const parsedInfo = tokenAcc.account.data.parsed.info;
-    const info = parseTokenAccountInfo(parsedInfo);
-    return info instanceof Error ? undefined : { tokenAcc, info };
-  }, onChaintokenAccounts).filter(({ info }) => {
-    return (
-      findTokenById(`solana/spl/${info.mint.toBase58()}`)?.type ===
-      "TokenCurrency"
+  const onChainTokenAccsByMint = pipe(
+    () => onChaintokenAccounts,
+    groupBy(({ info: { mint } }) => mint.toBase58()),
+    (v) => new Map(toPairs(v))
+  )();
+
+  const subAccByMint = pipe(
+    () => mainInitialAcc?.subAccounts ?? [],
+    filter((subAcc): subAcc is TokenAccount => subAcc.type === "TokenAccount"),
+    keyBy((subAcc) => toTokenMint(subAcc.token.id)),
+    (v) => new Map(toPairs(v))
+  )();
+
+  const nextSubAccs2: TokenAccount[] = [];
+
+  for (const [mint, accs] of onChainTokenAccsByMint.entries()) {
+    if (!tokenIsListedOnLedger(mint)) {
+      continue;
+    }
+
+    const assocTokenAccPubkey = await findAssociatedTokenAccountPubkey(
+      mainAccAddress,
+      mint
     );
-  });
 
-  const knownOnChainTokenAccsByMint = new Map(
-    Object.entries(
-      groupBy(knownOnChainTokenAccs, (acc) => acc.info.mint.toString())
-    )
-  );
+    const assocTokenAcc = accs.find(({ onChainAcc: { pubkey } }) =>
+      pubkey.equals(assocTokenAccPubkey)
+    );
 
-  // TODO: zip?
-  const mintAddressSubAccountPairList =
-    mainInitialAcc?.subAccounts
-      ?.filter(
-        (subAcc): subAcc is TokenAccount => subAcc.type === "TokenAccount"
-      )
-      .map((subAcc) => {
-        const tokenIdParts = subAcc.token.id.split("/");
-        const mintAddress = tokenIdParts[tokenIdParts.length - 1];
-        return [mintAddress, subAcc] as const;
-      }) ?? [];
-
-  const subAccountByMintAddress = new Map(mintAddressSubAccountPairList);
-
-  const perMintAsync = [...knownOnChainTokenAccsByMint.entries()].map(
-    ([mintAddress, onChainTokenAccs]) => {
-      const subAcc = subAccountByMintAddress.get(mintAddress);
-
-      return toAsyncGenerator(async () => {
-        const newTxsAsync = onChainTokenAccs.map((acc) =>
-          getTransactions(
-            acc.tokenAcc.pubkey.toBase58(),
-            subAcc?.operations[0].hash
-          )
-        );
-        const newTxs = await drainAsyncGen(...newTxsAsync);
-
-        return {
-          onChainTokenAccs,
-          subAcc,
-          newTxs,
-        };
-      });
+    if (assocTokenAcc === undefined) {
+      continue;
     }
-  );
 
-  const perMint = await drainAsyncGen(...perMintAsync);
+    const subAcc = subAccByMint.get(mint);
 
-  const nextSubAccsAsync = perMint.map(
-    ({ subAcc, onChainTokenAccs, newTxs }) => {
-      return toAsyncGenerator(async () => {
-        if (isNonEmptyArray(newTxs)) {
-          if (subAcc === undefined) {
-            const mintAddress = onChainTokenAccs[0].info.mint.toBase58();
-            const ownerAddress = onChainTokenAccs[0].info.owner.toBase58();
-            const associatedTokenAccPubkey =
-              await findAssociatedTokenAccountPubkey(ownerAddress, mintAddress);
-            const associatedTokenAccountExists = onChainTokenAccs.some((acc) =>
-              acc.tokenAcc.pubkey.equals(associatedTokenAccPubkey)
-            );
-            return associatedTokenAccountExists
-              ? newSubAcc(
-                  mainAccountId,
-                  onChainTokenAccs,
-                  associatedTokenAccPubkey.toBase58(),
-                  newTxs
-                )
-              : undefined;
-          }
-          return patchedSubAcc(subAcc, onChainTokenAccs, newTxs);
-        }
-        return subAcc;
-      });
-    }
-  );
+    const lastSyncedTxSignature = subAcc?.operations?.[0].hash;
 
-  //TODO: replacw with compact
-  const nextSubAccs = reduceDefined(
-    (v) => v,
-    await drainAsyncGen(...nextSubAccsAsync)
-  );
+    const txs = await getTransactions(
+      assocTokenAcc.onChainAcc.pubkey.toBase58(),
+      lastSyncedTxSignature
+    );
+
+    const nextSubAcc =
+      subAcc === undefined
+        ? newSubAcc({
+            mainAccountId,
+            assocTokenAcc,
+            txs,
+          })
+        : patchedSubAcc({
+            subAcc,
+            assocTokenAcc,
+            txs,
+          });
+
+    nextSubAccs2.push(nextSubAcc);
+  }
 
   const mainAccountLastTxSignature = mainInitialAcc?.operations[0]?.hash;
 
-  const newMainAccTxs = await drainAsyncGen(
-    getTransactions(mainAccAddress, mainAccountLastTxSignature)
+  const newMainAccTxs = await getTransactions(
+    mainAccAddress,
+    mainAccountLastTxSignature
   );
 
   const newMainAccOps = newMainAccTxs
@@ -185,7 +125,7 @@ const getAccountShape: GetAccountShape = async (info) => {
   );
 
   const shape: Partial<Account> = {
-    subAccounts: nextSubAccs,
+    subAccounts: nextSubAccs2,
     id: mainAccountId,
     blockHeight,
     balance: mainAccBalance,
@@ -197,67 +137,19 @@ const getAccountShape: GetAccountShape = async (info) => {
   return shape;
 };
 
-async function* enrichWithNewTransactions(
-  accPairList: (readonly [
-    OnChainTokenAccount,
-    OnChainTokenAccountInfo,
-    TokenAccount?
-  ])[]
-) {
-  for (const [tokenAcc, info, subAcc] of accPairList) {
-    const address = tokenAcc.pubkey.toBase58();
-    const latestLoadedTxSignature = subAcc?.operations?.[0]?.hash;
-    const accsWithTxs = [
-      tokenAcc,
-      info,
-      subAcc,
-      await drainAsyncGen(getTransactions(address, latestLoadedTxSignature)),
-    ] as const;
-    yield accsWithTxs;
-  }
-}
-
-function parseTokenAccountInfoQuiet(info: any) {
-  try {
-    return create(info, OnChainTokenAccountInfo);
-  } catch (e) {
-    // TODO: remove throw
-    throw e;
-    console.error(e);
-    return undefined;
-  }
-}
-
 const postSync = (initial: Account, synced: Account) => {
-  //const ops = (synced.subAccounts ?? []).flatMap(acc => acc.pen)
   return synced;
 };
 
-function toAsyncGenerator<T>(promise: () => Promise<T>) {
-  return (async function* AsyncGenerator() {
-    yield await promise();
-  })();
-}
-
-async function drainAsyncGen<T>(...asyncGens: AsyncGenerator<T>[]) {
-  const items: T[] = [];
-  for (const gen of asyncGens) {
-    for await (const item of gen) {
-      items.push(item);
-    }
-  }
-  return items;
-}
-
-function newSubAcc(
-  mainAccId: string,
-  onChainTokenAccs: NonEmptyArray<{
-    tokenAcc: OnChainTokenAccount;
-    info: OnChainTokenAccountInfo;
-  }>,
-  associatedTokenAccountAddress: string,
-  txs: NonEmptyArray<TransactionDescriptor>
-): TokenAccount {
+function newSubAcc({
+  mainAccountId,
+  assocTokenAcc,
+  txs,
+}: {
+  mainAccountId: string;
+  assocTokenAcc: OnChainTokenAccount;
+  txs: TransactionDescriptor[];
+}): TokenAccount {
   // TODO: check the order of txs
   const firstTx = txs[txs.length - 1];
 
@@ -265,28 +157,28 @@ function newSubAcc(
     (firstTx.info.blockTime ?? Date.now() / 1000) * 1000
   );
 
-  const tokenId = `solana/spl/${onChainTokenAccs[0].info.mint.toBase58()}`;
+  const tokenId = toTokenId(assocTokenAcc.info.mint.toBase58());
   const tokenCurrency = getTokenById(tokenId);
 
-  const id = encodeAccountIdWithTokenAccountAddress(
-    mainAccId,
-    associatedTokenAccountAddress
+  const accosTokenAccPubkey = assocTokenAcc.onChainAcc.pubkey;
+
+  const accountId = encodeAccountIdWithTokenAccountAddress(
+    mainAccountId,
+    accosTokenAccPubkey.toBase58()
   );
 
-  const balance = new BigNumber(
-    sumBy(onChainTokenAccs, (acc) => Number(acc.info.tokenAmount.amount))
-  );
+  const balance = new BigNumber(assocTokenAcc.info.tokenAmount.amount);
 
   const newOps = compact(
-    txs.map((tx) => txToTokenAccOperation(tx, onChainTokenAccs, id))
+    txs.map((tx) => txToTokenAccOperation(tx, assocTokenAcc, accountId))
   );
 
   return {
     balance,
     balanceHistoryCache: emptyHistoryCache,
     creationDate,
-    id: id,
-    parentId: mainAccId,
+    id: accountId,
+    parentId: mainAccountId,
     operations: mergeOps([], newOps),
     // TODO: fix
     operationsCount: txs.length,
@@ -299,31 +191,28 @@ function newSubAcc(
   };
 }
 
-function patchedSubAcc(
-  subAcc: TokenAccount,
-  onChainTokenAccs: NonEmptyArray<{
-    tokenAcc: OnChainTokenAccount;
-    info: OnChainTokenAccountInfo;
-  }>,
-  txs: NonEmptyArray<TransactionDescriptor>
-): TokenAccount {
-  const balance = new BigNumber(
-    sumBy(onChainTokenAccs, (acc) => Number(acc.info.tokenAmount.amount))
-  );
-
-  const owner = onChainTokenAccs[0].info.owner.toBase58();
+function patchedSubAcc({
+  subAcc,
+  assocTokenAcc,
+  txs,
+}: {
+  subAcc: TokenAccount;
+  assocTokenAcc: OnChainTokenAccount;
+  txs: TransactionDescriptor[];
+}): TokenAccount {
+  const balance = new BigNumber(assocTokenAcc.info.tokenAmount.amount);
 
   const newOps = compact(
-    txs.map((tx) => txToTokenAccOperation(tx, onChainTokenAccs, subAcc.id))
+    txs.map((tx) => txToTokenAccOperation(tx, assocTokenAcc, subAcc.id))
   );
 
   const totalOps = mergeOps(subAcc.operations, newOps);
+
   return {
     ...subAcc,
     balance,
     spendableBalance: balance,
     operations: totalOps,
-    operationsCount: totalOps.length,
   };
 }
 
@@ -387,44 +276,6 @@ function txToMainAccOperation(
   const txHash = tx.info.signature;
   const txDate = new Date(tx.info.blockTime * 1000);
 
-  const { internalOperations, subOperations } = message.instructions.reduce(
-    (acc, ix, ixIndex) => {
-      const ixDescriptor = parseQuiet(ix, tx.parsed.transaction);
-      const partialOp = ixDescriptorToPartialOperation(ixDescriptor);
-      const op: Operation = {
-        id: `${txHash}:ix:${ixIndex}`,
-        hash: txHash,
-        accountId,
-        hasFailed: !!tx.info.err,
-        blockHeight: tx.info.slot,
-        blockHash: message.recentBlockhash,
-        extra: {
-          memo: tx.info.memo ?? undefined,
-          info: JSON.stringify((ix as any).parsed?.info),
-          //...partialOp.extra,
-        },
-        date: txDate,
-        senders: [],
-        recipients: [],
-        fee: new BigNumber(0),
-        value: partialOp.value ?? new BigNumber(0),
-        type: partialOp.type ?? "NONE",
-      };
-
-      if (ixDescriptor.program === "spl-token") {
-        // TODO: should we bother about sub operations at all?
-        acc.subOperations.push(op);
-      } else {
-        acc.internalOperations.push(op);
-      }
-      return acc;
-    },
-    {
-      internalOperations: [] as Operation[],
-      subOperations: [] as Operation[],
-    }
-  );
-
   return {
     id: encodeOperationId(accountId, txHash, txType),
     hash: txHash,
@@ -448,51 +299,41 @@ function txToMainAccOperation(
 
 function txToTokenAccOperation(
   tx: TransactionDescriptor,
-  onChainTokenAccs: NonEmptyArray<{
-    tokenAcc: OnChainTokenAccount;
-    info: OnChainTokenAccountInfo;
-  }>,
+  assocTokenAcc: OnChainTokenAccount,
   accountId: string
 ): Operation | undefined {
   if (!tx.info.blockTime || !tx.parsed.meta) {
     return undefined;
   }
 
-  const tokenAccIndices = [
-    ...tx.parsed.transaction.message.accountKeys.entries(),
-  ]
-    .filter(([_, accKey]) =>
-      onChainTokenAccs.some((acc) => acc.tokenAcc.pubkey.equals(accKey.pubkey))
-    )
-    .map(([index, _]) => index);
+  const assocTokenAccIndex =
+    tx.parsed.transaction.message.accountKeys.findIndex((v) =>
+      v.pubkey.equals(assocTokenAcc.onChainAcc.pubkey)
+    );
+
+  if (assocTokenAccIndex < 0) {
+    return undefined;
+  }
 
   const { preTokenBalances, postTokenBalances } = tx.parsed.meta;
 
-  const tokenAccPreTokenBalances = (preTokenBalances ?? []).filter(
-    (tokenBalance) => tokenAccIndices.includes(tokenBalance.accountIndex)
+  const preTokenBalance = preTokenBalances?.find(
+    (b) => b.accountIndex === assocTokenAccIndex
   );
 
-  const tokenAccPostTokenBalances = (postTokenBalances ?? []).filter(
-    (tokenBalance) => tokenAccIndices.includes(tokenBalance.accountIndex)
+  const postTokenBalance = postTokenBalances?.find(
+    (b) => b.accountIndex === assocTokenAccIndex
   );
 
-  const delta =
-    sum(
-      tokenAccPostTokenBalances.map((value) =>
-        Number(value.uiTokenAmount.amount)
-      )
-    ) -
-    sum(
-      tokenAccPreTokenBalances.map((value) =>
-        Number(value.uiTokenAmount.amount)
-      )
-    );
+  const delta = new BigNumber(
+    postTokenBalance?.uiTokenAmount.amount ?? 0
+  ).minus(new BigNumber(preTokenBalance?.uiTokenAmount.amount ?? 0));
 
-  const txType = delta === 0 ? "NONE" : delta > 0 ? "IN" : "OUT";
+  const txType = delta.eq(0) ? "NONE" : delta.gt(0) ? "IN" : "OUT";
 
   const txHash = tx.info.signature;
 
-  const owner = onChainTokenAccs[0].info.owner.toBase58();
+  const owner = assocTokenAcc.info.owner.toBase58();
 
   return {
     id: encodeOperationId(accountId, txHash, txType),
@@ -506,7 +347,7 @@ function txToTokenAccOperation(
     recipients: [owner],
     // TODO: fix
     senders: [],
-    value: new BigNumber(delta).abs(),
+    value: delta.abs(),
     hasFailed: !!tx.info.err,
     extra: {
       memo: tx.info.memo ?? undefined,
@@ -515,6 +356,7 @@ function txToTokenAccOperation(
   };
 }
 
+/*
 function ixDescriptorToPartialOperation(
   ixDescriptor: Exclude<ReturnType<typeof parseQuiet>, undefined>
 ): Partial<Operation> {
@@ -528,7 +370,6 @@ function ixDescriptorToPartialOperation(
       acc[key] = info[key].toString();
       return acc;
     }, {});
-  */
 
   const extra = {
     program: ixDescriptor.title,
@@ -541,6 +382,7 @@ function ixDescriptorToPartialOperation(
     extra,
   };
 }
+*/
 
 export const sync = makeSync(getAccountShape, postSync);
 export const scanAccounts = makeScanAccounts(getAccountShape);

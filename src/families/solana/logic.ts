@@ -1,4 +1,6 @@
+import { findTokenById } from "@ledgerhq/cryptoassets";
 import { PublicKey } from "@solana/web3.js";
+import { TokenAccount } from "../../types/account";
 import { getBalance } from "./api";
 
 export type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
@@ -44,4 +46,12 @@ export function toTokenId(mint: string) {
 
 export function toTokenMint(tokenId: string) {
   return tokenId.split("/")[2];
+}
+
+export function toSubAccMint(subAcc: TokenAccount) {
+  return toTokenMint(subAcc.token.id);
+}
+
+export function tokenIsListedOnLedger(mint: string) {
+  return findTokenById(toTokenId(mint))?.type === "TokenCurrency";
 }

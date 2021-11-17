@@ -13,7 +13,6 @@ import {
   getNetworkInfo,
   getOnChainTokenAccountsByMint,
   findAssociatedTokenAccountPubkey,
-  getTokenTransferSpec,
   getTxFeeCalculator,
   getMaybeTokenAccount,
   getAssociatedTokenAccountCreationFee,
@@ -23,7 +22,6 @@ import {
   SolanaMainAccountNotFunded,
   SolanaAddressOffEd25519,
   SolanaMemoIsTooLong,
-  SolanaAmountNotTransferableIn1Tx,
   SolanaTokenAccountHoldsAnotherToken,
   SolanaRecipientAssociatedTokenAccountWillBeFunded,
   SolanaNotEnoughBalanceToPayFees,
@@ -39,7 +37,6 @@ import {
 } from "./logic";
 
 import type {
-  AncillaryTokenAccountOperation,
   Command,
   CommandDescriptor,
   PreparedTransactionState,
@@ -84,7 +81,7 @@ async function deriveCommandDescriptor(
 
       return mode.kind === "transfer"
         ? deriveTransaferCommandDescriptor(mainAccount, tx, mode)
-        : deriveTokenTransferDescriptor(mainAccount, tx, mode);
+        : deriveTokenTransferCommandDescriptor(mainAccount, tx, mode);
     case "token.createAssociatedTokenAccount":
       return deriveCreateAssociatedTokenAccountCommandDescriptor(
         mainAccount,
@@ -159,7 +156,7 @@ const prepareTransaction = async (
     : tx;
 };
 
-const deriveTokenTransferDescriptor = async (
+const deriveTokenTransferCommandDescriptor = async (
   mainAccount: Account,
   tx: Transaction,
   mode: UnpreparedTokenTransferTransactionMode
@@ -172,6 +169,7 @@ const deriveTokenTransferDescriptor = async (
     throw new Error("subaccount not found");
   }
 
+  // TODO: to token id
   const tokenIdParts = subAccount.token.id.split("/");
   const mintAddress = tokenIdParts[tokenIdParts.length - 1];
   const mintDecimals = subAccount.token.units[0].magnitude;
@@ -221,32 +219,6 @@ const deriveTokenTransferDescriptor = async (
     return toInvalidStatusCommand(errors, warnings);
   }
 
-  // TODO: remove total balance
-  const {
-    totalBalance,
-    totalTransferableAmountIn1Tx,
-    ancillaryTokenAccOps: ownerAncillaryTokenAccOps,
-  } = await getTokenTransferSpec(
-    mainAccount.freshAddress,
-    senderAssociatedTokenAccountAddress,
-    mintAddress,
-    recipientDescriptor,
-    txAmount,
-    mintDecimals
-  );
-
-  if (ownerAncillaryTokenAccOps.length > 0) {
-    //TODO: think of it...
-    warnings.ancillaryOps = new Error(
-      JSON.stringify(ownerAncillaryTokenAccOps)
-    );
-  }
-
-  if (txAmount > totalTransferableAmountIn1Tx) {
-    errors.amount = new SolanaAmountNotTransferableIn1Tx();
-    return toInvalidStatusCommand(errors, warnings);
-  }
-
   return {
     status: "valid",
     command: {
@@ -254,7 +226,6 @@ const deriveTokenTransferDescriptor = async (
       ownerAddress: mainAccount.freshAddress,
       ownerAssociatedTokenAccountAddress: senderAssociatedTokenAccountAddress,
       amount: txAmount,
-      ownerAncillaryTokenAccOps,
       mintAddress,
       mintDecimals,
       recipientDescriptor: recipientDescriptor,
