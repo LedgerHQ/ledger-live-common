@@ -8,7 +8,7 @@ import { getAccountCurrency, getMainAccount } from "../../account";
 import { getAccountBridge } from "../../bridge";
 import { TransactionRefusedOnDevice } from "../../errors";
 import { withDevice } from "../../hw/deviceAccess";
-import { getCurrencyExchangeConfig } from "../";
+// import { getCurrencyExchangeConfig } from "../";
 import { getProvider } from "./";
 
 import type {
@@ -105,10 +105,26 @@ const completeExchange = (
         );
         if (unsubscribed) return;
 
-        const {
-          config: payoutAddressConfig,
-          signature: payoutAddressConfigSignature,
-        } = getCurrencyExchangeConfig(refundCurrency);
+        // FIXME: use test BTC config untill app-exchange updated
+        // cf. https://github.com/LedgerHQ/app-exchange/blob/banx/test/src/common.js#L45-L46
+
+        // const {
+        //   config: payoutAddressConfig,
+        //   signature: payoutAddressConfigSignature,
+        // } = getCurrencyExchangeConfig(refundCurrency);
+
+        const payoutAddressConfig = Buffer.from([
+          0x3, 0x42, 0x54, 0x43, 0x7, 0x42, 0x69, 0x74, 0x63, 0x6f, 0x69, 0x6e,
+          0x0,
+        ]);
+        const payoutAddressConfigSignature = Buffer.from([
+          0x30, 0x45, 0x2, 0x21, 0x0, 0xcb, 0x17, 0x43, 0x82, 0x30, 0x22, 0x19,
+          0xdc, 0xa3, 0x59, 0xc0, 0xa4, 0xd4, 0x57, 0xb2, 0x56, 0x9e, 0x31,
+          0xa0, 0x6b, 0x2c, 0x25, 0xc0, 0x8, 0x8a, 0x2b, 0xd3, 0xfd, 0x6c, 0x4,
+          0x38, 0x6a, 0x2, 0x20, 0x2c, 0x6d, 0xa, 0x5b, 0x92, 0x4a, 0x41, 0x46,
+          0x21, 0x6, 0x7e, 0x31, 0x6f, 0x2, 0x1a, 0xa1, 0x3a, 0xa5, 0xb2, 0xee,
+          0xe2, 0xbf, 0x36, 0xea, 0x3c, 0xfd, 0xde, 0xbc, 0x5, 0x3b, 0x20, 0x1b,
+        ]);
 
         try {
           await exchange.checkPayoutAddress(
