@@ -1,4 +1,6 @@
-import * as bip32 from "bip32";
+import BIP32Factory from "bip32";
+import { ECPair } from "ecpair";
+import * as ecc from "tiny-secp256k1";
 import * as bip39 from "bip39";
 import * as bitcoin from "bitcoinjs-lib";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -17,9 +19,10 @@ import {
   DerivationModes,
 } from "../../../../families/bitcoin/wallet-btc/types";
 import { Merge } from "../../../../families/bitcoin/wallet-btc/pickingstrategies/Merge";
+import { ValidateSigFunction } from "bitcoinjs-lib/src/psbt";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
+const bip32 = BIP32Factory(ecc);
 // FIXME Skipped because Praline required on CI
 describe.skip("testing xpub legacy transactions", () => {
   const network = coininfo.bitcoin.regtest.toBitcoinJS();
@@ -38,10 +41,8 @@ describe.skip("testing xpub legacy transactions", () => {
     const seed = bip39.mnemonicToSeedSync(`test${i} test${i} test${i}`);
     const node = bip32.fromSeed(seed, network);
     const signer = (account: number, index: number) =>
-      bitcoin.ECPair.fromWIF(
-        node.derive(account).derive(index).toWIF(),
-        network
-      );
+      ECPair.fromPrivateKey(node.derive(account).derive(index).privateKey!);
+
     const xpub = new Xpub({
       storage,
       explorer,
@@ -135,8 +136,8 @@ describe.skip("testing xpub legacy transactions", () => {
           associatedDerivations[i][0],
           associatedDerivations[i][1]
         )
-      );
-      psbt.validateSignaturesOfInput(i);
+      );      
+      psbt.validateSignaturesOfInput(i, ecc.verify);
     });
     psbt.finalizeAllInputs();
     const rawTxHex = psbt.extractTransaction().toHex();
@@ -253,7 +254,7 @@ describe.skip("testing xpub legacy transactions", () => {
           associatedDerivations[i][1]
         )
       );
-      psbt.validateSignaturesOfInput(i);
+      psbt.validateSignaturesOfInput(i, ecc.verify);
     });
     psbt.finalizeAllInputs();
     const rawTxHex = psbt.extractTransaction().toHex();

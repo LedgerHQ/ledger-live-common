@@ -1,18 +1,19 @@
-import * as bip32 from "bip32";
+import axios from "axios";
+import BIP32Factory from "bip32";
 import * as bip39 from "bip39";
-import * as bitcoin from "bitcoinjs-lib";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import coininfo from "coininfo";
-import axios from "axios";
-import { DerivationModes } from "../../../../families/bitcoin/wallet-btc/types";
-import Xpub from "../../../../families/bitcoin/wallet-btc/xpub";
+import { ECPair } from "ecpair";
+import * as ecc from "tiny-secp256k1";
 import Crypto from "../../../../families/bitcoin/wallet-btc/crypto/bitcoin";
 import Explorer from "../../../../families/bitcoin/wallet-btc/explorer";
 import BitcoinLikeStorage from "../../../../families/bitcoin/wallet-btc/storage";
+import { DerivationModes } from "../../../../families/bitcoin/wallet-btc/types";
+import Xpub from "../../../../families/bitcoin/wallet-btc/xpub";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
+const bip32 = BIP32Factory(ecc)
 // FIXME Skipped because Praline required on CI
 describe.skip("testing xpub reorg management", () => {
   const network = coininfo.bitcoin.test.toBitcoinJS();
@@ -31,10 +32,8 @@ describe.skip("testing xpub reorg management", () => {
     const seed = bip39.mnemonicToSeedSync(`test${i} test${i} test${i}`);
     const node = bip32.fromSeed(seed, network);
     const signer = (account: number, index: number) =>
-      bitcoin.ECPair.fromWIF(
-        node.derive(account).derive(index).toWIF(),
-        network
-      );
+      ECPair.fromPrivateKey(node.derive(account).derive(index).privateKey!);
+
     const xpub = new Xpub({
       storage,
       explorer,

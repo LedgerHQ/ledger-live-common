@@ -1,4 +1,6 @@
-import * as bip32 from "bip32";
+import BIP32Factory from "bip32";
+import { ECPair } from "ecpair";
+import * as ecc from "tiny-secp256k1";
 import * as bip39 from "bip39";
 import * as bitcoin from "bitcoinjs-lib";
 import coininfo from "coininfo";
@@ -12,7 +14,7 @@ import BitcoinLikeStorage from "../../../../families/bitcoin/wallet-btc/storage"
 import { Merge } from "../../../../families/bitcoin/wallet-btc/pickingstrategies/Merge";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
+const bip32 = BIP32Factory(ecc);
 /*
 In order to launch this litecoin test locally
 TICKER=ltc TAG=latest LOG_LEVEL=debug docker-compose -f ./environments/explorer-praline-btc.yml up -d
@@ -33,10 +35,7 @@ describe.skip("testing xpub legacy litecoin transactions", () => {
     const seed = bip39.mnemonicToSeedSync(`test${i} test${i} test${i}`);
     const node = bip32.fromSeed(seed, network);
     const signer = (account: number, index: number) =>
-      bitcoin.ECPair.fromWIF(
-        node.derive(account).derive(index).toWIF(),
-        network
-      );
+      ECPair.fromPrivateKey(node.derive(account).derive(index).privateKey!);
     const xpub = new Xpub({
       storage,
       explorer,
@@ -128,7 +127,7 @@ describe.skip("testing xpub legacy litecoin transactions", () => {
           associatedDerivations[i][1]
         )
       );
-      psbt.validateSignaturesOfInput(i);
+      psbt.validateSignaturesOfInput(i, ecc.verify);
     });
     psbt.finalizeAllInputs();
     const rawTxHex = psbt.extractTransaction().toHex();

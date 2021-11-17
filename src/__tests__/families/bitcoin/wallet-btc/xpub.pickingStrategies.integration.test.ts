@@ -1,16 +1,19 @@
-import * as bip32 from "bip32";
-import * as bip39 from "bip39";
-import * as bitcoin from "bitcoinjs-lib";
-import coininfo from "coininfo";
 import BigNumber from "bignumber.js";
+import BIP32Factory from "bip32";
+import * as bip39 from "bip39";
+import coininfo from "coininfo";
+import { ECPair } from 'ecpair';
+import * as ecc from "tiny-secp256k1";
+import Crypto from "../../../../families/bitcoin/wallet-btc/crypto/bitcoin";
+import BitcoinLikeExplorer from "../../../../families/bitcoin/wallet-btc/explorer";
+import { CoinSelect } from "../../../../families/bitcoin/wallet-btc/pickingstrategies/CoinSelect";
+import { DeepFirst } from "../../../../families/bitcoin/wallet-btc/pickingstrategies/DeepFirst";
+import { Merge } from "../../../../families/bitcoin/wallet-btc/pickingstrategies/Merge";
+import BitcoinLikeStorage from "../../../../families/bitcoin/wallet-btc/storage";
 import { DerivationModes } from "../../../../families/bitcoin/wallet-btc/types";
 import Xpub from "../../../../families/bitcoin/wallet-btc/xpub";
-import BitcoinLikeExplorer from "../../../../families/bitcoin/wallet-btc/explorer";
-import Crypto from "../../../../families/bitcoin/wallet-btc/crypto/bitcoin";
-import BitcoinLikeStorage from "../../../../families/bitcoin/wallet-btc/storage";
-import { Merge } from "../../../../families/bitcoin/wallet-btc/pickingstrategies/Merge";
-import { DeepFirst } from "../../../../families/bitcoin/wallet-btc/pickingstrategies/DeepFirst";
-import { CoinSelect } from "../../../../families/bitcoin/wallet-btc/pickingstrategies/CoinSelect";
+
+const bip32 = BIP32Factory(ecc);
 
 describe("testing xpub legacy transactions", () => {
   const network = coininfo.bitcoin.test.toBitcoinJS();
@@ -23,7 +26,7 @@ describe("testing xpub legacy transactions", () => {
   const seed = bip39.mnemonicToSeedSync("test1 test1 test1");
   const node = bip32.fromSeed(seed, network);
   const signer = (account: number, index: number) =>
-    bitcoin.ECPair.fromWIF(node.derive(account).derive(index).toWIF(), network);
+    ECPair.fromPrivateKey(node.derive(account).derive(index).privateKey!);
   const xpub = new Xpub({
     storage,
     explorer: new BitcoinLikeExplorer({
@@ -377,8 +380,8 @@ describe("testing xpub legacy transactions", () => {
     expect(res.unspentUtxos.length).toEqual(3);
     expect(
       Number(res.unspentUtxos[0].value) +
-        Number(res.unspentUtxos[1].value) +
-        Number(res.unspentUtxos[2].value)
+      Number(res.unspentUtxos[1].value) +
+      Number(res.unspentUtxos[2].value)
     ).toEqual(5000000000 + 600000000 + 100000000);
   }, 180000);
 });

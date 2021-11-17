@@ -1,9 +1,9 @@
 // from https://github.com/LedgerHQ/xpub-scan/blob/master/src/actions/deriveAddresses.ts
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { bech32, bech32m } from "bech32";
+// import { bech32, bech32m } from "bech32";
 import * as bjs from "bitcoinjs-lib";
-import { publicKeyTweakAdd } from "secp256k1";
+//import * as ecc from "tiny-secp256k1";
 import { DerivationModes } from "../types";
 import Base from "./base";
 
@@ -20,43 +20,43 @@ import Base from "./base";
  * TODO: Replace with bitcoinjs-lib call
  */
 /* eslint-disable */
-function fromBech32(address: string): {
-  version: number;
-  prefix: string;
-  data: Buffer;
-} {
-  let result;
-  let version;
-  try {
-    result = bech32.decode(address);
-  } catch (e) {}
+// function fromBech32(address: string): {
+//   version: number;
+//   prefix: string;
+//   data: Buffer;
+// } {
+//   let result;
+//   let version;
+//   try {
+//     result = bech32.decode(address);
+//   } catch (e) {}
 
-  if (result) {
-    version = result.words[0];
-    if (version !== 0) throw new TypeError(address + " uses wrong encoding");
-  } else {
-    result = bech32m.decode(address);
-    version = result.words[0];
-    if (version === 0) throw new TypeError(address + " uses wrong encoding");
-  }
+//   if (result) {
+//     version = result.words[0];
+//     if (version !== 0) throw new TypeError(address + " uses wrong encoding");
+//   } else {
+//     result = bech32m.decode(address);
+//     version = result.words[0];
+//     if (version === 0) throw new TypeError(address + " uses wrong encoding");
+//   }
 
-  const data = bech32.fromWords(result.words.slice(1));
+//   const data = bech32.fromWords(result.words.slice(1));
 
-  return {
-    version,
-    prefix: result.prefix,
-    data: Buffer.from(data),
-  };
-}
+//   return {
+//     version,
+//     prefix: result.prefix,
+//     data: Buffer.from(data),
+//   };
+// }
 
-function toBech32(data: Buffer, version: number, prefix: string): string {
-  const words = bech32.toWords(data);
-  words.unshift(version);
+// function toBech32(data: Buffer, version: number, prefix: string): string {
+//   const words = bech32.toWords(data);
+//   words.unshift(version);
 
-  return version === 0
-    ? bech32.encode(prefix, words)
-    : bech32m.encode(prefix, words);
-}
+//   return version === 0
+//     ? bech32.encode(prefix, words)
+//     : bech32m.encode(prefix, words);
+// }
 /* eslint-enable */
 
 // This function expects a valid base58check address or a valid
@@ -74,7 +74,7 @@ function toOutputScriptTemporary(
   } catch (e) {
     // It's not a base58 address, so it's a segwit address
   }
-  const decodeBech32 = fromBech32(validAddress);
+  const decodeBech32 = bjs.address.fromBech32(validAddress);
   return bjs.script.compile([
     // OP_0 is encoded as 0x00, but OP_1 through OP_16 are encoded as 0x51 though 0x60, see BIP173
     decodeBech32.version + (decodeBech32.version > 0 ? 0x50 : 0),
@@ -140,7 +140,7 @@ class Bitcoin extends Base {
   }
 
   private tryBech32(address: string): boolean {
-    const result = fromBech32(address);
+    const result = bjs.address.fromBech32(address);
     if (this.network.bech32 !== result.prefix) {
       // Address doesn't use the expected human-readable part ${network.bech32}
       return false;
@@ -175,13 +175,6 @@ class Bitcoin extends Base {
     return false;
   }
 
-  private hashTapTweak(x: Buffer): Buffer {
-    // hash_tag(x) = SHA256(SHA256(tag) || SHA256(tag) || x), see BIP340
-    // See https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki#specification
-    const h = bjs.crypto.sha256(Buffer.from("TapTweak", "utf-8"));
-    return bjs.crypto.sha256(Buffer.concat([h, h, x]));
-  }
-
   private getTaprootAddress(
     xpub: string,
     account: number,
@@ -194,20 +187,16 @@ class Bitcoin extends Base {
     // https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki#public-key-conversion
     const schnorrInternalPubkey = ecdsaPubkey.slice(1);
 
-    const evenEcdsaPubkey = Buffer.concat([
-      Buffer.from([0x02]),
-      schnorrInternalPubkey,
-    ]);
-    const tweak = this.hashTapTweak(schnorrInternalPubkey);
+    const tweak = bjs.crypto.taggedHash("TapTweak", schnorrInternalPubkey);
 
     // Q = P + int(hash_TapTweak(bytes(P)))G
-    const outputEcdsaKey = Buffer.from(
-      publicKeyTweakAdd(evenEcdsaPubkey, tweak)
-    );
-    // Convert to schnorr.
-    const outputSchnorrKey = outputEcdsaKey.slice(1);
-    // Create address
-    return toBech32(outputSchnorrKey, 1, this.network.bech32);
+    const outputEcdsaKey = Buffer.from("abcd", "hex");//ecc.xOnlyPointAddTweak(schnorrInternalPubkey, tweak);
+    if (outputEcdsaKey == null) {
+      throw Error("Couldn't tweak internal key!")
+    }
+
+    // Create address    
+    return bjs.address.toBech32(Buffer.from(outputEcdsaKey/*.xOnlyPubkey*/), 1, this.network.bech32);
   }
 
   isTaprootAddress(address: string): boolean {

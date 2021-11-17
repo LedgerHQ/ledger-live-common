@@ -1,11 +1,11 @@
 import * as bjs from "bitcoinjs-lib";
-import * as bip32 from "bip32";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { toOutputScript } from "bitcoinjs-lib/src/address";
 import { bech32 } from "bech32";
 import { DerivationModes } from "../types";
 import { ICrypto } from "./types";
+import { bip32 } from "./base";
 import Base from "./base";
 
 // Todo copy paste from bitcoin.ts. we can merge them later

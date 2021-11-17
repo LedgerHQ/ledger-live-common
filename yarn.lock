@@ -2614,15 +2614,15 @@ bech32@1.1.4, bech32@^1.1.2, bech32@^1.1.4:
   resolved "https://registry.npmjs.org/bech32/-/bech32-1.1.4.tgz"
   integrity sha512-s0IrSOzLlbvX7yp4WBfPITzpAU8sqQcpsmwXDiKwrG4r491vwCO/XpejasRNl0piBMe/DvP4Tz0mIS/X1DPJBQ==
 
+bech32@2.0.0, bech32@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/bech32/-/bech32-2.0.0.tgz#078d3686535075c8c79709f054b1b226a133b355"
+  integrity sha512-LcknSilhIGatDAsY1ak2I8VtGaHNhgMSYVxFrGLXv+xLHytaKZKcaUJJUE7qmBr7h33o5YQwP55pMI0xmkpJwg==
+
 bech32@=1.1.3:
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/bech32/-/bech32-1.1.3.tgz#bd47a8986bbb3eec34a56a097a84b8d3e9a2dfcd"
   integrity sha512-yuVFUvrNcoJi0sv5phmqc6P+Fl1HjRDRNOOkHY2X/3LBy2bIGNSFx4fZ95HMaXHupuS7cZR15AsvtmCIF4UEyg==
-
-bech32@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/bech32/-/bech32-2.0.0.tgz#078d3686535075c8c79709f054b1b226a133b355"
-  integrity sha512-LcknSilhIGatDAsY1ak2I8VtGaHNhgMSYVxFrGLXv+xLHytaKZKcaUJJUE7qmBr7h33o5YQwP55pMI0xmkpJwg==
 
 benchmark@^2.1.4:
   version "2.1.4"
@@ -2674,7 +2674,7 @@ bip32-path@0.4.2, bip32-path@^0.4.2:
   resolved "https://registry.npmjs.org/bip32-path/-/bip32-path-0.4.2.tgz"
   integrity sha1-XbBBataCJxLwd4NuJVe4aXwMfJk=
 
-bip32@2.0.6, bip32@^2.0.4, bip32@^2.0.6:
+bip32@2.0.6, bip32@^2.0.4:
   version "2.0.6"
   resolved "https://registry.npmjs.org/bip32/-/bip32-2.0.6.tgz"
   integrity sha512-HpV5OMLLGTjSVblmrtYRfFFKuQB+GArM0+XP8HGWfJ5vxYBqo+DesvJwOdC2WJ3bCkZShGf0QIfoIpeomVzVdA==
@@ -2684,6 +2684,18 @@ bip32@2.0.6, bip32@^2.0.4, bip32@^2.0.6:
     create-hash "^1.2.0"
     create-hmac "^1.1.7"
     tiny-secp256k1 "^1.1.3"
+    typeforce "^1.11.5"
+    wif "^2.0.6"
+
+bip32@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/bip32/-/bip32-3.0.0.tgz#d29e8a99c0efb6da3553c914f56129550edce2f2"
+  integrity sha512-lcIPU2oY8Lvc9lPN66aCwqgDC0kZmzTHrU2Ka1KhJnmujIBpF7igfpBmZRXAwGMiFuhGm0avdVrZre9o7OdpsQ==
+  dependencies:
+    "@types/node" "10.12.18"
+    bs58check "^2.1.1"
+    create-hash "^1.2.0"
+    create-hmac "^1.1.7"
     typeforce "^1.11.5"
     wif "^2.0.6"
 
@@ -2738,6 +2750,19 @@ bitcoinjs-lib@^5.2.0:
     tiny-secp256k1 "^1.1.1"
     typeforce "^1.11.3"
     varuint-bitcoin "^1.0.4"
+    wif "^2.0.1"
+
+bitcoinjs-lib@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/bitcoinjs-lib/-/bitcoinjs-lib-6.0.0.tgz#42e6a3d7be47da050f371d37e5a88762b603bd95"
+  integrity sha512-KYx81rVE4LDbZcHfE375NCX4CDeZuz7HECZm/KAmqKMY2jpD3ZcUnI7Fm+QX5EMF/xmtzzfrNL/BNxo8o0iOQg==
+  dependencies:
+    bech32 "^2.0.0"
+    bip174 "^2.0.1"
+    bs58check "^2.1.2"
+    create-hash "^1.1.0"
+    typeforce "^1.11.3"
+    varuint-bitcoin "^1.1.2"
     wif "^2.0.1"
 
 bitcore-lib-cash@^8.25.22:
@@ -3411,6 +3436,16 @@ domexception@^2.0.1:
   integrity sha512-yxJ2mFy/sibVQlu5qHjOkf9J3K6zgmCxgJ94u2EdvDOV09H+32LtRswEcUsmUWN72pVLOEnTSRaIVVzVQgS0dg==
   dependencies:
     webidl-conversions "^5.0.0"
+
+ecpair@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/ecpair/-/ecpair-1.0.1.tgz#26380cbd7a5666d75b18f3b51d7bc9908129046a"
+  integrity sha512-5qPa0GVZJI1FAMS+4GZBWXS/bzY7/p2ehuGuHPqvsRWe2yXDc4Bgvf89BMJz87pqcW7+ogGQkLZfwflMr/RPgQ==
+  dependencies:
+    randombytes "^2.0.1"
+    tiny-secp256k1 "^1.1.6"
+    typeforce "^1.11.3"
+    wif "^2.0.1"
 
 ed2curve@^0.3.0:
   version "0.3.0"
@@ -6502,7 +6537,7 @@ scryptsy@^2.1.0:
   resolved "https://registry.npmjs.org/scryptsy/-/scryptsy-2.1.0.tgz"
   integrity sha512-1CdSqHQowJBnMAFyPEBRfqag/YP9OF394FV+4YREIJX4ljD7OxvQRDayyoyyCk+senRjSkP6VnUNQmVQqB6g7w==
 
-secp256k1@4.0.2, secp256k1@^4.0.1, secp256k1@^4.0.2:
+secp256k1@4.0.2, secp256k1@^4.0.1:
   version "4.0.2"
   resolved "https://registry.npmjs.org/secp256k1/-/secp256k1-4.0.2.tgz"
   integrity sha512-UDar4sKvWAksIlfX3xIaQReADn+WFnHvbVujpcbr+9Sf/69odMwy2MUsz5CKLQgX9nsIyrjuxL2imVyoNHa3fg==
@@ -6900,7 +6935,7 @@ timemachine@^0.3.2:
   resolved "https://registry.npmjs.org/timemachine/-/timemachine-0.3.2.tgz"
   integrity sha512-JNKeKZXQJc8UC19JcIq0XziBud+fNNJfatZ57lwk+o1O9mpW2FmzWvRw7FTTOKuN6M0zsjGIlNi0O0QrF5WVRA==
 
-tiny-secp256k1@1.1.6, tiny-secp256k1@^1.1.1, tiny-secp256k1@^1.1.3:
+tiny-secp256k1@1.1.6, tiny-secp256k1@^1.1.1, tiny-secp256k1@^1.1.3, tiny-secp256k1@^1.1.6:
   version "1.1.6"
   resolved "https://registry.npmjs.org/tiny-secp256k1/-/tiny-secp256k1-1.1.6.tgz"
   integrity sha512-FmqJZGduTyvsr2cF3375fqGHUovSwDi/QytexX1Se4BPuPZpTE5Ftp5fg+EFSuEf3lhZqgCRjEG3ydUQ/aNiwA==
@@ -6910,6 +6945,13 @@ tiny-secp256k1@1.1.6, tiny-secp256k1@^1.1.1, tiny-secp256k1@^1.1.3:
     create-hmac "^1.1.7"
     elliptic "^6.4.0"
     nan "^2.13.2"
+
+tiny-secp256k1@2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/tiny-secp256k1/-/tiny-secp256k1-2.1.0.tgz#7c14fd7a786436960cf74e2c59e3fc0637250856"
+  integrity sha512-xeCZkjxSb12CyxaEOF8K2JK0+Fk8P0HD1Gq0dpzf4+z5XOEWxqd/dV0ANLI2MdkR1zxbkUdXLvYYLHiK4wwfnQ==
+  dependencies:
+    uint8array-tools "0.0.6"
 
 tmpl@1.0.x:
   version "1.0.5"
@@ -7117,6 +7159,11 @@ typescript@^4.4.4:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.4.tgz#2cd01a1a1f160704d3101fd5a58ff0f9fcb8030c"
   integrity sha512-DqGhF5IKoBl8WNf8C1gu8q0xZSInh9j1kJJMqT3a94w1JzVaBU4EXOSMrz9yDqMT0xt3selp83fuFMQ0uzv6qA==
 
+uint8array-tools@0.0.6:
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/uint8array-tools/-/uint8array-tools-0.0.6.tgz#821c5c575bbf63fd0703650380bfa3ac11fb2a55"
+  integrity sha512-aIvEHNRX1AlOYAr6qSUjQBn4mCduxx6MtC967aRDTb2UUBPj0Ix2ZFQDcmXUUO/UxRPHcw1f5a5nVbCSKDSOqA==
+
 unbox-primitive@^1.0.1:
   version "1.0.1"
   resolved "https://registry.npmjs.org/unbox-primitive/-/unbox-primitive-1.0.1.tgz"
@@ -7205,7 +7252,7 @@ v8-to-istanbul@^8.1.0:
     convert-source-map "^1.6.0"
     source-map "^0.7.3"
 
-varuint-bitcoin@1.1.2, varuint-bitcoin@^1.0.4:
+varuint-bitcoin@1.1.2, varuint-bitcoin@^1.0.4, varuint-bitcoin@^1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/varuint-bitcoin/-/varuint-bitcoin-1.1.2.tgz#e76c138249d06138b480d4c5b40ef53693e24e92"
   integrity sha512-4EVb+w4rx+YfVM32HQX42AbbT7/1f5zwAYhIujKXKk8NQK+JfRVl3pqT3hjNn/L+RstigmGGKVwHA/P0wgITZw==

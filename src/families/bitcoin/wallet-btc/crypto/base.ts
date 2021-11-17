@@ -1,13 +1,14 @@
 // from https://github.com/LedgerHQ/xpub-scan/blob/master/src/actions/deriveAddresses.ts
 
-import * as bjs from "bitcoinjs-lib";
-import * as bip32 from "bip32";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { toOutputScript } from "bitcoinjs-lib/src/address";
 import bs58check from "bs58check";
 import { DerivationModes } from "../types";
 import { ICrypto } from "./types";
+import * as ecc from "tiny-secp256k1";
+import * as bjs from "bitcoinjs-lib";
+import BIP32Factory from "bip32";
 
 export function fallbackValidateAddress(address: string): boolean {
   try {
@@ -23,6 +24,8 @@ export function fallbackValidateAddress(address: string): boolean {
   }
   return true;
 }
+
+export const bip32 = BIP32Factory(ecc);
 
 class Base implements ICrypto {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

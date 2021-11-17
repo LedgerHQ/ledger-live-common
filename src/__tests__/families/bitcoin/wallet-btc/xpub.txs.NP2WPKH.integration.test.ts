@@ -1,4 +1,6 @@
-import * as bip32 from "bip32";
+import BIP32Factory from "bip32";
+import * as ecc from "tiny-secp256k1";
+import { ECPair } from "ecpair";
 import * as bip39 from "bip39";
 import * as bitcoin from "bitcoinjs-lib";
 import coininfo from "coininfo";
@@ -13,6 +15,7 @@ import { Merge } from "../../../../families/bitcoin/wallet-btc/pickingstrategies
 import * as utils from "../../../../families/bitcoin/wallet-btc/utils";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const bip32 = BIP32Factory(ecc);
 
 // FIXME Skipped because Praline required on CI
 describe.skip("testing xpub segwit transactions", () => {
@@ -32,7 +35,7 @@ describe.skip("testing xpub segwit transactions", () => {
     const seed = bip39.mnemonicToSeedSync(`test${i} test${i} test${i}`);
     const node = bip32.fromSeed(seed, network);
     const signer = (account: number, index: number) =>
-      bitcoin.ECPair.fromWIF(
+      ECPair.fromWIF(
         node.derive(account).derive(index).toWIF(),
         network
       );
@@ -151,7 +154,7 @@ describe.skip("testing xpub segwit transactions", () => {
           associatedDerivations[i][1]
         )
       );
-      psbt.validateSignaturesOfInput(i);
+      psbt.validateSignaturesOfInput(i, ecc.verify);
     });
     psbt.finalizeAllInputs();
     const rawTxHex = psbt.extractTransaction().toHex();
