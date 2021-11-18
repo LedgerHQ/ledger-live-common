@@ -10,6 +10,7 @@ import {
 import type { Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
 import { isValidAddress, isSelfTransaction } from "./logic";
+import getEstimatedFees from "./js-getFeesForTransaction";
 
 const getTransactionStatus = async (
   a: Account,
@@ -31,7 +32,7 @@ const getTransactionStatus = async (
     errors.fees = new FeeNotLoaded();
   }
 
-  const estimatedFees = t.fees || new BigNumber(0);
+  const estimatedFees = await getEstimatedFees(t);
   if (estimatedFees.gt(a.balance)) {
     errors.amount = new NotEnoughBalance();
   }
