@@ -141,12 +141,7 @@ class Bitcoin extends Base {
   }
 
   private tryBech32(address: string): boolean {
-    let result;
-    try {
-      result = fromBech32(address);
-    } catch {
-      return false;
-    }
+    const result = fromBech32(address);
     if (this.network.bech32 !== result.prefix) {
       // Address doesn't use the expected human-readable part ${network.bech32}
       return false;
