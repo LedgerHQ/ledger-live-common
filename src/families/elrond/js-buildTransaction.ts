@@ -19,15 +19,21 @@ export const buildTransaction = async (
   const nonce = getNonce(a);
   let { gasPrice, gasLimit, chainID }: NetworkInfo = await getNetworkConfig();
 
+  let transactionValue;
+  
   if (ta) {
     t.data = encodeESDTTransfer(t, ta);
     t.amount = new BigNumber(0); //amount of EGLD to be sent should be 0 in an ESDT transafer
     gasLimit = ESDT_TRANSFER_GAS; //gasLimit for and ESDT transfer
-  }
 
-  const transactionValue = t.useAllAmount
-  ? a.balance.minus(t.fees ? t.fees : new BigNumber(0))
-  : t.amount;
+    transactionValue = t.useAllAmount
+    ? ta.balance : t.amount;
+  }
+  else {
+    transactionValue = t.useAllAmount
+    ? a.balance.minus(t.fees ? t.fees : new BigNumber(0))
+    : t.amount;  
+  }
 
   const unsigned: ElrondProtocolTransaction = {
     nonce,
