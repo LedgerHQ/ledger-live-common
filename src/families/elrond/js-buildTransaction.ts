@@ -4,6 +4,7 @@ import { encodeESDTTransfer, getNonce } from "./logic";
 import { getNetworkConfig } from "./api";
 import { ESDT_TRANSFER_GAS, HASH_TRANSACTION } from "./constants";
 import BigNumber from "bignumber.js";
+import getEstimatedFees from "./js-getFeesForTransaction";
 
 /**
  *
@@ -20,14 +21,11 @@ export const buildTransaction = async (
   let { gasPrice, gasLimit, chainID }: NetworkInfo = await getNetworkConfig();
 
   let transactionValue;
-  
+
   if (ta) {
     t.data = encodeESDTTransfer(t, ta);
-    t.amount = new BigNumber(0); //amount of EGLD to be sent should be 0 in an ESDT transafer
     gasLimit = ESDT_TRANSFER_GAS; //gasLimit for and ESDT transfer
-
-    transactionValue = t.useAllAmount
-    ? ta.balance : t.amount;
+    transactionValue = new BigNumber(0); //amount of EGLD to be sent should be 0 in an ESDT transfer
   }
   else {
     transactionValue = t.useAllAmount
