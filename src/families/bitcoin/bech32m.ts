@@ -1,8 +1,9 @@
 // Ported from https://github.com/bitcoinjs/bech32/tree/605655d6b37a782345549cd1388db688a96ad56f
 // until we can use bech32 2.0.0
 // We can't directly use bech32 2.0.0 because many of our dependencies are still using bech32 ^1.1.3
-// which conflict on mobile
+// which conflict on mobile (root cause of https://ledgerhq.atlassian.net/browse/LL-7930)
 // FIXME Remove that file and use bech32 2.0.0 when all dependencies also uses it.
+
 const ENCODING_CONST = 0x2bc830a3;
 const ALPHABET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 const ALPHABET_MAP: { [key: string]: number } = {};
