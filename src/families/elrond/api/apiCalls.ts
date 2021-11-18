@@ -122,11 +122,13 @@ export default class ElrondApi {
     let allTransactions: Transaction[] = [];
     let from = 0;
     while (from <= transactionsCount) {
-      const { data: transactions } = await network({
+      let { data: transactions } = await network({
         method: "GET",
         url: `${this.API_URL}/accounts/${addr}/transactions?after=${startAt}&from=${from}&size=${MAX_PAGINATION_SIZE}`,
       });
 
+      transactions = transactions.filter((transaction) => !transaction.tokenIdentifier);
+      
       allTransactions = [...allTransactions, ...transactions];
 
       from = from + MAX_PAGINATION_SIZE;
@@ -136,15 +138,29 @@ export default class ElrondApi {
   }
 
   async getESDTTransactionsForAddress(addr: string, token: string): Promise<Transaction[]> {
-    const transactions = await this.getHistory(addr, 0);
+    const { data: tokenTransactionsCount } = await network({
+      method: "GET",
+      url: `${this.API_URL}/accounts/${addr}/transactions/count?token=${token}`,
+    });
 
-    const esdtTransactions = transactions.filter(({tokenIdentifier}) => tokenIdentifier && tokenIdentifier==token);
+    let allTokenTransactions: Transaction[] = [];
+    let from = 0;
+    while (from <= tokenTransactionsCount) {
+      const { data: tokenTransactions } = await network({
+        method: "GET",
+        url: `${this.API_URL}/accounts/${addr}/transactions?token=${token}&from=${from}&size=${MAX_PAGINATION_SIZE}`,
+      });
 
-    for (let esdtTransaction of esdtTransactions) {
+      allTokenTransactions = [...allTokenTransactions, ...tokenTransactions];
+
+      from = from + MAX_PAGINATION_SIZE;
+    }
+
+    for (let esdtTransaction of allTokenTransactions) {
       esdtTransaction.transfer = ElrondTransferOptions.esdt;
     }
 
-    return esdtTransactions;
+    return allTokenTransactions;
   }
 
   async getESDTTokensForAddress(addr: string): Promise<ESDTToken[]> {
