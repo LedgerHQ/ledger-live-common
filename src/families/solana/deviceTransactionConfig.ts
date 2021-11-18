@@ -1,7 +1,7 @@
 import type { AccountLike, Account } from "../../types";
 import type {
   Command,
-  CreateAssociatedTokenAccountCommand,
+  TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
   TransferCommand,
@@ -19,27 +19,23 @@ function getDeviceTransactionConfig({
   parentAccount: Account | null | undefined;
   transaction: Transaction;
 }): Array<DeviceTransactionField> {
-  switch (transaction.state.kind) {
-    case "prepared":
-      const { commandDescriptor } = transaction.state;
-      switch (commandDescriptor.status) {
-        case "valid":
-          return fieldsForCommand(commandDescriptor);
-        case "invalid":
-          throw new Error("unexpected invalid command");
-        default:
-          return assertUnreachable(commandDescriptor);
-      }
-    case "unprepared":
-      throw new Error("unexpected unprepared transaction");
+  const { commandDescriptor } = transaction.model;
+  if (commandDescriptor === undefined) {
+    throw new Error("missing command descriptor");
+  }
+  switch (commandDescriptor.status) {
+    case "valid":
+      return fieldsForCommand(commandDescriptor);
+    case "invalid":
+      throw new Error("unexpected invalid command");
     default:
-      return assertUnreachable(transaction.state);
+      return assertUnreachable(commandDescriptor);
   }
 }
 
 export default getDeviceTransactionConfig;
 function fieldsForCommand(
-  commandDescriptor: ValidCommandDescriptor<Command>
+  commandDescriptor: ValidCommandDescriptor
 ): DeviceTransactionField[] {
   const { command } = commandDescriptor;
   switch (command.kind) {
@@ -47,7 +43,7 @@ function fieldsForCommand(
       return fieldsForTransfer(command);
     case "token.transfer":
       return fieldsForTokenTransfer(command);
-    case "token.createAssociatedTokenAccount":
+    case "token.createATA":
       return fieldsForCreateATA(command);
     default:
       return assertUnreachable(command);
@@ -127,7 +123,7 @@ function fieldsForTokenTransfer(
 }
 
 function fieldsForCreateATA(
-  command: CreateAssociatedTokenAccountCommand
+  command: TokenCreateATACommand
 ): DeviceTransactionField[] {
   const fields: Array<DeviceTransactionField> = [];
 

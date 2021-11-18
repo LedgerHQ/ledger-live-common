@@ -12,10 +12,10 @@ const createTransaction = (mainAccount: Account): Transaction => {
     family: "solana",
     amount: new BigNumber(0),
     recipient: "",
-    state: {
-      kind: "unprepared",
-      mode: {
-        kind: "transfer",
+    model: {
+      kind: "transfer",
+      uiState: {
+        memo: undefined,
       },
     },
   };

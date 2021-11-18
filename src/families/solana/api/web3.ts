@@ -12,7 +12,7 @@ import { chunk } from "lodash";
 import { encodeOperationId } from "../../../operation";
 import { Operation, OperationType } from "../../../types";
 import {
-  CreateAssociatedTokenAccountCommand,
+  TokenCreateATACommand,
   TokenTransferCommand,
   TransferCommand,
 } from "../types";
@@ -493,7 +493,7 @@ export async function buildCreateAssociatedTokenAccountTransaction({
   mint,
   owner,
   associatedTokenAccountAddress,
-}: CreateAssociatedTokenAccountCommand): Promise<Transaction> {
+}: TokenCreateATACommand): Promise<Transaction> {
   const ownerPubKey = new PublicKey(owner);
   const mintPubkey = new PublicKey(mint);
   const associatedTokenAccPubkey = new PublicKey(associatedTokenAccountAddress);

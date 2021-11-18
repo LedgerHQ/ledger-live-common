@@ -8,7 +8,7 @@ import type {
 import { open, close } from "../../hw";
 import type {
   Command,
-  CreateAssociatedTokenAccountCommand,
+  TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
   TransferCommand,
@@ -20,30 +20,27 @@ import BigNumber from "bignumber.js";
 import { encodeOperationId } from "../../operation";
 import { assertUnreachable } from "./utils";
 
-const buildOptimisticOperation = async (
+const buildOptimisticOperation = (
   account: Account,
   transaction: Transaction
-): Promise<Operation> => {
-  const { state } = transaction;
-  switch (state.kind) {
-    case "prepared":
-      const { commandDescriptor } = state;
-      switch (commandDescriptor.status) {
-        case "valid":
-          return buildOptimisticOperationForCommand(
-            account,
-            transaction,
-            commandDescriptor
-          );
-        case "invalid":
-          throw new Error("unexpected transaction state");
-        default:
-          assertUnreachable(commandDescriptor);
-      }
-    case "unprepared":
-      throw new Error("unexpected transaction state");
+): Operation => {
+  if (transaction.model.commandDescriptor === undefined) {
+    throw new Error("command descriptor is missing");
+  }
+
+  const { commandDescriptor } = transaction.model;
+
+  switch (commandDescriptor.status) {
+    case "valid":
+      return buildOptimisticOperationForCommand(
+        account,
+        transaction,
+        commandDescriptor
+      );
+    case "invalid":
+      throw new Error("invalid command");
     default:
-      return assertUnreachable(state);
+      return assertUnreachable(commandDescriptor);
   }
 };
 
@@ -108,38 +105,41 @@ export default signOperation;
 function buildOptimisticOperationForCommand(
   account: Account,
   transaction: Transaction,
-  commandDescriptor: ValidCommandDescriptor<Command>
+  commandDescriptor: ValidCommandDescriptor
 ): Operation {
-  switch (commandDescriptor.command.kind) {
+  const { command } = commandDescriptor;
+  switch (command.kind) {
     case "transfer":
       return optimisticOpForTransfer(
         account,
         transaction,
-        commandDescriptor as ValidCommandDescriptor<TransferCommand>
+        command,
+        commandDescriptor
       );
     case "token.transfer":
       return optimisticOpForTokenTransfer(
         account,
         transaction,
-        commandDescriptor as ValidCommandDescriptor<TokenTransferCommand>
+        command,
+        commandDescriptor
       );
-    case "token.createAssociatedTokenAccount":
-      type command = CreateAssociatedTokenAccountCommand;
+    case "token.createATA":
       return optimisticOpForCATA(
         account,
         transaction,
-        commandDescriptor as ValidCommandDescriptor<command>
+        command,
+        commandDescriptor
       );
     default:
-      return assertUnreachable(commandDescriptor.command);
+      return assertUnreachable(command);
   }
 }
 function optimisticOpForTransfer(
   account: Account,
   transaction: Transaction,
-  commandDescriptor: ValidCommandDescriptor<TransferCommand>
+  command: TransferCommand,
+  commandDescriptor: ValidCommandDescriptor
 ): Operation {
-  const { command } = commandDescriptor;
   return {
     ...optimisticOpcommons(transaction, commandDescriptor),
     id: encodeOperationId(account.id, "", "OUT"),
@@ -157,12 +157,12 @@ function optimisticOpForTransfer(
 function optimisticOpForTokenTransfer(
   account: Account,
   transaction: Transaction,
-  commandDescriptor: ValidCommandDescriptor<TokenTransferCommand>
+  command: TokenTransferCommand,
+  commandDescriptor: ValidCommandDescriptor
 ): Operation {
   if (!transaction.subAccountId) {
     throw new Error("sub account id is required for token transfer");
   }
-  const { command } = commandDescriptor;
   return {
     ...optimisticOpcommons(transaction, commandDescriptor),
     id: encodeOperationId(account.id, "", "FEES"),
@@ -194,7 +194,8 @@ function optimisticOpForTokenTransfer(
 function optimisticOpForCATA(
   account: Account,
   transaction: Transaction,
-  commandDescriptor: ValidCommandDescriptor<CreateAssociatedTokenAccountCommand>
+  _: TokenCreateATACommand,
+  commandDescriptor: ValidCommandDescriptor
 ): Operation {
   const opType: OperationType = "OPT_IN";
 
@@ -211,7 +212,7 @@ function optimisticOpForCATA(
 
 function optimisticOpcommons(
   transaction: Transaction,
-  commandDescriptor: ValidCommandDescriptor<Command>
+  commandDescriptor: ValidCommandDescriptor
 ) {
   if (!transaction.feeCalculator) {
     throw new Error("fee calculator is not loaded");

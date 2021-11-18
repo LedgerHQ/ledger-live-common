@@ -2,7 +2,7 @@ import { BigNumber } from "bignumber.js";
 import type {
   Command,
   CommandDescriptor,
-  CreateAssociatedTokenAccountCommand,
+  TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
   TransactionRaw,
@@ -20,11 +20,11 @@ import { toTokenId } from "./logic";
 
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
-  const { family, state, feeCalculator } = tr;
+  const { family, model, feeCalculator } = tr;
   return {
     ...common,
     family,
-    state: JSON.parse(state),
+    model: JSON.parse(model),
     feeCalculator,
   };
 };
@@ -32,11 +32,11 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
 // TODO: not to serialize errors and warnings?
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
-  const { family, state, feeCalculator } = t;
+  const { family, model, feeCalculator } = t;
   return {
     ...common,
     family,
-    state: JSON.stringify(state),
+    model: JSON.stringify(model),
     feeCalculator,
   };
 };
@@ -52,24 +52,17 @@ export const formatTransaction = (
   tx: Transaction,
   mainAccount: Account
 ): string => {
-  switch (tx.state.kind) {
-    case "prepared":
-      switch (tx.state.commandDescriptor.status) {
-        case "valid":
-          return formatCommand(
-            mainAccount,
-            tx,
-            tx.state.commandDescriptor.command
-          );
-        case "invalid":
-          throw new Error("can not format invalid transaction");
-        default:
-          return assertUnreachable(tx.state.commandDescriptor);
-      }
-    case "unprepared":
-      throw new Error("can not format unprepared transaction");
+  if (tx.model.commandDescriptor === undefined) {
+    throw new Error("can not format unprepared transaction");
+  }
+  const { commandDescriptor } = tx.model;
+  switch (commandDescriptor.status) {
+    case "valid":
+      return formatCommand(mainAccount, tx, commandDescriptor.command);
+    case "invalid":
+      throw new Error("can not format invalid transaction");
     default:
-      return assertUnreachable(tx.state);
+      return assertUnreachable(commandDescriptor);
   }
 };
 
@@ -83,7 +76,7 @@ function formatCommand(
       return formatTransfer(mainAccount, tx, command);
     case "token.transfer":
       return formatTokenTransfer(mainAccount, tx, command);
-    case "token.createAssociatedTokenAccount":
+    case "token.createATA":
       return formatCreateATA(mainAccount, tx, command);
     default:
       return assertUnreachable(command);
@@ -141,7 +134,7 @@ function formatTokenTransfer(
 function formatCreateATA(
   mainAccount: Account,
   tx: Transaction,
-  command: CreateAssociatedTokenAccountCommand
+  command: TokenCreateATACommand
 ) {
   const token = getTokenById(toTokenId(command.mint));
   const str = [`  OPT IN TOKEN: ${token.ticker}`].filter(Boolean).join("\n");

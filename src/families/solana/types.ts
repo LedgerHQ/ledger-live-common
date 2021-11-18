@@ -9,43 +9,6 @@ export type CoreAccountSpecifics = Record<string, never>;
 export type CoreOperationSpecifics = Record<string, never>;
 export type CoreCurrencySpecifics = Record<string, never>;
 
-/*
-export type NetworkInfo = {
-  family: "solana";
-  lamportsPerSignature: BigNumber;
-};
-
-export type NetworkInfoRaw = {
-  family: "solana";
-  lamportPerSignature: string;
-};
-*/
-
-/*
-type TokenTransactionSpec = {
-  kind: "prepared";
-  mintAddress: string;
-  decimals: number;
-};
-
-type UnpreparedTokenTransactionSpec = {
-  kind: "unprepared";
-  subAccountId: string;
-};
-
-type TokenTransactionMode = {
-  kind: "token";
-  fundRecipient: boolean;
-  spec: UnpreparedTokenTransactionSpec | TokenTransactionSpec;
-};
-
-type NativeTransactionMode = {
-  kind: "native";
-};
-
-export type TransactionMode = NativeTransactionMode | TokenTransactionMode;
-*/
-
 export type TransferCommand = {
   kind: "transfer";
   sender: string;
@@ -54,8 +17,8 @@ export type TransferCommand = {
   memo?: string;
 };
 
-export type CreateAssociatedTokenAccountCommand = {
-  kind: "token.createAssociatedTokenAccount";
+export type TokenCreateATACommand = {
+  kind: "token.createATA";
   owner: string;
   mint: string;
   associatedTokenAccountAddress: string;
@@ -81,11 +44,11 @@ export type TokenTransferCommand = {
 export type Command =
   | TransferCommand
   | TokenTransferCommand
-  | CreateAssociatedTokenAccountCommand;
+  | TokenCreateATACommand;
 
-export type ValidCommandDescriptor<C extends Command> = {
+export type ValidCommandDescriptor = {
   status: "valid";
-  command: C;
+  command: Command;
   fees?: number;
   warnings?: Record<string, Error>;
 };
@@ -96,48 +59,41 @@ export type InvalidCommandDescriptor = {
   warnings?: Record<string, Error>;
 };
 
-export type CommandDescriptor<C extends Command> =
-  | ValidCommandDescriptor<C>
+export type CommandDescriptor<> =
+  | ValidCommandDescriptor
   | InvalidCommandDescriptor;
 
-export type UnpreparedTransferTransactionMode = {
-  kind: TransferCommand["kind"];
-  memo?: string;
+export type TransferTransaction = {
+  kind: "transfer";
+  uiState: {
+    memo?: string;
+  };
 };
 
-export type UnpreparedTokenTransferTransactionMode = {
-  kind: TokenTransferCommand["kind"];
-  subAccountId: string;
-  memo?: string;
+export type TokenTransferTransaction = {
+  kind: "token.transfer";
+  uiState: {
+    subAccountId: string;
+    memo?: string;
+  };
 };
 
-export type UnpreparedCreateAssociatedTokenAccountTransactionMode = {
-  kind: CreateAssociatedTokenAccountCommand["kind"];
-  tokenId: string;
+export type TokenCreateATATransaction = {
+  kind: "token.createATA";
+  uiState: {
+    tokenId: string;
+  };
 };
 
-export type UnpreparedTransactionMode =
-  | UnpreparedTransferTransactionMode
-  | UnpreparedTokenTransferTransactionMode
-  | UnpreparedCreateAssociatedTokenAccountTransactionMode;
-
-export type UnpreparedTransactionState = {
-  kind: "unprepared";
-  mode: UnpreparedTransactionMode;
-};
-
-export type PreparedTransactionState = {
-  kind: "prepared";
-  commandDescriptor: CommandDescriptor<Command>;
-};
-
-export type TransactionState =
-  | PreparedTransactionState
-  | UnpreparedTransactionState;
+export type TransactionModel = { commandDescriptor?: CommandDescriptor } & (
+  | TransferTransaction
+  | TokenTransferTransaction
+  | TokenCreateATATransaction
+);
 
 export type Transaction = TransactionCommon & {
   family: "solana";
-  state: TransactionState;
+  model: TransactionModel;
   feeCalculator?: {
     lamportsPerSignature: number;
   };
@@ -145,7 +101,7 @@ export type Transaction = TransactionCommon & {
 
 export type TransactionRaw = TransactionCommonRaw & {
   family: "solana";
-  state: string;
+  model: string;
   feeCalculator?: {
     lamportsPerSignature: number;
   };

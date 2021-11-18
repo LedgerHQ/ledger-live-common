@@ -40,26 +40,28 @@ import {
 import type {
   Command,
   CommandDescriptor,
-  PreparedTransactionState,
-  CreateAssociatedTokenAccountCommand,
+  TokenCreateATACommand,
+  TokenCreateATATransaction,
   TokenRecipientDescriptor,
   TokenTransferCommand,
+  TokenTransferTransaction,
   Transaction,
+  TransactionModel,
   TransferCommand,
-  UnpreparedCreateAssociatedTokenAccountTransactionMode,
-  UnpreparedTokenTransferTransactionMode,
-  UnpreparedTransactionMode,
-  UnpreparedTransferTransactionMode,
+  TransferTransaction,
+  ValidCommandDescriptor,
 } from "./types";
 import { assertUnreachable } from "./utils";
 
 async function deriveCommandDescriptor(
   mainAccount: Account,
-  tx: Transaction,
-  mode: UnpreparedTransactionMode
-): Promise<CommandDescriptor<Command>> {
+  tx: Transaction
+): Promise<CommandDescriptor> {
   const errors: Record<string, Error> = {};
-  switch (mode.kind) {
+
+  const { model } = tx;
+
+  switch (model.kind) {
     case "transfer":
     case "token.transfer":
       if (!tx.recipient) {
@@ -70,7 +72,7 @@ async function deriveCommandDescriptor(
         errors.recipient = new InvalidAddress();
       }
 
-      if (mode.memo && mode.memo.length > MAX_MEMO_LENGTH) {
+      if (model.uiState.memo && model.uiState.memo.length > MAX_MEMO_LENGTH) {
         errors.memo = errors.memo = new SolanaMemoIsTooLong(undefined, {
           maxLength: MAX_MEMO_LENGTH,
         });
@@ -80,16 +82,16 @@ async function deriveCommandDescriptor(
         return toInvalidStatusCommand(errors);
       }
 
-      return mode.kind === "transfer"
-        ? deriveTransaferCommandDescriptor(mainAccount, tx, mode)
-        : deriveTokenTransferCommandDescriptor(mainAccount, tx, mode);
-    case "token.createAssociatedTokenAccount":
+      return model.kind === "transfer"
+        ? deriveTransaferCommandDescriptor(mainAccount, tx, model)
+        : deriveTokenTransferCommandDescriptor(mainAccount, tx, model);
+    case "token.createATA":
       return deriveCreateAssociatedTokenAccountCommandDescriptor(
         mainAccount,
-        mode
+        model
       );
     default:
-      return assertUnreachable(mode);
+      return assertUnreachable(model);
   }
 }
 
@@ -106,12 +108,11 @@ const prepareTransaction = async (
     patch.feeCalculator = feeCalculator;
   }
 
-  const mode = deriveMode(tx);
+  const txToDeriveFrom = updateModelIfSubAccountIdPresent(tx);
 
   const commandDescriptor = await deriveCommandDescriptor(
     mainAccount,
-    tx,
-    mode
+    txToDeriveFrom
   );
 
   if (commandDescriptor.status === "invalid") {
@@ -144,8 +145,8 @@ const prepareTransaction = async (
     return toInvalidTx(tx, patch, errors);
   }
 
-  patch.state = {
-    kind: "prepared",
+  patch.model = {
+    ...tx.model,
     commandDescriptor,
   };
 
@@ -160,12 +161,15 @@ const prepareTransaction = async (
 const deriveTokenTransferCommandDescriptor = async (
   mainAccount: Account,
   tx: Transaction,
-  mode: UnpreparedTokenTransferTransactionMode
-): Promise<CommandDescriptor<TokenTransferCommand>> => {
+  model: TransactionModel & { kind: TokenTransferTransaction["kind"] }
+): Promise<CommandDescriptor> => {
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
-  // TODO: check all info if changed = revalidate
-  const subAccount = findSubAccountById(mainAccount, mode.subAccountId);
+
+  const subAccount = findSubAccountById(
+    mainAccount,
+    model.uiState.subAccountId
+  );
   if (!subAccount || subAccount.type !== "TokenAccount") {
     throw new Error("subaccount not found");
   }
@@ -229,7 +233,7 @@ const deriveTokenTransferCommandDescriptor = async (
       mintAddress,
       mintDecimals,
       recipientDescriptor: recipientDescriptor,
-      memo: mode.memo,
+      memo: model.uiState.memo,
     },
     fees,
     warnings,
@@ -284,9 +288,9 @@ async function getTokenRecipient(
 
 async function deriveCreateAssociatedTokenAccountCommandDescriptor(
   mainAccount: Account,
-  mode: UnpreparedCreateAssociatedTokenAccountTransactionMode
-): Promise<CommandDescriptor<CreateAssociatedTokenAccountCommand>> {
-  const token = getTokenById(mode.tokenId);
+  model: TransactionModel & { kind: TokenCreateATATransaction["kind"] }
+): Promise<CommandDescriptor> {
+  const token = getTokenById(model.uiState.tokenId);
   const tokenIdParts = token.id.split("/");
   const mint = tokenIdParts[tokenIdParts.length - 1];
 
@@ -303,7 +307,7 @@ async function deriveCreateAssociatedTokenAccountCommandDescriptor(
     status: "valid",
     fees,
     command: {
-      kind: mode.kind,
+      kind: model.kind,
       mint: mint,
       owner: mainAccount.freshAddress,
       associatedTokenAccountAddress,
@@ -314,8 +318,8 @@ async function deriveCreateAssociatedTokenAccountCommandDescriptor(
 async function deriveTransaferCommandDescriptor(
   mainAccount: Account,
   tx: Transaction,
-  mode: UnpreparedTransferTransactionMode
-): Promise<CommandDescriptor<TransferCommand>> {
+  model: TransactionModel & { kind: TransferTransaction["kind"] }
+): Promise<CommandDescriptor> {
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
 
@@ -347,7 +351,7 @@ async function deriveTransaferCommandDescriptor(
       sender: mainAccount.freshAddress,
       recipient: tx.recipient,
       amount: txAmount.toNumber(),
-      memo: mode.memo,
+      memo: model.uiState.memo,
     },
     warnings: Object.keys(warnings).length > 0 ? warnings : undefined,
   };
@@ -362,8 +366,8 @@ function toInvalidTx(
   return {
     ...tx,
     ...patch,
-    state: {
-      kind: "prepared",
+    model: {
+      ...tx.model,
       commandDescriptor: toInvalidStatusCommand(errors, warnings),
     },
   };
@@ -380,22 +384,22 @@ function toInvalidStatusCommand(
   };
 }
 
-function deriveMode(tx: Transaction): UnpreparedTransactionMode {
-  switch (tx.state.kind) {
-    case "prepared":
-      return tx.subAccountId
-        ? {
-            kind: "token.transfer",
-            subAccountId: tx.subAccountId,
-          }
-        : {
-            kind: "transfer",
-          };
-    case "unprepared":
-      return tx.state.mode;
-    default:
-      return assertUnreachable(tx.state);
+// if subaccountid present - it's a token transfer
+function updateModelIfSubAccountIdPresent(tx: Transaction): Transaction {
+  if (tx.subAccountId) {
+    return {
+      ...tx,
+      model: {
+        kind: "token.transfer",
+        uiState: {
+          ...tx.model.uiState,
+          subAccountId: tx.subAccountId,
+        },
+      },
+    };
   }
+
+  return tx;
 }
 
 export default prepareTransaction;

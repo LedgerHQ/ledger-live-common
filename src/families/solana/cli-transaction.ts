@@ -47,10 +47,9 @@ function inferTransactions(
         if (account.type === "Account") {
           const solanaTx: SolanaTransaction = {
             ...transaction,
-            state: {
-              kind: "unprepared",
-              mode: {
-                kind: "transfer",
+            model: {
+              kind: "transfer",
+              uiState: {
                 memo: opts.memo,
               },
             },
@@ -60,15 +59,15 @@ function inferTransactions(
           if (account.type !== "TokenAccount") {
             throw new Error("expected token account");
           }
+          const subAccountId = account.id;
           const solanaTx: SolanaTransaction = {
             ...transaction,
-            subAccountId: account.id,
-            state: {
-              kind: "unprepared",
-              mode: {
-                kind: "token.transfer",
-                subAccountId: account.id,
+            subAccountId,
+            model: {
+              kind: "token.transfer",
+              uiState: {
                 memo: opts.memo,
+                subAccountId,
               },
             },
           };
@@ -91,10 +90,9 @@ function inferTransactions(
 
         const solanaTx: SolanaTransaction = {
           ...transaction,
-          state: {
-            kind: "unprepared",
-            mode: {
-              kind: "token.createAssociatedTokenAccount",
+          model: {
+            kind: "token.createATA",
+            uiState: {
               tokenId: tokenCurrency.id,
             },
           },

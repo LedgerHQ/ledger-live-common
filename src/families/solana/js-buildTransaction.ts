@@ -32,20 +32,17 @@ export const buildOnChainTransaction = async (
 };
 
 function build(tx: Transaction) {
-  switch (tx.state.kind) {
-    case "prepared":
-      switch (tx.state.commandDescriptor.status) {
-        case "valid":
-          return buildForCommand(tx.state.commandDescriptor.command);
-        case "invalid":
-          throw new Error("invalid command");
-        default:
-          return assertUnreachable(tx.state.commandDescriptor);
-      }
-    case "unprepared":
-      throw new Error("unprepared tx");
+  const { commandDescriptor } = tx.model;
+  if (commandDescriptor === undefined) {
+    throw new Error("missing command descriptor");
+  }
+  switch (commandDescriptor.status) {
+    case "valid":
+      return buildForCommand(commandDescriptor.command);
+    case "invalid":
+      throw new Error("can not build invalid command");
     default:
-      return assertUnreachable(tx.state);
+      return assertUnreachable(commandDescriptor);
   }
 }
 
@@ -55,7 +52,7 @@ async function buildForCommand(command: Command): Promise<OnChainTransaction> {
       return buildTransferTransaction(command);
     case "token.transfer":
       return buildTokenTransferTransaction(command);
-    case "token.createAssociatedTokenAccount":
+    case "token.createATA":
       return buildCreateAssociatedTokenAccountTransaction(command);
     default:
       return assertUnreachable(command);
