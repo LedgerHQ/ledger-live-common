@@ -9,6 +9,7 @@ import Elrond from "./hw-app-elrond";
 import { buildTransaction } from "./js-buildTransaction";
 import { getNonce } from "./logic";
 import { findTokenById } from "@ledgerhq/cryptoassets";
+import { CHAIN_ID } from "./constants";
 
 const buildOptimisticOperation = (
   account: Account,
@@ -72,7 +73,9 @@ const signOperation = ({
         if (tokenAccount) {
           const tokenIdentifier = tokenAccount.id.split('+')[1];
           const token = findTokenById(`${tokenIdentifier}`);
-          await elrond.provideESDTInfo(token?.ticker, token?.id.split('/')[2], token?.units[0].magnitude, 'T', token?.ledgerSignature);
+
+          const collectionIdentifierHex = token?.id.split('/')[2];
+          await elrond.provideESDTInfo(token?.ticker, collectionIdentifierHex, token?.units[0].magnitude, CHAIN_ID, token?.ledgerSignature);
         }
 
         const unsignedTx: string = await buildTransaction(
