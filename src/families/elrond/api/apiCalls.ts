@@ -2,7 +2,7 @@ import network from "../../../network";
 import {
   HASH_TRANSACTION,
   METACHAIN_SHARD,
-  TRANSACTIONS_SIZE,
+  MAX_PAGINATION_SIZE,
   ESDT_TRANSFER_GAS,
 } from "../constants";
 import { ElrondProtocolTransaction, ElrondTransferOptions, ESDTToken, NetworkInfo, Transaction } from "../types";
@@ -124,12 +124,12 @@ export default class ElrondApi {
     while (from <= transactionsCount) {
       const { data: transactions } = await network({
         method: "GET",
-        url: `${this.API_URL}/accounts/${addr}/transactions?after=${startAt}&from=${from}&size=${TRANSACTIONS_SIZE}`,
+        url: `${this.API_URL}/accounts/${addr}/transactions?after=${startAt}&from=${from}&size=${MAX_PAGINATION_SIZE}`,
       });
 
       allTransactions = [...allTransactions, ...transactions];
 
-      from = from + TRANSACTIONS_SIZE;
+      from = from + MAX_PAGINATION_SIZE;
     }
 
     return allTransactions;
@@ -148,12 +148,34 @@ export default class ElrondApi {
   }
 
   async getESDTTokensForAddress(addr: string): Promise<ESDTToken[]> {
-    const { data: tokens } = await network({
+    const { data: tokensCount } = await network({
       method: "GET",
-      url: `${this.API_URL}/accounts/${addr}/tokens`
+      url: `${this.API_URL}/accounts/${addr}/tokens/count`
     });
 
-    return tokens;
+    let allTokens: ESDTToken[] = [];
+    let from = 0;
+    while (from <= tokensCount) {
+      const { data: tokens } = await network({
+        method: "GET",
+        url: `${this.API_URL}/accounts/${addr}/tokens?from=${from}&size=${MAX_PAGINATION_SIZE}`
+      });
+
+      allTokens = [...allTokens, ...tokens];
+
+      from = from + MAX_PAGINATION_SIZE;
+    }
+
+    return allTokens;
+  }
+
+  async getESDTTokensCountForAddress(addr: string): Promise<number> {
+    const { data: tokensCount } = await network({
+      method: "GET",
+      url: `${this.API_URL}/accounts/${addr}/tokens/count`
+    });
+
+    return tokensCount;
   }
 
   async getBlockchainBlockHeight(): Promise<number> {

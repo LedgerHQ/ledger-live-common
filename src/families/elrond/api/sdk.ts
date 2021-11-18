@@ -20,12 +20,14 @@ export const getAccount = async (addr: string) => {
     nonce,
   };
 };
+
 export const getValidators = async () => {
   const validators = await api.getValidators();
   return {
     validators,
   };
 };
+
 export const getNetworkConfig = async (): Promise<NetworkInfo> => {
   return await api.getNetworkConfig();
 };
@@ -116,7 +118,8 @@ export const getAccountESDTTokens = async (
 }
 
 export const hasESDTTokens = async(address: string): Promise<boolean> => {
-  return (await getAccountESDTTokens(address)).length > 0;
+  const tokensCount = await api.getESDTTokensCountForAddress(address);
+  return tokensCount > 0;
 }
 
 export const getAccountESDTOperations = async (
