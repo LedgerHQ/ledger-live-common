@@ -320,11 +320,9 @@ async function deriveTransaferCommandDescriptor(
   const warnings: Record<string, Error> = {};
 
   if (!isEd25519Address(tx.recipient)) {
-    errors.recipient = new SolanaAddressOffEd25519();
-    return toInvalidStatusCommand(errors, warnings);
+    warnings.recipientOffCurve = new SolanaAddressOffEd25519();
   }
 
-  // TODO: check if need to run validation again, recipient changed etc..
   const recipientWalletIsUnfunded = !(await isAccountFunded(tx.recipient));
   if (recipientWalletIsUnfunded) {
     warnings.recipient = new SolanaMainAccountNotFunded();
