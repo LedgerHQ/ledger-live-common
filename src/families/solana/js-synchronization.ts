@@ -344,7 +344,7 @@ function txToTokenAccOperation(
     postTokenBalance?.uiTokenAmount.amount ?? 0
   ).minus(new BigNumber(preTokenBalance?.uiTokenAmount.amount ?? 0));
 
-  const txType = delta.eq(0) ? "NONE" : delta.gt(0) ? "IN" : "OUT";
+  const opType = getTokenAccOperationType({ tx: tx.parsed.transaction, delta });
 
   const txHash = tx.info.signature;
 
@@ -354,9 +354,9 @@ function txToTokenAccOperation(
   });
 
   return {
-    id: encodeOperationId(accountId, txHash, txType),
+    id: encodeOperationId(accountId, txHash, opType),
     accountId,
-    type: txType,
+    type: opType,
     hash: txHash,
     date: new Date(tx.info.blockTime * 1000),
     blockHeight: tx.info.slot,
@@ -494,6 +494,32 @@ function getTokenSendersRecipients({
       recipients: [] as string[],
     }
   );
+}
+
+function getTokenAccOperationType({
+  tx,
+  delta,
+}: {
+  tx: ParsedTransaction;
+  delta: BigNumber;
+}): OperationType {
+  const { instructions } = tx.message;
+  const [mainIx, ...otherIxs] = instructions
+    .map((ix) => parseQuiet(ix, tx))
+    .filter(({ program }) => program !== "spl-memo");
+
+  if (mainIx !== undefined && otherIxs.length === 0) {
+    switch (mainIx.program) {
+      case "spl-associated-token-account":
+        switch (mainIx.instruction.type) {
+          case "associate":
+            return "OPT_IN";
+        }
+    }
+  }
+
+  const fallbackType = delta.eq(0) ? "NONE" : delta.gt(0) ? "IN" : "OUT";
+  return fallbackType;
 }
 
 export const sync = makeSync(getAccountShape, postSync);
