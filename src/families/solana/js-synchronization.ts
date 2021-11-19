@@ -22,6 +22,12 @@ import {
   toTokenMint,
 } from "./logic";
 import _, { compact, filter, groupBy, keyBy, toPairs, pipe } from "lodash/fp";
+import { parseQuiet } from "./api/program/parser";
+import {
+  ParsedConfirmedTransactionMeta,
+  ParsedMessageAccount,
+  ParsedTransaction,
+} from "@solana/web3.js";
 
 type OnChainTokenAccount = Awaited<
   ReturnType<typeof getAccount>
@@ -241,28 +247,27 @@ function txToMainAccOperation(
     new BigNumber(preBalances[accountIndex])
   );
 
-  const isFeePayer =
-    message.accountKeys[0].pubkey.toBase58() === accountAddress;
+  const isFeePayer = accountIndex === 0;
+  const txFee = new BigNumber(tx.parsed.meta.fee);
 
-  const fee = new BigNumber(isFeePayer ? tx.parsed.meta.fee : 0);
-
-  const txType: OperationType =
-    isFeePayer && balanceDelta.negated().eq(fee)
-      ? "FEES"
-      : balanceDelta.lt(0)
-      ? "OUT"
-      : balanceDelta.gt(0)
-      ? "IN"
-      : "NONE";
+  const opType = getMainAccOperationType({
+    tx: tx.parsed.transaction,
+    fee: txFee,
+    isFeePayer,
+    balanceDelta,
+  });
 
   const { senders, recipients } = message.accountKeys.reduce(
     (acc, account, i) => {
-      const balanceDelta = new BigNumber(postBalances[i]).minus(
+      const delta = new BigNumber(postBalances[i]).minus(
         new BigNumber(preBalances[i])
       );
-      if (balanceDelta.lt(0)) {
-        acc.senders.push(account.pubkey.toBase58());
-      } else if (balanceDelta.gt(0)) {
+      if (delta.lt(0)) {
+        const shouldConsiderAsSender = i > 0 || !delta.negated().eq(txFee);
+        if (shouldConsiderAsSender) {
+          acc.senders.push(account.pubkey.toBase58());
+        }
+      } else if (delta.gt(0)) {
         acc.recipients.push(account.pubkey.toBase58());
       }
       return acc;
@@ -276,8 +281,20 @@ function txToMainAccOperation(
   const txHash = tx.info.signature;
   const txDate = new Date(tx.info.blockTime * 1000);
 
+  /*
+  const subOperations = message.instructions.reduce((operations, ix) => {
+    const ixDescriptor = parseQuiet(ix, tx.parsed.transaction);
+    //ixDescriptor.program === 'stake'
+  }, [] as Operation[]);
+  */
+
+  const opFee = isFeePayer ? txFee : new BigNumber(0);
+
+  const value = balanceDelta.abs().minus(opFee);
+  const opValue = opType === "OPT_OUT" ? value.negated() : value;
+
   return {
-    id: encodeOperationId(accountId, txHash, txType),
+    id: encodeOperationId(accountId, txHash, opType),
     hash: txHash,
     accountId: accountId,
     hasFailed: !!tx.info.err,
@@ -286,14 +303,12 @@ function txToMainAccOperation(
     extra: {
       memo: tx.info.memo ?? undefined,
     },
-    type: txType,
+    type: opType,
     senders,
     recipients,
     date: txDate,
-    value: balanceDelta.abs().minus(fee),
-    //internalOperations,
-    //subOperations,
-    fee,
+    value: opValue,
+    fee: opFee,
   };
 }
 
@@ -333,7 +348,10 @@ function txToTokenAccOperation(
 
   const txHash = tx.info.signature;
 
-  const owner = assocTokenAcc.info.owner.toBase58();
+  const { senders, recipients } = getTokenSendersRecipients({
+    meta: tx.parsed.meta,
+    accounts: tx.parsed.transaction.message.accountKeys,
+  });
 
   return {
     id: encodeOperationId(accountId, txHash, txType),
@@ -342,11 +360,9 @@ function txToTokenAccOperation(
     hash: txHash,
     date: new Date(tx.info.blockTime * 1000),
     blockHeight: tx.info.slot,
-    // TODO: fix
     fee: new BigNumber(0),
-    recipients: [owner],
-    // TODO: fix
-    senders: [],
+    recipients,
+    senders,
     value: delta.abs(),
     hasFailed: !!tx.info.err,
     extra: {
@@ -363,7 +379,6 @@ function ixDescriptorToPartialOperation(
   const { info } = ixDescriptor.instruction ?? {};
 
   // TODO: fix poor man display
-  /*
   const infoStrValues =
     info &&
     Object.keys(info).reduce((acc, key) => {
@@ -383,6 +398,103 @@ function ixDescriptorToPartialOperation(
   };
 }
 */
+
+function getMainAccOperationType({
+  tx,
+  fee,
+  isFeePayer,
+  balanceDelta,
+}: {
+  tx: ParsedTransaction;
+  fee: BigNumber;
+  isFeePayer: boolean;
+  balanceDelta: BigNumber;
+}): OperationType {
+  const type = getMainAccOperationTypeFromTx(tx);
+
+  if (type !== undefined) {
+    return type;
+  }
+
+  return isFeePayer && balanceDelta.negated().eq(fee)
+    ? "FEES"
+    : balanceDelta.lt(0)
+    ? "OUT"
+    : balanceDelta.gt(0)
+    ? "IN"
+    : "NONE";
+}
+
+function getMainAccOperationTypeFromTx(
+  tx: ParsedTransaction
+): OperationType | undefined {
+  const { instructions } = tx.message;
+  const [mainIx, ...otherIxs] = instructions
+    .map((ix) => parseQuiet(ix, tx))
+    .filter(({ program }) => program !== "spl-memo");
+
+  if (mainIx === undefined || otherIxs.length > 0) {
+    return undefined;
+  }
+
+  switch (mainIx.program) {
+    case "spl-associated-token-account":
+      switch (mainIx.instruction.type) {
+        case "associate":
+          return "OPT_IN";
+      }
+    case "spl-token":
+      switch (mainIx.instruction.type) {
+        case "closeAccount":
+          return "OPT_OUT";
+      }
+    case "stake":
+      switch (mainIx.instruction.type) {
+        case "delegate":
+          return "DELEGATE";
+        case "deactivate":
+          return "UNDELEGATE";
+      }
+    default:
+      return undefined;
+  }
+}
+
+function getTokenSendersRecipients({
+  meta,
+  accounts,
+}: {
+  meta: ParsedConfirmedTransactionMeta;
+  accounts: ParsedMessageAccount[];
+}) {
+  const { preTokenBalances, postTokenBalances } = meta;
+  return accounts.reduce(
+    (accum, account, i) => {
+      const preTokenBalance = preTokenBalances?.find(
+        (b) => b.accountIndex === i
+      );
+      const postTokenBalance = postTokenBalances?.find(
+        (b) => b.accountIndex === i
+      );
+      if (preTokenBalance && postTokenBalance) {
+        const tokenDelta = new BigNumber(
+          postTokenBalance.uiTokenAmount.amount
+        ).minus(new BigNumber(preTokenBalance.uiTokenAmount.amount));
+
+        if (tokenDelta.lt(0)) {
+          accum.senders.push(account.pubkey.toBase58());
+        } else if (tokenDelta.gt(0)) {
+          accum.recipients.push(account.pubkey.toBase58());
+        }
+      }
+      return accum;
+    },
+    {
+      senders: [] as string[],
+      recipients: [] as string[],
+    }
+  );
+}
 
 export const sync = makeSync(getAccountShape, postSync);
 export const scanAccounts = makeScanAccounts(getAccountShape);
