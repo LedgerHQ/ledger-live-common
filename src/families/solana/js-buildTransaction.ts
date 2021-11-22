@@ -5,6 +5,7 @@ import {
   buildTransferTransaction,
   buildTokenTransferTransaction,
   buildCreateAssociatedTokenAccountTransaction,
+  Config,
 } from "./api";
 import { assertUnreachable } from "./utils";
 import { Transaction as OnChainTransaction } from "@solana/web3.js";
@@ -15,9 +16,10 @@ import { Transaction as OnChainTransaction } from "@solana/web3.js";
  */
 export const buildOnChainTransaction = async (
   account: Account,
-  transaction: Transaction
+  transaction: Transaction,
+  config: Config
 ) => {
-  const tx = await build(transaction);
+  const tx = await build(transaction, config);
 
   return [
     tx.compileMessage().serialize(),
@@ -31,14 +33,14 @@ export const buildOnChainTransaction = async (
   ] as const;
 };
 
-function build(tx: Transaction) {
+function build(tx: Transaction, config: Config) {
   const { commandDescriptor } = tx.model;
   if (commandDescriptor === undefined) {
     throw new Error("missing command descriptor");
   }
   switch (commandDescriptor.status) {
     case "valid":
-      return buildForCommand(commandDescriptor.command);
+      return buildForCommand(commandDescriptor.command, config);
     case "invalid":
       throw new Error("can not build invalid command");
     default:
@@ -46,14 +48,17 @@ function build(tx: Transaction) {
   }
 }
 
-async function buildForCommand(command: Command): Promise<OnChainTransaction> {
+async function buildForCommand(
+  command: Command,
+  config: Config
+): Promise<OnChainTransaction> {
   switch (command.kind) {
     case "transfer":
-      return buildTransferTransaction(command);
+      return buildTransferTransaction(command, config);
     case "token.transfer":
-      return buildTokenTransferTransaction(command);
+      return buildTokenTransferTransaction(command, config);
     case "token.createATA":
-      return buildCreateAssociatedTokenAccountTransaction(command);
+      return buildCreateAssociatedTokenAccountTransaction(command, config);
     default:
       return assertUnreachable(command);
   }

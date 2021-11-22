@@ -6,18 +6,16 @@ import {
   ConfirmedSignatureInfo,
   ParsedConfirmedTransaction,
   TransactionInstruction,
+  Cluster,
+  clusterApiUrl,
 } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { chunk } from "lodash";
-import { encodeOperationId } from "../../../operation";
-import { Operation, OperationType } from "../../../types";
 import {
   TokenCreateATACommand,
   TokenTransferCommand,
   TransferCommand,
 } from "../types";
-import { parse } from "./program";
-import { parseQuiet } from "./program/parser";
 import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -32,19 +30,34 @@ import { drainSeqAsyncGen } from "../utils";
 import { map } from "lodash/fp";
 import { Awaited } from "../logic";
 
-//const conn = new Connection(clusterApiUrl("mainnet-beta"), "finalized");
-const conn = new Connection("http://api.devnet.solana.com");
-
-export const getBalance = (address: string) =>
-  conn.getBalance(new PublicKey(address));
-
-/*
-export const accountExists = async (address: string) => {
-  return (await conn.getAccountInfo(new PublicKey(address))) !== null;
+export type Config = {
+  cluster: Cluster;
 };
-*/
 
-export const getAccount = async (address: string) => {
+const MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
+
+const connector = () => {
+  const connections = new Map<Cluster, Connection>();
+
+  return (cluster: Cluster) => {
+    const existingConnection = connections.get(cluster);
+    if (existingConnection !== undefined) {
+      return existingConnection;
+    }
+    const newConnection = new Connection(clusterApiUrl(cluster));
+    connections.set(cluster, newConnection);
+    return newConnection;
+  };
+};
+
+const connection = connector();
+
+export const getBalance = (address: string, config: Config) =>
+  connection(config.cluster).getBalance(new PublicKey(address));
+
+export const getAccount = async (address: string, config: Config) => {
+  const conn = connection(config.cluster);
+
   const pubKey = new PublicKey(address);
   const balanceLamportsWithContext = await conn.getBalanceAndContext(pubKey);
 
@@ -82,154 +95,10 @@ function toTokenAccountWithInfo(onChainAcc: ParsedOnChainTokenAccount) {
   return { onChainAcc, info };
 }
 
-export const getTxFeeCalculator = async () => {
-  const res = await conn.getRecentBlockhash();
+export const getTxFeeCalculator = async (config: Config) => {
+  const res = await connection(config.cluster).getRecentBlockhash();
   return res.feeCalculator;
-  //return res.feeCalculator.lamportsPerSignature;
 };
-
-//export const getNetworkInfo = async (): Promise<NetworkInfo> => {
-export const getNetworkInfo = async (): Promise<{
-  lamportsPerSignature: BigNumber;
-}> => {
-  const { feeCalculator } = await conn.getRecentBlockhash();
-
-  return {
-    lamportsPerSignature: new BigNumber(-1),
-  };
-
-  /*
-  return {
-    family: "solana",
-    lamportsPerSignature: new BigNumber(feeCalculator.lamportsPerSignature),
-  };
-  */
-};
-
-function onChainTxToOperation(
-  txDetails: TransactionDescriptor,
-  mainAccountId: string,
-  accountAddress: string
-): Operation | undefined {
-  if (!txDetails.info.blockTime) {
-    return undefined;
-  }
-
-  if (!txDetails.parsed.meta) {
-    return undefined;
-  }
-
-  const { message } = txDetails.parsed.transaction;
-
-  const accountIndex = message.accountKeys.findIndex(
-    (pma) => pma.pubkey.toBase58() === accountAddress
-  );
-
-  if (accountIndex < 0) {
-    return undefined;
-  }
-
-  const { preBalances, postBalances } = txDetails.parsed.meta;
-
-  const balanceDelta = new BigNumber(postBalances[accountIndex]).minus(
-    new BigNumber(preBalances[accountIndex])
-  );
-
-  const isFeePayer =
-    message.accountKeys[0].pubkey.toBase58() === accountAddress;
-
-  const fee = new BigNumber(isFeePayer ? txDetails.parsed.meta.fee : 0);
-
-  const txType: OperationType =
-    isFeePayer && balanceDelta.eq(fee)
-      ? "FEES"
-      : balanceDelta.lt(0)
-      ? "OUT"
-      : balanceDelta.gt(0)
-      ? "IN"
-      : "NONE";
-
-  const { senders, recipients } = message.accountKeys.reduce(
-    (acc, account, i) => {
-      const balanceDelta = new BigNumber(postBalances[i]).minus(
-        new BigNumber(preBalances[i])
-      );
-      if (balanceDelta.lt(0)) {
-        acc.senders.push(account.pubkey.toBase58());
-      } else if (balanceDelta.gt(0)) {
-        acc.recipients.push(account.pubkey.toBase58());
-      }
-      return acc;
-    },
-    {
-      senders: [] as string[],
-      recipients: [] as string[],
-    }
-  );
-
-  const txHash = txDetails.info.signature;
-  const txDate = new Date(txDetails.info.blockTime * 1000);
-
-  const { internalOperations, subOperations } = message.instructions.reduce(
-    (acc, ix, ixIndex) => {
-      const ixDescriptor = parseQuiet(ix, txDetails.parsed.transaction);
-      const partialOp = ixDescriptorToPartialOperation(ixDescriptor);
-      //TODO: use encodeTokenAccountId here
-      //const accountId = ixDescriptor.program === "spl-token" ? txd : "";
-      const accountId = mainAccountId;
-      const op: Operation = {
-        id: `${txHash}:ix:${ixIndex}`,
-        hash: txHash,
-        accountId,
-        hasFailed: !!txDetails.info.err,
-        blockHeight: txDetails.info.slot,
-        blockHash: message.recentBlockhash,
-        extra: {
-          memo: txDetails.info.memo ?? undefined,
-          info: (ix as any).parsed?.info,
-          //...partialOp.extra,
-        },
-        date: txDate,
-        senders: [],
-        recipients: [],
-        fee: new BigNumber(0),
-        value: partialOp.value ?? new BigNumber(0),
-        type: partialOp.type ?? "NONE",
-      };
-
-      if (ixDescriptor.program === "spl-token") {
-        acc.subOperations.push(op);
-      } else {
-        acc.internalOperations.push(op);
-      }
-      return acc;
-    },
-    {
-      internalOperations: [] as Operation[],
-      subOperations: [] as Operation[],
-    }
-  );
-
-  return {
-    id: encodeOperationId(mainAccountId, txHash, txType),
-    hash: txHash,
-    accountId: mainAccountId,
-    hasFailed: !!txDetails.info.err,
-    blockHeight: txDetails.info.slot,
-    blockHash: message.recentBlockhash,
-    extra: {
-      memo: txDetails.info.memo ?? undefined,
-    },
-    type: txType,
-    senders,
-    recipients,
-    date: txDate,
-    value: balanceDelta.abs().minus(fee),
-    internalOperations,
-    subOperations,
-    fee,
-  };
-}
 
 export type TransactionDescriptor = {
   parsed: ParsedConfirmedTransaction;
@@ -238,8 +107,10 @@ export type TransactionDescriptor = {
 
 async function* getTransactionsBatched(
   pubKey: PublicKey,
-  untilTxSignature?: string
+  untilTxSignature: string | undefined,
+  config: Config
 ): AsyncGenerator<TransactionDescriptor[], void, unknown> {
+  const conn = connection(config.cluster);
   // as per Ledger team - last 1000 operations is a sane limit
   const signatures = await conn.getSignaturesForAddress(pubKey, {
     until: untilTxSignature,
@@ -268,30 +139,40 @@ async function* getTransactionsBatched(
   }
 }
 
-async function* getTransactionsGen(address: string, untilTxSignature?: string) {
+async function* getTransactionsGen(
+  address: string,
+  untilTxSignature: string | undefined,
+  config: Config
+) {
   const pubKey = new PublicKey(address);
 
   for await (const txDetailsBatch of getTransactionsBatched(
     pubKey,
-    untilTxSignature
+    untilTxSignature,
+    config
   )) {
     yield* txDetailsBatch;
   }
 }
 
-export function getTransactions(address: string, untilTxSignature?: string) {
-  return drainSeqAsyncGen(getTransactionsGen(address, untilTxSignature));
+export function getTransactions(
+  address: string,
+  untilTxSignature: string | undefined,
+  config: Config
+) {
+  return drainSeqAsyncGen(
+    getTransactionsGen(address, untilTxSignature, config)
+  );
 }
 
-// TODO: AMOUNT AS BIGNUMBER?
-export const buildTransferTransaction = async ({
-  sender,
-  recipient,
-  amount,
-  memo,
-}: TransferCommand) => {
+export const buildTransferTransaction = async (
+  { sender, recipient, amount, memo }: TransferCommand,
+  config: Config
+) => {
   const fromPublicKey = new PublicKey(sender);
   const toPublicKey = new PublicKey(recipient);
+
+  const conn = connection(config.cluster);
 
   const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
 
@@ -303,7 +184,6 @@ export const buildTransferTransaction = async ({
   const transferIx = SystemProgram.transfer({
     fromPubkey: fromPublicKey,
     toPubkey: toPublicKey,
-    //lamports: amount.toNumber(),
     lamports: amount,
   });
 
@@ -312,8 +192,7 @@ export const buildTransferTransaction = async ({
   if (memo) {
     const memoIx = new TransactionInstruction({
       keys: [],
-      // TODO: switch to spl memo id
-      programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+      programId: new PublicKey(MEMO_PROGRAM_ID),
       data: Buffer.from(memo),
     });
     onChainTx.add(memoIx);
@@ -323,7 +202,8 @@ export const buildTransferTransaction = async ({
 };
 
 export const buildTokenTransferTransaction = async (
-  command: TokenTransferCommand
+  command: TokenTransferCommand,
+  config: Config
 ) => {
   const {
     ownerAddress,
@@ -334,6 +214,8 @@ export const buildTokenTransferTransaction = async (
     mintDecimals,
     memo,
   } = command;
+  const conn = connection(config.cluster);
+
   const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
 
   const ownerPubkey = new PublicKey(ownerAddress);
@@ -376,8 +258,7 @@ export const buildTokenTransferTransaction = async (
   if (memo) {
     const memoIx = new TransactionInstruction({
       keys: [],
-      // TODO: switch to spl id
-      programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+      programId: new PublicKey(MEMO_PROGRAM_ID),
       data: Buffer.from(memo),
     });
     onChainTx.add(memoIx);
@@ -400,36 +281,9 @@ export const addSignatureToTransaction = ({
   return tx;
 };
 
-export const broadcastTransaction = (rawTx: Buffer) => {
-  return conn.sendRawTransaction(rawTx);
+export const broadcastTransaction = (rawTx: Buffer, config: Config) => {
+  return connection(config.cluster).sendRawTransaction(rawTx);
 };
-
-function ixDescriptorToPartialOperation(
-  ixDescriptor: Exclude<ReturnType<typeof parse>, undefined>
-): Partial<Operation> {
-  const { info } = ixDescriptor.instruction ?? {};
-
-  // TODO: fix poor man display
-  /*
-  const infoStrValues =
-    info &&
-    Object.keys(info).reduce((acc, key) => {
-      acc[key] = info[key].toString();
-      return acc;
-    }, {});
-  */
-
-  const extra = {
-    program: ixDescriptor.title,
-    instruction: ixDescriptor.instruction?.title,
-    //info: JSON.stringify(infoStrValues, null, 2),
-  };
-
-  return {
-    type: "NONE",
-    extra,
-  };
-}
 
 export async function findAssociatedTokenAccountPubkey(
   ownerAddress: string,
@@ -448,10 +302,13 @@ export async function findAssociatedTokenAccountPubkey(
 
 export async function getOnChainTokenAccountsByMint(
   ownerAddress: string,
-  mintAddress: string
+  mintAddress: string,
+  config: Config
 ) {
   const ownerPubkey = new PublicKey(ownerAddress);
   const mintPubkey = new PublicKey(mintAddress);
+
+  const conn = connection(config.cluster);
 
   const { value: onChainTokenAccInfoList } =
     await conn.getParsedTokenAccountsByOwner(ownerPubkey, {
@@ -477,7 +334,14 @@ export async function getOnChainTokenAccountsByMint(
     })
     .filter((value): value is Info => value !== undefined);
 }
-export async function getMaybeTokenAccount(address: string) {
+export async function getMaybeTokenAccount(
+  address: string,
+  config: {
+    cluster: Cluster;
+  }
+) {
+  const conn = connection(config.cluster);
+
   const accInfo = (await conn.getParsedAccountInfo(new PublicKey(address)))
     .value;
 
@@ -489,14 +353,15 @@ export async function getMaybeTokenAccount(address: string) {
   return tokenAccount;
 }
 
-export async function buildCreateAssociatedTokenAccountTransaction({
-  mint,
-  owner,
-  associatedTokenAccountAddress,
-}: TokenCreateATACommand): Promise<Transaction> {
+export async function buildCreateAssociatedTokenAccountTransaction(
+  { mint, owner, associatedTokenAccountAddress }: TokenCreateATACommand,
+  config: Config
+): Promise<Transaction> {
   const ownerPubKey = new PublicKey(owner);
   const mintPubkey = new PublicKey(mint);
   const associatedTokenAccPubkey = new PublicKey(associatedTokenAccountAddress);
+
+  const conn = connection(config.cluster);
 
   const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
 
@@ -519,6 +384,6 @@ export async function buildCreateAssociatedTokenAccountTransaction({
   return onChainTx;
 }
 
-export function getAssociatedTokenAccountCreationFee() {
-  return Token.getMinBalanceRentForExemptAccount(conn);
+export function getAssociatedTokenAccountCreationFee(config: Config) {
+  return Token.getMinBalanceRentForExemptAccount(connection(config.cluster));
 }

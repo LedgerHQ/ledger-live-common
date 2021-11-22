@@ -1,7 +1,6 @@
 export {
   getAccount,
   getTransactions,
-  getNetworkInfo,
   buildTransferTransaction,
   buildTokenTransferTransaction,
   buildCreateAssociatedTokenAccountTransaction,
@@ -13,4 +12,6 @@ export {
   getTxFeeCalculator,
   getAssociatedTokenAccountCreationFee,
   getMaybeTokenAccount,
+  Config,
+  TransactionDescriptor,
 } from "./web3";

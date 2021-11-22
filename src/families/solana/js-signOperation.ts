@@ -7,7 +7,6 @@ import type {
 } from "../../types";
 import { open, close } from "../../hw";
 import type {
-  Command,
   TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
@@ -18,7 +17,8 @@ import { buildOnChainTransaction } from "./js-buildTransaction";
 import Solana from "@ledgerhq/hw-app-solana";
 import BigNumber from "bignumber.js";
 import { encodeOperationId } from "../../operation";
-import { assertUnreachable } from "./utils";
+import { assertUnreachable, clusterByCurrencyId } from "./utils";
+import { Config } from "./api";
 
 const buildOptimisticOperation = (
   account: Account,
@@ -60,9 +60,13 @@ const signOperation = ({
     const main = async () => {
       const transport = await open(deviceId);
 
+      const config: Config = {
+        cluster: clusterByCurrencyId(account.currency.id),
+      };
+
       try {
         const [msgToHardwareBytes, singOnChainTransaction] =
-          await buildOnChainTransaction(account, transaction);
+          await buildOnChainTransaction(account, transaction, config);
 
         const hwApp = new Solana(transport);
 
@@ -84,7 +88,7 @@ const signOperation = ({
         subsriber.next({
           type: "signed",
           signedOperation: {
-            operation: await buildOptimisticOperation(account, transaction),
+            operation: buildOptimisticOperation(account, transaction),
             signature: singedOnChainTxBytes.toString("hex"),
             expirationDate: null,
           },

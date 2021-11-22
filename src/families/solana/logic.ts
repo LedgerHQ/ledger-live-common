@@ -1,7 +1,7 @@
 import { findTokenById } from "@ledgerhq/cryptoassets";
 import { PublicKey } from "@solana/web3.js";
 import { TokenAccount } from "../../types/account";
-import { getBalance } from "./api";
+import { Config, getBalance } from "./api";
 
 export type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
 
@@ -19,8 +19,8 @@ export const isEd25519Address = (address: string) => {
   return PublicKey.isOnCurve(new PublicKey(address).toBytes());
 };
 
-export const isAccountFunded = async (address: string) =>
-  (await getBalance(address)) > 0;
+export const isAccountFunded = async (address: string, config: Config) =>
+  (await getBalance(address, config)) > 0;
 
 export function encodeAccountIdWithTokenAccountAddress(
   accountId: string,

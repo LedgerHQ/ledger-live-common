@@ -11,7 +11,7 @@ import { getAccount, findAssociatedTokenAccountPubkey } from "./api";
 import BigNumber from "bignumber.js";
 
 import { emptyHistoryCache } from "../../account";
-import { getTransactions, TransactionDescriptor } from "./api/web3";
+import { Config, getTransactions, TransactionDescriptor } from "./api";
 import { getTokenById } from "@ledgerhq/cryptoassets";
 import { encodeOperationId } from "../../operation";
 import {
@@ -21,13 +21,14 @@ import {
   toTokenId,
   toTokenMint,
 } from "./logic";
-import _, { compact, filter, groupBy, keyBy, toPairs, pipe } from "lodash/fp";
+import { compact, filter, groupBy, keyBy, toPairs, pipe } from "lodash/fp";
 import { parseQuiet } from "./api/program/parser";
 import {
   ParsedConfirmedTransactionMeta,
   ParsedMessageAccount,
   ParsedTransaction,
 } from "@solana/web3.js";
+import { clusterByCurrencyId } from "./utils";
 
 type OnChainTokenAccount = Awaited<
   ReturnType<typeof getAccount>
@@ -40,13 +41,18 @@ const getAccountShape: GetAccountShape = async (info) => {
     currency,
     derivationMode,
   } = info;
+
+  const config: Config = {
+    cluster: clusterByCurrencyId(currency.id),
+  };
+
   const {
     //TODO: switch to slot?
     blockHeight,
     balance: mainAccBalance,
     spendableBalance: mainAccSpendableBalance,
     tokenAccounts: onChaintokenAccounts,
-  } = await getAccount(mainAccAddress);
+  } = await getAccount(mainAccAddress, config);
 
   const mainAccountId = encodeAccountId({
     type: "js",
@@ -95,7 +101,8 @@ const getAccountShape: GetAccountShape = async (info) => {
 
     const txs = await getTransactions(
       assocTokenAcc.onChainAcc.pubkey.toBase58(),
-      lastSyncedTxSignature
+      lastSyncedTxSignature,
+      config
     );
 
     const nextSubAcc =
@@ -118,7 +125,8 @@ const getAccountShape: GetAccountShape = async (info) => {
 
   const newMainAccTxs = await getTransactions(
     mainAccAddress,
-    mainAccountLastTxSignature
+    mainAccountLastTxSignature,
+    config
   );
 
   const newMainAccOps = newMainAccTxs
