@@ -13,7 +13,7 @@ import { DerivationModes } from "../../../../families/bitcoin/wallet-btc/types";
 import Xpub from "../../../../families/bitcoin/wallet-btc/xpub";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-const bip32 = BIP32Factory(ecc)
+const bip32 = BIP32Factory(ecc);
 // FIXME Skipped because Praline required on CI
 describe.skip("testing xpub reorg management", () => {
   const network = coininfo.bitcoin.test.toBitcoinJS();

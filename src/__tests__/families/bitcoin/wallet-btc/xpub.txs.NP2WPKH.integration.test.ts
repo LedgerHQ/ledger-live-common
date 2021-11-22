@@ -35,10 +35,7 @@ describe.skip("testing xpub segwit transactions", () => {
     const seed = bip39.mnemonicToSeedSync(`test${i} test${i} test${i}`);
     const node = bip32.fromSeed(seed, network);
     const signer = (account: number, index: number) =>
-      ECPair.fromWIF(
-        node.derive(account).derive(index).toWIF(),
-        network
-      );
+      ECPair.fromWIF(node.derive(account).derive(index).toWIF(), network);
     const xpub = new Xpub({
       storage,
       explorer,

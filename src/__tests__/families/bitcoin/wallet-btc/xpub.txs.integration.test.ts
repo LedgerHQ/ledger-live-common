@@ -19,7 +19,6 @@ import {
   DerivationModes,
 } from "../../../../families/bitcoin/wallet-btc/types";
 import { Merge } from "../../../../families/bitcoin/wallet-btc/pickingstrategies/Merge";
-import { ValidateSigFunction } from "bitcoinjs-lib/src/psbt";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const bip32 = BIP32Factory(ecc);
@@ -136,7 +135,7 @@ describe.skip("testing xpub legacy transactions", () => {
           associatedDerivations[i][0],
           associatedDerivations[i][1]
         )
-      );      
+      );
       psbt.validateSignaturesOfInput(i, ecc.verify);
     });
     psbt.finalizeAllInputs();

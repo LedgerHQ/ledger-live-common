@@ -25,8 +25,6 @@ export function fallbackValidateAddress(address: string): boolean {
   return true;
 }
 
-export const bip32 = BIP32Factory(ecc);
-
 class Base implements ICrypto {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   network: any;
@@ -44,6 +42,7 @@ class Base implements ICrypto {
 
   protected getPubkeyAt(xpub: string, account: number, index: number): Buffer {
     if (!Base.bech32Cache[xpub]) {
+      const bip32 = BIP32Factory(ecc);
       Base.bech32Cache[xpub] = bip32.fromBase58(xpub, this.network);
     }
     if (Base.publickeyCache[`${xpub}-${account}-${index}`]) {

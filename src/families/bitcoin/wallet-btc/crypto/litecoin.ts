@@ -2,11 +2,13 @@ import * as bjs from "bitcoinjs-lib";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { toOutputScript } from "bitcoinjs-lib/src/address";
-import { bech32 } from "bech32";
 import { DerivationModes } from "../types";
 import { ICrypto } from "./types";
-import { bip32 } from "./base";
+import * as ecc from "tiny-secp256k1";
+import BIP32Factory from "bip32";
 import Base from "./base";
+
+const bip32 = BIP32Factory(ecc);
 
 // Todo copy paste from bitcoin.ts. we can merge them later
 class Litecoin extends Base implements ICrypto {
@@ -95,8 +97,12 @@ class Litecoin extends Base implements ICrypto {
   validateAddress(address: string): boolean {
     // bech32 address
     if (address.substring(0, 3) === "ltc") {
-      if (bech32.decodeUnsafe(address)) {
-        return true;
+      try {
+        if (bjs.address.fromBech32(address)) {
+          return true;
+        }
+      } catch {
+        /* try base58 instead */
       }
     }
     // bs58 address

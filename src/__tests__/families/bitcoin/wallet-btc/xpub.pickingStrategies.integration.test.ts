@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 import BIP32Factory from "bip32";
 import * as bip39 from "bip39";
 import coininfo from "coininfo";
-import { ECPair } from 'ecpair';
+import { ECPair } from "ecpair";
 import * as ecc from "tiny-secp256k1";
 import Crypto from "../../../../families/bitcoin/wallet-btc/crypto/bitcoin";
 import BitcoinLikeExplorer from "../../../../families/bitcoin/wallet-btc/explorer";
@@ -380,8 +380,8 @@ describe("testing xpub legacy transactions", () => {
     expect(res.unspentUtxos.length).toEqual(3);
     expect(
       Number(res.unspentUtxos[0].value) +
-      Number(res.unspentUtxos[1].value) +
-      Number(res.unspentUtxos[2].value)
+        Number(res.unspentUtxos[1].value) +
+        Number(res.unspentUtxos[2].value)
     ).toEqual(5000000000 + 600000000 + 100000000);
   }, 180000);
 });
