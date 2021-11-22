@@ -16,14 +16,18 @@ export async function drainSeqAsyncGen<T>(...asyncGens: AsyncGenerator<T>[]) {
 
 export function clusterByCurrencyId(currencyId: string): Cluster {
   const parts = currencyId.split("_");
-  if (parts.length !== 2 || parts[0] !== "solana") {
-    throw Error(
-      `unexpected currency id format <${currencyId}>, should be like "solana_testnet"`
-    );
-  }
-  if (parts[1] === "devnet" || parts[1] === "testnet") {
-    return parts[1];
+  if (parts[0] === "solana") {
+    if (parts.length === 1) {
+      return "mainnet-beta";
+    }
+    if (parts.length === 2) {
+      if (parts[1] === "devnet" || parts[1] === "testnet") {
+        return parts[1];
+      }
+    }
   }
 
-  return "mainnet-beta";
+  throw Error(
+    `unexpected currency id format <${currencyId}>, should be like solana[_(testnet | devnet)]`
+  );
 }

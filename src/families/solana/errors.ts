@@ -1,7 +1,6 @@
 import { createCustomErrorClass } from "@ledgerhq/errors";
 
-// TODO: rename to wallet ?
-export const SolanaMainAccountNotFunded = createCustomErrorClass(
+export const SolanaAccountNotFunded = createCustomErrorClass(
   "SolanaAccountNotFunded"
 );
 

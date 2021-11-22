@@ -16,7 +16,7 @@ import {
   Config,
 } from "./api";
 import {
-  SolanaMainAccountNotFunded,
+  SolanaAccountNotFunded,
   SolanaAddressOffEd25519,
   SolanaMemoIsTooLong,
   SolanaTokenAccountHoldsAnotherToken,
@@ -125,7 +125,6 @@ const prepareTransaction = async (
   const command = commandDescriptor.command;
   switch (command.kind) {
     case "transfer":
-      // TODO: SWITCH TO BIGNUMBER!!!!!
       const totalSpend = command.amount + feeCalculator.lamportsPerSignature;
       if (mainAccount.balance.lt(totalSpend)) {
         errors.amount = new NotEnoughBalance();
@@ -205,7 +204,7 @@ const deriveTokenTransferCommandDescriptor = async (
       new SolanaRecipientAssociatedTokenAccountWillBeFunded();
 
     if (!(await isAccountFunded(tx.recipient, config))) {
-      warnings.recipient = new SolanaMainAccountNotFunded();
+      warnings.recipient = new SolanaAccountNotFunded();
     }
   }
 
@@ -339,7 +338,7 @@ async function deriveTransaferCommandDescriptor(
     config
   ));
   if (recipientWalletIsUnfunded) {
-    warnings.recipient = new SolanaMainAccountNotFunded();
+    warnings.recipient = new SolanaAccountNotFunded();
   }
 
   if (!tx.useAllAmount && tx.amount.lte(0)) {
