@@ -168,6 +168,10 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
     return fees;
   }
 
+  async getRelayFee() {
+    return 5;
+  }
+
   async getPendings(address: Address, nbMax?: number) {
     const params: {
       no_token?: string;

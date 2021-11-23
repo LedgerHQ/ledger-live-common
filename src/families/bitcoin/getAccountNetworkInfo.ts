@@ -44,7 +44,7 @@ export async function getAccountNetworkInfo(
   if (feesPerByte.length !== 3) {
     throw new Error("cardinality of feesPerByte should be exactly 3");
   }
-
+  const relayFee = await walletAccount.xpub.explorer.getRelayFee();
   const feeItems = {
     items: feesPerByte.map((feePerByte, i) => ({
       key: String(i),
@@ -53,6 +53,7 @@ export async function getAccountNetworkInfo(
     })),
     defaultFeePerByte:
       feesPerByte[Math.floor(feesPerByte.length / 2)] || new BigNumber(0),
+    relayFee,
   };
   return {
     family: "bitcoin",
