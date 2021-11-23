@@ -107,4 +107,4 @@ export type TransactionRaw = TransactionCommonRaw & {
   };
 };
 
-export const reflect = (_declare: any): void => {};
+export const reflect = (_declare: unknown): void => {};

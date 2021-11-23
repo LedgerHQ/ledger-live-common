@@ -2,13 +2,54 @@ import {
   ParsedInstruction,
   PartiallyDecodedInstruction,
 } from "@solana/web3.js";
-import { parseSplTokenInstruction } from "../instruction/token";
+import {
+  parseSplTokenInstruction,
+  TokenInstructionDescriptor,
+} from "../instruction/token";
 import { PARSED_PROGRAMS } from "./constants";
-import { parseAssociatedTokenAccountInstruction } from "../instruction/associated-token-account";
-import { parseSplMemoInstruction } from "../instruction/memo";
-import { parseStakeInstruction } from "../instruction/stake";
+import {
+  AssociatedTokenAccountInstructionDescriptor,
+  parseAssociatedTokenAccountInstruction,
+} from "../instruction/associated-token-account";
+import {
+  MemoInstructionDescriptor,
+  parseSplMemoInstruction,
+} from "../instruction/memo";
+import {
+  parseStakeInstruction,
+  StakeInstructionDescriptor,
+} from "../instruction/stake";
 
-export const parse = (ix: ParsedInstruction | PartiallyDecodedInstruction) => {
+type ParsedProgram =
+  | {
+      program: "spl-associated-token-account";
+      title: string;
+      instruction: AssociatedTokenAccountInstructionDescriptor;
+    }
+  | {
+      program: "spl-memo";
+      title: string;
+      instruction: MemoInstructionDescriptor;
+    }
+  | {
+      program: "stake";
+      title: string;
+      instruction: StakeInstructionDescriptor;
+    }
+  | {
+      program: "spl-token";
+      title: string;
+      instruction: TokenInstructionDescriptor;
+    }
+  | {
+      program: "unknown";
+      title: "Unknown";
+      instruction: undefined;
+    };
+
+export const parse = (
+  ix: ParsedInstruction | PartiallyDecodedInstruction
+): ParsedProgram => {
   if ("parsed" in ix) {
     const program: typeof PARSED_PROGRAMS[keyof typeof PARSED_PROGRAMS] =
       ix.program as any;
@@ -60,7 +101,7 @@ export const parse = (ix: ParsedInstruction | PartiallyDecodedInstruction) => {
 
 export const parseQuiet = (
   ix: ParsedInstruction | PartiallyDecodedInstruction
-) => {
+): ParsedProgram => {
   try {
     return parse(ix);
   } catch (_) {
@@ -68,9 +109,13 @@ export const parseQuiet = (
   }
 };
 
-function unknown() {
+function unknown(): {
+  program: "unknown";
+  title: "Unknown";
+  instruction: undefined;
+} {
   return {
-    program: "Unknown",
+    program: "unknown",
     title: "Unknown",
     instruction: undefined,
   } as const;

@@ -10,15 +10,11 @@ import {
 import { assertUnreachable } from "./utils";
 import { Transaction as OnChainTransaction } from "@solana/web3.js";
 
-/**
- * @param {Account} a
- * @param {Transaction} t
- */
 export const buildOnChainTransaction = async (
   account: Account,
   transaction: Transaction,
   config: Config
-) => {
+): Promise<readonly [Buffer, (signature: Buffer) => Buffer]> => {
   const tx = await build(transaction, config);
 
   return [

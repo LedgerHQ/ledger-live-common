@@ -1,7 +1,6 @@
 import { BigNumber } from "bignumber.js";
 import type {
   Command,
-  CommandDescriptor,
   TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
@@ -29,7 +28,6 @@ export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   };
 };
 
-// TODO: not to serialize errors and warnings?
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
   const { family, model, feeCalculator } = t;

@@ -1,10 +1,12 @@
 import { Cluster } from "@solana/web3.js";
 
-export const assertUnreachable = (value: never) => {
+export const assertUnreachable = (_: never): never => {
   throw new Error("unreachable assertion failed");
 };
 
-export async function drainSeqAsyncGen<T>(...asyncGens: AsyncGenerator<T>[]) {
+export async function drainSeqAsyncGen<T>(
+  ...asyncGens: AsyncGenerator<T>[]
+): Promise<T[]> {
   const items: T[] = [];
   for (const gen of asyncGens) {
     for await (const item of gen) {

@@ -1,6 +1,5 @@
 import type { AccountLike, Account } from "../../types";
 import type {
-  Command,
   TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,

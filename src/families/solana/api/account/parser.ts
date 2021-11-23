@@ -5,14 +5,11 @@ import { TokenAccount, TokenAccountInfo } from "./token";
 
 export function parseTokenAccountInfo(info: unknown): TokenAccountInfo {
   return create(info, TokenAccountInfo);
-  /*
-  const routine = () => {
-  };
-  return onThrowReturnError(routine);
-  */
 }
 
-export function tryParseAsTokenAccount(data: ParsedAccountData) {
+export function tryParseAsTokenAccount(
+  data: ParsedAccountData
+): TokenAccountInfo | undefined | Error {
   const routine = () => {
     const info = create(data.parsed, ParsedInfo);
 

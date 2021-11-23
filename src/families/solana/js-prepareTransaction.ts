@@ -127,18 +127,20 @@ const prepareTransaction = async (
 
   const command = commandDescriptor.command;
   switch (command.kind) {
-    case "transfer":
+    case "transfer": {
       const totalSpend = command.amount + feeCalculator.lamportsPerSignature;
       if (mainAccount.balance.lt(totalSpend)) {
         errors.amount = new NotEnoughBalance();
       }
       break;
-    default:
+    }
+    default: {
       const totalFees =
         feeCalculator.lamportsPerSignature + (commandDescriptor.fees ?? 0);
       if (mainAccount.balance.lt(totalFees)) {
         errors.amount = new SolanaNotEnoughBalanceToPayFees();
       }
+    }
   }
 
   if (Object.keys(errors).length > 0) {

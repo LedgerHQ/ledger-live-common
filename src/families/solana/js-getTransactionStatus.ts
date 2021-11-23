@@ -29,7 +29,7 @@ const getTransactionStatus = async (
         estimatedFees: txFees,
         totalSpent: new BigNumber(0),
       };
-    case "valid":
+    case "valid": {
       const { command } = commandDescriptor;
       const estimatedFees = txFees.plus(commandDescriptor.fees ?? 0);
       const amount = getAmount(tx, command);
@@ -42,6 +42,7 @@ const getTransactionStatus = async (
         warnings: commandDescriptor.warnings ?? {},
         errors: {},
       };
+    }
     default:
       return assertUnreachable(commandDescriptor);
   }

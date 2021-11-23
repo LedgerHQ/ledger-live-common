@@ -8,6 +8,7 @@ import {
   TransactionInstruction,
   Cluster,
   clusterApiUrl,
+  FeeCalculator,
 } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { chunk } from "lodash";
@@ -49,10 +50,18 @@ const connector = () => {
 
 const connection = connector();
 
-export const getBalance = (address: string, config: Config) =>
+export const getBalance = (address: string, config: Config): Promise<number> =>
   connection(config.cluster).getBalance(new PublicKey(address));
 
-export const getAccount = async (address: string, config: Config) => {
+export const getAccount = async (
+  address: string,
+  config: Config
+): Promise<{
+  balance: BigNumber;
+  spendableBalance: BigNumber;
+  blockHeight: number;
+  tokenAccounts: ParsedOnChainTokenAccountWithInfo[];
+}> => {
   const conn = connection(config.cluster);
 
   const pubKey = new PublicKey(address);
@@ -71,7 +80,6 @@ export const getAccount = async (address: string, config: Config) => {
 
   const balance = new BigNumber(balanceLamportsWithContext.value);
   const spendableBalance = BigNumber.max(balance.minus(lamportPerSignature), 0);
-  // TODO: check that
   const blockHeight = balanceLamportsWithContext.context.slot;
 
   return {
@@ -86,13 +94,22 @@ type ParsedOnChainTokenAccount = Awaited<
   ReturnType<Connection["getParsedTokenAccountsByOwner"]>
 >["value"][number];
 
-function toTokenAccountWithInfo(onChainAcc: ParsedOnChainTokenAccount) {
+type ParsedOnChainTokenAccountWithInfo = {
+  onChainAcc: ParsedOnChainTokenAccount;
+  info: TokenAccountInfo;
+};
+
+function toTokenAccountWithInfo(
+  onChainAcc: ParsedOnChainTokenAccount
+): ParsedOnChainTokenAccountWithInfo {
   const parsedInfo = onChainAcc.account.data.parsed.info;
   const info = parseTokenAccountInfo(parsedInfo);
   return { onChainAcc, info };
 }
 
-export const getTxFeeCalculator = async (config: Config) => {
+export const getTxFeeCalculator = async (
+  config: Config
+): Promise<FeeCalculator> => {
   const res = await connection(config.cluster).getRecentBlockhash();
   return res.feeCalculator;
 };
@@ -140,7 +157,7 @@ async function* getTransactionsGen(
   address: string,
   untilTxSignature: string | undefined,
   config: Config
-) {
+): AsyncGenerator<TransactionDescriptor, void, undefined> {
   const pubKey = new PublicKey(address);
 
   for await (const txDetailsBatch of getTransactionsBatched(
@@ -156,7 +173,7 @@ export function getTransactions(
   address: string,
   untilTxSignature: string | undefined,
   config: Config
-) {
+): Promise<TransactionDescriptor[]> {
   return drainSeqAsyncGen(
     getTransactionsGen(address, untilTxSignature, config)
   );
@@ -165,7 +182,7 @@ export function getTransactions(
 export const buildTransferTransaction = async (
   { sender, recipient, amount, memo }: TransferCommand,
   config: Config
-) => {
+): Promise<Transaction> => {
   const fromPublicKey = new PublicKey(sender);
   const toPublicKey = new PublicKey(recipient);
 
@@ -201,7 +218,7 @@ export const buildTransferTransaction = async (
 export const buildTokenTransferTransaction = async (
   command: TokenTransferCommand,
   config: Config
-) => {
+): Promise<Transaction> => {
   const {
     ownerAddress,
     ownerAssociatedTokenAccountAddress,
@@ -272,20 +289,23 @@ export const addSignatureToTransaction = ({
   tx: Transaction;
   address: string;
   signature: Buffer;
-}) => {
+}): Transaction => {
   tx.addSignature(new PublicKey(address), signature);
 
   return tx;
 };
 
-export const broadcastTransaction = (rawTx: Buffer, config: Config) => {
+export const broadcastTransaction = (
+  rawTx: Buffer,
+  config: Config
+): Promise<string> => {
   return connection(config.cluster).sendRawTransaction(rawTx);
 };
 
 export async function findAssociatedTokenAccountPubkey(
   ownerAddress: string,
   mintAddress: string
-) {
+): Promise<PublicKey> {
   const ownerPubKey = new PublicKey(ownerAddress);
   const mintPubkey = new PublicKey(mintAddress);
 
@@ -297,46 +317,12 @@ export async function findAssociatedTokenAccountPubkey(
   );
 }
 
-export async function getOnChainTokenAccountsByMint(
-  ownerAddress: string,
-  mintAddress: string,
-  config: Config
-) {
-  const ownerPubkey = new PublicKey(ownerAddress);
-  const mintPubkey = new PublicKey(mintAddress);
-
-  const conn = connection(config.cluster);
-
-  const { value: onChainTokenAccInfoList } =
-    await conn.getParsedTokenAccountsByOwner(ownerPubkey, {
-      mint: mintPubkey,
-    });
-
-  type Info = {
-    info: typeof onChainTokenAccInfoList[number];
-    tokenAccInfo: TokenAccountInfo;
-  };
-
-  return onChainTokenAccInfoList
-    .map((info) => {
-      const parsedInfo = info.account.data.parsed?.info;
-      const tokenAccInfo = parseTokenAccountInfo(parsedInfo);
-
-      return tokenAccInfo instanceof Error
-        ? undefined
-        : {
-            info: info,
-            tokenAccInfo,
-          };
-    })
-    .filter((value): value is Info => value !== undefined);
-}
 export async function getMaybeTokenAccount(
   address: string,
   config: {
     cluster: Cluster;
   }
-) {
+): Promise<TokenAccountInfo | undefined | Error> {
   const conn = connection(config.cluster);
 
   const accInfo = (await conn.getParsedAccountInfo(new PublicKey(address)))
@@ -381,6 +367,8 @@ export async function buildCreateAssociatedTokenAccountTransaction(
   return onChainTx;
 }
 
-export function getAssociatedTokenAccountCreationFee(config: Config) {
+export function getAssociatedTokenAccountCreationFee(
+  config: Config
+): Promise<number> {
   return Token.getMinBalanceRentForExemptAccount(connection(config.cluster));
 }

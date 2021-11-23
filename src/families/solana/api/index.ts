@@ -8,7 +8,6 @@ export {
   broadcastTransaction,
   getBalance,
   findAssociatedTokenAccountPubkey,
-  getOnChainTokenAccountsByMint,
   getTxFeeCalculator,
   getAssociatedTokenAccountCreationFee,
   getMaybeTokenAccount,

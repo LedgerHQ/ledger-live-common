@@ -21,7 +21,7 @@ export function parseSplTokenInstruction(
   };
 }
 
-type TokenInstructionDescriptor = {
+export type TokenInstructionDescriptor = {
   [K in TokenInstructionType]: {
     title: typeof IX_TITLES[K];
     type: K;

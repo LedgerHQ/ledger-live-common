@@ -47,7 +47,6 @@ const getAccountShape: GetAccountShape = async (info) => {
   };
 
   const {
-    //TODO: switch to slot?
     blockHeight,
     balance: mainAccBalance,
     spendableBalance: mainAccSpendableBalance,
@@ -151,7 +150,7 @@ const getAccountShape: GetAccountShape = async (info) => {
   return shape;
 };
 
-const postSync = (initial: Account, synced: Account) => {
+const postSync = (_: Account, synced: Account) => {
   return synced;
 };
 
@@ -164,7 +163,6 @@ function newSubAcc({
   assocTokenAcc: OnChainTokenAccount;
   txs: TransactionDescriptor[];
 }): TokenAccount {
-  // TODO: check the order of txs
   const firstTx = txs[txs.length - 1];
 
   const creationDate = new Date(
@@ -194,7 +192,6 @@ function newSubAcc({
     id: accountId,
     parentId: mainAccountId,
     operations: mergeOps([], newOps),
-    // TODO: fix
     operationsCount: txs.length,
     pendingOperations: [],
     spendableBalance: balance,
@@ -289,13 +286,6 @@ function txToMainAccOperation(
   const txHash = tx.info.signature;
   const txDate = new Date(tx.info.blockTime * 1000);
 
-  /*
-  const subOperations = message.instructions.reduce((operations, ix) => {
-    const ixDescriptor = parseQuiet(ix, tx.parsed.transaction);
-    //ixDescriptor.program === 'stake'
-  }, [] as Operation[]);
-  */
-
   const opFee = isFeePayer ? txFee : new BigNumber(0);
 
   const value = balanceDelta.abs().minus(opFee);
@@ -380,33 +370,6 @@ function txToTokenAccOperation(
   };
 }
 
-/*
-function ixDescriptorToPartialOperation(
-  ixDescriptor: Exclude<ReturnType<typeof parseQuiet>, undefined>
-): Partial<Operation> {
-  const { info } = ixDescriptor.instruction ?? {};
-
-  // TODO: fix poor man display
-  const infoStrValues =
-    info &&
-    Object.keys(info).reduce((acc, key) => {
-      acc[key] = info[key].toString();
-      return acc;
-    }, {});
-
-  const extra = {
-    program: ixDescriptor.title,
-    instruction: ixDescriptor.instruction?.title,
-    //info: JSON.stringify(infoStrValues, null, 2),
-  };
-
-  return {
-    type: "NONE",
-    extra,
-  };
-}
-*/
-
 function getMainAccOperationType({
   tx,
   fee,
@@ -451,11 +414,14 @@ function getMainAccOperationTypeFromTx(
         case "associate":
           return "OPT_IN";
       }
+      // needed for lint
+      break;
     case "spl-token":
       switch (mainIx.instruction.type) {
         case "closeAccount":
           return "OPT_OUT";
       }
+      break;
     case "stake":
       switch (mainIx.instruction.type) {
         case "delegate":
@@ -463,6 +429,7 @@ function getMainAccOperationTypeFromTx(
         case "deactivate":
           return "UNDELEGATE";
       }
+      break;
     default:
       return undefined;
   }

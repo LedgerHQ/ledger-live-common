@@ -6,7 +6,12 @@ import {
   FeeTooHigh,
 } from "@ledgerhq/errors";
 import type { Transaction } from "../types";
-import type { Account, AccountBridge, CurrencyBridge } from "../../../types";
+import type {
+  Account,
+  AccountBridge,
+  AccountLike,
+  CurrencyBridge,
+} from "../../../types";
 import {
   scanAccounts,
   signOperation,
@@ -30,36 +35,44 @@ const createTransaction = (): Transaction => ({
   },
 });
 
-const updateTransaction = (t: Transaction, patch: Partial<Transaction>) => ({
+const updateTransaction = (
+  t: Transaction,
+  patch: Partial<Transaction>
+): Transaction => ({
   ...t,
   ...patch,
 });
 
 const prepareTransaction = async (
-  a: Account,
+  _: Account,
   t: Transaction
 ): Promise<Transaction> => ({
   ...t,
-  //feeCalculator: new BigNumber(1),
-  /*
-  networkInfo: {
-    family: "solana",
-    lamportsPerSignature: new BigNumber(1),
-  },
-  */
 });
 
 const estimateMaxSpendable = async ({
   account,
   parentAccount,
-  transaction,
-}) => {
+}: {
+  account: AccountLike;
+  parentAccount: Account;
+  transaction: Transaction;
+}): Promise<BigNumber> => {
   const mainAccount = getMainAccount(account, parentAccount);
-  const estimatedFees = transaction?.fees || new BigNumber(5000);
+  const estimatedFees = new BigNumber(5000);
   return BigNumber.max(0, mainAccount.balance.minus(estimatedFees));
 };
 
-const getTransactionStatus = (account, t) => {
+const getTransactionStatus = (
+  account: Account,
+  t: Transaction
+): Promise<{
+  errors: Record<string, Error>;
+  warnings: Record<string, Error>;
+  estimatedFees: BigNumber;
+  amount: BigNumber;
+  totalSpent: BigNumber;
+}> => {
   const errors: any = {};
   const warnings: any = {};
   const useAllAmount = !!t.useAllAmount;

@@ -20,7 +20,7 @@ export function parseStakeInstruction(
   };
 }
 
-type StakeInstructionDescriptor = {
+export type StakeInstructionDescriptor = {
   [K in StakeInstructionType]: {
     title: typeof IX_TITLES[K];
     type: K;

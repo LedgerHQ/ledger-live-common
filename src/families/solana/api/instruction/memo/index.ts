@@ -15,7 +15,7 @@ export function parseSplMemoInstruction(
   };
 }
 
-type MemoInstructionDescriptor = {
+export type MemoInstructionDescriptor = {
   [K in MemoInstructionType]: {
     title: typeof IX_TITLES[K];
     type: K;

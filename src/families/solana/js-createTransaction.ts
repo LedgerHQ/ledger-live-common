@@ -2,12 +2,7 @@ import { BigNumber } from "bignumber.js";
 import type { Transaction /* TransactionMode */ } from "./types";
 import { Account } from "../../types";
 
-/**
- * Create an empty transaction
- *
- * @returns {Transaction}
- */
-const createTransaction = (mainAccount: Account): Transaction => {
+const createTransaction = (_: Account): Transaction => {
   return {
     family: "solana",
     amount: new BigNumber(0),

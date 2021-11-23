@@ -1,11 +1,9 @@
-import type { Account, AccountLike, TokenAccount } from "../../types";
+import type { Account, AccountLike } from "../../types";
 import type { Transaction } from "./types";
 import BigNumber from "bignumber.js";
 
 const estimateMaxSpendable = async ({
   account,
-  parentAccount,
-  transaction,
 }: {
   account: AccountLike;
   parentAccount?: Account;

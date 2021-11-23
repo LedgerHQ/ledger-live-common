@@ -28,7 +28,7 @@ export function parseAssociatedTokenAccountInstruction(
   };
 }
 
-type AssociatedTokenAccountInstructionDescriptor = {
+export type AssociatedTokenAccountInstructionDescriptor = {
   [K in AssociatedTokenAccountInstructionType]: {
     title: typeof IX_TITLES[K];
     type: K;

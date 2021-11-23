@@ -1,4 +1,4 @@
-import { enums, number, type, string, Infer } from "superstruct";
+import { enums, type, string, Infer } from "superstruct";
 
 type SaveInfo = Infer<typeof SaveInfo>;
 export const SaveInfo = type({

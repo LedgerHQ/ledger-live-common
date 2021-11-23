@@ -36,7 +36,7 @@ function inferTransactions(
 
   const token = tokens?.[0];
 
-  return transactions.map(({ account, mainAccount, transaction }) => {
+  return transactions.map(({ account, transaction }) => {
     if (transaction.family !== "solana") {
       throw new Error(
         `Solana family transaction expected, got <${transaction.family}>`
@@ -73,7 +73,7 @@ function inferTransactions(
           };
           return solanaTx;
         }
-      case "optIn":
+      case "optIn": {
         if (token === undefined) {
           throw new Error("token required");
         }
@@ -98,6 +98,7 @@ function inferTransactions(
           },
         };
         return solanaTx;
+      }
       default:
         return assertUnreachable(mode);
     }
@@ -113,7 +114,7 @@ function inferAccounts(
   const mode = inferMode(opts.mode);
 
   switch (mode) {
-    case "send":
+    case "send": {
       if (!opts.token) {
         return [mainAccount];
       }
@@ -143,6 +144,7 @@ function inferAccounts(
         );
       }
       return [subAccount];
+    }
     case "optIn":
       return [mainAccount];
     default:

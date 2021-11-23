@@ -1,4 +1,4 @@
-import { enums, number, type, string, Infer } from "superstruct";
+import { enums, type, Infer } from "superstruct";
 import { PublicKeyFromString } from "../../validators/pubkey";
 
 type AssociateInfo = Infer<typeof AssociateInfo>;
