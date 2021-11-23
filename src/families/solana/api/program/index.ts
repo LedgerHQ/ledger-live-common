@@ -1,1 +1,1 @@
-export { parse } from "./parser";
+export { parse, parseQuiet } from "./parser";

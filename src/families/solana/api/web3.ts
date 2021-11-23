@@ -21,11 +21,8 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
 } from "@solana/spl-token";
-import {
-  tryParseAsTokenAccount,
-  parseTokenAccountInfo,
-} from "./account/parser";
-import { TokenAccountInfo } from "./validators/accounts/token";
+import { tryParseAsTokenAccount, parseTokenAccountInfo } from "./account";
+import { TokenAccountInfo } from "./account/token";
 import { drainSeqAsyncGen } from "../utils";
 import { map } from "lodash/fp";
 import { Awaited } from "../logic";

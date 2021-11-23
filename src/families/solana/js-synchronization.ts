@@ -22,7 +22,7 @@ import {
   toTokenMint,
 } from "./logic";
 import { compact, filter, groupBy, keyBy, toPairs, pipe } from "lodash/fp";
-import { parseQuiet } from "./api/program/parser";
+import { parseQuiet } from "./api/program";
 import {
   ParsedConfirmedTransactionMeta,
   ParsedMessageAccount,
@@ -438,7 +438,7 @@ function getMainAccOperationTypeFromTx(
 ): OperationType | undefined {
   const { instructions } = tx.message;
   const [mainIx, ...otherIxs] = instructions
-    .map((ix) => parseQuiet(ix, tx))
+    .map((ix) => parseQuiet(ix))
     .filter(({ program }) => program !== "spl-memo");
 
   if (mainIx === undefined || otherIxs.length > 0) {
@@ -513,7 +513,7 @@ function getTokenAccOperationType({
 }): OperationType {
   const { instructions } = tx.message;
   const [mainIx, ...otherIxs] = instructions
-    .map((ix) => parseQuiet(ix, tx))
+    .map((ix) => parseQuiet(ix))
     .filter(({ program }) => program !== "spl-memo");
 
   if (mainIx !== undefined && otherIxs.length === 0) {

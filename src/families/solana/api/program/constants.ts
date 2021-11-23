@@ -8,12 +8,3 @@ export const PARSED_PROGRAMS = {
   SPL_TOKEN: "spl-token",
   VOTE: "vote",
 } as const;
-
-export const NON_PARSED_PROGRAMS = {
-  BONFIDA_BOT: "bonfida-bot",
-  MANGO: "mango",
-  SERUM: "serum",
-  TOKEN_SWAP: "token-swap",
-  TOKEN_LENDING: "token-lending",
-  WORMHOLE: "wormhole",
-} as const;

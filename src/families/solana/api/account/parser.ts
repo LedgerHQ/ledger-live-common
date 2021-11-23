@@ -1,7 +1,7 @@
 import { ParsedAccountData } from "@solana/web3.js";
 import { create } from "superstruct";
 import { ParsedInfo } from "../validators";
-import { TokenAccount, TokenAccountInfo } from "../validators/accounts/token";
+import { TokenAccount, TokenAccountInfo } from "./token";
 
 export function parseTokenAccountInfo(info: unknown): TokenAccountInfo {
   return create(info, TokenAccountInfo);
