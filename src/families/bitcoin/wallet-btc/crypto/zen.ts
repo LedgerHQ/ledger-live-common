@@ -83,8 +83,7 @@ class Zen implements ICrypto {
     if (!this.validateAddress(address)) {
       throw new Error("Invalid address");
     }
-    // TODO find a better way to calculate the script from zen address instead of converting to bitcoin address
-    const res = toOutputScript(
+    const outputScript = toOutputScript(
       Zen.toBitcoinAddr(address),
       coininfo.bitcoin.main.toBitcoinJS()
     );
@@ -93,7 +92,7 @@ class Zen implements ICrypto {
       "209ec9845acb02fab24e1c0368b3b517c1a4488fba97f0e3459ac053ea0100000003c01f02b4",
       "hex"
     );
-    return Buffer.concat([res, bip115Script]);
+    return Buffer.concat([outputScript, bip115Script]);
   }
 
   // eslint-disable-next-line class-methods-use-this
