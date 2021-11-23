@@ -64,10 +64,13 @@ async function deriveCommandDescriptor(
         errors.recipient = new InvalidAddress();
       }
 
-      if (model.uiState.memo && model.uiState.memo.length > MAX_MEMO_LENGTH) {
-        errors.memo = errors.memo = new SolanaMemoIsTooLong(undefined, {
-          maxLength: MAX_MEMO_LENGTH,
-        });
+      if (model.uiState.memo) {
+        const encoder = new TextEncoder();
+        if (encoder.encode(model.uiState.memo).byteLength > MAX_MEMO_LENGTH) {
+          errors.memo = errors.memo = new SolanaMemoIsTooLong(undefined, {
+            maxLength: MAX_MEMO_LENGTH,
+          });
+        }
       }
 
       if (Object.keys(errors).length > 0) {

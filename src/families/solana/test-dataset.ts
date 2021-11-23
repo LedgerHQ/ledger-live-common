@@ -1,13 +1,11 @@
 import BigNumber from "bignumber.js";
 import type { DatasetTest } from "../../types";
 
-import { Transaction } from "./types";
+import { Transaction, TransactionModel } from "./types";
 
 import scanAccounts1 from "./datasets/solana.scanAccounts.1";
 import {
   AmountRequired,
-  FeeNotLoaded,
-  FeeTooHigh,
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughBalance,
@@ -17,26 +15,47 @@ import {
   SolanaAccountNotFunded,
   SolanaAddressOffEd25519,
   SolanaMemoIsTooLong,
+  SolanaRecipientAssociatedTokenAccountWillBeFunded,
+  SolanaTokenAccountHoldsAnotherToken,
 } from "./errors";
-import { MAX_MEMO_LENGTH } from "./logic";
+import {
+  encodeAccountIdWithTokenAccountAddress,
+  MAX_MEMO_LENGTH,
+} from "./logic";
+import createTransaction from "./js-createTransaction";
+import { compact } from "lodash/fp";
+import { assertUnreachable } from "./utils";
 
 // do not change real properties or the test will break
 const testOnChainData = {
-  // real props
-  // seed
+  //  --- real props ---
   unfundedAddress: "7b6Q3ap8qRzfyvDw1Qce3fUV8C7WgFNzJQwYNTJm3KQo",
-  // 44'/501'/0/0
+  // 0/0
   fundedSenderAddress: "7CZgkK494jMdoY8xpXY3ViLjpDGMbNikCzMtAT5cAjKk",
-  fundedSenderBalance: new BigNumber(98985000),
-  // 44'/501'/1000/0
+  fundedSenderBalance: new BigNumber(83404840),
+  // 1000/0
   fundedAddress: "ARRKL4FT4LMwpkhUw4xNbfiHqR7UdePtzGLvkszgydqZ",
-  // maybe outdated or not real, fine for tests
+  wSolSenderAssocTokenAccAddress:
+    "H6f17NUsg2XyB5KSbva61LjF3R16x45oUWPBRBdcL8BG",
+  wSolSenderAssocTokenAccBalance: new BigNumber(7960720),
+  // 1000/0
+  wSolFundedAccountAssocTokenAccAddress:
+    "Ax69sAxqBSdT3gMAUqXb8pUvgxSLCiXfTitMALEnFZTS",
+  // 0/0
+  notWSolTokenAccAddress: "Hsm3S2rhX4HwxYBaCyqgJ1cCtFyFSBu6HLy1bdvh7fKs",
+  // ---  maybe outdated or not real, fine for tests ---
   offEd25519Address: "6D8GtWkKJgToM5UoiByHqjQCCC9Dq1Hh7iNmU4jKSs14",
   offEd25519Address2: "12rqwuEgBYiGhBrDJStCiqEtzQpTTiZbh7teNVLuYcFA",
   feeCalculator: {
     lamportsPerSignature: 5000,
   },
 };
+
+const mainAccId = `js:2:solana:${testOnChainData.fundedSenderAddress}:`;
+const wSolSubAccId = encodeAccountIdWithTokenAccountAddress(
+  mainAccId,
+  testOnChainData.wSolSenderAssocTokenAccAddress
+);
 
 const fees = (signatureCount: number) =>
   new BigNumber(
@@ -66,62 +85,13 @@ const dataset: DatasetTest<Transaction> = {
             "can be called on an empty transaction",
           ],
           transactions: [
-            {
-              name: "status is error: recipient required",
-              transaction: {
-                model: {
-                  kind: "transfer",
-                  uiState: {},
-                },
-                amount: zero,
-                recipient: "",
-                feeCalculator: testOnChainData.feeCalculator,
-                family: "solana",
-              },
-              expectedStatus: {
-                errors: {
-                  recipient: new RecipientRequired(),
-                },
-                warnings: {},
-                estimatedFees: fees(1),
-                amount: zero,
-                totalSpent: zero,
-              },
-            },
-            {
-              name: "status is error: recipient is not valid",
-              transaction: {
-                model: {
-                  kind: "transfer",
-                  uiState: {},
-                },
-                amount: new BigNumber(1),
-                recipient: "0",
-                feeCalculator: testOnChainData.feeCalculator,
-                family: "solana",
-              },
-              expectedStatus: {
-                errors: {
-                  recipient: new InvalidAddress(),
-                },
-                warnings: {},
-                estimatedFees: fees(1),
-                amount: new BigNumber(1),
-                totalSpent: zero,
-              },
-            },
+            ...recipientRequired(),
+            ...recipientNotValid(),
+            ...recipientIsSameAsSender(),
+            ...memoIsTooLong(),
             {
               name: "status is error: called on an empty transaction",
-              transaction: {
-                model: {
-                  kind: "transfer",
-                  uiState: {},
-                },
-                amount: zero,
-                recipient: "",
-                feeCalculator: undefined,
-                family: "solana",
-              },
+              transaction: createTransaction({} as any),
               expectedStatus: {
                 errors: {
                   recipient: new RecipientRequired(),
@@ -133,7 +103,7 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "status is success: not all amount",
+              name: "transfer :: status is success: not all amount",
               transaction: {
                 model: {
                   kind: "transfer",
@@ -155,7 +125,7 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "status is success: all amount",
+              name: "transfer :: status is success: all amount",
               transaction: {
                 model: {
                   kind: "transfer",
@@ -176,7 +146,7 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "status is error: not enough balance, not all amount",
+              name: "transfer :: status is error: not enough balance, not all amount",
               transaction: {
                 model: {
                   kind: "transfer",
@@ -198,7 +168,7 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "status is error: not enough balance, all amount",
+              name: "transfer :: status is error: not enough balance, all amount",
               transaction: {
                 model: {
                   kind: "transfer",
@@ -225,7 +195,7 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "status is error: amount is 0",
+              name: "transfer :: status is error: amount is 0",
               transaction: {
                 model: {
                   kind: "transfer",
@@ -247,7 +217,7 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "status is error: amount is negative",
+              name: "transfer :: status is error: amount is negative",
               transaction: {
                 model: {
                   kind: "transfer",
@@ -269,29 +239,7 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "status is error: source == destination",
-              transaction: {
-                model: {
-                  kind: "transfer",
-                  uiState: {},
-                },
-                amount: testOnChainData.fundedSenderBalance,
-                recipient: testOnChainData.fundedSenderAddress,
-                feeCalculator: testOnChainData.feeCalculator,
-                family: "solana",
-              },
-              expectedStatus: {
-                errors: {
-                  recipient: new InvalidAddressBecauseDestinationIsAlsoSource(),
-                },
-                warnings: {},
-                estimatedFees: fees(1),
-                amount: testOnChainData.fundedSenderBalance,
-                totalSpent: zero,
-              },
-            },
-            {
-              name: "status is warning: recipient wallet not funded",
+              name: "transfer :: status is warning: recipient wallet not funded",
               transaction: {
                 model: {
                   kind: "transfer",
@@ -313,7 +261,7 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "status is warning: recipient address is off ed25519",
+              name: "transfer :: status is warning: recipient address is off ed25519",
               transaction: {
                 model: {
                   kind: "transfer",
@@ -336,27 +284,136 @@ const dataset: DatasetTest<Transaction> = {
               },
             },
             {
-              name: "status is error: memo is too long",
+              name: "token.transfer :: status is success: recipient is funded wallet, assoc token acc exists",
               transaction: {
                 model: {
-                  kind: "transfer",
+                  kind: "token.transfer",
                   uiState: {
-                    memo: Buffer.alloc(MAX_MEMO_LENGTH + 1).toString("hex"),
+                    subAccountId: wSolSubAccId,
                   },
                 },
-                amount: new BigNumber(1),
-                recipient: testOnChainData.fundedSenderAddress,
+                amount:
+                  testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
+                recipient: testOnChainData.fundedAddress,
+                feeCalculator: testOnChainData.feeCalculator,
+                family: "solana",
+              },
+              expectedStatus: {
+                errors: {},
+                warnings: {},
+                estimatedFees: fees(1),
+                amount:
+                  testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
+                totalSpent:
+                  testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
+              },
+            },
+            {
+              name: "token.transfer :: status is success: recipient is correct mint token acc",
+              transaction: {
+                model: {
+                  kind: "token.transfer",
+                  uiState: {
+                    subAccountId: wSolSubAccId,
+                  },
+                },
+                amount:
+                  testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
+                recipient:
+                  testOnChainData.wSolFundedAccountAssocTokenAccAddress,
+                feeCalculator: testOnChainData.feeCalculator,
+                family: "solana",
+              },
+              expectedStatus: {
+                errors: {},
+                warnings: {},
+                estimatedFees: fees(1),
+                amount:
+                  testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
+                totalSpent:
+                  testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
+              },
+            },
+            {
+              name: "token.transfer :: status is error: recipient is another mint token acc",
+              transaction: {
+                model: {
+                  kind: "token.transfer",
+                  uiState: {
+                    subAccountId: wSolSubAccId,
+                  },
+                },
+                amount:
+                  testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
+                recipient: testOnChainData.notWSolTokenAccAddress,
                 feeCalculator: testOnChainData.feeCalculator,
                 family: "solana",
               },
               expectedStatus: {
                 errors: {
-                  memo: new SolanaMemoIsTooLong(),
+                  recipient: new SolanaTokenAccountHoldsAnotherToken(),
                 },
                 warnings: {},
-                amount: new BigNumber(1),
                 estimatedFees: fees(1),
+                amount:
+                  testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
                 totalSpent: zero,
+              },
+            },
+            {
+              name: "token.transfer :: status is warning: recipient is off curve",
+              transaction: {
+                model: {
+                  kind: "token.transfer",
+                  uiState: {
+                    subAccountId: wSolSubAccId,
+                  },
+                },
+                amount:
+                  testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
+                recipient: testOnChainData.offEd25519Address,
+                feeCalculator: testOnChainData.feeCalculator,
+                family: "solana",
+              },
+              expectedStatus: {
+                errors: {
+                  recipient: new SolanaAddressOffEd25519(),
+                },
+                warnings: {},
+                estimatedFees: fees(1),
+                amount:
+                  testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
+                totalSpent: zero,
+              },
+            },
+            {
+              name: "token.transfer :: status is success: recipient is wallet and no assoc token acc exists (will be created)",
+              transaction: {
+                model: {
+                  kind: "token.transfer",
+                  uiState: {
+                    subAccountId: wSolSubAccId,
+                  },
+                },
+                amount:
+                  testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
+                recipient: testOnChainData.unfundedAddress,
+                feeCalculator: testOnChainData.feeCalculator,
+                family: "solana",
+              },
+              expectedStatus: {
+                errors: {},
+                warnings: {
+                  recipient: new SolanaAccountNotFunded(),
+                  recipientAssociatedTokenAccount:
+                    new SolanaRecipientAssociatedTokenAccountWillBeFunded(),
+                },
+                // this fee is dynamic, skip
+                //estimatedFees: new BigNumber(2044280),
+                amount:
+                  testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
+                totalSpent:
+                  testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
               },
             },
           ],
@@ -366,11 +423,9 @@ const dataset: DatasetTest<Transaction> = {
   },
 };
 
-export default dataset;
-
 function makeAccount(freshAddress: string) {
   return {
-    id: `js:2:solana:${freshAddress}:`,
+    id: mainAccId,
     seedIdentifier: "",
     name: "Solana 1",
     derivationMode: "" as const,
@@ -387,3 +442,115 @@ function makeAccount(freshAddress: string) {
     balance: "0",
   };
 }
+
+type TransactionTestSpec = Exclude<
+  Exclude<
+    DatasetTest<Transaction>["currencies"][string]["accounts"],
+    undefined
+  >[number]["transactions"],
+  undefined
+>[number];
+
+function recipientRequired(): TransactionTestSpec[] {
+  const models: TransactionModel[] = [
+    {
+      kind: "token.transfer",
+      uiState: {
+        subAccountId: "",
+      },
+    },
+    {
+      kind: "transfer",
+      uiState: {},
+    },
+  ];
+  return models.map((model) => {
+    return {
+      name: `${model.kind} :: status is error: recipient required`,
+      transaction: {
+        model,
+        amount: zero,
+        recipient: "",
+        feeCalculator: testOnChainData.feeCalculator,
+        family: "solana",
+      },
+      expectedStatus: {
+        errors: {
+          recipient: new RecipientRequired(),
+        },
+        warnings: {},
+        estimatedFees: fees(1),
+        amount: zero,
+        totalSpent: zero,
+      },
+    };
+  });
+}
+
+function recipientNotValid(): TransactionTestSpec[] {
+  return recipientRequired().map((spec) => {
+    return {
+      ...spec,
+      transaction: {
+        ...(spec.transaction as Transaction),
+        recipient: "invalid address",
+      },
+      expectedStatus: {
+        ...spec.expectedStatus,
+        errors: {
+          recipient: new InvalidAddress(),
+        },
+      },
+    };
+  });
+}
+
+function recipientIsSameAsSender(): TransactionTestSpec[] {
+  return recipientRequired().map((spec) => {
+    return {
+      ...spec,
+      transaction: {
+        ...(spec.transaction as Transaction),
+        recipient: testOnChainData.fundedSenderAddress,
+      },
+      expectedStatus: {
+        ...spec.expectedStatus,
+        errors: {
+          recipient: new InvalidAddressBecauseDestinationIsAlsoSource(),
+        },
+      },
+    };
+  });
+}
+
+function memoIsTooLong(): TransactionTestSpec[] {
+  return compact(
+    recipientRequired().map((spec) => {
+      const tx = spec.transaction as Transaction;
+      switch (tx.model.kind) {
+        case "transfer":
+        case "token.transfer":
+          tx.model.uiState.memo = "c".repeat(MAX_MEMO_LENGTH + 1);
+          return {
+            ...spec,
+            transaction: {
+              ...(spec.transaction as Transaction),
+              recipient: testOnChainData.fundedAddress,
+            },
+            expectedStatus: {
+              ...spec.expectedStatus,
+              errors: {
+                memo: new SolanaMemoIsTooLong(),
+              },
+            },
+          };
+        case "token.createATA":
+          return undefined;
+        default:
+          return assertUnreachable(tx.model);
+      }
+    })
+  );
+}
+
+export default dataset;
