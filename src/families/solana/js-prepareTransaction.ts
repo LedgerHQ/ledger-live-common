@@ -96,7 +96,7 @@ const cacheKeyByCluster = (config: Config) => config.cluster;
 const cacheKeyByAddress = (address: string, config: Config) =>
   `${cacheKeyByCluster(config)}:${address}`;
 
-const minutes = (num: number, max: number = 100) => ({
+const minutes = (num: number, max = 100) => ({
   max,
   maxAge: num * 60 * 1000,
 });
