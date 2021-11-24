@@ -214,6 +214,7 @@ const deriveTokenTransferCommandDescriptor = async (
     mainAccount,
     model.uiState.subAccountId
   );
+
   if (!subAccount || subAccount.type !== "TokenAccount") {
     throw new Error("subaccount not found");
   }

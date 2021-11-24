@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js";
-import type { DatasetTest } from "../../types";
+import { DatasetTest, encodeAccountId } from "../../types";
 
 import { Transaction, TransactionModel } from "./types";
 
@@ -31,14 +31,14 @@ const testOnChainData = {
   //  --- real props ---
   unfundedAddress: "7b6Q3ap8qRzfyvDw1Qce3fUV8C7WgFNzJQwYNTJm3KQo",
   // 0/0
-  fundedSenderAddress: "7CZgkK494jMdoY8xpXY3ViLjpDGMbNikCzMtAT5cAjKk",
-  fundedSenderBalance: new BigNumber(83404840),
+  fundedSenderAddress: "AQbkEagmPgmsdAfS4X8V8UyJnXXjVPMvjeD15etqQ3Jh",
+  fundedSenderBalance: new BigNumber(83389840),
   // 1000/0
   fundedAddress: "ARRKL4FT4LMwpkhUw4xNbfiHqR7UdePtzGLvkszgydqZ",
   wSolSenderAssocTokenAccAddress:
-    "H6f17NUsg2XyB5KSbva61LjF3R16x45oUWPBRBdcL8BG",
+    "8RtwWeqdFz4EFuZU3MAadfYMWSdRMamjFrfq6BXkHuNN",
   wSolSenderAssocTokenAccBalance: new BigNumber(7960720),
-  // 1000/0
+  // 1000/0, mint - wrapped sol
   wSolFundedAccountAssocTokenAccAddress:
     "Ax69sAxqBSdT3gMAUqXb8pUvgxSLCiXfTitMALEnFZTS",
   // 0/0
@@ -51,7 +51,14 @@ const testOnChainData = {
   },
 };
 
-const mainAccId = `js:2:solana:${testOnChainData.fundedSenderAddress}:`;
+const mainAccId = encodeAccountId({
+  type: "js",
+  version: "2",
+  currencyId: "solana",
+  xpubOrAddress: testOnChainData.fundedSenderAddress,
+  derivationMode: "solanaMain",
+});
+
 const wSolSubAccId = encodeAccountIdWithTokenAccountAddress(
   mainAccId,
   testOnChainData.wSolSenderAssocTokenAccAddress
@@ -430,7 +437,7 @@ function makeAccount(freshAddress: string) {
     id: mainAccId,
     seedIdentifier: "",
     name: "Solana 1",
-    derivationMode: "" as const,
+    derivationMode: "solanaMain" as const,
     index: 0,
     freshAddress,
     freshAddressPath: "",
