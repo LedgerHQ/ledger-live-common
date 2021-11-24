@@ -40,6 +40,16 @@ const envDefinitions = {
     parser: stringParser,
     desc: "Node API endpoint for algorand",
   },
+  API_CELO_INDEXER: {
+    def: "http://localhost:9292", // def: "https://celo.coin.ledger.com",
+    parser: stringParser,
+    desc: "Explorer API for celo",
+  },
+  API_CELO_NODE: {
+    def: "http://localhost:9393", // def: "https://celo.coin.ledger.com",
+    parser: stringParser,
+    desc: "Node endpoint for celo",
+  },
   API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
     def: "https://cosmoshub4.coin.ledger.com/",
     parser: stringParser,

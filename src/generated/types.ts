@@ -14,6 +14,15 @@ import { Transaction as bitcoinTransaction } from "../families/bitcoin/types";
 import { TransactionRaw as bitcoinTransactionRaw } from "../families/bitcoin/types";
 import { NetworkInfo as bitcoinNetworkInfo } from "../families/bitcoin/types";
 import { NetworkInfoRaw as bitcoinNetworkInfoRaw } from "../families/bitcoin/types";
+import { reflect as celoReflect } from "../families/celo/types";
+import { CoreStatics as CoreStatics_celo } from "../families/celo/types";
+import { CoreAccountSpecifics as CoreAccountSpecifics_celo } from "../families/celo/types";
+import { CoreOperationSpecifics as CoreOperationSpecifics_celo } from "../families/celo/types";
+import { CoreCurrencySpecifics as CoreCurrencySpecifics_celo } from "../families/celo/types";
+import { Transaction as celoTransaction } from "../families/celo/types";
+import { TransactionRaw as celoTransactionRaw } from "../families/celo/types";
+import { NetworkInfo as celoNetworkInfo } from "../families/celo/types";
+import { NetworkInfoRaw as celoNetworkInfoRaw } from "../families/celo/types";
 import { reflect as cosmosReflect } from "../families/cosmos/types";
 import { CoreStatics as CoreStatics_cosmos } from "../families/cosmos/types";
 import { CoreAccountSpecifics as CoreAccountSpecifics_cosmos } from "../families/cosmos/types";
@@ -122,6 +131,7 @@ import { NetworkInfoRaw as tronNetworkInfoRaw } from "../families/tron/types";
 export type SpecificStatics = {}
 & CoreStatics_algorand
 & CoreStatics_bitcoin
+& CoreStatics_celo
 & CoreStatics_cosmos
 & CoreStatics_crypto_org
 & CoreStatics_elrond
@@ -137,6 +147,7 @@ export type SpecificStatics = {}
 export type CoreAccountSpecifics = {}
 & CoreAccountSpecifics_algorand
 & CoreAccountSpecifics_bitcoin
+& CoreAccountSpecifics_celo
 & CoreAccountSpecifics_cosmos
 & CoreAccountSpecifics_crypto_org
 & CoreAccountSpecifics_elrond
@@ -152,6 +163,7 @@ export type CoreAccountSpecifics = {}
 export type CoreOperationSpecifics = {}
 & CoreOperationSpecifics_algorand
 & CoreOperationSpecifics_bitcoin
+& CoreOperationSpecifics_celo
 & CoreOperationSpecifics_cosmos
 & CoreOperationSpecifics_crypto_org
 & CoreOperationSpecifics_elrond
@@ -167,6 +179,7 @@ export type CoreOperationSpecifics = {}
 export type CoreCurrencySpecifics = {}
 & CoreCurrencySpecifics_algorand
 & CoreCurrencySpecifics_bitcoin
+& CoreCurrencySpecifics_celo
 & CoreCurrencySpecifics_cosmos
 & CoreCurrencySpecifics_crypto_org
 & CoreCurrencySpecifics_elrond
@@ -182,6 +195,7 @@ export type CoreCurrencySpecifics = {}
 export type Transaction =
   | algorandTransaction
   | bitcoinTransaction
+  | celoTransaction
   | cosmosTransaction
   | crypto_orgTransaction
   | elrondTransaction
@@ -197,6 +211,7 @@ export type Transaction =
 export type TransactionRaw =
   | algorandTransactionRaw
   | bitcoinTransactionRaw
+  | celoTransactionRaw
   | cosmosTransactionRaw
   | crypto_orgTransactionRaw
   | elrondTransactionRaw
@@ -211,6 +226,7 @@ export type TransactionRaw =
   | tronTransactionRaw
 export type NetworkInfo =
   | bitcoinNetworkInfo
+  | celoNetworkInfo
   | cosmosNetworkInfo
   | crypto_orgNetworkInfo
   | elrondNetworkInfo
@@ -223,6 +239,7 @@ export type NetworkInfo =
   | tronNetworkInfo
 export type NetworkInfoRaw =
   | bitcoinNetworkInfoRaw
+  | celoNetworkInfoRaw
   | cosmosNetworkInfoRaw
   | crypto_orgNetworkInfoRaw
   | elrondNetworkInfoRaw
@@ -236,6 +253,7 @@ export type NetworkInfoRaw =
 export const reflectSpecifics = (declare: any): Array<{ OperationMethods: Record<string, unknown>, AccountMethods: Record<string, unknown> }> => [
   algorandReflect(declare),
   bitcoinReflect(declare),
+  celoReflect(declare),
   cosmosReflect(declare),
   crypto_orgReflect(declare),
   elrondReflect(declare),
