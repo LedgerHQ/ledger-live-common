@@ -95,10 +95,11 @@ function serializeTransactionData(
   const to = eip55.encode(transaction.recipient);
 
   return abi.simpleEncode(
-    "safeTransferFrom(address,address,uint256)",
+    "safeTransferFrom(address,address,uint256,bytes)",
     from,
     to,
-    transaction.tokenIds?.[0]
+    transaction.tokenIds?.[0],
+    "0x00"
   );
 }
 
