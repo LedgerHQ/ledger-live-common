@@ -172,7 +172,9 @@ const dataset: DatasetTest<Transaction> = {
               transaction: {
                 model: {
                   kind: "transfer",
-                  uiState: {},
+                  uiState: {
+                    memo: "a memo",
+                  },
                 },
                 useAllAmount: true,
                 amount: zero,

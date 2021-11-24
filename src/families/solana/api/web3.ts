@@ -27,6 +27,7 @@ import { TokenAccountInfo } from "./account/token";
 import { drainSeqAsyncGen } from "../utils";
 import { map } from "lodash/fp";
 import { Awaited } from "../logic";
+import { makeLRUCache } from "../../../cache";
 
 export type Config = {
   cluster: Cluster;
@@ -53,6 +54,17 @@ const connection = connector();
 export const getBalance = (address: string, config: Config): Promise<number> =>
   connection(config.cluster).getBalance(new PublicKey(address));
 
+const lamportsPerSignature = async (config: Config) => {
+  const conn = connection(config.cluster);
+  const res = await conn.getRecentBlockhash();
+  return res.feeCalculator.lamportsPerSignature;
+};
+
+const lamportPerSignatureCached = makeLRUCache(
+  lamportsPerSignature,
+  (config) => config.cluster
+);
+
 export const getAccount = async (
   address: string,
   config: Config
@@ -67,9 +79,7 @@ export const getAccount = async (
   const pubKey = new PublicKey(address);
   const balanceLamportsWithContext = await conn.getBalanceAndContext(pubKey);
 
-  const lamportPerSignature = await conn
-    .getRecentBlockhash()
-    .then((res) => res.feeCalculator.lamportsPerSignature);
+  const lamportPerSignature = await lamportPerSignatureCached(config);
 
   const tokenAccounts = await conn
     .getParsedTokenAccountsByOwner(pubKey, {

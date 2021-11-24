@@ -7,6 +7,7 @@ import {
   RecipientRequired,
 } from "@ledgerhq/errors";
 import { findSubAccountById } from "../../account";
+import { makeLRUCache } from "../../cache";
 import type { Account } from "../../types";
 import {
   findAssociatedTokenAccountPubkey,
@@ -91,6 +92,45 @@ async function deriveCommandDescriptor(
   }
 }
 
+const cacheKeyByCluster = (config: Config) => config.cluster;
+const cacheKeyByAddress = (address: string, config: Config) =>
+  `${cacheKeyByCluster(config)}:${address}`;
+
+const minutes = (num: number, max: number = 100) => ({
+  max,
+  maxAge: num * 60 * 1000,
+});
+
+const getTxFeeCalculatorCached = makeLRUCache(
+  getTxFeeCalculator,
+  cacheKeyByCluster,
+  minutes(5)
+);
+
+const getAssociatedTokenAccountCreationFeeCached = makeLRUCache(
+  getAssociatedTokenAccountCreationFee,
+  cacheKeyByCluster,
+  minutes(5)
+);
+
+const isAccountFundedCached = makeLRUCache(
+  isAccountFunded,
+  cacheKeyByAddress,
+  minutes(1)
+);
+
+const getMaybeTokenAccountCached = makeLRUCache(
+  getMaybeTokenAccount,
+  cacheKeyByAddress,
+  minutes(1)
+);
+
+const findAssociatedTokenAccountPubkeyCached = makeLRUCache(
+  findAssociatedTokenAccountPubkey,
+  (owner, mint) => `${owner}:${mint}`,
+  minutes(1000)
+);
+
 const prepareTransaction = async (
   mainAccount: Account,
   tx: Transaction
@@ -102,7 +142,8 @@ const prepareTransaction = async (
     cluster: clusterByCurrencyId(mainAccount.currency.id),
   };
 
-  const feeCalculator = tx.feeCalculator ?? (await getTxFeeCalculator(config));
+  const feeCalculator =
+    tx.feeCalculator ?? (await getTxFeeCalculatorCached(config));
 
   if (tx.feeCalculator === undefined) {
     patch.feeCalculator = feeCalculator;
@@ -201,14 +242,14 @@ const deriveTokenTransferCommandDescriptor = async (
   }
 
   const fees = recipientDescriptor.shouldCreateAsAssociatedTokenAccount
-    ? await getAssociatedTokenAccountCreationFee(config)
+    ? await getAssociatedTokenAccountCreationFeeCached(config)
     : 0;
 
   if (recipientDescriptor.shouldCreateAsAssociatedTokenAccount) {
     warnings.recipientAssociatedTokenAccount =
       new SolanaRecipientAssociatedTokenAccountWillBeFunded();
 
-    if (!(await isAccountFunded(tx.recipient, config))) {
+    if (!(await isAccountFundedCached(tx.recipient, config))) {
       warnings.recipient = new SolanaAccountNotFunded();
     }
   }
@@ -249,7 +290,7 @@ async function getTokenRecipient(
   mintAddress: string,
   config: Config
 ): Promise<TokenRecipientDescriptor | Error> {
-  const recipientTokenAccount = await getMaybeTokenAccount(
+  const recipientTokenAccount = await getMaybeTokenAccountCached(
     recipientAddress,
     config
   );
@@ -264,12 +305,15 @@ async function getTokenRecipient(
     }
 
     const recipientAssociatedTokenAccPubkey =
-      await findAssociatedTokenAccountPubkey(recipientAddress, mintAddress);
+      await findAssociatedTokenAccountPubkeyCached(
+        recipientAddress,
+        mintAddress
+      );
 
     const recipientAssociatedTokenAccountAddress =
       recipientAssociatedTokenAccPubkey.toBase58();
 
-    const shouldCreateAsAssociatedTokenAccount = !(await isAccountFunded(
+    const shouldCreateAsAssociatedTokenAccount = !(await isAccountFundedCached(
       recipientAssociatedTokenAccountAddress,
       config
     ));
@@ -304,14 +348,15 @@ async function deriveCreateAssociatedTokenAccountCommandDescriptor(
   const tokenIdParts = token.id.split("/");
   const mint = tokenIdParts[tokenIdParts.length - 1];
 
-  const associatedTokenAccountPubkey = await findAssociatedTokenAccountPubkey(
-    mainAccount.freshAddress,
-    mint
-  );
+  const associatedTokenAccountPubkey =
+    await findAssociatedTokenAccountPubkeyCached(
+      mainAccount.freshAddress,
+      mint
+    );
 
   const associatedTokenAccountAddress = associatedTokenAccountPubkey.toBase58();
 
-  const fees = await getAssociatedTokenAccountCreationFee(config);
+  const fees = await getAssociatedTokenAccountCreationFeeCached(config);
 
   return {
     status: "valid",
@@ -338,7 +383,7 @@ async function deriveTransaferCommandDescriptor(
     warnings.recipientOffCurve = new SolanaAddressOffEd25519();
   }
 
-  const recipientWalletIsUnfunded = !(await isAccountFunded(
+  const recipientWalletIsUnfunded = !(await isAccountFundedCached(
     tx.recipient,
     config
   ));
@@ -416,4 +461,51 @@ function updateModelIfSubAccountIdPresent(tx: Transaction): Transaction {
   return tx;
 }
 
-export default prepareTransaction;
+const cacheKeyByModelUIState = (model: TransactionModel) => {
+  switch (model.kind) {
+    case "transfer":
+      return `{
+        memo: ${model.uiState.memo}
+      }`;
+    case "token.transfer":
+      return `{
+        memo: ${model.uiState.memo},
+        subAccountId: ${model.uiState.subAccountId}
+      }`;
+    case "token.createATA":
+      return `{
+        tokenId: ${model.uiState.tokenId}
+      }`;
+    default:
+      return assertUnreachable(model);
+  }
+};
+
+const cacheKeyByAccTx = (mainAccount: Account, tx: Transaction) => {
+  // json stringify is not stable, using a stable one from a library is an overkill
+  return `{
+    account: {
+      id: ${mainAccount.id},
+      address: ${mainAccount.freshAddress},
+      syncDate: ${mainAccount.lastSyncDate.toISOString()},
+    },
+    tx: {
+      recipient: ${tx.recipient},
+      amount: ${tx.amount.toNumber()},
+      useAllAmount: ${tx.useAllAmount},
+      subAccountId: ${tx.subAccountId},
+      model: {
+        kind: ${tx.model.kind},
+        uiState: ${cacheKeyByModelUIState(tx.model)},
+      },
+    },
+  }`;
+};
+
+const prepareTransactionCached = makeLRUCache(
+  prepareTransaction,
+  cacheKeyByAccTx,
+  minutes(1)
+);
+
+export default prepareTransactionCached;
