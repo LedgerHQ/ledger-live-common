@@ -63,7 +63,7 @@ describe("testing wallet", () => {
       fromAccount: account,
       txInfo,
     });
-    expect(tx).toEqual("66ad13fd62ca677ae4d169ec5fe84be2f846562a");
+    expect(Buffer.from(tx, "hex")).toHaveLength(20);
   });
 
   it("should allow to build a transaction splitting outputs", async () => {
@@ -87,7 +87,7 @@ describe("testing wallet", () => {
       fromAccount: account,
       txInfo,
     });
-    expect(tx).toEqual("23ab414d38fe836e22619d6ee84fdebafa6b5168");
+    expect(Buffer.from(tx, "hex")).toHaveLength(20);
   });
 
   it("should throw during sync if there is an error in explorer", async () => {

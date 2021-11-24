@@ -122,7 +122,8 @@ class BitcoinLikeWallet {
     account: Account,
     feePerByte: number,
     excludeUTXOs: Array<{ hash: string; outputIndex: number }>,
-    pickUnconfirmedRBF: boolean
+    pickUnconfirmedRBF: boolean,
+    outputAddresses: string[] = []
   ) {
     const addresses = await account.xpub.getXpubAddresses();
     const utxos = flatten(
@@ -134,6 +135,7 @@ class BitcoinLikeWallet {
     );
     let balance = new BigNumber(0);
     log("btcwallet", "estimateAccountMaxSpendable utxos", utxos);
+    let usableUtxoCount = 0;
     utxos.forEach((utxo) => {
       if (
         !excludeUTXOs.find(
@@ -143,6 +145,7 @@ class BitcoinLikeWallet {
         )
       ) {
         if ((pickUnconfirmedRBF && utxo.rbf) || utxo.block_height !== null) {
+          usableUtxoCount++;
           balance = balance.plus(utxo.value);
         }
       }
@@ -150,12 +153,14 @@ class BitcoinLikeWallet {
     // fees if we use all utxo
     const fees =
       feePerByte *
-      utils.estimateTxSize(
-        utxos.length,
-        1,
+      utils.maxTxSizeCeil(
+        usableUtxoCount,
+        outputAddresses,
+        outputAddresses.length == 0,
         account.xpub.crypto,
         account.xpub.derivationMode
       );
+
     log("btcwallet", "estimateAccountMaxSpendable balance", balance);
     log("btcwallet", "estimateAccountMaxSpendable fees", fees);
     const maxSpendable = balance.minus(fees);
@@ -222,7 +227,6 @@ class BitcoinLikeWallet {
       btc,
       fromAccount,
       txInfo,
-      segwit,
       additionals,
       hasExtraData,
       onDeviceSignatureRequested,
@@ -255,7 +259,7 @@ class BitcoinLikeWallet {
     const inputs: Inputs = txInfo.inputs.map((i) => {
       log("hw", `splitTransaction`, {
         transactionHex: i.txHex,
-        isSegwitSupported: segwit,
+        isSegwitSupported: true,
         hasTimestamp: false,
         hasExtraData,
         additionals,
@@ -263,7 +267,7 @@ class BitcoinLikeWallet {
       return [
         btc.splitTransaction(
           i.txHex,
-          segwit,
+          true,
           false, // FIXME hasTimestamp needed for LL-7539
           hasExtraData,
           additionals

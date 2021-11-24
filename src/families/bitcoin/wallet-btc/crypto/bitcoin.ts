@@ -1,9 +1,10 @@
 // from https://github.com/LedgerHQ/xpub-scan/blob/master/src/actions/deriveAddresses.ts
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import { bech32, bech32m } from "bech32";
+
+import * as bech32 from "bech32";
+import { bech32m } from "../../bech32m";
 import * as bjs from "bitcoinjs-lib";
 import { publicKeyTweakAdd } from "secp256k1";
+import { InvalidAddress } from "@ledgerhq/errors";
 import { DerivationModes } from "../types";
 import Base from "./base";
 
@@ -87,7 +88,7 @@ class Bitcoin extends Base {
     // Make sure the address is valid on this network
     // otherwise we can't call toOutputScriptTemporary.
     if (!this.validateAddress(address)) {
-      throw new Error("Invalid address");
+      throw new InvalidAddress();
     }
     // bitcoinjs-lib/src/address doesn't yet have released support for bech32m,
     // so we'll implement our own version of toOutputScript while waiting.
@@ -124,9 +125,16 @@ class Bitcoin extends Base {
     account: number,
     index: number
   ): string {
+    if (Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`]) {
+      return Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`];
+    }
     switch (derivationMode) {
       case DerivationModes.TAPROOT:
-        return this.getTaprootAddress(xpub, account, index);
+        Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`] =
+          this.getTaprootAddress(xpub, account, index);
+        return Base.addressCache[
+          `${derivationMode}-${xpub}-${account}-${index}`
+        ];
       default:
         return super.getAddress(derivationMode, xpub, account, index);
     }
@@ -188,7 +196,7 @@ class Bitcoin extends Base {
     const schnorrInternalPubkey = ecdsaPubkey.slice(1);
 
     const evenEcdsaPubkey = Buffer.concat([
-      Buffer.of(0x02),
+      Buffer.from([0x02]),
       schnorrInternalPubkey,
     ]);
     const tweak = this.hashTapTweak(schnorrInternalPubkey);
@@ -201,6 +209,19 @@ class Bitcoin extends Base {
     const outputSchnorrKey = outputEcdsaKey.slice(1);
     // Create address
     return toBech32(outputSchnorrKey, 1, this.network.bech32);
+  }
+
+  isTaprootAddress(address: string): boolean {
+    // This prefix check is to avoid returning false in cases where a valid base58 address also happens
+    // to be a valid bech32(m) string (but invalid segwit address).
+    if (address.toLowerCase().startsWith(`${this.network.bech32}1`)) {
+      try {
+        bjs.address.fromBech32(address);
+      } catch {
+        return true;
+      }
+    }
+    return false;
   }
 }
 
