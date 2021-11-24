@@ -12,7 +12,7 @@ import type { Account } from "../../../types";
 
 const notOwnedNft = createCustomErrorClass("NotOwnedNft");
 const notEnoughNftOwned = createCustomErrorClass("NotEnoughNftOwned");
-const notTokenIdsProvided = createCustomErrorClass("notTokenIdsProvided");
+const notTokenIdsProvided = createCustomErrorClass("NotTokenIdsProvided");
 
 export type Modes = "erc1155.transfer";
 
@@ -115,16 +115,26 @@ function serializeTransactionData(
 ): Buffer | null | undefined {
   const from = eip55.encode(account.freshAddress);
   const to = eip55.encode(transaction.recipient);
-  const tokenIds = transaction.tokenIds;
-  const quantities = transaction.quantities?.map((q) => q.toFixed());
+  const tokenIds = transaction.tokenIds || [];
+  const quantities = transaction.quantities?.map((q) => q.toFixed()) || [];
 
-  return abi.simpleEncode(
-    "safeBatchTransferFrom(address,address,uint256[],uint256[])",
-    from,
-    to,
-    tokenIds,
-    quantities
-  );
+  return tokenIds?.length > 1
+    ? abi.simpleEncode(
+        "safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)",
+        from,
+        to,
+        tokenIds,
+        quantities,
+        "0x00",
+      )
+    : abi.simpleEncode(
+        "safeTransferFrom(address,address,uint256,uint256,bytes)",
+        from,
+        to,
+        tokenIds[0],
+        quantities[0],
+        "0x00",
+      );
 }
 
 export const modes: Record<Modes, ModeModule> = {
