@@ -46,8 +46,8 @@ export async function getAccountNetworkInfo(
     throw new Error("cardinality of feesPerByte should be exactly 3");
   }
   // Suggested fee is too low
-  if (feesPerByte[2].toNumber() < Math.ceil((relayFee * 100000000) / 1024)) {
-    feesPerByte[2] = new BigNumber(Math.ceil((relayFee * 100000000) / 1024));
+  if (feesPerByte[2].toNumber() < Math.ceil(relayFee * 100000) + 1) {
+    feesPerByte[2] = new BigNumber(Math.ceil(relayFee * 100000)).plus(1);
     feesPerByte[1] = feesPerByte[2].plus(1);
     feesPerByte[0] = feesPerByte[1].plus(1);
   }
