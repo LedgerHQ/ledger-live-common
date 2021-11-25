@@ -125,11 +125,7 @@ function serializeTransactionData(
         to,
         tokenIds,
         quantities,
-<<<<<<< HEAD
-        "0x00",
-=======
         "0x00"
->>>>>>> 5a9cae5c4cfa7ca77fe712871d7941ac859001f7
       )
     : abi.simpleEncode(
         "safeTransferFrom(address,address,uint256,uint256,bytes)",
@@ -137,11 +133,7 @@ function serializeTransactionData(
         to,
         tokenIds[0],
         quantities[0],
-<<<<<<< HEAD
-        "0x00",
-=======
         "0x00"
->>>>>>> 5a9cae5c4cfa7ca77fe712871d7941ac859001f7
       );
 }
 
