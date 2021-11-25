@@ -169,7 +169,10 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
   }
 
   async getRelayFee() {
-    return 5;
+    const client = await this.client.acquire();
+    const fees = (await client.client.get(`/network`)).data;
+    await this.client.release(client);
+    return parseFloat(fees["relay_fee"]);
   }
 
   async getPendings(address: Address, nbMax?: number) {

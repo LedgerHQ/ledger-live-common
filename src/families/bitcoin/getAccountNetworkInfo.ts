@@ -20,6 +20,7 @@ export async function getAccountNetworkInfo(
 ): Promise<NetworkInfo> {
   const walletAccount = getWalletAccount(account);
   const rawFees = await walletAccount.xpub.explorer.getFees();
+  const relayFee = await walletAccount.xpub.explorer.getRelayFee();
   // Convoluted logic to convert from:
   // { "2": 2435, "3": 1241, "6": 1009, "last_updated": 1627973170 }
   // to:
@@ -44,7 +45,12 @@ export async function getAccountNetworkInfo(
   if (feesPerByte.length !== 3) {
     throw new Error("cardinality of feesPerByte should be exactly 3");
   }
-  const relayFee = await walletAccount.xpub.explorer.getRelayFee();
+  // Suggested fee is too low
+  if (feesPerByte[2].toNumber() < Math.ceil((relayFee * 100000000) / 1024)) {
+    feesPerByte[2] = new BigNumber(Math.ceil((relayFee * 100000000) / 1024));
+    feesPerByte[1] = feesPerByte[2].plus(1);
+    feesPerByte[0] = feesPerByte[1].plus(1);
+  }
   const feeItems = {
     items: feesPerByte.map((feePerByte, i) => ({
       key: String(i),
