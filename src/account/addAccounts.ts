@@ -40,7 +40,7 @@ export function groupAddAccounts(
   scannedAccounts: Account[],
   context: {
     scanning: boolean;
-    preferredNewAccountSchemes?: DerivationMode[];
+    preferredNewAccountScheme?: DerivationMode;
   }
 ): AddAccountsSectionResult {
   const importedAccounts: Account[] = [];
@@ -74,7 +74,7 @@ export function groupAddAccounts(
     );
 
     if (existingAccount) {
-      if (!acc.used) {
+      if (!acc.used && !alreadyEmptyAccount) {
         alreadyEmptyAccount = existingAccount;
       }
 
@@ -116,15 +116,11 @@ export function groupAddAccounts(
       id: "creatable",
       selectable: true,
       defaultSelected: false,
-      data:
-        context.preferredNewAccountSchemes &&
-        context.preferredNewAccountSchemes.length > 0
-          ? creatableAccounts.filter(
-              (a) =>
-                context.preferredNewAccountSchemes &&
-                context.preferredNewAccountSchemes.includes(a.derivationMode)
-            )
-          : creatableAccounts,
+      data: context.preferredNewAccountScheme
+        ? creatableAccounts.filter(
+            (a) => a.derivationMode === context.preferredNewAccountScheme
+          )
+        : creatableAccounts,
     });
   }
 
