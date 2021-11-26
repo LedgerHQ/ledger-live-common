@@ -188,7 +188,7 @@ const initialExplorerConfig: FullConfig = {
   ethereum: {
     id: "eth",
     stable: {
-      base: "EXPLORER",
+      base: "EXPLORER_BETA",
       version: "v3",
     },
   },
