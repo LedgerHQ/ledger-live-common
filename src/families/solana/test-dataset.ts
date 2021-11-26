@@ -25,6 +25,7 @@ import {
 import createTransaction from "./js-createTransaction";
 import { compact } from "lodash/fp";
 import { assertUnreachable } from "./utils";
+import { getEnv } from "../../env";
 
 // do not change real properties or the test will break
 const testOnChainData = {
@@ -72,7 +73,7 @@ const fees = (signatureCount: number) =>
 const zero = new BigNumber(0);
 
 const dataset: DatasetTest<Transaction> = {
-  implementations: ["js"],
+  implementations: [getEnv("MOCK") ? "mock" : "js"],
   currencies: {
     solana: {
       scanAccounts: [scanAccounts1],

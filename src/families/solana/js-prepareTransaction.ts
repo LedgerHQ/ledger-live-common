@@ -7,15 +7,7 @@ import {
   RecipientRequired,
 } from "@ledgerhq/errors";
 import { findSubAccountById } from "../../account";
-import { makeLRUCache } from "../../cache";
 import type { Account } from "../../types";
-import {
-  findAssociatedTokenAccountPubkey,
-  getTxFeeCalculator,
-  getMaybeTokenAccount,
-  getAssociatedTokenAccountCreationFee,
-  Config,
-} from "./api";
 import {
   SolanaAccountNotFunded,
   SolanaAddressOffEd25519,
@@ -28,7 +20,6 @@ import {
 } from "./errors";
 import {
   decodeAccountIdWithTokenAccountAddress,
-  isAccountFunded,
   isEd25519Address,
   isValidBase58Address,
   MAX_MEMO_LENGTH,
@@ -36,6 +27,7 @@ import {
 
 import type {
   CommandDescriptor,
+  PrepareTxAPI,
   TokenCreateATATransaction,
   TokenRecipientDescriptor,
   TokenTransferTransaction,
@@ -43,12 +35,12 @@ import type {
   TransactionModel,
   TransferTransaction,
 } from "./types";
-import { assertUnreachable, clusterByCurrencyId } from "./utils";
+import { assertUnreachable } from "./utils";
 
 async function deriveCommandDescriptor(
   mainAccount: Account,
   tx: Transaction,
-  config: Config
+  api: PrepareTxAPI
 ): Promise<CommandDescriptor> {
   const errors: Record<string, Error> = {};
 
@@ -79,71 +71,28 @@ async function deriveCommandDescriptor(
       }
 
       return model.kind === "transfer"
-        ? deriveTransaferCommandDescriptor(mainAccount, tx, model, config)
-        : deriveTokenTransferCommandDescriptor(mainAccount, tx, model, config);
+        ? deriveTransaferCommandDescriptor(mainAccount, tx, model, api)
+        : deriveTokenTransferCommandDescriptor(mainAccount, tx, model, api);
     case "token.createATA":
       return deriveCreateAssociatedTokenAccountCommandDescriptor(
         mainAccount,
         model,
-        config
+        api
       );
     default:
       return assertUnreachable(model);
   }
 }
 
-const cacheKeyByCluster = (config: Config) => config.cluster;
-const cacheKeyByAddress = (address: string, config: Config) =>
-  `${cacheKeyByCluster(config)}:${address}`;
-
-const minutes = (num: number, max = 100) => ({
-  max,
-  maxAge: num * 60 * 1000,
-});
-
-const getTxFeeCalculatorCached = makeLRUCache(
-  getTxFeeCalculator,
-  cacheKeyByCluster,
-  minutes(5)
-);
-
-const getAssociatedTokenAccountCreationFeeCached = makeLRUCache(
-  getAssociatedTokenAccountCreationFee,
-  cacheKeyByCluster,
-  minutes(5)
-);
-
-const isAccountFundedCached = makeLRUCache(
-  isAccountFunded,
-  cacheKeyByAddress,
-  minutes(1)
-);
-
-const getMaybeTokenAccountCached = makeLRUCache(
-  getMaybeTokenAccount,
-  cacheKeyByAddress,
-  minutes(1)
-);
-
-const findAssociatedTokenAccountPubkeyCached = makeLRUCache(
-  findAssociatedTokenAccountPubkey,
-  (owner, mint) => `${owner}:${mint}`,
-  minutes(1000)
-);
-
 const prepareTransaction = async (
   mainAccount: Account,
-  tx: Transaction
+  tx: Transaction,
+  api: PrepareTxAPI
 ): Promise<Transaction> => {
   const patch: Partial<Transaction> = {};
   const errors: Record<string, Error> = {};
 
-  const config: Config = {
-    cluster: clusterByCurrencyId(mainAccount.currency.id),
-  };
-
-  const feeCalculator =
-    tx.feeCalculator ?? (await getTxFeeCalculatorCached(config));
+  const feeCalculator = tx.feeCalculator ?? (await api.getTxFeeCalculator());
 
   if (tx.feeCalculator === undefined) {
     patch.feeCalculator = feeCalculator;
@@ -154,7 +103,7 @@ const prepareTransaction = async (
   const commandDescriptor = await deriveCommandDescriptor(
     mainAccount,
     txToDeriveFrom,
-    config
+    api
   );
 
   if (commandDescriptor.status === "invalid") {
@@ -205,7 +154,7 @@ const deriveTokenTransferCommandDescriptor = async (
   mainAccount: Account,
   tx: Transaction,
   model: TransactionModel & { kind: TokenTransferTransaction["kind"] },
-  config: Config
+  api: PrepareTxAPI
 ): Promise<CommandDescriptor> => {
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
@@ -234,7 +183,7 @@ const deriveTokenTransferCommandDescriptor = async (
   const recipientDescriptor = await getTokenRecipient(
     tx.recipient,
     mintAddress,
-    config
+    api
   );
 
   if (recipientDescriptor instanceof Error) {
@@ -243,14 +192,14 @@ const deriveTokenTransferCommandDescriptor = async (
   }
 
   const fees = recipientDescriptor.shouldCreateAsAssociatedTokenAccount
-    ? await getAssociatedTokenAccountCreationFeeCached(config)
+    ? await api.getAssociatedTokenAccountCreationFee()
     : 0;
 
   if (recipientDescriptor.shouldCreateAsAssociatedTokenAccount) {
     warnings.recipientAssociatedTokenAccount =
       new SolanaRecipientAssociatedTokenAccountWillBeFunded();
 
-    if (!(await isAccountFundedCached(tx.recipient, config))) {
+    if (!(await isAccountFunded(tx.recipient, api))) {
       warnings.recipient = new SolanaAccountNotFunded();
     }
   }
@@ -289,11 +238,10 @@ const deriveTokenTransferCommandDescriptor = async (
 async function getTokenRecipient(
   recipientAddress: string,
   mintAddress: string,
-  config: Config
+  api: PrepareTxAPI
 ): Promise<TokenRecipientDescriptor | Error> {
-  const recipientTokenAccount = await getMaybeTokenAccountCached(
-    recipientAddress,
-    config
+  const recipientTokenAccount = await api.getMaybeTokenAccount(
+    recipientAddress
   );
 
   if (recipientTokenAccount instanceof Error) {
@@ -306,17 +254,14 @@ async function getTokenRecipient(
     }
 
     const recipientAssociatedTokenAccPubkey =
-      await findAssociatedTokenAccountPubkeyCached(
-        recipientAddress,
-        mintAddress
-      );
+      await api.findAssociatedTokenAccountPubkey(recipientAddress, mintAddress);
 
     const recipientAssociatedTokenAccountAddress =
       recipientAssociatedTokenAccPubkey.toBase58();
 
-    const shouldCreateAsAssociatedTokenAccount = !(await isAccountFundedCached(
+    const shouldCreateAsAssociatedTokenAccount = !(await isAccountFunded(
       recipientAssociatedTokenAccountAddress,
-      config
+      api
     ));
 
     return {
@@ -343,21 +288,18 @@ async function getTokenRecipient(
 async function deriveCreateAssociatedTokenAccountCommandDescriptor(
   mainAccount: Account,
   model: TransactionModel & { kind: TokenCreateATATransaction["kind"] },
-  config: Config
+  api: PrepareTxAPI
 ): Promise<CommandDescriptor> {
   const token = getTokenById(model.uiState.tokenId);
   const tokenIdParts = token.id.split("/");
   const mint = tokenIdParts[tokenIdParts.length - 1];
 
   const associatedTokenAccountPubkey =
-    await findAssociatedTokenAccountPubkeyCached(
-      mainAccount.freshAddress,
-      mint
-    );
+    await api.findAssociatedTokenAccountPubkey(mainAccount.freshAddress, mint);
 
   const associatedTokenAccountAddress = associatedTokenAccountPubkey.toBase58();
 
-  const fees = await getAssociatedTokenAccountCreationFeeCached(config);
+  const fees = await api.getAssociatedTokenAccountCreationFee();
 
   return {
     status: "valid",
@@ -375,7 +317,7 @@ async function deriveTransaferCommandDescriptor(
   mainAccount: Account,
   tx: Transaction,
   model: TransactionModel & { kind: TransferTransaction["kind"] },
-  config: Config
+  api: PrepareTxAPI
 ): Promise<CommandDescriptor> {
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
@@ -384,10 +326,7 @@ async function deriveTransaferCommandDescriptor(
     warnings.recipientOffCurve = new SolanaAddressOffEd25519();
   }
 
-  const recipientWalletIsUnfunded = !(await isAccountFundedCached(
-    tx.recipient,
-    config
-  ));
+  const recipientWalletIsUnfunded = !(await isAccountFunded(tx.recipient, api));
   if (recipientWalletIsUnfunded) {
     warnings.recipient = new SolanaAccountNotFunded();
   }
@@ -462,51 +401,12 @@ function updateModelIfSubAccountIdPresent(tx: Transaction): Transaction {
   return tx;
 }
 
-const cacheKeyByModelUIState = (model: TransactionModel) => {
-  switch (model.kind) {
-    case "transfer":
-      return `{
-        memo: ${model.uiState.memo}
-      }`;
-    case "token.transfer":
-      return `{
-        memo: ${model.uiState.memo},
-        subAccountId: ${model.uiState.subAccountId}
-      }`;
-    case "token.createATA":
-      return `{
-        tokenId: ${model.uiState.tokenId}
-      }`;
-    default:
-      return assertUnreachable(model);
-  }
-};
+async function isAccountFunded(
+  address: string,
+  api: PrepareTxAPI
+): Promise<boolean> {
+  const balance = await api.getBalance(address);
+  return balance > 0;
+}
 
-const cacheKeyByAccTx = (mainAccount: Account, tx: Transaction) => {
-  // json stringify is not stable, using a stable one from a library is an overkill
-  return `{
-    account: {
-      id: ${mainAccount.id},
-      address: ${mainAccount.freshAddress},
-      syncDate: ${mainAccount.lastSyncDate.toISOString()},
-    },
-    tx: {
-      recipient: ${tx.recipient},
-      amount: ${tx.amount.toNumber()},
-      useAllAmount: ${tx.useAllAmount},
-      subAccountId: ${tx.subAccountId},
-      model: {
-        kind: ${tx.model.kind},
-        uiState: ${cacheKeyByModelUIState(tx.model)},
-      },
-    },
-  }`;
-};
-
-const prepareTransactionCached = makeLRUCache(
-  prepareTransaction,
-  cacheKeyByAccTx,
-  minutes(1)
-);
-
-export default prepareTransactionCached;
+export { prepareTransaction };

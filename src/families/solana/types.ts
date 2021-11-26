@@ -2,6 +2,13 @@ import type {
   TransactionCommon,
   TransactionCommonRaw,
 } from "../../types/transaction";
+import {
+  findAssociatedTokenAccountPubkey,
+  getAssociatedTokenAccountCreationFee,
+  getBalance,
+  getMaybeTokenAccount,
+  getTxFeeCalculator,
+} from "./api";
 
 // for legacy reasons export the types
 export type CoreStatics = Record<string, never>;
@@ -110,3 +117,13 @@ export type TransactionRaw = TransactionCommonRaw & {
 };
 
 export const reflect = (_declare: unknown): void => {};
+
+export type PrepareTxAPI = {
+  findAssociatedTokenAccountPubkey: typeof findAssociatedTokenAccountPubkey;
+  getTxFeeCalculator: ReturnType<typeof getTxFeeCalculator>;
+  getMaybeTokenAccount: ReturnType<typeof getMaybeTokenAccount>;
+  getAssociatedTokenAccountCreationFee: ReturnType<
+    typeof getAssociatedTokenAccountCreationFee
+  >;
+  getBalance: ReturnType<typeof getBalance>;
+};

@@ -51,8 +51,10 @@ const connector = () => {
 
 const connection = connector();
 
-export const getBalance = (address: string, config: Config): Promise<number> =>
-  connection(config.cluster).getBalance(new PublicKey(address));
+export const getBalance =
+  (config: Config) =>
+  (address: string): Promise<number> =>
+    connection(config.cluster).getBalance(new PublicKey(address));
 
 const lamportsPerSignature = async (config: Config) => {
   const conn = connection(config.cluster);
@@ -117,12 +119,11 @@ function toTokenAccountWithInfo(
   return { onChainAcc, info };
 }
 
-export const getTxFeeCalculator = async (
-  config: Config
-): Promise<FeeCalculator> => {
-  const res = await connection(config.cluster).getRecentBlockhash();
-  return res.feeCalculator;
-};
+export const getTxFeeCalculator =
+  (config: Config) => async (): Promise<FeeCalculator> => {
+    const res = await connection(config.cluster).getRecentBlockhash();
+    return res.feeCalculator;
+  };
 
 export type TransactionDescriptor = {
   parsed: ParsedConfirmedTransaction;
@@ -327,24 +328,21 @@ export async function findAssociatedTokenAccountPubkey(
   );
 }
 
-export async function getMaybeTokenAccount(
-  address: string,
-  config: {
-    cluster: Cluster;
-  }
-): Promise<TokenAccountInfo | undefined | Error> {
-  const conn = connection(config.cluster);
+export const getMaybeTokenAccount =
+  (config: Config) =>
+  async (address: string): Promise<TokenAccountInfo | undefined | Error> => {
+    const conn = connection(config.cluster);
 
-  const accInfo = (await conn.getParsedAccountInfo(new PublicKey(address)))
-    .value;
+    const accInfo = (await conn.getParsedAccountInfo(new PublicKey(address)))
+      .value;
 
-  const tokenAccount =
-    accInfo !== null && "parsed" in accInfo.data
-      ? tryParseAsTokenAccount(accInfo.data)
-      : undefined;
+    const tokenAccount =
+      accInfo !== null && "parsed" in accInfo.data
+        ? tryParseAsTokenAccount(accInfo.data)
+        : undefined;
 
-  return tokenAccount;
-}
+    return tokenAccount;
+  };
 
 export async function buildCreateAssociatedTokenAccountTransaction(
   { mint, owner, associatedTokenAccountAddress }: TokenCreateATACommand,
@@ -377,8 +375,6 @@ export async function buildCreateAssociatedTokenAccountTransaction(
   return onChainTx;
 }
 
-export function getAssociatedTokenAccountCreationFee(
-  config: Config
-): Promise<number> {
-  return Token.getMinBalanceRentForExemptAccount(connection(config.cluster));
-}
+export const getAssociatedTokenAccountCreationFee =
+  (config: Config) => (): Promise<number> =>
+    Token.getMinBalanceRentForExemptAccount(connection(config.cluster));

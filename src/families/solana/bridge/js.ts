@@ -5,9 +5,9 @@ import { scanAccounts, sync } from "../js-synchronization";
 import getTransactionStatus from "../js-getTransactionStatus";
 import estimateMaxSpendable from "../js-estimateMaxSpendable";
 import createTransaction, { updateTransaction } from "../js-createTransaction";
-import prepareTransaction from "../js-prepareTransaction";
 import signOperation from "../js-signOperation";
 import broadcast from "../js-broadcast";
+import { prepareTransactionCached } from "./js-cached";
 
 const preload = async (): Promise<any> => {};
 
@@ -24,7 +24,7 @@ const currencyBridge: CurrencyBridge = {
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   updateTransaction,
-  prepareTransaction,
+  prepareTransaction: prepareTransactionCached,
   estimateMaxSpendable,
   getTransactionStatus,
   sync,
