@@ -7,7 +7,7 @@ import estimateMaxSpendable from "../js-estimateMaxSpendable";
 import createTransaction, { updateTransaction } from "../js-createTransaction";
 import signOperation from "../js-signOperation";
 import broadcast from "../js-broadcast";
-import { prepareTransactionCached } from "./js-cached";
+import { prepareTransactionQueuedAndCached } from "../prepare-tx/prepare-tx-queued-cached";
 
 const preload = async (): Promise<any> => {};
 
@@ -24,7 +24,7 @@ const currencyBridge: CurrencyBridge = {
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
   updateTransaction,
-  prepareTransaction: prepareTransactionCached,
+  prepareTransaction: prepareTransactionQueuedAndCached,
   estimateMaxSpendable,
   getTransactionStatus,
   sync,

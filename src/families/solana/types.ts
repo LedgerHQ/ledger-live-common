@@ -3,6 +3,7 @@ import type {
   TransactionCommonRaw,
 } from "../../types/transaction";
 import {
+  Config,
   findAssociatedTokenAccountPubkey,
   getAssociatedTokenAccountCreationFee,
   getBalance,
@@ -119,11 +120,12 @@ export type TransactionRaw = TransactionCommonRaw & {
 export const reflect = (_declare: unknown): void => {};
 
 export type PrepareTxAPI = {
-  findAssociatedTokenAccountPubkey: typeof findAssociatedTokenAccountPubkey;
-  getTxFeeCalculator: ReturnType<typeof getTxFeeCalculator>;
-  getMaybeTokenAccount: ReturnType<typeof getMaybeTokenAccount>;
-  getAssociatedTokenAccountCreationFee: ReturnType<
+  readonly findAssociatedTokenAccountPubkey: typeof findAssociatedTokenAccountPubkey;
+  readonly getTxFeeCalculator: ReturnType<typeof getTxFeeCalculator>;
+  readonly getMaybeTokenAccount: ReturnType<typeof getMaybeTokenAccount>;
+  readonly getAssociatedTokenAccountCreationFee: ReturnType<
     typeof getAssociatedTokenAccountCreationFee
   >;
-  getBalance: ReturnType<typeof getBalance>;
+  readonly getBalance: ReturnType<typeof getBalance>;
+  readonly config: Config;
 };
