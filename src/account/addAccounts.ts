@@ -40,7 +40,7 @@ export function groupAddAccounts(
   scannedAccounts: Account[],
   context: {
     scanning: boolean;
-    preferredNewAccountScheme?: DerivationMode;
+    preferredNewAccountSchemes?: DerivationMode[];
   }
 ): AddAccountsSectionResult {
   const importedAccounts: Account[] = [];
@@ -116,11 +116,16 @@ export function groupAddAccounts(
       id: "creatable",
       selectable: true,
       defaultSelected: false,
-      data: context.preferredNewAccountScheme
-        ? creatableAccounts.filter(
-            (a) => a.derivationMode === context.preferredNewAccountScheme
-          )
-        : creatableAccounts,
+      data:
+        context.preferredNewAccountSchemes &&
+        context.preferredNewAccountSchemes.length > 0
+          ? creatableAccounts.filter(
+              (a) =>
+                context.preferredNewAccountSchemes &&
+                // Note: we could use a simple preferredNewAccountScheme param
+                a.derivationMode === context.preferredNewAccountSchemes[0]
+            )
+          : creatableAccounts,
     });
   }
 
