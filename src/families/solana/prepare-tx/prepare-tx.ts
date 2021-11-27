@@ -1,41 +1,34 @@
 import { Account } from "../../../types";
-import {
-  Config,
-  findAssociatedTokenAccountPubkey,
-  getAssociatedTokenAccountCreationFee,
-  getBalance,
-  getMaybeTokenAccount,
-  getTxFeeCalculator,
-} from "../api";
-import { PrepareTxAPI, Transaction, TransactionModel } from "../types";
+import { Transaction, TransactionModel } from "../types";
 import { assertUnreachable, clusterByCurrencyId } from "../utils";
-import { getPrepareTxAPIQueued } from "./prepare-tx-queued";
-import { getPrepareTxAPICached, minutes } from "./prepare-tx-cached";
+import { getPrepareTxAPIQueued } from "./prepare-tx-api-queued";
+import { getPrepareTxAPICached, minutes } from "./prepare-tx-api-cached";
 import { prepareTransaction as prepareTransactionWithAPI } from "../js-prepareTransaction";
 import { makeLRUCache } from "../../../cache";
+import { getPrepareTxAPI } from "./prepare-tx-api";
+import { Config } from "../api";
 
-function getPrepareTxAPI(config: Config): PrepareTxAPI {
-  return {
-    findAssociatedTokenAccountPubkey,
-    getAssociatedTokenAccountCreationFee:
-      getAssociatedTokenAccountCreationFee(config),
-    getBalance: getBalance(config),
-    getMaybeTokenAccount: getMaybeTokenAccount(config),
-    getTxFeeCalculator: getTxFeeCalculator(config),
-    config,
-  };
-}
+const cacheKeyCluster = (config: Config) => config.cluster;
+
+const prepareTxQueuedAndCachedAPI = makeLRUCache(
+  (config: Config) => {
+    const api = getPrepareTxAPI(config);
+    const queuedApi = getPrepareTxAPIQueued(api);
+    const queuedAndCachedApi = getPrepareTxAPICached(queuedApi);
+    return Promise.resolve(queuedAndCachedApi);
+  },
+  cacheKeyCluster,
+  minutes(1000)
+);
 
 const prepareTransaction = async (mainAccount: Account, tx: Transaction) => {
   const config = {
     cluster: clusterByCurrencyId(mainAccount.currency.id),
   };
 
-  const api = getPrepareTxAPI(config);
-  const queuedApi = getPrepareTxAPIQueued(api);
-  const queuedAndCachedApi = await getPrepareTxAPICached(queuedApi);
+  const api = await prepareTxQueuedAndCachedAPI(config);
 
-  return prepareTransactionWithAPI(mainAccount, tx, queuedAndCachedApi);
+  return prepareTransactionWithAPI(mainAccount, tx, api);
 };
 
 const cacheKeyByModelUIState = (model: TransactionModel) => {
@@ -81,10 +74,10 @@ const cacheKeyByAccTx = (mainAccount: Account, tx: Transaction) => {
   }`;
 };
 
-const prepareTransactionQueuedAndCached = makeLRUCache(
+const prepareTransactionWithQueuedAndCachedAPI = makeLRUCache(
   prepareTransaction,
   cacheKeyByAccTx,
   minutes(1)
 );
 
-export { prepareTransactionQueuedAndCached };
+export { prepareTransactionWithQueuedAndCachedAPI };

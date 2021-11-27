@@ -40,36 +40,41 @@ type AsyncQueueEntry<T> = {
   reject: (reason?: any) => void;
 };
 
-async function drainAsyncQueue() {
-  if (asyncQueue.length > 0) {
-    const { lazyPromise, resolve, reject } = asyncQueue[asyncQueue.length - 1];
-    try {
-      resolve(await lazyPromise());
-    } catch (e) {
-      reject(e);
-    } finally {
-      asyncQueue.pop();
-      drainAsyncQueue();
+export function asyncQueue(config: { delayBetweenRuns: number }) {
+  const { delayBetweenRuns } = config;
+  const q: AsyncQueueEntry<any>[] = [];
+
+  const drain = async () => {
+    if (q.length > 0) {
+      const { lazyPromise, resolve, reject } = q[q.length - 1];
+      try {
+        resolve(await lazyPromise());
+      } catch (e) {
+        reject(e);
+      } finally {
+        void setTimeout(() => {
+          q.pop();
+          void drain();
+        }, delayBetweenRuns);
+      }
     }
-  }
-}
+  };
 
-const asyncQueue: AsyncQueueEntry<any>[] = [];
+  const submit = <T>(lazyPromise: () => Promise<T>): Promise<T> => {
+    return new Promise((resolve, reject) => {
+      q.unshift({
+        lazyPromise,
+        resolve,
+        reject,
+      });
 
-export function runQueued<T>(lazyPromise: () => Promise<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    asyncQueue.unshift({
-      lazyPromise,
-      resolve,
-      reject,
+      if (q.length === 1) {
+        void drain();
+      }
     });
+  };
 
-    drainAsyncQueue();
-  });
+  return {
+    submit,
+  };
 }
-
-export const lazy = <ARGS extends any[], R>(fn: (...args: ARGS) => R) => {
-  return (...args: ARGS) =>
-    () =>
-      fn(...args);
-};
