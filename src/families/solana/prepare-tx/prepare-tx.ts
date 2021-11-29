@@ -7,6 +7,7 @@ import { prepareTransaction as prepareTransactionWithAPI } from "../js-prepareTr
 import { makeLRUCache } from "../../../cache";
 import { getPrepareTxAPI } from "./prepare-tx-api";
 import { Config } from "../api";
+import { ChainAPI } from "../api/web4";
 
 const cacheKeyCluster = (config: Config) => config.cluster;
 
@@ -20,16 +21,6 @@ const prepareTxQueuedAndCachedAPI = makeLRUCache(
   cacheKeyCluster,
   minutes(1000)
 );
-
-const prepareTransaction = async (mainAccount: Account, tx: Transaction) => {
-  const config = {
-    cluster: clusterByCurrencyId(mainAccount.currency.id),
-  };
-
-  const api = await prepareTxQueuedAndCachedAPI(config);
-
-  return prepareTransactionWithAPI(mainAccount, tx, api);
-};
 
 const cacheKeyByModelUIState = (model: TransactionModel) => {
   switch (model.kind) {
@@ -51,11 +42,9 @@ const cacheKeyByModelUIState = (model: TransactionModel) => {
   }
 };
 
-const cacheKeyByAccTx = (mainAccount: Account, tx: Transaction) => {
-  const cluster = clusterByCurrencyId(mainAccount.currency.id);
+export const cacheKeyByAccTx = (mainAccount: Account, tx: Transaction) => {
   // json stringify is not stable, using a stable one from a library is probably an overkill
   return `{
-    cluster: ${cluster},
     account: {
       id: ${mainAccount.id},
       address: ${mainAccount.freshAddress},
@@ -74,10 +63,12 @@ const cacheKeyByAccTx = (mainAccount: Account, tx: Transaction) => {
   }`;
 };
 
-const prepareTransactionWithQueuedAndCachedAPI = makeLRUCache(
-  prepareTransaction,
-  cacheKeyByAccTx,
+/*
+const prepareTransactionWithAPICached = makeLRUCache(
+  prepareTransactionWithAPI,
+  cacheKeyByAccTxCluster,
   minutes(1)
 );
+*/
 
-export { prepareTransactionWithQueuedAndCachedAPI };
+//export { prepareTransactionWithAPICached };

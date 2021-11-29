@@ -1,39 +1,13 @@
-import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
-import type { AccountBridge, CurrencyBridge } from "../../../types";
-import type { Transaction } from "../types";
-import { scanAccounts, sync } from "../js-synchronization";
-import getTransactionStatus from "../js-getTransactionStatus";
-import estimateMaxSpendable from "../js-estimateMaxSpendable";
-import createTransaction, { updateTransaction } from "../js-createTransaction";
-import signOperation from "../js-signOperation";
-import broadcast from "../js-broadcast";
-import { prepareTransactionWithQueuedAndCachedAPI } from "../prepare-tx/prepare-tx";
+import { Config, getChainAPI } from "../api/web4";
+import { makeLRUCache } from "../../../cache";
+import { minutes } from "../prepare-tx/prepare-tx-api-cached";
+import { makeBridges } from "./bridge";
 
-const preload = async (): Promise<any> => {};
+const getChainAPIQueuedAndCached = makeLRUCache(
+  //TODO: make queued and cached
+  (config: Config) => Promise.resolve(getChainAPI(config)),
+  (config) => config.cluster,
+  minutes(1000)
+);
 
-const hydrate = (): void => {};
-
-const receive = makeAccountBridgeReceive();
-
-const currencyBridge: CurrencyBridge = {
-  preload,
-  hydrate,
-  scanAccounts,
-};
-
-const accountBridge: AccountBridge<Transaction> = {
-  createTransaction,
-  updateTransaction,
-  prepareTransaction: prepareTransactionWithQueuedAndCachedAPI,
-  estimateMaxSpendable,
-  getTransactionStatus,
-  sync,
-  receive,
-  signOperation,
-  broadcast,
-};
-
-export default {
-  currencyBridge,
-  accountBridge,
-};
+export default makeBridges(getChainAPIQueuedAndCached);

@@ -1,4 +1,9 @@
-import { makeScanAccounts, makeSync, mergeOps } from "../../bridge/jsHelpers";
+import {
+  GetAccountShapeArg0,
+  makeScanAccounts,
+  makeSync,
+  mergeOps,
+} from "../../bridge/jsHelpers";
 import {
   Account,
   encodeAccountId,
@@ -7,7 +12,6 @@ import {
   TokenAccount,
 } from "../../types";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
-import { getAccount, findAssociatedTokenAccountPubkey } from "./api";
 import BigNumber from "bignumber.js";
 
 import { emptyHistoryCache } from "../../account";
@@ -29,12 +33,16 @@ import {
   ParsedTransaction,
 } from "@solana/web3.js";
 import { clusterByCurrencyId } from "./utils";
+import { ChainAPI } from "./api/web4";
 
 type OnChainTokenAccount = Awaited<
   ReturnType<typeof getAccount>
 >["tokenAccounts"][number];
 
-const getAccountShape: GetAccountShape = async (info) => {
+export const getAccountShapeWithAPI = async (
+  info: GetAccountShapeArg0,
+  api: ChainAPI
+) => {
   const {
     address: mainAccAddress,
     initialAccount: mainInitialAcc,
@@ -42,16 +50,12 @@ const getAccountShape: GetAccountShape = async (info) => {
     derivationMode,
   } = info;
 
-  const config: Config = {
-    cluster: clusterByCurrencyId(currency.id),
-  };
-
   const {
     blockHeight,
     balance: mainAccBalance,
     spendableBalance: mainAccSpendableBalance,
     tokenAccounts: onChaintokenAccounts,
-  } = await getAccount(mainAccAddress, config);
+  } = await api.getAccount(mainAccAddress);
 
   const mainAccountId = encodeAccountId({
     type: "js",
@@ -497,5 +501,7 @@ function getTokenAccOperationType({
   return fallbackType;
 }
 
+/*
 export const sync = makeSync(getAccountShape, postSync);
 export const scanAccounts = makeScanAccounts(getAccountShape);
+*/

@@ -8,6 +8,7 @@ import {
 } from "@ledgerhq/errors";
 import { findSubAccountById } from "../../account";
 import type { Account } from "../../types";
+import { ChainAPI } from "./api/web4";
 import {
   SolanaAccountNotFunded,
   SolanaAddressOffEd25519,
@@ -87,7 +88,7 @@ async function deriveCommandDescriptor(
 const prepareTransaction = async (
   mainAccount: Account,
   tx: Transaction,
-  api: PrepareTxAPI
+  api: ChainAPI
 ): Promise<Transaction> => {
   const patch: Partial<Transaction> = {};
   const errors: Record<string, Error> = {};

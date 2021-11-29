@@ -16,7 +16,7 @@ import {
   TokenCreateATACommand,
   TokenTransferCommand,
   TransferCommand,
-} from "../types";
+} from "../../types";
 import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -24,10 +24,10 @@ import {
 } from "@solana/spl-token";
 import { tryParseAsTokenAccount, parseTokenAccountInfo } from "./account";
 import { TokenAccountInfo } from "./account/token";
-import { drainSeqAsyncGen } from "../utils";
+import { drainSeqAsyncGen } from "../../utils";
 import { map } from "lodash/fp";
-import { Awaited } from "../logic";
-import { makeLRUCache } from "../../../cache";
+import { Awaited } from "../../logic";
+import { makeLRUCache } from "../../../../cache";
 
 export type Config = {
   cluster: Cluster;
@@ -190,29 +190,22 @@ export function getTransactions(
   );
 }
 
-export const buildTransferTransaction = async (
-  { sender, recipient, amount, memo }: TransferCommand,
-  config: Config
-): Promise<Transaction> => {
+export const buildTransferInstructions = ({
+  sender,
+  recipient,
+  amount,
+  memo,
+}: TransferCommand): TransactionInstruction[] => {
   const fromPublicKey = new PublicKey(sender);
   const toPublicKey = new PublicKey(recipient);
 
-  const conn = connection(config.cluster);
-
-  const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
-
-  const onChainTx = new Transaction({
-    feePayer: fromPublicKey,
-    recentBlockhash,
-  });
-
-  const transferIx = SystemProgram.transfer({
-    fromPubkey: fromPublicKey,
-    toPubkey: toPublicKey,
-    lamports: amount,
-  });
-
-  onChainTx.add(transferIx);
+  const instructions: TransactionInstruction[] = [
+    SystemProgram.transfer({
+      fromPubkey: fromPublicKey,
+      toPubkey: toPublicKey,
+      lamports: amount,
+    }),
+  ];
 
   if (memo) {
     const memoIx = new TransactionInstruction({
@@ -220,16 +213,15 @@ export const buildTransferTransaction = async (
       programId: new PublicKey(MEMO_PROGRAM_ID),
       data: Buffer.from(memo),
     });
-    onChainTx.add(memoIx);
+    instructions.push(memoIx);
   }
 
-  return onChainTx;
+  return instructions;
 };
 
-export const buildTokenTransferTransaction = async (
-  command: TokenTransferCommand,
-  config: Config
-): Promise<Transaction> => {
+export const buildTokenTransferInstructions = (
+  command: TokenTransferCommand
+): TransactionInstruction[] => {
   const {
     ownerAddress,
     ownerAssociatedTokenAccountAddress,
@@ -239,23 +231,16 @@ export const buildTokenTransferTransaction = async (
     mintDecimals,
     memo,
   } = command;
-  const conn = connection(config.cluster);
-
-  const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
-
   const ownerPubkey = new PublicKey(ownerAddress);
 
   const destinationPubkey = new PublicKey(recipientDescriptor.tokenAccAddress);
 
-  const onChainTx = new Transaction({
-    feePayer: ownerPubkey,
-    recentBlockhash,
-  });
+  const instructions: TransactionInstruction[] = [];
 
   const mintPubkey = new PublicKey(mintAddress);
 
   if (recipientDescriptor.shouldCreateAsAssociatedTokenAccount) {
-    onChainTx.add(
+    instructions.push(
       Token.createAssociatedTokenAccountInstruction(
         ASSOCIATED_TOKEN_PROGRAM_ID,
         TOKEN_PROGRAM_ID,
@@ -267,29 +252,30 @@ export const buildTokenTransferTransaction = async (
     );
   }
 
-  const tokenTransferIx = Token.createTransferCheckedInstruction(
-    TOKEN_PROGRAM_ID,
-    new PublicKey(ownerAssociatedTokenAccountAddress),
-    mintPubkey,
-    destinationPubkey,
-    ownerPubkey,
-    [],
-    amount,
-    mintDecimals
+  instructions.push(
+    Token.createTransferCheckedInstruction(
+      TOKEN_PROGRAM_ID,
+      new PublicKey(ownerAssociatedTokenAccountAddress),
+      mintPubkey,
+      destinationPubkey,
+      ownerPubkey,
+      [],
+      amount,
+      mintDecimals
+    )
   );
 
-  onChainTx.add(tokenTransferIx);
-
   if (memo) {
-    const memoIx = new TransactionInstruction({
-      keys: [],
-      programId: new PublicKey(MEMO_PROGRAM_ID),
-      data: Buffer.from(memo),
-    });
-    onChainTx.add(memoIx);
+    instructions.push(
+      new TransactionInstruction({
+        keys: [],
+        programId: new PublicKey(MEMO_PROGRAM_ID),
+        data: Buffer.from(memo),
+      })
+    );
   }
 
-  return onChainTx;
+  return instructions;
 };
 
 export const addSignatureToTransaction = ({
@@ -304,13 +290,6 @@ export const addSignatureToTransaction = ({
   tx.addSignature(new PublicKey(address), signature);
 
   return tx;
-};
-
-export const broadcastTransaction = (
-  rawTx: Buffer,
-  config: Config
-): Promise<string> => {
-  return connection(config.cluster).sendRawTransaction(rawTx);
 };
 
 export async function findAssociatedTokenAccountPubkey(
@@ -344,24 +323,16 @@ export const getMaybeTokenAccount =
     return tokenAccount;
   };
 
-export async function buildCreateAssociatedTokenAccountTransaction(
-  { mint, owner, associatedTokenAccountAddress }: TokenCreateATACommand,
-  config: Config
-): Promise<Transaction> {
+export function buildCreateAssociatedTokenAccountInstruction({
+  mint,
+  owner,
+  associatedTokenAccountAddress,
+}: TokenCreateATACommand): TransactionInstruction[] {
   const ownerPubKey = new PublicKey(owner);
   const mintPubkey = new PublicKey(mint);
   const associatedTokenAccPubkey = new PublicKey(associatedTokenAccountAddress);
 
-  const conn = connection(config.cluster);
-
-  const { blockhash: recentBlockhash } = await conn.getRecentBlockhash();
-
-  const onChainTx = new Transaction({
-    feePayer: ownerPubKey,
-    recentBlockhash,
-  });
-
-  onChainTx.add(
+  const instructions: TransactionInstruction[] = [
     Token.createAssociatedTokenAccountInstruction(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
@@ -369,10 +340,10 @@ export async function buildCreateAssociatedTokenAccountTransaction(
       associatedTokenAccPubkey,
       ownerPubKey,
       ownerPubKey
-    )
-  );
+    ),
+  ];
 
-  return onChainTx;
+  return instructions;
 }
 
 export const getAssociatedTokenAccountCreationFee =
