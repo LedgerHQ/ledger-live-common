@@ -85,8 +85,6 @@ export type TokenCreateATATransaction = {
   };
 };
 
-// sync any changes to uiState types with cache key extractor
-// `cacheKeyByModelUIState` in prepare transaction
 export type TransactionModel = { commandDescriptor?: CommandDescriptor } & (
   | TransferTransaction
   | TokenTransferTransaction
