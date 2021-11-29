@@ -6,11 +6,7 @@ import {
   ConfirmedSignatureInfo,
   ParsedConfirmedTransaction,
   TransactionInstruction,
-  Cluster,
-  clusterApiUrl,
-  FeeCalculator,
 } from "@solana/web3.js";
-import BigNumber from "bignumber.js";
 import { chunk } from "lodash";
 import {
   TokenCreateATACommand,
@@ -25,79 +21,10 @@ import {
 import { tryParseAsTokenAccount, parseTokenAccountInfo } from "./account";
 import { TokenAccountInfo } from "./account/token";
 import { drainSeqAsyncGen } from "../../utils";
-import { map } from "lodash/fp";
 import { Awaited } from "../../logic";
-import { makeLRUCache } from "../../../../cache";
-import { ChainAPI, Config } from ".";
+import { ChainAPI } from ".";
 
 const MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
-
-const connector = () => {
-  const connections = new Map<Cluster, Connection>();
-
-  return (cluster: Cluster) => {
-    const existingConnection = connections.get(cluster);
-    if (existingConnection !== undefined) {
-      return existingConnection;
-    }
-    const newConnection = new Connection(clusterApiUrl(cluster));
-    connections.set(cluster, newConnection);
-    return newConnection;
-  };
-};
-
-const connection = connector();
-
-export const getBalance =
-  (config: Config) =>
-  (address: string): Promise<number> =>
-    connection(config.cluster).getBalance(new PublicKey(address));
-
-const lamportsPerSignature = async (config: Config) => {
-  const conn = connection(config.cluster);
-  const res = await conn.getRecentBlockhash();
-  return res.feeCalculator.lamportsPerSignature;
-};
-
-const lamportPerSignatureCached = makeLRUCache(
-  lamportsPerSignature,
-  (config) => config.cluster
-);
-
-export const getAccount = async (
-  address: string,
-  config: Config
-): Promise<{
-  balance: BigNumber;
-  spendableBalance: BigNumber;
-  blockHeight: number;
-  tokenAccounts: ParsedOnChainTokenAccountWithInfo[];
-}> => {
-  const conn = connection(config.cluster);
-
-  const pubKey = new PublicKey(address);
-  const balanceLamportsWithContext = await conn.getBalanceAndContext(pubKey);
-
-  const lamportPerSignature = await lamportPerSignatureCached(config);
-
-  const tokenAccounts = await conn
-    .getParsedTokenAccountsByOwner(pubKey, {
-      programId: TOKEN_PROGRAM_ID,
-    })
-    .then((res) => res.value)
-    .then(map(toTokenAccountWithInfo));
-
-  const balance = new BigNumber(balanceLamportsWithContext.value);
-  const spendableBalance = BigNumber.max(balance.minus(lamportPerSignature), 0);
-  const blockHeight = balanceLamportsWithContext.context.slot;
-
-  return {
-    tokenAccounts,
-    balance,
-    spendableBalance,
-    blockHeight,
-  };
-};
 
 type ParsedOnChainTokenAccount = Awaited<
   ReturnType<Connection["getParsedTokenAccountsByOwner"]>
@@ -115,12 +42,6 @@ export function toTokenAccountWithInfo(
   const info = parseTokenAccountInfo(parsedInfo);
   return { onChainAcc, info };
 }
-
-export const getTxFeeCalculator =
-  (config: Config) => async (): Promise<FeeCalculator> => {
-    const res = await connection(config.cluster).getRecentBlockhash();
-    return res.feeCalculator;
-  };
 
 export type TransactionDescriptor = {
   parsed: ParsedConfirmedTransaction;
@@ -335,7 +256,3 @@ export function buildCreateAssociatedTokenAccountInstruction({
 
   return instructions;
 }
-
-export const getAssociatedTokenAccountCreationFee =
-  (config: Config) => (): Promise<number> =>
-    Token.getMinBalanceRentForExemptAccount(connection(config.cluster));
