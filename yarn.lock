@@ -1165,10 +1165,10 @@
   dependencies:
     commander "^2.20.0"
 
-"@ledgerhq/cryptoassets@6.15.2", "@ledgerhq/cryptoassets@^6.15.2":
-  version "6.15.2"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/cryptoassets/-/cryptoassets-6.15.2.tgz#2c948678bb30c7f84a7f5c4750bf6668af440769"
-  integrity sha512-By6c68QX9gLCIR8gJfKwEtszHchaNeSthEByf2eAOP78HUUO3uuYBeumvBQXGUJU6WnZEC63ydKdYSN3VAzIxQ==
+"@ledgerhq/cryptoassets@6.17.0", "@ledgerhq/cryptoassets@^6.17.0":
+  version "6.17.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/cryptoassets/-/cryptoassets-6.17.0.tgz#cc3963b0ed726efcba976b78185d7f72ea9bedbc"
+  integrity sha512-xvXmS0fCLBOr54/lBF4w4pfWVhmbEcf/Wf45k0Carx4vtSUzMChd/KyAvIuLODNeIBj9lXOK2OqXB0u8wc8p5A==
   dependencies:
     invariant "2"
 
@@ -1214,10 +1214,10 @@
     js-sha512 "^0.8.0"
     tweetnacl "^1.0.3"
 
-"@ledgerhq/hw-app-btc@6.15.1":
-  version "6.15.1"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-btc/-/hw-app-btc-6.15.1.tgz#6e2d451196153e7a619414bd386d829b824226cf"
-  integrity sha512-9qWke/C6YQ9cQAklcdUras+dYzSOGY8UwR/Ce0Je0M/SyfB8iOC15e6LHUVhp73LFOAiSrpKRwbmWGnezbvlLA==
+"@ledgerhq/hw-app-btc@6.17.1":
+  version "6.17.1"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-btc/-/hw-app-btc-6.17.1.tgz#4b54cf18c7e88b8baee7dd0fab5a191472f5760d"
+  integrity sha512-xyfYnKr6b+0DoQ6veiXJIBLGhz2YwDVs3bEMBY2EoZA9CbsvyQbnVxETFHNCRsRp/LWZJyr4Atvj0bT0wZCWQQ==
   dependencies:
     "@ledgerhq/hw-transport" "^6.11.2"
     "@ledgerhq/logs" "^6.10.0"
@@ -1240,12 +1240,12 @@
     "@ledgerhq/hw-transport" "^6.11.2"
     bip32-path "^0.4.2"
 
-"@ledgerhq/hw-app-eth@6.15.2":
-  version "6.15.2"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-eth/-/hw-app-eth-6.15.2.tgz#e27ca307ed76c93f32c98838840e64cd1f907d18"
-  integrity sha512-5R4OOFcIfP9Xaaz+qy6I1M1a+932j1jbz6rV8znYyTAWTwdW3CTvSZq/wu8MwXxSwQAIL5g7BsrZZxDhXZujTA==
+"@ledgerhq/hw-app-eth@6.17.0":
+  version "6.17.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-eth/-/hw-app-eth-6.17.0.tgz#9f2f7ee18b0fe553277a08d007a8271ec94014ff"
+  integrity sha512-msZD5mU/Ck/2ODKCNPSyMDq3v8FBOI3R3QasDDm7WNfH5H8UVB+mobjExPjmlke+t1GsM864V2EU2/YiLGM/lg==
   dependencies:
-    "@ledgerhq/cryptoassets" "^6.15.2"
+    "@ledgerhq/cryptoassets" "^6.17.0"
     "@ledgerhq/errors" "^6.10.0"
     "@ledgerhq/hw-transport" "^6.11.2"
     "@ledgerhq/logs" "^6.10.0"
@@ -2215,10 +2215,10 @@
   dependencies:
     "@walletconnect/window-getters" "^1.0.0"
 
-"@xstate/react@^1.6.2":
-  version "1.6.2"
-  resolved "https://registry.yarnpkg.com/@xstate/react/-/react-1.6.2.tgz#b6626884da9476ae22880a8c6daeda12be680a05"
-  integrity sha512-G8edXa/pHCoGNDTSJxrlPtUHUszHlCMRvMD84igVZuevEP9ij0pud1FQ0WdCdl6yC++77RCDY+D6v5o1wWtXJQ==
+"@xstate/react@^1.6.3":
+  version "1.6.3"
+  resolved "https://registry.yarnpkg.com/@xstate/react/-/react-1.6.3.tgz#706f3beb7bc5879a78088985c8fd43b9dab7f725"
+  integrity sha512-NCUReRHPGvvCvj2yLZUTfR0qVp6+apc8G83oXSjN4rl89ZjyujiKrTff55bze/HrsvCsP/sUJASf2n0nzMF1KQ==
   dependencies:
     use-isomorphic-layout-effect "^1.0.0"
     use-subscription "^1.3.0"
@@ -2466,19 +2466,19 @@ axios@0.21.1:
   dependencies:
     follow-redirects "^1.10.0"
 
+axios@0.21.4, axios@^0.21.1:
+  version "0.21.4"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
+  integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
+  dependencies:
+    follow-redirects "^1.14.0"
+
 axios@0.24.0, axios@^0.24.0:
   version "0.24.0"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.24.0.tgz#804e6fa1e4b9c5288501dd9dff56a7a0940d20d6"
   integrity sha512-Q6cWsys88HoPgAaFAVUb0WpPk0O8iTeisR9IMqy9G8AbO4NlpVknrnQS03zzF9PGAWgO3cgletO3VjV/P7VztA==
   dependencies:
     follow-redirects "^1.14.4"
-
-axios@^0.21.1:
-  version "0.21.4"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
-  integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
-  dependencies:
-    follow-redirects "^1.14.0"
 
 axobject-query@^2.2.0:
   version "2.2.0"
@@ -2551,14 +2551,7 @@ balanced-match@^1.0.0:
   resolved "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.0.tgz"
   integrity sha1-ibTRmasr7kneFk6gK4nORi1xt2c=
 
-base-x@3.0.7:
-  version "3.0.7"
-  resolved "https://registry.npmjs.org/base-x/-/base-x-3.0.7.tgz"
-  integrity sha512-zAKJGuQPihXW22fkrfOclUUZXM2g92z5GzlSMHxhO6r6Qj+Nm0ccaGNBzDZojzwOMkpjAv4J0fOv1U4go+a4iw==
-  dependencies:
-    safe-buffer "^5.0.1"
-
-base-x@^3.0.2, base-x@^3.0.6, base-x@^3.0.9:
+base-x@3.0.9, base-x@^3.0.2, base-x@^3.0.6, base-x@^3.0.9:
   version "3.0.9"
   resolved "https://registry.yarnpkg.com/base-x/-/base-x-3.0.9.tgz#6349aaabb58526332de9f60995e548a53fe21320"
   integrity sha512-H7JU6iBHTal1gp56aKoaa//YUxEaAOUiydvrV/pILqIHXTtqxSkATOnDA2u+jZ/61sD+L/412+7kzXRtWukhpQ==
@@ -6292,25 +6285,25 @@ ripemd160@2, ripemd160@^2.0.0, ripemd160@^2.0.1, ripemd160@^2.0.2:
     hash-base "^3.0.0"
     inherits "^2.0.1"
 
-ripple-address-codec@^4.0.0, ripple-address-codec@^4.1.1:
-  version "4.1.1"
-  resolved "https://registry.npmjs.org/ripple-address-codec/-/ripple-address-codec-4.1.1.tgz"
-  integrity sha512-mcVD8f7+CH6XaBnLkRcmw4KyHMufa0HTJE3TYeaecwleIQASLYVenjQmVJLgmJQcDUS2Ldh/EltqktmiFMFgkg==
+ripple-address-codec@^4.0.0, ripple-address-codec@^4.1.1, ripple-address-codec@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/ripple-address-codec/-/ripple-address-codec-4.2.0.tgz#dc3291394ff22f46d8aeac6ef30d51be1416d7c9"
+  integrity sha512-9QhBNDiWjwj7l+WQ7H7klXF/VwxVj2Q0HRhd4vLCueTPoxUtaNQyfvUZFiXJrqxg0heM3/iWxupkq4TwrXgSuQ==
   dependencies:
-    base-x "3.0.7"
+    base-x "3.0.9"
     create-hash "^1.1.2"
 
-ripple-binary-codec@^1.1.3:
-  version "1.1.3"
-  resolved "https://registry.npmjs.org/ripple-binary-codec/-/ripple-binary-codec-1.1.3.tgz"
-  integrity sha512-NnFNZZ+225BxdDdHtcEn4GiGzup+V0DGAbtKygZIwbqA5116oZBt6uY3g43gYpdDMISsEbM7NewBij8+7jdlvA==
+ripple-binary-codec@^1.1.3, ripple-binary-codec@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/ripple-binary-codec/-/ripple-binary-codec-1.2.0.tgz#4058281c045fd6f9f8eb8be9402bbaf2d56aad8b"
+  integrity sha512-XMRCbFXyG+dGp3x7tMs9IwA+FVWPPaGjdHYW2+g4Q/WQJqFp5MRED+jjOBOUafmrW4TUsOn1PEEdbB4ozWbDBw==
   dependencies:
     assert "^2.0.0"
     big-integer "^1.6.48"
     buffer "5.6.0"
     create-hash "^1.2.0"
     decimal.js "^10.2.0"
-    ripple-address-codec "^4.1.1"
+    ripple-address-codec "^4.2.0"
 
 ripple-bs58@^4.0.0:
   version "4.0.1"
@@ -6597,10 +6590,10 @@ stack-utils@^2.0.2, stack-utils@^2.0.3:
   dependencies:
     escape-string-regexp "^2.0.0"
 
-stellar-base@^6.0.4:
-  version "6.0.4"
-  resolved "https://registry.yarnpkg.com/stellar-base/-/stellar-base-6.0.4.tgz#2b44ef6434e52cbfca103ff9349f16fca806557e"
-  integrity sha512-zYoo4sjeF3mX9L/m/VF5qySpKdmGi+1c8Q58dB+wRNSLZMYssx7cplONuFMZpcCDukSdFNx+8mjyZdPuy7j1tA==
+stellar-base@^6.0.6:
+  version "6.0.6"
+  resolved "https://registry.yarnpkg.com/stellar-base/-/stellar-base-6.0.6.tgz#2f95ad35ab6901a2fc0d5cb5b483436241b7123c"
+  integrity sha512-v0t9jeP456plMpye8W2vRq2lTvMUvRkskH5GGfqgMTeX+gBAwp7Y67wYphRt2pGQ2NXtxlsgEBSBKWvNxGp76A==
   dependencies:
     base32.js "^0.1.0"
     bignumber.js "^4.0.0"
@@ -6612,23 +6605,23 @@ stellar-base@^6.0.4:
   optionalDependencies:
     sodium-native "^2.3.0"
 
-stellar-sdk@^9.0.1:
-  version "9.0.1"
-  resolved "https://registry.yarnpkg.com/stellar-sdk/-/stellar-sdk-9.0.1.tgz#f0d920def0b395c9c240d6e399a1c63b107b3bd1"
-  integrity sha512-hHRlCAjX5NPEXAmUtIu0BU0F7Mm8qtTCldXgb2mXosfHz8o/vu7lYy/08FjEav925TlsS51HSu2MN0+qHnYkjQ==
+stellar-sdk@^9.1.0:
+  version "9.1.0"
+  resolved "https://registry.yarnpkg.com/stellar-sdk/-/stellar-sdk-9.1.0.tgz#6950a1ca8c268218b9be179c120c23f284ea6f5a"
+  integrity sha512-Y2B/pGM+eEC4Iuf6vGBGD86AdXYHCahuEiTa7kMOSDR/SXv7UQdOcrEpho+ZjTqZP0cYBe9UOTkYiW12Sm3IzQ==
   dependencies:
     "@types/eventsource" "^1.1.2"
     "@types/node" ">= 8"
     "@types/randombytes" "^2.0.0"
     "@types/urijs" "^1.19.6"
-    axios "0.21.1"
+    axios "0.21.4"
     bignumber.js "^4.0.0"
     detect-node "^2.0.4"
     es6-promise "^4.2.4"
     eventsource "^1.0.7"
     lodash "^4.17.21"
     randombytes "^2.1.0"
-    stellar-base "^6.0.4"
+    stellar-base "^6.0.6"
     toml "^2.3.0"
     tslib "^1.10.0"
     urijs "^1.19.1"
@@ -7323,10 +7316,10 @@ xmlchars@^2.2.0:
   resolved "https://registry.npmjs.org/xmlchars/-/xmlchars-2.2.0.tgz"
   integrity sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==
 
-xstate@^4.26.0:
-  version "4.26.0"
-  resolved "https://registry.yarnpkg.com/xstate/-/xstate-4.26.0.tgz#aea3c94b6df57729f55d3d2b83ab9d21801ad24e"
-  integrity sha512-l0tfRBhVYM17D6IWT4pVOzzN9kY/5lnPWCe4LXjJ3F9HCrJOPBn6tPRAb9mapSRBS8cOeByJFDCRSNopgaoC5w==
+xstate@^4.26.1:
+  version "4.26.1"
+  resolved "https://registry.yarnpkg.com/xstate/-/xstate-4.26.1.tgz#4fc1afd153f88cf302a9ee2b758f6629e6a829b6"
+  integrity sha512-JLofAEnN26l/1vbODgsDa+Phqa61PwDlxWu8+2pK+YbXf+y9pQSDLRvcYH2H1kkeUBA5fGp+xFL/zfE8jNMw4g==
 
 xstream@^11.14.0:
   version "11.14.0"
