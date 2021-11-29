@@ -40,7 +40,9 @@ type AsyncQueueEntry<T> = {
   reject: (reason?: any) => void;
 };
 
-export function asyncQueue(config: { delayBetweenRuns: number }) {
+export function asyncQueue(config: { delayBetweenRuns: number }): {
+  submit: <T>(fn: () => Promise<T>) => Promise<T>;
+} {
   const { delayBetweenRuns } = config;
   const q: AsyncQueueEntry<any>[] = [];
 

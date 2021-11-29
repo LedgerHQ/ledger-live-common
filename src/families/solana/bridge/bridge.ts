@@ -98,7 +98,10 @@ function makeSign(
 
 export function makeBridges(
   getChainAPI: (config: Config) => Promise<ChainAPI>
-) {
+): {
+  currencyBridge: CurrencyBridge;
+  accountBridge: AccountBridge<Transaction>;
+} {
   const { sync, scan } = makeSyncAndScan(getChainAPI);
 
   const accountBridge: AccountBridge<Transaction> = {

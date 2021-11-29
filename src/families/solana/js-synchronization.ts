@@ -39,7 +39,7 @@ type OnChainTokenAccount = Awaited<
 export const getAccountShapeWithAPI = async (
   info: GetAccountShapeArg0,
   api: ChainAPI
-) => {
+): Promise<Partial<Account>> => {
   const {
     address: mainAccAddress,
     initialAccount: mainInitialAcc,

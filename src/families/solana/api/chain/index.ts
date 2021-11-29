@@ -10,12 +10,52 @@ import {
   PublicKey,
   SignaturesForAddressOptions,
 } from "@solana/web3.js";
+import { Awaited } from "../../logic";
 
 export type Config = {
   readonly cluster: Cluster;
 };
 
-export function getChainAPI(config: Config) {
+export type ChainAPI = Readonly<{
+  getBalance: (address: string) => Promise<number>;
+
+  getRecentBlockhash: () => ReturnType<Connection["getRecentBlockhash"]>;
+
+  getBalanceAndContext: (
+    address: string
+  ) => ReturnType<Connection["getBalanceAndContext"]>;
+
+  getParsedTokenAccountsByOwner: (
+    address: string
+  ) => ReturnType<Connection["getParsedTokenAccountsByOwner"]>;
+
+  getSignaturesForAddress: (
+    address: string,
+    opts?: SignaturesForAddressOptions
+  ) => ReturnType<Connection["getSignaturesForAddress"]>;
+
+  getParsedConfirmedTransactions: (
+    signatures: string[]
+  ) => ReturnType<Connection["getParsedConfirmedTransactions"]>;
+
+  getAccountInfo: (
+    address: string
+  ) => Promise<
+    Awaited<ReturnType<Connection["getParsedAccountInfo"]>>["value"]
+  >;
+
+  sendRawTransaction: (
+    buffer: Buffer
+  ) => ReturnType<Connection["sendRawTransaction"]>;
+
+  findAssocTokenAccAddress: (owner: string, mint: string) => Promise<string>;
+
+  getAssocTokenAccMinNativeBalance: () => Promise<number>;
+
+  config: Config;
+}>;
+
+export function getChainAPI(config: Config): ChainAPI {
   const connection = new Connection(clusterApiUrl(config.cluster), "finalized");
 
   return {
@@ -61,6 +101,3 @@ export function getChainAPI(config: Config) {
     config,
   };
 }
-
-// TODO: make readonly!
-export type ChainAPI = ReturnType<typeof getChainAPI>;
