@@ -15,20 +15,6 @@ export type Config = {
   readonly cluster: Cluster;
 };
 
-const connector = () => {
-  const connections = new Map<Cluster, Connection>();
-
-  return (cluster: Cluster) => {
-    const existingConnection = connections.get(cluster);
-    if (existingConnection !== undefined) {
-      return existingConnection;
-    }
-    const newConnection = new Connection(clusterApiUrl(cluster));
-    connections.set(cluster, newConnection);
-    return newConnection;
-  };
-};
-
 export function getChainAPI(config: Config) {
   const connection = new Connection(clusterApiUrl(config.cluster), "finalized");
 

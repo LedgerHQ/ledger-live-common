@@ -7,6 +7,8 @@ export function logged(api: ChainAPI): ChainAPI {
       if (typeof targetValue === "function") {
         return function (...args: unknown[]) {
           const result = targetValue.apply(this, args);
+          const log = (_: unknown) => {};
+          /*
           const log = (answer: unknown) => {
             console.log({
               method: propKey,
@@ -14,6 +16,7 @@ export function logged(api: ChainAPI): ChainAPI {
               answer,
             });
           };
+          */
           if (result instanceof Promise) {
             return result.then((answer) => {
               log(answer);

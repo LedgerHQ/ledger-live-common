@@ -4,7 +4,6 @@ import { ChainAPI } from "./api";
 
 export const broadcastWithAPI = async (
   {
-    account,
     signedOperation,
   }: {
     account: Account;
