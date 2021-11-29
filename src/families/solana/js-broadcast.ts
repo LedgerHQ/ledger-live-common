@@ -1,6 +1,6 @@
 import { patchOperationWithHash } from "../../operation";
 import type { Account, Operation, SignedOperation } from "../../types";
-import { ChainAPI } from "./api/web4";
+import { ChainAPI } from "./api";
 
 export const broadcastWithAPI = async (
   {

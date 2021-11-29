@@ -1,11 +1,10 @@
-import { Config, getChainAPI } from "../api/web4";
+import { cached, Config, getChainAPI, queued } from "../api";
 import { makeLRUCache } from "../../../cache";
-import { minutes } from "../prepare-tx/prepare-tx-api-cached";
 import { makeBridges } from "./bridge";
+import { minutes } from "../api/cached";
 
 const getChainAPIQueuedAndCached = makeLRUCache(
-  //TODO: make queued and cached
-  (config: Config) => Promise.resolve(getChainAPI(config)),
+  (config: Config) => Promise.resolve(cached(queued(getChainAPI(config), 100))),
   (config) => config.cluster,
   minutes(1000)
 );

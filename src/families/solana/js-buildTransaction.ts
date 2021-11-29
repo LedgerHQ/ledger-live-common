@@ -5,14 +5,14 @@ import {
   buildTransferInstructions,
   buildTokenTransferInstructions,
   buildCreateAssociatedTokenAccountInstruction,
-} from "./api";
+} from "./api/chain/web3";
 import { assertUnreachable } from "./utils";
 import {
   PublicKey,
   Transaction as OnChainTransaction,
   TransactionInstruction,
 } from "@solana/web3.js";
-import { ChainAPI } from "./api/web4";
+import { ChainAPI } from "./api";
 
 export const buildTransactionWithAPI = async (
   account: Account,

@@ -8,7 +8,8 @@ import {
 } from "@ledgerhq/errors";
 import { findSubAccountById } from "../../account";
 import type { Account } from "../../types";
-import { ChainAPI } from "./api/web4";
+import { ChainAPI } from "./api";
+import { getMaybeTokenAccount } from "./api/chain/web3";
 import {
   SolanaAccountNotFunded,
   SolanaAddressOffEd25519,
@@ -28,7 +29,6 @@ import {
 
 import type {
   CommandDescriptor,
-  PrepareTxAPI,
   TokenCreateATATransaction,
   TokenRecipientDescriptor,
   TokenTransferTransaction,
@@ -41,7 +41,7 @@ import { assertUnreachable } from "./utils";
 async function deriveCommandDescriptor(
   mainAccount: Account,
   tx: Transaction,
-  api: PrepareTxAPI
+  api: ChainAPI
 ): Promise<CommandDescriptor> {
   const errors: Record<string, Error> = {};
 
@@ -93,7 +93,7 @@ const prepareTransaction = async (
   const patch: Partial<Transaction> = {};
   const errors: Record<string, Error> = {};
 
-  const feeCalculator = tx.feeCalculator ?? (await api.getTxFeeCalculator());
+  const feeCalculator = tx.feeCalculator ?? (await getTxFeeCalculator(api));
 
   if (tx.feeCalculator === undefined) {
     patch.feeCalculator = feeCalculator;
@@ -155,7 +155,7 @@ const deriveTokenTransferCommandDescriptor = async (
   mainAccount: Account,
   tx: Transaction,
   model: TransactionModel & { kind: TokenTransferTransaction["kind"] },
-  api: PrepareTxAPI
+  api: ChainAPI
 ): Promise<CommandDescriptor> => {
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
@@ -193,7 +193,7 @@ const deriveTokenTransferCommandDescriptor = async (
   }
 
   const fees = recipientDescriptor.shouldCreateAsAssociatedTokenAccount
-    ? await api.getAssociatedTokenAccountCreationFee()
+    ? await api.getAssocTokenAccMinNativeBalance()
     : 0;
 
   if (recipientDescriptor.shouldCreateAsAssociatedTokenAccount) {
@@ -239,10 +239,11 @@ const deriveTokenTransferCommandDescriptor = async (
 async function getTokenRecipient(
   recipientAddress: string,
   mintAddress: string,
-  api: PrepareTxAPI
+  api: ChainAPI
 ): Promise<TokenRecipientDescriptor | Error> {
-  const recipientTokenAccount = await api.getMaybeTokenAccount(
-    recipientAddress
+  const recipientTokenAccount = await getMaybeTokenAccount(
+    recipientAddress,
+    api
   );
 
   if (recipientTokenAccount instanceof Error) {
@@ -254,11 +255,8 @@ async function getTokenRecipient(
       return new SolanaAddressOffEd25519();
     }
 
-    const recipientAssociatedTokenAccPubkey =
-      await api.findAssociatedTokenAccountPubkey(recipientAddress, mintAddress);
-
     const recipientAssociatedTokenAccountAddress =
-      recipientAssociatedTokenAccPubkey.toBase58();
+      await api.findAssocTokenAccAddress(recipientAddress, mintAddress);
 
     const shouldCreateAsAssociatedTokenAccount = !(await isAccountFunded(
       recipientAssociatedTokenAccountAddress,
@@ -289,18 +287,18 @@ async function getTokenRecipient(
 async function deriveCreateAssociatedTokenAccountCommandDescriptor(
   mainAccount: Account,
   model: TransactionModel & { kind: TokenCreateATATransaction["kind"] },
-  api: PrepareTxAPI
+  api: ChainAPI
 ): Promise<CommandDescriptor> {
   const token = getTokenById(model.uiState.tokenId);
   const tokenIdParts = token.id.split("/");
   const mint = tokenIdParts[tokenIdParts.length - 1];
 
-  const associatedTokenAccountPubkey =
-    await api.findAssociatedTokenAccountPubkey(mainAccount.freshAddress, mint);
+  const associatedTokenAccountAddress = await api.findAssocTokenAccAddress(
+    mainAccount.freshAddress,
+    mint
+  );
 
-  const associatedTokenAccountAddress = associatedTokenAccountPubkey.toBase58();
-
-  const fees = await api.getAssociatedTokenAccountCreationFee();
+  const fees = await api.getAssocTokenAccMinNativeBalance();
 
   return {
     status: "valid",
@@ -318,7 +316,7 @@ async function deriveTransaferCommandDescriptor(
   mainAccount: Account,
   tx: Transaction,
   model: TransactionModel & { kind: TransferTransaction["kind"] },
-  api: PrepareTxAPI
+  api: ChainAPI
 ): Promise<CommandDescriptor> {
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
@@ -404,10 +402,15 @@ function updateModelIfSubAccountIdPresent(tx: Transaction): Transaction {
 
 async function isAccountFunded(
   address: string,
-  api: PrepareTxAPI
+  api: ChainAPI
 ): Promise<boolean> {
   const balance = await api.getBalance(address);
   return balance > 0;
+}
+
+async function getTxFeeCalculator(api: ChainAPI) {
+  const { feeCalculator } = await api.getRecentBlockhash();
+  return feeCalculator;
 }
 
 export { prepareTransaction };

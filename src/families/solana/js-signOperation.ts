@@ -17,9 +17,8 @@ import { buildTransactionWithAPI } from "./js-buildTransaction";
 import Solana from "@ledgerhq/hw-app-solana";
 import BigNumber from "bignumber.js";
 import { encodeOperationId } from "../../operation";
-import { assertUnreachable, clusterByCurrencyId } from "./utils";
-import { Config } from "./api";
-import { ChainAPI } from "./api/web4";
+import { assertUnreachable } from "./utils";
+import { ChainAPI } from "./api";
 
 const buildOptimisticOperation = (
   account: Account,
@@ -45,9 +44,6 @@ const buildOptimisticOperation = (
   }
 };
 
-/**
- * Sign Transaction with Ledger hardware
- */
 export const signOperationWithAPI = (
   {
     account,

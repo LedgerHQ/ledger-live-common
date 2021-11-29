@@ -28,10 +28,7 @@ import { drainSeqAsyncGen } from "../../utils";
 import { map } from "lodash/fp";
 import { Awaited } from "../../logic";
 import { makeLRUCache } from "../../../../cache";
-
-export type Config = {
-  cluster: Cluster;
-};
+import { ChainAPI, Config } from ".";
 
 const MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
 
@@ -106,12 +103,12 @@ type ParsedOnChainTokenAccount = Awaited<
   ReturnType<Connection["getParsedTokenAccountsByOwner"]>
 >["value"][number];
 
-type ParsedOnChainTokenAccountWithInfo = {
+export type ParsedOnChainTokenAccountWithInfo = {
   onChainAcc: ParsedOnChainTokenAccount;
   info: TokenAccountInfo;
 };
 
-function toTokenAccountWithInfo(
+export function toTokenAccountWithInfo(
   onChainAcc: ParsedOnChainTokenAccount
 ): ParsedOnChainTokenAccountWithInfo {
   const parsedInfo = onChainAcc.account.data.parsed.info;
@@ -131,13 +128,12 @@ export type TransactionDescriptor = {
 };
 
 async function* getTransactionsBatched(
-  pubKey: PublicKey,
+  address: string,
   untilTxSignature: string | undefined,
-  config: Config
+  api: ChainAPI
 ): AsyncGenerator<TransactionDescriptor[], void, unknown> {
-  const conn = connection(config.cluster);
   // as per Ledger team - last 1000 operations is a sane limit
-  const signatures = await conn.getSignaturesForAddress(pubKey, {
+  const signatures = await api.getSignaturesForAddress(address, {
     until: untilTxSignature,
     limit: 1000,
   });
@@ -147,7 +143,7 @@ async function* getTransactionsBatched(
   const batchSize = 100;
 
   for (const signaturesInfoBatch of chunk(signatures, batchSize)) {
-    const transactions = await conn.getParsedConfirmedTransactions(
+    const transactions = await api.getParsedConfirmedTransactions(
       signaturesInfoBatch.map((tx) => tx.signature)
     );
     const txsDetails = transactions.reduce((acc, tx, index) => {
@@ -167,14 +163,12 @@ async function* getTransactionsBatched(
 async function* getTransactionsGen(
   address: string,
   untilTxSignature: string | undefined,
-  config: Config
+  api: ChainAPI
 ): AsyncGenerator<TransactionDescriptor, void, undefined> {
-  const pubKey = new PublicKey(address);
-
   for await (const txDetailsBatch of getTransactionsBatched(
-    pubKey,
+    address,
     untilTxSignature,
-    config
+    api
   )) {
     yield* txDetailsBatch;
   }
@@ -183,11 +177,9 @@ async function* getTransactionsGen(
 export function getTransactions(
   address: string,
   untilTxSignature: string | undefined,
-  config: Config
+  api: ChainAPI
 ): Promise<TransactionDescriptor[]> {
-  return drainSeqAsyncGen(
-    getTransactionsGen(address, untilTxSignature, config)
-  );
+  return drainSeqAsyncGen(getTransactionsGen(address, untilTxSignature, api));
 }
 
 export const buildTransferInstructions = ({
@@ -307,21 +299,19 @@ export async function findAssociatedTokenAccountPubkey(
   );
 }
 
-export const getMaybeTokenAccount =
-  (config: Config) =>
-  async (address: string): Promise<TokenAccountInfo | undefined | Error> => {
-    const conn = connection(config.cluster);
+export const getMaybeTokenAccount = async (
+  address: string,
+  api: ChainAPI
+): Promise<TokenAccountInfo | undefined | Error> => {
+  const accInfo = await api.getAccountInfo(address);
 
-    const accInfo = (await conn.getParsedAccountInfo(new PublicKey(address)))
-      .value;
+  const tokenAccount =
+    accInfo !== null && "parsed" in accInfo.data
+      ? tryParseAsTokenAccount(accInfo.data)
+      : undefined;
 
-    const tokenAccount =
-      accInfo !== null && "parsed" in accInfo.data
-        ? tryParseAsTokenAccount(accInfo.data)
-        : undefined;
-
-    return tokenAccount;
-  };
+  return tokenAccount;
+};
 
 export function buildCreateAssociatedTokenAccountInstruction({
   mint,

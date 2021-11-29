@@ -1,4 +1,4 @@
 export * from "./chain/index";
-export * from "./cached";
-export * from "./queued";
-export * from "./logged";
+export { cached } from "./cached";
+export { queued } from "./queued";
+export { logged } from "./logged";

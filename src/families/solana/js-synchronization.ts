@@ -1,9 +1,4 @@
-import {
-  GetAccountShapeArg0,
-  makeScanAccounts,
-  makeSync,
-  mergeOps,
-} from "../../bridge/jsHelpers";
+import { GetAccountShapeArg0, mergeOps } from "../../bridge/jsHelpers";
 import {
   Account,
   encodeAccountId,
@@ -11,11 +6,10 @@ import {
   OperationType,
   TokenAccount,
 } from "../../types";
-import type { GetAccountShape } from "../../bridge/jsHelpers";
 import BigNumber from "bignumber.js";
 
 import { emptyHistoryCache } from "../../account";
-import { Config, getTransactions, TransactionDescriptor } from "./api";
+import { getTransactions, TransactionDescriptor } from "./api/chain/web3";
 import { getTokenById } from "@ledgerhq/cryptoassets";
 import { encodeOperationId } from "../../operation";
 import {
@@ -25,15 +19,18 @@ import {
   toTokenId,
   toTokenMint,
 } from "./logic";
-import { compact, filter, groupBy, keyBy, toPairs, pipe } from "lodash/fp";
-import { parseQuiet } from "./api/program";
+import { compact, filter, groupBy, keyBy, toPairs, pipe, map } from "lodash/fp";
+import { parseQuiet } from "./api/chain/program";
 import {
   ParsedConfirmedTransactionMeta,
   ParsedMessageAccount,
   ParsedTransaction,
 } from "@solana/web3.js";
-import { clusterByCurrencyId } from "./utils";
-import { ChainAPI } from "./api/web4";
+import { ChainAPI } from "./api";
+import {
+  ParsedOnChainTokenAccountWithInfo,
+  toTokenAccountWithInfo,
+} from "./api/chain/web3";
 
 type OnChainTokenAccount = Awaited<
   ReturnType<typeof getAccount>
@@ -55,7 +52,7 @@ export const getAccountShapeWithAPI = async (
     balance: mainAccBalance,
     spendableBalance: mainAccSpendableBalance,
     tokenAccounts: onChaintokenAccounts,
-  } = await api.getAccount(mainAccAddress);
+  } = await getAccount(mainAccAddress, api);
 
   const mainAccountId = encodeAccountId({
     type: "js",
@@ -85,13 +82,13 @@ export const getAccountShapeWithAPI = async (
       continue;
     }
 
-    const assocTokenAccPubkey = await findAssociatedTokenAccountPubkey(
+    const assocTokenAccAddress = await api.findAssocTokenAccAddress(
       mainAccAddress,
       mint
     );
 
-    const assocTokenAcc = accs.find(({ onChainAcc: { pubkey } }) =>
-      pubkey.equals(assocTokenAccPubkey)
+    const assocTokenAcc = accs.find(
+      ({ onChainAcc: { pubkey } }) => pubkey.toBase58() === assocTokenAccAddress
     );
 
     if (assocTokenAcc === undefined) {
@@ -105,7 +102,7 @@ export const getAccountShapeWithAPI = async (
     const txs = await getTransactions(
       assocTokenAcc.onChainAcc.pubkey.toBase58(),
       lastSyncedTxSignature,
-      config
+      api
     );
 
     const nextSubAcc =
@@ -129,7 +126,7 @@ export const getAccountShapeWithAPI = async (
   const newMainAccTxs = await getTransactions(
     mainAccAddress,
     mainAccountLastTxSignature,
-    config
+    api
   );
 
   const newMainAccOps = newMainAccTxs
@@ -152,10 +149,6 @@ export const getAccountShapeWithAPI = async (
   };
 
   return shape;
-};
-
-const postSync = (_: Account, synced: Account) => {
-  return synced;
 };
 
 function newSubAcc({
@@ -501,7 +494,36 @@ function getTokenAccOperationType({
   return fallbackType;
 }
 
-/*
-export const sync = makeSync(getAccountShape, postSync);
-export const scanAccounts = makeScanAccounts(getAccountShape);
-*/
+async function getAccount(
+  address: string,
+  api: ChainAPI
+): Promise<{
+  balance: BigNumber;
+  spendableBalance: BigNumber;
+  blockHeight: number;
+  tokenAccounts: ParsedOnChainTokenAccountWithInfo[];
+}> {
+  const balanceLamportsWithContext = await api.getBalanceAndContext(address);
+
+  const { feeCalculator } = await api.getRecentBlockhash();
+  const { lamportsPerSignature } = feeCalculator;
+
+  const tokenAccounts = await api
+    .getParsedTokenAccountsByOwner(address)
+    .then((res) => res.value)
+    .then(map(toTokenAccountWithInfo));
+
+  const balance = new BigNumber(balanceLamportsWithContext.value);
+  const spendableBalance = BigNumber.max(
+    balance.minus(lamportsPerSignature),
+    0
+  );
+  const blockHeight = balanceLamportsWithContext.context.slot;
+
+  return {
+    tokenAccounts,
+    balance,
+    spendableBalance,
+    blockHeight,
+  };
+}
