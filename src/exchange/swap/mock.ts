@@ -86,7 +86,7 @@ export const mockGetExchangeRates = async (
   //Mock OK, not really magnitude aware
   return [
     {
-      rate: new BigNumber("1"),
+      rate: new BigNumber("666"),
       toAmount: amount.times(magnitudeAwareRate),
       magnitudeAwareRate,
       rateId: "mockedRateId",
@@ -95,7 +95,7 @@ export const mockGetExchangeRates = async (
       tradeMethod: "fixed",
     },
     {
-      rate: new BigNumber("1"),
+      rate: new BigNumber("333"),
       toAmount: amount.times(magnitudeAwareRate),
       magnitudeAwareRate,
       rateId: "mockedRateId",
