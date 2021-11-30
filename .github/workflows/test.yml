@@ -150,12 +150,8 @@ jobs:
 
   cli-linux:
     runs-on: ${{ needs.start-runner.outputs.label }}
-    needs: [start-runner]
+    needs: [start-runner, jest-linux]
     steps:
-      - name: prepare runner
-        run: |
-          sudo growpart /dev/nvme0n1 1
-          sudo resize2fs /dev/nvme0n1p1
       - uses: actions/checkout@v1
       - uses: actions/setup-node@master
         with:
