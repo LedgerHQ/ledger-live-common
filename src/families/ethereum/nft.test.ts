@@ -26,8 +26,6 @@ const gaspardAccount: AccountRaw = {
   xpub: "",
 };
 
-setEnv("NFT", true);
-
 describe("nft reconciliation", () => {
   let account = fromAccountRaw(gaspardAccount);
   const localCache = {};
@@ -43,13 +41,16 @@ describe("nft reconciliation", () => {
   const bridge = getAccountBridge(account);
   async function sync(account) {
     const blacklistedTokenIds = [];
-    return await bridge
+    setEnv("NFT", true);
+    const r = await bridge
       .sync(account, {
         paginationConfig: {},
         blacklistedTokenIds,
       })
       .pipe(reduce((a, f: (arg0: Account) => Account) => f(a), account))
       .toPromise();
+    setEnv("NFT", false);
+    return r;
   }
 
   test("first sync & have nfts", async () => {
