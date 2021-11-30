@@ -64,7 +64,7 @@ describe("nft reconciliation", () => {
       nfts: account.nfts?.slice(Math.ceil((account.nfts?.length || 0) / 2)),
     };
     const resync = await sync(copy);
-    expect(resync.nfts?.length).toEqual(account.nfts?.length);
+    expect(resync.nfts).toEqual(account.nfts);
   });
 
   test("remove half NFTs will restore them with missing operations too", async () => {
@@ -74,7 +74,7 @@ describe("nft reconciliation", () => {
       nfts: account.nfts?.slice(Math.ceil((account.nfts?.length || 0) / 2)),
     };
     const resync = await sync(copy);
-    expect(resync.nfts?.length).toEqual(account.nfts?.length);
+    expect(resync.nfts).toEqual(account.nfts);
   });
 
   test("patchAccount restore new NFTs correctly", async () => {
@@ -84,6 +84,6 @@ describe("nft reconciliation", () => {
       nfts: account.nfts?.slice(Math.ceil((account.nfts?.length || 0) / 2)),
     };
     const newAccount = patchAccount(copy, toAccountRaw(account));
-    expect(newAccount.nfts?.length).toEqual(account.nfts?.length);
+    expect(newAccount.nfts).toEqual(account.nfts);
   });
 });

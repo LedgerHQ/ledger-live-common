@@ -148,7 +148,7 @@ export const mergeNfts = (
   }
 
   // Adding the rest of newNfts that was not already in oldNfts
-  return nfts.concat(Object.values(newNftsPerId));
+  return Object.values(newNftsPerId).concat(nfts);
 };
 
 export const makeSync =
