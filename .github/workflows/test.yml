@@ -24,7 +24,7 @@ jobs:
         uses: machulav/ec2-github-runner@v2
         with:
           mode: start
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.CI_BOT_TOKEN }}
           ec2-image-id: ${{ steps.get-ami-id.outputs.ami-id }}
           ec2-instance-type: c5.4xlarge
           subnet-id: subnet-03b7b4dff904e0142 # production-shared-private-eu-west-1a
@@ -227,6 +227,6 @@ jobs:
         uses: machulav/ec2-github-runner@v2
         with:
           mode: stop
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.CI_BOT_TOKEN }}
           label: ${{ needs.start-runner.outputs.label }}
           ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
