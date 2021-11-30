@@ -150,7 +150,7 @@ jobs:
 
   cli-linux:
     runs-on: ${{ needs.start-runner.outputs.label }}
-    needs: [start-runner, jest-linux]
+    needs: [start-runner]
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@master
