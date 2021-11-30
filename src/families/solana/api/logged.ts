@@ -1,22 +1,29 @@
 import { ChainAPI } from "./chain";
 
-export function logged(api: ChainAPI): ChainAPI {
+import fs from "fs";
+
+export function logged(api: ChainAPI, file: string): ChainAPI {
   const proxy: ChainAPI = new Proxy(api, {
     get(target, propKey, receiver) {
+      if (typeof propKey === "symbol") {
+        throw new Error("symbols not supported");
+      }
       const targetValue = Reflect.get(target, propKey, receiver);
       if (typeof targetValue === "function") {
         return function (...args: unknown[]) {
           const result = targetValue.apply(this, args);
-          const log = (_: unknown) => {};
-          /*
           const log = (answer: unknown) => {
-            console.log({
+            const summary = {
               method: propKey,
               params: args,
               answer,
-            });
+            };
+            const summaryJson = JSON.stringify(summary).replace(
+              /{"_bn":(".*?")}/g,
+              "new PublicKey(Buffer.from($1, 'hex'))"
+            );
+            fs.appendFileSync(file, summaryJson + ",\n");
           };
-          */
           if (result instanceof Promise) {
             return result.then((answer) => {
               log(answer);

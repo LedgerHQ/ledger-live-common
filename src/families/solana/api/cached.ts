@@ -18,7 +18,10 @@ const cacheKeyEmpty = () => "" as const;
 const cacheKeyAssocTokenAccAddress = (owner: string, mint: string) =>
   `${owner}:${mint}`;
 
-const cacheKeyTransactions = (signatures: string[]) => hash(signatures.sort());
+const cacheKeyTransactions = (signatures: string[]) =>
+  hash([...signatures].sort());
+
+const cacheKeyByArgs = (...args: any[]) => hash(args);
 
 export function cached(api: ChainAPI): ChainAPI {
   return {
@@ -68,7 +71,7 @@ export function cached(api: ChainAPI): ChainAPI {
 
     getSignaturesForAddress: makeLRUCache(
       api.getSignaturesForAddress,
-      cacheKeyAddress,
+      cacheKeyByArgs,
       seconds(30)
     ),
 
