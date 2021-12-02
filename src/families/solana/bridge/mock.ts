@@ -6,7 +6,7 @@ import { makeLRUCache } from "../../../cache";
 import { getMockedMethods } from "./mock-data";
 import { minutes } from "../api/cached";
 
-function getMockedAPI(config: Config): Promise<ChainAPI> {
+function mockChainAPI(config: Config): ChainAPI {
   const mockedMethods = getMockedMethods();
   const api = new Proxy(
     { config },
@@ -37,7 +37,7 @@ function getMockedAPI(config: Config): Promise<ChainAPI> {
       },
     }
   );
-  return Promise.resolve(api as ChainAPI);
+  return api as ChainAPI;
 }
 
 function removeUndefineds(input: any) {
@@ -48,16 +48,33 @@ function removeUndefineds(input: any) {
     : input;
 }
 
+// Bridge with this api will log all api calls to a file.
+// The calls data can be copied to mock-data.ts from the file.
 /* eslint-disable @typescript-eslint/no-unused-vars */
-const createMockForApi = makeLRUCache(
-  (config: Config) =>
-    Promise.resolve(
-      cached(queued(logged(getChainAPI(config), "/tmp/log"), 100))
-      //queued(logged(getChainAPI(config), "/tmp/log"), 100)
-    ),
-  (config) => config.cluster,
-  minutes(1000)
-);
+function createMockDataForAPI() {
+  const apiGetter = makeLRUCache(
+    (config: Config) =>
+      Promise.resolve(
+        cached(queued(logged(getChainAPI(config), "/tmp/log"), 100))
+      ),
+    (config) => config.cluster,
+    minutes(1000)
+  );
+  return {
+    getAPI: apiGetter,
+    getQueuedAPI: apiGetter,
+    getQueuedAndCachedAPI: apiGetter,
+  };
+}
 
-//export default makeBridges(createMockForApi);
-export default makeBridges(getMockedAPI);
+function getMockedAPIs() {
+  const mockedAPI = mockChainAPI({ cluster: "mock" } as any);
+  return {
+    getAPI: (_: Config) => Promise.resolve(mockedAPI),
+    getQueuedAPI: (_: Config) => Promise.resolve(mockedAPI),
+    getQueuedAndCachedAPI: (_: Config) => Promise.resolve(mockedAPI),
+  };
+}
+
+//export default makeBridges(createMockDataForAPI());
+export default makeBridges(getMockedAPIs());

@@ -96,13 +96,19 @@ function makeSign(
   };
 }
 
-export function makeBridges(
-  getChainAPI: (config: Config) => Promise<ChainAPI>
-): {
+export function makeBridges({
+  getAPI,
+  getQueuedAPI,
+  getQueuedAndCachedAPI,
+}: {
+  getAPI: (config: Config) => Promise<ChainAPI>;
+  getQueuedAPI: (config: Config) => Promise<ChainAPI>;
+  getQueuedAndCachedAPI: (config: Config) => Promise<ChainAPI>;
+}): {
   currencyBridge: CurrencyBridge;
   accountBridge: AccountBridge<Transaction>;
 } {
-  const { sync, scan } = makeSyncAndScan(getChainAPI);
+  const { sync, scan } = makeSyncAndScan(getQueuedAPI);
 
   const accountBridge: AccountBridge<Transaction> = {
     createTransaction,
@@ -111,9 +117,9 @@ export function makeBridges(
     getTransactionStatus,
     sync,
     receive: makeAccountBridgeReceive(),
-    prepareTransaction: makePrepare(getChainAPI),
-    broadcast: makeBroadcast(getChainAPI),
-    signOperation: makeSign(getChainAPI),
+    prepareTransaction: makePrepare(getQueuedAndCachedAPI),
+    broadcast: makeBroadcast(getAPI),
+    signOperation: makeSign(getAPI),
   };
 
   const currencyBridge: CurrencyBridge = {
