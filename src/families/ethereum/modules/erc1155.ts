@@ -9,6 +9,7 @@ import {
 import { validateRecipient } from "../transaction";
 import type { ModeModule, Transaction } from "../types";
 import type { Account } from "../../../types";
+import { prepareTransaction } from "./erc721";
 
 const notOwnedNft = createCustomErrorClass("NotOwnedNft");
 const notEnoughNftOwned = createCustomErrorClass("NotEnoughNftOwned");
@@ -84,11 +85,11 @@ const erc1155Transfer: ModeModule = {
       value: input.transaction.recipient ?? "",
     });
 
-    // fields.push({
-    //   type: "text",
-    //   label: "Collection Name",
-    //   value: "Collection Name",
-    // });
+    fields.push({
+      type: "text",
+      label: "Collection Name",
+      value: input.transaction.collectionName || "",
+    });
 
     fields.push({
       type: "text",
@@ -119,6 +120,8 @@ const erc1155Transfer: ModeModule = {
       approving: true, // workaround to track the status ENABLING
     };
   },
+
+  prepareTransaction,
 };
 
 function serializeTransactionData(
