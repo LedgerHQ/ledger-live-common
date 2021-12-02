@@ -296,7 +296,7 @@ function txToMainAccOperation(
     blockHeight: tx.info.slot,
     blockHash: message.recentBlockhash,
     extra: {
-      memo: tx.info.memo ?? undefined,
+      memo: tx.info.memo ? dropMemoLengthPrefixIfAny(tx.info.memo) : undefined,
     },
     type: opType,
     senders,
@@ -361,7 +361,7 @@ function txToTokenAccOperation(
     value: delta.abs(),
     hasFailed: !!tx.info.err,
     extra: {
-      memo: tx.info.memo ?? undefined,
+      memo: tx.info.memo ? dropMemoLengthPrefixIfAny(tx.info.memo) : undefined,
     },
     blockHash: tx.parsed.transaction.message.recentBlockhash,
   };
@@ -492,6 +492,17 @@ function getTokenAccOperationType({
 
   const fallbackType = delta.eq(0) ? "NONE" : delta.gt(0) ? "IN" : "OUT";
   return fallbackType;
+}
+
+function dropMemoLengthPrefixIfAny(memo: string) {
+  const lengthPrefixMatch = memo.match(/^\[(\d+)\]\s/);
+  if (lengthPrefixMatch) {
+    const prefixLength = Number(lengthPrefixMatch[1]);
+    if (Number.isInteger(prefixLength) && prefixLength < memo.length) {
+      return memo.slice(-prefixLength);
+    }
+  }
+  return memo;
 }
 
 async function getAccount(
