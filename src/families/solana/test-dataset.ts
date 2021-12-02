@@ -293,6 +293,8 @@ const dataset: DatasetTest<Transaction> = {
                 totalSpent: fees(1).plus(1),
               },
             },
+            // no tokens for first release
+            /*
             {
               name: "token.transfer :: status is success: recipient is funded wallet, assoc token acc exists",
               transaction: {
@@ -426,6 +428,7 @@ const dataset: DatasetTest<Transaction> = {
                   testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
               },
             },
+            */
           ],
         },
       ],
