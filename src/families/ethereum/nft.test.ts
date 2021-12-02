@@ -28,6 +28,7 @@ const gaspardAccount: AccountRaw = {
   xpub: "",
 };
 
+/*
 const gaspardPolygonAccount: AccountRaw = {
   id: "js:1:polygon:0xb98d10d9f6d07ba283bfd21b2dfec050f9ae282a:",
   seedIdentifier: "0xb98d10d9f6d07ba283bfd21b2dfec050f9ae282a",
@@ -46,6 +47,7 @@ const gaspardPolygonAccount: AccountRaw = {
   lastSyncDate: "",
   xpub: "",
 };
+*/
 
 const gaspardBscAccount: AccountRaw = {
   id: "js:1:bsc:0xb98d10d9f6d07ba283bfd21b2dfec050f9ae282a:",
