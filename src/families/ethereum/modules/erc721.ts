@@ -59,18 +59,30 @@ const erc721Transfer: ModeModule = {
     fields.push({
       type: "text",
       label: "Type",
-      value: `ERC721.transfer`,
+      value: `NFT Transfer`,
     });
 
     fields.push({
       type: "text",
-      label: "Collection",
-      value: input.transaction.collection ?? "",
+      label: "To",
+      value: input.transaction.recipient ?? "",
+    });
+
+    // fields.push({
+    //   type: "text",
+    //   label: "Collection Name",
+    //   value: "Collection Name",
+    // });
+
+    fields.push({
+      type: "address",
+      label: "NFT Address",
+      address: input.transaction.collection ?? "",
     });
 
     fields.push({
       type: "text",
-      label: "Token ID",
+      label: "NFT ID",
       value: input.transaction.tokenIds?.[0] ?? "",
     });
   },
