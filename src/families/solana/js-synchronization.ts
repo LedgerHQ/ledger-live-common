@@ -285,7 +285,7 @@ function txToMainAccOperation(
 
   const opFee = isFeePayer ? txFee : new BigNumber(0);
 
-  const value = balanceDelta.abs().minus(opFee);
+  const value = balanceDelta.abs();
   const opValue = opType === "OPT_OUT" ? value.negated() : value;
 
   return {
