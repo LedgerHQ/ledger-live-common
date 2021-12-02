@@ -50,7 +50,7 @@ function removeUndefineds(input: any) {
 
 // Bridge with this api will log all api calls to a file.
 // The calls data can be copied to mock-data.ts from the file.
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 function createMockDataForAPI() {
   const apiGetter = makeLRUCache(
     (config: Config) =>

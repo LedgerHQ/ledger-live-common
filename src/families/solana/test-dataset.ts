@@ -15,7 +15,9 @@ import {
   SolanaAccountNotFunded,
   SolanaAddressOffEd25519,
   SolanaMemoIsTooLong,
+  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   SolanaRecipientAssociatedTokenAccountWillBeFunded,
+  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   SolanaTokenAccountHoldsAnotherToken,
 } from "./errors";
 import {
@@ -60,6 +62,7 @@ const mainAccId = encodeAccountId({
   derivationMode: "solanaMain",
 });
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 const wSolSubAccId = encodeAccountIdWithTokenAccountAddress(
   mainAccId,
   testOnChainData.wSolSenderAssocTokenAccAddress

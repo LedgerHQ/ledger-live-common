@@ -19,6 +19,7 @@ import {
   toTokenId,
   toTokenMint,
 } from "./logic";
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import { compact, filter, groupBy, keyBy, toPairs, pipe, map } from "lodash/fp";
 import { parseQuiet } from "./api/chain/program";
 import {
@@ -29,6 +30,7 @@ import {
 import { ChainAPI } from "./api";
 import {
   ParsedOnChainTokenAccountWithInfo,
+  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   toTokenAccountWithInfo,
 } from "./api/chain/web3";
 
