@@ -138,14 +138,15 @@ function optimisticOpForTransfer(
   command: TransferCommand,
   commandDescriptor: ValidCommandDescriptor
 ): Operation {
+  const commons = optimisticOpcommons(transaction, commandDescriptor);
   return {
-    ...optimisticOpcommons(transaction, commandDescriptor),
+    ...commons,
     id: encodeOperationId(account.id, "", "OUT"),
     type: "OUT",
     accountId: account.id,
     senders: [account.freshAddress],
     recipients: [transaction.recipient],
-    value: new BigNumber(command.amount),
+    value: new BigNumber(command.amount).plus(commons.fee),
     extra: {
       memo: command.memo,
     },
