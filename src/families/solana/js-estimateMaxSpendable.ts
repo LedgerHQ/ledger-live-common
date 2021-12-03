@@ -1,21 +1,30 @@
-import type { Account, AccountLike } from "../../types";
+import type { AccountBridge } from "../../types";
 import type { Transaction } from "./types";
 import BigNumber from "bignumber.js";
+import { ChainAPI } from "./api";
 
-const estimateMaxSpendable = async ({
-  account,
-}: {
-  account: AccountLike;
-  parentAccount?: Account;
-  transaction?: Transaction;
-}): Promise<BigNumber> => {
+const estimateMaxSpendableWithAPI = async (
+  {
+    account,
+    transaction,
+  }: Parameters<AccountBridge<Transaction>["estimateMaxSpendable"]>[0],
+  api: ChainAPI
+): Promise<BigNumber> => {
+  const feeCalculator =
+    transaction?.feeCalculator ??
+    (await api.getRecentBlockhash()).feeCalculator;
+
   switch (account.type) {
     case "Account":
+      return BigNumber.max(
+        account.balance.minus(feeCalculator.lamportsPerSignature),
+        0
+      );
     case "TokenAccount":
-      return account.spendableBalance;
+      return account.balance;
   }
 
   throw new Error("not supported account type");
 };
 
-export default estimateMaxSpendable;
+export default estimateMaxSpendableWithAPI;

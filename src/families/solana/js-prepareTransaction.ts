@@ -6,6 +6,7 @@ import {
   NotEnoughBalance,
   RecipientRequired,
 } from "@ledgerhq/errors";
+import BigNumber from "bignumber.js";
 import { findSubAccountById } from "../../account";
 import type { Account } from "../../types";
 import { ChainAPI } from "./api";
@@ -38,9 +39,13 @@ import type {
 } from "./types";
 import { assertUnreachable } from "./utils";
 
+type TransactionWithFeeCalculator = Transaction & {
+  feeCalculator: Exclude<Transaction["feeCalculator"], undefined>;
+};
+
 async function deriveCommandDescriptor(
   mainAccount: Account,
-  tx: Transaction,
+  tx: TransactionWithFeeCalculator,
   api: ChainAPI
 ): Promise<CommandDescriptor> {
   const errors: Record<string, Error> = {};
@@ -99,7 +104,10 @@ const prepareTransaction = async (
     patch.feeCalculator = feeCalculator;
   }
 
-  const txToDeriveFrom = updateModelIfSubAccountIdPresent(tx);
+  const txToDeriveFrom = {
+    ...updateModelIfSubAccountIdPresent(tx),
+    feeCalculator,
+  };
 
   const commandDescriptor = await deriveCommandDescriptor(
     mainAccount,
@@ -314,7 +322,7 @@ async function deriveCreateAssociatedTokenAccountCommandDescriptor(
 
 async function deriveTransferCommandDescriptor(
   mainAccount: Account,
-  tx: Transaction,
+  tx: TransactionWithFeeCalculator,
   model: TransactionModel & { kind: TransferTransaction["kind"] },
   api: ChainAPI
 ): Promise<CommandDescriptor> {
@@ -335,9 +343,13 @@ async function deriveTransferCommandDescriptor(
     return toInvalidStatusCommand(errors, warnings);
   }
 
-  const txAmount = tx.useAllAmount ? mainAccount.spendableBalance : tx.amount;
+  const fee = tx.feeCalculator.lamportsPerSignature;
 
-  if (txAmount.gt(mainAccount.spendableBalance)) {
+  const txAmount = tx.useAllAmount
+    ? BigNumber.max(mainAccount.balance.minus(fee), 0)
+    : tx.amount;
+
+  if (txAmount.plus(fee).gt(mainAccount.balance)) {
     errors.amount = new NotEnoughBalance();
     return toInvalidStatusCommand(errors, warnings);
   }

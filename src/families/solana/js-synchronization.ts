@@ -521,9 +521,6 @@ async function getAccount(
 }> {
   const balanceLamportsWithContext = await api.getBalanceAndContext(address);
 
-  const { feeCalculator } = await api.getRecentBlockhash();
-  const { lamportsPerSignature } = feeCalculator;
-
   const tokenAccounts = [];
 
   // no tokens for the first release
@@ -534,16 +531,12 @@ async function getAccount(
     */
 
   const balance = new BigNumber(balanceLamportsWithContext.value);
-  const spendableBalance = BigNumber.max(
-    balance.minus(lamportsPerSignature),
-    0
-  );
   const blockHeight = balanceLamportsWithContext.context.slot;
 
   return {
     tokenAccounts,
     balance,
-    spendableBalance,
+    spendableBalance: balance,
     blockHeight,
   };
 }
