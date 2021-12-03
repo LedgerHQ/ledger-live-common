@@ -16,7 +16,6 @@ import {
   NFTMetadataContextState,
   NFTMetadataContextType,
   NFTResource,
-  NFT,
 } from "./types";
 import { isOutdated } from "./logic";
 
