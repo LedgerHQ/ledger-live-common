@@ -119,12 +119,7 @@ Operation[] {
   return all;
 }
 
-export const mergeNfts = (
-  oldNfts: NFT[] | undefined,
-  newNfts: NFT[] | undefined
-): NFT[] => {
-  if (!newNfts?.length) return oldNfts ?? [];
-
+export const mergeNfts = (oldNfts: NFT[], newNfts: NFT[]): NFT[] => {
   // Getting a map of id => NFT
   const newNftsPerId: Record<string, NFT> = (newNfts as NFT[]).reduce(
     (acc, curr) => setWith(acc, curr.id, curr, Object),
