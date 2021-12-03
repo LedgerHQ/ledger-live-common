@@ -1,12 +1,12 @@
 import { BigNumber } from "bignumber.js";
-import type { Account } from "../../types";
+import type { Account, TransactionStatus } from "../../types";
 import type { Command, Transaction } from "./types";
 import { assertUnreachable } from "./utils";
 
 const getTransactionStatus = async (
   _: Account,
   tx: Transaction
-): Promise<Status> => {
+): Promise<TransactionStatus> => {
   const txFees = new BigNumber(tx.feeCalculator?.lamportsPerSignature ?? 0);
 
   const { commandDescriptor } = tx.model;
@@ -46,14 +46,6 @@ const getTransactionStatus = async (
     default:
       return assertUnreachable(commandDescriptor);
   }
-};
-
-type Status = {
-  errors: Record<string, Error>;
-  warnings: Record<string, Error>;
-  estimatedFees: BigNumber;
-  amount: BigNumber;
-  totalSpent: BigNumber;
 };
 
 function getAmount(tx: Transaction, command: Command) {

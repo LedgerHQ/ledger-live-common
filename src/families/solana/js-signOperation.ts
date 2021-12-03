@@ -56,17 +56,17 @@ export const signOperationWithAPI = (
   },
   api: () => Promise<ChainAPI>
 ): Observable<SignOperationEvent> =>
-  new Observable((subsriber) => {
+  new Observable((subscriber) => {
     const main = async () => {
       const transport = await open(deviceId);
 
       try {
-        const [msgToHardwareBytes, singOnChainTransaction] =
+        const [msgToHardwareBytes, signOnChainTransaction] =
           await buildTransactionWithAPI(account, transaction, await api());
 
         const hwApp = new Solana(transport);
 
-        subsriber.next({
+        subscriber.next({
           type: "device-signature-requested",
         });
 
@@ -75,17 +75,17 @@ export const signOperationWithAPI = (
           msgToHardwareBytes
         );
 
-        subsriber.next({
+        subscriber.next({
           type: "device-signature-granted",
         });
 
-        const singedOnChainTxBytes = singOnChainTransaction(signature);
+        const signedOnChainTxBytes = signOnChainTransaction(signature);
 
-        subsriber.next({
+        subscriber.next({
           type: "signed",
           signedOperation: {
             operation: buildOptimisticOperation(account, transaction),
-            signature: singedOnChainTxBytes.toString("hex"),
+            signature: signedOnChainTxBytes.toString("hex"),
             expirationDate: null,
           },
         });
@@ -95,8 +95,8 @@ export const signOperationWithAPI = (
     };
 
     main().then(
-      () => subsriber.complete(),
-      (e) => subsriber.error(e)
+      () => subscriber.complete(),
+      (e) => subscriber.error(e)
     );
   });
 

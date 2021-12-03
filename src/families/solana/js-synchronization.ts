@@ -421,6 +421,8 @@ function getMainAccOperationTypeFromTx(
           return "OPT_OUT";
       }
       break;
+    // disabled until staking support
+    /*
     case "stake":
       switch (mainIx.instruction.type) {
         case "delegate":
@@ -429,6 +431,7 @@ function getMainAccOperationTypeFromTx(
           return "UNDELEGATE";
       }
       break;
+      */
     default:
       return undefined;
   }

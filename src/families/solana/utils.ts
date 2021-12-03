@@ -17,16 +17,14 @@ export async function drainSeqAsyncGen<T>(
 }
 
 export function clusterByCurrencyId(currencyId: string): Cluster {
-  const parts = currencyId.split("_");
-  if (parts[0] === "solana") {
-    if (parts.length === 1) {
-      return "mainnet-beta";
-    }
-    if (parts.length === 2) {
-      if (parts[1] === "devnet" || parts[1] === "testnet") {
-        return parts[1];
-      }
-    }
+  const clusters: Record<string, Cluster> = {
+    solana: "mainnet-beta",
+    solana_devnet: "devnet",
+    solana_testnet: "testnet",
+  };
+
+  if (currencyId in clusters) {
+    return clusters[currencyId];
   }
 
   throw Error(

@@ -72,7 +72,7 @@ async function deriveCommandDescriptor(
       }
 
       return model.kind === "transfer"
-        ? deriveTransaferCommandDescriptor(mainAccount, tx, model, api)
+        ? deriveTransferCommandDescriptor(mainAccount, tx, model, api)
         : deriveTokenTransferCommandDescriptor(mainAccount, tx, model, api);
     case "token.createATA":
       return deriveCreateAssociatedTokenAccountCommandDescriptor(
@@ -312,7 +312,7 @@ async function deriveCreateAssociatedTokenAccountCommandDescriptor(
   };
 }
 
-async function deriveTransaferCommandDescriptor(
+async function deriveTransferCommandDescriptor(
   mainAccount: Account,
   tx: Transaction,
   model: TransactionModel & { kind: TransferTransaction["kind"] },
