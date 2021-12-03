@@ -53,10 +53,10 @@ async function* getTransactionsBatched(
   untilTxSignature: string | undefined,
   api: ChainAPI
 ): AsyncGenerator<TransactionDescriptor[], void, unknown> {
-  // as per Ledger team - last 1000 operations is a sane limit
+  // as per Ledger team - last 100 operations is a sane limit to begin with
   const signatures = await api.getSignaturesForAddress(address, {
     until: untilTxSignature,
-    limit: 1000,
+    limit: 100,
   });
 
   // max req payload is 50K, around 200 transactions atm
