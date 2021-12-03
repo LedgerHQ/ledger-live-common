@@ -28,12 +28,24 @@ export const getAccountInfo = async (
   }
 };
 
-export const getTransactions = async (address: string): Promise<undefined> => {
+export const getTransaction = async (address: string): Promise<undefined> => {
   log("cosmjs", "fetch transaction");
 
   try {
     api = await StargateClient.connect(defaultEndpoint);
     const data = await api.getTx(address);
+    return data;
+  } catch (e) {
+    return undefined;
+  }
+};
+
+export const getTransactions = async (address: string): Promise<undefined> => {
+  log("cosmjs", "fetch transactions");
+
+  try {
+    api = await StargateClient.connect(defaultEndpoint);
+    const data = await api.searchTx({ sentFromOrTo: address });
     return data;
   } catch (e) {
     return undefined;
