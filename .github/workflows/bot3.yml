@@ -61,7 +61,7 @@ jobs:
       - name: pull docker image
         run: docker pull ghcr.io/ledgerhq/speculos
       - name: kill apt-get
-        run: sudo killall apt-get apt || echo OK
+        run: sudo killall -w apt-get apt || echo OK
       - name: Install linux deps
         run: sudo apt-get install -y libusb-1.0-0-dev jq
       - name: Install dependencies
