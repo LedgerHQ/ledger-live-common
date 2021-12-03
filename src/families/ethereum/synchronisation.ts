@@ -410,7 +410,7 @@ const txToOps =
 
             const all: Operation[] = [];
 
-            event.transfers.forEach((transfer) => {
+            event.transfers.forEach((transfer, i) => {
               const tokenId = transfer.id;
               const value = new BigNumber(transfer.value);
               const nftId = encodeNftId(id, event.contract, tokenId);
@@ -418,7 +418,7 @@ const txToOps =
               if (sending) {
                 const type = "NFT_OUT";
                 all.push({
-                  id: `${nftId}-${hash}-${type}`,
+                  id: `${nftId}-${hash}-${type}-i${i}`,
                   senders: [sender],
                   recipients: [receiver],
                   contract,
@@ -441,7 +441,7 @@ const txToOps =
               if (receiving) {
                 const type = "NFT_IN";
                 all.push({
-                  id: `${nftId}-${hash}-${type}`,
+                  id: `${nftId}-${hash}-${type}-i${i}`,
                   senders: [sender],
                   recipients: [receiver],
                   contract,
