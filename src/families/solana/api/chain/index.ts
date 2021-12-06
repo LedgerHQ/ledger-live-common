@@ -7,6 +7,7 @@ import {
   Cluster,
   clusterApiUrl,
   Connection,
+  FeeCalculator,
   PublicKey,
   SignaturesForAddressOptions,
 } from "@solana/web3.js";
@@ -19,7 +20,9 @@ export type Config = {
 export type ChainAPI = Readonly<{
   getBalance: (address: string) => Promise<number>;
 
-  getRecentBlockhash: () => ReturnType<Connection["getRecentBlockhash"]>;
+  getRecentBlockhash: () => Promise<string>;
+
+  getTxFeeCalculator: () => Promise<FeeCalculator>;
 
   getBalanceAndContext: (
     address: string
@@ -56,36 +59,45 @@ export type ChainAPI = Readonly<{
 }>;
 
 export function getChainAPI(config: Config): ChainAPI {
-  const connection = new Connection(clusterApiUrl(config.cluster), "finalized");
+  const connection = () =>
+    new Connection(clusterApiUrl(config.cluster), "finalized");
 
   return {
     getBalance: (address: string) =>
-      connection.getBalance(new PublicKey(address)),
+      connection().getBalance(new PublicKey(address)),
 
-    getRecentBlockhash: () => connection.getRecentBlockhash(),
+    getRecentBlockhash: () =>
+      connection()
+        .getRecentBlockhash()
+        .then((r) => r.blockhash),
+
+    getTxFeeCalculator: () =>
+      connection()
+        .getRecentBlockhash()
+        .then((r) => r.feeCalculator),
 
     getBalanceAndContext: (address: string) =>
-      connection.getBalanceAndContext(new PublicKey(address)),
+      connection().getBalanceAndContext(new PublicKey(address)),
 
     getParsedTokenAccountsByOwner: (address: string) =>
-      connection.getParsedTokenAccountsByOwner(new PublicKey(address), {
+      connection().getParsedTokenAccountsByOwner(new PublicKey(address), {
         programId: TOKEN_PROGRAM_ID,
       }),
     getSignaturesForAddress: (
       address: string,
       opts?: SignaturesForAddressOptions
-    ) => connection.getSignaturesForAddress(new PublicKey(address), opts),
+    ) => connection().getSignaturesForAddress(new PublicKey(address), opts),
 
     getParsedConfirmedTransactions: (signatures: string[]) =>
-      connection.getParsedConfirmedTransactions(signatures),
+      connection().getParsedConfirmedTransactions(signatures),
 
     getAccountInfo: (address: string) =>
-      connection
+      connection()
         .getParsedAccountInfo(new PublicKey(address))
         .then((r) => r.value),
 
     sendRawTransaction: (buffer: Buffer) =>
-      connection.sendRawTransaction(buffer),
+      connection().sendRawTransaction(buffer),
 
     findAssocTokenAccAddress: (owner: string, mint: string) =>
       Token.getAssociatedTokenAddress(
@@ -96,7 +108,7 @@ export function getChainAPI(config: Config): ChainAPI {
       ).then((r) => r.toBase58()),
 
     getAssocTokenAccMinNativeBalance: () =>
-      Token.getMinBalanceRentForExemptAccount(connection),
+      Token.getMinBalanceRentForExemptAccount(connection()),
 
     config,
   };

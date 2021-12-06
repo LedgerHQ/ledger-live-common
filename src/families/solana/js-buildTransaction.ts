@@ -21,7 +21,7 @@ export const buildTransactionWithAPI = async (
 ): Promise<readonly [Buffer, (signature: Buffer) => Buffer]> => {
   const instructions = buildInstructions(transaction);
 
-  const { blockhash: recentBlockhash } = await api.getRecentBlockhash();
+  const recentBlockhash = await api.getRecentBlockhash();
 
   const feePayer = new PublicKey(account.freshAddress);
 

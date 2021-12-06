@@ -11,8 +11,7 @@ const estimateMaxSpendableWithAPI = async (
   api: ChainAPI
 ): Promise<BigNumber> => {
   const feeCalculator =
-    transaction?.feeCalculator ??
-    (await api.getRecentBlockhash()).feeCalculator;
+    transaction?.feeCalculator ?? (await api.getTxFeeCalculator());
 
   switch (account.type) {
     case "Account":

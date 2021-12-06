@@ -69,6 +69,12 @@ export function cached(api: ChainAPI): ChainAPI {
       seconds(5)
     ),
 
+    getTxFeeCalculator: makeLRUCache(
+      api.getTxFeeCalculator,
+      cacheKeyEmpty,
+      minutes(5)
+    ),
+
     getSignaturesForAddress: makeLRUCache(
       api.getSignaturesForAddress,
       cacheKeyByArgs,

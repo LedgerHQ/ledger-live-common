@@ -98,7 +98,7 @@ const prepareTransaction = async (
   const patch: Partial<Transaction> = {};
   const errors: Record<string, Error> = {};
 
-  const feeCalculator = tx.feeCalculator ?? (await getTxFeeCalculator(api));
+  const feeCalculator = tx.feeCalculator ?? (await api.getTxFeeCalculator());
 
   if (tx.feeCalculator === undefined) {
     patch.feeCalculator = feeCalculator;
@@ -418,11 +418,6 @@ async function isAccountFunded(
 ): Promise<boolean> {
   const balance = await api.getBalance(address);
   return balance > 0;
-}
-
-async function getTxFeeCalculator(api: ChainAPI) {
-  const { feeCalculator } = await api.getRecentBlockhash();
-  return feeCalculator;
 }
 
 export { prepareTransaction };
