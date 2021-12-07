@@ -44,7 +44,7 @@ export const acceptTransferTransaction: DeviceAction<Transaction, any> =
       {
         title: "Fee payer",
         button: "Rr",
-        expectedValue: ({ account }) => "sender",
+        expectedValue: () => "sender",
       },
       {
         title: "Approve",

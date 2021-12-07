@@ -23,7 +23,7 @@ const solana: AppSpec<Transaction> = {
         const transaction = bridge.createTransaction(account);
         const sibling = pickSiblings(siblings);
         const recipient = sibling.freshAddress;
-        let amount = account.balance.div(9 + 0.2 * Math.random());
+        const amount = account.balance.div(9 + 0.2 * Math.random());
         return {
           transaction,
           updates: [
