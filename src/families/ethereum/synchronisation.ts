@@ -167,7 +167,10 @@ export const getAccountShape: GetAccountShape = async (
   const operations = mergeOps(initialStableOperations, newOps);
 
   const nfts = isNFTActive(currency)
-    ? mergeNfts(initialAccount?.nfts, nftsFromOperations(operations))
+    ? mergeNfts(
+        initialAccount?.nfts || [],
+        nftsFromOperations(operations).filter((n) => n.amount.gt(0))
+      )
     : undefined;
 
   const accountShape: Partial<Account> = {
@@ -396,7 +399,7 @@ const txToOps =
     const erc1155Operations =
       !erc1155_transfer_events || !isNFTActive(currency)
         ? []
-        : flatMap(erc1155_transfer_events, (event) => {
+        : flatMap(erc1155_transfer_events, (event, i) => {
             const sender = safeEncodeEIP55(event.sender);
             const receiver = safeEncodeEIP55(event.receiver);
             const contract = safeEncodeEIP55(event.contract);
@@ -410,7 +413,7 @@ const txToOps =
 
             const all: Operation[] = [];
 
-            event.transfers.forEach((transfer) => {
+            event.transfers.forEach((transfer, j) => {
               const tokenId = transfer.id;
               const value = new BigNumber(transfer.value);
               const nftId = encodeNftId(id, event.contract, tokenId);
@@ -418,7 +421,7 @@ const txToOps =
               if (sending) {
                 const type = "NFT_OUT";
                 all.push({
-                  id: `${nftId}-${hash}-${type}`,
+                  id: `${nftId}-${hash}-${type}-i${i}_${j}`,
                   senders: [sender],
                   recipients: [receiver],
                   contract,
@@ -441,7 +444,7 @@ const txToOps =
               if (receiving) {
                 const type = "NFT_IN";
                 all.push({
-                  id: `${nftId}-${hash}-${type}`,
+                  id: `${nftId}-${hash}-${type}-i${i}`,
                   senders: [sender],
                   recipients: [receiver],
                   contract,
