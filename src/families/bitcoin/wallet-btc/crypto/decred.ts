@@ -2,13 +2,13 @@ import Base from "./base";
 import { InvalidAddress } from "@ledgerhq/errors";
 import * as bjs from "bitcoinjs-lib";
 import bs58checkBase from "bs58check/base";
+import bs58check from "bs58check";
 import createBlakeHash from "blake-hash";
 import RIPEMD160 from "ripemd160";
 import bs58 from "bs58";
 import ecc from "tiny-secp256k1";
 import createHash from "create-hash";
 import createHmac from "create-hmac";
-import bs58check from "bs58check";
 
 // the BIP32 class is inspired from https://github.com/bitcoinjs/bip32/blob/master/src/bip32.js
 class BIP32 {
@@ -185,8 +185,16 @@ class Decred extends Base {
     if (!this.validateAddress(address)) {
       throw new InvalidAddress();
     }
-    const decodeBase58 = bjs.address.fromBase58Check(address);
-    return bjs.payments.p2pkh({ hash: decodeBase58.hash }).output as Buffer;
+    const decodeBase58 = Decred.bs58check.decode(address, Decred._blake256x2);
+    const prefix = address.toLocaleUpperCase().substring(0, 2);
+    if (prefix === "dc") {
+      return bjs.payments.p2sh({ hash: decodeBase58.slice(2) })
+        .output as Buffer;
+    } else if (prefix === "de" || prefix === "ds") {
+      return bjs.payments.p2pkh({ hash: decodeBase58.slice(2) })
+        .output as Buffer;
+    }
+    throw new InvalidAddress();
   }
 
   // eslint-disable-next-line class-methods-use-this
