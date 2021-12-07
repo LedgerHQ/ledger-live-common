@@ -34,18 +34,8 @@ const getOperationType = (type: string): OperationType => {
       return "OUT";
     case "InternalTransferReceived":
       return "IN";
-    case "ValidatorGroupVoteCastSent":
-      return "VOTE";
-    case "RewardReceived":
-      return "REWARD";
     case "AccountSlashed":
       return "SLASH";
-    case "GoldLocked":
-      return "FREEZE";
-    case "GoldUnlocked":
-      return "UNFREEZE";
-    case "GoldWithdrawn":
-      return "REWARD_PAYOUT";
     default:
       return "NONE";
   }
