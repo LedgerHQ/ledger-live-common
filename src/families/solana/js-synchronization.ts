@@ -77,7 +77,7 @@ export const getAccountShapeWithAPI = async (
     (v) => new Map(toPairs(v))
   )();
 
-  const nextSubAccs2: TokenAccount[] = [];
+  const nextSubAccs: TokenAccount[] = [];
 
   for (const [mint, accs] of onChainTokenAccsByMint.entries()) {
     if (!tokenIsListedOnLedger(mint)) {
@@ -120,7 +120,7 @@ export const getAccountShapeWithAPI = async (
             txs,
           });
 
-    nextSubAccs2.push(nextSubAcc);
+    nextSubAccs.push(nextSubAcc);
   }
 
   const mainAccountLastTxSignature = mainInitialAcc?.operations[0]?.hash;
@@ -141,7 +141,9 @@ export const getAccountShapeWithAPI = async (
   );
 
   const shape: Partial<Account> = {
-    subAccounts: nextSubAccs2,
+    // uncomment when tokens are supported
+    // subAccounts as undefined makes TokenList disappear in desktop
+    //subAccounts: nextSubAccs,
     id: mainAccountId,
     blockHeight,
     balance: mainAccBalance,
