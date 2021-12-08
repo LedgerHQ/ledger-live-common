@@ -496,6 +496,22 @@ const komodo: AppSpec<Transaction> = {
     ),
   }),
 };
+const decred: AppSpec<Transaction> = {
+  name: "Decred",
+  currency: getCryptoCurrencyById("decred"),
+  dependency: "Bitcoin",
+  appQuery: {
+    model: DeviceModelId.nanoS,
+    appName: "Decred",
+  },
+  test: genericTest,
+  mutations: bitcoinLikeMutations({
+    minimalAmount: parseCurrencyUnit(
+      getCryptoCurrencyById("decred").units[0],
+      "0.0001"
+    ),
+  }),
+};
 const litecoin: AppSpec<Transaction> = {
   name: "Litecoin",
   currency: getCryptoCurrencyById("litecoin"),
@@ -532,4 +548,5 @@ export default {
   viacoin,
   zcash,
   zencash,
+  decred,
 };
