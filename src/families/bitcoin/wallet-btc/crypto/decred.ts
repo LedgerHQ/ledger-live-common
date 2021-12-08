@@ -220,7 +220,12 @@ class Decred extends Base {
     if (Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`]) {
       return Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`];
     }
-    const buffer = Decred.bs58check.decode(xpub);
+    let buffer: Buffer;
+    try {
+      buffer = Decred.bs58check.decode(xpub);
+    } catch {
+      buffer = bs58check.decode(xpub);
+    }
     const depth = buffer[4];
     const parentFingerprint = buffer.readUInt32BE(5);
     const i = buffer.readUInt32BE(9);
