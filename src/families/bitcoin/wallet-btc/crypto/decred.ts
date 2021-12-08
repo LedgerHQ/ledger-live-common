@@ -187,10 +187,10 @@ class Decred extends Base {
     }
     const decodeBase58 = Decred.bs58check.decode(address, Decred._blake256x2);
     const prefix = address.toLocaleUpperCase().substring(0, 2);
-    if (prefix === "dc") {
+    if (prefix === "DC") {
       return bjs.payments.p2sh({ hash: decodeBase58.slice(2) })
         .output as Buffer;
-    } else if (prefix === "de" || prefix === "ds") {
+    } else if (prefix === "DE" || prefix === "DS") {
       return bjs.payments.p2pkh({ hash: decodeBase58.slice(2) })
         .output as Buffer;
     }
