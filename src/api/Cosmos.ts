@@ -5,6 +5,7 @@ import {
   SignerData,
   StdFee,
 } from "@cosmjs/stargate";
+import { CosmosClient } from "@cosmjs/launchpad";
 import { fromHex } from "@cosmjs/encoding";
 import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
@@ -12,7 +13,8 @@ import BigNumber from "bignumber.js";
 let api;
 let signedApi;
 
-const defaultEndpoint = getEnv("API_COSMOS_RPC_URL");
+const defaultEndpoint = getEnv("API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT");
+const defaultRpcEndpoint = getEnv("API_COSMOS_RPC_URL");
 
 export const getAccountInfo = async (
   recipient: string
@@ -32,7 +34,7 @@ export const getTransaction = async (address: string): Promise<undefined> => {
   log("cosmjs", "fetch transaction");
 
   try {
-    api = await StargateClient.connect(defaultEndpoint);
+    api = await new CosmosClient(defaultEndpoint);
     const data = await api.getTx(address);
     return data;
   } catch (e) {
@@ -43,8 +45,11 @@ export const getTransaction = async (address: string): Promise<undefined> => {
 export const getTransactions = async (address: string): Promise<undefined> => {
   log("cosmjs", "fetch transactions");
 
+  // launchpad restrict more than 100 transactions
+  // we need to implement low level request with @cosmjs/tendermint-rpc
+  // in order to loop over pagination
   try {
-    api = await StargateClient.connect(defaultEndpoint);
+    api = await new CosmosClient(defaultEndpoint);
     const data = await api.searchTx({ sentFromOrTo: address });
     return data;
   } catch (e) {
@@ -82,7 +87,7 @@ export const getHeight = async (): Promise<number | undefined> => {
   log("cosmjs", "fetch height");
 
   try {
-    api = await StargateClient.connect(defaultEndpoint);
+    api = await new CosmosClient(defaultEndpoint);
     const data = await api.getHeight();
     return data;
   } catch (e) {
@@ -97,7 +102,7 @@ export const getBalance = async (
   log("cosmjs", "fetch balance");
 
   try {
-    api = await StargateClient.connect(defaultEndpoint);
+    api = await StargateClient.connect(defaultRpcEndpoint);
     const data = await api.getBalance(address, searchDenom);
     return data;
   } catch (e) {
@@ -111,7 +116,7 @@ export const getAllBalances = async (
   log("cosmjs", "fetch balances");
 
   try {
-    api = await StargateClient.connect(defaultEndpoint);
+    api = await StargateClient.connect(defaultRpcEndpoint);
     const data = await api.getAllBalances(address);
     return data[0].amount;
   } catch (e) {
@@ -123,7 +128,7 @@ export const getChainId = async (): Promise<string | undefined> => {
   log("cosmjs", "fetch chainid");
 
   try {
-    api = await StargateClient.connect(defaultEndpoint);
+    api = await new CosmosClient(defaultEndpoint);
     const data = await api.getChainId();
     return data;
   } catch (e) {
