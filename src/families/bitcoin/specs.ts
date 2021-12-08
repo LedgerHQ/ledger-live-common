@@ -499,7 +499,6 @@ const komodo: AppSpec<Transaction> = {
 const decred: AppSpec<Transaction> = {
   name: "Decred",
   currency: getCryptoCurrencyById("decred"),
-  dependency: "Bitcoin",
   appQuery: {
     model: DeviceModelId.nanoS,
     appName: "Decred",

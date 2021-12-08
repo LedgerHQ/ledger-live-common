@@ -244,7 +244,7 @@ class BitcoinLikeWallet {
     // refer to https://github.com/LedgerHQ/lib-ledger-core/blob/fc9d762b83fc2b269d072b662065747a64ab2816/core/src/wallet/bitcoin/api_impl/BitcoinLikeTransactionApi.cpp#L478
     // Decred has a witness and an expiry height
     if (additionals && additionals.includes("decred")) {
-      length += 4;
+      length += 2 * txInfo.outputs.length;
     }
     const buffer = Buffer.allocUnsafe(length);
     const bufferWriter = new BufferWriter(buffer, 0);
