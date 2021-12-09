@@ -34,6 +34,7 @@ import makeCompoundSummary from "./commands/makeCompoundSummary";
 import managerListApps from "./commands/managerListApps";
 import portfolio from "./commands/portfolio";
 import proxy from "./commands/proxy";
+import personalSign from "./commands/personalSign";
 import receive from "./commands/receive";
 import repl from "./commands/repl";
 import satstack from "./commands/satstack";
@@ -88,6 +89,7 @@ export default {
   managerListApps,
   portfolio,
   proxy,
+  personalSign,
   receive,
   repl,
   satstack,
