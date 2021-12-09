@@ -2,7 +2,7 @@ import { from } from "rxjs";
 import { mergeMap } from "rxjs/operators";
 import { asDerivationMode } from "@ledgerhq/live-common/lib/derivation";
 import { withDevice } from "@ledgerhq/live-common/lib/hw/deviceAccess";
-import signMessage from "@ledgerhq/live-common/lib/hw/signMessage";
+import personalSign from "@ledgerhq/live-common/lib/hw/personalSign";
 import { inferCurrency } from "../scan";
 export default {
   description:
@@ -37,7 +37,7 @@ export default {
         // Used to verify that a valid derivation mode was specified
         asDerivationMode(arg.derivationMode);
         return withDevice(arg.device || "")((t) =>
-          from(signMessage(t, { ...arg, currency }))
+          from(personalSign(t, { ...arg, currency }))
         );
       })
     ),
