@@ -462,13 +462,13 @@ const implementations = {
 
               if (disconnectT) {
                 // any connect app event unschedule the disconnect debounced event
-                clearTimeout(disconnectT);
                 disconnectT = null;
+                clearTimeout(disconnectT);
               }
 
               if (event.type === "unresponsiveDevice") {
                 return; // ignore unresponsive case which happens for polling
-              } else if (event.type === "disconnected" && !event.expected) {
+              } else if (event.type === "disconnected") {
                 // the disconnect event is delayed to debounce the reconnection that happens when switching apps
                 disconnectT = setTimeout(() => {
                   disconnectT = null;
@@ -486,7 +486,6 @@ const implementations = {
                     device,
                   });
                 }
-                if (event.type === "disconnected") return; // do not emit the expected disconnect, we already have the deviceChange
                 o.next(event);
               }
             },
@@ -592,7 +591,7 @@ export const createAction = (
             }
 
             // default debounce (to be tweak)
-            return interval(1000);
+            return interval(2000);
           }),
           takeWhile((s: State) => !s.requiresAppInstallation && !s.error, true)
         ) // the state simply goes into a React state
