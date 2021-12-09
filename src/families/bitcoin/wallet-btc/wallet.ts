@@ -122,7 +122,8 @@ class BitcoinLikeWallet {
     account: Account,
     feePerByte: number,
     excludeUTXOs: Array<{ hash: string; outputIndex: number }>,
-    pickUnconfirmedRBF: boolean
+    pickUnconfirmedRBF: boolean,
+    outputAddresses: string[] = []
   ) {
     const addresses = await account.xpub.getXpubAddresses();
     const utxos = flatten(
@@ -134,6 +135,7 @@ class BitcoinLikeWallet {
     );
     let balance = new BigNumber(0);
     log("btcwallet", "estimateAccountMaxSpendable utxos", utxos);
+    let usableUtxoCount = 0;
     utxos.forEach((utxo) => {
       if (
         !excludeUTXOs.find(
@@ -143,6 +145,7 @@ class BitcoinLikeWallet {
         )
       ) {
         if ((pickUnconfirmedRBF && utxo.rbf) || utxo.block_height !== null) {
+          usableUtxoCount++;
           balance = balance.plus(utxo.value);
         }
       }
@@ -150,12 +153,14 @@ class BitcoinLikeWallet {
     // fees if we use all utxo
     const fees =
       feePerByte *
-      utils.estimateTxSize(
-        utxos.length,
-        1,
+      utils.maxTxSizeCeil(
+        usableUtxoCount,
+        outputAddresses,
+        outputAddresses.length == 0,
         account.xpub.crypto,
         account.xpub.derivationMode
       );
+
     log("btcwallet", "estimateAccountMaxSpendable balance", balance);
     log("btcwallet", "estimateAccountMaxSpendable fees", fees);
     const maxSpendable = balance.minus(fees);
@@ -207,8 +212,11 @@ class BitcoinLikeWallet {
     lockTime?: number;
     sigHashType?: number;
     segwit?: boolean;
+    hasTimestamp?: boolean;
+    initialTimestamp?: number;
     additionals?: Array<string>;
     expiryHeight?: Buffer;
+    hasExtraData?: boolean;
     onDeviceSignatureRequested?: () => void;
     onDeviceSignatureGranted?: () => void;
     onDeviceStreaming?: (arg0: {
@@ -221,25 +229,36 @@ class BitcoinLikeWallet {
       btc,
       fromAccount,
       txInfo,
+      hasTimestamp,
+      initialTimestamp,
       additionals,
+      hasExtraData,
       onDeviceSignatureRequested,
       onDeviceSignatureGranted,
       onDeviceStreaming,
     } = params;
 
-    const length = txInfo.outputs.reduce((sum, output) => {
+    let length = txInfo.outputs.reduce((sum, output) => {
       return sum + 8 + output.script.length + 1;
     }, 1);
+    // refer to https://github.com/LedgerHQ/lib-ledger-core/blob/fc9d762b83fc2b269d072b662065747a64ab2816/core/src/wallet/bitcoin/api_impl/BitcoinLikeTransactionApi.cpp#L478
+    // Decred has a witness and an expiry height
+    if (additionals && additionals.includes("decred")) {
+      length += 2 * txInfo.outputs.length;
+    }
     const buffer = Buffer.allocUnsafe(length);
     const bufferWriter = new BufferWriter(buffer, 0);
     bufferWriter.writeVarInt(txInfo.outputs.length);
     txInfo.outputs.forEach((txOut) => {
       // xpub splits output into smaller outputs than SAFE_MAX_INT anyway
       bufferWriter.writeUInt64(txOut.value.toNumber());
+      if (additionals && additionals.includes("decred")) {
+        bufferWriter.writeVarInt(0);
+        bufferWriter.writeVarInt(0);
+      }
       bufferWriter.writeVarSlice(txOut.script);
     });
     const outputScriptHex = buffer.toString("hex");
-
     const associatedKeysets = txInfo.associatedDerivations.map(
       ([account, index]) =>
         `${fromAccount.params.path}/${fromAccount.params.index}'/${account}/${index}`
@@ -250,12 +269,27 @@ class BitcoinLikeWallet {
       string | null | undefined,
       number | null | undefined
     ][];
-    const inputs: Inputs = txInfo.inputs.map((i) => [
-      btc.splitTransaction(i.txHex, true),
-      i.output_index,
-      null,
-      null,
-    ]);
+    const inputs: Inputs = txInfo.inputs.map((i) => {
+      log("hw", `splitTransaction`, {
+        transactionHex: i.txHex,
+        isSegwitSupported: true,
+        hasTimestamp,
+        hasExtraData,
+        additionals,
+      });
+      return [
+        btc.splitTransaction(
+          i.txHex,
+          true,
+          hasTimestamp,
+          hasExtraData,
+          additionals
+        ),
+        i.output_index,
+        null,
+        i.sequence,
+      ];
+    });
 
     const lastOutputIndex = txInfo.outputs.length - 1;
 
@@ -266,7 +300,7 @@ class BitcoinLikeWallet {
       ...(params.lockTime && { lockTime: params.lockTime }),
       ...(params.sigHashType && { sigHashType: params.sigHashType }),
       ...(params.segwit && { segwit: params.segwit }),
-      // initialTimestamp,
+      initialTimestamp,
       ...(params.expiryHeight && { expiryHeight: params.expiryHeight }),
       ...(txInfo.outputs[lastOutputIndex]?.isChange && {
         changePath: `${fromAccount.params.path}/${fromAccount.params.index}'/${txInfo.changeAddress.account}/${txInfo.changeAddress.index}`,
@@ -281,7 +315,7 @@ class BitcoinLikeWallet {
       ...(params.lockTime && { lockTime: params.lockTime }),
       ...(params.sigHashType && { sigHashType: params.sigHashType }),
       ...(params.segwit && { segwit: params.segwit }),
-      // initialTimestamp,
+      initialTimestamp,
       ...(params.expiryHeight && { expiryHeight: params.expiryHeight }),
       ...(txInfo.outputs[lastOutputIndex]?.isChange && {
         changePath: `${fromAccount.params.path}/${fromAccount.params.index}'/${txInfo.changeAddress.account}/${txInfo.changeAddress.index}`,

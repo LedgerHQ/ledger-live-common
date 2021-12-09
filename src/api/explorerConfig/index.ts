@@ -12,17 +12,15 @@ const initialExplorerConfig: FullConfig = {
     },
   },
   bitcoin_cash: {
-    id: "abc",
+    id: "bch",
     stable: {
       base: "EXPLORER",
       version: "v2",
     },
-    /*
     experimental: {
       base: "EXPLORER",
       version: "v3",
     },
-    */
   },
   bitcoin_gold: {
     id: "btg",
@@ -64,10 +62,6 @@ const initialExplorerConfig: FullConfig = {
     id: "doge",
     stable: {
       base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
-      base: "EXPLORER",
       version: "v3",
     },
   },
@@ -82,10 +76,6 @@ const initialExplorerConfig: FullConfig = {
   komodo: {
     id: "kmd",
     stable: {
-      base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
       base: "EXPLORER",
       version: "v3",
     },
@@ -129,10 +119,6 @@ const initialExplorerConfig: FullConfig = {
   stakenet: {
     id: "xsn",
     stable: {
-      base: "EXPLORER",
-      version: "v2",
-    },
-    experimental: {
       base: "EXPLORER",
       version: "v3",
     },
@@ -209,6 +195,13 @@ const initialExplorerConfig: FullConfig = {
   },
   ethereum_classic: {
     id: "etc",
+    stable: {
+      base: "EXPLORER",
+      version: "v3",
+    },
+  },
+  polygon: {
+    id: "matic",
     stable: {
       base: "EXPLORER",
       version: "v3",
