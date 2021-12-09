@@ -73,14 +73,10 @@ const signOperation = ({
 
         const segwit = isSegwitDerivationMode(account.derivationMode);
 
-        // FIXME Call to explorer needed to set timestamp (https://ledgerhq.atlassian.net/browse/LL-7539)
-        // cf. https://github.com/LedgerHQ/lib-ledger-core/blob/fc9d762b83fc2b269d072b662065747a64ab2816/core/src/wallet/bitcoin/transaction_builders/BitcoinLikeUtxoPicker.cpp#L150-L154
-        /*
-        const hasTimestamp = networkParams.usesTimestampedTransaction;
+        const hasTimestamp = currency.id === "peercoin";
         const initialTimestamp = hasTimestamp
-          ? transaction.timestamp
+          ? Math.floor(Date.now() / 1000)
           : undefined;
-        */
 
         const perCoin = perCoinLogic[currency.id];
         let additionals = [currency.id];
@@ -105,6 +101,8 @@ const signOperation = ({
           ? Buffer.from([0x00, 0x00, 0x00, 0x00])
           : undefined;
 
+        const hasExtraData = perCoin?.hasExtraData || false;
+
         const signature = await wallet.signAccountTx({
           btc: hwApp,
           fromAccount: walletAccount,
@@ -112,9 +110,11 @@ const signOperation = ({
           lockTime,
           sigHashType,
           segwit,
-          //initialTimestamp,
+          hasTimestamp,
+          initialTimestamp,
           additionals,
           expiryHeight,
+          hasExtraData,
           onDeviceSignatureGranted: () =>
             o.next({
               type: "device-signature-granted",

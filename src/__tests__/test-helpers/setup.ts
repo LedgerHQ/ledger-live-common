@@ -21,6 +21,7 @@ setSupportedCurrencies([
   "bitcoin",
   "ethereum",
   "bsc",
+  "polygon",
   "elrond",
   "ripple",
   "bitcoin_cash",
@@ -54,4 +55,5 @@ setSupportedCurrencies([
   "crypto_org_croeseid",
   "crypto_org",
   "filecoin",
+  "solana",
 ]);

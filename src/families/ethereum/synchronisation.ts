@@ -4,7 +4,7 @@ import throttle from "lodash/throttle";
 import flatMap from "lodash/flatMap";
 import eip55 from "eip55";
 import { log } from "@ledgerhq/logs";
-import { mergeOps } from "../../bridge/jsHelpers";
+import { mergeNfts, mergeOps } from "../../bridge/jsHelpers";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import {
   encodeTokenAccountId,
@@ -19,6 +19,9 @@ import type { Operation, TokenAccount, Account } from "../../types";
 import { API, apiForCurrency, Tx } from "../../api/Ethereum";
 import { digestTokenAccounts, prepareTokenAccounts } from "./modules";
 import { findTokenByAddressInCurrency } from "@ledgerhq/cryptoassets";
+import { encodeNftId, isNFTActive, nftsFromOperations } from "../../nft";
+import { NFT_VERSION } from "./versions";
+
 export const getAccountShape: GetAccountShape = async (
   infoInput,
   { blacklistedTokenIds }
@@ -37,21 +40,25 @@ export const getAccountShape: GetAccountShape = async (
   const initialStableOperations = initialAccount
     ? stableOperations(initialAccount)
     : [];
+  const shouldNFTBeActive = isNFTActive(currency);
   // fetch transactions, incrementally if possible
   const mostRecentStableOperation = initialStableOperations[0];
   // when new tokens are added / blacklist changes, we need to sync again because we need to go through all operations again
   const syncHash =
     JSON.stringify(blacklistedTokenIds || []) +
     "_" +
+    shouldNFTBeActive +
+    "_" +
     listTokensForCryptoCurrency(currency, {
       withDelisted: true,
     }).length;
-  const outdatedBlacklist = initialAccount?.syncHash !== syncHash;
+  const outdatedSyncHash = initialAccount?.syncHash !== syncHash;
   const pullFromBlockHash =
     initialAccount &&
     areAllOperationsLoaded(initialAccount) &&
     mostRecentStableOperation &&
-    !outdatedBlacklist
+    !outdatedSyncHash &&
+    NFT_VERSION
       ? mostRecentStableOperation.blockHash
       : undefined;
   const txsP = fetchAllTransactions(api, address, pullFromBlockHash);
@@ -158,6 +165,14 @@ export const getAccountShape: GetAccountShape = async (
     subOperations: inferSubOperations(o.hash, subAccounts),
   }));
   const operations = mergeOps(initialStableOperations, newOps);
+
+  const nfts = isNFTActive(currency)
+    ? mergeNfts(
+        initialAccount?.nfts || [],
+        nftsFromOperations(operations).filter((n) => n.amount.gt(0))
+      )
+    : undefined;
+
   const accountShape: Partial<Account> = {
     id: accountId,
     operations,
@@ -168,6 +183,7 @@ export const getAccountShape: GetAccountShape = async (
     lastSyncDate: new Date(),
     balanceHistory: undefined,
     syncHash,
+    nfts,
   };
   return accountShape;
 };
@@ -188,7 +204,14 @@ const txToOps =
   (tx: Tx): Operation[] => {
     // workaround bugs in our explorer that don't treat partial/optimistic operation really well
     if (!tx.gas_used) return [];
-    const { hash, block, actions, transfer_events } = tx;
+    const {
+      hash,
+      block,
+      actions,
+      transfer_events,
+      erc721_transfer_events,
+      erc1155_transfer_events,
+    } = tx;
     const addr = address;
     const from = safeEncodeEIP55(tx.from);
     const to = safeEncodeEIP55(tx.to);
@@ -305,6 +328,151 @@ const txToOps =
 
           return all;
         });
+
+    // Creating NFTOps from transfer events related to ERC721 only
+    const erc721Operations =
+      !erc721_transfer_events || !isNFTActive(currency)
+        ? []
+        : flatMap(erc721_transfer_events, (event) => {
+            const sender = safeEncodeEIP55(event.sender);
+            const receiver = safeEncodeEIP55(event.receiver);
+            const contract = safeEncodeEIP55(event.contract);
+            const tokenId = event.token_id;
+            const nftId = encodeNftId(id, event.contract, tokenId);
+            const sending = addr === sender;
+            const receiving = addr === receiver;
+
+            if (!sending && !receiving) {
+              return [];
+            }
+
+            const all: Operation[] = [];
+
+            if (sending) {
+              const type = "NFT_OUT";
+              all.push({
+                id: `${nftId}-${hash}-${type}`,
+                senders: [sender],
+                recipients: [receiver],
+                contract,
+                fee,
+                standard: "ERC721",
+                tokenId,
+                value: new BigNumber(1),
+                hash,
+                type,
+                blockHeight,
+                blockHash,
+                date,
+                transactionSequenceNumber,
+                accountId: id,
+                extra: {},
+              });
+            }
+
+            if (receiving) {
+              const type = "NFT_IN";
+              all.push({
+                id: `${nftId}-${hash}-${type}`,
+                senders: [sender],
+                recipients: [receiver],
+                contract,
+                fee,
+                standard: "ERC721",
+                tokenId,
+                value: new BigNumber(1),
+                hash,
+                type,
+                blockHeight,
+                blockHash,
+                date,
+                transactionSequenceNumber,
+                accountId: id,
+                extra: {},
+              });
+            }
+
+            return all;
+          });
+
+    // Creating NFTOps from transfer events related to ERC1155 only
+    const erc1155Operations =
+      !erc1155_transfer_events || !isNFTActive(currency)
+        ? []
+        : flatMap(erc1155_transfer_events, (event, i) => {
+            const sender = safeEncodeEIP55(event.sender);
+            const receiver = safeEncodeEIP55(event.receiver);
+            const contract = safeEncodeEIP55(event.contract);
+            const operator = safeEncodeEIP55(event.operator);
+            const sending = addr === sender;
+            const receiving = addr === receiver;
+
+            if (!sending && !receiving) {
+              return [];
+            }
+
+            const all: Operation[] = [];
+
+            event.transfers.forEach((transfer, j) => {
+              const tokenId = transfer.id;
+              const value = new BigNumber(transfer.value);
+              const nftId = encodeNftId(id, event.contract, tokenId);
+
+              if (sending) {
+                const type = "NFT_OUT";
+                all.push({
+                  id: `${nftId}-${hash}-${type}-i${i}_${j}`,
+                  senders: [sender],
+                  recipients: [receiver],
+                  contract,
+                  fee,
+                  operator,
+                  standard: "ERC1155",
+                  tokenId,
+                  value,
+                  hash,
+                  type,
+                  blockHeight,
+                  blockHash,
+                  date,
+                  transactionSequenceNumber,
+                  accountId: id,
+                  extra: {},
+                });
+              }
+
+              if (receiving) {
+                const type = "NFT_IN";
+                all.push({
+                  id: `${nftId}-${hash}-${type}-i${i}_${j}`,
+                  senders: [sender],
+                  recipients: [receiver],
+                  contract,
+                  fee,
+                  operator,
+                  standard: "ERC1155",
+                  tokenId,
+                  value,
+                  hash,
+                  type,
+                  blockHeight,
+                  blockHash,
+                  date,
+                  transactionSequenceNumber,
+                  accountId: id,
+                  extra: {},
+                });
+              }
+            });
+
+            return all;
+          });
+
+    const nftOperations = erc721Operations
+      .concat(erc1155Operations)
+      /** @warning is this necessary ? Do we need the operations to be chronologically organised for LLD/LLM ? */
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+
     const ops: Operation[] = [];
 
     if (sending) {
@@ -325,6 +493,7 @@ const txToOps =
         hasFailed,
         internalOperations: internalOperations,
         subOperations,
+        nftOperations,
         transactionSequenceNumber,
       });
     }
@@ -347,6 +516,7 @@ const txToOps =
         internalOperations: sending ? [] : internalOperations,
         // if it was already in sending, we don't add twice
         subOperations: sending ? [] : subOperations,
+        nftOperations,
         transactionSequenceNumber,
       });
     }
@@ -354,7 +524,9 @@ const txToOps =
     if (
       !sending &&
       !receiving &&
-      (internalOperations.length || subOperations.length)
+      (internalOperations.length ||
+        subOperations.length ||
+        nftOperations.length)
     ) {
       ops.push({
         id: `${id}-${hash}-NONE`,
@@ -371,6 +543,7 @@ const txToOps =
         extra: {},
         internalOperations,
         subOperations,
+        nftOperations,
         transactionSequenceNumber,
       });
     }

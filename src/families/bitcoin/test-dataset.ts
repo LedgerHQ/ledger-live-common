@@ -1,7 +1,7 @@
 import type { DatasetTest } from "../../types";
 import type { Transaction } from "./types";
-import bitcoin_cash from "./datasets/bitcoin_cash";
-import bitcoin_gold from "./datasets/bitcoin_gold";
+// import bitcoin_cash from "./datasets/bitcoin_cash";
+// import bitcoin_gold from "./datasets/bitcoin_gold";
 import bitcoin from "./datasets/bitcoin";
 import dash from "./datasets/dash";
 // import decred from "./datasets/decred";
@@ -21,8 +21,8 @@ const dataset: DatasetTest<Transaction> = {
   implementations: ["js", "libcore", "mock"],
   currencies: {
     bitcoin,
-    bitcoin_cash,
-    bitcoin_gold,
+    // bitcoin_cash,
+    // bitcoin_gold,
     dash,
     // decred, // BACK-2443
     digibyte,

@@ -254,7 +254,12 @@ const bitcoinLikeMutations = ({
     },
     recoverBadTransactionStatus,
     test: ({ account }) => {
-      expect(account.balance.toString()).toBe("0");
+      expect(
+        account.bitcoinResources?.utxos
+          .filter((u) => u.blockHeight) // Exclude pending UTXOs
+          .reduce((p, c) => p.plus(c.value), new BigNumber(0))
+          .toString()
+      ).toBe("0");
     },
   },
 ];
@@ -277,7 +282,7 @@ const bitcoinTestnet: AppSpec<Transaction> = {
   appQuery: {
     model: DeviceModelId.nanoS,
     appName: "Bitcoin Test",
-    // appVersion: "2.0.0-alpha",
+    appVersion: "2.0.0-beta",
   },
   test: genericTest,
   mutations: bitcoinLikeMutations({
@@ -491,6 +496,21 @@ const komodo: AppSpec<Transaction> = {
     ),
   }),
 };
+const decred: AppSpec<Transaction> = {
+  name: "Decred",
+  currency: getCryptoCurrencyById("decred"),
+  appQuery: {
+    model: DeviceModelId.nanoS,
+    appName: "Decred",
+  },
+  test: genericTest,
+  mutations: bitcoinLikeMutations({
+    minimalAmount: parseCurrencyUnit(
+      getCryptoCurrencyById("decred").units[0],
+      "0.0001"
+    ),
+  }),
+};
 const litecoin: AppSpec<Transaction> = {
   name: "Litecoin",
   currency: getCryptoCurrencyById("litecoin"),
@@ -527,4 +547,5 @@ export default {
   viacoin,
   zcash,
   zencash,
+  decred,
 };
