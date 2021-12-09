@@ -64,8 +64,8 @@ async function deriveCommandDescriptor(
       }
 
       if (model.uiState.memo) {
-        const encoder = new TextEncoder();
-        if (encoder.encode(model.uiState.memo).byteLength > MAX_MEMO_LENGTH) {
+        const memoBytes = Buffer.from(model.uiState.memo, "utf-8");
+        if (memoBytes.byteLength > MAX_MEMO_LENGTH) {
           errors.memo = errors.memo = new SolanaMemoIsTooLong(undefined, {
             maxLength: MAX_MEMO_LENGTH,
           });
