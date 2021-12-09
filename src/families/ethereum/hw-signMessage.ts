@@ -1,7 +1,7 @@
 import Eth from "@ledgerhq/hw-app-eth";
 import Transport from "@ledgerhq/hw-transport";
 import { TypedDataUtils } from "eth-sig-util";
-import { bufferToHex } from "ethereumjs-util";
+import { bufferToHex, fromUtf8 } from "ethereumjs-util";
 import type { MessageData, Result } from "../../hw/signMessage/types";
 import type { TypedMessageData, TypedMessage } from "./types";
 type EthResolver = (
@@ -34,7 +34,7 @@ const resolver: EthResolver = async (
   let result;
 
   if (typeof message === "string") {
-    result = await eth.signPersonalMessage(path, rawMessage.slice(2));
+    result = await eth.signPersonalMessage(path, rawMessage?.slice(2) ?? fromUtf8(message).slice(2));
   } else {
     result = await eth.signEIP712HashedMessage(
       path,
