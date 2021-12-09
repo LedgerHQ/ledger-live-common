@@ -17,7 +17,6 @@ import {
   SolanaMemoIsTooLong,
   SolanaTokenAccountHoldsAnotherToken,
   SolanaRecipientAssociatedTokenAccountWillBeFunded,
-  SolanaNotEnoughBalanceToPayFees,
   SolanaTokenRecipientIsSenderATA,
   SolanaTokenAccounNotInitialized,
 } from "./errors";
@@ -137,7 +136,7 @@ const prepareTransaction = async (
       const totalFees =
         feeCalculator.lamportsPerSignature + (commandDescriptor.fees ?? 0);
       if (mainAccount.balance.lt(totalFees)) {
-        errors.amount = new SolanaNotEnoughBalanceToPayFees();
+        errors.amount = new NotEnoughBalance();
       }
     }
   }
