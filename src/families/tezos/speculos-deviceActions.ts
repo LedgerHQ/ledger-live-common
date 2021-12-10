@@ -15,6 +15,10 @@ const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
       button: "Rr",
     },
     {
+      title: "Custom Delegate",
+      button: "Rr",
+    },
+    {
       title: "Delegate",
       button: "Rr",
       stepValueTransform: (s) => s.slice(0, 36), // Name would be concat otherwise
