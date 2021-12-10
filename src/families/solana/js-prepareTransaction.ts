@@ -101,6 +101,8 @@ const prepareTransaction = async (
 
   if (tx.feeCalculator === undefined) {
     patch.feeCalculator = feeCalculator;
+    // LLM requires this field to be truthy to show fees
+    (patch as any).networkInfo = true;
   }
 
   const txToDeriveFrom = {
