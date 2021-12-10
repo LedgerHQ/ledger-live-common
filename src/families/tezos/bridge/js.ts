@@ -6,7 +6,6 @@ import {
   NotEnoughBalance,
   NotEnoughBalanceToDelegate,
   FeeTooHigh,
-  NotSupportedLegacyAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   RecommendUndelegation,
 } from "@ledgerhq/errors";
@@ -65,7 +64,7 @@ const getTransactionStatus = async (
     recipient?: Error;
   } = {};
 
-  let estimatedFees = new BigNumber(t.fees || 0);
+  let estimatedFees = t.totalCost || new BigNumber(0);
 
   const { tezosResources } = account;
   if (!tezosResources) throw new Error("tezosResources is missing");
@@ -90,15 +89,8 @@ const getTransactionStatus = async (
       }
     }
 
-    if (t.recipient.startsWith("KT") && !errors.recipient) {
-      errors.recipient = new NotSupportedLegacyAddress();
-    }
-
-    // no fee / not enough balance already handled by taquitoError
     if (!tezosResources.revealed) {
-      // FIXME
-      // https://github.com/ecadlabs/taquito/commit/48a11cfaffe4c6bdfa6f04ebbd0b756f4b135865#diff-3b138622526cbaa55605b79011aa411652367136a3e92e43faecc654da3854e7
-      estimatedFees = estimatedFees.plus(374 || DEFAULT_FEE.REVEAL);
+      estimatedFees = estimatedFees.plus(DEFAULT_FEE.REVEAL);
     }
 
     if (t.mode === "send") {
@@ -196,6 +188,7 @@ const prepareTransaction = async (
         throw new Error("unsupported mode=" + transaction.mode);
     }
 
+    transaction.totalCost = new BigNumber(out.totalCost);
     transaction.fees = new BigNumber(out.suggestedFeeMutez);
     transaction.gasLimit = new BigNumber(out.gasLimit);
     transaction.storageLimit = new BigNumber(out.storageLimit);
