@@ -10,10 +10,13 @@ import {
 import type { CosmosValidatorItem, Transaction } from "../types";
 import { getValidators, hydrateValidators } from "../validators";
 // import { getAccountInfo } from "../../../api/Cosmos";
+import { toHex } from "@cosmjs/encoding";
 import { BigNumber } from "bignumber.js";
-// import { getMainAccount } from "../../../account";
-import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
-import { makeSync, makeScanAccounts } from "../../../bridge/jsHelpers";
+import {
+  makeAccountBridgeReceive,
+  makeSync,
+  makeScanAccounts,
+} from "../../../bridge/jsHelpers";
 import flatMap from "lodash/flatMap";
 import {
   getTransactions,
@@ -21,7 +24,6 @@ import {
   getAllBalances,
   // getValidators,
 } from "../../../api/Cosmos";
-// import { FeeNotLoaded } from "@ledgerhq/errors";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Cosmos from "@ledgerhq/hw-app-str";
 import { Observable } from "rxjs";
@@ -29,20 +31,37 @@ import {
   asSafeCosmosPreloadData,
   setCosmosPreloadData,
 } from "../preloadedData";
-// import { log } from "@ledgerhq/logs";
 
 // the balance does not update straightaway so we should ignore recent operations if they are in pending for a bit
 const preferPendingOperationsUntilBlockValidation = 35;
 
 const txToOps =
   ({ id, address }) =>
-  (tx: Record<string, any>): Operation[] => {
+  (tx: any): Operation[] => {
     const ops: Operation[] = [];
-    const hash = tx.txid;
-    const date = new Date(tx.time * 1000);
-    const value = tx.amount;
-    const from = tx.address_from;
-    const to = tx.address_to;
+    const hash = toHex(tx.hash);
+    const txlog = JSON.parse(tx.result.log);
+
+    let from;
+    let to;
+    let value;
+
+    for (const t of txlog[0].events) {
+      for (const a of t.attributes) {
+        switch (a.key) {
+          case "sender":
+            from = a.value;
+            break;
+          case "recipient":
+            to = a.value;
+            break;
+          case "amount":
+            value = new BigNumber(a.value.replace("uatom", "") / 1000000);
+            break;
+        }
+      }
+    }
+
     const sending = address === from;
     const receiving = address === to;
     const fee = new BigNumber(0);
@@ -54,12 +73,12 @@ const txToOps =
         type: "OUT",
         value: value.plus(fee),
         fee,
-        blockHeight: tx.block_height,
+        blockHeight: tx.height,
         blockHash: null,
         accountId: id,
         senders: [from],
         recipients: [to],
-        date,
+        date: tx.date,
         extra: {},
       });
     }
@@ -71,12 +90,12 @@ const txToOps =
         type: "IN",
         value,
         fee,
-        blockHeight: tx.block_height,
+        blockHeight: tx.height,
         blockHash: null,
         accountId: id,
         senders: [from],
         recipients: [to],
-        date,
+        date: tx.date,
         extra: {},
       });
     }
@@ -108,7 +127,7 @@ const getAccountShape = async (info) => {
   const blockHeight = await getHeight();
   const balance = await getAllBalances(info.address);
   const txs = await getTransactions(info.address);
-  const operations = flatMap(txs, txToOps(info));
+  const operations = flatMap(txs.txs, txToOps(info));
 
   return {
     balance,
