@@ -48,6 +48,8 @@ const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
     {
       title: "Fee",
       button: "Rr",
+      // FIXME: the value of estimatedFees do not match the actual tx fees
+      /*
       expectedValue: ({ account, status }) => {
         const amount = status.estimatedFees;
         return formatCurrencyUnit(account.currency.units[0], amount, {
@@ -55,6 +57,7 @@ const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
           joinFragmentsSeparator: " ",
         }).replace(/\s/g, " ");
       },
+      */
     },
     {
       title: "Source",
