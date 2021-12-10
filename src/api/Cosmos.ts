@@ -13,6 +13,7 @@ import BigNumber from "bignumber.js";
 
 let api;
 let signedApi;
+let tmClient;
 
 const defaultEndpoint = getEnv("API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT");
 const defaultRpcEndpoint = getEnv("API_COSMOS_RPC_URL");
@@ -35,8 +36,13 @@ export const getTransaction = async (address: string): Promise<any> => {
   log("cosmjs", "fetch transaction");
 
   try {
-    const tmClient = await Tendermint34Client.connect(defaultRpcEndpoint);
+    tmClient = await Tendermint34Client.connect(defaultRpcEndpoint);
     const data = await tmClient.tx({ hash: fromHex(address) });
+
+    // fetch date transaction
+    const block = await tmClient.block(data.height);
+    data.date = new Date(block.block.header.time);
+
     return data.result;
   } catch (e) {
     return undefined;
@@ -48,12 +54,18 @@ export const getTransactions = async (address: string): Promise<any> => {
 
   // todo: handle pagination to loop over requests
   try {
-    const tmClient = await Tendermint34Client.connect(defaultRpcEndpoint);
+    tmClient = await Tendermint34Client.connect(defaultRpcEndpoint);
     const data = await tmClient.txSearch({
       query: `transfer.recipient='${address}'`,
       page: 1,
       per_page: 100,
     });
+
+    // fetch date transactions
+    for (const tx of data.txs) {
+      const block = await tmClient.block(tx.height);
+      tx.date = new Date(block.block.header.time);
+    }
 
     return data;
   } catch (e) {
@@ -75,12 +87,12 @@ export const broadcast = async (
   }
 };
 
-export const getBlock = async (height: number): Promise<number | undefined> => {
+export const getBlock = async (height: number): Promise<any> => {
   log("cosmjs", "fetch block");
 
   try {
-    api = await StargateClient.connect(defaultEndpoint);
-    const data = await api.getBlock(height);
+    api = await Tendermint34Client.connect(defaultEndpoint);
+    const data = await api.block(height);
     return data;
   } catch (e) {
     return undefined;
