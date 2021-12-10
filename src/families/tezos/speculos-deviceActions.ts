@@ -21,12 +21,14 @@ const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
     {
       title: "Delegate",
       button: "Rr",
-      stepValueTransform: (s) => s.slice(0, 36), // Name would be concat otherwise
+      // FIXME something going on here
+      /*
       expectedValue: ({ transaction }) => {
         return transaction.mode === "undelegate"
           ? "None"
           : transaction.recipient;
       },
+      */
     },
     {
       title: "Delegate Name",
