@@ -6,6 +6,7 @@ import {
   StdFee,
 } from "@cosmjs/stargate";
 import { CosmosClient } from "@cosmjs/launchpad";
+import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
 import { fromHex } from "@cosmjs/encoding";
 import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
@@ -30,27 +31,30 @@ export const getAccountInfo = async (
   }
 };
 
-export const getTransaction = async (address: string): Promise<undefined> => {
+export const getTransaction = async (address: string): Promise<any> => {
   log("cosmjs", "fetch transaction");
 
   try {
-    api = await new CosmosClient(defaultEndpoint);
-    const data = await api.getTx(address);
-    return data;
+    const tmClient = await Tendermint34Client.connect(defaultRpcEndpoint);
+    const data = await tmClient.tx({ hash: fromHex(address) });
+    return data.result;
   } catch (e) {
     return undefined;
   }
 };
 
-export const getTransactions = async (address: string): Promise<undefined> => {
+export const getTransactions = async (address: string): Promise<any> => {
   log("cosmjs", "fetch transactions");
 
-  // launchpad restrict more than 100 transactions
-  // we need to implement low level request with @cosmjs/tendermint-rpc
-  // in order to loop over pagination
+  // todo: handle pagination to loop over requests
   try {
-    api = await new CosmosClient(defaultEndpoint);
-    const data = await api.searchTx({ sentFromOrTo: address });
+    const tmClient = await Tendermint34Client.connect(defaultRpcEndpoint);
+    const data = await tmClient.txSearch({
+      query: `transfer.recipient='${address}'`,
+      page: 1,
+      per_page: 100,
+    });
+
     return data;
   } catch (e) {
     return undefined;
@@ -110,17 +114,15 @@ export const getBalance = async (
   }
 };
 
-export const getAllBalances = async (
-  address: string
-): Promise<BigNumber | undefined> => {
+export const getAllBalances = async (address: string): Promise<BigNumber> => {
   log("cosmjs", "fetch balances");
 
   try {
     api = await StargateClient.connect(defaultRpcEndpoint);
     const data = await api.getAllBalances(address);
-    return data[0].amount;
+    return new BigNumber(data[0].amount);
   } catch (e) {
-    return undefined;
+    return new BigNumber(0);
   }
 };
 
