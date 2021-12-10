@@ -193,7 +193,7 @@ const prepareTransaction = async (
         });
         break;
       default:
-        throw "unsuported";
+        throw new Error("unsupported mode=" + transaction.mode);
     }
 
     transaction.fees = new BigNumber(out.suggestedFeeMutez);
@@ -240,6 +240,10 @@ const estimateMaxSpendable = async ({
     useAllAmount: true,
   });
   const s = await getTransactionStatus(mainAccount, t);
+  const errors = Object.values(s.errors);
+  if (errors.length) {
+    throw errors[0];
+  }
   return s.amount;
 };
 
