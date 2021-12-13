@@ -7,7 +7,12 @@ import {
   SignOperationEvent,
   CryptoCurrency,
 } from "../../../types";
-import type { CosmosValidatorItem, Transaction } from "../types";
+// import { getMaxEstimatedBalance } from "../logic";
+import type {
+  // CosmosResources,
+  CosmosValidatorItem,
+  Transaction,
+} from "../types";
 import { getValidators, hydrateValidators } from "../validators";
 // import { getAccountInfo } from "../../../api/Cosmos";
 import { toHex } from "@cosmjs/encoding";
@@ -16,8 +21,9 @@ import {
   makeAccountBridgeReceive,
   makeSync,
   makeScanAccounts,
+  GetAccountShape,
 } from "../../../bridge/jsHelpers";
-import flatMap from "lodash/flatMap";
+import { encodeAccountId } from "../../../account";
 import {
   getTransactions,
   getHeight,
@@ -35,10 +41,11 @@ import {
 // the balance does not update straightaway so we should ignore recent operations if they are in pending for a bit
 const preferPendingOperationsUntilBlockValidation = 35;
 
-const txToOps =
-  ({ id, address }) =>
-  (tx: any): Operation[] => {
-    const ops: Operation[] = [];
+const txToOps = (info: any, txs: any): any => {
+  const { id, address } = info;
+  const ops: Operation[] = [];
+
+  for (const tx of txs) {
     const hash = toHex(tx.hash);
     const txlog = JSON.parse(tx.result.log);
 
@@ -99,9 +106,10 @@ const txToOps =
         extra: {},
       });
     }
+  }
 
-    return ops;
-  };
+  return ops;
+};
 
 const postSync = (initial: Account, parent: Account): Account => {
   function evictRecentOpsIfPending(a) {
@@ -123,17 +131,95 @@ const postSync = (initial: Account, parent: Account): Account => {
   return parent;
 };
 
-const getAccountShape = async (info) => {
-  const blockHeight = await getHeight();
-  const balance = await getAllBalances(info.address);
-  const txs = await getTransactions(info.address);
-  const operations = flatMap(txs.txs, txToOps(info));
+/*
+const filterDelegation = (delegations) => {
+  return delegations.filter((delegation) => delegation.amount.gt(0));
+};
+*/
 
-  return {
-    balance,
-    operations,
-    blockHeight,
+/*
+const getCosmosResources = async (
+  account: Account,
+  coreAccount
+): Promise<CosmosResources> => {
+  const flattenDelegation = await getFlattenDelegation(cosmosAccount);
+  const flattenUnbonding = await getFlattenUnbonding(cosmosAccount);
+  const flattenRedelegation = await getFlattenRedelegations(cosmosAccount);
+
+  const res = {
+    delegations: filterDelegation(flattenDelegation),
+    redelegations: flattenRedelegation,
+    unbondings: flattenUnbonding,
+    delegatedBalance: flattenDelegation.reduce(
+      (old, current) => old.plus(current.amount),
+      new BigNumber(0)
+    ),
+    pendingRewardsBalance: flattenDelegation.reduce(
+      (old, current) => old.plus(current.pendingRewards),
+      new BigNumber(0)
+    ),
+    unbondingBalance: flattenUnbonding.reduce(
+      (old, current) => old.plus(current.amount),
+      new BigNumber(0)
+    ),
+    withdrawAddress: "",
   };
+
+  return res;
+};
+*/
+
+const getAccountShape: GetAccountShape = async (info) => {
+  const { address, currency, derivationMode } = info;
+
+  const accountId = encodeAccountId({
+    type: "js",
+    version: "2",
+    currencyId: currency.id,
+    xpubOrAddress: address,
+    derivationMode,
+  });
+
+  const blockHeight = await getHeight();
+  const balance = await getAllBalances(address);
+  const txs = await getTransactions(address);
+  const operations = txToOps(info, txs);
+
+  const shape = {
+    id: accountId,
+    balance,
+    spendableBalance: balance,
+    operationsCount: operations.length,
+    blockHeight,
+    cosmosResources: {
+      // todo: stacking
+      delegations: [],
+      redelegations: [],
+      unbondings: [],
+      delegatedBalance: new BigNumber(0),
+      pendingRewardsBalance: new BigNumber(0),
+      unbondingBalance: new BigNumber(0),
+      withdrawAddress: "",
+    },
+    // used: fromCosmosResourcesRaw,
+  };
+
+  // shape.cosmosResources = await getCosmosResources(info, coreAccount);
+  // shape.spendableBalance = getMaxEstimatedBalance(shape, new BigNumber(0));
+
+  if (shape.spendableBalance.lt(0)) {
+    shape.spendableBalance = new BigNumber(0);
+  }
+
+  /*
+  if (!shape.used) {
+    const cosmosAccount = await shape.asCosmosLikeAccount();
+    const seq = await cosmosAccount.getSequence();
+    shape.used = seq != "";
+  }
+  */
+
+  return { ...shape, operations };
 };
 
 const sync = makeSync(getAccountShape, postSync);
