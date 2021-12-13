@@ -41,7 +41,7 @@ export const getTransaction = async (address: string): Promise<any> => {
 
     // fetch date transaction
     const block = await tmClient.block(data.height);
-    data.date = new Date(block.block.header.time);
+    data.result.date = new Date(block.block.header.time);
 
     return data.result;
   } catch (e) {
@@ -52,9 +52,10 @@ export const getTransaction = async (address: string): Promise<any> => {
 export const getTransactions = async (address: string): Promise<any> => {
   log("cosmjs", "fetch transactions");
 
-  // todo: handle pagination to loop over requests
   try {
     tmClient = await Tendermint34Client.connect(defaultRpcEndpoint);
+
+    // todo: handle pagination to loop over requests
     const data = await tmClient.txSearch({
       query: `transfer.recipient='${address}'`,
       page: 1,
@@ -67,7 +68,7 @@ export const getTransactions = async (address: string): Promise<any> => {
       tx.date = new Date(block.block.header.time);
     }
 
-    return data;
+    return data.txs;
   } catch (e) {
     return undefined;
   }
