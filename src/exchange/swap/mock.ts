@@ -103,6 +103,15 @@ export const mockGetExchangeRates = async (
       expirationDate: new Date(),
       tradeMethod: "float",
     },
+    {
+      rate: new BigNumber("2"),
+      toAmount: amount.times(magnitudeAwareRate),
+      magnitudeAwareRate,
+      rateId: "mockedRateId",
+      provider: "ftx.com",
+      expirationDate: new Date(),
+      tradeMethod: "float",
+    },
   ];
 };
 export const mockInitSwap = (
@@ -136,6 +145,15 @@ export const mockGetProviders: GetProviders = async () => {
         },
         {
           provider: "wyre",
+          pairs: [
+            { from: "bitcoin", to: "ethereum", tradeMethod: "float" },
+            { from: "bitcoin", to: "ethereum", tradeMethod: "fixed" },
+            { from: "ethereum", to: "bitcoin", tradeMethod: "float" },
+            { from: "ethereum", to: "bitcoin", tradeMethod: "fixed" },
+          ],
+        },
+        {
+          provider: "ftx.com",
           pairs: [
             { from: "bitcoin", to: "ethereum", tradeMethod: "float" },
             { from: "bitcoin", to: "ethereum", tradeMethod: "fixed" },
