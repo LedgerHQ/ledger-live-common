@@ -116,9 +116,7 @@ const envDefinitions = {
     desc: "tzkt.io explorer",
   },
   API_TEZOS_NODE: {
-    // def: "https://xtz-node.api.live.ledger.com",
-    // FIXME: tmp external node until we fix our bugs
-    def: "https://mainnet.smartpy.io",
+    def: "https://xtz-node.api.live.ledger.com",
     parser: stringParser,
     desc: "node API for tezos (for broadcast only)",
   },
