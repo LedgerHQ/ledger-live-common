@@ -34,7 +34,7 @@ const tezos: AppSpec<Transaction> = {
   transactionCheck: ({ maxSpendable }) => {
     invariant(
       maxSpendable.gt(
-        parseCurrencyUnit(getCryptoCurrencyById("tezos").units[0], "0.1")
+        parseCurrencyUnit(getCryptoCurrencyById("tezos").units[0], "0.02")
       ),
       "balance is too low"
     );
