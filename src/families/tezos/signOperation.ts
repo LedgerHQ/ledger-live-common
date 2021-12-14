@@ -44,6 +44,8 @@ export const signOperation = ({
 
         o.next({ type: "device-signature-requested" });
 
+        let type = "OUT";
+
         let res, signature, opbytes;
         switch (transaction.mode) {
           case "send":
@@ -63,12 +65,14 @@ export const signOperation = ({
               delegate: transaction.recipient,
             });
             opbytes = res.raw.opbytes;
+            type = "DELEGATE";
             break;
           case "undelegate":
             res = await tezos.contract.setDelegate({
               source: freshAddress,
             });
             opbytes = res.raw.opbytes;
+            type = "UNDELEGATE";
             break;
           default:
             throw "not supported";
@@ -88,9 +92,9 @@ export const signOperation = ({
 
         // currently, all mode are always at least one OUT tx on ETH parent
         const operation = {
-          id: `${accountId}-${txHash}-OUT`,
+          id: `${accountId}-${txHash}-${type}`,
           hash: txHash,
-          type: "OUT",
+          type,
           value: transaction.amount,
           fee: fees,
           extra: {
