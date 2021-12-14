@@ -3,19 +3,20 @@
 | name | ticker | PROD | EXPERIMENTAL |
 |--|--|--|--|
 | Bitcoin | BTC | https://explorers.api.live.ledger.com/blockchain/v3/btc | N/A |
-| Bitcoin Cash | BCH | https://explorers.api.live.ledger.com/blockchain/v2/abc | N/A |
+| Bitcoin Cash | BCH | https://explorers.api.live.ledger.com/blockchain/v2/bch | N/A |
 | Bitcoin Gold | BTG | https://explorers.api.live.ledger.com/blockchain/v3/btg | N/A |
 | Binance Smart Chain | BNB | https://explorers.api.live.ledger.com/blockchain/v3/bnb | N/A |
 | Dash | DASH | https://explorers.api.live.ledger.com/blockchain/v3/dash | N/A |
 | Decred | DCR | https://explorers.api.live.ledger.com/blockchain/v3/dcr | N/A |
 | DigiByte | DGB | https://explorers.api.live.ledger.com/blockchain/v3/dgb | N/A |
-| Dogecoin | DOGE | https://explorers.api.live.ledger.com/blockchain/v2/doge | https://explorers.api.live.ledger.com/blockchain/v3/doge |
+| Dogecoin | DOGE | https://explorers.api.live.ledger.com/blockchain/v3/doge | N/A |
 | Ethereum | ETH | https://explorers.api.live.ledger.com/blockchain/v3/eth | N/A |
 | Ethereum Classic | ETC | https://explorers.api.live.ledger.com/blockchain/v3/etc | N/A |
 | Komodo | KMD | https://explorers.api.live.ledger.com/blockchain/v3/kmd | N/A |
 | Litecoin | LTC | https://explorers.api.live.ledger.com/blockchain/v3/ltc | N/A |
 | Peercoin | PPC | https://explorers.api.live.ledger.com/blockchain/v3/ppc | N/A |
 | PivX | PIVX | https://explorers.api.live.ledger.com/blockchain/v3/pivx | N/A |
+| Polygon | MATIC | https://explorers.api.live.ledger.com/blockchain/v3/matic | N/A |
 | Qtum | QTUM | https://explorers.api.live.ledger.com/blockchain/v3/qtum | N/A |
 | Stakenet | XSN | https://explorers.api.live.ledger.com/blockchain/v3/xsn | N/A |
 | Vertcoin | VTC | https://explorers.api.live.ledger.com/blockchain/v3/vtc | N/A |

@@ -5,8 +5,10 @@ import bchaddr from "bchaddrjs";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { toOutputScript } from "bitcoinjs-lib/src/address";
+import { InvalidAddress } from "@ledgerhq/errors";
 import { DerivationModes } from "../types";
 import { ICrypto } from "./types";
+import Base from "./base";
 
 // a mock explorer class that just use js objects
 class BitcoinCash implements ICrypto {
@@ -45,7 +47,13 @@ class BitcoinCash implements ICrypto {
     account: number,
     index: number
   ): string {
-    return this.getLegacyBitcoinCashAddress(xpub, account, index);
+    if (Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`]) {
+      return Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`];
+    }
+    const address = this.getLegacyBitcoinCashAddress(xpub, account, index);
+    Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`] =
+      address;
+    return address;
   }
 
   // infer address type from its syntax
@@ -60,7 +68,7 @@ class BitcoinCash implements ICrypto {
 
   toOutputScript(address: string) {
     if (!this.validateAddress(address)) {
-      throw new Error("Invalid address");
+      throw new InvalidAddress();
     }
     // TODO find a better way to calculate the script from bch address instead of converting to bitcoin address
     return toOutputScript(bchaddr.toLegacyAddress(address), this.network);

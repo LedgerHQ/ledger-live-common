@@ -1,4 +1,5 @@
-import { bech32m, bech32, BechLib } from "bech32";
+import * as bech32 from "bech32";
+import { bech32m } from "../../../../families/bitcoin/bech32m";
 import * as utils from "../../../../families/bitcoin/wallet-btc/utils";
 import { Currency } from "../../../../families/bitcoin/wallet-btc/crypto/types";
 import cryptoFactory from "../../../../families/bitcoin/wallet-btc/crypto/factory";
@@ -18,7 +19,8 @@ function toBech32(
   data: Buffer,
   version: number,
   prefix: string,
-  bech32variant: BechLib
+  //bech32variant: BechLib // FIXME Restore this
+  bech32variant: any
 ): string {
   const words = bech32.toWords(data);
   words.unshift(version);
@@ -175,6 +177,8 @@ describe("Unit tests for various utils functions", () => {
     validateAddrs(["ETx91CT52eBFYWbe4Yht5BpZNigWg2EkqJ"], "viacoin", true);
     validateAddrs(["7i1KkJHUjfw2MrbtXK5DQkhz7zd36st9GR"], "stakenet", true);
     validateAddrs(["S6NMcEfYbavHrP3Uo1wbEUvKhAbKeMuga8"], "stealthcoin", true);
+    validateAddrs(["Dso59DoPRkfATcZgHGgfh9mpku7taw9srAv"], "decred", true);
+    validateAddrs(["Dcck4QrFF5wuLzQpwxb5evhSRD7ZTsJZwuh"], "decred", true);
 
     validateAddrs(
       ["bitcoincash:qzl0x0982hy9xrh99wdnejx4eecdn02jv58as5p599"],
@@ -208,6 +212,8 @@ describe("Unit tests for various utils functions", () => {
     validateAddrs(["ETx91CT52eBFYWbe4Yht5BpZNigWg2Ekqq"], "viacoin", false);
     validateAddrs(["7i1KkJHUjfw2MrbtXK5DQkhz7zd36st9GG"], "stakenet", false);
     validateAddrs(["S6NMcEfYbavHrP3Uo1wbEUvKhAbKeMugaa"], "stealthcoin", false);
+    validateAddrs(["Dso59DoPRkfATcZgHGgff9mpku7taw9srAv"], "decred", false);
+    validateAddrs(["Dcck4QrFF5wuLQzpwxb5evhSRD7ZTsJZwuh"], "decred", false);
   });
 });
 
