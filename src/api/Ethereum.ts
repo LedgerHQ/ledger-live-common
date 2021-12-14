@@ -10,6 +10,7 @@ import { blockchainBaseURL } from "./Ledger";
 import { FeeEstimationFailed } from "../errors";
 import { makeLRUCache } from "../cache";
 import { getEnv } from "../env";
+import { isNFTActive } from "../nft/support";
 
 export type Block = {
   height: BigNumber;
@@ -132,13 +133,13 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
       let { data } = await network({
         method: "GET",
         url: URL.format({
-          pathname:
-            getEnv("NFT") && currency.ticker === "ETH"
-              ? `https://explorers.api-01.live.ledger-stg.com/blockchain/v3/eth/addresses/${address}/transactions`
-              : `${baseURL}/addresses/${address}/transactions`,
+          pathname: isNFTActive(currency)
+            ? `https://explorers.api-01.live.ledger-stg.com/blockchain/v3/eth/addresses/${address}/transactions`
+            : `${baseURL}/addresses/${address}/transactions`,
           query: {
             batch_size,
             noinput: true,
+            no_input: true,
             no_token: true,
             block_hash,
           },
