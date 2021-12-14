@@ -31,6 +31,7 @@ const tezos: AppSpec<Transaction> = {
     model: DeviceModelId.nanoS,
     appName: "TezosWallet",
   },
+  testTimeout: 2 * 60 * 1000,
   transactionCheck: ({ maxSpendable }) => {
     invariant(
       maxSpendable.gt(
