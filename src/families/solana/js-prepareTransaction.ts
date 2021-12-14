@@ -68,8 +68,7 @@ async function deriveCommandDescriptor(
           errors.memo = errors.memo = new SolanaMemoIsTooLong(undefined, {
             maxLength: MAX_MEMO_LENGTH,
           });
-          // HACK: LLM expects <transaction> as error key to disable
-          // continue button
+          // LLM expects <transaction> as error key to disable continue button
           errors.transaction = errors.memo;
         }
       }
@@ -104,7 +103,7 @@ const prepareTransaction = async (
 
   if (tx.feeCalculator === undefined) {
     patch.feeCalculator = feeCalculator;
-    // HACK: LLM requires this field to be truthy to show fees
+    // LLM requires this field to be truthy to show fees
     (patch as any).networkInfo = true;
   }
 
