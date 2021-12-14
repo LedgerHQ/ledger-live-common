@@ -75,7 +75,7 @@ export const signOperation = ({
             type = "UNDELEGATE";
             break;
           default:
-            throw "not supported";
+            throw new Error("not supported");
         }
 
         if (cancelled) {
