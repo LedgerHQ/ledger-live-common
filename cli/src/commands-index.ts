@@ -1,11 +1,11 @@
-import app from "./commands/app";
-import appUninstallAll from "./commands/appUninstallAll";
 import appsCheckAllAppVersions from "./commands/appsCheckAllAppVersions";
 import appsInstallAll from "./commands/appsInstallAll";
 import appsUpdateTestAll from "./commands/appsUpdateTestAll";
+import app from "./commands/app";
+import appUninstallAll from "./commands/appUninstallAll";
 import balanceHistory from "./commands/balanceHistory";
-import bot from "./commands/bot";
 import botPortfolio from "./commands/botPortfolio";
+import bot from "./commands/bot";
 import broadcast from "./commands/broadcast";
 import cleanSpeculos from "./commands/cleanSpeculos";
 import countervalues from "./commands/countervalues";
@@ -32,13 +32,13 @@ import libcoreSetPassword from "./commands/libcoreSetPassword";
 import liveData from "./commands/liveData";
 import makeCompoundSummary from "./commands/makeCompoundSummary";
 import managerListApps from "./commands/managerListApps";
+import personalSign from "./commands/personalSign";
 import portfolio from "./commands/portfolio";
 import proxy from "./commands/proxy";
-import personalSign from "./commands/personalSign";
 import receive from "./commands/receive";
 import repl from "./commands/repl";
-import satstack from "./commands/satstack";
 import satstackStatus from "./commands/satstackStatus";
+import satstack from "./commands/satstack";
 import scanDescriptors from "./commands/scanDescriptors";
 import send from "./commands/send";
 import signMessage from "./commands/signMessage";
@@ -53,14 +53,14 @@ import version from "./commands/version";
 import walletconnect from "./commands/walletconnect";
 
 export default {
-  app,
-  appUninstallAll,
   appsCheckAllAppVersions,
   appsInstallAll,
   appsUpdateTestAll,
+  app,
+  appUninstallAll,
   balanceHistory,
-  bot,
   botPortfolio,
+  bot,
   broadcast,
   cleanSpeculos,
   countervalues,
@@ -87,13 +87,13 @@ export default {
   liveData,
   makeCompoundSummary,
   managerListApps,
+  personalSign,
   portfolio,
   proxy,
-  personalSign,
   receive,
   repl,
-  satstack,
   satstackStatus,
+  satstack,
   scanDescriptors,
   send,
   signMessage,

@@ -36,7 +36,7 @@ export type AppManifest = {
   apiVersion: string;
   manifestVersion: string;
   branch: AppBranch;
-  params?: string[];
+  params?: string[] | object;
   categories: string[];
   currencies: string[] | "*";
   content: {
