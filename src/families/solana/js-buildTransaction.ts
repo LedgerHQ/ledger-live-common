@@ -20,7 +20,7 @@ export const buildTransactionWithAPI = async (
   transaction: Transaction,
   api: ChainAPI
 ): Promise<readonly [Buffer, (signature: Buffer) => Buffer]> => {
-  const instructions = await buildInstructions(transaction);
+  const instructions = buildInstructions(transaction);
 
   const recentBlockhash = await api.getRecentBlockhash();
 
@@ -45,7 +45,7 @@ export const buildTransactionWithAPI = async (
   ] as const;
 };
 
-function buildInstructions(tx: Transaction): Promise<TransactionInstruction[]> {
+function buildInstructions(tx: Transaction): TransactionInstruction[] {
   const { commandDescriptor } = tx.model;
   if (commandDescriptor === undefined) {
     throw new Error("missing command descriptor");
@@ -60,9 +60,9 @@ function buildInstructions(tx: Transaction): Promise<TransactionInstruction[]> {
   }
 }
 
-async function buildInstructionsForCommand(
+function buildInstructionsForCommand(
   command: Command
-): Promise<TransactionInstruction[]> {
+): TransactionInstruction[] {
   switch (command.kind) {
     case "transfer":
       return buildTransferInstructions(command);

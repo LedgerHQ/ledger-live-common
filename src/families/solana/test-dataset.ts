@@ -561,6 +561,7 @@ function memoIsTooLong(): TransactionTestSpec[] {
             },
           };
         case "token.createATA":
+        case "stake.createAccount":
           return undefined;
         default:
           return assertUnreachable(tx.model);

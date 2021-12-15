@@ -64,7 +64,8 @@ function getAmountForModel(
 ) {
   const { model } = tx;
   switch (model.kind) {
-    case "transfer": {
+    case "transfer":
+    case "stake.createAccount": {
       if (tx.amount.lte(0)) {
         return tx.amount;
       }
@@ -89,6 +90,7 @@ function getTotalSpentForModel(
 ) {
   switch (model.kind) {
     case "transfer":
+    case "stake.createAccount":
       return amount.plus(estimatedFees);
     case "token.transfer":
       return amount;
@@ -103,6 +105,7 @@ function getAmountForCommand(command: Command) {
   switch (command.kind) {
     case "transfer":
     case "token.transfer":
+    case "stake.createAccount":
       return new BigNumber(command.amount);
     case "token.createATA":
       return new BigNumber(0);
@@ -118,6 +121,7 @@ function getTotalSpentForCommand(
 ) {
   switch (command.kind) {
     case "transfer":
+    case "stake.createAccount":
       return amount.plus(estimatedFees);
     case "token.transfer":
       return amount;

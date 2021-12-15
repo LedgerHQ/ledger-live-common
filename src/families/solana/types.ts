@@ -27,7 +27,7 @@ export type TokenCreateATACommand = {
 export type StakeCreateAccountCommand = {
   kind: "stake.createAccount";
   fromAccAddress: string;
-  //stakeAccAddress: string;
+  stakeAccAddress: string;
   seed: string;
   amount: number;
   delegate?: {

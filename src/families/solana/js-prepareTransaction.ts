@@ -13,6 +13,7 @@ import { ChainAPI } from "./api";
 import {
   getMaybeTokenAccount,
   getMaybeVoteAccount,
+  getStakeAccountAddressWithSeed,
   getStakeAccountMinimumBalanceForRentExemption,
 } from "./api/chain/web3";
 import {
@@ -419,7 +420,15 @@ async function deriveStakeCreateAccountCommandDescriptor(
     return toInvalidStatusCommand(errors);
   }
 
+  // TODO: get the seed like <stake:N> when sync support staked accs
+  const seed = Math.random().toString();
+
   const fees = await getStakeAccountMinimumBalanceForRentExemption(api);
+
+  const stakeAccAddress = await getStakeAccountAddressWithSeed({
+    fromAddress: mainAccount.freshAddress,
+    seed,
+  });
 
   return {
     status: "valid",
@@ -427,9 +436,9 @@ async function deriveStakeCreateAccountCommandDescriptor(
       kind: "stake.createAccount",
       amount: amount.toNumber(),
       fromAccAddress: mainAccount.freshAddress,
+      stakeAccAddress,
       delegate,
-      // TODO: get the seed like <stake:N> when sync support staked accs
-      seed: Math.random().toString(),
+      seed,
     },
     fees,
   };

@@ -1,5 +1,6 @@
 import type { AccountLike, Account } from "../../types";
 import type {
+  StakeCreateAccountCommand,
   TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
@@ -44,6 +45,8 @@ function fieldsForCommand(
       return fieldsForTokenTransfer(command);
     case "token.createATA":
       return fieldsForCreateATA(command);
+    case "stake.createAccount":
+      return fieldsForStakeCreateAccount(command);
     default:
       return assertUnreachable(command);
   }
@@ -156,5 +159,16 @@ function fieldsForCreateATA(
     address: command.owner,
   });
 
+  return fields;
+}
+function fieldsForStakeCreateAccount(
+  command: StakeCreateAccountCommand
+): DeviceTransactionField[] {
+  const fields: Array<DeviceTransactionField> = [];
+  fields.push({
+    type: "text",
+    label: "FIX ME UNRECOGNIZED FORMAT",
+    value: "FIX ME UNRECOGNIZED FORMAT",
+  });
   return fields;
 }

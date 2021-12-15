@@ -258,6 +258,22 @@ export function getStakeAccountMinimumBalanceForRentExemption(api: ChainAPI) {
   return api.getMinimumBalanceForRentExemption(StakeProgram.space);
 }
 
+export async function getStakeAccountAddressWithSeed({
+  fromAddress,
+  seed,
+}: {
+  fromAddress: string;
+  seed: string;
+}) {
+  const pubkey = await PublicKey.createWithSeed(
+    new PublicKey(fromAddress),
+    seed,
+    StakeProgram.programId
+  );
+
+  return pubkey.toBase58();
+}
+
 export function buildCreateAssociatedTokenAccountInstruction({
   mint,
   owner,
@@ -281,22 +297,19 @@ export function buildCreateAssociatedTokenAccountInstruction({
   return instructions;
 }
 
-export async function buildStakeCreateAccountInstructions({
+export function buildStakeCreateAccountInstructions({
   fromAccAddress,
+  stakeAccAddress,
   seed,
   amount,
   delegate,
-}: StakeCreateAccountCommand): Promise<TransactionInstruction[]> {
+}: StakeCreateAccountCommand): TransactionInstruction[] {
   const fromPubkey = new PublicKey(fromAccAddress);
-  const newAccPubkey = await PublicKey.createWithSeed(
-    fromPubkey,
-    seed,
-    StakeProgram.programId
-  );
+  const stakePubkey = new PublicKey(stakeAccAddress);
 
   const tx = StakeProgram.createAccountWithSeed({
     fromPubkey,
-    stakePubkey: newAccPubkey,
+    stakePubkey,
     basePubkey: fromPubkey,
     seed,
     lamports: amount,
@@ -310,7 +323,7 @@ export async function buildStakeCreateAccountInstructions({
     tx.add(
       StakeProgram.delegate({
         authorizedPubkey: fromPubkey,
-        stakePubkey: newAccPubkey,
+        stakePubkey,
         votePubkey: new PublicKey(delegate.voteAccAddress),
       })
     );
