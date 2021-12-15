@@ -400,7 +400,7 @@ async function deriveStakeCreateAccountCommandDescriptor(
   const { uiState } = model;
   const { delegate } = uiState;
 
-  if (mainAccount.balance.gt(amount.plus(fee))) {
+  if (mainAccount.balance.lt(amount.plus(fee))) {
     errors.amount = new NotEnoughBalance();
   }
 

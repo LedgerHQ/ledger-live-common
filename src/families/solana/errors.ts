@@ -28,5 +28,5 @@ export const SolanaTokenRecipientIsSenderATA = createCustomErrorClass(
 );
 
 export const SolanaInvalidValidator = createCustomErrorClass(
-  "SolanaTokenRecipientIsSenderATA"
+  "SolanaInvalidValidator"
 );
