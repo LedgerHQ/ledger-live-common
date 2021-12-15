@@ -91,7 +91,8 @@ function formatStakeCreateAccount(
 ) {
   const amount = lamportsToSOL(mainAccount, command.amount);
   const str = [
-    `  CREATE STAKE ACCOUNT FROM: ${command.fromAccAddress}`,
+    `  CREATE STAKE ACCOUNT: ${command.stakeAccAddress}`,
+    `  FROM: ${command.fromAccAddress}`,
     `  AMOUNT: ${amount}${tx.useAllAmount ? " (ALL)" : ""}`,
     `  SEED: ${command.seed}`,
     `  AUTO DELEGATE: ${command.delegate === undefined ? "FALSE" : "TRUE"}`,
