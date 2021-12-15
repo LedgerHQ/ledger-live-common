@@ -7,6 +7,7 @@ import {
 } from "@cosmjs/stargate";
 import { CosmosClient } from "@cosmjs/launchpad";
 import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
+import { DecodedTxRaw, decodeTxRaw } from "@cosmjs/proto-signing";
 import { fromHex } from "@cosmjs/encoding";
 import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
@@ -43,6 +44,16 @@ export const getTransaction = async (address: string): Promise<any> => {
     const block = await tmClient.block(data.height);
     data.result.date = new Date(block.block.header.time);
 
+    // fetch fee transaction
+    data.result.fee = new BigNumber(0);
+    const txRaw: DecodedTxRaw = decodeTxRaw(data.result.tx);
+
+    if (txRaw.authInfo.fee) {
+      txRaw.authInfo.fee.amount.forEach((fee) => {
+        data.result.fee.plus(fee.amount);
+      });
+    }
+
     return data.result;
   } catch (e) {
     return undefined;
@@ -53,22 +64,40 @@ export const getTransactions = async (address: string): Promise<any> => {
   log("cosmjs", "fetch transactions");
 
   try {
+    const txs: Array<any> = [];
     tmClient = await Tendermint34Client.connect(defaultRpcEndpoint);
 
-    // todo: handle pagination to loop over requests
     const data = await tmClient.txSearch({
       query: `transfer.recipient='${address}'`,
       page: 1,
       per_page: 100,
     });
 
-    // fetch date transactions
     for (const tx of data.txs) {
-      const block = await tmClient.block(tx.height);
-      tx.date = new Date(block.block.header.time);
+      txs.push(tx);
     }
 
-    return data.txs;
+    // todo: handle pagination to loop over requests
+
+    // fetch date and set default fee
+    for (const tx of txs) {
+      const block = await tmClient.block(tx.height);
+      tx.date = new Date(block.block.header.time);
+
+      tx.fee = new BigNumber(0);
+      // todo: fix this, decodeTxRaw break iterator
+      /*
+      let txRaw: DecodedTxRaw = decodeTxRaw(tx.tx);
+
+      if (txRaw.authInfo.fee) {
+        txRaw.authInfo.fee.amount.forEach((fee) => {
+          tx.fee.plus(fee.amount);
+        });
+      }
+      */
+    }
+
+    return txs;
   } catch (e) {
     return undefined;
   }
