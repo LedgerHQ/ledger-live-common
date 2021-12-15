@@ -376,6 +376,11 @@ const envDefinitions = {
     parser: stringParser,
     desc: "mock the server response for the exchange KYC check, options are 'open', 'pending', 'closed' or 'approved'.",
   },
+  MOCK_SWAP_LOGIN: {
+    def: "false",
+    parser: stringParser,
+    desc: "mock the server response for the exchange Login check",
+  },
   NFT: {
     def: false,
     parser: boolParser,
