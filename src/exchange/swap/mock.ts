@@ -108,7 +108,7 @@ export const mockGetExchangeRates = async (
       toAmount: amount.times(magnitudeAwareRate),
       magnitudeAwareRate,
       rateId: "mockedRateId",
-      provider: "ftx",
+      provider: "random1",
       expirationDate: new Date(),
       tradeMethod: "float",
     },
@@ -153,7 +153,7 @@ export const mockGetProviders: GetProviders = async () => {
           ],
         },
         {
-          provider: "ft",
+          provider: "random2",
           pairs: [
             { from: "bitcoin", to: "ethereum", tradeMethod: "float" },
             { from: "bitcoin", to: "ethereum", tradeMethod: "fixed" },
