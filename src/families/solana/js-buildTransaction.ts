@@ -5,6 +5,7 @@ import {
   buildTransferInstructions,
   buildTokenTransferInstructions,
   buildCreateAssociatedTokenAccountInstruction,
+  buildStakeCreateAccountInstructions,
 } from "./api/chain/web3";
 import { assertUnreachable } from "./utils";
 import {
@@ -19,7 +20,7 @@ export const buildTransactionWithAPI = async (
   transaction: Transaction,
   api: ChainAPI
 ): Promise<readonly [Buffer, (signature: Buffer) => Buffer]> => {
-  const instructions = buildInstructions(transaction);
+  const instructions = await buildInstructions(transaction);
 
   const recentBlockhash = await api.getRecentBlockhash();
 
@@ -44,7 +45,7 @@ export const buildTransactionWithAPI = async (
   ] as const;
 };
 
-function buildInstructions(tx: Transaction) {
+function buildInstructions(tx: Transaction): Promise<TransactionInstruction[]> {
   const { commandDescriptor } = tx.model;
   if (commandDescriptor === undefined) {
     throw new Error("missing command descriptor");
@@ -59,9 +60,9 @@ function buildInstructions(tx: Transaction) {
   }
 }
 
-function buildInstructionsForCommand(
+async function buildInstructionsForCommand(
   command: Command
-): TransactionInstruction[] {
+): Promise<TransactionInstruction[]> {
   switch (command.kind) {
     case "transfer":
       return buildTransferInstructions(command);
@@ -69,6 +70,8 @@ function buildInstructionsForCommand(
       return buildTokenTransferInstructions(command);
     case "token.createATA":
       return buildCreateAssociatedTokenAccountInstruction(command);
+    case "stake.createAccount":
+      return buildStakeCreateAccountInstructions(command);
     default:
       return assertUnreachable(command);
   }

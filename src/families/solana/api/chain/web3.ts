@@ -6,9 +6,11 @@ import {
   ConfirmedSignatureInfo,
   ParsedConfirmedTransaction,
   TransactionInstruction,
+  StakeProgram,
 } from "@solana/web3.js";
 import { chunk } from "lodash";
 import {
+  StakeCreateAccountCommand,
   TokenCreateATACommand,
   TokenTransferCommand,
   TransferCommand,
@@ -18,11 +20,16 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
 } from "@solana/spl-token";
-import { tryParseAsTokenAccount, parseTokenAccountInfo } from "./account";
+import {
+  tryParseAsTokenAccount,
+  parseTokenAccountInfo,
+  tryParseAsVoteAccount,
+} from "./account";
 import { TokenAccountInfo } from "./account/token";
 import { drainSeqAsyncGen } from "../../utils";
 import { Awaited } from "../../logic";
 import { ChainAPI } from ".";
+import { VoteAccountInfo } from "./account/vote";
 
 const MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
 
@@ -234,6 +241,23 @@ export const getMaybeTokenAccount = async (
   return tokenAccount;
 };
 
+export async function getMaybeVoteAccount(
+  address: string,
+  api: ChainAPI
+): Promise<VoteAccountInfo | undefined | Error> {
+  const accInfo = await api.getAccountInfo(address);
+  const voteAccount =
+    accInfo !== null && "parsed" in accInfo.data
+      ? tryParseAsVoteAccount(accInfo.data)
+      : undefined;
+
+  return voteAccount;
+}
+
+export function getStakeAccountMinimumBalanceForRentExemption(api: ChainAPI) {
+  return api.getMinimumBalanceForRentExemption(StakeProgram.space);
+}
+
 export function buildCreateAssociatedTokenAccountInstruction({
   mint,
   owner,
@@ -255,4 +279,42 @@ export function buildCreateAssociatedTokenAccountInstruction({
   ];
 
   return instructions;
+}
+
+export async function buildStakeCreateAccountInstructions({
+  fromAccAddress,
+  seed,
+  amount,
+  delegate,
+}: StakeCreateAccountCommand): Promise<TransactionInstruction[]> {
+  const fromPubkey = new PublicKey(fromAccAddress);
+  const newAccPubkey = await PublicKey.createWithSeed(
+    fromPubkey,
+    seed,
+    StakeProgram.programId
+  );
+
+  const tx = StakeProgram.createAccountWithSeed({
+    fromPubkey,
+    stakePubkey: newAccPubkey,
+    basePubkey: fromPubkey,
+    seed,
+    lamports: amount,
+    authorized: {
+      staker: fromPubkey,
+      withdrawer: fromPubkey,
+    },
+  });
+
+  if (delegate !== undefined) {
+    tx.add(
+      StakeProgram.delegate({
+        authorizedPubkey: fromPubkey,
+        stakePubkey: newAccPubkey,
+        votePubkey: new PublicKey(delegate.voteAccAddress),
+      })
+    );
+  }
+
+  return tx.instructions;
 }

@@ -1,6 +1,7 @@
 import { BigNumber } from "bignumber.js";
 import type {
   Command,
+  StakeCreateAccountCommand,
   TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
@@ -76,9 +77,32 @@ function formatCommand(
       return formatTokenTransfer(mainAccount, tx, command);
     case "token.createATA":
       return formatCreateATA(mainAccount, tx, command);
+    case "stake.createAccount":
+      return formatStakeCreateAccount(mainAccount, tx, command);
     default:
       return assertUnreachable(command);
   }
+}
+
+function formatStakeCreateAccount(
+  mainAccount: Account,
+  tx: Transaction,
+  command: StakeCreateAccountCommand
+) {
+  const amount = lamportsToSOL(mainAccount, command.amount);
+  const str = [
+    `  CREATE STAKE ACCOUNT FROM: ${command.fromAccAddress}`,
+    `  AMOUNT: ${amount}${tx.useAllAmount ? " (ALL)" : ""}`,
+    `  SEED: ${command.seed}`,
+    `  AUTO DELEGATE: ${command.delegate === undefined ? "FALSE" : "TRUE"}`,
+    command.delegate === undefined
+      ? ""
+      : `  VOTE ACCOUNT: ${command.delegate.voteAccAddress}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return "\n" + str;
 }
 
 function formatTransfer(

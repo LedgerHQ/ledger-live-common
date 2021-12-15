@@ -26,3 +26,7 @@ export const SolanaAddressOffEd25519 = createCustomErrorClass(
 export const SolanaTokenRecipientIsSenderATA = createCustomErrorClass(
   "SolanaTokenRecipientIsSenderATA"
 );
+
+export const SolanaInvalidValidator = createCustomErrorClass(
+  "SolanaTokenRecipientIsSenderATA"
+);

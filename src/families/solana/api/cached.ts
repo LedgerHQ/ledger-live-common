@@ -17,6 +17,8 @@ const cacheKeyAddress = (address: string) => address;
 const cacheKeyEmpty = () => "" as const;
 const cacheKeyAssocTokenAccAddress = (owner: string, mint: string) =>
   `${owner}:${mint}`;
+const cacheKeyMinimumBalanceForRentExemption = (dataLengt: number) =>
+  dataLengt.toString();
 
 const cacheKeyTransactions = (signatures: string[]) =>
   hash([...signatures].sort());
@@ -79,6 +81,12 @@ export function cached(api: ChainAPI): ChainAPI {
       api.getSignaturesForAddress,
       cacheKeyByArgs,
       seconds(30)
+    ),
+
+    getMinimumBalanceForRentExemption: makeLRUCache(
+      api.getMinimumBalanceForRentExemption,
+      cacheKeyMinimumBalanceForRentExemption,
+      minutes(5)
     ),
 
     // do not cache

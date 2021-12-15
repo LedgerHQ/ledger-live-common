@@ -10,7 +10,11 @@ import BigNumber from "bignumber.js";
 import { findSubAccountById } from "../../account";
 import type { Account } from "../../types";
 import { ChainAPI } from "./api";
-import { getMaybeTokenAccount } from "./api/chain/web3";
+import {
+  getMaybeTokenAccount,
+  getMaybeVoteAccount,
+  getStakeAccountMinimumBalanceForRentExemption,
+} from "./api/chain/web3";
 import {
   SolanaAccountNotFunded,
   SolanaAddressOffEd25519,
@@ -19,6 +23,7 @@ import {
   SolanaRecipientAssociatedTokenAccountWillBeFunded,
   SolanaTokenRecipientIsSenderATA,
   SolanaTokenAccounNotInitialized,
+  SolanaInvalidValidator,
 } from "./errors";
 import {
   decodeAccountIdWithTokenAccountAddress,
@@ -29,6 +34,8 @@ import {
 
 import type {
   CommandDescriptor,
+  StakeCreateAccountCommand,
+  StakeCreateAccountTransaction,
   TokenCreateATATransaction,
   TokenRecipientDescriptor,
   TokenTransferTransaction,
@@ -83,6 +90,13 @@ async function deriveCommandDescriptor(
     case "token.createATA":
       return deriveCreateAssociatedTokenAccountCommandDescriptor(
         mainAccount,
+        model,
+        api
+      );
+    case "stake.createAccount":
+      return deriveStakeCreateAccountCommandDescriptor(
+        mainAccount,
+        tx,
         model,
         api
       );
@@ -367,6 +381,57 @@ async function deriveTransferCommandDescriptor(
       memo: model.uiState.memo,
     },
     warnings: Object.keys(warnings).length > 0 ? warnings : undefined,
+  };
+}
+
+async function deriveStakeCreateAccountCommandDescriptor(
+  mainAccount: Account,
+  tx: TransactionWithFeeCalculator,
+  model: TransactionModel & { kind: StakeCreateAccountTransaction["kind"] },
+  api: ChainAPI
+): Promise<CommandDescriptor> {
+  const errors: Record<string, Error> = {};
+
+  const fee = tx.feeCalculator.lamportsPerSignature;
+
+  const amount = tx.useAllAmount ? mainAccount.balance.minus(fee) : tx.amount;
+
+  const { uiState } = model;
+  const { delegate } = uiState;
+
+  if (mainAccount.balance.gt(amount.plus(fee))) {
+    errors.amount = new NotEnoughBalance();
+  }
+
+  if (delegate !== undefined) {
+    if (!isValidBase58Address(delegate.voteAccAddress)) {
+      errors.voteAccAddress = new InvalidAddress();
+    } else {
+      const voteAcc = await getMaybeVoteAccount(delegate.voteAccAddress, api);
+
+      if (voteAcc instanceof Error || voteAcc === undefined) {
+        errors.voteAccAddress = new SolanaInvalidValidator();
+      }
+    }
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return toInvalidStatusCommand(errors);
+  }
+
+  const fees = await getStakeAccountMinimumBalanceForRentExemption(api);
+
+  return {
+    status: "valid",
+    command: {
+      kind: "stake.createAccount",
+      amount: amount.toNumber(),
+      fromAccAddress: mainAccount.freshAddress,
+      delegate,
+      // TODO: get the seed like <stake:N> when sync support staked accs
+      seed: Math.random().toString(),
+    },
+    fees,
   };
 }
 

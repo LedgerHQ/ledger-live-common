@@ -83,6 +83,8 @@ function expectCorrectMemo(input: TransactionTestInput<Transaction>) {
       break;
     case "token.createATA":
       break;
+    case "stake.createAccount":
+      break;
     default:
       return assertUnreachable(transaction.model);
   }

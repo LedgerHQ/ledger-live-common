@@ -24,6 +24,17 @@ export type TokenCreateATACommand = {
   associatedTokenAccountAddress: string;
 };
 
+export type StakeCreateAccountCommand = {
+  kind: "stake.createAccount";
+  fromAccAddress: string;
+  //stakeAccAddress: string;
+  seed: string;
+  amount: number;
+  delegate?: {
+    voteAccAddress: string;
+  };
+};
+
 export type TokenRecipientDescriptor = {
   walletAddress: string;
   tokenAccAddress: string;
@@ -44,7 +55,8 @@ export type TokenTransferCommand = {
 export type Command =
   | TransferCommand
   | TokenTransferCommand
-  | TokenCreateATACommand;
+  | TokenCreateATACommand
+  | StakeCreateAccountCommand;
 
 export type ValidCommandDescriptor = {
   status: "valid";
@@ -85,10 +97,20 @@ export type TokenCreateATATransaction = {
   };
 };
 
+export type StakeCreateAccountTransaction = {
+  kind: "stake.createAccount";
+  uiState: {
+    delegate?: {
+      voteAccAddress: string;
+    };
+  };
+};
+
 export type TransactionModel = { commandDescriptor?: CommandDescriptor } & (
   | TransferTransaction
   | TokenTransferTransaction
   | TokenCreateATATransaction
+  | StakeCreateAccountTransaction
 );
 
 export type Transaction = TransactionCommon & {

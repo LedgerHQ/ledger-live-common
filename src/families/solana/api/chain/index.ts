@@ -55,6 +55,8 @@ export type ChainAPI = Readonly<{
 
   getAssocTokenAccMinNativeBalance: () => Promise<number>;
 
+  getMinimumBalanceForRentExemption: (dataLength: number) => Promise<number>;
+
   config: Config;
 }>;
 
@@ -109,6 +111,9 @@ export function getChainAPI(config: Config): ChainAPI {
 
     getAssocTokenAccMinNativeBalance: () =>
       Token.getMinBalanceRentForExemptAccount(connection()),
+
+    getMinimumBalanceForRentExemption: (dataLength: number) =>
+      connection().getMinimumBalanceForRentExemption(dataLength),
 
     config,
   };
