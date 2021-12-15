@@ -85,9 +85,9 @@ export const getTransactions = async (address: string): Promise<any> => {
       tx.date = new Date(block.block.header.time);
 
       tx.fee = new BigNumber(0);
-      // todo: fix this, decodeTxRaw break iterator
+      // todo: fix this, decodeTxRaw break upper iterator
       /*
-      let txRaw: DecodedTxRaw = decodeTxRaw(tx.tx);
+      const txRaw: DecodedTxRaw = decodeTxRaw(tx.tx);
 
       if (txRaw.authInfo.fee) {
         txRaw.authInfo.fee.amount.forEach((fee) => {
