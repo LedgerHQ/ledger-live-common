@@ -165,10 +165,62 @@ function fieldsForStakeCreateAccount(
   command: StakeCreateAccountCommand
 ): DeviceTransactionField[] {
   const fields: Array<DeviceTransactionField> = [];
+
+  if (command.delegate) {
+    fields.push({
+      type: "text",
+      label: "Unrecognized format",
+      value: "Unrecognized format",
+    });
+    return fields;
+  }
+
+  fields.push({
+    type: "address",
+    label: "Create stake acct",
+    address: command.stakeAccAddress,
+  });
+
+  fields.push({
+    type: "amount",
+    label: "Deposit",
+  });
+
+  fields.push({
+    type: "address",
+    label: "From",
+    address: command.fromAccAddress,
+  });
+
+  fields.push({
+    type: "address",
+    label: "Base",
+    address: command.fromAccAddress,
+  });
+
   fields.push({
     type: "text",
-    label: "FIX ME UNRECOGNIZED FORMAT",
-    value: "FIX ME UNRECOGNIZED FORMAT",
+    label: "Seed",
+    value: command.seed,
   });
+
+  fields.push({
+    type: "address",
+    label: "New authority",
+    address: command.fromAccAddress,
+  });
+
+  fields.push({
+    type: "text",
+    label: "Lockup",
+    value: "None",
+  });
+
+  fields.push({
+    type: "address",
+    label: "Fee payer",
+    address: command.fromAccAddress,
+  });
+
   return fields;
 }
