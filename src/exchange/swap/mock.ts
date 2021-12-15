@@ -162,7 +162,7 @@ export const mockGetProviders: GetProviders = async () => {
           ],
         },
         {
-          provider: "random2",
+          provider: "ftx",
           pairs: [
             { from: "bitcoin", to: "ethereum", tradeMethod: "float" },
             { from: "bitcoin", to: "ethereum", tradeMethod: "fixed" },
