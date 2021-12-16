@@ -2,6 +2,7 @@ import { BigNumber } from "bignumber.js";
 import type {
   Command,
   StakeCreateAccountCommand,
+  StakeDelegateCommand,
   TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
@@ -76,9 +77,11 @@ function formatCommand(
     case "token.transfer":
       return formatTokenTransfer(mainAccount, tx, command);
     case "token.createATA":
-      return formatCreateATA(mainAccount, tx, command);
+      return formatCreateATA(command);
     case "stake.createAccount":
       return formatStakeCreateAccount(mainAccount, tx, command);
+    case "stake.delegate":
+      return formatStakeDelegate(command);
     default:
       return assertUnreachable(command);
   }
@@ -154,13 +157,19 @@ function formatTokenTransfer(
   return "\n" + str;
 }
 
-function formatCreateATA(
-  mainAccount: Account,
-  tx: Transaction,
-  command: TokenCreateATACommand
-) {
+function formatCreateATA(command: TokenCreateATACommand) {
   const token = getTokenById(toTokenId(command.mint));
   const str = [`  OPT IN TOKEN: ${token.ticker}`].filter(Boolean).join("\n");
+  return "\n" + str;
+}
+
+function formatStakeDelegate(command: StakeDelegateCommand) {
+  const str = [
+    `  DELEGATE: ${command.stakeAccAddr}`,
+    `  TO: ${command.voteAccAddr}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
   return "\n" + str;
 }
 

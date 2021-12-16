@@ -82,8 +82,8 @@ function expectCorrectMemo(input: TransactionTestInput<Transaction>) {
       expect(operation.extra.memo).toBe(transaction.model.uiState.memo);
       break;
     case "token.createATA":
-      break;
     case "stake.createAccount":
+    case "stake.delegate":
       break;
     default:
       return assertUnreachable(transaction.model);

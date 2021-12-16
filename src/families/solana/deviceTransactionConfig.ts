@@ -1,6 +1,7 @@
 import type { AccountLike, Account } from "../../types";
 import type {
   StakeCreateAccountCommand,
+  StakeDelegateCommand,
   TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
@@ -47,6 +48,8 @@ function fieldsForCommand(
       return fieldsForCreateATA(command);
     case "stake.createAccount":
       return fieldsForStakeCreateAccount(command);
+    case "stake.delegate":
+      return fieldsForStakeDelegate(command);
     default:
       return assertUnreachable(command);
   }
@@ -220,6 +223,38 @@ function fieldsForStakeCreateAccount(
     type: "address",
     label: "Fee payer",
     address: command.fromAccAddress,
+  });
+
+  return fields;
+}
+
+function fieldsForStakeDelegate(
+  command: StakeDelegateCommand
+): DeviceTransactionField[] {
+  const fields: Array<DeviceTransactionField> = [];
+
+  fields.push({
+    type: "address",
+    label: "Delegate from",
+    address: command.stakeAccAddr,
+  });
+
+  fields.push({
+    type: "address",
+    label: "Authorized by",
+    address: command.authorizedAccAddr,
+  });
+
+  fields.push({
+    type: "address",
+    label: "Vote account",
+    address: command.voteAccAddr,
+  });
+
+  fields.push({
+    type: "text",
+    label: "Fee payer",
+    value: "authorizer",
   });
 
   return fields;

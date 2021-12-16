@@ -9,6 +9,7 @@ import { open, close } from "../../hw";
 import type {
   Command,
   StakeCreateAccountCommand,
+  StakeDelegateCommand,
   TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
@@ -137,6 +138,13 @@ function buildOptimisticOperationForCommand(
         command,
         commandDescriptor
       );
+    case "stake.delegate":
+      return optimisticOpForStakeDelegate(
+        account,
+        transaction,
+        command,
+        commandDescriptor
+      );
     default:
       return assertUnreachable(command);
   }
@@ -243,6 +251,7 @@ function getOpExtras(command: Command): Record<string, any> {
       break;
     case "token.createATA":
     case "stake.createAccount":
+    case "stake.delegate":
       break;
     default:
       return assertUnreachable(command);
@@ -272,6 +281,26 @@ function optimisticOpForStakeCreateAccount(
     senders: [account.freshAddress],
     recipients,
     value: new BigNumber(command.amount).plus(commons.fee),
+    extra: getOpExtras(command),
+  };
+}
+
+function optimisticOpForStakeDelegate(
+  account: Account,
+  transaction: Transaction,
+  command: StakeDelegateCommand,
+  commandDescriptor: ValidCommandDescriptor
+): Operation {
+  const commons = optimisticOpcommons(transaction, commandDescriptor);
+  const opType: OperationType = "DELEGATE";
+  return {
+    ...commons,
+    id: encodeOperationId(account.id, "", opType),
+    type: opType,
+    accountId: account.id,
+    senders: [],
+    recipients: [],
+    value: commons.fee,
     extra: getOpExtras(command),
   };
 }

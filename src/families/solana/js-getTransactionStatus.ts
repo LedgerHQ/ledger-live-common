@@ -77,6 +77,7 @@ function getAmountForModel(
     case "token.transfer":
       return tx.useAllAmount ? account.balance : tx.amount;
     case "token.createATA":
+    case "stake.delegate":
       return new BigNumber(0);
     default:
       return assertUnreachable(model);
@@ -95,6 +96,7 @@ function getTotalSpentForModel(
     case "token.transfer":
       return amount;
     case "token.createATA":
+    case "stake.delegate":
       return estimatedFees;
     default:
       return assertUnreachable(model);
@@ -108,6 +110,7 @@ function getAmountForCommand(command: Command) {
     case "stake.createAccount":
       return new BigNumber(command.amount);
     case "token.createATA":
+    case "stake.delegate":
       return new BigNumber(0);
     default:
       return assertUnreachable(command);
@@ -126,6 +129,7 @@ function getTotalSpentForCommand(
     case "token.transfer":
       return amount;
     case "token.createATA":
+    case "stake.delegate":
       return estimatedFees;
     default:
       return assertUnreachable(command);

@@ -10,7 +10,12 @@ import type {
 import { Transaction as SolanaTransaction } from "./types";
 import { assertUnreachable } from "./utils";
 
-const modes = ["send", "optIn", "stake.createAccount"] as const;
+const modes = [
+  "send",
+  "optIn",
+  "stake.createAccount",
+  "stake.delegate",
+] as const;
 type Mode = typeof modes[number];
 
 // some options already specified for other blockchains like ethereum.
@@ -20,6 +25,11 @@ const options = [
     name: "solanaValidator",
     type: String,
     desc: "validator address to delegate to",
+  },
+  {
+    name: "solanaStakeAccount",
+    type: String,
+    desc: "stake account address to use in the transaction",
   },
 ];
 
@@ -123,6 +133,25 @@ function inferTransactions(
           },
         };
       }
+      case "stake.delegate":
+        if (opts.solanaStakeAccount === undefined) {
+          throw new Error("stake account is required");
+        }
+
+        if (opts.solanaValidator === undefined) {
+          throw new Error("validator is required");
+        }
+
+        return {
+          ...transaction,
+          model: {
+            kind: "stake.delegate",
+            uiState: {
+              stakeAccAddr: opts.solanaStakeAccount,
+              voteAccAddr: opts.solanaValidator,
+            },
+          },
+        };
       default:
         return assertUnreachable(mode);
     }
@@ -170,8 +199,8 @@ function inferAccounts(
       return [subAccount];
     }
     case "optIn":
-      return [mainAccount];
     case "stake.createAccount":
+    case "stake.delegate":
       return [mainAccount];
     default:
       return assertUnreachable(mode);

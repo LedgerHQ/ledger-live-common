@@ -37,6 +37,7 @@ import type {
   CommandDescriptor,
   StakeCreateAccountCommand,
   StakeCreateAccountTransaction,
+  StakeDelegateTransaction,
   TokenCreateATATransaction,
   TokenRecipientDescriptor,
   TokenTransferTransaction,
@@ -101,6 +102,8 @@ async function deriveCommandDescriptor(
         model,
         api
       );
+    case "stake.delegate":
+      return deriveStakeDelegateCommandDescriptor(mainAccount, tx, model, api);
     default:
       return assertUnreachable(model);
   }
@@ -393,14 +396,14 @@ async function deriveStakeCreateAccountCommandDescriptor(
 ): Promise<CommandDescriptor> {
   const errors: Record<string, Error> = {};
 
-  const fee = tx.feeCalculator.lamportsPerSignature;
+  const txFee = tx.feeCalculator.lamportsPerSignature;
 
-  const amount = tx.useAllAmount ? mainAccount.balance.minus(fee) : tx.amount;
+  const amount = tx.useAllAmount ? mainAccount.balance.minus(txFee) : tx.amount;
 
   const { uiState } = model;
   const { delegate } = uiState;
 
-  if (mainAccount.balance.lt(amount.plus(fee))) {
+  if (mainAccount.balance.lt(amount.plus(txFee))) {
     errors.amount = new NotEnoughBalance();
   }
 
@@ -423,7 +426,7 @@ async function deriveStakeCreateAccountCommandDescriptor(
   // TODO: get the seed like <stake:N> when sync support staked accs
   const seed = Math.random().toString();
 
-  const fees = await getStakeAccountMinimumBalanceForRentExemption(api);
+  const commandFees = await getStakeAccountMinimumBalanceForRentExemption(api);
 
   const stakeAccAddress = await getStakeAccountAddressWithSeed({
     fromAddress: mainAccount.freshAddress,
@@ -440,7 +443,46 @@ async function deriveStakeCreateAccountCommandDescriptor(
       delegate,
       seed,
     },
-    fees,
+    fees: commandFees,
+  };
+}
+
+async function deriveStakeDelegateCommandDescriptor(
+  mainAccount: Account,
+  tx: TransactionWithFeeCalculator,
+  model: TransactionModel & { kind: StakeDelegateTransaction["kind"] },
+  api: ChainAPI
+): Promise<CommandDescriptor> {
+  const errors: Record<string, Error> = {};
+
+  const { uiState } = model;
+
+  if (!isValidBase58Address(uiState.stakeAccAddr)) {
+    errors.stakeAccAddr = new InvalidAddress();
+  }
+
+  if (!isValidBase58Address(uiState.voteAccAddr)) {
+    errors.voteAccAddr = new InvalidAddress();
+  } else {
+    const voteAcc = await getMaybeVoteAccount(uiState.voteAccAddr, api);
+
+    if (voteAcc instanceof Error || voteAcc === undefined) {
+      errors.voteAccAddress = new SolanaInvalidValidator();
+    }
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return toInvalidStatusCommand(errors);
+  }
+
+  return {
+    status: "valid",
+    command: {
+      kind: "stake.delegate",
+      authorizedAccAddr: mainAccount.freshAddress,
+      stakeAccAddr: uiState.stakeAccAddr,
+      voteAccAddr: uiState.voteAccAddr,
+    },
   };
 }
 

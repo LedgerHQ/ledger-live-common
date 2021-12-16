@@ -35,6 +35,13 @@ export type StakeCreateAccountCommand = {
   };
 };
 
+export type StakeDelegateCommand = {
+  kind: "stake.delegate";
+  authorizedAccAddr: string;
+  stakeAccAddr: string;
+  voteAccAddr: string;
+};
+
 export type TokenRecipientDescriptor = {
   walletAddress: string;
   tokenAccAddress: string;
@@ -56,7 +63,8 @@ export type Command =
   | TransferCommand
   | TokenTransferCommand
   | TokenCreateATACommand
-  | StakeCreateAccountCommand;
+  | StakeCreateAccountCommand
+  | StakeDelegateCommand;
 
 export type ValidCommandDescriptor = {
   status: "valid";
@@ -106,11 +114,20 @@ export type StakeCreateAccountTransaction = {
   };
 };
 
+export type StakeDelegateTransaction = {
+  kind: "stake.delegate";
+  uiState: {
+    stakeAccAddr: string;
+    voteAccAddr: string;
+  };
+};
+
 export type TransactionModel = { commandDescriptor?: CommandDescriptor } & (
   | TransferTransaction
   | TokenTransferTransaction
   | TokenCreateATATransaction
   | StakeCreateAccountTransaction
+  | StakeDelegateTransaction
 );
 
 export type Transaction = TransactionCommon & {
