@@ -11,6 +11,7 @@ import type {
   StakeCreateAccountCommand,
   StakeDelegateCommand,
   StakeUndelegateCommand,
+  StakeWithdrawCommand,
   TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
@@ -153,6 +154,13 @@ function buildOptimisticOperationForCommand(
         command,
         commandDescriptor
       );
+    case "stake.withdraw":
+      return optimisticOpForStakeWithdraw(
+        account,
+        transaction,
+        command,
+        commandDescriptor
+      );
     default:
       return assertUnreachable(command);
   }
@@ -261,6 +269,7 @@ function getOpExtras(command: Command): Record<string, any> {
     case "stake.createAccount":
     case "stake.delegate":
     case "stake.undelegate":
+    case "stake.withdraw":
       break;
     default:
       return assertUnreachable(command);
@@ -329,6 +338,27 @@ function optimisticOpForStakeUndelegate(
     accountId: account.id,
     senders: [],
     recipients: [],
+    value: commons.fee,
+    extra: getOpExtras(command),
+  };
+}
+
+function optimisticOpForStakeWithdraw(
+  account: Account,
+  transaction: Transaction,
+  command: StakeWithdrawCommand,
+  commandDescriptor: ValidCommandDescriptor
+): Operation {
+  const commons = optimisticOpcommons(transaction, commandDescriptor);
+  // TODO: should we reuse existing op types or create specific ones for Solana?
+  const opType: OperationType = "WITHDRAW_UNBONDED";
+  return {
+    ...commons,
+    id: encodeOperationId(account.id, "", opType),
+    type: opType,
+    accountId: account.id,
+    senders: [command.stakeAccAddr],
+    recipients: [command.toAccAddr],
     value: commons.fee,
     extra: getOpExtras(command),
   };

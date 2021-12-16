@@ -79,6 +79,8 @@ function getAmountForModel(
     case "token.createATA":
     case "stake.delegate":
     case "stake.undelegate":
+    case "stake.withdraw":
+      // TODO: fix amount for withdraw
       return new BigNumber(0);
     default:
       return assertUnreachable(model);
@@ -99,6 +101,7 @@ function getTotalSpentForModel(
     case "token.createATA":
     case "stake.delegate":
     case "stake.undelegate":
+    case "stake.withdraw":
       return estimatedFees;
     default:
       return assertUnreachable(model);
@@ -110,6 +113,7 @@ function getAmountForCommand(command: Command) {
     case "transfer":
     case "token.transfer":
     case "stake.createAccount":
+    case "stake.withdraw":
       return new BigNumber(command.amount);
     case "token.createATA":
     case "stake.delegate":
@@ -134,6 +138,7 @@ function getTotalSpentForCommand(
     case "token.createATA":
     case "stake.delegate":
     case "stake.undelegate":
+    case "stake.withdraw":
       return estimatedFees;
     default:
       return assertUnreachable(command);

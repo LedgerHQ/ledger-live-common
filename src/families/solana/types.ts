@@ -48,6 +48,14 @@ export type StakeUndelegateCommand = {
   stakeAccAddr: string;
 };
 
+export type StakeWithdrawCommand = {
+  kind: "stake.withdraw";
+  authorizedAccAddr: string;
+  stakeAccAddr: string;
+  toAccAddr: string;
+  amount: number;
+};
+
 export type TokenRecipientDescriptor = {
   walletAddress: string;
   tokenAccAddress: string;
@@ -71,7 +79,8 @@ export type Command =
   | TokenCreateATACommand
   | StakeCreateAccountCommand
   | StakeDelegateCommand
-  | StakeUndelegateCommand;
+  | StakeUndelegateCommand
+  | StakeWithdrawCommand;
 
 export type ValidCommandDescriptor = {
   status: "valid";
@@ -136,6 +145,13 @@ export type StakeUndelegateTransaction = {
   };
 };
 
+export type StakeWithdrawTransaction = {
+  kind: "stake.withdraw";
+  uiState: {
+    stakeAccAddr: string;
+  };
+};
+
 export type TransactionModel = { commandDescriptor?: CommandDescriptor } & (
   | TransferTransaction
   | TokenTransferTransaction
@@ -143,6 +159,7 @@ export type TransactionModel = { commandDescriptor?: CommandDescriptor } & (
   | StakeCreateAccountTransaction
   | StakeDelegateTransaction
   | StakeUndelegateTransaction
+  | StakeWithdrawTransaction
 );
 
 export type Transaction = TransactionCommon & {

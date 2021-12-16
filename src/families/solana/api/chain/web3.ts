@@ -13,6 +13,7 @@ import {
   StakeCreateAccountCommand,
   StakeDelegateCommand,
   StakeUndelegateCommand,
+  StakeWithdrawCommand,
   TokenCreateATACommand,
   TokenTransferCommand,
   TransferCommand,
@@ -320,6 +321,22 @@ export function buildStakeUndelegateInstructions({
   const tx = StakeProgram.deactivate({
     authorizedPubkey: new PublicKey(authorizedAccAddr),
     stakePubkey: new PublicKey(stakeAccAddr),
+  });
+
+  return tx.instructions;
+}
+
+export function buildStakeWithdrawInstructions({
+  authorizedAccAddr,
+  stakeAccAddr,
+  amount,
+  toAccAddr,
+}: StakeWithdrawCommand): TransactionInstruction[] {
+  const tx = StakeProgram.withdraw({
+    authorizedPubkey: new PublicKey(authorizedAccAddr),
+    stakePubkey: new PublicKey(stakeAccAddr),
+    lamports: amount,
+    toPubkey: new PublicKey(toAccAddr),
   });
 
   return tx.instructions;

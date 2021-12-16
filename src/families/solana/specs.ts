@@ -85,6 +85,7 @@ function expectCorrectMemo(input: TransactionTestInput<Transaction>) {
     case "stake.createAccount":
     case "stake.delegate":
     case "stake.undelegate":
+    case "stake.withdraw":
       break;
     default:
       return assertUnreachable(transaction.model);

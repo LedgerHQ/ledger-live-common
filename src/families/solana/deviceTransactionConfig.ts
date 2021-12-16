@@ -3,6 +3,7 @@ import type {
   StakeCreateAccountCommand,
   StakeDelegateCommand,
   StakeUndelegateCommand,
+  StakeWithdrawCommand,
   TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
@@ -53,6 +54,8 @@ function fieldsForCommand(
       return fieldsForStakeDelegate(command);
     case "stake.undelegate":
       return fieldsForStakeUndelegate(command);
+    case "stake.withdraw":
+      return fieldsForStakeWithdraw(command);
     default:
       return assertUnreachable(command);
   }
@@ -272,6 +275,43 @@ function fieldsForStakeUndelegate(
     type: "address",
     label: "Deactivate stake",
     address: command.stakeAccAddr,
+  });
+
+  fields.push({
+    type: "address",
+    label: "Authorized by",
+    address: command.authorizedAccAddr,
+  });
+
+  fields.push({
+    type: "address",
+    label: "Fee payer",
+    address: command.authorizedAccAddr,
+  });
+
+  return fields;
+}
+
+function fieldsForStakeWithdraw(
+  command: StakeWithdrawCommand
+): DeviceTransactionField[] {
+  const fields: Array<DeviceTransactionField> = [];
+
+  fields.push({
+    type: "amount",
+    label: "Stake withdraw",
+  });
+
+  fields.push({
+    type: "address",
+    label: "From",
+    address: command.stakeAccAddr,
+  });
+
+  fields.push({
+    type: "address",
+    label: "To",
+    address: command.toAccAddr,
   });
 
   fields.push({

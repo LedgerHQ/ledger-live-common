@@ -38,6 +38,7 @@ import type {
   StakeCreateAccountTransaction,
   StakeDelegateTransaction,
   StakeUndelegateTransaction,
+  StakeWithdrawTransaction,
   TokenCreateATATransaction,
   TokenRecipientDescriptor,
   TokenTransferTransaction,
@@ -106,6 +107,8 @@ async function deriveCommandDescriptor(
       return deriveStakeDelegateCommandDescriptor(mainAccount, model, api);
     case "stake.undelegate":
       return deriveStakeUndelegateCommandDescriptor(mainAccount, model);
+    case "stake.withdraw":
+      return deriveStakeWithdrawCommandDescriptor(mainAccount, tx, model);
     default:
       return assertUnreachable(model);
   }
@@ -400,6 +403,7 @@ async function deriveStakeCreateAccountCommandDescriptor(
 
   const txFee = tx.feeCalculator.lamportsPerSignature;
 
+  // TODO: warning to leave some balance on main acc to pay fees
   const amount = tx.useAllAmount ? mainAccount.balance.minus(txFee) : tx.amount;
 
   const { uiState } = model;
@@ -509,6 +513,49 @@ async function deriveStakeUndelegateCommandDescriptor(
       kind: "stake.undelegate",
       authorizedAccAddr: mainAccount.freshAddress,
       stakeAccAddr: uiState.stakeAccAddr,
+    },
+  };
+}
+
+async function deriveStakeWithdrawCommandDescriptor(
+  mainAccount: Account,
+  tx: TransactionWithFeeCalculator,
+  model: TransactionModel & { kind: StakeWithdrawTransaction["kind"] }
+): Promise<CommandDescriptor> {
+  const errors: Record<string, Error> = {};
+
+  // TODO: find stake account in the main acc when synced
+  const { uiState } = model;
+
+  if (tx.recipient.length > 0 && !isValidBase58Address(tx.recipient)) {
+    errors.recipient = new InvalidAddress();
+  }
+
+  // TODO: use all amount
+  else if (tx.amount.lte(0)) {
+    errors.amount = new AmountRequired();
+  }
+  // TODO: else if amount > stake balance
+
+  if (!isValidBase58Address(uiState.stakeAccAddr)) {
+    errors.stakeAccAddr = new InvalidAddress();
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return toInvalidStatusCommand(errors);
+  }
+
+  const recipient =
+    tx.recipient.length > 0 ? tx.recipient : mainAccount.freshAddress;
+
+  return {
+    status: "valid",
+    command: {
+      kind: "stake.withdraw",
+      authorizedAccAddr: mainAccount.freshAddress,
+      stakeAccAddr: uiState.stakeAccAddr,
+      amount: tx.amount.toNumber(),
+      toAccAddr: recipient,
     },
   };
 }

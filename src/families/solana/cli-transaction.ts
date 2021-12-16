@@ -16,6 +16,7 @@ const modes = [
   "stake.createAccount",
   "stake.delegate",
   "stake.undelegate",
+  "stake.withdraw",
 ] as const;
 type Mode = typeof modes[number];
 
@@ -167,6 +168,20 @@ function inferTransactions(
             },
           },
         };
+      case "stake.withdraw":
+        if (opts.solanaStakeAccount === undefined) {
+          throw new Error("stake account is required");
+        }
+
+        return {
+          ...transaction,
+          model: {
+            kind: "stake.withdraw",
+            uiState: {
+              stakeAccAddr: opts.solanaStakeAccount,
+            },
+          },
+        };
       default:
         return assertUnreachable(mode);
     }
@@ -217,6 +232,8 @@ function inferAccounts(
     case "stake.createAccount":
     case "stake.delegate":
     case "stake.undelegate":
+    case "stake.withdraw":
+      // TODO: infer stake account
       return [mainAccount];
     default:
       return assertUnreachable(mode);
