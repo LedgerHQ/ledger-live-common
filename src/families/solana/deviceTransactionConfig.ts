@@ -2,6 +2,7 @@ import type { AccountLike, Account } from "../../types";
 import type {
   StakeCreateAccountCommand,
   StakeDelegateCommand,
+  StakeSplitCommand,
   StakeUndelegateCommand,
   StakeWithdrawCommand,
   TokenCreateATACommand,
@@ -56,6 +57,8 @@ function fieldsForCommand(
       return fieldsForStakeUndelegate(command);
     case "stake.withdraw":
       return fieldsForStakeWithdraw(command);
+    case "stake.split":
+      return fieldsForStakeSplit(command);
     default:
       return assertUnreachable(command);
   }
@@ -312,6 +315,55 @@ function fieldsForStakeWithdraw(
     type: "address",
     label: "To",
     address: command.toAccAddr,
+  });
+
+  fields.push({
+    type: "address",
+    label: "Authorized by",
+    address: command.authorizedAccAddr,
+  });
+
+  fields.push({
+    type: "address",
+    label: "Fee payer",
+    address: command.authorizedAccAddr,
+  });
+
+  return fields;
+}
+
+function fieldsForStakeSplit(
+  command: StakeSplitCommand
+): DeviceTransactionField[] {
+  const fields: Array<DeviceTransactionField> = [];
+
+  fields.push({
+    type: "amount",
+    label: "Split stake",
+  });
+
+  fields.push({
+    type: "address",
+    label: "From",
+    address: command.stakeAccAddr,
+  });
+
+  fields.push({
+    type: "address",
+    label: "To",
+    address: command.splitStakeAccAddr,
+  });
+
+  fields.push({
+    type: "address",
+    label: "Base",
+    address: command.authorizedAccAddr,
+  });
+
+  fields.push({
+    type: "text",
+    label: "Seed",
+    value: command.seed,
   });
 
   fields.push({

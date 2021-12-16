@@ -3,6 +3,7 @@ import type {
   Command,
   StakeCreateAccountCommand,
   StakeDelegateCommand,
+  StakeSplitCommand,
   StakeUndelegateCommand,
   StakeWithdrawCommand,
   TokenCreateATACommand,
@@ -87,7 +88,9 @@ function formatCommand(
     case "stake.undelegate":
       return formatStakeUndelegate(command);
     case "stake.withdraw":
-      return formatStakeWithdraw(command);
+      return formatStakeWithdraw(mainAccount, tx, command);
+    case "stake.split":
+      return formatStakeSplit(mainAccount, tx, command);
     default:
       return assertUnreachable(command);
   }
@@ -186,10 +189,32 @@ function formatStakeUndelegate(command: StakeUndelegateCommand) {
   return "\n" + str;
 }
 
-function formatStakeWithdraw(command: StakeWithdrawCommand) {
+function formatStakeWithdraw(
+  mainAccount: Account,
+  tx: Transaction,
+  command: StakeWithdrawCommand
+) {
+  const amount = lamportsToSOL(mainAccount, command.amount);
   const str = [
     `  WITHDRAW FROM: ${command.stakeAccAddr}`,
+    `  AMOUNT: ${amount}${tx.useAllAmount ? " (ALL)" : ""}`,
     `  TO: ${command.toAccAddr}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  return "\n" + str;
+}
+
+function formatStakeSplit(
+  mainAccount: Account,
+  tx: Transaction,
+  command: StakeSplitCommand
+) {
+  const amount = lamportsToSOL(mainAccount, command.amount);
+  const str = [
+    `  SPLIT: ${command.stakeAccAddr}`,
+    `  AMOUNT: ${amount}${tx.useAllAmount ? " (ALL)" : ""}`,
+    `  TO: ${command.splitStakeAccAddr}`,
   ]
     .filter(Boolean)
     .join("\n");

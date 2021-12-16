@@ -62,13 +62,13 @@ function getAmountForModel(
   tx: Transaction,
   estimatedFees: BigNumber
 ) {
+  if (tx.amount.lte(0)) {
+    return tx.amount;
+  }
   const { model } = tx;
   switch (model.kind) {
     case "transfer":
     case "stake.createAccount": {
-      if (tx.amount.lte(0)) {
-        return tx.amount;
-      }
       const amount = tx.useAllAmount
         ? account.balance.minus(estimatedFees)
         : BigNumber.max(tx.amount, 0);
@@ -79,9 +79,10 @@ function getAmountForModel(
     case "token.createATA":
     case "stake.delegate":
     case "stake.undelegate":
-    case "stake.withdraw":
-      // TODO: fix amount for withdraw
       return new BigNumber(0);
+    case "stake.withdraw":
+    case "stake.split":
+      return tx.amount;
     default:
       return assertUnreachable(model);
   }
@@ -102,6 +103,7 @@ function getTotalSpentForModel(
     case "stake.delegate":
     case "stake.undelegate":
     case "stake.withdraw":
+    case "stake.split":
       return estimatedFees;
     default:
       return assertUnreachable(model);
@@ -118,6 +120,7 @@ function getAmountForCommand(command: Command) {
     case "token.createATA":
     case "stake.delegate":
     case "stake.undelegate":
+    case "stake.split":
       return new BigNumber(0);
     default:
       return assertUnreachable(command);
@@ -139,6 +142,7 @@ function getTotalSpentForCommand(
     case "stake.delegate":
     case "stake.undelegate":
     case "stake.withdraw":
+    case "stake.split":
       return estimatedFees;
     default:
       return assertUnreachable(command);

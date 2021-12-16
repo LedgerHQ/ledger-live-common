@@ -12,6 +12,7 @@ import { chunk } from "lodash";
 import {
   StakeCreateAccountCommand,
   StakeDelegateCommand,
+  StakeSplitCommand,
   StakeUndelegateCommand,
   StakeWithdrawCommand,
   TokenCreateATACommand,
@@ -340,6 +341,36 @@ export function buildStakeWithdrawInstructions({
   });
 
   return tx.instructions;
+}
+
+export function buildStakeSplitInstructions({
+  authorizedAccAddr,
+  stakeAccAddr,
+  seed,
+  amount,
+  splitStakeAccAddr,
+}: StakeSplitCommand): TransactionInstruction[] {
+  // HACK: switch to split_with_seed when supported by @solana/web3.js
+  const splitIx = StakeProgram.split({
+    authorizedPubkey: new PublicKey(authorizedAccAddr),
+    lamports: amount,
+    stakePubkey: new PublicKey(stakeAccAddr),
+    splitStakePubkey: new PublicKey(splitStakeAccAddr),
+  }).instructions[1];
+
+  if (splitIx === undefined) {
+    throw new Error("expected split instruction");
+  }
+
+  const allocateIx = SystemProgram.allocate({
+    accountPubkey: new PublicKey(splitStakeAccAddr),
+    basePubkey: new PublicKey(authorizedAccAddr),
+    programId: StakeProgram.programId,
+    seed,
+    space: StakeProgram.space,
+  });
+
+  return [allocateIx, splitIx];
 }
 
 export function buildStakeCreateAccountInstructions({

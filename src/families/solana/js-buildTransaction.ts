@@ -9,6 +9,7 @@ import {
   buildStakeDelegateInstructions,
   buildStakeUndelegateInstructions,
   buildStakeWithdrawInstructions,
+  buildStakeSplitInstructions,
 } from "./api/chain/web3";
 import { assertUnreachable } from "./utils";
 import {
@@ -81,6 +82,8 @@ function buildInstructionsForCommand(
       return buildStakeUndelegateInstructions(command);
     case "stake.withdraw":
       return buildStakeWithdrawInstructions(command);
+    case "stake.split":
+      return buildStakeSplitInstructions(command);
     default:
       return assertUnreachable(command);
   }

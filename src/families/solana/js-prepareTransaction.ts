@@ -37,6 +37,7 @@ import type {
   CommandDescriptor,
   StakeCreateAccountTransaction,
   StakeDelegateTransaction,
+  StakeSplitTransaction,
   StakeUndelegateTransaction,
   StakeWithdrawTransaction,
   TokenCreateATATransaction,
@@ -109,6 +110,8 @@ async function deriveCommandDescriptor(
       return deriveStakeUndelegateCommandDescriptor(mainAccount, model);
     case "stake.withdraw":
       return deriveStakeWithdrawCommandDescriptor(mainAccount, tx, model);
+    case "stake.split":
+      return deriveStakeSplitCommandDescriptor(mainAccount, tx, model, api);
     default:
       return assertUnreachable(model);
   }
@@ -532,7 +535,7 @@ async function deriveStakeWithdrawCommandDescriptor(
   }
 
   // TODO: use all amount
-  else if (tx.amount.lte(0)) {
+  if (tx.amount.lte(0)) {
     errors.amount = new AmountRequired();
   }
   // TODO: else if amount > stake balance
@@ -557,6 +560,55 @@ async function deriveStakeWithdrawCommandDescriptor(
       amount: tx.amount.toNumber(),
       toAccAddr: recipient,
     },
+  };
+}
+
+async function deriveStakeSplitCommandDescriptor(
+  mainAccount: Account,
+  tx: TransactionWithFeeCalculator,
+  model: TransactionModel & { kind: StakeSplitTransaction["kind"] },
+  api: ChainAPI
+): Promise<CommandDescriptor> {
+  const errors: Record<string, Error> = {};
+
+  // TODO: find stake account in the main acc when synced
+  const { uiState } = model;
+
+  // TODO: use all amount
+  if (tx.amount.lte(0)) {
+    errors.amount = new AmountRequired();
+  }
+  // TODO: else if amount > stake balance
+
+  if (!isValidBase58Address(uiState.stakeAccAddr)) {
+    errors.stakeAccAddr = new InvalidAddress();
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return toInvalidStatusCommand(errors);
+  }
+
+  // TODO: fix seed
+  const seed = Math.random().toString();
+
+  const commandFees = await getStakeAccountMinimumBalanceForRentExemption(api);
+
+  const splitStakeAccAddr = await getStakeAccountAddressWithSeed({
+    fromAddress: mainAccount.freshAddress,
+    seed,
+  });
+
+  return {
+    status: "valid",
+    command: {
+      kind: "stake.split",
+      authorizedAccAddr: mainAccount.freshAddress,
+      stakeAccAddr: uiState.stakeAccAddr,
+      amount: tx.amount.toNumber(),
+      seed,
+      splitStakeAccAddr,
+    },
+    fees: commandFees,
   };
 }
 

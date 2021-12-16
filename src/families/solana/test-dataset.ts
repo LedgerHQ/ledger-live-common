@@ -565,6 +565,7 @@ function memoIsTooLong(): TransactionTestSpec[] {
         case "stake.delegate":
         case "stake.undelegate":
         case "stake.withdraw":
+        case "stake.split":
           return undefined;
         default:
           return assertUnreachable(tx.model);
