@@ -7,6 +7,7 @@ import {
   buildCreateAssociatedTokenAccountInstruction,
   buildStakeCreateAccountInstructions,
   buildStakeDelegateInstructions,
+  buildStakeUndelegateInstructions,
 } from "./api/chain/web3";
 import { assertUnreachable } from "./utils";
 import {
@@ -75,6 +76,8 @@ function buildInstructionsForCommand(
       return buildStakeCreateAccountInstructions(command);
     case "stake.delegate":
       return buildStakeDelegateInstructions(command);
+    case "stake.undelegate":
+      return buildStakeUndelegateInstructions(command);
     default:
       return assertUnreachable(command);
   }

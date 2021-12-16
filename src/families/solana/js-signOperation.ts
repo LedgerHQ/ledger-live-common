@@ -10,6 +10,7 @@ import type {
   Command,
   StakeCreateAccountCommand,
   StakeDelegateCommand,
+  StakeUndelegateCommand,
   TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
@@ -145,6 +146,13 @@ function buildOptimisticOperationForCommand(
         command,
         commandDescriptor
       );
+    case "stake.undelegate":
+      return optimisticOpForStakeUndelegate(
+        account,
+        transaction,
+        command,
+        commandDescriptor
+      );
     default:
       return assertUnreachable(command);
   }
@@ -252,6 +260,7 @@ function getOpExtras(command: Command): Record<string, any> {
     case "token.createATA":
     case "stake.createAccount":
     case "stake.delegate":
+    case "stake.undelegate":
       break;
     default:
       return assertUnreachable(command);
@@ -293,6 +302,26 @@ function optimisticOpForStakeDelegate(
 ): Operation {
   const commons = optimisticOpcommons(transaction, commandDescriptor);
   const opType: OperationType = "DELEGATE";
+  return {
+    ...commons,
+    id: encodeOperationId(account.id, "", opType),
+    type: opType,
+    accountId: account.id,
+    senders: [],
+    recipients: [],
+    value: commons.fee,
+    extra: getOpExtras(command),
+  };
+}
+
+function optimisticOpForStakeUndelegate(
+  account: Account,
+  transaction: Transaction,
+  command: StakeUndelegateCommand,
+  commandDescriptor: ValidCommandDescriptor
+): Operation {
+  const commons = optimisticOpcommons(transaction, commandDescriptor);
+  const opType: OperationType = "UNDELEGATE";
   return {
     ...commons,
     id: encodeOperationId(account.id, "", opType),

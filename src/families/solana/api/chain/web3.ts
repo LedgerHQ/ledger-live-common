@@ -12,6 +12,7 @@ import { chunk } from "lodash";
 import {
   StakeCreateAccountCommand,
   StakeDelegateCommand,
+  StakeUndelegateCommand,
   TokenCreateATACommand,
   TokenTransferCommand,
   TransferCommand,
@@ -307,6 +308,18 @@ export function buildStakeDelegateInstructions({
     authorizedPubkey: new PublicKey(authorizedAccAddr),
     stakePubkey: new PublicKey(stakeAccAddr),
     votePubkey: new PublicKey(voteAccAddr),
+  });
+
+  return tx.instructions;
+}
+
+export function buildStakeUndelegateInstructions({
+  authorizedAccAddr,
+  stakeAccAddr,
+}: StakeUndelegateCommand): TransactionInstruction[] {
+  const tx = StakeProgram.deactivate({
+    authorizedPubkey: new PublicKey(authorizedAccAddr),
+    stakePubkey: new PublicKey(stakeAccAddr),
   });
 
   return tx.instructions;

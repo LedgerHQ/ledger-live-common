@@ -2,6 +2,7 @@ import type { AccountLike, Account } from "../../types";
 import type {
   StakeCreateAccountCommand,
   StakeDelegateCommand,
+  StakeUndelegateCommand,
   TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
@@ -50,6 +51,8 @@ function fieldsForCommand(
       return fieldsForStakeCreateAccount(command);
     case "stake.delegate":
       return fieldsForStakeDelegate(command);
+    case "stake.undelegate":
+      return fieldsForStakeUndelegate(command);
     default:
       return assertUnreachable(command);
   }
@@ -255,6 +258,32 @@ function fieldsForStakeDelegate(
     type: "text",
     label: "Fee payer",
     value: "authorizer",
+  });
+
+  return fields;
+}
+
+function fieldsForStakeUndelegate(
+  command: StakeUndelegateCommand
+): DeviceTransactionField[] {
+  const fields: Array<DeviceTransactionField> = [];
+
+  fields.push({
+    type: "address",
+    label: "Deactivate stake",
+    address: command.stakeAccAddr,
+  });
+
+  fields.push({
+    type: "address",
+    label: "Authorized by",
+    address: command.authorizedAccAddr,
+  });
+
+  fields.push({
+    type: "address",
+    label: "Fee payer",
+    address: command.authorizedAccAddr,
   });
 
   return fields;

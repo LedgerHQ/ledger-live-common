@@ -3,6 +3,7 @@ import type {
   Command,
   StakeCreateAccountCommand,
   StakeDelegateCommand,
+  StakeUndelegateCommand,
   TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
@@ -82,6 +83,8 @@ function formatCommand(
       return formatStakeCreateAccount(mainAccount, tx, command);
     case "stake.delegate":
       return formatStakeDelegate(command);
+    case "stake.undelegate":
+      return formatStakeUndelegate(command);
     default:
       return assertUnreachable(command);
   }
@@ -168,6 +171,13 @@ function formatStakeDelegate(command: StakeDelegateCommand) {
     `  DELEGATE: ${command.stakeAccAddr}`,
     `  TO: ${command.voteAccAddr}`,
   ]
+    .filter(Boolean)
+    .join("\n");
+  return "\n" + str;
+}
+
+function formatStakeUndelegate(command: StakeUndelegateCommand) {
+  const str = [`  UNDELEGATE: ${command.stakeAccAddr}`]
     .filter(Boolean)
     .join("\n");
   return "\n" + str;

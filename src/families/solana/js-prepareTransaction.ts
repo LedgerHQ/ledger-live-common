@@ -37,6 +37,7 @@ import type {
   CommandDescriptor,
   StakeCreateAccountTransaction,
   StakeDelegateTransaction,
+  StakeUndelegateTransaction,
   TokenCreateATATransaction,
   TokenRecipientDescriptor,
   TokenTransferTransaction,
@@ -102,7 +103,9 @@ async function deriveCommandDescriptor(
         api
       );
     case "stake.delegate":
-      return deriveStakeDelegateCommandDescriptor(mainAccount, tx, model, api);
+      return deriveStakeDelegateCommandDescriptor(mainAccount, model, api);
+    case "stake.undelegate":
+      return deriveStakeUndelegateCommandDescriptor(mainAccount, model);
     default:
       return assertUnreachable(model);
   }
@@ -448,7 +451,6 @@ async function deriveStakeCreateAccountCommandDescriptor(
 
 async function deriveStakeDelegateCommandDescriptor(
   mainAccount: Account,
-  tx: TransactionWithFeeCalculator,
   model: TransactionModel & { kind: StakeDelegateTransaction["kind"] },
   api: ChainAPI
 ): Promise<CommandDescriptor> {
@@ -481,6 +483,32 @@ async function deriveStakeDelegateCommandDescriptor(
       authorizedAccAddr: mainAccount.freshAddress,
       stakeAccAddr: uiState.stakeAccAddr,
       voteAccAddr: uiState.voteAccAddr,
+    },
+  };
+}
+
+async function deriveStakeUndelegateCommandDescriptor(
+  mainAccount: Account,
+  model: TransactionModel & { kind: StakeUndelegateTransaction["kind"] }
+): Promise<CommandDescriptor> {
+  const errors: Record<string, Error> = {};
+
+  const { uiState } = model;
+
+  if (!isValidBase58Address(uiState.stakeAccAddr)) {
+    errors.stakeAccAddr = new InvalidAddress();
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return toInvalidStatusCommand(errors);
+  }
+
+  return {
+    status: "valid",
+    command: {
+      kind: "stake.undelegate",
+      authorizedAccAddr: mainAccount.freshAddress,
+      stakeAccAddr: uiState.stakeAccAddr,
     },
   };
 }
