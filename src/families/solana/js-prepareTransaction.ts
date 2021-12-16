@@ -35,7 +35,6 @@ import {
 
 import type {
   CommandDescriptor,
-  StakeCreateAccountCommand,
   StakeCreateAccountTransaction,
   StakeDelegateTransaction,
   TokenCreateATATransaction,
