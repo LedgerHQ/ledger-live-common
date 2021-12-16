@@ -50,122 +50,6 @@ const manifest: AppManifest[] = [
     domains: ["https://*"],
   },
   {
-    "id": "paraswapv5",
-    "name": "ParaSwap v5",
-    "url": "http://localhost:3000/?params=%7B%22nanoApp%22%3A%22Paraswap%22%2C%22dappName%22%3A%22ParaSwap%22%2C%22networks%22%3A%5B%7B%22currency%22%3A%22ethereum%22%2C%22chainID%22%3A1%2C%22nodeURL%22%3A%22http%3A%2F%2F127.0.0.1%3A7545%22%7D%5D%2C%22dappUrl%22%3A%22https%3A%2F%2Fv5.paraswap.io%2F%3Fembed%3Dtrue%26referrer%3Dledger2%22%7D",
-    "params": {
-      "nanoApp": "Paraswap",
-      "dappName": "ParaSwap",
-      "networks": [
-        {
-          "currency": "ethereum",
-          "chainID": 1337,
-          "nodeURL": "http://127.0.0.1:7545"
-        }
-      ],
-      "dappUrl": "https://v5.paraswap.io/?embed=true&referrer=ledger2"
-    },
-    "homepageUrl": "https://paraswap.io",
-    "supportUrl": "https://paraswap.io",
-    "icon": "https://cdn.live.ledger.com/icons/platform/paraswap.png",
-    "platform": "all",
-    "apiVersion": "0.0.1",
-    "manifestVersion": "1",
-    "branch": "stable",
-    "categories": ["swap", "defi"],
-    "currencies": ["ethereum", "bsc"],
-    "content": {
-      "shortDescription": {
-        "en": "Swap your crypto with ParaSwap that aggregates and provides the best quotes decentralised exchanges."
-      },
-      "description": {
-        "en": "Swap your crypto with ParaSwap that aggregates and provides the best quotes decentralised exchanges."
-      }
-    },
-    "permissions": [
-      {
-        "method": "account.list",
-        "params": {
-          "currencies": ["ethereum", "bsc"]
-        }
-      },
-      {
-        "method": "account.request",
-        "params": {
-          "currencies": ["ethereum", "bsc"]
-        }
-      },
-      {
-        "method": "transaction.sign",
-        "params": {
-          "nanoApp": ["paraswap"]
-        }
-      },
-      {
-        "method": "transaction.broadcast"
-      }
-    ],
-    "domains": ["http://*"]
-  },
-  {
-    "id": "paraswapv5env",
-    "name": "ParaSwap v5 from env",
-    "url": process.env.DAPP_URL || "http://localhost:3000/",
-    "params": {
-      "nanoApp": "Paraswap",
-      "dappName": "ParaSwap",
-      "networks": [
-        {
-          "currency": "ethereum",
-          "chainID": 1337,
-          "nodeURL": "http://127.0.0.1:7545"
-        }
-      ],
-      "dappUrl": "https://v5.paraswap.io/?embed=true&referrer=ledger2"
-    },
-    "homepageUrl": "https://paraswap.io",
-    "supportUrl": "https://paraswap.io",
-    "icon": "https://cdn.live.ledger.com/icons/platform/paraswap.png",
-    "platform": "all",
-    "apiVersion": "0.0.1",
-    "manifestVersion": "1",
-    "branch": "stable",
-    "categories": ["swap", "defi"],
-    "currencies": ["ethereum", "bsc"],
-    "content": {
-      "shortDescription": {
-        "en": "Swap your crypto with ParaSwap that aggregates and provides the best quotes decentralised exchanges."
-      },
-      "description": {
-        "en": "Swap your crypto with ParaSwap that aggregates and provides the best quotes decentralised exchanges."
-      }
-    },
-    "permissions": [
-      {
-        "method": "account.list",
-        "params": {
-          "currencies": ["ethereum", "bsc"]
-        }
-      },
-      {
-        "method": "account.request",
-        "params": {
-          "currencies": ["ethereum", "bsc"]
-        }
-      },
-      {
-        "method": "transaction.sign",
-        "params": {
-          "nanoApp": ["paraswap"]
-        }
-      },
-      {
-        "method": "transaction.broadcast"
-      }
-    ],
-    "domains": ["http://*"]
-  },
-  {
     id: "lido",
     name: "Lido",
     url: "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?dappName=Lido&nanoApp=Lido&url=https%3A%2F%2Fstake.lido.fi%2F%3Fref%3D0x558247e365be655f9144e1a0140D793984372Ef3%26embed%3Dtrue",
@@ -386,7 +270,6 @@ const manifest: AppManifest[] = [
 ];
 
 async function fetchManifest(): Promise<AppManifest[]> {
-  console.log("Fetching manifests", manifest);
   return Promise.resolve(manifest);
 }
 

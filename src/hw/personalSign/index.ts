@@ -8,18 +8,20 @@ import { Device } from "../actions/types";
 import { createAction as createAppAction } from "../actions/app";
 import { useCallback, useEffect, useRef, useState } from "react";
 // TODO deprecate this approach
+// The personal sign method is ethereum alone
+// but this just feels better incase there's
+// a need to support multiple currencies
 const all = {
-  ethereum
+  ethereum,
 };
 
 const dispatch: Resolver = (transport, opts) => {
-  const r = all[opts.currency.id];
+  const r = all["ethereum"];
   if (r) return r(transport, opts);
   throw new Error(`unsupported signTransaction(${opts.currency.id})`);
 };
 
 export default dispatch;
-
 
 type BaseState = {
   signMessageRequested: MessageData | null | undefined;
