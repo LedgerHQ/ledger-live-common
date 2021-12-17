@@ -116,6 +116,7 @@ export function PlatformAppProvider({
   const value = useMemo(() => {
     if (getEnv("DUMMY_LIVE_APP")) {
       const path = getEnv("DUMMY_LIVE_APP");
+      console.log("-----> PATH: " + path);
       addDummyApp(path);
     }
 
