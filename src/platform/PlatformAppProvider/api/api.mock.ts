@@ -270,7 +270,7 @@ const manifest: AppManifest[] = [
   {
     id: "test-live-app",
     name: "Test Live App",
-    url: "http://localhost:3000",
+    url: "http://localhost:3001",
     homepageUrl: "https://developers.ledger.com/",
     icon: "",
     platform: "all",
