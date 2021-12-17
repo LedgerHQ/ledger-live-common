@@ -9,6 +9,8 @@ import React, {
 import type { PlatformAppContextType, Props, State } from "./types";
 import api from "./api";
 import type { AppManifest } from "../types";
+import { getEnv } from "../../env";
+import { readFile } from "fs";
 
 // @ts-expect-error empty object creates an error
 const PlatformAppContext = createContext<PlatformAppContextType>({});
@@ -40,6 +42,22 @@ export function PlatformAppProvider({
       ),
     }));
   }, []);
+
+  const addDummyApp = (filePath) => {
+    readFile(filePath, (readError, data) => {
+      if (!readError) {
+        try {
+          const manifest = JSON.parse(data.toString());
+
+          Array.isArray(manifest)
+            ? manifest.forEach((m) => addLocalManifest(m))
+            : addLocalManifest(manifest);
+        } catch (parseError) {
+          console.log(parseError);
+        }
+      }
+    });
+  };
 
   const removeLocalManifest = useCallback((id: string) => {
     setState((previousState) => {
@@ -96,10 +114,16 @@ export function PlatformAppProvider({
   }, [autoUpdateDelay, updateData]);
 
   const value = useMemo(() => {
+    if (getEnv("DUMMY_LIVE_APP")) {
+      const path = getEnv("DUMMY_LIVE_APP");
+      addDummyApp(path);
+    }
+
     const manifests = new Map([
       ...state.remoteManifests,
       ...state.localManifests,
     ]);
+
     return {
       ...state,
       manifests,
