@@ -267,6 +267,33 @@ const manifest: AppManifest[] = [
     ],
     domains: ["https://*"],
   },
+  {
+    id: "test-live-app",
+    name: "Test Live App",
+    url: "http://localhost:3000",
+    homepageUrl: "https://developers.ledger.com/",
+    icon: "",
+    platform: "all",
+    apiVersion: "0.0.1",
+    manifestVersion: "1",
+    branch: "stable",
+    categories: ["tools"],
+    currencies: "*",
+    content: {
+      shortDescription: {
+        en: "App for testing the Platform apps and Live SDK in E2E (Playwright) tests",
+      },
+      description: {
+        en: "App for testing the Platform apps and Live SDK in E2E (Playwright) tests",
+      },
+    },
+    permissions: [
+      {
+        method: "*",
+      },
+    ],
+    domains: ["https://*"],
+  },
 ];
 
 async function fetchManifest(): Promise<AppManifest[]> {

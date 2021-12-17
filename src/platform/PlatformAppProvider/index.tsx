@@ -43,22 +43,6 @@ export function PlatformAppProvider({
     }));
   }, []);
 
-  const addDummyApp = (filePath) => {
-    readFile(filePath, (readError, data) => {
-      if (!readError) {
-        try {
-          const manifest = JSON.parse(data.toString());
-
-          Array.isArray(manifest)
-            ? manifest.forEach((m) => addLocalManifest(m))
-            : addLocalManifest(manifest);
-        } catch (parseError) {
-          console.log(parseError);
-        }
-      }
-    });
-  };
-
   const removeLocalManifest = useCallback((id: string) => {
     setState((previousState) => {
       const newLocalManifests = new Map(previousState.localManifests);
@@ -114,12 +98,6 @@ export function PlatformAppProvider({
   }, [autoUpdateDelay, updateData]);
 
   const value = useMemo(() => {
-    if (getEnv("DUMMY_LIVE_APP")) {
-      const path = getEnv("DUMMY_LIVE_APP");
-      console.log("-----> PATH: " + path);
-      addDummyApp(path);
-    }
-
     const manifests = new Map([
       ...state.remoteManifests,
       ...state.localManifests,
