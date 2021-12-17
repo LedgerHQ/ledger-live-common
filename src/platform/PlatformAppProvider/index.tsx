@@ -9,8 +9,6 @@ import React, {
 import type { PlatformAppContextType, Props, State } from "./types";
 import api from "./api";
 import type { AppManifest } from "../types";
-import { getEnv } from "../../env";
-import { readFile } from "fs";
 
 // @ts-expect-error empty object creates an error
 const PlatformAppContext = createContext<PlatformAppContextType>({});
@@ -102,7 +100,6 @@ export function PlatformAppProvider({
       ...state.remoteManifests,
       ...state.localManifests,
     ]);
-
     return {
       ...state,
       manifests,
