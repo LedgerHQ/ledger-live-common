@@ -17,6 +17,7 @@ export const formatTransaction = (
     storageLimit,
     fees,
     useAllAmount,
+    totalCost,
   }: Transaction,
   mainAccount: Account
 ): string => {
@@ -36,7 +37,10 @@ ${mode.toUpperCase()} ${
 TO ${recipient}
 with fees=${!fees ? "?" : formatCurrencyUnit(mainAccount.unit, fees)}
 with gasLimit=${!gasLimit ? "?" : gasLimit.toString()}
-with storageLimit=${!storageLimit ? "?" : storageLimit.toString()}`;
+with storageLimit=${!storageLimit ? "?" : storageLimit.toString()}
+(totalCost ${
+    !totalCost ? "?" : formatCurrencyUnit(mainAccount.unit, totalCost)
+  })`;
 };
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
