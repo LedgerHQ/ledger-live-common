@@ -210,11 +210,6 @@ const envDefinitions = {
     parser: boolParser,
     desc: "disable a problematic mechanism of our API",
   },
-  DUMMY_LIVE_APP: {
-    def: "",
-    parser: stringParser,
-    desc: "path to manifest for a dummy live app for use in automated (playwright) tests",
-  },
   ETHEREUM_GAS_LIMIT_AMPLIFIER: {
     def: 1.2,
     parser: floatParser,
