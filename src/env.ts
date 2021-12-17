@@ -392,8 +392,7 @@ const envDefinitions = {
     desc: "set the currencies where NFT is active",
   },
   NFT_ETH_METADATA_SERVICE: {
-    // FIXME LL-8001
-    def: "https://nft.staging.aws.ledger.fr/v1/ethereum/1/contracts/tokens/infos",
+    def: "https://nft.api.live.ledger.com",
     parser: stringParser,
     desc: "service uri used to get the metadata of an nft",
   },
