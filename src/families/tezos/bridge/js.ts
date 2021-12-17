@@ -208,6 +208,14 @@ const prepareTransaction = async (
       transaction.gasLimit = transaction.gasLimit.plus(gasBuffer);
       const s = await getTransactionStatus(account, transaction);
       transaction.amount = account.balance.minus(s.estimatedFees);
+      const estmtnMax = await tezos.estimate.transfer({
+        to: transaction.recipient,
+        amount: transaction.amount.div(10 ** 6).toNumber(),
+      });
+      transaction.totalCost = new BigNumber(estmtnMax.totalCost);
+      transaction.fees = new BigNumber(estmtnMax.suggestedFeeMutez);
+      transaction.gasLimit = new BigNumber(estmtnMax.gasLimit);
+      transaction.storageLimit = new BigNumber(estmtnMax.storageLimit);
     }
   } catch (e: any) {
     transaction.taquitoError = e.id;
