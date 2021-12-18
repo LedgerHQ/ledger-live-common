@@ -531,6 +531,11 @@ const envDefinitions = {
     parser: intParser,
     desc: "version used for the platform api",
   },
+  MARKET_API_URL: {
+    def: "https://api.coingecko.com/api/v3", // @TODO replace with prod API proxy whenever ready
+    parser: stringParser,
+    desc: "url used to fetch platform catalog",
+  },
 };
 
 const getDefinition = (name: string): EnvDef<any> | null | undefined =>
