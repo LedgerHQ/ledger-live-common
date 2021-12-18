@@ -95,11 +95,29 @@ export const mockGetExchangeRates = async (
       tradeMethod: "fixed",
     },
     {
-      rate: new BigNumber("1"),
+      rate: new BigNumber("2"),
       toAmount: amount.times(magnitudeAwareRate),
       magnitudeAwareRate,
       rateId: "mockedRateId",
       provider: "changelly",
+      expirationDate: new Date(),
+      tradeMethod: "float",
+    },
+    {
+      rate: new BigNumber("3"),
+      toAmount: amount.times(magnitudeAwareRate),
+      magnitudeAwareRate,
+      rateId: "mockedRateId",
+      provider: "wyre",
+      expirationDate: new Date(),
+      tradeMethod: "float",
+    },
+    {
+      rate: new BigNumber("4"),
+      toAmount: amount.times(magnitudeAwareRate),
+      magnitudeAwareRate,
+      rateId: "mockedRateId",
+      provider: "ftx",
       expirationDate: new Date(),
       tradeMethod: "float",
     },
@@ -136,6 +154,15 @@ export const mockGetProviders: GetProviders = async () => {
         },
         {
           provider: "wyre",
+          pairs: [
+            { from: "bitcoin", to: "ethereum", tradeMethod: "float" },
+            { from: "bitcoin", to: "ethereum", tradeMethod: "fixed" },
+            { from: "ethereum", to: "bitcoin", tradeMethod: "float" },
+            { from: "ethereum", to: "bitcoin", tradeMethod: "fixed" },
+          ],
+        },
+        {
+          provider: "ftx",
           pairs: [
             { from: "bitcoin", to: "ethereum", tradeMethod: "float" },
             { from: "bitcoin", to: "ethereum", tradeMethod: "fixed" },
