@@ -534,7 +534,7 @@ const envDefinitions = {
     parser: stringParser,
     desc: "url used to fetch platform app manifests (staging)",
   },
-  PLATFORM_LOCAL_MANIFEST_URL: {
+  PLATFORM_LOCAL_MANIFEST_PATH: {
     def: "",
     parser: stringParser,
     desc: "url used to fetch local platform app manifests (test)",

@@ -69,9 +69,8 @@ export function getLocalManifest(fileName) {
         //  ? manifest.forEach(m => new Map(m))
         //  :
         // TODO: PLEASE HALP ME HANDLE SEVERAL Dapps at a time
-
       } catch (parseError) {
-        console.log(parseError);
+        console.error("local manifest readFile error:", parseError);
       }
     }
   });
