@@ -29,6 +29,10 @@ const boolParser = (v: unknown): boolean | null | undefined => {
 const stringParser = (v: unknown): string | null | undefined =>
   typeof v === "string" ? v : undefined;
 
+// const pathParser = (v: unknown): string | null | undefined =>
+//   typeof v === "string" ? v : undefined;
+// TODO: Please check if value is a path :D LOL
+
 const envDefinitions = {
   ANALYTICS_CONSOLE: {
     def: false,
@@ -529,6 +533,11 @@ const envDefinitions = {
     def: "https://cdn.live.ledger-stg.com/platform/apps/v1/data.json",
     parser: stringParser,
     desc: "url used to fetch platform app manifests (staging)",
+  },
+  PLATFORM_LOCAL_MANIFEST_URL: {
+    def: "",
+    parser: stringParser,
+    desc: "url used to fetch local platform app manifests (test)",
   },
   PLATFORM_API_URL: {
     def: "",

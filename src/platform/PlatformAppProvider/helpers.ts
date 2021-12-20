@@ -6,6 +6,8 @@ export type FilterParams = {
   private?: boolean;
   version?: string;
 };
+import path from "path";
+import { readFile } from "fs";
 
 function matchVersion(filterParams: FilterParams, manifest: AppManifest) {
   return (
@@ -51,4 +53,28 @@ export function mergeManifestLists(
 ): AppManifest[] {
   const newIds = new Set(list2.map((elem) => elem.id));
   return [...list1.filter((elem) => !newIds.has(elem.id)), ...list2];
+}
+
+export function getLocalManifest(fileName) {
+  const fileAbsolutePath = path.resolve(fileName);
+  let manifestMap;
+
+  readFile(fileAbsolutePath, (readError, data) => {
+    if (!readError) {
+      try {
+        const manifest = JSON.parse(data.toString());
+        manifestMap = new Map(manifest);
+
+        // Array.isArray(manifest)
+        //  ? manifest.forEach(m => new Map(m))
+        //  :
+        // TODO: PLEASE HALP ME HANDLE SEVERAL Dapps at a time
+
+      } catch (parseError) {
+        console.log(parseError);
+      }
+    }
+  });
+
+  return manifestMap;
 }

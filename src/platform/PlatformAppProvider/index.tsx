@@ -9,11 +9,13 @@ import React, {
 import type { PlatformAppContextType, Props, State } from "./types";
 import api from "./api";
 import type { AppManifest } from "../types";
+import { getEnv } from "../../env";
+import { getLocalManifest } from "./helpers";
 
 // @ts-expect-error empty object creates an error
 const PlatformAppContext = createContext<PlatformAppContextType>({});
 const initialState: State = {
-  localManifests: new Map(),
+  localManifests: getEnv('PLATFORM_LOCAL_MANIFEST_URL') ? getLocalManifest(getEnv('PLATFORM_LOCAL_MANIFEST_URL')) : new Map(),
   remoteManifests: new Map(),
   isLoading: false,
   lastUpdateTime: undefined,
