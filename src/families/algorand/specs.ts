@@ -1,6 +1,6 @@
 import expect from "expect";
 import invariant from "invariant";
-import type { Transaction } from "./types";
+import type { AlgorandTransaction } from "./types";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
 import { isAccountEmpty } from "../../account";
 import { pickSiblings } from "../../bot/specs";
@@ -74,7 +74,7 @@ const getRandomAssetId = (account) => {
   return sample(diff);
 };
 
-const algorand: AppSpec<Transaction> = {
+const algorand: AppSpec<AlgorandTransaction> = {
   name: "Algorand",
   currency,
   appQuery: {
@@ -161,7 +161,7 @@ const algorand: AppSpec<Transaction> = {
         const amount = subAccount.balance
           .div(1.9 + 0.2 * Math.random())
           .integerValue();
-        const updates: Array<Partial<Transaction>> = [
+        const updates: Array<Partial<AlgorandTransaction>> = [
           {
             mode,
             subAccountId: subAccount.id,
@@ -207,7 +207,7 @@ const algorand: AppSpec<Transaction> = {
           ? account.subAccounts.find((a) => a.id.includes(assetId as string))
           : null;
         invariant(!subAccount, "already opt-in");
-        const updates: Array<Partial<Transaction>> = [
+        const updates: Array<Partial<AlgorandTransaction>> = [
           {
             mode,
           },
@@ -244,7 +244,7 @@ const algorand: AppSpec<Transaction> = {
         invariant(maxSpendable.gt(minFees), "Spendable balance is too low");
         const transaction = bridge.createTransaction(account);
         const mode = "claimReward";
-        const updates: Array<Partial<Transaction>> = [
+        const updates: Array<Partial<AlgorandTransaction>> = [
           {
             mode,
           },
