@@ -29,7 +29,6 @@ export const buildTransactionPayload = async (
       account.subAccounts.find((t) => t.id === subAccountId)
     : null;
 
-  // FIXME Is TextEncoder ok on mobile??
   const note = memo ? new TextEncoder().encode(memo) : undefined;
 
   // Minor hack: cast the result as a algosdk.SuggestedParams, while it's actually a TransactionParametersResponse

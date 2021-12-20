@@ -93,7 +93,6 @@ const buildOptimisticOperation = (
     ? spendableBalance
     : transaction.amount.plus(fees);
 
-  // FIXME Is that correct ??
   const type = subAccountId
     ? "FEES"
     : transaction.mode === "optIn"

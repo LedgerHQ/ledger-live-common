@@ -263,7 +263,6 @@ const getAccountShape: GetAccountShape = async (
     startAt
   );
 
-  // TODO Make sure subAccounts operations are merged in optimized way
   const subAccounts = await buildSubAccounts({
     currency,
     accountId,
@@ -296,23 +295,6 @@ const getAccountShape: GetAccountShape = async (
 
   return shape;
 };
-
-// TODO Need migration from libcore??
-/*
-const buildSubAccounts = async (
-  info, accountId
-): Promise<SubAccount[]> => {
-  const { address, initialAccount, currency, derivationMode } = info;
-  const oldSubAccounts = {};
-  initialAccount?.subAccounts?.forEach((a) => {
-    // in case of coming from libcore, we need to converge to new ids
-    const { token } = decodeTokenAccountId(a.id);
-    if (!token) return;
-    const id = encodeTokenAccountId(accountId, token);
-    oldSubAccounts[id] = a;
-  });
-}
-*/
 
 async function buildSubAccount({
   parentAccountId,

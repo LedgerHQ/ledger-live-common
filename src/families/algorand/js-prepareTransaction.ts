@@ -17,22 +17,5 @@ export const prepareTransaction = async (
 
   const fees = await getEstimatedFees(account, transaction);
 
-  /* FIXME What is all that for?
-  if (recipient || transaction.mode !== "send") {
-    let errors: Error | undefined | null | boolean = (
-      await validateRecipient(account, transaction)
-    ).recipientError;
-    errors = errors || (transaction.mode === "optIn" && !transaction.assetId);
-
-    if (!errors) {
-      const res = await calculateFees({
-        account,
-        t,
-      });
-      fees = res.estimatedFees;
-    }
-  }
-  */
-
   return { ...transaction, fees, amount, recipient };
 };

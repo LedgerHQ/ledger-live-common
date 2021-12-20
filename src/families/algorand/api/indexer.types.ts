@@ -1,8 +1,5 @@
 import { BigNumber } from "bignumber.js";
 
-// TODO Support unknown type transactions
-// TODO Support inner-txns ("Inner transactions produced by application execution") ??
-
 export type AlgoTransactionDetails = AlgoPaymentInfo | AlgoAssetTransferInfo;
 
 // Define only types we explicitely support
