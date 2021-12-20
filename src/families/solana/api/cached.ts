@@ -77,6 +77,12 @@ export function cached(api: ChainAPI): ChainAPI {
       minutes(1)
     ),
 
+    getStakeActivation: makeLRUCache(
+      api.getStakeActivation,
+      cacheKeyAddress,
+      minutes(1)
+    ),
+
     getRecentBlockhash: makeLRUCache(
       api.getRecentBlockhash,
       cacheKeyEmpty,

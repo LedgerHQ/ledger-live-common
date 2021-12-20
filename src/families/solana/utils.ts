@@ -16,6 +16,14 @@ export async function drainSeqAsyncGen<T>(
   return items;
 }
 
+export async function drainSeq<T>(jobs: (() => Promise<T>)[]) {
+  const items: T[] = [];
+  for (const job of jobs) {
+    items.push(await job());
+  }
+  return items;
+}
+
 export function clusterByCurrencyId(currencyId: string): Cluster {
   const clusters: Record<string, Cluster> = {
     solana: "mainnet-beta",

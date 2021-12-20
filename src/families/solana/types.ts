@@ -211,11 +211,20 @@ export type SolanaStake = {
         voteAddr: string;
       }
     | undefined;
-  balance: number;
+  stakeAccBalance: number;
+  activation: {
+    state: "active" | "inactive" | "activating" | "deactivating";
+    active: number;
+    inactive: number;
+  };
 };
 
 export type SolanaResources = {
   stakes: SolanaStake[];
+};
+
+export type SolanaResourcesRaw = {
+  stakes: string;
 };
 
 export const reflect = (_declare: unknown): void => {};

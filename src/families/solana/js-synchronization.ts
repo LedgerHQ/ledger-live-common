@@ -42,6 +42,7 @@ import {
   ParsedConfirmedTransactionMeta,
   ParsedMessageAccount,
   ParsedTransaction,
+  StakeActivationData,
 } from "@solana/web3.js";
 import { ChainAPI } from "./api";
 import {
@@ -49,7 +50,7 @@ import {
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   toTokenAccountWithInfo,
 } from "./api/chain/web3";
-import { drainSeqAsyncGen } from "./utils";
+import { drainSeq, drainSeqAsyncGen } from "./utils";
 import { SolanaStake } from "./types";
 
 type OnChainTokenAccount = Awaited<
@@ -72,7 +73,7 @@ export const getAccountShapeWithAPI = async (
     balance: mainAccBalance,
     spendableBalance: mainAccSpendableBalance,
     tokenAccounts: onChaintokenAccounts,
-    stakeAccounts: onChainStakeAccounts,
+    stakes: onChainStakes,
   } = await getAccount(mainAccAddress, api);
 
   const mainAccountId = encodeAccountId({
@@ -142,15 +143,15 @@ export const getAccountShapeWithAPI = async (
     nextSubAccs.push(nextSubAcc);
   }
 
-  const stakes: SolanaStake[] = onChainStakeAccounts.map((acc) => {
+  const stakes: SolanaStake[] = onChainStakes.map(({ account, activation }) => {
     const {
       info: { meta, stake },
-    } = acc;
+    } = account;
     return {
-      balance: acc.onChainAcc.account.lamports,
+      stakeAccAddr: account.onChainAcc.pubkey.toBase58(),
+      stakeAccBalance: account.onChainAcc.account.lamports,
       hasStakeAuth: meta.authorized.staker.toBase58() === mainAccAddress,
       hasWithdrawAuth: meta.authorized.withdrawer.toBase58() === mainAccAddress,
-      stakeAccAddr: acc.onChainAcc.pubkey.toBase58(),
       lockup:
         meta.lockup.unixTimestamp === 0
           ? undefined
@@ -164,6 +165,7 @@ export const getAccountShapeWithAPI = async (
               stake: stake.delegation.stake.toNumber(),
               voteAddr: stake.delegation.voter.toBase58(),
             },
+      activation,
     };
   });
 
@@ -194,6 +196,7 @@ export const getAccountShapeWithAPI = async (
     spendableBalance: mainAccSpendableBalance,
     operations: mainAccTotalOperations,
     operationsCount: mainAccTotalOperations.length,
+    //solanaResources:
   };
 
   return shape;
@@ -569,7 +572,10 @@ async function getAccount(
   spendableBalance: BigNumber;
   blockHeight: number;
   tokenAccounts: ParsedOnChainTokenAccountWithInfo[];
-  stakeAccounts: ParsedOnChainStakeAccountWithInfo[];
+  stakes: {
+    account: ParsedOnChainStakeAccountWithInfo;
+    activation: StakeActivationData;
+  }[];
 }> {
   const balanceLamportsWithContext = await api.getBalanceAndContext(address);
 
@@ -594,6 +600,17 @@ async function getAccount(
     compact
   )();
 
+  const stakes = await drainSeq(
+    stakeAccounts.map((account) => async () => {
+      return {
+        account,
+        activation: await api.getStakeActivation(
+          account.onChainAcc.pubkey.toBase58()
+        ),
+      };
+    })
+  );
+
   const balance = new BigNumber(balanceLamportsWithContext.value);
   const blockHeight = balanceLamportsWithContext.context.slot;
 
@@ -602,6 +619,6 @@ async function getAccount(
     spendableBalance: balance,
     blockHeight,
     tokenAccounts,
-    stakeAccounts,
+    stakes,
   };
 }
