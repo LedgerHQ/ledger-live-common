@@ -60,6 +60,7 @@ export const nftsByCollections = (
     (acc: CollectionMap<CollectionWithNFT>, nft: NFT) => {
       const { collection, ...nftWithoutCollection } = nft;
 
+      // FIXME why do we actively remove collection from nft? i don't get it
       if (!acc[collection.contract]) {
         acc[collection.contract] = { ...collection, nfts: [] };
       }

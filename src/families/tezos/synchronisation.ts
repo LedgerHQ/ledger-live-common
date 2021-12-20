@@ -7,12 +7,14 @@ import { mergeOps } from "../../bridge/jsHelpers";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { encodeOperationId } from "../../operation";
 import { areAllOperationsLoaded, decodeAccountId } from "../../account";
-import type { Operation, Account } from "../../types";
+import type { Operation, Account, NFT } from "../../types";
 import api from "./api/tzkt";
+import bcd, { TokenBalance } from "./api/bcd";
 import type { APIOperation } from "./api/tzkt";
 import { DerivationType } from "@taquito/ledger-signer";
 import { compressPublicKey } from "@taquito/ledger-signer/dist/lib/utils";
 import { b58cencode, prefix, Prefix } from "@taquito/utils";
+import { getEnv } from "../../env";
 
 function restorePublicKey(
   publicKey: string,
@@ -88,7 +90,11 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
     apiAccount.type
   );
 
-  const apiOperations = await fetchAllTransactions(address, lastId);
+  const apiOperationsP = fetchAllTransactions(address, lastId);
+  const apiTokensP = fetchAllTokens(address);
+
+  const apiOperations = await apiOperationsP;
+  const apiTokens = await apiTokensP;
 
   const { revealed, counter, publicKey } = apiAccount;
 
@@ -107,6 +113,38 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
 
   const operations = mergeOps(initialStableOperations, newOps);
 
+  const nfts = apiTokens
+    .filter((t) => {
+      // TODO figure out a way to filter on NFTs
+      return t.token_id && t.decimals === 0;
+    })
+    .map((token) => {
+      const nft: NFT = {
+        id: token.symbol + "_" + token.token_id,
+        tokenId: token.token_id,
+        amount: new BigNumber(token.balance || 1),
+        collection: {
+          contract: token.contract,
+          standard: token.symbol,
+        },
+        resolvedMetadata: {
+          contract: token.contract,
+          tokenId: token.token_id,
+          tokenName: token.name,
+          nftName: token.name,
+          description: token.description,
+          media: token.thumbnail_uri?.replace(
+            "ipfs://",
+            getEnv("IPFS_RESOLVER")
+          ),
+          properties: [],
+          // wtf
+          links: { opensea: "", rarible: "", etherscan: "" },
+        },
+      };
+      return nft;
+    });
+
   const accountShape = {
     id: accountId,
     operations,
@@ -116,6 +154,7 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
     blockHeight,
     lastSyncDate: new Date(),
     tezosResources,
+    nfts,
   };
 
   return accountShape;
@@ -237,9 +276,7 @@ const txToOp =
       blockHash,
       accountId,
       date: new Date(timestamp),
-      extra: {
-        id,
-      },
+      extra: { id },
       hasFailed,
     };
   };
@@ -264,4 +301,21 @@ const fetchAllTransactions = async (
     }
   } while (--maxIteration);
   return txs;
+};
+
+const fetchAllTokens = async (address: string): Promise<TokenBalance[]> => {
+  let all: TokenBalance[] = [];
+  const size = 50;
+  let maxIteration = 20; // safe limit
+  do {
+    // FIXME not sure what is going on here
+    const r = await bcd.getTokenBalances(address, {
+      sort_by: "balance",
+      size,
+      offset: all.length,
+    });
+    if (r.length === 0) return all;
+    all = all.concat(r);
+  } while (--maxIteration);
+  return all;
 };

@@ -949,20 +949,34 @@ export function toAccountRaw({
   return res;
 }
 
-export function toNFTRaw({ id, tokenId, amount, collection }: NFT): NFTRaw {
+export function toNFTRaw({
+  id,
+  tokenId,
+  amount,
+  collection,
+  resolvedMetadata,
+}: NFT): NFTRaw {
   return {
     id,
     tokenId,
     amount: amount.toFixed(),
     collection,
+    resolvedMetadata,
   };
 }
 
-export function fromNFTRaw({ id, tokenId, amount, collection }: NFTRaw): NFT {
+export function fromNFTRaw({
+  id,
+  tokenId,
+  amount,
+  collection,
+  resolvedMetadata,
+}: NFTRaw): NFT {
   return {
     id,
     tokenId,
     amount: new BigNumber(amount),
     collection,
+    resolvedMetadata,
   };
 }

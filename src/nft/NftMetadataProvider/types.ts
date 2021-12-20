@@ -1,4 +1,4 @@
-import { NFTMetadataResponse } from "../../types";
+import { NFTMetadataResponse, NFTMetadataResult } from "../../types";
 
 export type NFTResourceQueued = {
   status: "queued";
@@ -10,7 +10,7 @@ export type NFTResourceLoading = {
 
 export type NFTResourceLoaded = {
   status: "loaded";
-  metadata: Pick<NFTMetadataResponse, "result">;
+  metadata: NFTMetadataResult | null;
   updatedAt: number;
 };
 

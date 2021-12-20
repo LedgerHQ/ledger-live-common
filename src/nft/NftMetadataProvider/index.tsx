@@ -105,7 +105,37 @@ export function useNftMetadata(
 }
 
 export function useNftResource(nft: NFT | undefined): NFTResource {
-  return useNftMetadata(nft?.collection.contract, nft?.tokenId);
+  const contract = nft?.collection?.contract;
+  const tokenId = nft?.tokenId;
+  const { cache, loadNFTMetadata } = useContext(NftMetadataContext);
+
+  const key = contract && tokenId ? getNftKey(contract, tokenId) : "";
+
+  const cachedData = cache[key];
+  const metadata = nft?.resolvedMetadata;
+
+  useEffect(() => {
+    if (!contract || !tokenId || metadata) return;
+    if (!cachedData || isOutdated(cachedData)) {
+      loadNFTMetadata(contract, tokenId);
+    }
+  }, [contract, tokenId, cachedData, metadata, loadNFTMetadata]);
+
+  if (metadata) {
+    return {
+      status: "loaded",
+      metadata,
+      updatedAt: Date.now(),
+    };
+  }
+
+  if (cachedData) {
+    return cachedData;
+  } else {
+    return {
+      status: "queued",
+    };
+  }
 }
 
 export function useNftAPI(): NFTMetadataContextAPI {
@@ -166,17 +196,18 @@ export function NftMetadataProvider({
               }));
               break;
             case 200:
-              setState((oldState) => ({
-                ...oldState,
-                cache: {
-                  ...oldState.cache,
-                  [key]: {
-                    status: "loaded",
-                    metadata: result || {},
-                    updatedAt: Date.now(),
+              if (result)
+                setState((oldState) => ({
+                  ...oldState,
+                  cache: {
+                    ...oldState.cache,
+                    [key]: {
+                      status: "loaded",
+                      metadata: result,
+                      updatedAt: Date.now(),
+                    },
                   },
-                },
-              }));
+                }));
               break;
             default:
               break;

@@ -115,6 +115,11 @@ const envDefinitions = {
     parser: stringParser,
     desc: "tzkt.io explorer",
   },
+  API_TEZOS_BETTER_CALL_DEV_API: {
+    def: "https://api.better-call.dev",
+    parser: stringParser,
+    desc: "better-call.dev API is used for Tezos NFTs",
+  },
   API_TEZOS_NODE: {
     def: "https://xtz-node.api.live.ledger.com",
     parser: stringParser,
@@ -289,6 +294,11 @@ const envDefinitions = {
     def: "http://localhost:20000",
     parser: stringParser,
     desc: "Ledger satstack Bitcoin explorer API",
+  },
+  IPFS_RESOLVER: {
+    def: "https://cloudflare-ipfs.com/ipfs/",
+    parser: stringParser,
+    desc: "url to concat a ipfs hash to resolve a resource",
   },
   DISABLE_APP_VERSION_REQUIREMENTS: {
     def: false,
