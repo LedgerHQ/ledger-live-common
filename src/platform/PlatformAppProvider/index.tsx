@@ -15,7 +15,9 @@ import { getLocalManifest } from "./helpers";
 // @ts-expect-error empty object creates an error
 const PlatformAppContext = createContext<PlatformAppContextType>({});
 const initialState: State = {
-  localManifests: getEnv('PLATFORM_LOCAL_MANIFEST_PATH') ? getLocalManifest(getEnv('PLATFORM_LOCAL_MANIFEST_PATH')) : new Map(),
+  localManifests: getEnv("PLATFORM_LOCAL_MANIFEST_PATH")
+    ? getLocalManifest(getEnv("PLATFORM_LOCAL_MANIFEST_PATH"))
+    : new Map(),
   remoteManifests: new Map(),
   isLoading: false,
   lastUpdateTime: undefined,

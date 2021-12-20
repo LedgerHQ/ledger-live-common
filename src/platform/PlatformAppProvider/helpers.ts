@@ -7,7 +7,7 @@ export type FilterParams = {
   version?: string;
 };
 import path from "path";
-import { readFile } from "fs";
+import { readFileSync } from "fs";
 
 function matchVersion(filterParams: FilterParams, manifest: AppManifest) {
   return (
@@ -55,25 +55,24 @@ export function mergeManifestLists(
   return [...list1.filter((elem) => !newIds.has(elem.id)), ...list2];
 }
 
-export function getLocalManifest(fileName) {
-  const fileAbsolutePath = path.resolve(fileName);
+export function getLocalManifest(filename) {
+  console.info(filename);
+  const fileAbsolutePath = path.resolve(filename);
+  console.info(fileAbsolutePath);
   let manifestMap;
 
-  readFile(fileAbsolutePath, (readError, data) => {
-    if (!readError) {
-      try {
-        const manifest = JSON.parse(data.toString());
-        manifestMap = new Map(manifest);
+  try {
+    const data = readFileSync(fileAbsolutePath);
+    const manifest = JSON.parse(data.toString());
+    manifestMap = new Map(manifest);
 
-        // Array.isArray(manifest)
-        //  ? manifest.forEach(m => new Map(m))
-        //  :
-        // TODO: PLEASE HALP ME HANDLE SEVERAL Dapps at a time
-      } catch (parseError) {
-        console.error("local manifest readFile error:", parseError);
-      }
-    }
-  });
+    // Array.isArray(manifest)
+    //  ? manifest.forEach(m => new Map(m))
+    //  :
+    // TODO: PLEASE HALP ME HANDLE SEVERAL Dapps at a time
+  } catch (parseError) {
+    console.info("local manifest readFile error:", parseError);
+  }
 
   return manifestMap;
 }
