@@ -34,6 +34,8 @@ import { drainSeqAsyncGen } from "../../utils";
 import { Awaited } from "../../logic";
 import { ChainAPI } from ".";
 import { VoteAccountInfo } from "./account/vote";
+import { parseStakeAccountInfo } from "./account/parser";
+import { StakeAccountInfo } from "./account/stake";
 
 const MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
 
@@ -41,9 +43,18 @@ type ParsedOnChainTokenAccount = Awaited<
   ReturnType<Connection["getParsedTokenAccountsByOwner"]>
 >["value"][number];
 
+type ParsedOnChainStakeAccount = Awaited<
+  ReturnType<Connection["getParsedProgramAccounts"]>
+>[number];
+
 export type ParsedOnChainTokenAccountWithInfo = {
   onChainAcc: ParsedOnChainTokenAccount;
   info: TokenAccountInfo;
+};
+
+export type ParsedOnChainStakeAccountWithInfo = {
+  onChainAcc: ParsedOnChainStakeAccount;
+  info: StakeAccountInfo;
 };
 
 export function toTokenAccountWithInfo(
@@ -52,6 +63,17 @@ export function toTokenAccountWithInfo(
   const parsedInfo = onChainAcc.account.data.parsed.info;
   const info = parseTokenAccountInfo(parsedInfo);
   return { onChainAcc, info };
+}
+
+export function toStakeAccountWithInfo(
+  onChainAcc: ParsedOnChainStakeAccount
+): ParsedOnChainStakeAccountWithInfo | undefined {
+  if ("parsed" in onChainAcc.account.data) {
+    const parsedInfo = onChainAcc.account.data.parsed.info;
+    const info = parseStakeAccountInfo(parsedInfo);
+    return { onChainAcc, info };
+  }
+  return undefined;
 }
 
 export type TransactionDescriptor = {

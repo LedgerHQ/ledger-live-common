@@ -10,6 +10,7 @@ import {
   FeeCalculator,
   PublicKey,
   SignaturesForAddressOptions,
+  StakeProgram,
 } from "@solana/web3.js";
 import { Awaited } from "../../logic";
 
@@ -31,6 +32,14 @@ export type ChainAPI = Readonly<{
   getParsedTokenAccountsByOwner: (
     address: string
   ) => ReturnType<Connection["getParsedTokenAccountsByOwner"]>;
+
+  getStakeAccountsByStakeAuth: (
+    authAddr: string
+  ) => ReturnType<Connection["getParsedProgramAccounts"]>;
+
+  getStakeAccountsByWithdrawAuth: (
+    authAddr: string
+  ) => ReturnType<Connection["getParsedProgramAccounts"]>;
 
   getSignaturesForAddress: (
     address: string,
@@ -85,6 +94,31 @@ export function getChainAPI(config: Config): ChainAPI {
       connection().getParsedTokenAccountsByOwner(new PublicKey(address), {
         programId: TOKEN_PROGRAM_ID,
       }),
+
+    getStakeAccountsByStakeAuth: (authAddr: string) =>
+      connection().getParsedProgramAccounts(StakeProgram.programId, {
+        filters: [
+          {
+            memcmp: {
+              offset: 12,
+              bytes: authAddr,
+            },
+          },
+        ],
+      }),
+
+    getStakeAccountsByWithdrawAuth: (authAddr: string) =>
+      connection().getParsedProgramAccounts(StakeProgram.programId, {
+        filters: [
+          {
+            memcmp: {
+              offset: 44,
+              bytes: authAddr,
+            },
+          },
+        ],
+      }),
+
     getSignaturesForAddress: (
       address: string,
       opts?: SignaturesForAddressOptions

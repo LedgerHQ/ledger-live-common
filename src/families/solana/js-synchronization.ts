@@ -9,7 +9,12 @@ import {
 import BigNumber from "bignumber.js";
 
 import { emptyHistoryCache } from "../../account";
-import { getTransactions, TransactionDescriptor } from "./api/chain/web3";
+import {
+  getTransactions,
+  ParsedOnChainStakeAccountWithInfo,
+  toStakeAccountWithInfo,
+  TransactionDescriptor,
+} from "./api/chain/web3";
 import { getTokenById } from "@ledgerhq/cryptoassets";
 import { encodeOperationId } from "../../operation";
 import {
@@ -20,7 +25,18 @@ import {
   toTokenMint,
 } from "./logic";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-import { compact, filter, groupBy, keyBy, toPairs, pipe, map } from "lodash/fp";
+import {
+  compact,
+  filter,
+  groupBy,
+  keyBy,
+  toPairs,
+  pipe,
+  map,
+  uniqBy,
+  flow,
+  flowRight,
+} from "lodash/fp";
 import { parseQuiet } from "./api/chain/program";
 import {
   ParsedConfirmedTransactionMeta,
@@ -33,6 +49,8 @@ import {
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   toTokenAccountWithInfo,
 } from "./api/chain/web3";
+import { drainSeqAsyncGen } from "./utils";
+import { SolanaStake } from "./types";
 
 type OnChainTokenAccount = Awaited<
   ReturnType<typeof getAccount>
@@ -54,6 +72,7 @@ export const getAccountShapeWithAPI = async (
     balance: mainAccBalance,
     spendableBalance: mainAccSpendableBalance,
     tokenAccounts: onChaintokenAccounts,
+    stakeAccounts: onChainStakeAccounts,
   } = await getAccount(mainAccAddress, api);
 
   const mainAccountId = encodeAccountId({
@@ -122,6 +141,31 @@ export const getAccountShapeWithAPI = async (
 
     nextSubAccs.push(nextSubAcc);
   }
+
+  const stakes: SolanaStake[] = onChainStakeAccounts.map((acc) => {
+    const {
+      info: { meta, stake },
+    } = acc;
+    return {
+      balance: acc.onChainAcc.account.lamports,
+      hasStakeAuth: meta.authorized.staker.toBase58() === mainAccAddress,
+      hasWithdrawAuth: meta.authorized.withdrawer.toBase58() === mainAccAddress,
+      stakeAccAddr: acc.onChainAcc.pubkey.toBase58(),
+      lockup:
+        meta.lockup.unixTimestamp === 0
+          ? undefined
+          : {
+              unixTimestamp: meta.lockup.unixTimestamp,
+            },
+      delegation:
+        stake === null
+          ? undefined
+          : {
+              stake: stake.delegation.stake.toNumber(),
+              voteAddr: stake.delegation.voter.toBase58(),
+            },
+    };
+  });
 
   const mainAccountLastTxSignature = mainInitialAcc?.operations[0]?.hash;
 
@@ -525,6 +569,7 @@ async function getAccount(
   spendableBalance: BigNumber;
   blockHeight: number;
   tokenAccounts: ParsedOnChainTokenAccountWithInfo[];
+  stakeAccounts: ParsedOnChainStakeAccountWithInfo[];
 }> {
   const balanceLamportsWithContext = await api.getBalanceAndContext(address);
 
@@ -537,13 +582,26 @@ async function getAccount(
     .then(map(toTokenAccountWithInfo));
     */
 
+  const stakeAccountsRaw = [
+    ...(await api.getStakeAccountsByStakeAuth(address)),
+    ...(await api.getStakeAccountsByWithdrawAuth(address)),
+  ];
+
+  const stakeAccounts = flow(
+    () => stakeAccountsRaw,
+    uniqBy((acc) => acc.pubkey.toBase58()),
+    map(toStakeAccountWithInfo),
+    compact
+  )();
+
   const balance = new BigNumber(balanceLamportsWithContext.value);
   const blockHeight = balanceLamportsWithContext.context.slot;
 
   return {
-    tokenAccounts,
     balance,
     spendableBalance: balance,
     blockHeight,
+    tokenAccounts,
+    stakeAccounts,
   };
 }

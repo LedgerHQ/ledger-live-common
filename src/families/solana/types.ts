@@ -196,4 +196,26 @@ export type TransactionRaw = TransactionCommonRaw & {
   };
 };
 
+export type SolanaStake = {
+  stakeAccAddr: string;
+  hasStakeAuth: boolean;
+  hasWithdrawAuth: boolean;
+  lockup:
+    | {
+        unixTimestamp: number;
+      }
+    | undefined;
+  delegation:
+    | {
+        stake: number;
+        voteAddr: string;
+      }
+    | undefined;
+  balance: number;
+};
+
+export type SolanaResources = {
+  stakes: SolanaStake[];
+};
+
 export const reflect = (_declare: unknown): void => {};

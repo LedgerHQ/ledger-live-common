@@ -65,6 +65,18 @@ export function cached(api: ChainAPI): ChainAPI {
       minutes(1)
     ),
 
+    getStakeAccountsByStakeAuth: makeLRUCache(
+      api.getStakeAccountsByStakeAuth,
+      cacheKeyAddress,
+      minutes(1)
+    ),
+
+    getStakeAccountsByWithdrawAuth: makeLRUCache(
+      api.getStakeAccountsByWithdrawAuth,
+      cacheKeyAddress,
+      minutes(1)
+    ),
+
     getRecentBlockhash: makeLRUCache(
       api.getRecentBlockhash,
       cacheKeyEmpty,
