@@ -35,7 +35,6 @@ import {
   map,
   uniqBy,
   flow,
-  flowRight,
 } from "lodash/fp";
 import { parseQuiet } from "./api/chain/program";
 import {
@@ -50,7 +49,7 @@ import {
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   toTokenAccountWithInfo,
 } from "./api/chain/web3";
-import { drainSeq, drainSeqAsyncGen } from "./utils";
+import { drainSeq } from "./utils";
 import { SolanaStake } from "./types";
 
 type OnChainTokenAccount = Awaited<
@@ -196,7 +195,9 @@ export const getAccountShapeWithAPI = async (
     spendableBalance: mainAccSpendableBalance,
     operations: mainAccTotalOperations,
     operationsCount: mainAccTotalOperations.length,
-    //solanaResources:
+    solanaResources: {
+      stakes,
+    },
   };
 
   return shape;

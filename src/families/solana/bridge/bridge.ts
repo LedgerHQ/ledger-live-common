@@ -9,6 +9,7 @@ import type {
   AccountBridge,
   AccountLike,
   BroadcastFnSignature,
+  CryptoCurrency,
   CurrencyBridge,
   SignOperationFnSignature,
 } from "../../../types";
@@ -20,6 +21,7 @@ import createTransaction, { updateTransaction } from "../js-createTransaction";
 import { signOperationWithAPI } from "../js-signOperation";
 import { broadcastWithAPI } from "../js-broadcast";
 import { prepareTransaction as prepareTransactionWithAPI } from "../js-prepareTransaction";
+import { preloadWithAPI } from "../js-preload";
 import { ChainAPI, Config } from "../api";
 import { makeLRUCache } from "../../../cache";
 import { clusterByCurrencyId } from "../utils";
@@ -130,6 +132,19 @@ function makeSign(
   };
 }
 
+function makePreload(
+  getChainAPI: (config: Config) => Promise<ChainAPI>
+): CurrencyBridge["preload"] {
+  const preload = (currency: CryptoCurrency): Promise<Record<string, any>> => {
+    const config = {
+      cluster: clusterByCurrencyId(currency.id),
+    };
+    const api = () => getChainAPI(config);
+    return preloadWithAPI(api);
+  };
+  return preload;
+}
+
 export function makeBridges({
   getAPI,
   getQueuedAPI,
@@ -157,7 +172,7 @@ export function makeBridges({
   };
 
   const currencyBridge: CurrencyBridge = {
-    preload: async (): Promise<any> => {},
+    preload: makePreload(getQueuedAndCachedAPI),
     hydrate: (): void => {},
     scanAccounts: scan,
   };

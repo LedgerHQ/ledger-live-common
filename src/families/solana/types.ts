@@ -227,4 +227,20 @@ export type SolanaResourcesRaw = {
   stakes: string;
 };
 
+export type SolanaValidator = {
+  voteAccAddr: string;
+};
+
+export type SolanaPreloadDataV1 = {
+  version: "1";
+  validators: SolanaValidator[];
+};
+
+// exists for discriminated union to work
+export type SolanaPreloadDataV2 = {
+  version: "2";
+};
+
+export type SolanaPreloadData = SolanaPreloadDataV1 | SolanaPreloadDataV2;
+
 export const reflect = (_declare: unknown): void => {};

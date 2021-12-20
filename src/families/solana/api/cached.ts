@@ -83,6 +83,12 @@ export function cached(api: ChainAPI): ChainAPI {
       minutes(1)
     ),
 
+    getVoteAccounts: makeLRUCache(
+      api.getVoteAccounts,
+      cacheKeyEmpty,
+      minutes(1)
+    ),
+
     getRecentBlockhash: makeLRUCache(
       api.getRecentBlockhash,
       cacheKeyEmpty,
