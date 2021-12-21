@@ -7,7 +7,11 @@ const initialData: SolanaPreloadDataV1 = {
   validators: [],
 };
 
-const dataByCurrency = new Map<string, SolanaPreloadDataV1>();
+const dataByCurrency = new Map<string, SolanaPreloadDataV1>([
+  ["solana", initialData],
+  ["solana_testnet", initialData],
+  ["solana_devnet", initialData],
+]);
 
 const dataUpdatesByCurrency = new Map([
   ["solana", new BehaviorSubject<SolanaPreloadDataV1>(initialData)],
@@ -15,7 +19,7 @@ const dataUpdatesByCurrency = new Map([
   ["solana_devnet", new BehaviorSubject<SolanaPreloadDataV1>(initialData)],
 ]);
 
-export function setData(
+export function setSolanaPreloadData(
   data: SolanaPreloadDataV1,
   currency: CryptoCurrency
 ): void {
@@ -27,7 +31,7 @@ export function setData(
   subject.next(data);
 }
 
-export function getData(
+export function getSolanaPreloadData(
   currency: CryptoCurrency
 ): Observable<SolanaPreloadDataV1> {
   const subject = dataUpdatesByCurrency.get(currency.id);
@@ -35,4 +39,14 @@ export function getData(
     throw new Error(`unsupported currency ${currency.id}`);
   }
   return subject.asObservable();
+}
+
+export function getCurrentSolanaPreloadData(
+  currency: CryptoCurrency
+): SolanaPreloadDataV1 {
+  const data = dataByCurrency.get(currency.id);
+  if (data === undefined) {
+    throw new Error(`unsupported currency ${currency.id}`);
+  }
+  return data;
 }

@@ -2,9 +2,10 @@ import { CryptoCurrency } from "@ledgerhq/cryptoassets";
 import { ChainAPI } from "./api";
 import { SolanaPreloadData, SolanaPreloadDataV1 } from "./types";
 import { assertUnreachable } from "./utils";
-import { setData as setPreloadData } from "./js-preload-data";
+import { setSolanaPreloadData as setPreloadData } from "./js-preload-data";
 
 export async function preloadWithAPI(
+  currency: CryptoCurrency,
   getAPI: () => Promise<ChainAPI>
 ): Promise<Record<string, any>> {
   const api = await getAPI();
@@ -17,6 +18,8 @@ export async function preloadWithAPI(
       voteAccAddr: acc.votePubkey,
     })),
   };
+
+  setPreloadData(data, currency);
 
   return data;
 }
