@@ -55,15 +55,16 @@ export function mergeManifestLists(
   return [...list1.filter((elem) => !newIds.has(elem.id)), ...list2];
 }
 
-export function getLocalManifest(filename) {
-  console.info(filename);
-  const fileAbsolutePath = path.resolve(filename);
-  console.info(fileAbsolutePath);
+export function getLocalManifest(fileName: any) {
+  const filePath = path.resolve(fileName);
+  console.info(filePath);
   let manifestMap;
 
   try {
-    const data = readFileSync(fileAbsolutePath);
+    const data = readFileSync(filePath);
+    console.info(data);
     const manifest = JSON.parse(data.toString());
+    console.info(manifest);
     manifestMap = new Map(manifest);
 
     // Array.isArray(manifest)
@@ -71,7 +72,7 @@ export function getLocalManifest(filename) {
     //  :
     // TODO: PLEASE HALP ME HANDLE SEVERAL Dapps at a time
   } catch (parseError) {
-    console.info("local manifest readFile error:", parseError);
+    console.info("readFile error:", parseError);
   }
 
   return manifestMap;
