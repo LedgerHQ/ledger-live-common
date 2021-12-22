@@ -6,15 +6,15 @@ import {
   TransactionStatus,
   SignOperationEvent,
   CryptoCurrency,
+  AccountLike,
 } from "../../../types";
-// import { getMaxEstimatedBalance } from "../logic";
+import invariant from "invariant";
 import type {
-  // CosmosResources,
   CosmosValidatorItem,
+  StatusErrorMap,
   Transaction,
 } from "../types";
 import { getValidators, hydrateValidators } from "../validators";
-// import { getAccountInfo } from "../../../api/Cosmos";
 import { toHex } from "@cosmjs/encoding";
 import { BigNumber } from "bignumber.js";
 import {
@@ -23,12 +23,13 @@ import {
   makeScanAccounts,
   GetAccountShape,
 } from "../../../bridge/jsHelpers";
-import { encodeAccountId } from "../../../account";
+import { encodeAccountId, getMainAccount } from "../../../account";
 import {
   getTransactions,
   getHeight,
   getAllBalances,
-  // getValidators,
+  getFees,
+  // createWallet,
 } from "../../../api/Cosmos";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Cosmos from "@ledgerhq/hw-app-str";
@@ -37,16 +38,43 @@ import {
   asSafeCosmosPreloadData,
   setCosmosPreloadData,
 } from "../preloadedData";
+import {
+  AmountRequired,
+  FeeNotLoaded,
+  InvalidAddress,
+  InvalidAddressBecauseDestinationIsAlsoSource,
+  NotEnoughBalance,
+  RecommendUndelegation,
+} from "@ledgerhq/errors";
+// import { validateRecipient } from "../../../bridge/shared";
+import {
+  COSMOS_MAX_DELEGATIONS,
+  COSMOS_MAX_REDELEGATIONS,
+  COSMOS_MAX_UNBONDINGS,
+  getMaxEstimatedBalance,
+} from "../logic";
+import {
+  ClaimRewardsFeesWarning,
+  CosmosDelegateAllFundsWarning,
+  CosmosRedelegationInProgress,
+  CosmosTooManyValidators,
+  NotEnoughDelegationBalance,
+} from "../../../errors";
+import { getAbandonSeedAddress } from "@ledgerhq/cryptoassets";
+import { log } from "@ledgerhq/logs";
+import CryptoOrgApp from "@ledgerhq/hw-app-cosmos";
+import { open, close } from "../../../hw";
+import { encodeOperationId } from "../../../operation";
 
 // the balance does not update straightaway so we should ignore recent operations if they are in pending for a bit
 const preferPendingOperationsUntilBlockValidation = 35;
 
-const txToOps = (info: any, txs: any): any => {
-  const { id, address } = info;
+const txToOps = (info: any, id: string, txs: any): any => {
+  const { address } = info;
   const ops: Operation[] = [];
 
   for (const tx of txs) {
-    const hash = toHex(tx.hash);
+    const hash = toHex(tx.hash).toUpperCase();
     const txlog = JSON.parse(tx.result.log);
 
     let from;
@@ -63,7 +91,7 @@ const txToOps = (info: any, txs: any): any => {
             to = a.value;
             break;
           case "amount":
-            value = new BigNumber(a.value.replace("uatom", "") / 1000000);
+            value = new BigNumber(a.value.replace("uatom", ""));
             break;
         }
       }
@@ -71,15 +99,14 @@ const txToOps = (info: any, txs: any): any => {
 
     const sending = address === from;
     const receiving = address === to;
-    const fee = new BigNumber(0);
 
     if (sending) {
       ops.push({
         id: `${id}-${hash}-OUT`,
         hash,
         type: "OUT",
-        value: value.plus(fee),
-        fee,
+        value: value.plus(tx.fee),
+        fee: tx.fee,
         blockHeight: tx.height,
         blockHash: null,
         accountId: id,
@@ -96,7 +123,7 @@ const txToOps = (info: any, txs: any): any => {
         hash,
         type: "IN",
         value,
-        fee,
+        fee: tx.fee,
         blockHeight: tx.height,
         blockHash: null,
         accountId: id,
@@ -131,44 +158,6 @@ const postSync = (initial: Account, parent: Account): Account => {
   return parent;
 };
 
-/*
-const filterDelegation = (delegations) => {
-  return delegations.filter((delegation) => delegation.amount.gt(0));
-};
-*/
-
-/*
-const getCosmosResources = async (
-  account: Account,
-  coreAccount
-): Promise<CosmosResources> => {
-  const flattenDelegation = await getFlattenDelegation(cosmosAccount);
-  const flattenUnbonding = await getFlattenUnbonding(cosmosAccount);
-  const flattenRedelegation = await getFlattenRedelegations(cosmosAccount);
-
-  const res = {
-    delegations: filterDelegation(flattenDelegation),
-    redelegations: flattenRedelegation,
-    unbondings: flattenUnbonding,
-    delegatedBalance: flattenDelegation.reduce(
-      (old, current) => old.plus(current.amount),
-      new BigNumber(0)
-    ),
-    pendingRewardsBalance: flattenDelegation.reduce(
-      (old, current) => old.plus(current.pendingRewards),
-      new BigNumber(0)
-    ),
-    unbondingBalance: flattenUnbonding.reduce(
-      (old, current) => old.plus(current.amount),
-      new BigNumber(0)
-    ),
-    withdrawAddress: "",
-  };
-
-  return res;
-};
-*/
-
 const getAccountShape: GetAccountShape = async (info) => {
   const { address, currency, derivationMode } = info;
 
@@ -180,10 +169,11 @@ const getAccountShape: GetAccountShape = async (info) => {
     derivationMode,
   });
 
-  const blockHeight = await getHeight();
   const balance = await getAllBalances(address);
+
+  const blockHeight = await getHeight();
   const txs = await getTransactions(address);
-  const operations = txToOps(info, txs);
+  const operations = txToOps(info, accountId, txs);
 
   const shape = {
     id: accountId,
@@ -192,7 +182,6 @@ const getAccountShape: GetAccountShape = async (info) => {
     operationsCount: operations.length,
     blockHeight,
     cosmosResources: {
-      // todo: stacking
       delegations: [],
       redelegations: [],
       unbondings: [],
@@ -201,23 +190,11 @@ const getAccountShape: GetAccountShape = async (info) => {
       unbondingBalance: new BigNumber(0),
       withdrawAddress: "",
     },
-    // used: fromCosmosResourcesRaw,
   };
 
-  // shape.cosmosResources = await getCosmosResources(info, coreAccount);
-  // shape.spendableBalance = getMaxEstimatedBalance(shape, new BigNumber(0));
-
-  if (shape.spendableBalance.lt(0)) {
+  if (shape.spendableBalance && shape.spendableBalance.lt(0)) {
     shape.spendableBalance = new BigNumber(0);
   }
-
-  /*
-  if (!shape.used) {
-    const cosmosAccount = await shape.asCosmosLikeAccount();
-    const seq = await cosmosAccount.getSequence();
-    shape.used = seq != "";
-  }
-  */
 
   return { ...shape, operations };
 };
@@ -249,35 +226,298 @@ const updateTransaction = (t, patch) => {
 const receive = makeAccountBridgeReceive();
 
 const estimateMaxSpendable = async ({
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   account,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   parentAccount,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   transaction,
-}) => {
-  const s = await getTransactionStatus();
+}: {
+  account: AccountLike;
+  parentAccount: Account;
+  transaction: Transaction;
+}): Promise<BigNumber> => {
+  const mainAccount = getMainAccount(account, parentAccount);
+  const t = await prepareTransaction(mainAccount, {
+    ...createTransaction(),
+    ...transaction,
+    recipient:
+      transaction?.recipient || getAbandonSeedAddress(mainAccount.currency.id),
+    useAllAmount: true,
+  });
+  const s = await getTransactionStatus(mainAccount, t);
   return s.amount;
 };
 
-const getTransactionStatus = (): Promise<TransactionStatus> => {
-  const errors: {
-    gasPrice?: Error;
-    gasLimit?: Error;
-    recipient?: Error;
-  } = {};
-  const warnings: {
-    gasLimit?: Error;
-  } = {};
-  const result = {
+const getDelegateTransactionStatus = async (
+  a: Account,
+  t: Transaction,
+  isPreValidation = false
+): Promise<TransactionStatus> => {
+  const errors: StatusErrorMap = {};
+  const warnings: StatusErrorMap = {};
+  if (
+    t.validators.some(
+      (v) => !v.address || !v.address.includes("cosmosvaloper")
+    ) ||
+    t.validators.length === 0
+  )
+    errors.recipient = new InvalidAddress(undefined, {
+      currencyName: a.currency.name,
+    });
+
+  if (t.validators.length > COSMOS_MAX_DELEGATIONS) {
+    errors.validators = new CosmosTooManyValidators();
+  }
+
+  let amount = t.validators.reduce(
+    (old, current) => old.plus(current.amount),
+    new BigNumber(0)
+  );
+
+  if (amount.eq(0)) {
+    errors.amount = new AmountRequired();
+  }
+
+  const estimatedFees = t.fees || new BigNumber(0);
+
+  if (!isPreValidation && !t.fees) {
+    errors.fees = new FeeNotLoaded();
+  }
+
+  let totalSpent = amount.plus(estimatedFees);
+
+  if (totalSpent.eq(a.spendableBalance)) {
+    warnings.delegate = new CosmosDelegateAllFundsWarning();
+  }
+
+  if (
+    !errors.recipient &&
+    !errors.amount &&
+    (amount.lt(0) || totalSpent.gt(a.spendableBalance))
+  ) {
+    errors.amount = new NotEnoughBalance();
+    amount = new BigNumber(0);
+    totalSpent = new BigNumber(0);
+  }
+
+  return Promise.resolve({
     errors,
     warnings,
-    amount: new BigNumber(0),
-    totalSpent: new BigNumber(0),
-    estimatedFees: new BigNumber(0),
-  };
+    estimatedFees,
+    amount,
+    totalSpent,
+  });
+};
 
-  return Promise.resolve(result);
+const getSendTransactionStatus = async (
+  a: Account,
+  t: Transaction,
+  isPreValidation = false
+): Promise<TransactionStatus> => {
+  const errors: StatusErrorMap = {};
+  const warnings: StatusErrorMap = {};
+
+  if (a.freshAddress === t.recipient) {
+    errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
+    /*
+  } else {
+    const { recipientError, recipientWarning } = await validateRecipient(
+      a.currency,
+      t.recipient
+    );
+
+    if (recipientError) {
+      errors.recipient = recipientError;
+    }
+
+    if (recipientWarning) {
+      warnings.recipient = recipientWarning;
+    }
+  */
+  }
+
+  let amount = t.amount;
+
+  if (amount.lte(0) && !t.useAllAmount) {
+    errors.amount = new AmountRequired();
+  }
+
+  t.fees = await getFees();
+  const estimatedFees = t.fees || new BigNumber(0);
+
+  if (!isPreValidation && (!t.fees || !t.fees.gt(0))) {
+    errors.fees = new FeeNotLoaded();
+  }
+
+  amount = t.useAllAmount ? getMaxEstimatedBalance(a, estimatedFees) : amount;
+  const totalSpent = amount.plus(estimatedFees);
+
+  if (
+    (amount.lte(0) && t.useAllAmount) || // if use all Amount sets an amount at 0
+    (!errors.recipient && !errors.amount && totalSpent.gt(a.spendableBalance)) // if spendable balance lower than total
+  ) {
+    errors.amount = new NotEnoughBalance();
+  }
+
+  if (
+    a.cosmosResources &&
+    a.cosmosResources.delegations.length > 0 &&
+    t.useAllAmount
+  ) {
+    warnings.amount = new RecommendUndelegation();
+  }
+  log("dump", "promise", errors);
+  return Promise.resolve({
+    errors,
+    warnings,
+    estimatedFees,
+    amount,
+    totalSpent,
+  });
+};
+
+const redelegationStatusError = (a: Account, t: Transaction) => {
+  if (a.cosmosResources) {
+    const redelegations = a.cosmosResources.redelegations;
+    invariant(
+      redelegations.length < COSMOS_MAX_REDELEGATIONS,
+      "redelegation should not have more than 6 entries"
+    );
+    if (
+      redelegations.some((redelegation) => {
+        const dstValidator = redelegation.validatorDstAddress;
+        return (
+          dstValidator === t.cosmosSourceValidator &&
+          redelegation.completionDate > new Date()
+        );
+      })
+    )
+      return new CosmosRedelegationInProgress();
+    if (t.cosmosSourceValidator === t.validators[0].address)
+      return new InvalidAddressBecauseDestinationIsAlsoSource();
+  }
+
+  return isDelegable(a, t.cosmosSourceValidator, t.validators[0].amount);
+};
+
+const isDelegable = (
+  a: Account,
+  address: string | undefined | null,
+  amount: BigNumber
+) => {
+  const { cosmosResources } = a;
+  invariant(cosmosResources, "cosmosResources should exist");
+
+  if (
+    cosmosResources &&
+    cosmosResources.delegations.some(
+      (delegation) =>
+        delegation.validatorAddress === address && delegation.amount.lt(amount)
+    )
+  ) {
+    return new NotEnoughDelegationBalance();
+  }
+
+  return null;
+};
+
+const getTransactionStatus = async (
+  a: Account,
+  t: Transaction,
+  isPreValidation = false
+): Promise<TransactionStatus> => {
+  if (t.mode === "send") {
+    // We isolate the send transaction that it's a little bit different from the rest
+    return await getSendTransactionStatus(a, t, isPreValidation);
+  } else if (t.mode === "delegate") {
+    return await getDelegateTransactionStatus(a, t, isPreValidation);
+  }
+
+  const errors: StatusErrorMap = {};
+  const warnings: StatusErrorMap = {};
+  // here we only treat about all other mode than delegate and send
+  if (
+    t.validators.some(
+      (v) => !v.address || !v.address.includes("cosmosvaloper")
+    ) ||
+    t.validators.length === 0
+  )
+    errors.recipient = new InvalidAddress(undefined, {
+      currencyName: a.currency.name,
+    });
+
+  if (t.mode === "redelegate") {
+    const redelegationError = redelegationStatusError(a, t);
+
+    if (redelegationError) {
+      // Note : note sure if I have to put this error on this field
+      errors.redelegation = redelegationError;
+    }
+  } else if (t.mode === "undelegate") {
+    invariant(
+      a.cosmosResources &&
+        a.cosmosResources.unbondings.length < COSMOS_MAX_UNBONDINGS,
+      "unbondings should not have more than 6 entries"
+    );
+    if (t.validators.length === 0)
+      errors.recipient = new InvalidAddress(undefined, {
+        currencyName: a.currency.name,
+      });
+    const [first] = t.validators;
+    const unbondingError = first && isDelegable(a, first.address, first.amount);
+
+    if (unbondingError) {
+      errors.unbonding = unbondingError;
+    }
+  }
+
+  const validatorAmount = t.validators.reduce(
+    (old, current) => old.plus(current.amount),
+    new BigNumber(0)
+  );
+
+  if (t.mode !== "claimReward" && validatorAmount.lte(0)) {
+    errors.amount = new AmountRequired();
+  }
+
+  const estimatedFees = t.fees || new BigNumber(0);
+
+  if (!isPreValidation && !t.fees) {
+    errors.fees = new FeeNotLoaded();
+  }
+
+  let totalSpent = estimatedFees;
+
+  if (["claimReward", "claimRewardCompound"].includes(t.mode)) {
+    const { cosmosResources } = a;
+    invariant(cosmosResources, "cosmosResources should exist");
+    const claimReward =
+      t.validators.length && cosmosResources
+        ? cosmosResources.delegations.find(
+            (delegation) =>
+              delegation.validatorAddress === t.validators[0].address
+          )
+        : null;
+
+    if (claimReward && estimatedFees.gt(claimReward.pendingRewards)) {
+      warnings.claimReward = new ClaimRewardsFeesWarning();
+    }
+  }
+
+  if (
+    !errors.recipient &&
+    !errors.amount &&
+    (validatorAmount.lt(0) || totalSpent.gt(a.spendableBalance))
+  ) {
+    errors.amount = new NotEnoughBalance();
+    totalSpent = new BigNumber(0);
+  }
+
+  return Promise.resolve({
+    errors,
+    warnings,
+    estimatedFees,
+    amount: new BigNumber(0),
+    totalSpent,
+  });
 };
 
 const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
@@ -290,7 +530,6 @@ const broadcast = async ({ signedOperation: { signature } }) => {
 
 const signOperation = ({
   account,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   deviceId,
   transaction,
 }: {
@@ -298,46 +537,73 @@ const signOperation = ({
   deviceId: any;
   transaction: Transaction;
 }): Observable<SignOperationEvent> =>
-  Observable.create((o) => {
+  new Observable((o) => {
     async function main() {
-      // const transport = await open(deviceId);
+      const transport = await open(deviceId);
 
       try {
         o.next({
           type: "device-signature-requested",
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const unsigned = await prepareTransaction(account, transaction);
-        // const unsignedPayload = unsigned.signatureBase();
+        const hwApp = new CryptoOrgApp(transport);
+        const address = account.freshAddresses[0];
+        const { publicKey } = await hwApp.getAddress(
+          address.derivationPath,
+          "cosmos",
+          false
+        );
+
+        /*
+        const unsigned = await buildTransaction(
+          account,
+          transaction,
+          publicKey
+        );
+        */
         // Sign by device
-        // const hwApp = new Cosmos(transport);
-        /*
-        const { signature } = await hwApp.signTransaction(
-          account.freshAddressPath,
-          unsignedPayload
+        const { signature } = await hwApp.sign(
+          address.derivationPath,
+          "0"
+          //  unsigned.toSignDocument(0).toUint8Array()
         );
-        unsigned.addSignature(
-          account.freshAddress,
-          signature.toString("base64")
-        );
-        */
-        o.next({
-          type: "device-signature-granted",
-        });
-        /*
-         const operation = await buildOptimisticOperation(account, transaction);
-        o.next({
-          type: "signed",
-          signedOperation: {
-            operation,
-            signature: unsigned.toXDR(),
-            expirationDate: null,
-          },
-        });
-        */
+
+        // Ledger has encoded the sig in ASN1 DER format, but we need a 64-byte buffer of <r,s>
+        // DER-encoded signature from Ledger
+        if (signature != null) {
+          /*
+          const base64Sig = convertASN1toBase64(signature);
+          const signed = unsigned
+            .setSignature(
+              0,
+              utils.Bytes.fromUint8Array(new Uint8Array(base64Sig))
+            )
+            .toSigned()
+            .getHexEncoded();
+          o.next({
+            type: "device-signature-granted",
+          });
+          */
+
+          const operation = buildOptimisticOperation(
+            account,
+            transaction,
+            transaction.fees ?? new BigNumber(0),
+            false
+          );
+
+          o.next({
+            type: "signed",
+            signedOperation: {
+              operation,
+              // signature: signed,
+              signature: "signed",
+              expirationDate: null,
+            },
+          });
+        }
       } finally {
-        // close(transport, deviceId);
+        close(transport, deviceId);
       }
     }
 
@@ -375,6 +641,35 @@ const currencyBridge: CurrencyBridge = {
     setCosmosPreloadData(asSafeCosmosPreloadData(data));
   },
   scanAccounts: makeScanAccounts(getAccountShape),
+};
+
+const buildOptimisticOperation = (
+  account: Account,
+  transaction: Transaction,
+  fee: BigNumber,
+  signUsingHash: boolean
+): Operation => {
+  const type = "OUT";
+  const value = new BigNumber(transaction.amount);
+  const operation: Operation = {
+    id: encodeOperationId(account.id, "", type),
+    hash: "",
+    type,
+    value,
+    fee,
+    blockHash: null,
+    blockHeight: account.blockHeight,
+    senders: [account.freshAddress],
+    recipients: [transaction.recipient].filter(Boolean),
+    accountId: account.id,
+    // transactionSequenceNumber: getNonce(account),
+    transactionSequenceNumber: 0,
+    date: new Date(),
+    extra: {
+      signUsingHash,
+    },
+  };
+  return operation;
 };
 
 const accountBridge: AccountBridge<Transaction> = {
