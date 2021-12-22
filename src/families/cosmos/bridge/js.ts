@@ -73,9 +73,8 @@ const txToOps = (info: any, id: string, txs: any): any => {
   const { address } = info;
   const ops: Operation[] = [];
 
-  for (const tx of txs) {
-    const hash = toHex(tx.hash).toUpperCase();
-    const txlog = JSON.parse(tx.result.log);
+  for (const hash of Object.keys(txs)) {
+    const txlog = JSON.parse(txs[hash].result.log);
 
     let from;
     let to;
@@ -105,14 +104,14 @@ const txToOps = (info: any, id: string, txs: any): any => {
         id: `${id}-${hash}-OUT`,
         hash,
         type: "OUT",
-        value: value.plus(tx.fee),
-        fee: tx.fee,
-        blockHeight: tx.height,
+        value: value.plus(txs[hash].fee),
+        fee: txs[hash].fee,
+        blockHeight: txs[hash].height,
         blockHash: null,
         accountId: id,
         senders: [from],
         recipients: [to],
-        date: tx.date,
+        date: txs[hash].date,
         extra: {},
       });
     }
@@ -123,13 +122,13 @@ const txToOps = (info: any, id: string, txs: any): any => {
         hash,
         type: "IN",
         value,
-        fee: tx.fee,
-        blockHeight: tx.height,
+        fee: txs[hash].fee,
+        blockHeight: txs[hash].height,
         blockHash: null,
         accountId: id,
         senders: [from],
         recipients: [to],
-        date: tx.date,
+        date: txs[hash].date,
         extra: {},
       });
     }

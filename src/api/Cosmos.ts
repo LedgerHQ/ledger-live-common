@@ -12,7 +12,7 @@ import { CosmosClient } from "@cosmjs/launchpad";
 import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
 import { Secp256k1HdWallet } from "@cosmjs/launchpad";
 //import { DecodedTxRaw, decodeTxRaw } from "@cosmjs/proto-signing";
-import { fromHex } from "@cosmjs/encoding";
+import { fromHex, toHex } from "@cosmjs/encoding";
 import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
 
@@ -27,8 +27,8 @@ export const getTransactions = async (address: string): Promise<any> => {
   log("cosmjs", "fetch transactions");
 
   try {
-    const per_page = 5;
-    const txs: Array<any> = [];
+    const per_page = 100;
+    const txs: { [id: string]: any } = {};
     tmClient = await Tendermint34Client.connect(defaultRpcEndpoint);
 
     const data = await tmClient.txSearch({
@@ -38,13 +38,28 @@ export const getTransactions = async (address: string): Promise<any> => {
     });
 
     for (const tx of data.txs) {
-      txs.push(tx);
+      const hash = toHex(tx.hash).toUpperCase();
+      txs[hash] = tx;
     }
 
-    // todo: handle pagination to loop over requests
+    const txsDone = txs.length;
+    const nb_page = Math.ceil((data.totalCount - txsDone) / per_page);
+
+    for (let i = 2; i <= nb_page; i++) {
+      const data = await tmClient.txSearch({
+        query: `transfer.recipient='${address}'`,
+        page: i,
+        per_page: per_page,
+      });
+
+      for (const tx of data.txs) {
+        const hash = toHex(tx.hash).toUpperCase();
+        txs[hash] = tx;
+      }
+    }
 
     // fetch date and set fees
-    for (const tx of txs) {
+    for (const tx of data.txs) {
       const block = await tmClient.block(tx.height);
       tx.date = new Date(block.block.header.time);
 
@@ -60,7 +75,7 @@ export const getTransactions = async (address: string): Promise<any> => {
       }
       */
     }
-
+    
     return txs;
   } catch (e) {
     return undefined;
