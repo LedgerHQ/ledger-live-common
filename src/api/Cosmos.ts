@@ -130,7 +130,7 @@ export const getAllBalances = async (
     const data = await api.getAllBalances(address);
     return new BigNumber(data[0].amount);
   } catch (e) {
-    return undefined;
+    return new BigNumber(0);
   }
 };
 
