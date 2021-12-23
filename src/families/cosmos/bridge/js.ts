@@ -363,7 +363,7 @@ const getSendTransactionStatus = async (
   ) {
     warnings.amount = new RecommendUndelegation();
   }
-  log("dump", "promise", errors);
+
   return Promise.resolve({
     errors,
     warnings,
