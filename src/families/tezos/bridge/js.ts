@@ -241,10 +241,17 @@ const prepareTransaction = async (
       );
     }
   } catch (e) {
-    if (typeof e === "object" && e && "id" in e) {
+    if (typeof e !== "object" || !e) throw e;
+    if ("id" in e) {
       transaction.taquitoError = (e as { id: string }).id;
+    } else if ("status" in e) {
+      // in case of http 400, log & ignore (more case to handle)
+      log(
+        "taquito-network-error",
+        String((e as { message: string }).message || ""),
+        { transaction }
+      );
     } else {
-      console.error(e, transaction);
       throw e;
     }
   }

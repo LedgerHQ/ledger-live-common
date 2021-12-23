@@ -9,7 +9,7 @@ import { DeviceModelId } from "@ledgerhq/devices";
 import { getAccountDelegationSync, isAccountDelegating } from "./bakers";
 import whitelist from "./bakers.whitelist-default";
 
-const maxAccount = 30;
+const maxAccount = 12;
 
 function expectUnrevealed(account) {
   invariant(
