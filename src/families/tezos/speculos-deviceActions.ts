@@ -19,16 +19,9 @@ const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
       button: "Rr",
     },
     {
+      // device sometimes know the text of a given delegator, we're not validating the actual text
       title: "Delegate",
       button: "Rr",
-      // FIXME something going on here
-      /*
-      expectedValue: ({ transaction }) => {
-        return transaction.mode === "undelegate"
-          ? "None"
-          : transaction.recipient;
-      },
-      */
     },
     {
       title: "Delegate Name",
