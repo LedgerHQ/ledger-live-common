@@ -237,9 +237,7 @@ const txToOp =
       blockHash,
       accountId,
       date: new Date(timestamp),
-      extra: {
-        id,
-      },
+      extra: { id },
       hasFailed,
     };
   };
