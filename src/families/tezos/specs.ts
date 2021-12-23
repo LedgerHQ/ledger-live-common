@@ -6,7 +6,7 @@ import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
 import { DeviceModelId } from "@ledgerhq/devices";
-import { getAccountDelegationSync } from "./bakers";
+import { getAccountDelegationSync, isAccountDelegating } from "./bakers";
 import whitelist from "./bakers.whitelist-default";
 
 const maxAccount = 24;
@@ -70,9 +70,13 @@ const tezos: AppSpec<Transaction> = {
       },
     },
     {
-      name: "send max",
+      name: "send max (non delegating)",
       maxRun: 3,
       transaction: ({ account, siblings, bridge }) => {
+        invariant(
+          !isAccountDelegating(account),
+          "account must not be delegating"
+        );
         const sibling = pickSiblings(siblings, maxAccount);
         const recipient = sibling.freshAddress;
         return {

@@ -50,8 +50,9 @@ export const signOperation = ({
         switch (transaction.mode) {
           case "send":
             res = await tezos.contract.transfer({
+              mutez: true,
               to: transaction.recipient,
-              amount: transaction.amount.div(10 ** 6).toNumber(),
+              amount: transaction.amount.toNumber(),
               fee: transaction.fees?.toNumber() || 0,
               storageLimit: transaction.storageLimit?.toNumber() || 0,
               gasLimit: transaction.gasLimit?.toNumber() || 0,

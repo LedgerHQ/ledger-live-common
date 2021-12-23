@@ -166,8 +166,9 @@ const prepareTransaction = async (
     switch (transaction.mode) {
       case "send":
         out = await tezos.estimate.transfer({
+          mutez: true,
           to: transaction.recipient,
-          amount: transaction.amount.div(10 ** 6).toNumber(),
+          amount: transaction.amount.toNumber(),
         });
         break;
       case "delegate":
@@ -185,19 +186,11 @@ const prepareTransaction = async (
         throw new Error("unsupported mode=" + transaction.mode);
     }
 
-    transaction.totalCost = new BigNumber(out.totalCost);
-    transaction.fees = new BigNumber(out.suggestedFeeMutez);
-    transaction.gasLimit = new BigNumber(out.gasLimit);
-    transaction.storageLimit = new BigNumber(out.storageLimit);
-
-    if (!tezosResources.revealed) {
-      transaction.totalCost = transaction.totalCost.plus(DEFAULT_FEE.REVEAL);
-    }
-
     if (transaction.useAllAmount) {
       const totalFees = out.suggestedFeeMutez + out.burnFeeMutez;
-      const maxAmount = account.balance.minus(totalFees).toNumber();
-
+      const maxAmount = account.balance
+        .minus(totalFees + (tezosResources.revealed ? 0 : DEFAULT_FEE.REVEAL))
+        .toNumber();
       // from https://github.com/ecadlabs/taquito/blob/a70c64c4b105381bb9f1d04c9c70e8ef26e9241c/integration-tests/contract-empty-implicit-account-into-new-implicit-account.spec.ts#L33
       // Temporary fix, see https://gitlab.com/tezos/tezos/-/issues/1754
       // we need to increase the gasLimit and fee returned by the estimation
@@ -209,8 +202,18 @@ const prepareTransaction = async (
       const incr = increasedFee(gasBuffer, Number(out.opSize));
       transaction.fees = new BigNumber(out.suggestedFeeMutez + incr);
       transaction.totalCost = new BigNumber(totalFees + incr);
-      transaction.gasLimit = transaction.gasLimit.plus(gasBuffer);
+      transaction.gasLimit = new BigNumber(out.gasLimit + gasBuffer);
       transaction.amount = new BigNumber(maxAmount - incr);
+    } else {
+      transaction.totalCost = new BigNumber(out.totalCost);
+      transaction.fees = new BigNumber(out.suggestedFeeMutez);
+      transaction.gasLimit = new BigNumber(out.gasLimit);
+      transaction.storageLimit = new BigNumber(out.storageLimit);
+    }
+
+    transaction.storageLimit = new BigNumber(out.storageLimit);
+    if (!tezosResources.revealed) {
+      transaction.totalCost = transaction.totalCost.plus(DEFAULT_FEE.REVEAL);
     }
   } catch (e: any) {
     transaction.taquitoError = e.id;
