@@ -35,6 +35,7 @@ export const getTransactions = async (address: string): Promise<any> => {
       query: `transfer.recipient='${address}'`,
       page: 1,
       per_page: per_page,
+      order_by: "desc",
     });
 
     for (const tx of data.txs) {
@@ -50,6 +51,7 @@ export const getTransactions = async (address: string): Promise<any> => {
         query: `transfer.recipient='${address}'`,
         page: i,
         per_page: per_page,
+        order_by: "desc",
       });
 
       for (const tx of data.txs) {
