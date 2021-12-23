@@ -77,7 +77,7 @@ export const getTransactions = async (address: string): Promise<any> => {
       }
       */
     }
-    
+
     return txs;
   } catch (e) {
     return undefined;
