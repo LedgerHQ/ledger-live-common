@@ -65,7 +65,7 @@ const getTransactionStatus = async (
     recipient?: Error;
   } = {};
 
-  let estimatedFees = t.totalCost || new BigNumber(0);
+  const estimatedFees = t.totalCost || new BigNumber(0);
 
   const { tezosResources } = account;
   if (!tezosResources) throw new Error("tezosResources is missing");
@@ -88,10 +88,6 @@ const getTransactionStatus = async (
           warnings.recipient = recipientWarning;
         }
       }
-    }
-
-    if (!tezosResources.revealed) {
-      estimatedFees = estimatedFees.plus(DEFAULT_FEE.REVEAL);
     }
 
     if (t.mode === "send") {
@@ -194,7 +190,15 @@ const prepareTransaction = async (
     transaction.gasLimit = new BigNumber(out.gasLimit);
     transaction.storageLimit = new BigNumber(out.storageLimit);
 
+    if (!tezosResources.revealed) {
+      transaction.totalCost = transaction.totalCost.plus(DEFAULT_FEE.REVEAL);
+    }
+
     if (transaction.useAllAmount) {
+      const totalFees = out.suggestedFeeMutez + out.burnFeeMutez;
+      const maxAmount = account.balance.minus(totalFees).toNumber();
+
+      // from https://github.com/ecadlabs/taquito/blob/a70c64c4b105381bb9f1d04c9c70e8ef26e9241c/integration-tests/contract-empty-implicit-account-into-new-implicit-account.spec.ts#L33
       // Temporary fix, see https://gitlab.com/tezos/tezos/-/issues/1754
       // we need to increase the gasLimit and fee returned by the estimation
       const gasBuffer = 500;
@@ -202,12 +206,11 @@ const prepareTransaction = async (
       const increasedFee = (gasBuffer: number, opSize: number) => {
         return gasBuffer * MINIMAL_FEE_PER_GAS_MUTEZ + opSize;
       };
-      transaction.fees = transaction.fees.plus(
-        increasedFee(gasBuffer, Number(out.opSize))
-      );
+      const incr = increasedFee(gasBuffer, Number(out.opSize));
+      transaction.fees = new BigNumber(out.suggestedFeeMutez + incr);
+      transaction.totalCost = new BigNumber(totalFees + incr);
       transaction.gasLimit = transaction.gasLimit.plus(gasBuffer);
-      const s = await getTransactionStatus(account, transaction);
-      transaction.amount = account.balance.minus(s.estimatedFees);
+      transaction.amount = new BigNumber(maxAmount - incr);
     }
   } catch (e: any) {
     transaction.taquitoError = e.id;
