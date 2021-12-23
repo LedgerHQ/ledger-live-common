@@ -129,6 +129,10 @@ const getTransactionStatus = async (
     }
   }
 
+  if (!errors.amount && account.balance.lte(0)) {
+    errors.amount = new NotEnoughBalance();
+  }
+
   const result = {
     errors,
     warnings,
@@ -145,6 +149,10 @@ const prepareTransaction = async (
 ): Promise<Transaction> => {
   const { tezosResources } = account;
   if (!tezosResources) throw new Error("tezosResources is missing");
+
+  if (account.balance.lte(0)) {
+    return Promise.resolve(transaction);
+  }
 
   // basic check to confirm the transaction is "complete"
   if (!transaction.recipient) {
