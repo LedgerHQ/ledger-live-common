@@ -222,6 +222,7 @@ const prepareTransaction = async (
     if (typeof e === "object" && e && "id" in e) {
       transaction.taquitoError = (e as { id: string }).id;
     } else {
+      console.error(e, transaction);
       throw e;
     }
   }
