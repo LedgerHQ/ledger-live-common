@@ -144,7 +144,6 @@ const prepareTransaction = async (
   if (!tezosResources) throw new Error("tezosResources is missing");
 
   const tezos = new TezosToolkit(getEnv("API_TEZOS_NODE"));
-
   tezos.setProvider({
     signer: {
       publicKeyHash: async () => account.freshAddress,
@@ -154,14 +153,14 @@ const prepareTransaction = async (
     },
   });
 
-  try {
-    if (transaction.useAllAmount) {
-      // taquito does not accept 0, so we do 1
-      // only failing case is when the account precisely has fees + 1. which is
-      // unlikely
-      transaction.amount = new BigNumber(1);
-    }
+  if (transaction.useAllAmount) {
+    // taquito does not accept 0, so we do 1
+    // only failing case is when the account precisely has fees + 1. which is
+    // unlikely
+    transaction.amount = new BigNumber(1);
+  }
 
+  try {
     let out;
     switch (transaction.mode) {
       case "send":
