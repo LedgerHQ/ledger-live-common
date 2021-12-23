@@ -171,29 +171,14 @@ const prepareTransaction = async (
         });
 
         if (transaction.useAllAmount) {
-          // Temporary fix, see https://gitlab.com/tezos/tezos/-/issues/1754
-          // we need to increase the gasLimit and fee returned by the estimation
-          const gasBuffer = 500;
-          const MINIMAL_FEE_PER_GAS_MUTEZ = 0.1;
-          const increasedFee = (gasBuffer: number, opSize: number) => {
-            return gasBuffer * MINIMAL_FEE_PER_GAS_MUTEZ + opSize;
-          };
-          transaction.fees = out.suggestedFeeMutez.plus(
-            increasedFee(gasBuffer, Number(out.opSize))
-          );
-          transaction.gasLimit = out.gasLimit.plus(gasBuffer);
-
           out = await tezos.estimate.transfer({
             to: transaction.recipient,
-            fee: transaction.fees?.toNumber() || 0,
-            gasLimit: transaction.gasLimit?.toNumber() || 0,
             amount: account.balance
               .minus(out.totalCost)
               .div(10 ** 6)
               .toNumber(),
           });
         }
-
         break;
       case "delegate":
         out = await tezos.estimate.setDelegate({
@@ -215,16 +200,30 @@ const prepareTransaction = async (
       baseFee = baseFee.plus(DEFAULT_FEE.REVEAL);
     }
     transaction.totalCost = baseFee;
-
     transaction.fees = new BigNumber(out.suggestedFeeMutez);
     transaction.gasLimit = new BigNumber(out.gasLimit);
     transaction.storageLimit = new BigNumber(out.storageLimit);
 
     if (transaction.useAllAmount) {
+      // Temporary fix, see https://gitlab.com/tezos/tezos/-/issues/1754
+      // we need to increase the gasLimit and fee returned by the estimation
+      const gasBuffer = 500;
+      const MINIMAL_FEE_PER_GAS_MUTEZ = 0.1;
+      const increasedFee = (gasBuffer: number, opSize: number) => {
+        return gasBuffer * MINIMAL_FEE_PER_GAS_MUTEZ + opSize;
+      };
+      transaction.fees = transaction.fees?.plus(
+        increasedFee(gasBuffer, Number(out.opSize))
+      );
+      transaction.gasLimit = transaction.gasLimit?.plus(gasBuffer);
       transaction.amount = account.balance.minus(baseFee);
     }
   } catch (e: any) {
-    transaction.taquitoError = e.id;
+    if (e && "id" in e) {
+      transaction.taquitoError = e.id;
+    } else {
+      throw e;
+    }
   }
 
   return transaction;
