@@ -268,10 +268,6 @@ const estimateMaxSpendable = async ({
     useAllAmount: true,
   });
   const s = await getTransactionStatus(mainAccount, t);
-  const errors = Object.values(s.errors);
-  if (errors.length) {
-    throw errors[0];
-  }
   return s.amount;
 };
 
