@@ -78,6 +78,7 @@ const txToOps = (info: any, id: string, txs: any): any => {
     let from;
     let to;
     let value;
+    let type;
 
     for (const t of txlog[0].events) {
       for (const a of t.attributes) {
@@ -93,44 +94,33 @@ const txToOps = (info: any, id: string, txs: any): any => {
             break;
         }
       }
+
+      // todo: handle REDELEGATE and UNDELEGATE operations
+      if (t.type === "delegate") {
+        type = "DELEGATE";
+      } else if (t.type === "withdraw_rewards") {
+        type = "REWARD";
+      } else if (!type && address === from) {
+        type = "OUT";
+      } else if (!type && address === to) {
+        type = "IN";
+      }
     }
 
-    const sending = address === from;
-    const receiving = address === to;
-
-    if (sending) {
-      ops.push({
-        id: `${id}-${hash}-OUT`,
-        hash,
-        type: "OUT",
-        value: value.plus(txs[hash].fee),
-        fee: txs[hash].fee,
-        blockHeight: txs[hash].height,
-        blockHash: null,
-        accountId: id,
-        senders: [from],
-        recipients: [to],
-        date: txs[hash].date,
-        extra: {},
-      });
-    }
-
-    if (receiving) {
-      ops.push({
-        id: `${id}-${hash}-IN`,
-        hash,
-        type: "IN",
-        value,
-        fee: txs[hash].fee,
-        blockHeight: txs[hash].height,
-        blockHash: null,
-        accountId: id,
-        senders: [from],
-        recipients: [to],
-        date: txs[hash].date,
-        extra: {},
-      });
-    }
+    ops.push({
+      id: `${id}-${hash}-${type}`,
+      hash: hash,
+      type: type,
+      value: value.minus(txs[hash].fee),
+      fee: txs[hash].fee,
+      blockHash: null,
+      blockHeight: txs[hash].height,
+      senders: [from],
+      recipients: [to],
+      accountId: id,
+      date: txs[hash].date,
+      extra: {},
+    });
   }
 
   return ops;
