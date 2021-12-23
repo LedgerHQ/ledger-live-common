@@ -65,7 +65,7 @@ const getTransactionStatus = async (
     recipient?: Error;
   } = {};
 
-  let estimatedFees = t.totalCost || new BigNumber(0);
+  const estimatedFees = t.totalCost || new BigNumber(0);
 
   const { tezosResources } = account;
   if (!tezosResources) throw new Error("tezosResources is missing");
@@ -88,10 +88,6 @@ const getTransactionStatus = async (
           warnings.recipient = recipientWarning;
         }
       }
-    }
-
-    if (!tezosResources.revealed) {
-      estimatedFees = estimatedFees.plus(DEFAULT_FEE.REVEAL);
     }
 
     if (t.mode === "send") {
@@ -173,6 +169,17 @@ const prepareTransaction = async (
           to: transaction.recipient,
           amount: transaction.amount.div(10 ** 6).toNumber(),
         });
+
+        if (transaction.useAllAmount) {
+          out = await tezos.estimate.transfer({
+            to: transaction.recipient,
+            amount: account.balance
+              .minus(out.totalCost)
+              .div(10 ** 6)
+              .toNumber(),
+          });
+        }
+
         break;
       case "delegate":
         out = await tezos.estimate.setDelegate({
@@ -189,12 +196,19 @@ const prepareTransaction = async (
         throw new Error("unsupported mode=" + transaction.mode);
     }
 
-    transaction.totalCost = new BigNumber(out.totalCost);
+    let baseFee = new BigNumber(out.burnFeeMutez + out.suggestedFeeMutez);
+    if (!tezosResources.revealed) {
+      baseFee = baseFee.plus(DEFAULT_FEE.REVEAL);
+    }
+    transaction.totalCost = baseFee;
+
     transaction.fees = new BigNumber(out.suggestedFeeMutez);
     transaction.gasLimit = new BigNumber(out.gasLimit);
     transaction.storageLimit = new BigNumber(out.storageLimit);
 
     if (transaction.useAllAmount) {
+      // FIXME may no longer be needed?
+      /*
       // Temporary fix, see https://gitlab.com/tezos/tezos/-/issues/1754
       // we need to increase the gasLimit and fee returned by the estimation
       const gasBuffer = 500;
@@ -206,8 +220,10 @@ const prepareTransaction = async (
         increasedFee(gasBuffer, Number(out.opSize))
       );
       transaction.gasLimit = transaction.gasLimit.plus(gasBuffer);
+
       const s = await getTransactionStatus(account, transaction);
-      transaction.amount = account.balance.minus(s.estimatedFees);
+      */
+      transaction.amount = account.balance.minus(baseFee);
     }
   } catch (e: any) {
     transaction.taquitoError = e.id;
