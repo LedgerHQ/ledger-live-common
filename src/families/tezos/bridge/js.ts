@@ -146,6 +146,18 @@ const prepareTransaction = async (
   const { tezosResources } = account;
   if (!tezosResources) throw new Error("tezosResources is missing");
 
+  // basic check to confirm the transaction is "complete"
+  if (!transaction.recipient) {
+    return Promise.resolve(transaction);
+  }
+  const { recipientError } = await validateRecipient(
+    account.currency,
+    transaction.recipient
+  );
+  if (recipientError) {
+    return Promise.resolve(transaction);
+  }
+
   const tezos = new TezosToolkit(getEnv("API_TEZOS_NODE"));
   tezos.setProvider({
     signer: {
