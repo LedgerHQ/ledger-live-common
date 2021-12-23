@@ -27,55 +27,98 @@ export const getTransactions = async (address: string): Promise<any> => {
   log("cosmjs", "fetch transactions");
 
   try {
-    const per_page = 100;
+    const perPage = 100;
     const txs: { [id: string]: any } = {};
+    const data: Array<any> = [];
     tmClient = await Tendermint34Client.connect(defaultRpcEndpoint);
 
-    const data = await tmClient.txSearch({
+    // fetch incoming transactions
+    const txsIn = await tmClient.txSearch({
       query: `transfer.recipient='${address}'`,
       page: 1,
-      per_page: per_page,
+      per_page: perPage,
       order_by: "desc",
     });
 
-    for (const tx of data.txs) {
-      const hash = toHex(tx.hash).toUpperCase();
-      txs[hash] = tx;
+    for (const tx of txsIn.txs) {
+      tx.hash = toHex(tx.hash).toUpperCase();
+      data.push(tx);
     }
 
-    const txsDone = txs.length;
-    const nb_page = Math.ceil((data.totalCount - txsDone) / per_page);
+    const txsInDone = txs.length;
+    const txsInNbPage = Math.ceil((txsIn.totalCount - txsInDone) / perPage);
 
-    for (let i = 2; i <= nb_page; i++) {
-      const data = await tmClient.txSearch({
+    // paginate over pages
+    for (let i = 2; i <= txsInNbPage; i++) {
+      const txsIn = await tmClient.txSearch({
         query: `transfer.recipient='${address}'`,
         page: i,
-        per_page: per_page,
+        per_page: perPage,
         order_by: "desc",
       });
 
-      for (const tx of data.txs) {
-        const hash = toHex(tx.hash).toUpperCase();
-        txs[hash] = tx;
+      for (const tx of txsIn.txs) {
+        tx.hash = toHex(tx.hash).toUpperCase();
+        data.push(tx);
+      }
+    }
+
+    // fetch outgoing transactions
+    const txsOut = await tmClient.txSearch({
+      query: `message.sender='${address}'`,
+      page: 1,
+      per_page: perPage,
+      order_by: "desc",
+    });
+
+    for (const tx of txsOut.txs) {
+      tx.hash = toHex(tx.hash).toUpperCase();
+      data.push(tx);
+    }
+
+    const txsOutDone = txs.length;
+    const txsOutNbPage = Math.ceil((txsOut.totalCount - txsOutDone) / perPage);
+
+    // paginate over pages
+    for (let i = 2; i <= txsOutNbPage; i++) {
+      const txsOut = await tmClient.txSearch({
+        query: `message.sender='${address}'`,
+        page: i,
+        per_page: perPage,
+        order_by: "desc",
+      });
+
+      for (const tx of txsOut.txs) {
+        tx.hash = toHex(tx.hash).toUpperCase();
+        data.push(tx);
       }
     }
 
     // fetch date and set fees
-    for (const hash of Object.keys(txs)) {
-      const block = await tmClient.block(txs[hash].height);
-      txs[hash].date = new Date(block.block.header.time);
+    for (const tx of data) {
+      const block = await tmClient.block(tx.height);
+      tx.date = new Date(block.block.header.time);
 
-      txs[hash].fee = new BigNumber(0);
+      tx.fee = new BigNumber(0);
       // todo: fix this, decodeTxRaw break upper iterator
       /*
-      const txRaw: DecodedTxRaw = decodeTxRaw(txs[hash].tx);
+      const txRaw: DecodedTxRaw = decodeTxRaw(tx.tx);
 
       if (txRaw.authInfo.fee) {
         txRaw.authInfo.fee.amount.forEach((fee) => {
-          txs[hash].fee.plus(fee.amount);
+          tx.fee.plus(fee.amount);
         });
       }
       */
+    }
+
+    // sort transactions by date
+    data.sort((a, b) => {
+      return b.date.getTime() - a.date.getTime();
+    });
+
+    for (const tx of data) {
+      txs[tx.hash] = tx;
     }
 
     return txs;
