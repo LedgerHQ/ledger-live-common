@@ -117,7 +117,7 @@ const getTransactionStatus = async (
     log("taquitoerror", String(t.taquitoError));
 
     // remap taquito errors
-    if (t.taquitoError === "proto.010-PtGRANAD.contract.balance_too_low") {
+    if (t.taquitoError.endsWith("balance_too_low")) {
       if (t.mode === "send") {
         errors.amount = new NotEnoughBalance();
       } else {
@@ -215,8 +215,12 @@ const prepareTransaction = async (
         DEFAULT_FEE.REVEAL
       );
     }
-  } catch (e: any) {
-    transaction.taquitoError = e.id;
+  } catch (e) {
+    if (typeof e === "object" && e && "id" in e) {
+      transaction.taquitoError = (e as { id: string }).id;
+    } else {
+      throw e;
+    }
   }
 
   return transaction;
