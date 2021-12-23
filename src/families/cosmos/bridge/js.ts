@@ -15,7 +15,6 @@ import type {
   Transaction,
 } from "../types";
 import { getValidators, hydrateValidators } from "../validators";
-import { toHex } from "@cosmjs/encoding";
 import { BigNumber } from "bignumber.js";
 import {
   makeAccountBridgeReceive,
