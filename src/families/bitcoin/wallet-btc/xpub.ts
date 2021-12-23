@@ -87,8 +87,7 @@ class Xpub extends EventEmitter {
 
       // in case pendings have changed we clean them out
       // TODO perf : bad : looping in the tx array
-      const hasPendings = !!(await this.storage.getLastTx({
-        confirmed: false,
+      const hasPendings = !!(await this.storage.getLastUnconfirmedTx({
         account,
         index,
       }));
@@ -419,10 +418,9 @@ class Xpub extends EventEmitter {
     let txs: TX[] = [];
     let inserted = 0;
     do {
-      const lastTx = await this.storage.getLastTx({
+      const lastTx = await this.storage.getLastConfirmedTx({
         account,
         index,
-        confirmed: true,
       });
 
       txs = await this.explorer.getAddressTxsSinceLastTxBlock(
@@ -440,10 +438,9 @@ class Xpub extends EventEmitter {
   }
 
   async checkAddressReorg(account: number, index: number) {
-    const lastTx = await this.storage.getLastTx({
+    const lastTx = await this.storage.getLastConfirmedTx({
       account,
       index,
-      confirmed: true,
     });
 
     if (!lastTx) {

@@ -48,8 +48,14 @@ export interface IStorage {
   getLastTx(txFilter: {
     account?: number;
     index?: number;
-    address?: string;
-    confirmed?: boolean;
+  }): Promise<TX | undefined>;
+  getLastUnconfirmedTx(txFilter: {
+    account?: number;
+    index?: number;
+  }): Promise<TX | undefined>;
+  getLastConfirmedTx(txFilter: {
+    account?: number;
+    index?: number;
   }): Promise<TX | undefined>;
   getTx(address: string, hash: string): Promise<TX | undefined>;
   getUniquesAddresses(addressesFilter: {

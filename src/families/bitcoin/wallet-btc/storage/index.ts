@@ -1,4 +1,4 @@
-import { findLast, filter, uniqBy, findIndex, has } from "lodash";
+import { findLast, filter, uniqBy, findIndex } from "lodash";
 import { Input, IStorage, Output, TX, Address } from "./types";
 
 // a mock storage class that just use js objects
@@ -17,22 +17,39 @@ class BitcoinLikeStorage implements IStorage {
   // returning unordered tx within the same block)
   spentUtxos: { [key: string]: Input[] } = {};
 
-  async getLastTx(txFilter: {
-    account?: number;
-    index?: number;
-    address?: string;
-    confirmed?: boolean;
-  }) {
+  async getLastUnconfirmedTx(txFilter: { account?: number; index?: number }) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const tx: TX | undefined = findLast(this.txs, (t) => {
       return (
-        (!has(txFilter, "account") || t.account === txFilter.account) &&
-        (!has(txFilter, "index") || t.index === txFilter.index) &&
-        (!has(txFilter, "address") || t.address === txFilter.address) &&
-        (!has(txFilter, "confirmed") ||
-          (txFilter.confirmed && t.block) ||
-          (!txFilter.confirmed && !t.block))
+        (!txFilter.account || t.account === txFilter.account) &&
+        (!txFilter.index || t.index === txFilter.index) &&
+        !t.block
+      );
+    });
+    return tx;
+  }
+
+  async getLastConfirmedTx(txFilter: { account?: number; index?: number }) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const tx: TX | undefined = findLast(this.txs, (t) => {
+      return (
+        (!txFilter.account || t.account === txFilter.account) &&
+        (!txFilter.index || t.index === txFilter.index) &&
+        t.block
+      );
+    });
+    return tx;
+  }
+
+  async getLastTx(txFilter: { account?: number; index?: number }) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const tx: TX | undefined = findLast(this.txs, (t) => {
+      return (
+        (!txFilter.account || t.account === txFilter.account) &&
+        (!txFilter.index || t.index === txFilter.index)
       );
     });
     return tx;
