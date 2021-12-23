@@ -171,8 +171,22 @@ const prepareTransaction = async (
         });
 
         if (transaction.useAllAmount) {
+          // Temporary fix, see https://gitlab.com/tezos/tezos/-/issues/1754
+          // we need to increase the gasLimit and fee returned by the estimation
+          const gasBuffer = 500;
+          const MINIMAL_FEE_PER_GAS_MUTEZ = 0.1;
+          const increasedFee = (gasBuffer: number, opSize: number) => {
+            return gasBuffer * MINIMAL_FEE_PER_GAS_MUTEZ + opSize;
+          };
+          transaction.fees = out.suggestedFeeMutez.plus(
+            increasedFee(gasBuffer, Number(out.opSize))
+          );
+          transaction.gasLimit = out.gasLimit.plus(gasBuffer);
+
           out = await tezos.estimate.transfer({
             to: transaction.recipient,
+            fee: transaction.fees?.toNumber() || 0,
+            gasLimit: transaction.gasLimit?.toNumber() || 0,
             amount: account.balance
               .minus(out.totalCost)
               .div(10 ** 6)
@@ -207,22 +221,6 @@ const prepareTransaction = async (
     transaction.storageLimit = new BigNumber(out.storageLimit);
 
     if (transaction.useAllAmount) {
-      // FIXME may no longer be needed?
-      /*
-      // Temporary fix, see https://gitlab.com/tezos/tezos/-/issues/1754
-      // we need to increase the gasLimit and fee returned by the estimation
-      const gasBuffer = 500;
-      const MINIMAL_FEE_PER_GAS_MUTEZ = 0.1;
-      const increasedFee = (gasBuffer: number, opSize: number) => {
-        return gasBuffer * MINIMAL_FEE_PER_GAS_MUTEZ + opSize;
-      };
-      transaction.fees = transaction.fees.plus(
-        increasedFee(gasBuffer, Number(out.opSize))
-      );
-      transaction.gasLimit = transaction.gasLimit.plus(gasBuffer);
-
-      const s = await getTransactionStatus(account, transaction);
-      */
       transaction.amount = account.balance.minus(baseFee);
     }
   } catch (e: any) {
