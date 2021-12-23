@@ -61,18 +61,18 @@ export const getTransactions = async (address: string): Promise<any> => {
     }
 
     // fetch date and set fees
-    for (const tx of data.txs) {
-      const block = await tmClient.block(tx.height);
-      tx.date = new Date(block.block.header.time);
+    for (const hash of Object.keys(txs)) {
+      const block = await tmClient.block(txs[hash].height);
+      txs[hash].date = new Date(block.block.header.time);
 
-      tx.fee = new BigNumber(0);
+      txs[hash].fee = new BigNumber(0);
       // todo: fix this, decodeTxRaw break upper iterator
       /*
-      const txRaw: DecodedTxRaw = decodeTxRaw(tx.tx);
+      const txRaw: DecodedTxRaw = decodeTxRaw(txs[hash].tx);
 
       if (txRaw.authInfo.fee) {
         txRaw.authInfo.fee.amount.forEach((fee) => {
-          tx.fee.plus(fee.amount);
+          txs[hash].fee.plus(fee.amount);
         });
       }
       */
