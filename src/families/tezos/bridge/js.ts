@@ -205,7 +205,9 @@ const prepareTransaction = async (
       transaction.gasLimit = new BigNumber(out.gasLimit + gasBuffer);
       transaction.amount = new BigNumber(maxAmount - incr);
     } else {
-      transaction.totalCost = new BigNumber(out.totalCost);
+      transaction.totalCost = new BigNumber(
+        out.suggestedFeeMutez + out.burnFeeMutez
+      );
       transaction.fees = new BigNumber(out.suggestedFeeMutez);
       transaction.gasLimit = new BigNumber(out.gasLimit);
       transaction.storageLimit = new BigNumber(out.storageLimit);
