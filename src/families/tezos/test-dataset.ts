@@ -81,7 +81,7 @@ const dataset: DatasetTest<Transaction> = {
                 gasLimit: "10600",
                 storageLimit: "300",
                 taquitoError: null,
-                totalCost: null,
+                estimatedFees: null,
               }),
               expectedStatus: (account) => ({
                 errors: {},

@@ -44,7 +44,7 @@ const createTransaction: () => Transaction = () => ({
   networkInfo: null,
   useAllAmount: false,
   taquitoError: null,
-  totalCost: null,
+  estimatedFees: null,
 });
 
 const updateTransaction = (t, patch) => ({ ...t, ...patch });
@@ -65,7 +65,7 @@ const getTransactionStatus = async (
     recipient?: Error;
   } = {};
 
-  const estimatedFees = t.totalCost || new BigNumber(0);
+  const estimatedFees = t.estimatedFees || new BigNumber(0);
 
   const { tezosResources } = account;
   if (!tezosResources) throw new Error("tezosResources is missing");
@@ -200,21 +200,20 @@ const prepareTransaction = async (
       };
       const incr = increasedFee(gasBuffer, Number(out.opSize));
       transaction.fees = new BigNumber(out.suggestedFeeMutez + incr);
-      transaction.totalCost = new BigNumber(totalFees + incr);
       transaction.gasLimit = new BigNumber(out.gasLimit + gasBuffer);
       transaction.amount = new BigNumber(maxAmount - incr);
     } else {
-      transaction.totalCost = new BigNumber(
-        out.suggestedFeeMutez + out.burnFeeMutez
-      );
       transaction.fees = new BigNumber(out.suggestedFeeMutez);
       transaction.gasLimit = new BigNumber(out.gasLimit);
       transaction.storageLimit = new BigNumber(out.storageLimit);
     }
 
     transaction.storageLimit = new BigNumber(out.storageLimit);
+    transaction.estimatedFees = transaction.fees;
     if (!tezosResources.revealed) {
-      transaction.totalCost = transaction.totalCost.plus(DEFAULT_FEE.REVEAL);
+      transaction.estimatedFees = transaction.estimatedFees.plus(
+        DEFAULT_FEE.REVEAL
+      );
     }
   } catch (e: any) {
     transaction.taquitoError = e.id;
