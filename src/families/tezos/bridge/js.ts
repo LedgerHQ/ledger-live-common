@@ -123,6 +123,9 @@ const getTransactionStatus = async (
       } else {
         errors.amount = new NotEnoughBalanceToDelegate();
       }
+    } else {
+      // unidentified error case
+      errors.amount = new Error(t.taquitoError);
     }
   }
 
