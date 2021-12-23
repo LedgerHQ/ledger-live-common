@@ -155,15 +155,17 @@ const prepareTransaction = async (
   }
 
   // basic check to confirm the transaction is "complete"
-  if (!transaction.recipient) {
-    return Promise.resolve(transaction);
-  }
-  const { recipientError } = await validateRecipient(
-    account.currency,
-    transaction.recipient
-  );
-  if (recipientError) {
-    return Promise.resolve(transaction);
+  if (transaction.mode !== "undelegate") {
+    if (!transaction.recipient) {
+      return Promise.resolve(transaction);
+    }
+    const { recipientError } = await validateRecipient(
+      account.currency,
+      transaction.recipient
+    );
+    if (recipientError) {
+      return Promise.resolve(transaction);
+    }
   }
 
   const tezos = new TezosToolkit(getEnv("API_TEZOS_NODE"));
