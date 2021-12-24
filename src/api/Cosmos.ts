@@ -125,19 +125,14 @@ export const getTransactions = async (address: string): Promise<any> => {
     for (const tx of data) {
       const block = await tmClient.block(tx.height);
       tx.date = new Date(block.block.header.time);
-
       tx.fee = new BigNumber(0);
-      // todo: fix this, decodeTxRaw break upper iterator
-      /*
       const txRaw: DecodedTxRaw = decodeTxRaw(tx.tx);
 
       if (txRaw.authInfo.fee) {
         txRaw.authInfo.fee.amount.forEach((fee) => {
-          tx.fee.plus(fee.amount);
           tx.fee = tx.fee.plus(fee.amount);
         });
       }
-      */
     }
 
     // sort transactions by date
