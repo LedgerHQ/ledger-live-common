@@ -188,6 +188,7 @@ const getAccountShape: GetAccountShape = async (info) => {
   const txs = await getTransactions(address);
   const operations = txToOps(info, accountId, txs);
   const delegations = await getDelegators(address);
+  const withdrawAddress = await getWithdrawAddress(address);
 
   const shape = {
     id: accountId,
@@ -202,7 +203,7 @@ const getAccountShape: GetAccountShape = async (info) => {
       delegatedBalance: new BigNumber(0),
       pendingRewardsBalance: new BigNumber(0),
       unbondingBalance: new BigNumber(0),
-      withdrawAddress: "",
+      withdrawAddress,
     },
   };
 

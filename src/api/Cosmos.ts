@@ -50,6 +50,21 @@ export const getDelegators = async (address: string): Promise<any> => {
   }
 };
 
+export const getWithdrawAddress = async (address: string): Promise<string> => {
+  log("cosmjs", "fetch withdraw address");
+
+  try {
+    const { data } = await network({
+      method: "GET",
+      url: `${defaultEndpoint}/cosmos/distribution/v1beta1/delegators/${address}/withdraw_address`,
+    });
+
+    return data.withdraw_address;
+  } catch (e) {
+    return "";
+  }
+};
+
 export const getTransactions = async (address: string): Promise<any> => {
   log("cosmjs", "fetch transactions");
 
