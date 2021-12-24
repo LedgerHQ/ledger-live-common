@@ -203,9 +203,7 @@ export const getHeight = async (): Promise<number | undefined> => {
   }
 };
 
-export const getAllBalances = async (
-  address: string
-): Promise<BigNumber | undefined> => {
+export const getAllBalances = async (address: string): Promise<BigNumber> => {
   log("cosmjs", "fetch balances");
 
   try {
