@@ -134,6 +134,7 @@ export const getTransactions = async (address: string): Promise<any> => {
       if (txRaw.authInfo.fee) {
         txRaw.authInfo.fee.amount.forEach((fee) => {
           tx.fee.plus(fee.amount);
+          tx.fee = tx.fee.plus(fee.amount);
         });
       }
       */
