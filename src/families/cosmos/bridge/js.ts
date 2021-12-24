@@ -109,7 +109,6 @@ const txToOps = (info: any, id: string, txs: any): any => {
             op.recipients.push(a.value);
             break;
           case "amount":
-            op.value = new BigNumber(a.value.replace("uatom", ""));
             if (op.value.eq(0)) {
               op.value = op.value.plus(a.value.replace("uatom", ""));
             }
@@ -143,7 +142,6 @@ const txToOps = (info: any, id: string, txs: any): any => {
 
     if (!op.type && address === op.recipients[0]) {
       op.type = "IN";
-      op.value.minus(txs[hash].fee);
     }
 
     op.id = `${id}-${hash}-${op.type}`;
