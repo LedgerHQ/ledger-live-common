@@ -183,6 +183,7 @@ const getAccountShape: GetAccountShape = async (info) => {
   const blockHeight = await getHeight();
   const txs = await getTransactions(address);
   const operations = txToOps(info, accountId, txs);
+  const delegations = await getDelegators(address);
 
   const shape = {
     id: accountId,
@@ -191,7 +192,7 @@ const getAccountShape: GetAccountShape = async (info) => {
     operationsCount: operations.length,
     blockHeight,
     cosmosResources: {
-      delegations: [],
+      delegations: delegations,
       redelegations: [],
       unbondings: [],
       delegatedBalance: new BigNumber(0),

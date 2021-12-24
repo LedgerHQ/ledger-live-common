@@ -15,6 +15,7 @@ import { Secp256k1HdWallet } from "@cosmjs/launchpad";
 import { fromHex, toHex } from "@cosmjs/encoding";
 import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
+import network from "../network";
 
 let api;
 let signedApi;
@@ -22,6 +23,32 @@ let tmClient;
 
 const defaultEndpoint = getEnv("API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT");
 const defaultRpcEndpoint = getEnv("API_COSMOS_RPC_URL");
+
+export const getDelegators = async (address: string): Promise<any> => {
+  log("cosmjs", "fetch delegators");
+
+  const delegators: Array<any> = [];
+
+  try {
+    const { data } = await network({
+      method: "GET",
+      url: `${defaultEndpoint}/cosmos/staking/v1beta1/delegations/${address}`,
+    });
+
+    for (const d of data.delegation_responses) {
+      delegators.push({
+        validatorAddress: d.delegation.validator_address,
+        amount: new BigNumber(d.balance.amount),
+        pendingRewards: new BigNumber(d.balance.amount), // todo: ?
+        status: "bonded", // todo: ? bonded|unbonding|unbonded
+      });
+    }
+
+    return delegators;
+  } catch (e) {
+    return [];
+  }
+};
 
 export const getTransactions = async (address: string): Promise<any> => {
   log("cosmjs", "fetch transactions");
