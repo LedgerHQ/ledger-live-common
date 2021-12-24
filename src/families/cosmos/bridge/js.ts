@@ -28,6 +28,7 @@ import {
   getHeight,
   getAllBalances,
   getFees,
+  getDelegators,
   // createWallet,
 } from "../../../api/Cosmos";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -75,52 +76,72 @@ const txToOps = (info: any, id: string, txs: any): any => {
   for (const hash of Object.keys(txs)) {
     const txlog = JSON.parse(txs[hash].result.log);
 
-    let from;
-    let to;
-    let value;
-    let type;
+    const op: Operation = {
+      id: "",
+      hash: hash,
+      type: "" as any,
+      /*
+      value: transaction.useAllAmount
+        ? spendableBalance
+        : transaction.amount.plus(fee),
+      */
+      value: new BigNumber(0),
+      fee: txs[hash].fee,
+      blockHash: null,
+      blockHeight: txs[hash].height,
+      senders: [] as any,
+      recipients: [] as any,
+      accountId: id,
+      date: txs[hash].date,
+      extra: {
+        validators: [] as any,
+        // cosmosSourceValidator: transaction.cosmosSourceValidator, // redelegate
+      },
+    };
 
     for (const t of txlog[0].events) {
       for (const a of t.attributes) {
         switch (a.key) {
           case "sender":
-            from = a.value;
+            op.senders.push(a.value);
             break;
           case "recipient":
-            to = a.value;
+            op.recipients.push(a.value);
             break;
           case "amount":
-            value = new BigNumber(a.value.replace("uatom", ""));
+            op.value = new BigNumber(a.value.replace("uatom", ""));
+            break;
+          case "validator":
+            op.extra.validators.push({ amount: op.value, address: a.value });
+            break;
+          case "new_shares":
             break;
         }
       }
 
       // todo: handle REDELEGATE and UNDELEGATE operations
+
       if (t.type === "delegate") {
-        type = "DELEGATE";
-      } else if (t.type === "withdraw_rewards") {
-        type = "REWARD";
-      } else if (!type && address === from) {
-        type = "OUT";
-      } else if (!type && address === to) {
-        type = "IN";
+        op.type = "DELEGATE";
+      }
+
+      if (t.type === "withdraw_rewards") {
+        op.type = "REWARD";
       }
     }
 
-    ops.push({
-      id: `${id}-${hash}-${type}`,
-      hash: hash,
-      type: type,
-      value: value.minus(txs[hash].fee),
-      fee: txs[hash].fee,
-      blockHash: null,
-      blockHeight: txs[hash].height,
-      senders: [from],
-      recipients: [to],
-      accountId: id,
-      date: txs[hash].date,
-      extra: {},
-    });
+    if (!op.type && address === op.senders[0]) {
+      op.type = "OUT";
+      op.value.plus(txs[hash].fee);
+    }
+
+    if (!op.type && address === op.recipients[0]) {
+      op.type = "IN";
+      op.value.minus(txs[hash].fee);
+    }
+
+    op.id = `${id}-${hash}-${op.type}`;
+    ops.push(op);
   }
 
   return ops;
