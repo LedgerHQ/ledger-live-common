@@ -190,19 +190,41 @@ const getAccountShape: GetAccountShape = async (info) => {
   const delegations = await getDelegators(address);
   const withdrawAddress = await getWithdrawAddress(address);
 
+  let delegatedBalance = new BigNumber(0);
+  let pendingRewardsBalance = new BigNumber(0);
+  let unbondingBalance = new BigNumber(0);
+
+  for (const delegation of delegations) {
+    delegatedBalance = delegatedBalance.plus(delegation.amount);
+    pendingRewardsBalance = pendingRewardsBalance.plus(
+      delegation.pendingRewards
+    );
+
+    if (delegation.status === "unbonding") {
+      unbondingBalance = unbondingBalance.plus(delegation.amount);
+    }
+  }
+
+  // todo: calculate estimatedFees
+  const estimatedFees = new BigNumber(0);
+
+  const spendableBalance = balance
+    .minus(estimatedFees)
+    .minus(unbondingBalance.plus(delegatedBalance));
+
   const shape = {
     id: accountId,
     balance,
-    spendableBalance: balance,
+    spendableBalance,
     operationsCount: operations.length,
     blockHeight,
     cosmosResources: {
-      delegations: delegations,
+      delegations,
       redelegations: [],
       unbondings: [],
-      delegatedBalance: new BigNumber(0),
-      pendingRewardsBalance: new BigNumber(0),
-      unbondingBalance: new BigNumber(0),
+      delegatedBalance,
+      pendingRewardsBalance,
+      unbondingBalance,
       withdrawAddress,
     },
   };
