@@ -90,7 +90,10 @@ const tezos: AppSpec<Transaction> = {
       maxRun: 1,
       transaction: ({ account, bridge }) => {
         expectUnrevealed(account);
-        const recipient = sample(whitelist);
+        const d = getAccountDelegationSync(account);
+        const recipient = sample(
+          d ? whitelist.filter((w) => w !== d.address) : whitelist
+        );
         return {
           transaction: bridge.createTransaction(account),
           updates: [{ recipient, mode: "delegate" }],
@@ -102,7 +105,10 @@ const tezos: AppSpec<Transaction> = {
       maxRun: 1,
       transaction: ({ account, bridge }) => {
         expectRevealed(account);
-        const recipient = sample(whitelist);
+        const d = getAccountDelegationSync(account);
+        const recipient = sample(
+          d ? whitelist.filter((w) => w !== d.address) : whitelist
+        );
         return {
           transaction: bridge.createTransaction(account),
           updates: [{ recipient, mode: "delegate" }],
