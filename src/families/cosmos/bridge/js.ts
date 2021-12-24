@@ -110,6 +110,10 @@ const txToOps = (info: any, id: string, txs: any): any => {
             break;
           case "amount":
             op.value = new BigNumber(a.value.replace("uatom", ""));
+            if (op.value.eq(0)) {
+              op.value = op.value.plus(a.value.replace("uatom", ""));
+            }
+
             break;
           case "validator":
             op.extra.validators.push({ amount: op.value, address: a.value });
@@ -123,16 +127,18 @@ const txToOps = (info: any, id: string, txs: any): any => {
 
       if (t.type === "delegate") {
         op.type = "DELEGATE";
+        op.value = new BigNumber(txs[hash].fee);
       }
 
       if (t.type === "withdraw_rewards") {
         op.type = "REWARD";
+        op.value = new BigNumber(txs[hash].fee);
       }
     }
 
     if (!op.type && address === op.senders[0]) {
       op.type = "OUT";
-      op.value.plus(txs[hash].fee);
+      op.value = op.value.plus(txs[hash].fee);
     }
 
     if (!op.type && address === op.recipients[0]) {
