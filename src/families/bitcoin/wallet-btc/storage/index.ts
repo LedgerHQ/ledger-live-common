@@ -22,8 +22,8 @@ class BitcoinLikeStorage implements IStorage {
     // @ts-ignore
     const tx: TX | undefined = findLast(this.txs, (t) => {
       return (
-        (!txFilter.account || t.account === txFilter.account) &&
-        (!txFilter.index || t.index === txFilter.index) &&
+        (txFilter.account === undefined || t.account === txFilter.account) &&
+        (txFilter.index === undefined || t.index === txFilter.index) &&
         !t.block
       );
     });
@@ -35,8 +35,8 @@ class BitcoinLikeStorage implements IStorage {
     // @ts-ignore
     const tx: TX | undefined = findLast(this.txs, (t) => {
       return (
-        (!txFilter.account || t.account === txFilter.account) &&
-        (!txFilter.index || t.index === txFilter.index) &&
+        (txFilter.account === undefined || t.account === txFilter.account) &&
+        (txFilter.index === undefined || t.index === txFilter.index) &&
         t.block
       );
     });
@@ -48,8 +48,8 @@ class BitcoinLikeStorage implements IStorage {
     // @ts-ignore
     const tx: TX | undefined = findLast(this.txs, (t) => {
       return (
-        (!txFilter.account || t.account === txFilter.account) &&
-        (!txFilter.index || t.index === txFilter.index)
+        (txFilter.account === undefined || t.account === txFilter.account) &&
+        (txFilter.index === undefined || t.index === txFilter.index)
       );
     });
     return tx;
