@@ -25,13 +25,28 @@ export function useSolanaStakesWithMeta(
     return [];
   }
 
+  const { validatorsWithMeta } = data;
+
+  const validatorByVoteAccAddr = new Map(
+    validatorsWithMeta.map((validatorWithMeta) => [
+      validatorWithMeta.validator.voteAccAddr,
+      validatorWithMeta,
+    ])
+  );
+
   return stakes.map((stake) => {
+    const voteAccAddr = stake.delegation?.voteAccAddr;
+    const validator =
+      voteAccAddr === undefined
+        ? undefined
+        : validatorByVoteAccAddr.get(voteAccAddr);
+
     return {
       stake,
       meta: {
         validator: {
           img: undefined,
-          name: Math.random() > 0.5 ? "Dummy Name" : undefined,
+          name: validator?.meta.name,
         },
       },
     };
