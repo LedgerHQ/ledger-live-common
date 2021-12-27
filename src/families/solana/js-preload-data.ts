@@ -4,7 +4,7 @@ import { SolanaPreloadDataV1 } from "./types";
 
 const initialData: SolanaPreloadDataV1 = {
   version: "1",
-  validators: [],
+  validatorsWithMeta: [],
 };
 
 const dataByCurrency = new Map<string, SolanaPreloadDataV1>([

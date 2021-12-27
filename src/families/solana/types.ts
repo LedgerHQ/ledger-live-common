@@ -241,7 +241,7 @@ export type SolanaValidator = {
 
 export type SolanaPreloadDataV1 = {
   version: "1";
-  validators: SolanaValidator[];
+  validatorsWithMeta: SolanaValidatorWithMeta[];
 };
 
 // exists for discriminated union to work
@@ -254,8 +254,8 @@ export type SolanaPreloadData = SolanaPreloadDataV1 | SolanaPreloadDataV2;
 export type SolanaValidatorWithMeta = {
   validator: SolanaValidator;
   meta: {
-    name: string;
-    img: string;
+    name?: string;
+    img?: string;
   };
 };
 

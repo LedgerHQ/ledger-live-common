@@ -14,10 +14,15 @@ export async function preloadWithAPI(
 
   const data: SolanaPreloadData = {
     version: "1",
-    validators: voteAccs.current.map((acc) => ({
-      voteAccAddr: acc.votePubkey,
-      activatedStake: acc.activatedStake,
-      commission: acc.commission,
+    validatorsWithMeta: voteAccs.current.map((acc) => ({
+      validator: {
+        voteAccAddr: acc.votePubkey,
+        activatedStake: acc.activatedStake,
+        commission: acc.commission,
+      },
+      meta: {
+        name: Math.random() > 0.5 ? "Dummy Name" : undefined,
+      },
     })),
   };
 
