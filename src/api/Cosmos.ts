@@ -35,12 +35,30 @@ export const getDelegators = async (address: string): Promise<any> => {
       url: `${defaultEndpoint}/cosmos/staking/v1beta1/delegations/${address}`,
     });
 
+    let status = "unbonded";
+    const statusMap = {
+      BOND_STATUS_UNBONDED: "unbonded",
+      BOND_STATUS_UNBONDING: "unbonding",
+      BOND_STATUS_BONDED: "bonded",
+    };
+
     for (const d of data.delegation_responses) {
+      try {
+        const { data } = await network({
+          method: "GET",
+          url: `${defaultEndpoint}/cosmos/staking/v1beta1/validators/${d.delegation.validator_address}`,
+        });
+
+        status = statusMap[data.validator.status] || "unbonded";
+
+        // eslint-disable-next-line no-empty
+      } catch (e) {}
+
       delegators.push({
         validatorAddress: d.delegation.validator_address,
         amount: new BigNumber(d.balance.amount),
         pendingRewards: new BigNumber(d.balance.amount), // todo: ?
-        status: "bonded", // todo: ? bonded|unbonding|unbonded
+        status,
       });
     }
 
