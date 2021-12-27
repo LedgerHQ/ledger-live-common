@@ -69,6 +69,7 @@ async function elrondBuildESDTTokenAccounts({
   if (listTokensForCryptoCurrency(currency).length === 0) {
     return undefined;
   }
+
   const tokenAccounts: TokenAccount[] = [];
 
   const existingAccountByTicker = {}; // used for fast lookup
@@ -103,6 +104,8 @@ async function elrondBuildESDTTokenAccounts({
 
       if (tokenAccount) {
         tokenAccounts.push(tokenAccount);
+        existingAccountTickers.push(token.ticker);
+        existingAccountByTicker[token.ticker] = tokenAccount;
       }
     }
   }
