@@ -110,4 +110,4 @@ export type NetworkInfoRaw = {
 export type ElrondPreloadData = {
   validators: Record<string, any>;
 };
-export const reflect = (_declare: any) => { };
+export const reflect = (_declare: any) => {};
