@@ -182,7 +182,7 @@ const getAccountShape: GetAccountShape = async (info) => {
     derivationMode,
   });
 
-  const balance = await getAllBalances(address);
+  let balance = await getAllBalances(address);
 
   const blockHeight = await getHeight();
   const txs = await getTransactions(address);
@@ -210,7 +210,6 @@ const getAccountShape: GetAccountShape = async (info) => {
   // todo: calculate estimatedFees
   const estimatedFees = new BigNumber(0);
 
-  const spendableBalance = balance
   let spendableBalance = balance
     .minus(estimatedFees)
     .minus(unbondingBalance.plus(delegatedBalance));
