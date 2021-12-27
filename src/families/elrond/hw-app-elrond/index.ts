@@ -28,7 +28,7 @@ export default class Elrond {
         "signTransaction",
         "signMessage",
         "getAppConfiguration",
-        "provideESDTInfo"
+        "provideESDTInfo",
       ],
       scrambleKey
     );
@@ -198,7 +198,7 @@ export default class Elrond {
     const chainIdLengthBuffer = Buffer.from([chainId.length]);
     const chainIdBuffer = Buffer.from(chainId);
     const signatureBuffer = Buffer.from(signature, "hex");
-    let infoBuffer = [
+    const infoBuffer = [
       tickerLengthBuffer,
       tickerBuffer,
       idLengthBuffer,
@@ -218,7 +218,6 @@ export default class Elrond {
     chainId?: string,
     signature?: string
   ): Promise<any> {
-
     if (!ticker || !id || !decimals || !chainId || !signature) {
       throw new Error("Invalid ESDT token credentials!");
     }

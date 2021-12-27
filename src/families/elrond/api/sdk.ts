@@ -1,6 +1,11 @@
 import { BigNumber } from "bignumber.js";
 import ElrondApi from "./apiCalls";
-import { ElrondTransferOptions, ESDTToken, NetworkInfo, Transaction } from "../types";
+import {
+  ElrondTransferOptions,
+  ESDTToken,
+  NetworkInfo,
+  Transaction,
+} from "../types";
 import type { Operation, OperationType } from "../../../types";
 import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";
@@ -61,7 +66,7 @@ function getOperationValue(transaction: Transaction, addr: string): BigNumber {
     return new BigNumber(transaction.value ?? 0);
   }
 
-  return new BigNumber(transaction.value ?? 0).plus(transaction.fee ?? 0)
+  return new BigNumber(transaction.value ?? 0).plus(transaction.fee ?? 0);
 }
 
 /**
@@ -112,31 +117,38 @@ export const getOperations = async (
 };
 
 export const getAccountESDTTokens = async (
-  address: string,
+  address: string
 ): Promise<ESDTToken[]> => {
   return await api.getESDTTokensForAddress(address);
-}
+};
 
-export const hasESDTTokens = async(address: string): Promise<boolean> => {
+export const hasESDTTokens = async (address: string): Promise<boolean> => {
   const tokensCount = await api.getESDTTokensCountForAddress(address);
   return tokensCount > 0;
-}
+};
 
 export const getAccountESDTOperations = async (
   accountId: string,
   address: string,
-  tokenIdentifier: string,
+  tokenIdentifier: string
 ): Promise<Operation[]> => {
-  const accountESDTTransactions = await api.getESDTTransactionsForAddress(address, tokenIdentifier);
+  const accountESDTTransactions = await api.getESDTTransactionsForAddress(
+    address,
+    tokenIdentifier
+  );
 
-  return accountESDTTransactions.map(transaction => transactionToOperation(accountId, address, transaction));
-}
+  return accountESDTTransactions.map((transaction) =>
+    transactionToOperation(accountId, address, transaction)
+  );
+};
 
 /**
  * Obtain fees from blockchain
  */
 export const getFees = async (t: Transaction): Promise<BigNumber> => {
-  let { gasLimit, gasPerByte, gasPrice } = await getTransactionParams();
+  const transactionParams = await getTransactionParams();
+  const { gasPerByte, gasPrice } = transactionParams;
+  let gasLimit = transactionParams.gasLimit;
 
   if (t.subAccountId) {
     gasLimit = ESDT_TRANSFER_GAS;

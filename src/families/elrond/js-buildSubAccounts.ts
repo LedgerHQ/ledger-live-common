@@ -1,4 +1,9 @@
-import { CryptoCurrency, findTokenById, listTokensForCryptoCurrency, TokenCurrency } from "@ledgerhq/cryptoassets";
+import {
+  CryptoCurrency,
+  findTokenById,
+  listTokensForCryptoCurrency,
+  TokenCurrency,
+} from "@ledgerhq/cryptoassets";
 import BigNumber from "bignumber.js";
 import { emptyHistoryCache } from "../../account";
 import { Account, SyncConfig, TokenAccount } from "../../types";
@@ -17,11 +22,15 @@ async function buildElrondESDTTokenAccount({
 }) {
   const extractedId = token.id;
   const id = parentAccountId + "+" + extractedId;
-  const tokenIdentifierHex = token.id.split('/')[2];
-  const tokenIdentifier = Buffer.from(tokenIdentifierHex, 'hex').toString();
+  const tokenIdentifierHex = token.id.split("/")[2];
+  const tokenIdentifier = Buffer.from(tokenIdentifierHex, "hex").toString();
 
-  const operations = await getAccountESDTOperations(parentAccountId, accountAddress, tokenIdentifier);
- 
+  const operations = await getAccountESDTOperations(
+    parentAccountId,
+    accountAddress,
+    tokenIdentifier
+  );
+
   const tokenAccount: TokenAccount = {
     type: "TokenAccount",
     id,
@@ -36,7 +45,8 @@ async function buildElrondESDTTokenAccount({
     swapHistory: [],
     creationDate:
       operations.length > 0
-        ? operations[operations.length - 1].date : new Date(),
+        ? operations[operations.length - 1].date
+        : new Date(),
     balanceHistoryCache: emptyHistoryCache, // calculated in the jsHelpers
   };
   return tokenAccount;
@@ -58,7 +68,7 @@ async function elrondBuildESDTTokenAccounts({
   const { blacklistedTokenIds = [] } = syncConfig;
   if (listTokensForCryptoCurrency(currency).length === 0) {
     return undefined;
-  } 
+  }
   const tokenAccounts: TokenAccount[] = [];
 
   const existingAccountByTicker = {}; // used for fast lookup
@@ -79,8 +89,8 @@ async function elrondBuildESDTTokenAccounts({
   }
 
   const accountESDTs = await getAccountESDTTokens(accountAddress);
-  for (let esdt of accountESDTs) {
-    const esdtIdentifierHex = Buffer.from(esdt.identifier).toString('hex');
+  for (const esdt of accountESDTs) {
+    const esdtIdentifierHex = Buffer.from(esdt.identifier).toString("hex");
     const token = findTokenById(`elrond/esdt/${esdtIdentifierHex}`);
 
     if (token && !blacklistedTokenIds.includes(token.id)) {
@@ -90,7 +100,7 @@ async function elrondBuildESDTTokenAccounts({
         token,
         balance: new BigNumber(esdt.balance),
       });
-     
+
       if (tokenAccount) {
         tokenAccounts.push(tokenAccount);
       }

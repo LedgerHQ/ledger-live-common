@@ -71,17 +71,23 @@ const signOperation = ({
         await elrond.setAddress(account.freshAddressPath);
 
         if (tokenAccount) {
-          const tokenIdentifier = tokenAccount.id.split('+')[1];
+          const tokenIdentifier = tokenAccount.id.split("+")[1];
           const token = findTokenById(`${tokenIdentifier}`);
 
-          const collectionIdentifierHex = token?.id.split('/')[2];
-          await elrond.provideESDTInfo(token?.ticker, collectionIdentifierHex, token?.units[0].magnitude, CHAIN_ID, token?.ledgerSignature);
+          const collectionIdentifierHex = token?.id.split("/")[2];
+          await elrond.provideESDTInfo(
+            token?.ticker,
+            collectionIdentifierHex,
+            token?.units[0].magnitude,
+            CHAIN_ID,
+            token?.ledgerSignature
+          );
         }
 
         const unsignedTx: string = await buildTransaction(
           account,
           tokenAccount,
-          transaction,
+          transaction
         );
 
         o.next({

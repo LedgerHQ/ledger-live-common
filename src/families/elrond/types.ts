@@ -1,5 +1,4 @@
 import type { BigNumber } from "bignumber.js";
-import { RangeRaw } from "../../range";
 import type {
   TransactionCommon,
   TransactionCommonRaw,
@@ -31,7 +30,7 @@ export type ElrondProtocolTransaction = {
   data?: string; //for ESDT or stake transactions
   version: number;
   options: number;
-}
+};
 /**
  * Elrond transaction
  */
@@ -58,15 +57,15 @@ export type Transaction = TransactionCommon & {
 };
 
 export enum ElrondTransferOptions {
-  egld = 'egld',
-  esdt = 'esdt',
+  egld = "egld",
+  esdt = "esdt",
 }
 
 export type ESDTToken = {
   identifier: string;
   name: string;
   balance: string;
-}
+};
 
 /**
  * Elrond transaction from a raw JSON
@@ -111,4 +110,4 @@ export type NetworkInfoRaw = {
 export type ElrondPreloadData = {
   validators: Record<string, any>;
 };
-export const reflect = (_declare: any) => {};
+export const reflect = (_declare: any) => { };

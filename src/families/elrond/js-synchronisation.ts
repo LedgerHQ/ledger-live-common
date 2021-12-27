@@ -23,7 +23,7 @@ const getAccountShape: GetAccountShape = async (info) => {
   // Merge new operations with the previously synced ones
   const newOperations = await getOperations(accountId, address, startAt);
   const operations = mergeOps(oldOperations, newOperations);
-  
+
   let subAccounts: TokenAccount[] | undefined = [];
   if (await hasESDTTokens(address)) {
     subAccounts = await elrondBuildESDTTokenAccounts({
@@ -32,8 +32,8 @@ const getAccountShape: GetAccountShape = async (info) => {
       accountAddress: address,
       existingAccount: initialAccount,
       syncConfig: {
-        paginationConfig: {}
-      }
+        paginationConfig: {},
+      },
     });
   }
 

@@ -1,11 +1,13 @@
-import type { ElrondProtocolTransaction, NetworkInfo, Transaction } from "./types";
+import type {
+  ElrondProtocolTransaction,
+  NetworkInfo,
+  Transaction,
+} from "./types";
 import type { Account, SubAccount } from "../../types";
 import { encodeESDTTransfer, getNonce } from "./logic";
 import { getNetworkConfig } from "./api";
 import { ESDT_TRANSFER_GAS, HASH_TRANSACTION } from "./constants";
 import BigNumber from "bignumber.js";
-import getEstimatedFees from "./js-getFeesForTransaction";
-
 /**
  *
  * @param {Account} a
@@ -14,11 +16,13 @@ import getEstimatedFees from "./js-getFeesForTransaction";
 export const buildTransaction = async (
   a: Account,
   ta: SubAccount | null | undefined,
-  t: Transaction,
+  t: Transaction
 ) => {
   const address = a.freshAddress;
   const nonce = getNonce(a);
-  let { gasPrice, gasLimit, chainID }: NetworkInfo = await getNetworkConfig();
+  const networkConfig: NetworkInfo = await getNetworkConfig();
+  const { chainID, gasPrice } = networkConfig;
+  let gasLimit = networkConfig.gasLimit;
 
   let transactionValue;
 
@@ -27,13 +31,11 @@ export const buildTransaction = async (
     t.amount = new BigNumber(0); //amount of EGLD to be sent should be 0 in an ESDT transfer
     gasLimit = ESDT_TRANSFER_GAS; //gasLimit for and ESDT transfer
 
+    transactionValue = t.useAllAmount ? ta.balance : t.amount;
+  } else {
     transactionValue = t.useAllAmount
-    ? ta.balance : t.amount;
-  }
-  else {
-    transactionValue = t.useAllAmount
-    ? a.balance.minus(t.fees ? t.fees : new BigNumber(0))
-    : t.amount;  
+      ? a.balance.minus(t.fees ? t.fees : new BigNumber(0))
+      : t.amount;
   }
 
   const unsigned: ElrondProtocolTransaction = {

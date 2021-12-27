@@ -68,6 +68,8 @@ export const getNonce = (a: Account): number => {
 };
 
 export const encodeESDTTransfer = (t: Transaction, ta: SubAccount): string => {
-  const tokenIdentifierHex = ta.id.split('/')[2];
-  return Buffer.from(`ESDTTransfer@${tokenIdentifierHex}@${t.amount.toString(16)}`).toString('base64');
-}
+  const tokenIdentifierHex = ta.id.split("/")[2];
+  return Buffer.from(
+    `ESDTTransfer@${tokenIdentifierHex}@${t.amount.toString(16)}`
+  ).toString("base64");
+};
