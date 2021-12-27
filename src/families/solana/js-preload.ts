@@ -16,6 +16,8 @@ export async function preloadWithAPI(
     version: "1",
     validators: voteAccs.current.map((acc) => ({
       voteAccAddr: acc.votePubkey,
+      activatedStake: acc.activatedStake,
+      commission: acc.commission,
     })),
   };
 

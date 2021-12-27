@@ -162,7 +162,7 @@ export const getAccountShapeWithAPI = async (
           ? undefined
           : {
               stake: stake.delegation.stake.toNumber(),
-              voteAddr: stake.delegation.voter.toBase58(),
+              voteAccAddr: stake.delegation.voter.toBase58(),
             },
       activation,
     };

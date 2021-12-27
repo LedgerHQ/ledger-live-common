@@ -4,7 +4,7 @@ import {
   getCurrentSolanaPreloadData,
   getSolanaPreloadData,
 } from "./js-preload-data";
-import { SolanaPreloadDataV1 } from "./types";
+import { SolanaPreloadDataV1, SolanaStake, SolanaStakeWithMeta } from "./types";
 
 export function useSolanaPreloadData(
   currency: CryptoCurrency
@@ -13,4 +13,27 @@ export function useSolanaPreloadData(
     getSolanaPreloadData(currency),
     getCurrentSolanaPreloadData(currency)
   );
+}
+
+export function useSolanaStakesWithMeta(
+  currency: CryptoCurrency,
+  stakes: SolanaStake[]
+): SolanaStakeWithMeta[] {
+  const data = useSolanaPreloadData(currency);
+
+  if (data === null || data === undefined) {
+    return [];
+  }
+
+  return stakes.map((stake) => {
+    return {
+      stake,
+      meta: {
+        validator: {
+          img: undefined,
+          name: Math.random() > 0.5 ? "Dummy Name" : undefined,
+        },
+      },
+    };
+  });
 }

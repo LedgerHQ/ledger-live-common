@@ -200,22 +200,28 @@ export type SolanaStake = {
   stakeAccAddr: string;
   hasStakeAuth: boolean;
   hasWithdrawAuth: boolean;
-  lockup:
-    | {
-        unixTimestamp: number;
-      }
-    | undefined;
-  delegation:
-    | {
-        stake: number;
-        voteAddr: string;
-      }
-    | undefined;
+  lockup?: {
+    unixTimestamp: number;
+  };
+  delegation?: {
+    stake: number;
+    voteAccAddr: string;
+  };
   stakeAccBalance: number;
   activation: {
     state: "active" | "inactive" | "activating" | "deactivating";
     active: number;
     inactive: number;
+  };
+};
+
+export type SolanaStakeWithMeta = {
+  stake: SolanaStake;
+  meta: {
+    validator?: {
+      name?: string;
+      img?: string;
+    };
   };
 };
 
@@ -229,6 +235,8 @@ export type SolanaResourcesRaw = {
 
 export type SolanaValidator = {
   voteAccAddr: string;
+  commission: number;
+  activatedStake: number;
 };
 
 export type SolanaPreloadDataV1 = {
@@ -242,5 +250,13 @@ export type SolanaPreloadDataV2 = {
 };
 
 export type SolanaPreloadData = SolanaPreloadDataV1 | SolanaPreloadDataV2;
+
+export type SolanaValidatorWithMeta = {
+  validator: SolanaValidator;
+  meta: {
+    name: string;
+    img: string;
+  };
+};
 
 export const reflect = (_declare: unknown): void => {};
