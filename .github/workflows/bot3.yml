@@ -45,6 +45,7 @@ jobs:
       - uses: actions/setup-node@master
         with:
           node-version: 14.x
+          cache: yarn
       - name: install yarn
         run: npm i -g yarn
       - name: pull docker image
