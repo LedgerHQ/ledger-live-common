@@ -196,6 +196,8 @@ const getAccountShape: GetAccountShape = async (info) => {
 
   for (const delegation of delegations) {
     delegatedBalance = delegatedBalance.plus(delegation.amount);
+    balance = balance.plus(delegation.amount);
+
     pendingRewardsBalance = pendingRewardsBalance.plus(
       delegation.pendingRewards
     );
@@ -209,8 +211,13 @@ const getAccountShape: GetAccountShape = async (info) => {
   const estimatedFees = new BigNumber(0);
 
   const spendableBalance = balance
+  let spendableBalance = balance
     .minus(estimatedFees)
     .minus(unbondingBalance.plus(delegatedBalance));
+
+  if (spendableBalance.lt(0)) {
+    spendableBalance = new BigNumber(0);
+  }
 
   const shape = {
     id: accountId,
