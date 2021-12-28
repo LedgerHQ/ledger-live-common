@@ -137,6 +137,15 @@ const txToOps = (info: any, id: string, txs: any): any => {
       op.type = "IN";
     }
 
+    // remove duplicates
+    op.recipients = op.recipients.filter((element, index) => {
+      return op.recipients.indexOf(element) === index;
+    });
+
+    op.senders = op.senders.filter((element, index) => {
+      return op.senders.indexOf(element) === index;
+    });
+
     op.id = `${id}-${hash}-${op.type}`;
     ops.push(op);
   }
