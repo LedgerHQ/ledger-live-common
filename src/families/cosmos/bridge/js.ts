@@ -167,7 +167,6 @@ const getAccountShape: GetAccountShape = async (info) => {
   });
 
   let balance = await getAllBalances(address);
-
   const blockHeight = await getHeight();
   const txs = await getTransactions(address);
   const operations = txToOps(info, accountId, txs);
