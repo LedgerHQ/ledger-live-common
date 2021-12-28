@@ -147,25 +147,7 @@ const txToOps = (info: any, id: string, txs: any): any => {
   return ops;
 };
 
-const postSync = (initial: Account, parent: Account): Account => {
-  function evictRecentOpsIfPending(a) {
-    a.pendingOperations.forEach((pending) => {
-      const i = a.operations.findIndex((o) => o.id === pending.id);
-
-      if (i !== -1) {
-        const diff = parent.blockHeight - (a.operations[i].blockHeight || 0);
-
-        if (diff < preferPendingOperationsUntilBlockValidation) {
-          a.operations.splice(i, 1);
-        }
-      }
-    });
-  }
-
-  evictRecentOpsIfPending(parent);
-  parent.subAccounts && parent.subAccounts.forEach(evictRecentOpsIfPending);
-  return parent;
-};
+const postSync = (initial: Account, parent: Account) => parent;
 
 const getAccountShape: GetAccountShape = async (info) => {
   const { address, currency, derivationMode } = info;
