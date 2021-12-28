@@ -62,9 +62,6 @@ import { getAbandonSeedAddress } from "@ledgerhq/cryptoassets";
 import { log } from "@ledgerhq/logs";
 import { encodeOperationId } from "../../../operation";
 
-// the balance does not update straightaway so we should ignore recent operations if they are in pending for a bit
-const preferPendingOperationsUntilBlockValidation = 35;
-
 const txToOps = (info: any, id: string, txs: any): any => {
   const { address } = info;
   const ops: Operation[] = [];
