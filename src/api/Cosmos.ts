@@ -9,7 +9,6 @@ import {
 } from "@cosmjs/stargate";
 import { CosmosClient } from "@cosmjs/launchpad";
 import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
-import { Secp256k1HdWallet } from "@cosmjs/launchpad";
 import { DecodedTxRaw, decodeTxRaw } from "@cosmjs/proto-signing";
 import { fromHex, toHex } from "@cosmjs/encoding";
 import { log } from "@ledgerhq/logs";
