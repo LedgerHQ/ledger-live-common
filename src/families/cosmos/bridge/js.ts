@@ -236,13 +236,7 @@ const createTransaction = (): Transaction => ({
   validators: [],
 });
 
-const updateTransaction = (t, patch) => {
-  if ("recipient" in patch && patch.recipient !== t.recipient) {
-    return { ...t, ...patch, userGasLimit: null, estimatedGasLimit: null };
-  }
-
-  return { ...t, ...patch };
-};
+const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
 const receive = makeAccountBridgeReceive();
 
