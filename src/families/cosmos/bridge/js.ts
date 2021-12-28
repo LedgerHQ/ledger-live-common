@@ -30,6 +30,7 @@ import {
   getFees,
   getDelegators,
   // createWallet,
+  getWithdrawAddress,
 } from "../../../api/Cosmos";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Cosmos from "@ledgerhq/hw-app-str";
