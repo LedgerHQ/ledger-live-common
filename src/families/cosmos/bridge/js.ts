@@ -23,14 +23,7 @@ import {
   GetAccountShape,
 } from "../../../bridge/jsHelpers";
 import { encodeAccountId, getMainAccount } from "../../../account";
-import {
-  getTransactions,
-  getHeight,
-  getAllBalances,
-  getFees,
-  getDelegators,
-  getWithdrawAddress,
-} from "../../../api/Cosmos";
+import { getAccount, getFees } from "../../../api/Cosmos";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Cosmos from "@ledgerhq/hw-app-str";
 import {
@@ -166,13 +159,10 @@ const getAccountShape: GetAccountShape = async (info) => {
     derivationMode,
   });
 
-  let balance = await getAllBalances(address);
-  const blockHeight = await getHeight();
-  const txs = await getTransactions(address);
+  const { balances, blockHeight, txs, delegations, withdrawAddress } =
+    await getAccount(address);
   const operations = txToOps(info, accountId, txs);
-  const delegations = await getDelegators(address);
-  const withdrawAddress = await getWithdrawAddress(address);
-
+  let balance = balances;
   let delegatedBalance = new BigNumber(0);
   let pendingRewardsBalance = new BigNumber(0);
   let unbondingBalance = new BigNumber(0);
@@ -203,7 +193,7 @@ const getAccountShape: GetAccountShape = async (info) => {
 
   const shape = {
     id: accountId,
-    balance,
+    balance: balance,
     spendableBalance,
     operationsCount: operations.length,
     blockHeight,

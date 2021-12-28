@@ -23,6 +23,16 @@ let tmClient;
 const defaultEndpoint = getEnv("API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT");
 const defaultRpcEndpoint = getEnv("API_COSMOS_RPC_URL");
 
+export const getAccount = async (address: string) => {
+  const balances = await getAllBalances(address);
+  const blockHeight = await getHeight();
+  const txs = await getTransactions(address);
+  const delegations = await getDelegators(address);
+  const withdrawAddress = await getWithdrawAddress(address);
+
+  return { balances, blockHeight, txs, delegations, withdrawAddress };
+};
+
 export const getDelegators = async (address: string): Promise<any> => {
   log("cosmjs", "fetch delegators");
 
