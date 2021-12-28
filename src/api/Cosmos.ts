@@ -6,7 +6,6 @@ import {
   StdFee,
   calculateFee,
   GasPrice,
-  Coin,
 } from "@cosmjs/stargate";
 import { CosmosClient } from "@cosmjs/launchpad";
 import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
