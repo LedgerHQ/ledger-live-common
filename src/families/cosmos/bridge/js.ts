@@ -29,12 +29,10 @@ import {
   getAllBalances,
   getFees,
   getDelegators,
-  // createWallet,
   getWithdrawAddress,
 } from "../../../api/Cosmos";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Cosmos from "@ledgerhq/hw-app-str";
-import { Observable } from "rxjs";
 import {
   asSafeCosmosPreloadData,
   setCosmosPreloadData,
@@ -47,7 +45,6 @@ import {
   NotEnoughBalance,
   RecommendUndelegation,
 } from "@ledgerhq/errors";
-// import { validateRecipient } from "../../../bridge/shared";
 import {
   COSMOS_MAX_DELEGATIONS,
   COSMOS_MAX_REDELEGATIONS,
@@ -63,8 +60,6 @@ import {
 } from "../../../errors";
 import { getAbandonSeedAddress } from "@ledgerhq/cryptoassets";
 import { log } from "@ledgerhq/logs";
-import CryptoOrgApp from "@ledgerhq/hw-app-cosmos";
-import { open, close } from "../../../hw";
 import { encodeOperationId } from "../../../operation";
 
 // the balance does not update straightaway so we should ignore recent operations if they are in pending for a bit
