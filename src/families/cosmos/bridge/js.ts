@@ -6,7 +6,6 @@ import {
   TransactionStatus,
   SignOperationEvent,
   CryptoCurrency,
-  AccountLike,
 } from "../../../types";
 import invariant from "invariant";
 import type {
