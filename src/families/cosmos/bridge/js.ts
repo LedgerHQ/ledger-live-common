@@ -237,25 +237,12 @@ const updateTransaction = (t, patch) => ({ ...t, ...patch });
 
 const receive = makeAccountBridgeReceive();
 
-const estimateMaxSpendable = async ({
-  account,
-  parentAccount,
-  transaction,
-}: {
-  account: AccountLike;
-  parentAccount: Account;
-  transaction: Transaction;
-}): Promise<BigNumber> => {
+const estimateMaxSpendable = ({ account, parentAccount, transaction }) => {
   const mainAccount = getMainAccount(account, parentAccount);
-  const t = await prepareTransaction(mainAccount, {
-    ...createTransaction(),
-    ...transaction,
-    recipient:
-      transaction?.recipient || getAbandonSeedAddress(mainAccount.currency.id),
-    useAllAmount: true,
-  });
-  const s = await getTransactionStatus(mainAccount, t);
-  return s.amount;
+  const estimatedFees = transaction?.fees || new BigNumber(5000);
+  return Promise.resolve(
+    BigNumber.max(0, mainAccount.balance.minus(estimatedFees))
+  );
 };
 
 const getDelegateTransactionStatus = async (
