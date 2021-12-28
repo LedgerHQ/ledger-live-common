@@ -535,9 +535,7 @@ const getTransactionStatus = async (
   });
 };
 
-const prepareTransaction = async (a, t: Transaction): Promise<Transaction> => {
-  return t;
-};
+const prepareTransaction = async (a, t) => t;
 
 const broadcast = async ({ signedOperation: { signature } }) => {
   return await broadcast(signature);
