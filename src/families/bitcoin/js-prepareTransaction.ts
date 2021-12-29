@@ -20,7 +20,7 @@ const prepareTransaction = async (
   if (
     (t.networkInfo === networkInfo &&
       (feePerByte === t.feePerByte || feePerByte.eq(t.feePerByte || 0))) ||
-    feesStrategy === "custom"
+    t.feesStrategy === "custom"
   ) {
     // nothing changed
     return t;
