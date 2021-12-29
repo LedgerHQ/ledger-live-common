@@ -432,15 +432,10 @@ async function deriveStakeCreateAccountCommandDescriptor(
     return toInvalidStatusCommand(errors);
   }
 
-  // TODO: get the seed like <stake:N> when sync support staked accs
-  const seed = Math.random().toString();
-
   const commandFees = await getStakeAccountMinimumBalanceForRentExemption(api);
 
-  const stakeAccAddress = await getStakeAccountAddressWithSeed({
-    fromAddress: mainAccount.freshAddress,
-    seed,
-  });
+  const { addr: stakeAccAddress, seed: stakeAccAddressSeed } =
+    await nextStakeAccAddr(mainAccount);
 
   return {
     status: "valid",
@@ -450,7 +445,7 @@ async function deriveStakeCreateAccountCommandDescriptor(
       fromAccAddress: mainAccount.freshAddress,
       stakeAccAddress,
       delegate,
-      seed,
+      seed: stakeAccAddressSeed,
     },
     fees: commandFees,
   };
@@ -588,15 +583,12 @@ async function deriveStakeSplitCommandDescriptor(
     return toInvalidStatusCommand(errors);
   }
 
-  // TODO: fix seed
-  const seed = Math.random().toString();
+  mainAccount.solanaResources?.stakes ?? [];
 
   const commandFees = await getStakeAccountMinimumBalanceForRentExemption(api);
 
-  const splitStakeAccAddr = await getStakeAccountAddressWithSeed({
-    fromAddress: mainAccount.freshAddress,
-    seed,
-  });
+  const { addr: splitStakeAccAddr, seed: splitStakeAccAddrSeed } =
+    await nextStakeAccAddr(mainAccount);
 
   return {
     status: "valid",
@@ -605,7 +597,7 @@ async function deriveStakeSplitCommandDescriptor(
       authorizedAccAddr: mainAccount.freshAddress,
       stakeAccAddr: uiState.stakeAccAddr,
       amount: tx.amount.toNumber(),
-      seed,
+      seed: splitStakeAccAddrSeed,
       splitStakeAccAddr,
     },
     fees: commandFees,
@@ -663,6 +655,42 @@ async function isAccountFunded(
 ): Promise<boolean> {
   const balance = await api.getBalance(address);
   return balance > 0;
+}
+
+async function nextStakeAccAddr(account: Account, base = "stake") {
+  const usedStakeAccAddrs = (account.solanaResources?.stakes ?? []).map(
+    (s) => s.stakeAccAddr
+  );
+
+  return nextStakeAccAddrRoutine(
+    account.freshAddress,
+    new Set(usedStakeAccAddrs),
+    base,
+    0
+  );
+}
+
+async function nextStakeAccAddrRoutine(
+  fromAddress: string,
+  usedAddresses: Set<string>,
+  base: string,
+  idx: number
+): Promise<{
+  seed: string;
+  addr: string;
+}> {
+  const seed = `${base}:${idx}`;
+  const addr = await getStakeAccountAddressWithSeed({
+    fromAddress,
+    seed,
+  });
+
+  return usedAddresses.has(addr)
+    ? nextStakeAccAddrRoutine(fromAddress, usedAddresses, base, idx + 1)
+    : {
+        seed,
+        addr,
+      };
 }
 
 export { prepareTransaction };
