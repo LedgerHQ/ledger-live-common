@@ -83,6 +83,12 @@ export function cached(api: ChainAPI): ChainAPI {
       minutes(1)
     ),
 
+    getInflationReward: makeLRUCache(
+      api.getInflationReward,
+      cacheKeyByArgs,
+      minutes(5)
+    ),
+
     getVoteAccounts: makeLRUCache(
       api.getVoteAccounts,
       cacheKeyEmpty,

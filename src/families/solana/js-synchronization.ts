@@ -38,6 +38,7 @@ import {
 } from "lodash/fp";
 import { parseQuiet } from "./api/chain/program";
 import {
+  InflationReward,
   ParsedConfirmedTransactionMeta,
   ParsedMessageAccount,
   ParsedTransaction,
@@ -142,31 +143,40 @@ export const getAccountShapeWithAPI = async (
     nextSubAccs.push(nextSubAcc);
   }
 
-  const stakes: SolanaStake[] = onChainStakes.map(({ account, activation }) => {
-    const {
-      info: { meta, stake },
-    } = account;
-    return {
-      stakeAccAddr: account.onChainAcc.pubkey.toBase58(),
-      stakeAccBalance: account.onChainAcc.account.lamports,
-      hasStakeAuth: meta.authorized.staker.toBase58() === mainAccAddress,
-      hasWithdrawAuth: meta.authorized.withdrawer.toBase58() === mainAccAddress,
-      lockup:
-        meta.lockup.unixTimestamp === 0
-          ? undefined
-          : {
-              unixTimestamp: meta.lockup.unixTimestamp,
-            },
-      delegation:
-        stake === null
-          ? undefined
-          : {
-              stake: stake.delegation.stake.toNumber(),
-              voteAccAddr: stake.delegation.voter.toBase58(),
-            },
-      activation,
-    };
-  });
+  const stakes: SolanaStake[] = onChainStakes.map(
+    ({ account, activation, reward }) => {
+      const {
+        info: { meta, stake },
+      } = account;
+      return {
+        stakeAccAddr: account.onChainAcc.pubkey.toBase58(),
+        stakeAccBalance: account.onChainAcc.account.lamports,
+        hasStakeAuth: meta.authorized.staker.toBase58() === mainAccAddress,
+        hasWithdrawAuth:
+          meta.authorized.withdrawer.toBase58() === mainAccAddress,
+        lockup:
+          meta.lockup.unixTimestamp === 0
+            ? undefined
+            : {
+                unixTimestamp: meta.lockup.unixTimestamp,
+              },
+        delegation:
+          stake === null
+            ? undefined
+            : {
+                stake: stake.delegation.stake.toNumber(),
+                voteAccAddr: stake.delegation.voter.toBase58(),
+              },
+        activation,
+        reward:
+          reward === null
+            ? undefined
+            : {
+                amount: reward.amount,
+              },
+      };
+    }
+  );
 
   const mainAccountLastTxSignature = mainInitialAcc?.operations[0]?.hash;
 
@@ -576,6 +586,7 @@ async function getAccount(
   stakes: {
     account: ParsedOnChainStakeAccountWithInfo;
     activation: StakeActivationData;
+    reward: InflationReward | null;
   }[];
 }> {
   const balanceLamportsWithContext = await api.getBalanceAndContext(address);
@@ -601,13 +612,18 @@ async function getAccount(
     compact
   )();
 
+  const stakeRewards = await api.getInflationReward(
+    stakeAccounts.map(({ onChainAcc }) => onChainAcc.pubkey.toBase58())
+  );
+
   const stakes = await drainSeq(
-    stakeAccounts.map((account) => async () => {
+    stakeAccounts.map((account, idx) => async () => {
       return {
         account,
         activation: await api.getStakeActivation(
           account.onChainAcc.pubkey.toBase58()
         ),
+        reward: stakeRewards[idx],
       };
     })
   );

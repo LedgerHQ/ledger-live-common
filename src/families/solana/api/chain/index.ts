@@ -45,6 +45,10 @@ export type ChainAPI = Readonly<{
     stakeAccAddr: string
   ) => ReturnType<Connection["getStakeActivation"]>;
 
+  getInflationReward: (
+    addresses: string[]
+  ) => ReturnType<Connection["getInflationReward"]>;
+
   getVoteAccounts: () => ReturnType<Connection["getVoteAccounts"]>;
 
   getSignaturesForAddress: (
@@ -127,6 +131,11 @@ export function getChainAPI(config: Config): ChainAPI {
 
     getStakeActivation: (stakeAccAddr: string) =>
       connection().getStakeActivation(new PublicKey(stakeAccAddr)),
+
+    getInflationReward: (addresses: string[]) =>
+      connection().getInflationReward(
+        addresses.map((addr) => new PublicKey(addr))
+      ),
 
     getVoteAccounts: () => connection().getVoteAccounts(),
 

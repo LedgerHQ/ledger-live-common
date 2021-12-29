@@ -213,6 +213,9 @@ export type SolanaStake = {
     active: number;
     inactive: number;
   };
+  reward?: {
+    amount: number;
+  };
 };
 
 export type SolanaStakeWithMeta = {
