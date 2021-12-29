@@ -24,6 +24,17 @@ export type AppPermission = {
   params?: any;
 };
 
+export type AppParams = {
+  dappUrl: string;
+  nanoApp: string;
+  dappName: string;
+  networks: {
+    currency: string;
+    chainID: number;
+    nodeURL: string;
+  }[];
+};
+
 export type AppManifest = {
   id: string;
   private?: boolean;
@@ -36,7 +47,7 @@ export type AppManifest = {
   apiVersion: string;
   manifestVersion: string;
   branch: AppBranch;
-  params?: string[];
+  params?: AppParams;
   categories: string[];
   currencies: string[] | "*";
   content: {
