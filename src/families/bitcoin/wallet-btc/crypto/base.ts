@@ -10,6 +10,7 @@ import { ICrypto } from "./types";
 import bs58 from "bs58";
 import ecc from "tiny-secp256k1";
 import createHmac from "create-hmac";
+import bech32 from "bech32";
 
 // the BIP32 class is inspired from https://github.com/bitcoinjs/bip32/blob/master/src/bip32.js
 class BIP32 {
@@ -18,31 +19,22 @@ class BIP32 {
   network: any;
   depth: number;
   index: number;
-  constructor(
-    publicKey,
-    chainCode,
-    network,
-    depth = 0,
-    index = 0,
-  ) {
+  constructor(publicKey, chainCode, network, depth = 0, index = 0) {
     this.publicKey = publicKey;
     this.chainCode = chainCode;
     this.network = network;
     this.depth = depth;
     this.index = index;
   }
-  hmacSHA512(key, data) {
-    return createHmac("sha512", key).update(data).digest();
-  }
-  derive(index) {
+  derive(index: number) {
     const data = Buffer.allocUnsafe(37);
     this.publicKey.copy(data, 0);
     data.writeUInt32BE(index, 33);
-    const I = this.hmacSHA512(this.chainCode, data);
+    const I = createHmac("sha512", this.chainCode).update(data).digest();
     const IL = I.slice(0, 32);
     const IR = I.slice(32);
     const Ki = ecc.pointAddScalar(this.publicKey, IL, true);
-    return new BIP32(Ki,IR,this.network,this.depth + 1,index);
+    return new BIP32(Ki, IR, this.network, this.depth + 1, index);
   }
 }
 
@@ -83,13 +75,7 @@ class Base implements ICrypto {
       const i = buffer.readUInt32BE(9);
       const chainCode = buffer.slice(13, 45);
       const X = buffer.slice(45, 78);
-      const hd = new BIP32(
-        X,
-        chainCode,
-        this.network,
-        depth,
-        i
-      );
+      const hd = new BIP32(X, chainCode, this.network, depth, i);
       Base.bech32Cache[xpub] = hd;
     }
     if (Base.publickeyCache[`${xpub}-${account}-${index}`]) {
@@ -111,32 +97,32 @@ class Base implements ICrypto {
 
   // derive legacy address at account and index positions
   getLegacyAddress(xpub: string, account: number, index: number): string {
-    const { address } = bjs.payments.p2pkh({
-      pubkey: this.getPubkeyAt(xpub, account, index),
-      network: this.network,
-    });
-    return String(address);
+    const publicKeyBuffer = this.getPubkeyAt(xpub, account, index);
+    const publicKeyHash160 = bjs.crypto.hash160(publicKeyBuffer);
+    return bjs.address.toBase58Check(publicKeyHash160, this.network.pubKeyHash);
   }
 
   // derive native SegWit at account and index positions
   getNativeSegWitAddress(xpub: string, account: number, index: number): string {
-    const { address } = bjs.payments.p2wpkh({
-      pubkey: this.getPubkeyAt(xpub, account, index),
-      network: this.network,
-    });
-
-    return String(address);
+    const publicKeyBuffer = this.getPubkeyAt(xpub, account, index);
+    const publicKeyHash160 = bjs.crypto.hash160(publicKeyBuffer);
+    const words = bech32.toWords(publicKeyHash160);
+    words.unshift(0x00);
+    return bech32.encode(this.network.bech32, words);
   }
 
   // derive SegWit at account and index positions
   getSegWitAddress(xpub: string, account: number, index: number): string {
-    const { address } = bjs.payments.p2sh({
-      redeem: bjs.payments.p2wpkh({
-        pubkey: this.getPubkeyAt(xpub, account, index),
-        network: this.network,
-      }),
-    });
-    return String(address);
+    const publicKeyBuffer: Buffer = this.getPubkeyAt(xpub, account, index);
+    const redeemOutput: Buffer = bjs.script.compile([
+      0,
+      bjs.crypto.hash160(publicKeyBuffer),
+    ]);
+    const publicKeyHash160: Buffer = bjs.crypto.hash160(redeemOutput);
+    const payload: Buffer = Buffer.allocUnsafe(21);
+    payload.writeUInt8(this.network.scriptHash, 0);
+    publicKeyHash160.copy(payload, 1);
+    return bs58check.encode(payload);
   }
 
   // get address given an address type

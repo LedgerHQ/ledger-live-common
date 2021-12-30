@@ -4,32 +4,6 @@ import * as utils from "../../../../families/bitcoin/wallet-btc/utils";
 import { Currency } from "../../../../families/bitcoin/wallet-btc/crypto/types";
 import cryptoFactory from "../../../../families/bitcoin/wallet-btc/crypto/factory";
 import { DerivationModes } from "../../../../families/bitcoin/wallet-btc";
-import * as currency from "../../../../families/bitcoin/wallet-btc/crypto";
-import coininfo from "coininfo";
-
-
-console.log("hello world");
-
-const decredCrypto = new currency.Decred({ network: coininfo.decred.main.toBitcoinJS() });
-const bitcoinCrypto = new currency.Bitcoin({ network: coininfo.bitcoin.main.toBitcoinJS() });
-
-const start = Date.now();
-for (let index = 0; index<100000; index++){
-  // const lll = decredCrypto.getAddress("Legacy", "dpubZFUiMExUREbqJQVJkfXSs4wjUb1jwVkoofnPK8Mt95j3PanCyq9Mc4aFnWtRZkhci9ZYPVLZybVLMMkS6g1nKBTN4899KJwGeVBvyumvcjW", 0, index);
-  const lll = bitcoinCrypto.getAddress("Legacy", "xpub6CThYZbX4PTeA7KRYZ8YXP3F6HwT2eVKPQap3Avieds3p1eos35UzSsJtTbJ3vQ8d3fjRwk4bCEz4m4H6mkFW49q29ZZ6gS8tvahs4WCZ9X", 0, index);
-  //const lllc = bitcoinCrypto.getAddress("Taproot", "xpub6CThYZbX4PTeA7KRYZ8YXP3F6HwT2eVKPQap3Avieds3p1eos35UzSsJtTbJ3vQ8d3fjRwk4bCEz4m4H6mkFW49q29ZZ6gS8tvahs4WCZ9X", 0, index);
-  //const lllcd = bitcoinCrypto.getAddress("SegWit", "xpub6CThYZbX4PTeA7KRYZ8YXP3F6HwT2eVKPQap3Avieds3p1eos35UzSsJtTbJ3vQ8d3fjRwk4bCEz4m4H6mkFW49q29ZZ6gS8tvahs4WCZ9X", 0, index);
-  // console.log(lll);
-  // NATIVE_SEGWIT = "Native SegWit"
-  // SEGWIT = "SegWit"
-  // TAPROOT = "Taproot"
-
-}
-const millis = Date.now() - start;
-
-console.log(`seconds elapsed = ${Math.floor(millis / 1000)}`);
-console.log(millis);
-console.log("end");
 
 function validateAddrs(
   addresses: string[],
