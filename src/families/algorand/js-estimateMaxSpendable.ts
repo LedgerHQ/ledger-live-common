@@ -4,6 +4,7 @@ import { getMainAccount } from "../../account";
 import type { AlgorandTransaction } from "./types";
 import { computeAlgoMaxSpendable } from "./logic";
 import { createTransaction } from "./js-prepareTransaction";
+import { getAbandonSeedAddress } from "@ledgerhq/cryptoassets";
 
 export const estimateMaxSpendable = async ({
   account,
@@ -20,14 +21,21 @@ export const estimateMaxSpendable = async ({
     throw new Error("Algorand account expected");
   }
 
-  const tx = { ...createTransaction(), ...transaction, useAllAmount: true };
+  const tx = {
+    ...createTransaction(),
+    subAccountId: account.type === "Account" ? null : account.id,
+    ...transaction,
+    recipient:
+      transaction?.recipient || getAbandonSeedAddress(mainAccount.currency.id),
+    useAllAmount: true,
+  };
 
   const tokenAccount =
     tx.subAccountId &&
     mainAccount.subAccounts &&
     mainAccount.subAccounts.find((ta) => ta.id === tx.subAccountId);
 
-  if (!!tokenAccount) {
+  if (tokenAccount) {
     return tokenAccount.balance;
   } else {
     let maxSpendable = computeAlgoMaxSpendable({
