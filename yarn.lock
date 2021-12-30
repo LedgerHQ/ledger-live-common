@@ -1369,11 +1369,6 @@
   resolved "https://registry.npmjs.org/@ledgerhq/logs/-/logs-5.50.0.tgz"
   integrity sha512-swKHYCOZUGyVt4ge0u8a7AwNcA//h4nx5wIi0sruGye1IJ5Cva0GyK9L2/WdX+kWVTKp92ZiEo1df31lrWGPgA==
 
-"@msgpack/msgpack@^2.7.1":
-  version "2.7.1"
-  resolved "https://registry.yarnpkg.com/@msgpack/msgpack/-/msgpack-2.7.1.tgz#f01954baadc502f3c82e9c3f72c740ce65eae1cc"
-  integrity sha512-ApwiSL2c9ObewdOE/sqt788P1C5lomBOHyO8nUBCr4ofErBCnYQ003NtJ8lS9OQZc11ximkbmgAZJjB8y6cCdA==
-
 "@noble/hashes@0.4.1":
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-0.4.1.tgz#ef8ef347cfb3a03692f16ed31fda717f8e78d392"

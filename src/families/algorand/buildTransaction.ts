@@ -1,6 +1,4 @@
-import { encode as msgpackEncode } from "@msgpack/msgpack";
-// TODO Test this on LLM
-//import { encode as msgpackEncode } from "algo-msgpack-with-bigint";
+import { encode as msgpackEncode } from "algo-msgpack-with-bigint";
 import type {
   SuggestedParams as AlgoSuggestedParams,
   Transaction as AlgoTransaction,
