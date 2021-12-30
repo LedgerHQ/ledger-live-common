@@ -1,13 +1,50 @@
 // from https://github.com/LedgerHQ/xpub-scan/blob/master/src/actions/deriveAddresses.ts
 
 import * as bjs from "bitcoinjs-lib";
-import * as bip32 from "bip32";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { toOutputScript } from "bitcoinjs-lib/src/address";
 import bs58check from "bs58check";
 import { DerivationModes } from "../types";
 import { ICrypto } from "./types";
+import bs58 from "bs58";
+import ecc from "tiny-secp256k1";
+import createHmac from "create-hmac";
+
+// the BIP32 class is inspired from https://github.com/bitcoinjs/bip32/blob/master/src/bip32.js
+class BIP32 {
+  publicKey: any;
+  chainCode: any;
+  network: any;
+  depth: number;
+  index: number;
+  constructor(
+    publicKey,
+    chainCode,
+    network,
+    depth = 0,
+    index = 0,
+  ) {
+    this.publicKey = publicKey;
+    this.chainCode = chainCode;
+    this.network = network;
+    this.depth = depth;
+    this.index = index;
+  }
+  hmacSHA512(key, data) {
+    return createHmac("sha512", key).update(data).digest();
+  }
+  derive(index) {
+    const data = Buffer.allocUnsafe(37);
+    this.publicKey.copy(data, 0);
+    data.writeUInt32BE(index, 33);
+    const I = this.hmacSHA512(this.chainCode, data);
+    const IL = I.slice(0, 32);
+    const IR = I.slice(32);
+    const Ki = ecc.pointAddScalar(this.publicKey, IL, true);
+    return new BIP32(Ki,IR,this.network,this.depth + 1,index);
+  }
+}
 
 export function fallbackValidateAddress(address: string): boolean {
   try {
@@ -41,7 +78,19 @@ class Base implements ICrypto {
 
   protected getPubkeyAt(xpub: string, account: number, index: number): Buffer {
     if (!Base.bech32Cache[xpub]) {
-      Base.bech32Cache[xpub] = bip32.fromBase58(xpub, this.network);
+      const buffer: Buffer = bs58.decode(xpub);
+      const depth = buffer[4];
+      const i = buffer.readUInt32BE(9);
+      const chainCode = buffer.slice(13, 45);
+      const X = buffer.slice(45, 78);
+      const hd = new BIP32(
+        X,
+        chainCode,
+        this.network,
+        depth,
+        i
+      );
+      Base.bech32Cache[xpub] = hd;
     }
     if (Base.publickeyCache[`${xpub}-${account}-${index}`]) {
       return Base.publickeyCache[`${xpub}-${account}-${index}`];
@@ -66,7 +115,6 @@ class Base implements ICrypto {
       pubkey: this.getPubkeyAt(xpub, account, index),
       network: this.network,
     });
-
     return String(address);
   }
 
