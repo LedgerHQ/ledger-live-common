@@ -1,5 +1,3 @@
-import { BigNumber } from "bignumber.js";
-
 import type { AccountBridge, CurrencyBridge } from "../../../types";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 

@@ -12,8 +12,6 @@ import { listTokensForCryptoCurrency } from "../../currencies";
 import { extractTokenId } from "./tokens";
 import { DeviceModelId } from "@ledgerhq/devices";
 const currency = getCryptoCurrencyById("algorand");
-// Minimum fees
-const minFees = parseCurrencyUnit(currency.units[0], "0.001");
 // Minimum balance required for a new non-ASA account
 const minBalanceNewAccount = parseCurrencyUnit(currency.units[0], "0.1");
 
