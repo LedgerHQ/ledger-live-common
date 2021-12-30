@@ -324,16 +324,18 @@ const getAccountShape: GetAccountShape = async (info) => {
     walletAccount
   );
 
-  const accountAddresses: Set<string> = new Set<string>();
   const accountAddressesWithInfo = await walletAccount.xpub.getXpubAddresses();
-  accountAddressesWithInfo.map((a) => accountAddresses.add(a.address));
+  const accountAddresses = new Set(
+    accountAddressesWithInfo.map((a) => a.address)
+  );
 
-  const changeAddresses: Set<string> = new Set<string>();
   const changeAddressesWithInfo =
     await walletAccount.xpub.storage.getUniquesAddresses({
       account: 1,
     });
-  changeAddressesWithInfo.map((a) => changeAddresses.add(a.address));
+  const changeAddresses = new Set(
+    changeAddressesWithInfo.map((a) => a.address)
+  );
 
   const newOperations = transactions
     ?.map((tx) =>
