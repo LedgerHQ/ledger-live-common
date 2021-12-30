@@ -22,8 +22,7 @@ export const buildTransactionPayload = async (
   account: Account,
   transaction: Transaction
 ): Promise<AlgoTransactionPayload> => {
-  const { recipient, useAllAmount, fees, mode, memo, assetId, subAccountId } =
-    transaction;
+  const { amount, recipient, mode, memo, assetId, subAccountId } = transaction;
   const subAccount = subAccountId
     ? account.subAccounts &&
       account.subAccounts.find((t) => t.id === subAccountId)
@@ -47,31 +46,22 @@ export const buildTransactionPayload = async (
       throw new Error("Token Asset Id not found");
     }
 
-    const amount =
-      useAllAmount && subAccount
-        ? subAccount.balance.toNumber()
-        : transaction.amount.toNumber();
-
     algoTxn = makeAssetTransferTxnWithSuggestedParams(
       account.freshAddress,
       recipient,
       undefined,
       undefined,
-      amount,
+      amount.toNumber(),
       note,
       Number(targetAssetId),
       params,
       undefined
     );
   } else {
-    const amount = useAllAmount
-      ? account.spendableBalance.minus(fees ?? 0).toNumber()
-      : transaction.amount.toNumber();
-
     algoTxn = makePaymentTxnWithSuggestedParams(
       account.freshAddress,
       recipient,
-      amount,
+      amount.toNumber(),
       undefined,
       note,
       params

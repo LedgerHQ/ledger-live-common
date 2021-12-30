@@ -199,7 +199,10 @@ const algorand: AppSpec<AlgorandTransaction> = {
         // maxSpendable is expected to be greater than 100,000 micro-Algos (+ 1,000 for fees)
         // corresponding to the requirement that the main account will have
         // one more ASA after the opt-in; its minimum balance is updated accordingly
-        invariant(maxSpendable.gt(new BigNumber(101000)), "balance is too low");
+        invariant(
+          maxSpendable.gt(new BigNumber(101000)),
+          "Spendable balance is too low"
+        );
         const transaction = bridge.createTransaction(account);
         const mode = "optIn";
         const assetId = getRandomAssetId(account);

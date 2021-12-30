@@ -3,6 +3,7 @@ import type { Account, AccountLike } from "../../types";
 import { getMainAccount } from "../../account";
 import type { AlgorandTransaction } from "./types";
 import { computeAlgoMaxSpendable } from "./logic";
+import { createTransaction } from "./js-prepareTransaction";
 
 export const estimateMaxSpendable = async ({
   account,
@@ -19,18 +20,24 @@ export const estimateMaxSpendable = async ({
     throw new Error("Algorand account expected");
   }
 
-  const isTokenAccount = account.id && account.id === transaction?.subAccountId;
+  const tx = { ...createTransaction(), ...transaction, useAllAmount: true };
 
-  if (isTokenAccount) {
-    return account.balance;
+  const tokenAccount =
+    tx.subAccountId &&
+    mainAccount.subAccounts &&
+    mainAccount.subAccounts.find((ta) => ta.id === tx.subAccountId);
+
+  if (!!tokenAccount) {
+    return tokenAccount.balance;
   } else {
-    const maxSpendable = computeAlgoMaxSpendable({
+    let maxSpendable = computeAlgoMaxSpendable({
       accountBalance: mainAccount.balance,
       nbAccountAssets: algorandResources.nbAssets,
-      mode: transaction?.mode || "send",
+      mode: tx.mode,
     });
-    return transaction?.fees
-      ? maxSpendable.minus(transaction?.fees)
-      : maxSpendable;
+    if (tx.fees) {
+      maxSpendable = maxSpendable.minus(tx.fees);
+    }
+    return maxSpendable.gte(0) ? maxSpendable : new BigNumber(0);
   }
 };

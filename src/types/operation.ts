@@ -25,8 +25,8 @@ export type OperationType =
   | "SET_CONTROLLER"
   | "SLASH"
   | "NOMINATE"
-  // COMPOUND TYPE OPERATIONS
   | "CHILL"
+  // COMPOUND TYPE OPERATIONS
   | "SUPPLY"
   | "REDEEM"
   | "APPROVE"
