@@ -27,6 +27,7 @@ import {
 } from "./api";
 import { AlgoTransactionType, getAccount, getAccountTransactions } from "./api";
 import { addPrefixToken, extractTokenId } from "./tokens";
+import { computeAlgoMaxSpendable } from "./logic";
 
 const getASAOperationAmount = (
   transaction: AlgoTransaction,
@@ -258,6 +259,15 @@ const getAccountShape: GetAccountShape = async (
 
   const { round, balance, pendingRewards, assets } = await getAccount(address);
 
+  const nbAssets = assets.length;
+
+  // NOTE Actual spendable amount depends on the transaction
+  const spendableBalance = computeAlgoMaxSpendable({
+    accountBalance: balance,
+    nbAccountAssets: nbAssets,
+    mode: "send",
+  });
+
   const newTransactions: AlgoTransaction[] = await getAccountTransactions(
     address,
     startAt
@@ -283,13 +293,13 @@ const getAccountShape: GetAccountShape = async (
     id: accountId,
     blockHeight: round,
     balance,
-    spendableBalance: balance, // actual spendable balance depends on the transaction
+    spendableBalance,
     operations,
     operationsCount: operations.length,
     subAccounts,
     algorandResources: {
       rewards: pendingRewards,
-      nbAssets: assets.length,
+      nbAssets,
     },
   };
 
