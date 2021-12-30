@@ -71,12 +71,17 @@ class Base implements ICrypto {
   protected getPubkeyAt(xpub: string, account: number, index: number): Buffer {
     if (!Base.bech32Cache[xpub]) {
       const buffer: Buffer = bs58.decode(xpub);
-      const depth = buffer[4];
-      const i = buffer.readUInt32BE(9);
-      const chainCode = buffer.slice(13, 45);
-      const X = buffer.slice(45, 78);
-      const hd = new BIP32(X, chainCode, this.network, depth, i);
-      Base.bech32Cache[xpub] = hd;
+      const depth: number = buffer[4];
+      const i: number = buffer.readUInt32BE(9);
+      const chainCode: Buffer = buffer.slice(13, 45);
+      const publicKey: Buffer = buffer.slice(45, 78);
+      Base.bech32Cache[xpub] = new BIP32(
+        publicKey,
+        chainCode,
+        this.network,
+        depth,
+        i
+      );
     }
     if (Base.publickeyCache[`${xpub}-${account}-${index}`]) {
       return Base.publickeyCache[`${xpub}-${account}-${index}`];
@@ -97,16 +102,16 @@ class Base implements ICrypto {
 
   // derive legacy address at account and index positions
   getLegacyAddress(xpub: string, account: number, index: number): string {
-    const publicKeyBuffer = this.getPubkeyAt(xpub, account, index);
-    const publicKeyHash160 = bjs.crypto.hash160(publicKeyBuffer);
+    const publicKeyBuffer: Buffer = this.getPubkeyAt(xpub, account, index);
+    const publicKeyHash160: Buffer = bjs.crypto.hash160(publicKeyBuffer);
     return bjs.address.toBase58Check(publicKeyHash160, this.network.pubKeyHash);
   }
 
   // derive native SegWit at account and index positions
   getNativeSegWitAddress(xpub: string, account: number, index: number): string {
-    const publicKeyBuffer = this.getPubkeyAt(xpub, account, index);
-    const publicKeyHash160 = bjs.crypto.hash160(publicKeyBuffer);
-    const words = bech32.toWords(publicKeyHash160);
+    const publicKeyBuffer: Buffer = this.getPubkeyAt(xpub, account, index);
+    const publicKeyHash160: Buffer = bjs.crypto.hash160(publicKeyBuffer);
+    const words: number[] = bech32.toWords(publicKeyHash160);
     words.unshift(0x00);
     return bech32.encode(this.network.bech32, words);
   }
