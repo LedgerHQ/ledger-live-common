@@ -56,6 +56,10 @@ const acceptTransaction: DeviceAction<AlgorandTransaction, any> =
           transaction.mode === "optIn" ? "0" : status.amount.toString(),
       },
       {
+        title: "Sender",
+        button: "Rr",
+      },
+      {
         title: "Receiver",
         button: "Rr",
         expectedValue: ({ transaction }) => transaction.recipient,
