@@ -22,7 +22,13 @@ import {
   GetAccountShape,
 } from "../../../bridge/jsHelpers";
 import { encodeAccountId, getMainAccount } from "../../../account";
-import { getAccount, getFees } from "../../../api/Cosmos";
+import {
+  broadcast,
+  getAccount,
+  getChainId,
+  getFees,
+  getSequence,
+} from "../../../api/Cosmos";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Cosmos from "@ledgerhq/hw-app-str";
 import {
@@ -54,6 +60,7 @@ import { Observable } from "rxjs";
 import { withDevice } from "../../../hw/deviceAccess";
 import { LedgerSigner } from "@cosmjs/ledger-amino";
 import { makeCosmoshubPath, makeSignDoc, StdFee } from "@cosmjs/amino";
+import { makeStdTx } from "@cosmjs/launchpad";
 
 const txToOps = (info: any, id: string, txs: any): any => {
   const { address } = info;
@@ -500,10 +507,6 @@ const getTransactionStatus = async (
 
 const prepareTransaction = async (a, t) => t;
 
-const broadcast = async ({ signedOperation: { signature } }) => {
-  return await broadcast(signature);
-};
-
 const signOperation = ({
   account,
   deviceId,
@@ -521,15 +524,16 @@ const signOperation = ({
         const { fees } = transaction;
         if (!fees) throw new FeeNotLoaded();
 
-        const { freshAddressPath, freshAddress } = account;
+        const { freshAddress } = account;
 
         const ledgerSigner = new LedgerSigner(transport, {
+          // todo: handle path derivation
           hdPaths: [makeCosmoshubPath(0)],
         });
 
         o.next({ type: "device-signature-requested" });
 
-        let res, opbytes, msg;
+        let msg;
         switch (transaction.mode) {
           case "send":
             msg = {
@@ -555,10 +559,8 @@ const signOperation = ({
             throw "not supported";
         }
 
-        const defaultMemo = "Ledger";
-        const defaultSequence = "0";
         const accountNumber = 0;
-        const defaultChainId = "cosmoshub4";
+
         const defaultFee: StdFee = {
           amount: [
             {
@@ -566,31 +568,66 @@ const signOperation = ({
               denom: "ucosm",
             },
           ],
-          gas: "250",
+          gas: `${transaction.gas}`,
         };
 
         const signDoc = makeSignDoc(
           [msg],
           defaultFee,
-          defaultChainId,
-          defaultMemo,
+          await getChainId(),
+          transaction.memo || "",
           accountNumber,
-          defaultSequence
+          await getSequence(freshAddress)
         );
 
-        const { signature } = await ledgerSigner.signAmino(
+        const { signed, signature } = await ledgerSigner.signAmino(
           freshAddress,
           signDoc
         );
+
+        const signedTx = makeStdTx(signed, signature);
 
         if (cancelled) {
           return;
         }
 
-        return;
-
         o.next({ type: "device-signature-granted" });
 
+        // build optimistic operation
+        const txHash = ""; // resolved at broadcast time
+        const senders = [freshAddress];
+        const recipients = [transaction.recipient];
+        const accountId = account.id;
+
+        const operation = {
+          id: `${accountId}-${txHash}-OUT`,
+          hash: txHash,
+          type: "OUT",
+          value: transaction.amount,
+          fee: fees,
+          extra: {
+            storageLimit: 0,
+            gasLimit: 0,
+            // storageLimit: transaction.storageLimit,
+            // gasLimit: transaction.gasLimit,
+            opbytes: signedTx,
+          },
+          blockHash: null,
+          blockHeight: null,
+          senders,
+          recipients,
+          accountId,
+          date: new Date(),
+        };
+
+        o.next({
+          type: "signed",
+          signedOperation: {
+            operation,
+            signature,
+            expirationDate: null,
+          },
+        });
       }
 
       main().then(
@@ -643,7 +680,11 @@ const accountBridge: AccountBridge<Transaction> = {
   sync,
   receive,
   signOperation,
-  broadcast,
+  broadcast: async ({ signedOperation }) => {
+    return broadcast({
+      signedOperation,
+    });
+  },
 };
 
 export default {
