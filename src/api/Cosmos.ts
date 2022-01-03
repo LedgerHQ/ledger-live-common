@@ -254,15 +254,14 @@ export const getAllBalances = async (address: string): Promise<BigNumber> => {
   }
 };
 
-export const getChainId = async (): Promise<string | undefined> => {
+export const getChainId = async (): Promise<string> => {
   log("cosmjs", "fetch chainid");
 
   try {
-    api = await new CosmosClient(defaultEndpoint);
+    api = await StargateClient.connect(defaultRpcEndpoint);
     const data = await api.getChainId();
     return data;
   } catch (e) {
-    return undefined;
   }
 };
 
@@ -288,6 +287,7 @@ export const sign = async (
     return data;
   } catch (e) {
     return undefined;
+    return "";
   }
 };
 
