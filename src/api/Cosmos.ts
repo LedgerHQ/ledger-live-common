@@ -262,31 +262,6 @@ export const getChainId = async (): Promise<string> => {
     const data = await api.getChainId();
     return data;
   } catch (e) {
-  }
-};
-
-export const sign = async (
-  signerAddress: string,
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  messages,
-  fee: StdFee,
-  memo: string,
-  explicitSignerData: SignerData | undefined
-): Promise<string | undefined> => {
-  log("cosmjs", "sign");
-
-  try {
-    signedApi = await SigningStargateClient.connect(defaultEndpoint);
-    const data = await signedApi.sign(
-      signerAddress,
-      messages,
-      fee,
-      memo,
-      explicitSignerData
-    );
-    return data;
-  } catch (e) {
-    return undefined;
     return "";
   }
 };
