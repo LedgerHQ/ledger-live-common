@@ -76,6 +76,19 @@ export const getDelegators = async (address: string): Promise<any> => {
   }
 };
 
+export const isValidRecipent = async(address: string): Promise<boolean> => {
+  try {
+    await network({
+      method: "GET",
+      url: `${defaultEndpoint}/cosmos/bank/v1beta1/balances/${address}`,
+    });
+
+    return true;
+  } catch (e) {
+    return false
+  }
+};
+
 export const getWithdrawAddress = async (address: string): Promise<string> => {
   log("cosmjs", "fetch withdraw address");
 
