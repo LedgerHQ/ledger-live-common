@@ -50,7 +50,6 @@ import {
   CosmosTooManyValidators,
   NotEnoughDelegationBalance,
 } from "../../../errors";
-import { log } from "@ledgerhq/logs";
 import { Observable } from "rxjs";
 import { withDevice } from "../../../hw/deviceAccess";
 import { LedgerSigner } from "@cosmjs/ledger-amino";
