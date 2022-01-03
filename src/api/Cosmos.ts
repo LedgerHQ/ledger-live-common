@@ -266,25 +266,9 @@ export const getChainId = async (): Promise<string> => {
   }
 };
 
-export const signAndBroadcast = async (
-  signerAddress: string,
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  messages,
-  fee: StdFee,
-  memo: string
-): Promise<string | undefined> => {
-  log("cosmjs", "sign and broadcast");
 
   try {
     signedApi = await SigningStargateClient.connect(defaultEndpoint);
-    const data = await signedApi.signAndBroadcast(
-      signerAddress,
-      messages,
-      fee,
-      memo
-    );
-    return data;
   } catch (e) {
-    return undefined;
   }
 };
