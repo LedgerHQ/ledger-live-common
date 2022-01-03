@@ -2,15 +2,13 @@ import { getEnv } from "../env";
 import {
   StargateClient,
   SigningStargateClient,
-  SignerData,
-  StdFee,
   calculateFee,
   GasPrice,
 } from "@cosmjs/stargate";
 import { CosmosClient } from "@cosmjs/launchpad";
 import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
 import { DecodedTxRaw, decodeTxRaw } from "@cosmjs/proto-signing";
-import { fromHex, toHex } from "@cosmjs/encoding";
+import { toHex } from "@cosmjs/encoding";
 import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
 import network from "../network";
