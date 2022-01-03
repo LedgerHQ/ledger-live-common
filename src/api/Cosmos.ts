@@ -266,9 +266,14 @@ export const getChainId = async (): Promise<string> => {
   }
 };
 
+export const getSequence = async (address: string): Promise<number> => {
+  log("cosmjs", "fetch sequence");
 
   try {
     signedApi = await SigningStargateClient.connect(defaultEndpoint);
+    const { sequence } = await signedApi.getSequence(address);
+    return sequence;
   } catch (e) {
+    return 0;
   }
 };
