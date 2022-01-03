@@ -50,9 +50,11 @@ import {
   CosmosTooManyValidators,
   NotEnoughDelegationBalance,
 } from "../../../errors";
-import { getAbandonSeedAddress } from "@ledgerhq/cryptoassets";
 import { log } from "@ledgerhq/logs";
-import { encodeOperationId } from "../../../operation";
+import { Observable } from "rxjs";
+import { withDevice } from "../../../hw/deviceAccess";
+import { LedgerSigner } from "@cosmjs/ledger-amino";
+import { makeCosmoshubPath, makeSignDoc, StdFee } from "@cosmjs/amino";
 
 const txToOps = (info: any, id: string, txs: any): any => {
   const { address } = info;
@@ -65,11 +67,6 @@ const txToOps = (info: any, id: string, txs: any): any => {
       id: "",
       hash: hash,
       type: "" as any,
-      /*
-      value: transaction.useAllAmount
-        ? spendableBalance
-        : transaction.amount.plus(fee),
-      */
       value: new BigNumber(0),
       fee: txs[hash].fee,
       blockHash: null,
@@ -80,7 +77,6 @@ const txToOps = (info: any, id: string, txs: any): any => {
       date: txs[hash].date,
       extra: {
         validators: [] as any,
-        // cosmosSourceValidator: transaction.cosmosSourceValidator, // redelegate
       },
     };
 
@@ -313,21 +309,8 @@ const getSendTransactionStatus = async (
 
   if (a.freshAddress === t.recipient) {
     errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
-    /*
   } else {
-    const { recipientError, recipientWarning } = await validateRecipient(
-      a.currency,
-      t.recipient
-    );
-
-    if (recipientError) {
-      errors.recipient = recipientError;
-    }
-
-    if (recipientWarning) {
-      warnings.recipient = recipientWarning;
-    }
-  */
+    // todo validate recipient
   }
 
   let amount = t.amount;
@@ -531,81 +514,96 @@ const signOperation = ({
   deviceId: any;
   transaction: Transaction;
 }): Observable<SignOperationEvent> =>
-  new Observable((o) => {
-    async function main() {
-      const transport = await open(deviceId);
+  withDevice(deviceId)((transport) =>
+    Observable.create((o) => {
+      let cancelled;
 
-      try {
-        o.next({
-          type: "device-signature-requested",
+      async function main() {
+        const { fees } = transaction;
+        if (!fees) throw new FeeNotLoaded();
+
+        const { freshAddressPath, freshAddress } = account;
+
+        const ledgerSigner = new LedgerSigner(transport, {
+          hdPaths: [makeCosmoshubPath(0)],
         });
 
-        const hwApp = new CryptoOrgApp(transport);
-        const address = account.freshAddresses[0];
-        const { publicKey } = await hwApp.getAddress(
-          address.derivationPath,
-          "cosmos",
-          false
-        );
+        o.next({ type: "device-signature-requested" });
 
-        /*
-        const unsigned = await buildTransaction(
-          account,
-          transaction,
-          publicKey
-        );
-        */
-        // Sign by device
-        const { signature } = await hwApp.sign(
-          address.derivationPath,
-          "0"
-          //  unsigned.toSignDocument(0).toUint8Array()
-        );
+        let res, opbytes, msg;
+        switch (transaction.mode) {
+          case "send":
+            msg = {
+              type: "cosmos-sdk/MsgSend",
+              value: {
+                from_address: freshAddress,
+                to_address: transaction.recipient,
+                amount: [
+                  {
+                    amount: `${transaction.amount}`,
+                    denom: "ucosm",
+                  },
+                ],
+              },
+            };
 
-        // Ledger has encoded the sig in ASN1 DER format, but we need a 64-byte buffer of <r,s>
-        // DER-encoded signature from Ledger
-        if (signature != null) {
-          /*
-          const base64Sig = convertASN1toBase64(signature);
-          const signed = unsigned
-            .setSignature(
-              0,
-              utils.Bytes.fromUint8Array(new Uint8Array(base64Sig))
-            )
-            .toSigned()
-            .getHexEncoded();
-          o.next({
-            type: "device-signature-granted",
-          });
-          */
-
-          const operation = buildOptimisticOperation(
-            account,
-            transaction,
-            transaction.fees ?? new BigNumber(0),
-            false
-          );
-
-          o.next({
-            type: "signed",
-            signedOperation: {
-              operation,
-              // signature: signed,
-              signature: "signed",
-              expirationDate: null,
-            },
-          });
+            break;
+          case "delegate":
+            break;
+          case "undelegate":
+            break;
+          default:
+            throw "not supported";
         }
-      } finally {
-        close(transport, deviceId);
-      }
-    }
 
-    main().then(
-      () => o.complete(),
-      (e) => o.error(e)
-    );
-  });
+        const defaultMemo = "Ledger";
+        const defaultSequence = "0";
+        const accountNumber = 0;
+        const defaultChainId = "cosmoshub4";
+        const defaultFee: StdFee = {
+          amount: [
+            {
+              amount: `${transaction.fees}`,
+              denom: "ucosm",
+            },
+          ],
+          gas: "250",
+        };
+
+        const signDoc = makeSignDoc(
+          [msg],
+          defaultFee,
+          defaultChainId,
+          defaultMemo,
+          accountNumber,
+          defaultSequence
+        );
+
+        const { signature } = await ledgerSigner.signAmino(
+          freshAddress,
+          signDoc
+        );
+
+        if (cancelled) {
+          return;
+        }
+
+        return;
+
+        o.next({ type: "device-signature-granted" });
+
+      }
+
+      main().then(
+        () => o.complete(),
+        (e) => o.error(e)
+      );
+
+      return () => {
+        cancelled = true;
+      };
+    })
+  );
 
 const getPreloadStrategy = (_currency) => ({
   preloadMaxAge: 30 * 1000,
@@ -635,35 +633,6 @@ const currencyBridge: CurrencyBridge = {
     setCosmosPreloadData(asSafeCosmosPreloadData(data));
   },
   scanAccounts: makeScanAccounts(getAccountShape),
-};
-
-const buildOptimisticOperation = (
-  account: Account,
-  transaction: Transaction,
-  fee: BigNumber,
-  signUsingHash: boolean
-): Operation => {
-  const type = "OUT";
-  const value = new BigNumber(transaction.amount);
-  const operation: Operation = {
-    id: encodeOperationId(account.id, "", type),
-    hash: "",
-    type,
-    value,
-    fee,
-    blockHash: null,
-    blockHeight: account.blockHeight,
-    senders: [account.freshAddress],
-    recipients: [transaction.recipient].filter(Boolean),
-    accountId: account.id,
-    // transactionSequenceNumber: getNonce(account),
-    transactionSequenceNumber: 0,
-    date: new Date(),
-    extra: {
-      signUsingHash,
-    },
-  };
-  return operation;
 };
 
 const accountBridge: AccountBridge<Transaction> = {
