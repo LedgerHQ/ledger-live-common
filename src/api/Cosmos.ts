@@ -76,7 +76,7 @@ export const getDelegators = async (address: string): Promise<any> => {
   }
 };
 
-export const isValidRecipent = async(address: string): Promise<boolean> => {
+export const isValidRecipent = async (address: string): Promise<boolean> => {
   try {
     await network({
       method: "GET",
@@ -85,7 +85,7 @@ export const isValidRecipent = async(address: string): Promise<boolean> => {
 
     return true;
   } catch (e) {
-    return false
+    return false;
   }
 };
 
