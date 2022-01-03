@@ -12,6 +12,8 @@ import { toHex } from "@cosmjs/encoding";
 import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
 import network from "../network";
+import { Operation, SignedOperation } from "../types";
+import { patchOperationWithHash } from "../operation";
 
 let api;
 let signedApi;
@@ -189,18 +191,19 @@ export const getTransactions = async (address: string): Promise<any> => {
   }
 };
 
-export const broadcast = async (
-  transaction: string
-): Promise<number | undefined> => {
-  log("cosmjs", "fetch broadcast");
+export const broadcast = async ({
+  signedOperation,
+}: {
+  signedOperation: SignedOperation;
+}): Promise<Operation> => {
+  log("cosmjs", "broadcast tx");
 
-  try {
-    api = await StargateClient.connect(defaultEndpoint);
-    const data = await api.broadcastTx(fromHex(transaction));
-    return data;
-  } catch (e) {
-    return undefined;
-  }
+  const { operation } = signedOperation;
+
+  api = await StargateClient.connect(defaultEndpoint);
+  const { hash } = await api.broadcastTx(operation.extra.opbytes);
+
+  return patchOperationWithHash(operation, hash);
 };
 
 export const getBlock = async (height: number): Promise<any> => {
