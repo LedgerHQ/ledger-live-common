@@ -44,13 +44,20 @@ export const getAccountInfo = async (address: string) => {
 export const getAccount = async (address: string): Promise<any> => {
   log("cosmjs", "fetch account");
 
+  let data;
+
   try {
     api = await StargateClient.connect(defaultRpcEndpoint);
-    const data = await api.getAccount(address);
-    return data;
-  } catch (e) {
-    return undefined;
-  }
+    data = await api.getAccount(address);
+    // eslint-disable-next-line no-empty
+  } catch (e) {}
+
+  return {
+    address: data?.address || address,
+    pubkey: null,
+    accountNumber: data?.accountNumber || 0,
+    sequence: data?.sequence || 0,
+  };
 };
 
 export const getDelegators = async (address: string): Promise<any> => {
