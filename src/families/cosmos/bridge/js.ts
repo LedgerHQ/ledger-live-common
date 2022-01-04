@@ -28,6 +28,7 @@ import {
   getAccountInfo,
   getChainId,
   getFees,
+  isValidRecipent,
 } from "../../../api/Cosmos";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Cosmos from "@ledgerhq/hw-app-str";
@@ -316,7 +317,9 @@ const getSendTransactionStatus = async (
   if (a.freshAddress === t.recipient) {
     errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
   } else {
-    // todo validate recipient
+    if (!(await isValidRecipent(t.recipient))) {
+      errors.recipient = new Error("invalid recipient");
+    }
   }
 
   let amount = t.amount;
