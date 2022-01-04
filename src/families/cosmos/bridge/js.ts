@@ -546,8 +546,8 @@ const signOperation = ({
                 to_address: transaction.recipient,
                 amount: [
                   {
-                    amount: `${transaction.amount}`,
-                    denom: "ucosm",
+                    amount: `${transaction.amount.div(1000000)}`,
+                    denom: "atom",
                   },
                 ],
               },
@@ -565,8 +565,8 @@ const signOperation = ({
         const defaultFee: StdFee = {
           amount: [
             {
-              amount: `${transaction.fees}`,
-              denom: "ucosm",
+              amount: `${transaction.fees?.div(1000000)}`,
+              denom: "atom",
             },
           ],
           gas: `${transaction.gas}`,
