@@ -22,14 +22,35 @@ let tmClient;
 const defaultEndpoint = getEnv("API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT");
 const defaultRpcEndpoint = getEnv("API_COSMOS_RPC_URL");
 
-export const getAccount = async (address: string) => {
+export const getAccountInfo = async (address: string) => {
+  const { accountNumber, sequence } = await getAccount(address);
   const balances = await getAllBalances(address);
   const blockHeight = await getHeight();
   const txs = await getTransactions(address);
   const delegations = await getDelegators(address);
   const withdrawAddress = await getWithdrawAddress(address);
 
-  return { balances, blockHeight, txs, delegations, withdrawAddress };
+  return {
+    balances,
+    blockHeight,
+    txs,
+    delegations,
+    withdrawAddress,
+    accountNumber,
+    sequence,
+  };
+};
+
+export const getAccount = async (address: string): Promise<any> => {
+  log("cosmjs", "fetch account");
+
+  try {
+    api = await StargateClient.connect(defaultRpcEndpoint);
+    const data = await api.getAccount(address);
+    return data;
+  } catch (e) {
+    return undefined;
+  }
 };
 
 export const getDelegators = async (address: string): Promise<any> => {

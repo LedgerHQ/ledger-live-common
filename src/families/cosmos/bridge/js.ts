@@ -25,9 +25,9 @@ import { encodeAccountId, getMainAccount } from "../../../account";
 import {
   broadcast,
   getAccount,
+  getAccountInfo,
   getChainId,
   getFees,
-  getSequence,
 } from "../../../api/Cosmos";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Cosmos from "@ledgerhq/hw-app-str";
@@ -161,7 +161,7 @@ const getAccountShape: GetAccountShape = async (info) => {
   });
 
   const { balances, blockHeight, txs, delegations, withdrawAddress } =
-    await getAccount(address);
+    await getAccountInfo(address);
   const operations = txToOps(info, accountId, txs);
   let balance = balances;
   let delegatedBalance = new BigNumber(0);
@@ -559,8 +559,6 @@ const signOperation = ({
             throw "not supported";
         }
 
-        const accountNumber = 0;
-
         const defaultFee: StdFee = {
           amount: [
             {
@@ -571,13 +569,16 @@ const signOperation = ({
           gas: `${transaction.gas}`,
         };
 
+        const { accountNumber, sequence } = await getAccount(freshAddress);
+        const chainId = await getChainId();
+
         const signDoc = makeSignDoc(
           [msg],
           defaultFee,
-          await getChainId(),
+          chainId,
           transaction.memo || "",
           accountNumber,
-          await getSequence(freshAddress)
+          sequence
         );
 
         const { signed, signature } = await ledgerSigner.signAmino(
