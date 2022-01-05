@@ -7,5 +7,9 @@ const api: PlatformApi = {
     getEnv("MOCK")
       ? mockApi.fetchManifest(platformAppsServerURL)
       : prodApi.fetchManifest(platformAppsServerURL),
+  fetchCatalog: (platformAppsCatalogURL: string) =>
+    getEnv("MOCK")
+      ? mockApi.fetchCatalog(platformAppsCatalogURL)
+      : prodApi.fetchCatalog(platformAppsCatalogURL),
 };
 export default api;

@@ -3,6 +3,7 @@ import { getEnv } from "../../env";
 type RemotePlatformAppProvider = {
   value: string;
   url: string;
+  catalogUrl: string;
   label: string;
 };
 
@@ -10,11 +11,13 @@ export const providers: RemotePlatformAppProvider[] = [
   {
     value: "production",
     url: getEnv("PLATFORM_MANIFEST_API_URL"),
+    catalogUrl: getEnv("PLATFORM_CATALOG_API_URL"),
     label: "Production",
   },
   {
     value: "staging",
     url: getEnv("PLATFORM_MANIFEST_STAGING_API_URL"),
+    catalogUrl: getEnv("PLATFORM_CATALOG_STAGING_API_URL"),
     label: "Staging",
   },
 ];

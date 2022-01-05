@@ -15,6 +15,7 @@ const PlatformAppContext = createContext<PlatformAppContextType>({});
 const initialState: State = {
   localManifests: new Map(),
   remoteManifests: new Map(),
+  catalog: undefined,
   isLoading: false,
   lastUpdateTime: undefined,
   error: undefined,
@@ -27,6 +28,7 @@ export function usePlatformApp(): PlatformAppContextType {
 export function PlatformAppProvider({
   autoUpdateDelay,
   platformAppsServerURL,
+  platformCatalogServerURL,
   children,
 }: Props) {
   const [state, setState] = useState<State>(initialState);
@@ -59,7 +61,10 @@ export function PlatformAppProvider({
         isLoading: true,
       }));
 
-      const remoteManifestList = await api.fetchManifest(platformAppsServerURL);
+      const [remoteManifestList, catalog] = await Promise.all([
+        api.fetchManifest(platformAppsServerURL),
+        api.fetchCatalog(platformCatalogServerURL),
+      ]);
       const remoteManifests = new Map();
       for (let i = 0; i < remoteManifestList.length; i++) {
         const currentManifest = remoteManifestList[i];
@@ -68,6 +73,7 @@ export function PlatformAppProvider({
 
       setState((previousState) => ({
         ...previousState,
+        catalog,
         remoteManifests,
         isLoading: false,
         lastUpdateTime: Date.now(),
@@ -80,7 +86,7 @@ export function PlatformAppProvider({
         error,
       }));
     }
-  }, [platformAppsServerURL]);
+  }, [platformAppsServerURL, platformCatalogServerURL]);
 
   useEffect(() => {
     updateData();
