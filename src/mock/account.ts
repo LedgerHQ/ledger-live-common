@@ -12,6 +12,7 @@ import type {
   Operation,
   CryptoCurrency,
   TokenCurrency,
+  NFT,
 } from "../types";
 import { getOperationAmountNumber } from "../operation";
 import {
@@ -23,6 +24,7 @@ import {
 import { getDerivationScheme, runDerivationScheme } from "../derivation";
 import { genHex, genAddress } from "./helpers";
 import perFamilyMock from "../generated/mock";
+import mockNFTs from "./nfts";
 
 function ensureNoNegative(operations) {
   let total = new BigNumber(0);
@@ -334,6 +336,18 @@ export function genTokenAccount(
   return tokenAccount;
 }
 
+export function genNFTs(id: number | string): NFT[] {
+  const rng = new Prando(id);
+
+  const nfts: NFT[] = [];
+  for (let i = 0; i < 50; i++) {
+    nfts.push(mockNFTs[rng.nextInt(0, mockNFTs.length - 1)]);
+  }
+
+  return nfts;
+}
+
+
 export function genAccount(
   id: number | string,
   opts: GenAccountOptions = {}
@@ -394,6 +408,7 @@ export function genAccount(
         toAmount: new BigNumber("2000"),
       })),
     balanceHistoryCache: emptyHistoryCache,
+    nfts: currency.id === "ethereum" ? genNFTs(id) : [],
   };
 
   if (
