@@ -17,7 +17,7 @@ import { getMainAccount } from "../../account";
 import { getAccountBridge } from "../../bridge";
 import type { ConnectAppEvent, Input as ConnectAppInput } from "../connectApp";
 import type { Action, Device } from "./types";
-import type { AppState } from "./app";
+import type { AppRequest, AppState } from "./app";
 import { createAction as createAppAction } from "./app";
 type State = {
   signedOperation: SignedOperation | null | undefined;
