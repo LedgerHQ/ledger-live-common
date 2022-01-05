@@ -37,20 +37,41 @@ const getTransactionStatus = async (
     errors.amount = new NotEnoughBalance();
   }
 
-  const totalSpent = useAllAmount
-    ? a.balance
-    : new BigNumber(t.amount).plus(estimatedFees);
-  const amount = useAllAmount
-    ? a.balance.minus(estimatedFees)
-    : new BigNumber(t.amount);
+  let amount, totalSpent;
+  const tokenAccount =
+    t.subAccountId &&
+    a.subAccounts &&
+    a.subAccounts.find((ta) => ta.id === t.subAccountId);
 
-  if (totalSpent.gt(a.balance)) {
-    errors.amount = new NotEnoughBalance();
+  if (tokenAccount) {
+    amount = useAllAmount
+      ? tokenAccount.balance
+      : t.amount;
+
+    totalSpent = amount
+
+    if (totalSpent.gt(tokenAccount.balance)) {
+      errors.amount = new NotEnoughBalance();
+    }
+
+  } else {
+    totalSpent = useAllAmount
+      ? a.balance
+      : new BigNumber(t.amount).plus(estimatedFees);
+
+    amount = useAllAmount
+      ? a.balance.minus(estimatedFees)
+      : new BigNumber(t.amount);
+
+    if (totalSpent.gt(a.balance)) {
+      errors.amount = new NotEnoughBalance();
+    }
+
+    if (amount.div(10).lt(estimatedFees)) {
+      warnings.feeTooHigh = new FeeTooHigh();
+    }
   }
 
-  if (amount.div(10).lt(estimatedFees)) {
-    warnings.feeTooHigh = new FeeTooHigh();
-  }
 
   return Promise.resolve({
     errors,
