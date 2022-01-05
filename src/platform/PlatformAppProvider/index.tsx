@@ -15,10 +15,12 @@ const PlatformAppContext = createContext<PlatformAppContextType>({});
 const initialState: State = {
   localManifests: new Map(),
   remoteManifests: new Map(),
-  catalog: undefined,
+  catalogMetadata: undefined,
   isLoading: false,
+  isLoadingCatalog: false,
   lastUpdateTime: undefined,
   error: undefined,
+  errorCatalog: undefined,
 };
 const AUTO_UPDATE_DEFAULT_DELAY = 1800 * 1000; // 1800 seconds
 
@@ -54,17 +56,14 @@ export function PlatformAppProvider({
     });
   }, []);
 
-  const updateData = useCallback(async () => {
+  const updateManifests = useCallback(async () => {
     try {
       setState((previousState) => ({
         ...previousState,
         isLoading: true,
       }));
 
-      const [remoteManifestList, catalog] = await Promise.all([
-        api.fetchManifest(platformAppsServerURL),
-        api.fetchCatalog(platformCatalogServerURL),
-      ]);
+      const remoteManifestList = await api.fetchManifest(platformAppsServerURL);
       const remoteManifests = new Map();
       for (let i = 0; i < remoteManifestList.length; i++) {
         const currentManifest = remoteManifestList[i];
@@ -73,7 +72,6 @@ export function PlatformAppProvider({
 
       setState((previousState) => ({
         ...previousState,
-        catalog,
         remoteManifests,
         isLoading: false,
         lastUpdateTime: Date.now(),
@@ -86,7 +84,34 @@ export function PlatformAppProvider({
         error,
       }));
     }
-  }, [platformAppsServerURL, platformCatalogServerURL]);
+  }, [platformAppsServerURL]);
+
+  const updateCatalog = useCallback(async () => {
+    if (!platformCatalogServerURL) return;
+    try {
+      setState((previousState) => ({
+        ...previousState,
+        isLoadingCatalog: true,
+      }));
+      const catalogMetadata = await api.fetchCatalog(platformCatalogServerURL);
+      setState((previousState) => ({
+        ...previousState,
+        isLoadingCatalog: false,
+        catalogMetadata,
+      }));
+    } catch (error: any) {
+      setState((previousState) => ({
+        ...previousState,
+        isLoadingCatalog: false,
+        errorCatalog: error,
+      }));
+    }
+  }, [platformCatalogServerURL]);
+
+  const updateData = useCallback(() => {
+    updateManifests();
+    updateCatalog();
+  }, [updateManifests, updateCatalog]);
 
   useEffect(() => {
     updateData();
@@ -109,11 +134,11 @@ export function PlatformAppProvider({
     return {
       ...state,
       manifests,
-      updateData,
+      updateData: updateManifests,
       addLocalManifest,
       removeLocalManifest,
     };
-  }, [state, updateData, removeLocalManifest, addLocalManifest]);
+  }, [state, updateManifests, removeLocalManifest, addLocalManifest]);
 
   return (
     <PlatformAppContext.Provider value={value}>

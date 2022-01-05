@@ -1,19 +1,33 @@
-import type { AppManifest, Catalog } from "../types";
+import type { AppManifest, CatalogMetadata } from "../types";
 export type State = {
-  remoteManifests: Map<string, AppManifest>; // remotely fetched manifests
-  localManifests: Map<string, AppManifest>; // locally added manifests
-  catalog?: Catalog;
-  isLoading: boolean; // is remote currently updating
-  lastUpdateTime?: number; // last update time
-  error: Error | null | undefined; // last update error
+  /** Remotely fetched manifests */
+  remoteManifests: Map<string, AppManifest>;
+  /** Locally added manifests */
+  localManifests: Map<string, AppManifest>;
+  /** Catalog metadata */
+  catalogMetadata?: CatalogMetadata;
+  /** Is remote manifests currently updating */
+  isLoading: boolean;
+  /** Is remote catalog metadata currently updating */
+  isLoadingCatalog: boolean;
+  /** Last update time */
+  lastUpdateTime?: number;
+  /** Last manifests update error */
+  error: Error | null | undefined;
+  /** Last catalog update error */
+  errorCatalog: Error | null | undefined;
 };
 export type Props = {
   children: React.ReactNode;
-  autoUpdateDelay?: number; // interval between auto updated
-  platformAppsServerURL: string; // remote server URL
-  platformCatalogServerURL: string; // remote server URL
+  /** Interval between auto updates */
+  autoUpdateDelay?: number;
+  /** Remote server URL for fetching manifests */
+  platformAppsServerURL: string;
+  /** Remote server URL for fetching catalog metadata */
+  platformCatalogServerURL: string;
 };
 export type API = {
+  /** Apps manifests */
   manifests: Map<string, AppManifest>;
   updateData: () => Promise<void>;
   addLocalManifest: (manifest: AppManifest) => void;
@@ -24,5 +38,5 @@ export type PlatformAppContextType = State & API;
 
 export type PlatformApi = {
   fetchManifest: (url: string) => Promise<AppManifest[]>;
-  fetchCatalog: (url: string) => Promise<Catalog>;
+  fetchCatalog: (url: string) => Promise<CatalogMetadata>;
 };

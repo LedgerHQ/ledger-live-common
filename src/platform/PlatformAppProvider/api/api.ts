@@ -1,5 +1,5 @@
 import network from "../../../network";
-import type { AppManifest, Catalog } from "../../types";
+import type { AppManifest, CatalogMetadata } from "../../types";
 import type { PlatformApi } from "../types";
 
 // expose a function to fetch data from the cdn (data from ledger-live-assets)
@@ -22,7 +22,7 @@ async function fetchManifest(
 
 async function fetchCatalog(
   platformCatalogServerURL: string
-): Promise<Catalog> {
+): Promise<CatalogMetadata> {
   const url = `${platformCatalogServerURL}?t=${Date.now()}`;
 
   const { data } = await network({

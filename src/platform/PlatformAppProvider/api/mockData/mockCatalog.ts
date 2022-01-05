@@ -1,6 +1,6 @@
-import type { Catalog } from "../../../types";
+import type { CatalogMetadata } from "../../../types";
 
-export const catalog: Catalog = {
+export const catalog: CatalogMetadata = {
   compatibleAppsManifestVersions: ["v1"],
   promotedApps: [
     {

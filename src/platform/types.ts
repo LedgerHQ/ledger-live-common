@@ -91,7 +91,7 @@ type AppMetadata = {
 /**
  * Typing for ./data.json
  */
-export type Catalog = {
+export type CatalogMetadata = {
   compatibleAppsManifestVersions: string[];
   /**
    * Sorted array of the promoted apps.
@@ -107,7 +107,7 @@ export type Catalog = {
 
 export type PlatformApi = {
   fetchManifest: () => Promise<AppManifest[]>;
-  fetchCatalog: () => Promise<Catalog>;
+  fetchCatalog: () => Promise<CatalogMetadata>;
 };
 
 export type PlatformSignedTransaction = SignedOperation;
