@@ -19,19 +19,29 @@ const estimateMaxSpendable = async ({
   parentAccount: Account | null | undefined;
   transaction: Transaction | null | undefined;
 }): Promise<BigNumber> => {
-  const a = getMainAccount(account, parentAccount);
-  const t = {
+  const mainAccount = getMainAccount(account, parentAccount);
+  const tx = {
     ...createTransaction(),
+    subAccountId: account.type === "Account" ? null : account.id,
     ...transaction,
-    amount: a.spendableBalance,
   };
-  const fees = await getEstimatedFees(t);
 
-  if (fees.gt(a.spendableBalance)) {
+  const tokenAccount =
+    tx.subAccountId &&
+    mainAccount.subAccounts &&
+    mainAccount.subAccounts.find((ta) => ta.id === tx.subAccountId);
+
+  if (tokenAccount) {
+    return tokenAccount.balance;
+  }
+
+  const fees = await getEstimatedFees(tx);
+
+  if (fees.gt(mainAccount.balance)) {
     return new BigNumber(0);
   }
 
-  return a.spendableBalance.minus(fees);
+  return mainAccount.spendableBalance;
 };
 
 export default estimateMaxSpendable;
