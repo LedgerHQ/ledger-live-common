@@ -24,7 +24,7 @@ export type Props = {
   /** Remote server URL for fetching manifests */
   platformAppsServerURL: string;
   /** Remote server URL for fetching catalog metadata */
-  platformCatalogServerURL: string;
+  platformCatalogServerURL?: string;
 };
 export type API = {
   /** Apps manifests */
