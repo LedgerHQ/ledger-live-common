@@ -241,7 +241,6 @@ export const makeScanAccounts =
         transport
       ): Promise<Account | null | undefined> {
         if (finished) return;
-
         const accountShape: Partial<Account> = await getAccountShape(
           {
             transport,
@@ -391,16 +390,17 @@ export const makeScanAccounts =
                 }
               );
               let res = derivationsCache[freshAddressPath];
-
               if (!res) {
-                res = await getAddress(transport, {
-                  currency,
-                  path: freshAddressPath,
-                  derivationMode,
-                });
+                res =
+                  currency.family === "bitcoin"
+                    ? { path: freshAddressPath }
+                    : await getAddress(transport, {
+                        currency,
+                        path: freshAddressPath,
+                        derivationMode,
+                      });
                 derivationsCache[freshAddressPath] = res;
               }
-
               const account = await stepAccount(
                 index,
                 res,
