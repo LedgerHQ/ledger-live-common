@@ -142,7 +142,8 @@ const txToOps = (info: any, id: string, txs: any): any => {
       return op.senders.indexOf(element) === index;
     });
 
-    op.id = `${id}-${hash}-${op.type}`;
+    op.id = encodeOperationId(id, hash, op.type);
+
     ops.push(op);
   }
 
