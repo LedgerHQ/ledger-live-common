@@ -17,12 +17,21 @@ const defaultEndpoint = getEnv(
 const defaultRpcEndpoint = getEnv("API_COSMOS_RPC_URL").replace(/\/$/, "");
 
 export const getAccountInfo = async (address: string) => {
-  const { accountNumber, sequence } = await getAccount(address);
-  const balances = await getAllBalances(address);
-  const blockHeight = await getHeight();
-  const txs = await getTransactions(address);
-  const delegations = await getDelegators(address);
-  const withdrawAddress = await getWithdrawAddress(address);
+  const [
+    { accountNumber, sequence },
+    balances,
+    blockHeight,
+    txs,
+    delegations,
+    withdrawAddress,
+  ] = await Promise.all([
+    getAccount(address),
+    getAllBalances(address),
+    getHeight(),
+    getTransactions(address),
+    getDelegators(address),
+    getWithdrawAddress(address),
+  ]);
 
   return {
     balances,
