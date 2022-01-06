@@ -1149,10 +1149,10 @@
   dependencies:
     commander "^2.20.0"
 
-"@ledgerhq/cryptoassets@6.22.1", "@ledgerhq/cryptoassets@^6.22.1":
-  version "6.22.1"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/cryptoassets/-/cryptoassets-6.22.1.tgz#c51bb3a507dce9e39d8ec35812dd1f957bc23d6d"
-  integrity sha512-PGNOSjf2CKNt5jZhUbqwIy0YupIsYHRX76X3+XTXCElAV3FGX5e+whcnBYrl3uezDUYLZwtYWUnZyXZ4IqMFLw==
+"@ledgerhq/cryptoassets@6.22.3", "@ledgerhq/cryptoassets@^6.22.3":
+  version "6.22.3"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/cryptoassets/-/cryptoassets-6.22.3.tgz#22b9b92acd381f9b297196fdd72fdee6f8fd72f0"
+  integrity sha512-WNStZt2WVQapZorakOg9dbBqsXnDhjis+HtXKRHOkRCDS3ca0NBgbet1WmoSmZmWXlx727bY/xWNyJcUrRau6w==
   dependencies:
     invariant "2"
 
@@ -1224,12 +1224,12 @@
     "@ledgerhq/hw-transport" "^6.20.0"
     bip32-path "^0.4.2"
 
-"@ledgerhq/hw-app-eth@6.22.2":
-  version "6.22.2"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-eth/-/hw-app-eth-6.22.2.tgz#d2c35bef2f628966adbc2248a4bf0f67d430ecb4"
-  integrity sha512-QpOJelFfcu1Jv3ujn3TutpvXAnm3egaZDUoiDad7LANEwEkzSDUsa+nSoyy8f3N2u5EuFqvXCgrwZgnu0uBrUg==
+"@ledgerhq/hw-app-eth@6.22.3":
+  version "6.22.3"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-app-eth/-/hw-app-eth-6.22.3.tgz#82f1e99f98c11881cfbf9c182826dba9aea03dc9"
+  integrity sha512-3sJkU3PdUUhlrz509QBrpDHA3/szcTsk5RJyQLZCB+ssnw+zi9EpQbD6ICmR2Zp16zAl2q85lWTmmbyc8NGwCA==
   dependencies:
-    "@ledgerhq/cryptoassets" "^6.22.1"
+    "@ledgerhq/cryptoassets" "^6.22.3"
     "@ledgerhq/errors" "^6.10.0"
     "@ledgerhq/hw-transport" "^6.20.0"
     "@ledgerhq/logs" "^6.10.0"
