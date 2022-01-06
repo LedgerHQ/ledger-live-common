@@ -17,9 +17,20 @@ const buildOptimisticOperation = (
   fee: BigNumber
 ): Operation => {
   const type = "OUT";
-  const value = transaction.useAllAmount
-    ? account.balance.minus(fee)
-    : new BigNumber(transaction.amount);
+  const tokenAccount =
+    (transaction.subAccountId &&
+      account.subAccounts &&
+      account.subAccounts.find((ta) => ta.id === transaction.subAccountId)) || null;
+  let value;
+  if (tokenAccount) {
+    value = new BigNumber(0);
+  }
+  else {
+    value = transaction.useAllAmount
+      ? account.balance.minus(fee)
+      : new BigNumber(transaction.amount);
+  }
+
   const operation: Operation = {
     id: encodeOperationId(account.id, "", type),
     hash: "",
@@ -63,9 +74,10 @@ const signOperation = ({
         // Collect data for an ESDT transfer
         const { subAccounts } = account;
         const { subAccountId } = transaction;
-        const tokenAccount = !subAccountId
-          ? null
-          : subAccounts && subAccounts.find((ta) => ta.id === subAccountId);
+        const tokenAccount =
+          !subAccountId
+            ? null
+            : subAccounts && subAccounts.find((ta) => ta.id === subAccountId);
 
         const elrond = new Elrond(transport);
         await elrond.setAddress(account.freshAddressPath);
@@ -74,14 +86,16 @@ const signOperation = ({
           const tokenIdentifier = tokenAccount.id.split("+")[1];
           const token = findTokenById(`${tokenIdentifier}`);
 
-          const collectionIdentifierHex = token?.id.split("/")[2];
-          await elrond.provideESDTInfo(
-            token?.ticker,
-            collectionIdentifierHex,
-            token?.units[0].magnitude,
-            CHAIN_ID,
-            token?.ledgerSignature
-          );
+          if (token?.ticker && token.id && token.ledgerSignature) {
+            const collectionIdentifierHex = token.id.split("/")[2];
+            await elrond.provideESDTInfo(
+              token.ticker,
+              collectionIdentifierHex,
+              token?.units[0].magnitude,
+              CHAIN_ID,
+              token.ledgerSignature
+            );
+          }
         }
 
         const unsignedTx: string = await buildTransaction(
