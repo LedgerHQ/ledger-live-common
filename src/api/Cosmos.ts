@@ -11,8 +11,10 @@ import { calculateFee, GasPrice } from "@cosmjs/stargate";
 
 let tmClient;
 
-const defaultEndpoint = getEnv("API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT");
-const defaultRpcEndpoint = getEnv("API_COSMOS_RPC_URL");
+const defaultEndpoint = getEnv(
+  "API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT"
+).replace(/\/$/, "");
+const defaultRpcEndpoint = getEnv("API_COSMOS_RPC_URL").replace(/\/$/, "");
 
 export const getAccountInfo = async (address: string) => {
   const { accountNumber, sequence } = await getAccount(address);
