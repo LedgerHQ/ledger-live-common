@@ -24,17 +24,6 @@ export type AppPermission = {
   params?: any;
 };
 
-export type AppParams = {
-  dappUrl: string;
-  nanoApp: string;
-  dappName: string;
-  networks: {
-    currency: string;
-    chainID: number;
-    nodeURL: string;
-  }[];
-};
-
 export type AppManifest = {
   id: string;
   private?: boolean;
@@ -47,7 +36,7 @@ export type AppManifest = {
   apiVersion: string;
   manifestVersion: string;
   branch: AppBranch;
-  params?: AppParams;
+  params?: any;
   categories: string[];
   currencies: string[] | "*";
   content: {
@@ -58,17 +47,17 @@ export type AppManifest = {
   domains: string[];
 };
 
-type PromotedApp = {
+export type PromotedApp = {
   id: string; // Should match the id in /platform/apps/v1/data.json
   thumbnailUrl: string; // Should match an image in /icons/platform/thumbnails/
 };
 
-type AppMetadata = {
+export type AppMetadata = {
   /**
    * Identifier of the Live App.
    * Should match the id in platform/apps/v1/data.json
    *  */
-  id: string; 
+  id: string;
   /**
    * (Optional) list of networks supported by this Live App, each network
    * represented by the string identifying the native currency of this network.
