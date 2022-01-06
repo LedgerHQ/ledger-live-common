@@ -9,7 +9,7 @@ import {
 } from "@ledgerhq/errors";
 import type { Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
-import { isValidAddress, isSelfTransaction } from "./logic";
+import { isValidAddress, isSelfTransaction, computeTransactionValue } from "./logic";
 import getEstimatedFees from "./js-getFeesForTransaction";
 import { buildTransaction } from "./js-buildTransaction";
 
@@ -19,7 +19,6 @@ const getTransactionStatus = async (
 ): Promise<TransactionStatus> => {
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
-  const useAllAmount = !!t.useAllAmount;
 
   if (!t.recipient) {
     errors.recipient = new RecipientRequired();
@@ -32,39 +31,22 @@ const getTransactionStatus = async (
   if (!t.fees) {
     errors.fees = new FeeNotLoaded();
   }
-  let amount, totalSpent;
+
   const tokenAccount =
     (t.subAccountId &&
       a.subAccounts &&
       a.subAccounts.find((ta) => ta.id === t.subAccountId)) || null;
 
-  await buildTransaction(a, tokenAccount, t);
-
-  const estimatedFees = await getEstimatedFees(t);
+  const { amount, totalSpent, estimatedFees } = await computeTransactionValue(t, a, tokenAccount);
   if (estimatedFees.gt(a.balance)) {
     errors.amount = new NotEnoughBalance();
   }
 
   if (tokenAccount) {
-    amount = useAllAmount
-      ? tokenAccount.balance
-      : t.amount;
-
-    totalSpent = amount
-
     if (totalSpent.gt(tokenAccount.balance)) {
       errors.amount = new NotEnoughBalance();
     }
-
   } else {
-    totalSpent = useAllAmount
-      ? a.balance
-      : new BigNumber(t.amount).plus(estimatedFees);
-
-    amount = useAllAmount
-      ? a.balance.minus(estimatedFees)
-      : new BigNumber(t.amount);
-
     if (totalSpent.gt(a.balance)) {
       errors.amount = new NotEnoughBalance();
     }
