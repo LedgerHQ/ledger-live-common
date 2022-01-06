@@ -4,7 +4,11 @@ export const catalog: CatalogMetadata = {
   compatibleAppsManifestVersions: ["v1"],
   promotedApps: [
     {
-      id: "moonpay",
+      id: "rainbow",
+      thumbnailUrl: "",
+    },
+    {
+      id: "wyre_buy",
       thumbnailUrl: "",
     },
     {
@@ -15,6 +19,24 @@ export const catalog: CatalogMetadata = {
       id: "paraswap",
       thumbnailUrl: "",
     },
+    {
+      id: "zerion",
+      thumbnailUrl: "",
+    },
+  ],
+  supercategories: ["earn", "nft", "services", "spend", "trade"],
+  categories: [
+    "buy",
+    "card",
+    "dex",
+    "exchange",
+    "gift",
+    "lend",
+    "nft",
+    "portfolio",
+    "staking",
+    "swap",
+    "tools",
   ],
   appsMetadata: [
     {
