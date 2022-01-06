@@ -144,7 +144,9 @@ const txToOps = (info: any, id: string, txs: any): any => {
 
     op.id = encodeOperationId(id, hash, op.type);
 
-    ops.push(op);
+    if (op.type) {
+      ops.push(op);
+    }
   }
 
   return ops;
