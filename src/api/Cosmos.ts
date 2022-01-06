@@ -279,7 +279,7 @@ export const getBlock = async (height: number): Promise<any> => {
   try {
     const { data } = await network({
       method: "GET",
-      url: `${defaultEndpoint}/blocks/${height}`,
+      url: `${defaultEndpoint}/cosmos/base/tendermint/v1beta1/blocks/${height}`,
     });
 
     return data;
@@ -312,7 +312,7 @@ export const getHeight = async (): Promise<number> => {
   try {
     const { data } = await network({
       method: "GET",
-      url: `${defaultEndpoint}/blocks/latest`,
+      url: `${defaultEndpoint}/cosmos/base/tendermint/v1beta1/blocks/latest`,
     });
 
     return data.block.header.height;
