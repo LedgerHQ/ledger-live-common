@@ -55,6 +55,11 @@ export type ConnectAppEvent =
       type: "disconnected";
     }
   | {
+      type: "device-update-last-seen";
+      deviceInfo: DeviceInfo;
+      latestFirmware: FirmwareUpdateContext | null | undefined;
+    }
+  | {
       type: "device-permission-requested";
       wording: string;
     }
@@ -102,6 +107,20 @@ export const openAppFromDashboard = (
   appName: string
 ): Observable<ConnectAppEvent> =>
   concat(
+    // Nb Allows LLD/LLM to update lastSeenDevice
+    from(getDeviceInfo(transport)).pipe(
+      mergeMap((deviceInfo) =>
+        from(manager.getLatestFirmwareForDevice(deviceInfo)).pipe(
+          concatMap((latestFirmware) =>
+            of<ConnectAppEvent>({
+              type: "device-update-last-seen",
+              deviceInfo,
+              latestFirmware,
+            })
+          )
+        )
+      )
+    ),
     of<ConnectAppEvent>({
       type: "ask-open-app",
       appName,
