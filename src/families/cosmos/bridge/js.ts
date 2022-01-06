@@ -544,14 +544,14 @@ const signOperation = ({
               {
                 type: "cosmos-sdk/MsgSend",
                 value: {
-                  amount: [
-                    {
-                      amount: `${transaction.amount.div(1000000)}`,
-                      denom: "atom",
-                    },
-                  ],
                   from_address: freshAddress,
                   to_address: transaction.recipient,
+                  amount: [
+                    {
+                      denom: "atom",
+                      amount: `${transaction.amount.div(1000000)}`,
+                    },
+                  ],
                 },
               },
             ];
