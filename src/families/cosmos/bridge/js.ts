@@ -60,8 +60,9 @@ import {
 import { Observable } from "rxjs";
 import { withDevice } from "../../../hw/deviceAccess";
 import { LedgerSigner } from "@cosmjs/ledger-amino";
-import { makeCosmoshubPath, makeSignDoc, StdFee } from "@cosmjs/amino";
-import { makeStdTx } from "@cosmjs/launchpad";
+import { makeCosmoshubPath } from "@cosmjs/amino";
+import { Registry } from "@cosmjs/proto-signing";
+import { defaultRegistryTypes } from "@cosmjs/stargate";
 
 const txToOps = (info: any, id: string, txs: any): any => {
   const { address } = info;
@@ -536,33 +537,59 @@ const signOperation = ({
 
         o.next({ type: "device-signature-requested" });
 
-        let msg;
+        let msgs;
         switch (transaction.mode) {
           case "send":
-            msg = {
-              type: "cosmos-sdk/MsgSend",
-              value: {
-                from_address: freshAddress,
-                to_address: transaction.recipient,
-                amount: [
-                  {
-                    amount: `${transaction.amount.div(1000000)}`,
-                    denom: "atom",
-                  },
-                ],
+            msgs = [
+              {
+                type: "cosmos-sdk/MsgSend",
+                value: {
+                  amount: [
+                    {
+                      amount: `${transaction.amount.div(1000000)}`,
+                      denom: "atom",
+                    },
+                  ],
+                  from_address: freshAddress,
+                  to_address: transaction.recipient,
+                },
               },
-            };
+            ];
 
             break;
+
           case "delegate":
+            msgs = [
+              {
+                type: "cosmos-sdk/MsgDelegate",
+                value: {
+                  amount: [
+                    {
+                      amount: `${transaction.amount.div(1000000)}`,
+                      denom: "atom",
+                    },
+                  ],
+                  delegator_address: freshAddress,
+                  // todo:
+                  // validator_address: transaction.validator_address,
+                  validator_address: "",
+                },
+              },
+            ];
+
             break;
+
           case "undelegate":
+            // todo:
+            msgs = [{}];
+
             break;
+
           default:
             throw "not supported";
         }
 
-        const defaultFee: StdFee = {
+        const fee = {
           amount: [
             {
               amount: `${transaction.fees?.div(1000000)}`,
@@ -575,21 +602,32 @@ const signOperation = ({
         const { accountNumber, sequence } = await getAccount(freshAddress);
         const chainId = await getChainId();
 
-        const signDoc = makeSignDoc(
-          [msg],
-          defaultFee,
-          chainId,
-          transaction.memo || "",
-          accountNumber,
-          sequence
-        );
+        const unsigned = {
+          chain_id: chainId,
+          account_number: accountNumber,
+          sequence: sequence,
+          fee: fee,
+          msgs: msgs,
+          memo: transaction.memo || "",
+        };
 
         const { signed, signature } = await ledgerSigner.signAmino(
           freshAddress,
-          signDoc
+          unsigned
         );
 
-        const signedTx = makeStdTx(signed, signature);
+        const tx = {
+          msg: signed.msgs,
+          fee: signed.fee,
+          signatures: [signature],
+          memo: signed.memo,
+        };
+
+        const registry = new Registry(defaultRegistryTypes);
+        const txBytes = registry.encodeAsAny({
+          typeUrl: "/cosmos.tx.v1beta1.TxBody",
+          value: tx,
+        });
 
         if (cancelled) {
           return;
