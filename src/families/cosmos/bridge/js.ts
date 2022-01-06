@@ -614,7 +614,7 @@ const signOperation = ({
             gasLimit: 0,
             // storageLimit: transaction.storageLimit,
             // gasLimit: transaction.gasLimit,
-            opbytes: signedTx,
+            tx_bytes: txBytes,
           },
           blockHash: null,
           blockHeight: null,

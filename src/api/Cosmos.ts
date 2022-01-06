@@ -1,11 +1,4 @@
 import { getEnv } from "../env";
-import {
-  StargateClient,
-  SigningStargateClient,
-  calculateFee,
-  GasPrice,
-} from "@cosmjs/stargate";
-import { CosmosClient } from "@cosmjs/launchpad";
 import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
 import { DecodedTxRaw, decodeTxRaw } from "@cosmjs/proto-signing";
 import { toHex } from "@cosmjs/encoding";
@@ -14,9 +7,8 @@ import BigNumber from "bignumber.js";
 import network from "../network";
 import { Operation, SignedOperation } from "../types";
 import { patchOperationWithHash } from "../operation";
+import { calculateFee, GasPrice } from "@cosmjs/stargate";
 
-let api;
-let signedApi;
 let tmClient;
 
 const defaultEndpoint = getEnv("API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT");
@@ -44,20 +36,35 @@ export const getAccountInfo = async (address: string) => {
 export const getAccount = async (address: string): Promise<any> => {
   log("cosmjs", "fetch account");
 
-  let data;
+  const response = {
+    address: address,
+    pubkey: null,
+    accountNumber: 0,
+    sequence: 0,
+  };
 
   try {
-    api = await StargateClient.connect(defaultRpcEndpoint);
-    data = await api.getAccount(address);
+    const { data } = await network({
+      method: "GET",
+      url: `${defaultEndpoint}/cosmos/auth/v1beta1/accounts/${address}`,
+    });
+
+    if (data.account.address) {
+      response.address = data.account.address;
+    }
+
+    if (data.account.account_number) {
+      response.accountNumber = data.account.account_number;
+    }
+
+    if (data.account.sequence) {
+      response.sequence = data.account.sequence;
+    }
+
     // eslint-disable-next-line no-empty
   } catch (e) {}
 
-  return {
-    address: data?.address || address,
-    pubkey: null,
-    accountNumber: data?.accountNumber || 0,
-    sequence: data?.sequence || 0,
-  };
+  return response;
 };
 
 export const getDelegators = async (address: string): Promise<any> => {
@@ -205,7 +212,7 @@ export const getTransactions = async (address: string): Promise<any> => {
 
     // fetch date and set fees
     for (const tx of data) {
-      const block = await tmClient.block(tx.height);
+      const block = await getBlock(tx.height);
       tx.date = new Date(block.block.header.time);
       tx.fee = new BigNumber(0);
       const txRaw: DecodedTxRaw = decodeTxRaw(tx.tx);
@@ -241,28 +248,42 @@ export const broadcast = async ({
 
   const { operation } = signedOperation;
 
-  api = await StargateClient.connect(defaultEndpoint);
-  const { hash } = await api.broadcastTx(operation.extra.opbytes);
+  const { data } = await network({
+    method: "POST",
+    url: `${defaultEndpoint}/cosmos/tx/v1beta1/txs`,
+    data: {
+      tx_bytes: operation.extra.tx_bytes,
+      mode: "BROADCAST_MODE_BLOCK",
+    },
+  });
 
-  return patchOperationWithHash(operation, hash);
+  log("info", "broadcast return: ", data);
+
+  return patchOperationWithHash(operation, data.tx_response.txhash);
 };
 
 export const getBlock = async (height: number): Promise<any> => {
   log("cosmjs", "fetch block");
 
   try {
-    api = await Tendermint34Client.connect(defaultEndpoint);
-    const data = await api.block(height);
+    const { data } = await network({
+      method: "GET",
+      url: `${defaultEndpoint}/blocks/${height}`,
+    });
+
     return data;
   } catch (e) {
-    return undefined;
+    return {};
   }
 };
 
 export const getFees = async (
-  // address: string,
-  // recipient: string,
-  // amount: number
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  address?: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  recipient?: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  amount?: number
 ): Promise<BigNumber> => {
   log("cosmjs", "look for fees price");
 
@@ -274,15 +295,18 @@ export const getFees = async (
   return new BigNumber(defaultSendFee.amount[0].amount);
 };
 
-export const getHeight = async (): Promise<number | undefined> => {
+export const getHeight = async (): Promise<number> => {
   log("cosmjs", "fetch height");
 
   try {
-    api = await new CosmosClient(defaultEndpoint);
-    const data = await api.getHeight();
-    return data;
+    const { data } = await network({
+      method: "GET",
+      url: `${defaultEndpoint}/blocks/latest`,
+    });
+
+    return data.block.header.height;
   } catch (e) {
-    return undefined;
+    return 0;
   }
 };
 
@@ -290,9 +314,15 @@ export const getAllBalances = async (address: string): Promise<BigNumber> => {
   log("cosmjs", "fetch balances");
 
   try {
-    api = await StargateClient.connect(defaultRpcEndpoint);
-    const data = await api.getAllBalances(address);
-    return new BigNumber(data[0].amount);
+    const { data } = await network({
+      method: "GET",
+      url: `${defaultEndpoint}/cosmos/bank/v1beta1/balances/${address}`,
+    });
+
+    // todo:
+    // handle correct currency
+    // and iterate over multiple
+    return new BigNumber(data.balances[0].amount);
   } catch (e) {
     return new BigNumber(0);
   }
@@ -302,9 +332,12 @@ export const getChainId = async (): Promise<string> => {
   log("cosmjs", "fetch chainid");
 
   try {
-    api = await StargateClient.connect(defaultRpcEndpoint);
-    const data = await api.getChainId();
-    return data;
+    const { data } = await network({
+      method: "GET",
+      url: `${defaultEndpoint}/node_info`,
+    });
+
+    return data.node_info.network;
   } catch (e) {
     return "";
   }
@@ -314,9 +347,27 @@ export const getSequence = async (address: string): Promise<number> => {
   log("cosmjs", "fetch sequence");
 
   try {
-    signedApi = await SigningStargateClient.connect(defaultEndpoint);
-    const { sequence } = await signedApi.getSequence(address);
-    return sequence;
+    const { data } = await network({
+      method: "GET",
+      url: `${defaultEndpoint}/cosmos/auth/v1beta1/accounts/${address}`,
+    });
+
+    return data.account.sequence;
+  } catch (e) {
+    return 0;
+  }
+};
+
+export const getAccountNumber = async (address: string): Promise<number> => {
+  log("cosmjs", "fetch account number");
+
+  try {
+    const { data } = await network({
+      method: "GET",
+      url: `${defaultEndpoint}/cosmos/auth/v1beta1/accounts/${address}`,
+    });
+
+    return data.account.account_number;
   } catch (e) {
     return 0;
   }
