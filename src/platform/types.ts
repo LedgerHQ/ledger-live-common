@@ -83,6 +83,15 @@ export type AppMetadata = {
 export type CatalogMetadata = {
   compatibleAppsManifestVersions: string[];
   /**
+   * List of all existing categories.
+   */
+  categories: string[];
+
+  /**
+   * List of all existing supercategories.
+   */
+  supercategories: string[];
+  /**
    * Sorted array of the promoted apps.
    * The first app in the array will be the first of the promoted apps displayed
    * in Ledger Live and the rest will follow in that order.
