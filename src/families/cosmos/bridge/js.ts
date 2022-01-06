@@ -617,17 +617,19 @@ const signOperation = ({
         );
 
         const tx = {
+          chain_id: signed.chain_id,
           msg: signed.msgs,
           fee: signed.fee,
-          signatures: [signature],
+          signatures: [
+            {
+              pub_key: signature.pub_key,
+              signature: signature.signature,
+              sequence: signed.sequence,
+              account_number: signed.account_number,
+            },
+          ],
           memo: signed.memo,
         };
-
-        const registry = new Registry(defaultRegistryTypes);
-        const txBytes = registry.encodeAsAny({
-          typeUrl: "/cosmos.tx.v1beta1.TxBody",
-          value: tx,
-        });
 
         if (cancelled) {
           return;
@@ -652,7 +654,7 @@ const signOperation = ({
             gasLimit: 0,
             // storageLimit: transaction.storageLimit,
             // gasLimit: transaction.gasLimit,
-            tx_bytes: txBytes,
+            tx: tx,
           },
           blockHash: null,
           blockHeight: null,

@@ -252,16 +252,16 @@ export const broadcast = async ({
 
   const { data } = await network({
     method: "POST",
-    url: `${defaultEndpoint}/cosmos/tx/v1beta1/txs`,
+    url: `${defaultEndpoint}/txs`,
     data: {
-      tx_bytes: operation.extra.tx_bytes,
-      mode: "BROADCAST_MODE_BLOCK",
+      tx: operation.extra.tx,
+      mode: "commit",
     },
   });
 
   log("info", "broadcast return: ", data);
 
-  return patchOperationWithHash(operation, data.tx_response.txhash);
+  return patchOperationWithHash(operation, data.hash);
 };
 
 export const getBlock = async (height: number): Promise<any> => {
