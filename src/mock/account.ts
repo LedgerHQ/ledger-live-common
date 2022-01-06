@@ -347,7 +347,6 @@ export function genNFTs(id: number | string): NFT[] {
   return nfts;
 }
 
-
 export function genAccount(
   id: number | string,
   opts: GenAccountOptions = {}
