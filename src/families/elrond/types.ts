@@ -96,6 +96,7 @@ export type NetworkInfo = {
   gasLimit: number;
   gasPrice: number;
   gasPerByte: number;
+  gasPriceModifier: string;
 };
 
 export type NetworkInfoRaw = {
@@ -110,4 +111,4 @@ export type NetworkInfoRaw = {
 export type ElrondPreloadData = {
   validators: Record<string, any>;
 };
-export const reflect = (_declare: any) => {};
+export const reflect = (_declare: any) => { };

@@ -11,6 +11,7 @@ import type { Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
 import { isValidAddress, isSelfTransaction } from "./logic";
 import getEstimatedFees from "./js-getFeesForTransaction";
+import { buildTransaction } from "./js-buildTransaction";
 
 const getTransactionStatus = async (
   a: Account,
@@ -31,17 +32,18 @@ const getTransactionStatus = async (
   if (!t.fees) {
     errors.fees = new FeeNotLoaded();
   }
+  let amount, totalSpent;
+  const tokenAccount =
+    (t.subAccountId &&
+      a.subAccounts &&
+      a.subAccounts.find((ta) => ta.id === t.subAccountId)) || null;
+
+  await buildTransaction(a, tokenAccount, t);
 
   const estimatedFees = await getEstimatedFees(t);
   if (estimatedFees.gt(a.balance)) {
     errors.amount = new NotEnoughBalance();
   }
-
-  let amount, totalSpent;
-  const tokenAccount =
-    t.subAccountId &&
-    a.subAccounts &&
-    a.subAccounts.find((ta) => ta.id === t.subAccountId);
 
   if (tokenAccount) {
     amount = useAllAmount

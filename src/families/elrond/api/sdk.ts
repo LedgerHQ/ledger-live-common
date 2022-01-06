@@ -147,19 +147,37 @@ export const getAccountESDTOperations = async (
  */
 export const getFees = async (t: Transaction): Promise<BigNumber> => {
   const transactionParams = await getTransactionParams();
-  const { gasPerByte, gasPrice } = transactionParams;
-  let gasLimit = transactionParams.gasLimit;
+  let { gasPrice, gasPerByte, gasPriceModifier, gasLimit: minGasLimit } = transactionParams;
+
+  let gasLimit = minGasLimit;
+  if (t.subAccountId) {
+    gasLimit = ESDT_TRANSFER_GAS;
+  }
+
+  const transactionData = Buffer.from(t.data?.trim() || []);
+
+  let moveBalanceGas =
+    minGasLimit + transactionData.length * gasPerByte;
+  // if (moveBalanceGas > gasLimit) {
+  //   throw new NotE;
+  // }
 
   if (t.subAccountId) {
     gasLimit = ESDT_TRANSFER_GAS;
   }
 
-  if (!t.data) {
-    return new BigNumber(gasLimit * gasPrice);
+  gasPrice = new BigNumber(gasPrice);
+  let feeForMove = new BigNumber(moveBalanceGas).multipliedBy(gasPrice);
+  if (moveBalanceGas === gasLimit) {
+    return feeForMove;
   }
 
-  return new BigNumber((gasLimit + gasPerByte * t.data.length) * gasPrice);
-};
+  let diff = new BigNumber(gasLimit - moveBalanceGas);
+  let modifiedGasPrice = gasPrice.multipliedBy(new BigNumber(gasPriceModifier));
+  let processingFee = diff.multipliedBy(modifiedGasPrice);
+
+  return feeForMove.plus(processingFee);
+}
 
 /**
  * Broadcast blob to blockchain

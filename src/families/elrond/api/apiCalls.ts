@@ -61,6 +61,7 @@ export default class ElrondApi {
             erd_min_gas_limit: gasLimit,
             erd_min_gas_price: gasPrice,
             erd_gas_per_data_byte: gasPerByte,
+            erd_gas_price_modifier: gasPriceModifier,
           },
         },
       },
@@ -75,6 +76,7 @@ export default class ElrondApi {
       gasLimit,
       gasPrice,
       gasPerByte,
+      gasPriceModifier,
     };
   }
 
