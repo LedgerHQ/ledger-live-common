@@ -61,19 +61,16 @@ export const catalog: CatalogMetadata = {
     },
     {
       id: "paraswap",
-      networks: ["ethereum", "bsc", "polygon"],
       category: "swap",
       supercategory: "trade",
     },
     {
       id: "lido",
-      networks: ["ethereum"],
       category: "staking",
       supercategory: "earn",
     },
     {
       id: "1inch",
-      networks: ["ethereum", "bsc", "polygon"],
       category: "swap",
       supercategory: "trade",
     },
@@ -99,7 +96,6 @@ export const catalog: CatalogMetadata = {
     },
     {
       id: "zerion",
-      networks: ["ethereum"],
       category: "portfolio",
       supercategory: "services",
     },
@@ -130,7 +126,6 @@ export const catalog: CatalogMetadata = {
     },
     {
       id: "yearn",
-      networks: ["ethereum"],
       category: "staking",
       supercategory: "earn",
     },

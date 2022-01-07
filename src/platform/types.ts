@@ -58,11 +58,6 @@ export type AppMetadata = {
    * Should match the id in platform/apps/v1/data.json
    *  */
   id: string;
-  /**
-   * (Optional) list of networks supported by this Live App, each network
-   * represented by the string identifying the native currency of this network.
-   *  */
-  networks?: string[];
 
   /**
    * Identifier of a category for this app. The purpose is to show it as a tag
