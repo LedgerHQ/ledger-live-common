@@ -235,10 +235,10 @@ export const broadcast = async ({
 
   const { data } = await network({
     method: "POST",
-    url: `${defaultEndpoint}/txs`,
+    url: `${defaultEndpoint}/cosmos/tx/v1beta1/txs`,
     data: {
-      tx: operation.extra.tx,
-      mode: "commit",
+      tx_bytes: operation.extra.tx_bytes,
+      mode: "BROADCAST_MODE_BLOCK",
     },
   });
 
