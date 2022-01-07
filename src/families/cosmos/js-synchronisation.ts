@@ -1,6 +1,6 @@
 import { Account, Operation } from "../../types";
 import { BigNumber } from "bignumber.js";
-import { makeSync, GetAccountShape } from "../../bridge/jsHelpers";
+import { makeSync, GetAccountShape, mergeOps } from "../../bridge/jsHelpers";
 import { encodeAccountId } from "../../account";
 import { getAccountInfo } from "./api/Cosmos";
 import { encodeOperationId } from "../../operation";
@@ -9,21 +9,21 @@ const txToOps = (info: any, id: string, txs: any): any => {
   const { address } = info;
   const ops: Operation[] = [];
 
-  for (const hash of Object.keys(txs)) {
-    const txlog = JSON.parse(txs[hash].result.log);
+  for (const tx of txs) {
+    const txlog = JSON.parse(tx.result.log);
 
     const op: Operation = {
       id: "",
-      hash: hash,
+      hash: tx.hash,
       type: "" as any,
       value: new BigNumber(0),
-      fee: txs[hash].fee,
+      fee: tx.fee,
       blockHash: null,
-      blockHeight: txs[hash].height,
+      blockHeight: tx.height,
       senders: [] as any,
       recipients: [] as any,
       accountId: id,
-      date: txs[hash].date,
+      date: tx.date,
       extra: {
         validators: [] as any,
       },
@@ -56,18 +56,18 @@ const txToOps = (info: any, id: string, txs: any): any => {
 
       if (t.type === "delegate") {
         op.type = "DELEGATE";
-        op.value = new BigNumber(txs[hash].fee);
+        op.value = new BigNumber(tx.fee);
       }
 
       if (t.type === "withdraw_rewards") {
         op.type = "REWARD";
-        op.value = new BigNumber(txs[hash].fee);
+        op.value = new BigNumber(tx.fee);
       }
     }
 
     if (!op.type && address === op.senders[0]) {
       op.type = "OUT";
-      op.value = op.value.plus(txs[hash].fee);
+      op.value = op.value.plus(tx.fee);
     }
 
     if (!op.type && address === op.recipients[0]) {
@@ -83,7 +83,7 @@ const txToOps = (info: any, id: string, txs: any): any => {
       return op.senders.indexOf(element) === index;
     });
 
-    op.id = encodeOperationId(id, hash, op.type);
+    op.id = encodeOperationId(id, tx.hash, op.type);
 
     if (op.type) {
       ops.push(op);
@@ -96,7 +96,7 @@ const txToOps = (info: any, id: string, txs: any): any => {
 const postSync = (initial: Account, parent: Account) => parent;
 
 export const getAccountShape: GetAccountShape = async (info) => {
-  const { address, currency, derivationMode } = info;
+  const { address, currency, derivationMode, initialAccount } = info;
 
   const accountId = encodeAccountId({
     type: "js",
@@ -108,7 +108,11 @@ export const getAccountShape: GetAccountShape = async (info) => {
 
   const { balances, blockHeight, txs, delegations, withdrawAddress } =
     await getAccountInfo(address);
-  const operations = txToOps(info, accountId, txs);
+
+  const oldOperations = initialAccount?.operations || [];
+  const newOperations = txToOps(info, accountId, txs);
+  const operations = mergeOps(oldOperations, newOperations);
+
   let balance = balances;
   let delegatedBalance = new BigNumber(0);
   let pendingRewardsBalance = new BigNumber(0);

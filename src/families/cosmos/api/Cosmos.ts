@@ -146,8 +146,7 @@ export const getWithdrawAddress = async (address: string): Promise<string> => {
 export const getTransactions = async (address: string): Promise<any> => {
   try {
     const perPage = 100;
-    const txs: { [id: string]: any } = {};
-    const data: Array<any> = [];
+    const txs: Array<any> = [];
     tmClient = await Tendermint34Client.connect(defaultRpcEndpoint);
 
     // fetch incoming transactions
@@ -155,12 +154,11 @@ export const getTransactions = async (address: string): Promise<any> => {
       query: `transfer.recipient='${address}'`,
       page: 1,
       per_page: perPage,
-      order_by: "desc",
     });
 
     for (const tx of txsIn.txs) {
       tx.hash = toHex(tx.hash).toUpperCase();
-      data.push(tx);
+      txs.push(tx);
     }
 
     const txsInDone = txs.length;
@@ -172,12 +170,11 @@ export const getTransactions = async (address: string): Promise<any> => {
         query: `transfer.recipient='${address}'`,
         page: i,
         per_page: perPage,
-        order_by: "desc",
       });
 
       for (const tx of txsIn.txs) {
         tx.hash = toHex(tx.hash).toUpperCase();
-        data.push(tx);
+        txs.push(tx);
       }
     }
 
@@ -186,12 +183,11 @@ export const getTransactions = async (address: string): Promise<any> => {
       query: `message.sender='${address}'`,
       page: 1,
       per_page: perPage,
-      order_by: "desc",
     });
 
     for (const tx of txsOut.txs) {
       tx.hash = toHex(tx.hash).toUpperCase();
-      data.push(tx);
+      txs.push(tx);
     }
 
     const txsOutDone = txs.length;
@@ -203,17 +199,16 @@ export const getTransactions = async (address: string): Promise<any> => {
         query: `message.sender='${address}'`,
         page: i,
         per_page: perPage,
-        order_by: "desc",
       });
 
       for (const tx of txsOut.txs) {
         tx.hash = toHex(tx.hash).toUpperCase();
-        data.push(tx);
+        txs.push(tx);
       }
     }
 
     // fetch date and set fees
-    for (const tx of data) {
+    for (const tx of txs) {
       const block = await getBlock(tx.height);
       tx.date = new Date(block.block.header.time);
       tx.fee = new BigNumber(0);
@@ -224,15 +219,6 @@ export const getTransactions = async (address: string): Promise<any> => {
           tx.fee = tx.fee.plus(fee.amount);
         });
       }
-    }
-
-    // sort transactions by date
-    data.sort((a, b) => {
-      return b.date.getTime() - a.date.getTime();
-    });
-
-    for (const tx of data) {
-      txs[tx.hash] = tx;
     }
 
     return txs;
