@@ -1,12 +1,11 @@
-import { getEnv } from "../env";
+import { getEnv } from "../../../env";
 import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
 import { DecodedTxRaw, decodeTxRaw } from "@cosmjs/proto-signing";
 import { toHex } from "@cosmjs/encoding";
-import { log } from "@ledgerhq/logs";
 import BigNumber from "bignumber.js";
-import network from "../network";
-import { Operation, SignedOperation } from "../types";
-import { patchOperationWithHash } from "../operation";
+import network from "../../../network";
+import { Operation, SignedOperation } from "../../../types";
+import { patchOperationWithHash } from "../../../operation";
 import { calculateFee, GasPrice } from "@cosmjs/stargate";
 
 let tmClient;
@@ -45,8 +44,6 @@ export const getAccountInfo = async (address: string) => {
 };
 
 export const getAccount = async (address: string): Promise<any> => {
-  log("cosmjs", "fetch account");
-
   const response = {
     address: address,
     pubkey: null,
@@ -79,8 +76,6 @@ export const getAccount = async (address: string): Promise<any> => {
 };
 
 export const getDelegators = async (address: string): Promise<any> => {
-  log("cosmjs", "fetch delegators");
-
   const delegators: Array<any> = [];
 
   try {
@@ -136,8 +131,6 @@ export const isValidRecipent = async (address: string): Promise<boolean> => {
 };
 
 export const getWithdrawAddress = async (address: string): Promise<string> => {
-  log("cosmjs", "fetch withdraw address");
-
   try {
     const { data } = await network({
       method: "GET",
@@ -151,8 +144,6 @@ export const getWithdrawAddress = async (address: string): Promise<string> => {
 };
 
 export const getTransactions = async (address: string): Promise<any> => {
-  log("cosmjs", "fetch transactions");
-
   try {
     const perPage = 100;
     const txs: { [id: string]: any } = {};
@@ -255,8 +246,6 @@ export const broadcast = async ({
 }: {
   signedOperation: SignedOperation;
 }): Promise<Operation> => {
-  log("cosmjs", "broadcast tx");
-
   const { operation } = signedOperation;
 
   const { data } = await network({
@@ -268,14 +257,10 @@ export const broadcast = async ({
     },
   });
 
-  log("info", "broadcast return: ", data);
-
   return patchOperationWithHash(operation, data.hash);
 };
 
 export const getBlock = async (height: number): Promise<any> => {
-  log("cosmjs", "fetch block");
-
   try {
     const { data } = await network({
       method: "GET",
@@ -296,8 +281,6 @@ export const getFees = async (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   amount?: number
 ): Promise<BigNumber> => {
-  log("cosmjs", "look for fees price");
-
   // todo: handle new cosmjs fee calculation (simulate mode)
 
   const defaultGasPrice = GasPrice.fromString("0.025ucosm");
@@ -307,8 +290,6 @@ export const getFees = async (
 };
 
 export const getHeight = async (): Promise<number> => {
-  log("cosmjs", "fetch height");
-
   try {
     const { data } = await network({
       method: "GET",
@@ -322,8 +303,6 @@ export const getHeight = async (): Promise<number> => {
 };
 
 export const getAllBalances = async (address: string): Promise<BigNumber> => {
-  log("cosmjs", "fetch balances");
-
   try {
     const { data } = await network({
       method: "GET",
@@ -340,8 +319,6 @@ export const getAllBalances = async (address: string): Promise<BigNumber> => {
 };
 
 export const getChainId = async (): Promise<string> => {
-  log("cosmjs", "fetch chainid");
-
   try {
     const { data } = await network({
       method: "GET",
@@ -355,8 +332,6 @@ export const getChainId = async (): Promise<string> => {
 };
 
 export const getSequence = async (address: string): Promise<number> => {
-  log("cosmjs", "fetch sequence");
-
   try {
     const { data } = await network({
       method: "GET",
@@ -370,8 +345,6 @@ export const getSequence = async (address: string): Promise<number> => {
 };
 
 export const getAccountNumber = async (address: string): Promise<number> => {
-  log("cosmjs", "fetch account number");
-
   try {
     const { data } = await network({
       method: "GET",
