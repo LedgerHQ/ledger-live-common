@@ -4,15 +4,11 @@ export const catalog: CatalogMetadata = {
   compatibleAppsManifestVersions: ["v1"],
   promotedApps: [
     {
-      id: "rainbow",
+      id: "Card",
       thumbnailUrl: "",
     },
     {
-      id: "wyre_buy",
-      thumbnailUrl: "",
-    },
-    {
-      id: "lido",
+      id: "moonpay",
       thumbnailUrl: "",
     },
     {
@@ -20,21 +16,21 @@ export const catalog: CatalogMetadata = {
       thumbnailUrl: "",
     },
     {
-      id: "zerion",
+      id: "wyre_buy",
       thumbnailUrl: "",
     },
   ],
-  supercategories: ["earn", "nft", "services", "spend", "trade"],
+  supercategories: ["trade", "earn", "spend", "nft", "services", "other"],
   categories: [
     "buy",
     "card",
     "dex",
     "exchange",
-    "gift",
+    "gift card",
     "lend",
     "nft",
     "portfolio",
-    "staking",
+    "stake",
     "swap",
     "tools",
   ],
@@ -66,7 +62,7 @@ export const catalog: CatalogMetadata = {
     },
     {
       id: "lido",
-      category: "staking",
+      category: "stake",
       supercategory: "earn",
     },
     {
@@ -86,12 +82,12 @@ export const catalog: CatalogMetadata = {
     },
     {
       id: "bitrefill",
-      category: "gift",
+      category: "gift card",
       supercategory: "spend",
     },
     {
       id: "wyre_buy",
-      category: "exchange",
+      category: "buy",
       supercategory: "trade",
     },
     {
@@ -121,18 +117,18 @@ export const catalog: CatalogMetadata = {
     },
     {
       id: "deversifi",
-      category: "dex",
+      category: "swap",
       supercategory: "trade",
     },
     {
       id: "yearn",
-      category: "staking",
+      category: "lend",
       supercategory: "earn",
     },
     {
       id: "debug",
       category: "tools",
-      supercategory: "services",
+      supercategory: "other",
     },
   ],
 };
