@@ -143,7 +143,7 @@ const signOperation = ({
         const accountId = account.id;
 
         const operation = {
-          id: `${accountId}-${txHash}-OUT`,
+          id: encodeOperationId(accountId, txHash, "OUT"),
           hash: txHash,
           type: "OUT",
           value: transaction.amount,
