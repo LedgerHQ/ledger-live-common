@@ -71,7 +71,6 @@ const gaspardBscAccount: AccountRaw = {
 async function sync(account, withNFT = true) {
   const bridge = getAccountBridge(account);
   const blacklistedTokenIds = [];
-  setEnv("NFT", withNFT);
   const r = await bridge
     .sync(account, {
       paginationConfig: {},
@@ -79,7 +78,6 @@ async function sync(account, withNFT = true) {
     })
     .pipe(reduce((a, f: (arg0: Account) => Account) => f(a), account))
     .toPromise();
-  setEnv("NFT", false);
   return r;
 }
 
@@ -127,20 +125,6 @@ ethTestingAccounts.forEach((a) => {
       };
       const resync = await sync(copy);
       expect(resync.nfts).toEqual(account.nfts);
-    });
-
-    test("start account with .nfts and disable the NFT flag should make it disappear", async () => {
-      expect(account.nfts).not.toBeFalsy();
-      const resync = await sync(account, false);
-      expect(resync.nfts).toBeFalsy();
-    });
-
-    test("start account without .nfts and enable the NFT flag should make it appear", async () => {
-      const first = await sync(account, false);
-      expect(first.nfts).toBeFalsy();
-      const second = await sync(first, true);
-      expect(second.nfts).not.toBeFalsy();
-      expect(second.nfts).toEqual(account.nfts);
     });
   });
 });
