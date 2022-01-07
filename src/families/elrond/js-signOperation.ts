@@ -20,12 +20,12 @@ const buildOptimisticOperation = (
   const tokenAccount =
     (transaction.subAccountId &&
       account.subAccounts &&
-      account.subAccounts.find((ta) => ta.id === transaction.subAccountId)) || null;
+      account.subAccounts.find((ta) => ta.id === transaction.subAccountId)) ||
+    null;
   let value;
   if (tokenAccount) {
     value = new BigNumber(0);
-  }
-  else {
+  } else {
     value = transaction.useAllAmount
       ? account.balance.minus(fee)
       : new BigNumber(transaction.amount);
@@ -74,10 +74,9 @@ const signOperation = ({
         // Collect data for an ESDT transfer
         const { subAccounts } = account;
         const { subAccountId } = transaction;
-        const tokenAccount =
-          !subAccountId
-            ? null
-            : subAccounts && subAccounts.find((ta) => ta.id === subAccountId);
+        const tokenAccount = !subAccountId
+          ? null
+          : subAccounts && subAccounts.find((ta) => ta.id === subAccountId);
 
         const elrond = new Elrond(transport);
         await elrond.setAddress(account.freshAddressPath);

@@ -1,4 +1,3 @@
-import { BigNumber } from "bignumber.js";
 import {
   NotEnoughBalance,
   RecipientRequired,
@@ -9,9 +8,11 @@ import {
 } from "@ledgerhq/errors";
 import type { Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
-import { isValidAddress, isSelfTransaction, computeTransactionValue } from "./logic";
-import getEstimatedFees from "./js-getFeesForTransaction";
-import { buildTransaction } from "./js-buildTransaction";
+import {
+  isValidAddress,
+  isSelfTransaction,
+  computeTransactionValue,
+} from "./logic";
 
 const getTransactionStatus = async (
   a: Account,
@@ -35,9 +36,14 @@ const getTransactionStatus = async (
   const tokenAccount =
     (t.subAccountId &&
       a.subAccounts &&
-      a.subAccounts.find((ta) => ta.id === t.subAccountId)) || null;
+      a.subAccounts.find((ta) => ta.id === t.subAccountId)) ||
+    null;
 
-  const { amount, totalSpent, estimatedFees } = await computeTransactionValue(t, a, tokenAccount);
+  const { amount, totalSpent, estimatedFees } = await computeTransactionValue(
+    t,
+    a,
+    tokenAccount
+  );
   if (estimatedFees.gt(a.balance)) {
     errors.amount = new NotEnoughBalance();
   }
@@ -55,7 +61,6 @@ const getTransactionStatus = async (
       warnings.feeTooHigh = new FeeTooHigh();
     }
   }
-
 
   return Promise.resolve({
     errors,

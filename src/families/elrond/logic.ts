@@ -84,7 +84,15 @@ export const encodeESDTTransfer = (t: Transaction, ta: SubAccount): string => {
   ).toString("base64");
 };
 
-export const computeTransactionValue = async (t: Transaction, a: Account, ta: SubAccount | null): Promise<{ amount: BigNumber, totalSpent: BigNumber, estimatedFees: BigNumber }> => {
+export const computeTransactionValue = async (
+  t: Transaction,
+  a: Account,
+  ta: SubAccount | null
+): Promise<{
+  amount: BigNumber;
+  totalSpent: BigNumber;
+  estimatedFees: BigNumber;
+}> => {
   let amount, totalSpent;
 
   await buildTransaction(a, ta, t);
@@ -92,11 +100,9 @@ export const computeTransactionValue = async (t: Transaction, a: Account, ta: Su
   const estimatedFees = await getEstimatedFees(t);
 
   if (ta) {
-    amount = t.useAllAmount
-      ? ta.balance
-      : t.amount;
+    amount = t.useAllAmount ? ta.balance : t.amount;
 
-    totalSpent = amount
+    totalSpent = amount;
   } else {
     totalSpent = t.useAllAmount
       ? a.balance
@@ -105,8 +111,7 @@ export const computeTransactionValue = async (t: Transaction, a: Account, ta: Su
     amount = t.useAllAmount
       ? a.balance.minus(estimatedFees)
       : new BigNumber(t.amount);
-
   }
 
   return { amount, totalSpent, estimatedFees };
-}
+};
