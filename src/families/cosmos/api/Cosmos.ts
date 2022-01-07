@@ -46,7 +46,6 @@ export const getAccountInfo = async (address: string) => {
 export const getAccount = async (address: string): Promise<any> => {
   const response = {
     address: address,
-    pubkey: null,
     accountNumber: 0,
     sequence: 0,
   };
@@ -62,11 +61,11 @@ export const getAccount = async (address: string): Promise<any> => {
     }
 
     if (data.account.account_number) {
-      response.accountNumber = data.account.account_number;
+      response.accountNumber = parseInt(data.account.account_number);
     }
 
     if (data.account.sequence) {
-      response.sequence = data.account.sequence;
+      response.sequence = parseInt(data.account.sequence);
     }
 
     // eslint-disable-next-line no-empty
