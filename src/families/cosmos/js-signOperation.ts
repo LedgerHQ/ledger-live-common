@@ -86,6 +86,35 @@ const signOperation = ({
             break;
 
           case "delegate":
+            msg = {
+              typeUrl: "/cosmos.staking.v1beta1.MsgDelegate",
+              value: {
+                delegatorAddress: freshAddress,
+                // todo:
+                // validatorAddress: transaction.validator,
+                amount: [
+                  {
+                    denom: "uatom",
+                    amount: transaction.amount.toString(),
+                  },
+                ],
+              },
+            };
+
+            legacyMsg = {
+              type: "cosmos-sdk/MsgDelegate",
+              value: {
+                amount: [
+                  {
+                    amount: transaction.amount.toString(),
+                    denom: "uatom",
+                  },
+                ],
+                delegator_address: freshAddress,
+                // todo:
+                // validator_address: transaction.validator,
+              },
+            };
             break;
 
           case "undelegate":
