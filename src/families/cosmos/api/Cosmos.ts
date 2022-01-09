@@ -146,7 +146,8 @@ export const getTransactions = async (address: string): Promise<any> => {
   try {
     const perPage = 100;
     const txs: Array<any> = [];
-    tmClient = await Tendermint34Client.connect(defaultRpcEndpoint);
+    // tmClient = await Tendermint34Client.connect(defaultRpcEndpoint);
+    tmClient = await Tendermint34Client.connect("https://rpc.cosmos.network");
 
     // fetch incoming transactions
     const txsIn = await tmClient.txSearch({
