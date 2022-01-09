@@ -6,7 +6,6 @@ import BigNumber from "bignumber.js";
 import network from "../../../network";
 import { Operation, SignedOperation } from "../../../types";
 import { patchOperationWithHash } from "../../../operation";
-import { calculateFee, GasPrice } from "@cosmjs/stargate";
 
 let tmClient;
 
