@@ -83,7 +83,6 @@ const signOperation = ({
                 to_address: transaction.recipient,
               },
             };
-
             break;
 
           case "delegate":
