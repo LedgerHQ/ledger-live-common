@@ -1,5 +1,8 @@
-import type { ExchangeProviderNameAndSignature } from "../";
-import { getEnv } from "../../env";
+import type { ExchangeProviderNameAndSignature } from "../..";
+import { getEnv } from "../../../env";
+import { ExchangeTypes } from "../../hw-app-exchange/Exchange";
+// FIXME: to be move in this file alongide 'fundProviders' once 'src/exchange/sell/' is deprecated
+import { sellProviders } from "../../sell";
 
 const testFundProvider = {
   nameAndPubkey: Buffer.from([
@@ -29,15 +32,29 @@ const fundProviders: Record<
     curve: string;
   }
 > = {
-  // FIXME: only test provider for now
+  // FIXME: no prod provider for now
 };
 
 const getProvider = (
+  exchangeType: ExchangeTypes,
   providerName: string
 ): ExchangeProviderNameAndSignature => {
-  const res = getEnv("MOCK")
-    ? testFundProvider
-    : fundProviders[providerName.toLowerCase()];
+  if (getEnv("MOCK")) {
+    return testFundProvider;
+  }
+
+  const res = (() => {
+    switch (exchangeType) {
+      case ExchangeTypes.FUND:
+        return fundProviders[providerName.toLowerCase()];
+
+      case ExchangeTypes.SELL:
+        return sellProviders[providerName.toLowerCase()];
+
+      default:
+        return null;
+    }
+  })();
 
   if (!res) {
     throw new Error(`Unknown partner ${providerName}`);
