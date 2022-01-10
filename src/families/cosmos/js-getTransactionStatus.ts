@@ -22,8 +22,8 @@ import {
   COSMOS_MAX_UNBONDINGS,
   getMaxEstimatedBalance,
 } from "./logic";
-import { getFees, isValidRecipent } from "./api/Cosmos";
 import invariant from "invariant";
+import { isValidRecipent } from "./api/Cosmos";
 
 export const getTransactionStatus = async (
   a: Account,
@@ -209,7 +209,6 @@ const getSendTransactionStatus = async (
     errors.amount = new AmountRequired();
   }
 
-  t.fees = await getFees();
   const estimatedFees = t.fees || new BigNumber(0);
 
   if (!isPreValidation && (!t.fees || !t.fees.gt(0))) {
