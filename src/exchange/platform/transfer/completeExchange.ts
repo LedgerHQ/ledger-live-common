@@ -1,8 +1,11 @@
+import secp256k1 from "secp256k1";
 import { from, Observable } from "rxjs";
 import { TransportStatusError, WrongDeviceForAccount } from "@ledgerhq/errors";
 
 import { delay } from "../../../promise";
-import ExchangeTransport from "../../hw-app-exchange/Exchange";
+import ExchangeTransport, {
+  ExchangeTypes,
+} from "../../hw-app-exchange/Exchange";
 import perFamily from "../../../generated/exchange";
 import { getAccountCurrency, getMainAccount } from "../../../account";
 import { getAccountBridge } from "../../../bridge";
@@ -85,7 +88,15 @@ const completeExchange = (
         );
         if (unsubscribed) return;
 
-        const goodSign = Buffer.from(signature, "hex");
+        const bufferSignature = Buffer.from(signature, "hex");
+        /**
+         * For the FUND flow, the signature sent to the nano needs to be in DER
+         * format, which is not the case for SELL flow. Hence the ternary
+         */
+        const goodSign =
+          exchangeType === ExchangeTypes.FUND
+            ? Buffer.from(secp256k1.signatureExport(bufferSignature))
+            : bufferSignature;
 
         if (!goodSign) {
           throw new Error("Could not check provider signature");
