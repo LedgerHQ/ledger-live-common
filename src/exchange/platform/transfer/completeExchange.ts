@@ -1,26 +1,27 @@
 import { from, Observable } from "rxjs";
 import { TransportStatusError, WrongDeviceForAccount } from "@ledgerhq/errors";
 
-import { delay } from "../../promise";
-import ExchangeTransport from "../hw-app-exchange/Exchange";
-import perFamily from "../../generated/exchange";
-import { getAccountCurrency, getMainAccount } from "../../account";
-import { getAccountBridge } from "../../bridge";
-import { TransactionRefusedOnDevice } from "../../errors";
-import { withDevice } from "../../hw/deviceAccess";
-import { getCurrencyExchangeConfig } from "../";
-import { getProvider } from "./";
+import { delay } from "../../../promise";
+import ExchangeTransport from "../../hw-app-exchange/Exchange";
+import perFamily from "../../../generated/exchange";
+import { getAccountCurrency, getMainAccount } from "../../../account";
+import { getAccountBridge } from "../../../bridge";
+import { TransactionRefusedOnDevice } from "../../../errors";
+import { withDevice } from "../../../hw/deviceAccess";
+import { getCurrencyExchangeConfig } from "../..";
+import { getProvider } from ".";
 
 import type {
+  CompleteExchangeInputFund,
   CompleteExchangeInputSell,
   CompleteExchangeRequestEvent,
-} from "../platform/types";
+} from "../types";
 
 const withDevicePromise = (deviceId, fn) =>
   withDevice(deviceId)((transport) => from(fn(transport))).toPromise();
 
 const completeExchange = (
-  input: CompleteExchangeInputSell
+  input: CompleteExchangeInputFund | CompleteExchangeInputSell
 ): Observable<CompleteExchangeRequestEvent> => {
   let { transaction } = input; // TODO build a tx from the data
 
@@ -42,7 +43,7 @@ const completeExchange = (
 
     const confirmExchange = async () => {
       await withDevicePromise(deviceId, async (transport) => {
-        const providerNameAndSignature = getProvider(provider);
+        const providerNameAndSignature = getProvider(exchangeType, provider);
 
         if (!providerNameAndSignature)
           throw new Error("Could not get provider infos");
@@ -53,9 +54,7 @@ const completeExchange = (
           rateType
         );
         const refundAccount = getMainAccount(fromAccount, fromParentAccount);
-
         const accountBridge = getAccountBridge(refundAccount);
-
         const refundCurrency = getAccountCurrency(refundAccount);
 
         if (refundCurrency.type !== "CryptoCurrency")
@@ -81,12 +80,13 @@ const completeExchange = (
         if (unsubscribed) return;
 
         await exchange.processTransaction(
-          Buffer.from(binaryPayload, "ascii"),
+          Buffer.from(binaryPayload, "hex"),
           estimatedFees
         );
         if (unsubscribed) return;
 
-        const goodSign = Buffer.from(signature, "base64");
+        const goodSign = Buffer.from(signature, "hex");
+
         if (!goodSign) {
           throw new Error("Could not check provider signature");
         }

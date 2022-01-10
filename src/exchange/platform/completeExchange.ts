@@ -8,8 +8,7 @@ import type {
 } from "./types";
 
 import completeExchangeSwap from "../swap/completeExchange";
-import completeExchangeSell from "../sell/completeExchange";
-import completeExchangeFund from "../fund/completeExchange";
+import completeExchangeTransfer from "./transfer/completeExchange";
 
 import { ExchangeTypes } from "../hw-app-exchange/Exchange";
 
@@ -17,8 +16,6 @@ type CompleteExchangeInput =
   | CompleteExchangeInputSell
   | CompleteExchangeInputSwap
   | CompleteExchangeInputFund;
-
-// FIXME: could trim down input for each flow. exchangeType might not needed pass the switch case 🤷‍♂️
 
 const completeExchange = (
   input: CompleteExchangeInput
@@ -32,10 +29,10 @@ const completeExchange = (
       return completeExchangeSwap(input);
 
     case ExchangeTypes.SELL:
-      return completeExchangeSell(input);
+      return completeExchangeTransfer(input);
 
     case ExchangeTypes.FUND:
-      return completeExchangeFund(input);
+      return completeExchangeTransfer(input);
 
     default:
       throw new Error("exchangeType not handled");
