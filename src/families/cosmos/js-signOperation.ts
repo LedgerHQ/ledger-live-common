@@ -1,7 +1,6 @@
 import { Account, SignOperationEvent } from "../../types";
 import type { Transaction } from "./types";
 import { getAccount, getChainId } from "./api/Cosmos";
-import { FeeNotLoaded } from "@ledgerhq/errors";
 import { Observable } from "rxjs";
 import { withDevice } from "../../hw/deviceAccess";
 import {
@@ -12,7 +11,6 @@ import {
   TxBodyEncodeObject,
 } from "@cosmjs/proto-signing";
 import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
-import { fromBase64, toBase64 } from "@cosmjs/encoding";
 import { encodeOperationId } from "../../operation";
 import { LedgerSigner } from "@cosmjs/ledger-amino";
 import { coins, makeSignDoc } from "@cosmjs/amino";
@@ -36,16 +34,13 @@ const signOperation = ({
       let cancelled;
 
       async function main() {
-        const { fees } = transaction;
-        if (!fees) throw new FeeNotLoaded();
-
         const { freshAddress, freshAddressPath, seedIdentifier } = account;
         const { accountNumber, sequence } = await getAccount(freshAddress);
         const chainId = await getChainId();
 
         const pubkey = encodePubkey({
           type: "tendermint/PubKeySecp256k1",
-          value: toBase64(Buffer.from(seedIdentifier, "hex")),
+          value: Buffer.from(seedIdentifier, "hex").toString("base64"),
         });
 
         const registry = new Registry();
@@ -164,7 +159,7 @@ const signOperation = ({
         const txRaw = TxRaw.fromPartial({
           bodyBytes: txBodyBytes,
           authInfoBytes: authInfoBytes,
-          signatures: [fromBase64(signature.signature)],
+          signatures: [Buffer.from(signature.signature, "base64")],
         });
 
         const tx_bytes = Array.from(
@@ -188,7 +183,7 @@ const signOperation = ({
           hash: txHash,
           type: "OUT",
           value: transaction.amount,
-          fee: fees,
+          fee: transaction.fees,
           extra: {
             storageLimit: 0,
             gasLimit: 0,
