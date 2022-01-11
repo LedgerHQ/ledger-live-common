@@ -236,12 +236,23 @@ export const broadcast = async ({
     method: "POST",
     url: `${defaultEndpoint}/cosmos/tx/v1beta1/txs`,
     data: {
-      tx_bytes: operation.extra.tx_bytes,
-      mode: "BROADCAST_MODE_BLOCK",
+      tx_bytes: Array.from(operation.extra.tx_bytes),
+      mode: "BROADCAST_MODE_SYNC",
     },
   });
 
-  return patchOperationWithHash(operation, data.hash);
+  if (data.tx_response.code != 0) {
+    // error codes: https://github.com/cosmos/cosmos-sdk/blob/master/types/errors/errors.go
+    throw new Error(
+      "invalid broadcast return (code: " +
+        (data.tx_response.code || "?") +
+        ", message: '" +
+        (data.tx_response.raw_log || "") +
+        "')"
+    );
+  }
+
+  return patchOperationWithHash(operation, data.tx_response.txhash);
 };
 
 export const getBlock = async (height: number): Promise<any> => {
