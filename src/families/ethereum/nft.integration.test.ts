@@ -5,7 +5,6 @@ import type { Account, AccountRaw } from "../../types";
 import { getAccountBridge } from "../../bridge";
 import { makeBridgeCacheSystem } from "../../bridge/cache";
 import { patchAccount } from "../../reconciliation";
-import { setEnv } from "../../env";
 
 jest.setTimeout(200000);
 
@@ -68,7 +67,7 @@ const gaspardBscAccount: AccountRaw = {
   xpub: "",
 };
 
-async function sync(account, withNFT = true) {
+async function sync(account) {
   const bridge = getAccountBridge(account);
   const blacklistedTokenIds = [];
   const r = await bridge
