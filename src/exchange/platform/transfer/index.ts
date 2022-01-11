@@ -39,7 +39,7 @@ const getProvider = (
   exchangeType: ExchangeTypes,
   providerName: string
 ): ExchangeProviderNameAndSignature => {
-  if (getEnv("MOCK")) {
+  if (getEnv("MOCK_EXCHANGE_TEST_CONFIG")) {
     return testFundProvider;
   }
 
