@@ -40,11 +40,6 @@ const envDefinitions = {
     parser: stringParser,
     desc: "Node API endpoint for algorand",
   },
-  API_ALGORAND_BLOCKCHAIN_EXPLORER_API_KEY: {
-    def: "",
-    parser: stringParser,
-    desc: "Node API key for algorand",
-  },
   API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
     def: "https://cosmoshub4.coin.ledger.com/",
     parser: stringParser,
@@ -111,7 +106,7 @@ const envDefinitions = {
     desc: "Ledger explorer API for tezos",
   },
   API_TEZOS_TZKT_API: {
-    def: "http://xtz-tzkt-explorer.api-01.live.ledger-stg.com",
+    def: "https://xtz-tzkt-explorer.api.live.ledger.com",
     parser: stringParser,
     desc: "tzkt.io explorer",
   },
@@ -510,6 +505,11 @@ const envDefinitions = {
     def: false,
     parser: boolParser,
     desc: "enable visibility of debug apps and tools in Platform Catalog",
+  },
+  PLATFORM_EXPERIMENTAL_APPS: {
+    def: false,
+    parser: boolParser,
+    desc: "enable visibility of experimental apps and tools in Platform Catalog",
   },
   PLATFORM_MANIFEST_API_URL: {
     def: "https://cdn.live.ledger.com/platform/apps/v1/data.json",
