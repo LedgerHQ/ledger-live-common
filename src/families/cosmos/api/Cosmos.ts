@@ -236,7 +236,7 @@ export const broadcast = async ({
     method: "POST",
     url: `${defaultEndpoint}/cosmos/tx/v1beta1/txs`,
     data: {
-      tx_bytes: Array.from(operation.extra.tx_bytes),
+      tx_bytes: operation.extra.tx_bytes,
       mode: "BROADCAST_MODE_SYNC",
     },
   });

@@ -167,7 +167,9 @@ const signOperation = ({
           signatures: [fromBase64(signature.signature)],
         });
 
-        const tx_bytes = Uint8Array.from(TxRaw.encode(txRaw).finish());
+        const tx_bytes = Array.from(
+          Uint8Array.from(TxRaw.encode(txRaw).finish())
+        );
 
         if (cancelled) {
           return;
