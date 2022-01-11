@@ -4,7 +4,7 @@ import type { PlatformApi } from "../types";
 const manifest: AppManifest[] = [
   {
     id: "paraswap",
-    name: "Para",
+    name: "ParaSwap",
     url: "https://ledger-live-platform-apps.vercel.app/app/dapp-browser?url=https%3A%2F%2Fparaswap.io%2F%3Fembed%3Dtrue%26referrer%3Dledger2&nanoApp=Paraswap&dappName=ParaSwap",
     homepageUrl: "https://paraswap.io",
     supportUrl: "https://paraswap.io",
@@ -58,7 +58,7 @@ const manifest: AppManifest[] = [
     platform: "all",
     apiVersion: "0.0.1",
     manifestVersion: "1",
-    branch: "soon",
+    branch: "stable",
     categories: ["staking", "defi"],
     currencies: ["ethereum"],
     content: {
@@ -268,8 +268,8 @@ const manifest: AppManifest[] = [
     domains: ["https://*"],
   },
   {
-    id: "test-live-app",
-    name: "Test Live App",
+    id: "playwright-test-live-app",
+    name: "Playwright Test Live App",
     url: "http://localhost:3001",
     homepageUrl: "https://developers.ledger.com/",
     icon: "",
