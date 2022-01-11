@@ -45,10 +45,10 @@ const getProvider = (
 
   const res = (() => {
     switch (exchangeType) {
-      case ExchangeTypes.FUND:
+      case ExchangeTypes.Fund:
         return fundProviders[providerName.toLowerCase()];
 
-      case ExchangeTypes.SELL:
+      case ExchangeTypes.Sell:
         return sellProviders[providerName.toLowerCase()];
 
       default:

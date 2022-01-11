@@ -38,7 +38,7 @@ export default async (
     payloadSignature,
     transaction,
   } = input;
-  const exchange = new Exchange(transport, ExchangeTypes.SELL);
+  const exchange = new Exchange(transport, ExchangeTypes.Sell);
   const mainAccount = getMainAccount(account, parentAccount);
   const { estimatedFees } = status;
   const provider = getProvider("coinify"); // FIXME Don't forget to switch to prod

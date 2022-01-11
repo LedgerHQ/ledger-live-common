@@ -21,17 +21,17 @@ const completeExchange = (
   input: CompleteExchangeInput
 ): Observable<CompleteExchangeRequestEvent> => {
   switch (input.exchangeType) {
-    case ExchangeTypes.SWAP:
+    case ExchangeTypes.Swap:
       if (!input.exchange.toAccount) {
-        throw new Error("'toAccount' requested for SWAP exchange");
+        throw new Error("'toAccount' requested for Swap exchange");
       }
 
       return completeExchangeSwap(input);
 
-    case ExchangeTypes.SELL:
+    case ExchangeTypes.Sell:
       return completeExchangeTransfer(input);
 
-    case ExchangeTypes.FUND:
+    case ExchangeTypes.Fund:
       return completeExchangeTransfer(input);
 
     default:

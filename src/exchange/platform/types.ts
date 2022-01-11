@@ -57,17 +57,17 @@ interface CompleteExchangeInputCommon {
   transaction: Transaction;
 }
 export interface CompleteExchangeInputSell extends CompleteExchangeInputCommon {
-  readonly exchangeType: ExchangeTypes.SELL;
+  readonly exchangeType: ExchangeTypes.Sell;
   exchange: ExchangeSell;
 }
 
 export interface CompleteExchangeInputFund extends CompleteExchangeInputCommon {
-  readonly exchangeType: ExchangeTypes.FUND;
+  readonly exchangeType: ExchangeTypes.Fund;
   exchange: ExchangeSell;
 }
 
 export interface CompleteExchangeInputSwap extends CompleteExchangeInputCommon {
-  readonly exchangeType: ExchangeTypes.SWAP;
+  readonly exchangeType: ExchangeTypes.Swap;
   exchange: ExchangeSwap;
 }
 

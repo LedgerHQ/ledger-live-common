@@ -90,13 +90,13 @@ const completeExchange = (
 
         const bufferSignature = Buffer.from(signature, "hex");
         /**
-         * For the FUND and SWAP flow, the signature sent to the nano needs to
-         * be in DER format, which is not the case for SELL flow. Hence the
+         * For the Fund and Swap flow, the signature sent to the nano needs to
+         * be in DER format, which is not the case for Sell flow. Hence the
          * ternary.
          * cf. https://github.com/LedgerHQ/app-exchange/blob/e67848f136dc7227521791b91f608f7cd32e7da7/src/check_tx_signature.c#L14-L32
          */
         const goodSign =
-          exchangeType === ExchangeTypes.SELL
+          exchangeType === ExchangeTypes.Sell
             ? bufferSignature
             : Buffer.from(secp256k1.signatureExport(bufferSignature));
 

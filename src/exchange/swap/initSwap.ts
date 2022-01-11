@@ -45,9 +45,9 @@ const initSwap = (input: InitSwapInput): Observable<SwapRequestEvent> => {
       await withDevicePromise(deviceId, async (transport) => {
         const ratesFlag =
           exchangeRate.tradeMethod === "fixed"
-            ? RateTypes.FIXED
-            : RateTypes.FLOATING;
-        const swap = new Exchange(transport, ExchangeTypes.SWAP, ratesFlag);
+            ? RateTypes.Fixed
+            : RateTypes.Floating;
+        const swap = new Exchange(transport, ExchangeTypes.Swap, ratesFlag);
         // NB this id is crucial to prevent replay attacks, if it changes
         // we need to start the flow again.
         const deviceTransactionId = await swap.startNewTransaction();
