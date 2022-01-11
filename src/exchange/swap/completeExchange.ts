@@ -33,7 +33,7 @@ const completeExchange = (
     binaryPayload,
     signature,
     exchangeType,
-    rateType, // TODO Pass fixed/float for UI switch ?
+    rateType,
   } = input;
 
   const { fromAccount, fromParentAccount } = exchange;

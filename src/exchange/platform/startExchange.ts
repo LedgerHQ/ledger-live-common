@@ -23,7 +23,11 @@ const startExchange = (
       await withDevicePromise(deviceId, async (transport) => {
         log("exchange", `attempt to connect to ${deviceId}`);
         if (unsubscribed) return;
-        const exchange = new Exchange(transport, exchangeType); // TODO Pass fixed/float for UI switch ?
+        /**
+         * Note: `transactionRate` is not needed at this stage. It is only used
+         * at the `completeExchange` step
+         */
+        const exchange = new Exchange(transport, exchangeType);
         const nonce: string = await exchange.startNewTransaction();
         o.next({
           type: "start-exchange-result",
