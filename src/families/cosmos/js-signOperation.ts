@@ -4,7 +4,6 @@ import { getAccount, getChainId } from "./api/Cosmos";
 import { FeeNotLoaded } from "@ledgerhq/errors";
 import { Observable } from "rxjs";
 import { withDevice } from "../../hw/deviceAccess";
-import CosmosApp from "@ledgerhq/hw-app-cosmos";
 import {
   Coin,
   encodePubkey,
@@ -15,6 +14,13 @@ import {
 import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
 import { fromBase64, toBase64 } from "@cosmjs/encoding";
 import { encodeOperationId } from "../../operation";
+import { LedgerSigner } from "@cosmjs/ledger-amino";
+import { coins, makeSignDoc } from "@cosmjs/amino";
+import { SignMode } from "cosmjs-types/cosmos/tx/signing/v1beta1/signing";
+import { AminoTypes } from "@cosmjs/stargate";
+import { stringToPath } from "@cosmjs/crypto";
+
+const aminoTypes = new AminoTypes({ prefix: "cosmos" });
 
 const signOperation = ({
   account,
@@ -44,109 +50,71 @@ const signOperation = ({
 
         const registry = new Registry();
 
+        const hdPaths: any = stringToPath("m/" + freshAddressPath);
+
+        const ledgerSigner = new LedgerSigner(transport, {
+          hdPaths: [hdPaths],
+        });
+
         o.next({ type: "device-signature-requested" });
 
-        // Note:
-        // Cosmos App don't support gRPC transactions, we need to send legacy transaction (StdTx instead of TxBody) to the device.
-        // So, msg is the TxBody, and legacyMsg the StdTx.
-        // Keep in mind legacyMsg must be ordered in a strict way.
-        // https://github.com/cosmos/ledger-cosmos/blob/6c194daa28936e273f9548eabca9e72ba04bb632/app/src/tx_parser.c#L52
-
-        let msg, legacyMsg;
+        let msg;
 
         switch (transaction.mode) {
           case "send":
-            msg = {
-              typeUrl: "/cosmos.bank.v1beta1.MsgSend",
-              value: {
-                fromAddress: freshAddress,
-                toAddress: transaction.recipient,
-                amount: [
-                  {
-                    denom: "uatom",
-                    amount: transaction.amount.toString(),
-                  },
-                ],
+            msg = [
+              {
+                typeUrl: "/cosmos.bank.v1beta1.MsgSend",
+                value: {
+                  fromAddress: freshAddress,
+                  toAddress: transaction.recipient,
+                  amount: [
+                    {
+                      denom: "uatom",
+                      amount: transaction.amount.toString(),
+                    },
+                  ],
+                },
               },
-            };
-
-            legacyMsg = {
-              type: "cosmos-sdk/MsgSend",
-              value: {
-                amount: [
-                  {
-                    amount: transaction.amount.toString(),
-                    denom: "uatom",
-                  },
-                ],
-                from_address: freshAddress,
-                to_address: transaction.recipient,
-              },
-            };
+            ];
             break;
 
           case "delegate":
-            msg = {
-              typeUrl: "/cosmos.staking.v1beta1.MsgDelegate",
-              value: {
-                delegatorAddress: freshAddress,
-                // todo:
-                // validatorAddress: transaction.validator,
-                amount: [
-                  {
-                    denom: "uatom",
-                    amount: transaction.amount.toString(),
-                  },
-                ],
+            msg = [
+              {
+                typeUrl: "/cosmos.staking.v1beta1.MsgDelegate",
+                value: {
+                  delegatorAddress: freshAddress,
+                  // todo:
+                  // validatorAddress: transaction.validator,
+                  amount: [
+                    {
+                      denom: "uatom",
+                      amount: transaction.amount.toString(),
+                    },
+                  ],
+                },
               },
-            };
-
-            legacyMsg = {
-              type: "cosmos-sdk/MsgDelegate",
-              value: {
-                amount: [
-                  {
-                    amount: transaction.amount.toString(),
-                    denom: "uatom",
-                  },
-                ],
-                delegator_address: freshAddress,
-                // todo:
-                // validator_address: transaction.validator,
-              },
-            };
+            ];
             break;
 
           case "undelegate":
-            msg = {
-              typeUrl: "/cosmos.staking.v1beta1.MsgUndelegate",
-              value: {
-                delegatorAddress: freshAddress,
-                // todo:
-                // validatorAddress: transaction.validator,
-                amount: [
-                  {
-                    denom: "uatom",
-                    amount: transaction.amount.toString(),
-                  },
-                ],
+            msg = [
+              {
+                typeUrl: "/cosmos.staking.v1beta1.MsgUndelegate",
+                value: {
+                  delegatorAddress: freshAddress,
+                  // todo:
+                  // validatorAddress: transaction.validator,
+                  amount: [
+                    {
+                      denom: "uatom",
+                      amount: transaction.amount.toString(),
+                    },
+                  ],
+                },
               },
-            };
-
-            legacyMsg = {
-              type: "cosmos-sdk/MsgUndelegate",
-              value: {
-                amount: [
-                  {
-                    amount: transaction.amount.toString(),
-                    denom: "uatom",
-                  },
-                ],
-                delegator_address: freshAddress,
-                // todo:
-                // validator_address: transaction.validator,
-              },
-            };
+            ];
             break;
 
           default:
@@ -158,49 +126,45 @@ const signOperation = ({
           denom: "uatom",
         };
 
+        const authInfoBytes = makeAuthInfoBytes(
+          [{ pubkey, sequence }],
+          [fee],
+          transaction.gas?.toNumber() as number,
+          SignMode.SIGN_MODE_LEGACY_AMINO_JSON
+        );
+
+        const msgs = msg.map((msg) => aminoTypes.toAmino(msg));
+
+        const signDoc = makeSignDoc(
+          msgs,
+          {
+            amount: coins(transaction.fees?.toNumber() as number, "uatom"),
+            gas: transaction.gas?.toString() as string,
+          },
+          chainId,
+          transaction.memo || "",
+          accountNumber,
+          sequence
+        );
+
+        const { signed, signature } = await ledgerSigner.signAmino(
+          freshAddress,
+          signDoc
+        );
+
         const txBodyFields: TxBodyEncodeObject = {
           typeUrl: "/cosmos.tx.v1beta1.TxBody",
           value: {
-            messages: [msg],
+            messages: signed.msgs.map((msg) => aminoTypes.fromAmino(msg)),
           },
         };
 
         const txBodyBytes = registry.encode(txBodyFields);
 
-        const authInfoBytes = makeAuthInfoBytes(
-          [{ pubkey, sequence }],
-          [fee],
-          transaction.gas?.toNumber() || 0
-        );
-
-        const message = JSON.stringify({
-          account_number: accountNumber,
-          chain_id: chainId,
-          fee: {
-            amount: [
-              {
-                amount: transaction.amount.toString(),
-                denom: "uatom",
-              },
-            ],
-            gas: transaction.gas?.toNumber() || 0,
-          },
-          memo: transaction.memo || "",
-          msgs: [legacyMsg],
-          sequence: sequence,
-        });
-
-        const hwApp = new CosmosApp(transport);
-        const { signature } = await hwApp.sign(freshAddressPath, message);
-
-        if (!signature) {
-          return;
-        }
-
         const txRaw = TxRaw.fromPartial({
           bodyBytes: txBodyBytes,
           authInfoBytes: authInfoBytes,
-          signatures: [fromBase64(signature.toString("base64"))],
+          signatures: [fromBase64(signature.signature)],
         });
 
         const tx_bytes = Uint8Array.from(TxRaw.encode(txRaw).finish());
