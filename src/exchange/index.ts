@@ -33,7 +33,7 @@ const findExchangeCurrencyConfig = (
     }
   | null
   | undefined => {
-  return getEnv("MOCK")
+  return getEnv("MOCK_EXCHANGE_TEST_CONFIG")
     ? findTestExchangeCurrencyConfig(id)
     : findProdExchangeCurrencyConfig(id);
 };
