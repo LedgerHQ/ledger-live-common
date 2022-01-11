@@ -268,20 +268,16 @@ export const getBlock = async (height: number): Promise<any> => {
   }
 };
 
-export const getFees = async (
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  address?: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  recipient?: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  amount?: number
-): Promise<BigNumber> => {
-  // todo: handle new cosmjs fee calculation (simulate mode)
+export const simulate = async (tx_bytes: any): Promise<any> => {
+  const { data } = await network({
+    method: "POST",
+    url: `${defaultEndpoint}/cosmos/tx/v1beta1/simulate`,
+    data: {
+      tx_bytes: tx_bytes,
+    },
+  });
 
-  const defaultGasPrice = GasPrice.fromString("0.025ucosm");
-  const defaultSendFee = calculateFee(80_000, defaultGasPrice);
-
-  return new BigNumber(defaultSendFee.amount[0].amount);
+  return data;
 };
 
 export const getHeight = async (): Promise<number> => {
