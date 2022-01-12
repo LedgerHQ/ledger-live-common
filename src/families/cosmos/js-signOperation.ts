@@ -89,7 +89,9 @@ const signOperation = ({
         const txRaw = TxRaw.fromPartial({
           bodyBytes: txBodyBytes,
           authInfoBytes: unsignedPayload.auth,
-          signatures: [Buffer.from(signature.signature, "base64")],
+          signatures: [
+            new Uint8Array(Buffer.from(signature.signature, "base64")),
+          ],
         });
 
         const tx_bytes = Array.from(
