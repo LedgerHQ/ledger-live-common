@@ -63,8 +63,8 @@ const signOperation = ({
             fee: {
               amount: [
                 {
-                  denom: transaction.fees?.toString() as string,
-                  amount: "uatom",
+                  denom: "uatom",
+                  amount: transaction.fees?.toString() as string,
                 },
               ],
               gas: transaction.gas?.toString() as string,
