@@ -70,7 +70,7 @@ const signOperation = ({
         // We don't use Cosmos App,
         // Cosmos App support legacy StdTx and required to be ordered in a strict way,
         // Cosmos API expects a different order, resulting in a separate signature.
-        // https://github.com/cosmos/ledger-cosmos/blob/6c194daa28936e273f9548eabca9e72ba04bb632/app/src/tx_parser.c#L52
+        // https://github.com/LedgerHQ/app-cosmos/blob/6c194daa28936e273f9548eabca9e72ba04bb632/app/src/tx_parser.c#L52
 
         const { signed, signature } = await ledgerSigner.signAmino(
           account.freshAddress,
