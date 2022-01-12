@@ -72,7 +72,7 @@ const signOperation = ({
         // Cosmos API expects a different order, resulting in a separate signature.
         // https://github.com/LedgerHQ/app-cosmos/blob/6c194daa28936e273f9548eabca9e72ba04bb632/app/src/tx_parser.c#L52
 
-        const { signed, signature } = await ledgerSigner.signAmino(
+        const { signature } = await ledgerSigner.signAmino(
           account.freshAddress,
           signDoc
         );
@@ -80,7 +80,7 @@ const signOperation = ({
         const txBodyFields: TxBodyEncodeObject = {
           typeUrl: "/cosmos.tx.v1beta1.TxBody",
           value: {
-            messages: signed.msgs.map((msg) => aminoTypes.fromAmino(msg)),
+            messages: msgs.map((msg) => aminoTypes.fromAmino(msg)),
           },
         };
 
