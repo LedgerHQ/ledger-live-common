@@ -10,26 +10,30 @@ const txToOps = (info: any, id: string, txs: any): any => {
   const ops: Operation[] = [];
 
   for (const tx of txs) {
-    const txlog = JSON.parse(tx.result.log);
+    let fees = new BigNumber(0);
+
+    tx.tx.auth_info.fee.amount.forEach((elem) => {
+      fees = fees.plus(elem.amount);
+    });
 
     const op: Operation = {
       id: "",
-      hash: tx.hash,
+      hash: tx.txhash,
       type: "" as any,
       value: new BigNumber(0),
-      fee: tx.fee,
+      fee: fees,
       blockHash: null,
       blockHeight: tx.height,
       senders: [] as any,
       recipients: [] as any,
       accountId: id,
-      date: tx.date,
+      date: new Date(tx.timestamp),
       extra: {
         validators: [] as any,
       },
     };
 
-    for (const t of txlog[0].events) {
+    for (const t of tx.logs[0].events) {
       for (const a of t.attributes) {
         switch (a.key) {
           case "sender":
@@ -56,18 +60,18 @@ const txToOps = (info: any, id: string, txs: any): any => {
 
       if (t.type === "delegate") {
         op.type = "DELEGATE";
-        op.value = new BigNumber(tx.fee);
+        op.value = new BigNumber(fees);
       }
 
       if (t.type === "withdraw_rewards") {
         op.type = "REWARD";
-        op.value = new BigNumber(tx.fee);
+        op.value = new BigNumber(fees);
       }
     }
 
     if (!op.type && address === op.senders[0]) {
       op.type = "OUT";
-      op.value = op.value.plus(tx.fee);
+      op.value = op.value.plus(fees);
     }
 
     if (!op.type && address === op.recipients[0]) {
@@ -83,7 +87,7 @@ const txToOps = (info: any, id: string, txs: any): any => {
       return op.senders.indexOf(element) === index;
     });
 
-    op.id = encodeOperationId(id, tx.hash, op.type);
+    op.id = encodeOperationId(id, tx.txhash, op.type);
 
     if (op.type) {
       ops.push(op);

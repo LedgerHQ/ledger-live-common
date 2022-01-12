@@ -141,88 +141,27 @@ export const getWithdrawAddress = async (address: string): Promise<string> => {
 };
 
 export const getTransactions = async (address: string): Promise<any> => {
-  try {
-    const perPage = 100;
-    const txs: Array<any> = [];
-    // tmClient = await Tendermint34Client.connect(defaultRpcEndpoint);
-    tmClient = await Tendermint34Client.connect("https://rpc.cosmos.network");
+  const txs: Array<any> = [];
 
-    // fetch incoming transactions
-    const txsIn = await tmClient.txSearch({
-      query: `transfer.recipient='${address}'`,
-      page: 1,
-      per_page: perPage,
-    });
+  const receive = await network({
+    method: "GET",
+    url:
+      `${defaultEndpoint}/cosmos/tx/v1beta1/txs?events=` +
+      encodeURI(`transfer.recipient='${address}'`),
+  });
 
-    for (const tx of txsIn.txs) {
-      tx.hash = toHex(tx.hash).toUpperCase();
-      txs.push(tx);
-    }
+  receive.data.tx_responses.forEach((forEach) => txs.push(forEach));
 
-    const txsInDone = txs.length;
-    const txsInNbPage = Math.ceil((txsIn.totalCount - txsInDone) / perPage);
+  const send = await network({
+    method: "GET",
+    url:
+      `${defaultEndpoint}/cosmos/tx/v1beta1/txs?events=` +
+      encodeURI(`message.sender='${address}'`),
+  });
 
-    // paginate over pages
-    for (let i = 2; i <= txsInNbPage; i++) {
-      const txsIn = await tmClient.txSearch({
-        query: `transfer.recipient='${address}'`,
-        page: i,
-        per_page: perPage,
-      });
+  send.data.tx_responses.forEach((forEach) => txs.push(forEach));
 
-      for (const tx of txsIn.txs) {
-        tx.hash = toHex(tx.hash).toUpperCase();
-        txs.push(tx);
-      }
-    }
-
-    // fetch outgoing transactions
-    const txsOut = await tmClient.txSearch({
-      query: `message.sender='${address}'`,
-      page: 1,
-      per_page: perPage,
-    });
-
-    for (const tx of txsOut.txs) {
-      tx.hash = toHex(tx.hash).toUpperCase();
-      txs.push(tx);
-    }
-
-    const txsOutDone = txs.length;
-    const txsOutNbPage = Math.ceil((txsOut.totalCount - txsOutDone) / perPage);
-
-    // paginate over pages
-    for (let i = 2; i <= txsOutNbPage; i++) {
-      const txsOut = await tmClient.txSearch({
-        query: `message.sender='${address}'`,
-        page: i,
-        per_page: perPage,
-      });
-
-      for (const tx of txsOut.txs) {
-        tx.hash = toHex(tx.hash).toUpperCase();
-        txs.push(tx);
-      }
-    }
-
-    // fetch date and set fees
-    for (const tx of txs) {
-      const block = await getBlock(tx.height);
-      tx.date = new Date(block.block.header.time);
-      tx.fee = new BigNumber(0);
-      const txRaw: DecodedTxRaw = decodeTxRaw(tx.tx);
-
-      if (txRaw.authInfo.fee) {
-        txRaw.authInfo.fee.amount.forEach((fee) => {
-          tx.fee = tx.fee.plus(fee.amount);
-        });
-      }
-    }
-
-    return txs;
-  } catch (e) {
-    return undefined;
-  }
+  return txs;
 };
 
 export const broadcast = async ({
