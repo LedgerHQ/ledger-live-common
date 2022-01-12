@@ -534,7 +534,7 @@ const envDefinitions = {
   MARKET_API_URL: {
     def: "https://proxycg.api.live.ledger.com/api/v3",
     parser: stringParser,
-    desc: "url used to fetch platform catalog",
+    desc: "Market data api",
   },
 };
 
