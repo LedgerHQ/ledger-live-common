@@ -14,6 +14,13 @@ import { Transaction as bitcoinTransaction } from "../families/bitcoin/types";
 import { TransactionRaw as bitcoinTransactionRaw } from "../families/bitcoin/types";
 import { NetworkInfo as bitcoinNetworkInfo } from "../families/bitcoin/types";
 import { NetworkInfoRaw as bitcoinNetworkInfoRaw } from "../families/bitcoin/types";
+import { reflect as cardanoReflect } from "../families/cardano/types";
+import { CoreStatics as CoreStatics_cardano } from "../families/cardano/types";
+import { CoreAccountSpecifics as CoreAccountSpecifics_cardano } from "../families/cardano/types";
+import { CoreOperationSpecifics as CoreOperationSpecifics_cardano } from "../families/cardano/types";
+import { CoreCurrencySpecifics as CoreCurrencySpecifics_cardano } from "../families/cardano/types";
+import { Transaction as cardanoTransaction } from "../families/cardano/types";
+import { TransactionRaw as cardanoTransactionRaw } from "../families/cardano/types";
 import { reflect as cosmosReflect } from "../families/cosmos/types";
 import { CoreStatics as CoreStatics_cosmos } from "../families/cosmos/types";
 import { CoreAccountSpecifics as CoreAccountSpecifics_cosmos } from "../families/cosmos/types";
@@ -122,6 +129,7 @@ import { NetworkInfoRaw as tronNetworkInfoRaw } from "../families/tron/types";
 export type SpecificStatics = {}
 & CoreStatics_algorand
 & CoreStatics_bitcoin
+& CoreStatics_cardano
 & CoreStatics_cosmos
 & CoreStatics_crypto_org
 & CoreStatics_elrond
@@ -137,6 +145,7 @@ export type SpecificStatics = {}
 export type CoreAccountSpecifics = {}
 & CoreAccountSpecifics_algorand
 & CoreAccountSpecifics_bitcoin
+& CoreAccountSpecifics_cardano
 & CoreAccountSpecifics_cosmos
 & CoreAccountSpecifics_crypto_org
 & CoreAccountSpecifics_elrond
@@ -152,6 +161,7 @@ export type CoreAccountSpecifics = {}
 export type CoreOperationSpecifics = {}
 & CoreOperationSpecifics_algorand
 & CoreOperationSpecifics_bitcoin
+& CoreOperationSpecifics_cardano
 & CoreOperationSpecifics_cosmos
 & CoreOperationSpecifics_crypto_org
 & CoreOperationSpecifics_elrond
@@ -167,6 +177,7 @@ export type CoreOperationSpecifics = {}
 export type CoreCurrencySpecifics = {}
 & CoreCurrencySpecifics_algorand
 & CoreCurrencySpecifics_bitcoin
+& CoreCurrencySpecifics_cardano
 & CoreCurrencySpecifics_cosmos
 & CoreCurrencySpecifics_crypto_org
 & CoreCurrencySpecifics_elrond
@@ -182,6 +193,7 @@ export type CoreCurrencySpecifics = {}
 export type Transaction =
   | algorandTransaction
   | bitcoinTransaction
+  | cardanoTransaction
   | cosmosTransaction
   | crypto_orgTransaction
   | elrondTransaction
@@ -197,6 +209,7 @@ export type Transaction =
 export type TransactionRaw =
   | algorandTransactionRaw
   | bitcoinTransactionRaw
+  | cardanoTransactionRaw
   | cosmosTransactionRaw
   | crypto_orgTransactionRaw
   | elrondTransactionRaw
@@ -236,6 +249,7 @@ export type NetworkInfoRaw =
 export const reflectSpecifics = (declare: any): Array<{ OperationMethods: Record<string, unknown>, AccountMethods: Record<string, unknown> }> => [
   algorandReflect(declare),
   bitcoinReflect(declare),
+  cardanoReflect(declare),
   cosmosReflect(declare),
   crypto_orgReflect(declare),
   elrondReflect(declare),

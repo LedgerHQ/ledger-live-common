@@ -226,6 +226,10 @@ const modes = Object.freeze({
   solanaSub: {
     overridesDerivation: "44'/501'/<account>'",
   },
+  cardano: {
+    purpose: 1852,
+    overridesDerivation: "1852'/1815'/<account>'/<chain_type>/<address>",
+  },
 });
 modes as Record<DerivationMode, ModeSpec>; // eslint-disable-line
 
@@ -241,6 +245,7 @@ const legacyDerivations: Record<CryptoCurrencyIds, DerivationMode[]> = {
   stellar: ["sep5"],
   polkadot: ["polkadotbip44"],
   filecoin: ["filecoin"],
+  cardano: ["cardano"],
 };
 
 const legacyDerivationsPerFamily: Record<string, DerivationMode[]> = {
@@ -422,6 +427,7 @@ const disableBIP44 = {
   stellar: true,
   polkadot: true,
   solana: true,
+  cardano: true,
 };
 const seedIdentifierPath = {
   neo: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,

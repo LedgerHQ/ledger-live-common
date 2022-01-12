@@ -38,6 +38,10 @@ import type {
 } from "./portfolio";
 import type { SwapOperation, SwapOperationRaw } from "../exchange/swap/types";
 import type { NFT, NFTRaw } from "./nft";
+import {
+  CardanoResources,
+  CardanoResourcesRaw,
+} from "../families/cardano/types";
 // This is the old cache and now DEPRECATED (pre v2 portfoli)
 export type BalanceHistoryMap = Partial<Record<PortfolioRange, BalanceHistory>>;
 export type BalanceHistoryRawMap = Record<PortfolioRange, BalanceHistoryRaw>;
@@ -211,6 +215,7 @@ export type Account = {
   tezosResources?: TezosResources;
   elrondResources?: ElrondResources;
   cryptoOrgResources?: CryptoOrgResources;
+  cardanoResources?: CardanoResources;
   // Swap operations linked to this account
   swapHistory: SwapOperation[];
   // Hash used to discard tx history on sync
@@ -300,6 +305,7 @@ export type AccountRaw = {
   elrondResources?: ElrondResourcesRaw;
   tezosResources?: TezosResourcesRaw;
   cryptoOrgResources?: CryptoOrgResourcesRaw;
+  cardanoResources?: CardanoResourcesRaw;
   swapHistory?: SwapOperationRaw[];
   syncHash?: string;
   nfts?: NFTRaw[];

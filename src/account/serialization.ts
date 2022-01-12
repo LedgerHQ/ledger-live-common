@@ -61,6 +61,11 @@ import {
   emptyHistoryCache,
   generateHistoryFromOperations,
 } from "./balanceHistoryCache";
+import {
+  fromCardanoResourceRaw,
+  toCardanoResourceRaw,
+} from "../families/cardano/serialization";
+
 export { toCosmosResourcesRaw, fromCosmosResourcesRaw };
 export { toAlgorandResourcesRaw, fromAlgorandResourcesRaw };
 export { toBitcoinResourcesRaw, fromBitcoinResourcesRaw };
@@ -68,6 +73,7 @@ export { toPolkadotResourcesRaw, fromPolkadotResourcesRaw };
 export { toTezosResourcesRaw, fromTezosResourcesRaw };
 export { toElrondResourcesRaw, fromElrondResourcesRaw };
 export { toCryptoOrgResourcesRaw, fromCryptoOrgResourcesRaw };
+export { toCardanoResourceRaw, fromCardanoResourceRaw };
 
 export function toBalanceHistoryRaw(b: BalanceHistory): BalanceHistoryRaw {
   return b.map(({ date, value }) => [date.toISOString(), value.toString()]);
@@ -707,6 +713,7 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     polkadotResources,
     elrondResources,
     cryptoOrgResources,
+    cardanoResources,
     nfts,
   } = rawAccount;
   const subAccounts =
@@ -828,6 +835,10 @@ export function fromAccountRaw(rawAccount: AccountRaw): Account {
     res.cryptoOrgResources = fromCryptoOrgResourcesRaw(cryptoOrgResources);
   }
 
+  if (cardanoResources) {
+    res.cardanoResources = fromCardanoResourceRaw(cardanoResources);
+  }
+
   return res;
 }
 export function toAccountRaw({
@@ -867,6 +878,7 @@ export function toAccountRaw({
   elrondResources,
   cryptoOrgResources,
   nfts,
+  cardanoResources,
 }: Account): AccountRaw {
   const res: AccountRaw = {
     id,
@@ -945,6 +957,9 @@ export function toAccountRaw({
   }
   if (cryptoOrgResources) {
     res.cryptoOrgResources = toCryptoOrgResourcesRaw(cryptoOrgResources);
+  }
+  if (cardanoResources) {
+    res.cardanoResources = toCardanoResourceRaw(cardanoResources);
   }
   return res;
 }
