@@ -62,8 +62,6 @@ export type CurrencyData = {
   chartData: Record<string, number[]>;
 };
 
-
-
 export type SingleCoinState = {
   selectedCurrency?: string;
   chartRequestParams: MarketCurrencyChartDataRequestParams;
