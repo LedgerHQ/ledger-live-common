@@ -3,20 +3,14 @@ import type { Transaction } from "./types";
 import { getAccount, getChainId } from "./api/Cosmos";
 import { Observable } from "rxjs";
 import { withDevice } from "../../hw/deviceAccess";
-import {
-  Coin,
-  encodePubkey,
-  makeAuthInfoBytes,
-  Registry,
-  TxBodyEncodeObject,
-} from "@cosmjs/proto-signing";
+import { Registry, TxBodyEncodeObject } from "@cosmjs/proto-signing";
 import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
 import { encodeOperationId } from "../../operation";
 import { LedgerSigner } from "@cosmjs/ledger-amino";
-import { coins, makeSignDoc } from "@cosmjs/amino";
-import { SignMode } from "cosmjs-types/cosmos/tx/signing/v1beta1/signing";
+import { makeSignDoc } from "@cosmjs/amino";
 import { AminoTypes } from "@cosmjs/stargate";
 import { stringToPath } from "@cosmjs/crypto";
+import buildTransaction from "./js-buildTransaction";
 
 const aminoTypes = new AminoTypes({ prefix: "cosmos" });
 
@@ -34,18 +28,14 @@ const signOperation = ({
       let cancelled;
 
       async function main() {
-        const { freshAddress, freshAddressPath, seedIdentifier } = account;
-        const { accountNumber, sequence } = await getAccount(freshAddress);
+        const { accountNumber, sequence } = await getAccount(
+          account.freshAddress
+        );
         const chainId = await getChainId();
-
-        const pubkey = encodePubkey({
-          type: "tendermint/PubKeySecp256k1",
-          value: Buffer.from(seedIdentifier, "hex").toString("base64"),
-        });
 
         const registry = new Registry();
 
-        const hdPaths: any = stringToPath("m/" + freshAddressPath);
+        const hdPaths: any = stringToPath("m/" + account.freshAddressPath);
 
         const ledgerSigner = new LedgerSigner(transport, {
           hdPaths: [hdPaths],
@@ -53,87 +43,21 @@ const signOperation = ({
 
         o.next({ type: "device-signature-requested" });
 
-        let msg;
+        const unsignedPayload = await buildTransaction(account, transaction);
 
-        switch (transaction.mode) {
-          case "send":
-            msg = [
-              {
-                typeUrl: "/cosmos.bank.v1beta1.MsgSend",
-                value: {
-                  fromAddress: freshAddress,
-                  toAddress: transaction.recipient,
-                  amount: [
-                    {
-                      denom: "uatom",
-                      amount: transaction.amount.toString(),
-                    },
-                  ],
-                },
-              },
-            ];
-            break;
-
-          case "delegate":
-            msg = [
-              {
-                typeUrl: "/cosmos.staking.v1beta1.MsgDelegate",
-                value: {
-                  delegatorAddress: freshAddress,
-                  // todo:
-                  // validatorAddress: transaction.validator,
-                  amount: [
-                    {
-                      denom: "uatom",
-                      amount: transaction.amount.toString(),
-                    },
-                  ],
-                },
-              },
-            ];
-            break;
-
-          case "undelegate":
-            msg = [
-              {
-                typeUrl: "/cosmos.staking.v1beta1.MsgUndelegate",
-                value: {
-                  delegatorAddress: freshAddress,
-                  // todo:
-                  // validatorAddress: transaction.validator,
-                  amount: [
-                    {
-                      denom: "uatom",
-                      amount: transaction.amount.toString(),
-                    },
-                  ],
-                },
-              },
-            ];
-            break;
-
-          default:
-            throw "not supported";
-        }
-
-        const fee: Coin = {
-          amount: transaction.fees?.toString() as string,
-          denom: "uatom",
-        };
-
-        const authInfoBytes = makeAuthInfoBytes(
-          [{ pubkey, sequence }],
-          [fee],
-          transaction.gas?.toNumber() as number,
-          SignMode.SIGN_MODE_LEGACY_AMINO_JSON
+        const msgs = unsignedPayload.messages.map((msg) =>
+          aminoTypes.toAmino(msg)
         );
-
-        const msgs = msg.map((msg) => aminoTypes.toAmino(msg));
 
         const signDoc = makeSignDoc(
           msgs,
           {
-            amount: coins(transaction.fees?.toNumber() as number, "uatom"),
+            amount: [
+              {
+                denom: transaction.fees?.toString() as string,
+                amount: "uatom",
+              },
+            ],
             gas: transaction.gas?.toString() as string,
           },
           chainId,
@@ -142,8 +66,14 @@ const signOperation = ({
           sequence
         );
 
+        // Note:
+        // We don't use Cosmos App,
+        // Cosmos App support legacy StdTx and required to be ordered in a strict way,
+        // Cosmos API expects a different order, resulting in a separate signature.
+        // https://github.com/cosmos/ledger-cosmos/blob/6c194daa28936e273f9548eabca9e72ba04bb632/app/src/tx_parser.c#L52
+
         const { signed, signature } = await ledgerSigner.signAmino(
-          freshAddress,
+          account.freshAddress,
           signDoc
         );
 
@@ -158,7 +88,7 @@ const signOperation = ({
 
         const txRaw = TxRaw.fromPartial({
           bodyBytes: txBodyBytes,
-          authInfoBytes: authInfoBytes,
+          authInfoBytes: unsignedPayload.auth,
           signatures: [Buffer.from(signature.signature, "base64")],
         });
 
@@ -174,7 +104,7 @@ const signOperation = ({
 
         // build optimistic operation
         const txHash = ""; // resolved at broadcast time
-        const senders = [freshAddress];
+        const senders = [account.freshAddress];
         const recipients = [transaction.recipient];
         const accountId = account.id;
 
