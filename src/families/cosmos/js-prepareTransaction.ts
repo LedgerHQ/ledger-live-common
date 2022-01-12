@@ -1,24 +1,50 @@
 import { Account } from "../../types";
 import { Transaction } from "./types";
-import { simulate } from "./api/Cosmos";
 import BigNumber from "bignumber.js";
+import { simulate } from "./api/Cosmos";
+import { Registry, TxBodyEncodeObject } from "@cosmjs/proto-signing";
+import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
+import { getEnv } from "../../env";
+import buildTransaction from "./js-buildTransaction";
 
 const prepareTransaction = async (
-  a: Account,
-  t: Transaction
+  account: Account,
+  transaction: Transaction
 ): Promise<Transaction> => {
-  // create temporary msg
-  // sign it
-  // send to simulate to get fees
+  const unsignedPayload = await buildTransaction(account, transaction);
 
-  // we need ot abstract msg and legacyMsg builder method
+  const txBodyFields: TxBodyEncodeObject = {
+    typeUrl: "/cosmos.tx.v1beta1.TxBody",
+    value: {
+      messages: unsignedPayload.messages,
+    },
+  };
 
-  const msg = {};
-  //const data = await simulate(msg);
-  //t.fees = new BigNumber(data.gas_info.gas_used);
-  t.fees = new BigNumber(1);
+  const registry = new Registry();
 
-  return t;
+  const txBodyBytes = registry.encode(txBodyFields);
+
+  const txRaw = TxRaw.fromPartial({
+    bodyBytes: txBodyBytes,
+    authInfoBytes: unsignedPayload.auth,
+    signatures: [new Uint8Array(Buffer.from(account.seedIdentifier, "hex"))],
+  });
+
+  const tx_bytes = Array.from(Uint8Array.from(TxRaw.encode(txRaw).finish()));
+
+  const simulation = await simulate(tx_bytes);
+
+  const gasPrice = new BigNumber(getEnv("COSMOS_GAS_PRICE"));
+
+  transaction.gas = new BigNumber(simulation.gas_info.gas_used).multipliedBy(
+    getEnv("COSMOS_GAS_AMPLIFIER")
+  );
+
+  transaction.fees = gasPrice
+    .multipliedBy(transaction.gas)
+    .integerValue(BigNumber.ROUND_CEIL);
+
+  return transaction;
 };
 
 export default prepareTransaction;
