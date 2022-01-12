@@ -40,6 +40,7 @@ export type CurrencyData = {
   id: string;
   name: string;
   image?: string;
+  isLiveSupported?: boolean;
   internalCurrency?: CryptoCurrency;
   marketcap?: number;
   marketcapRank: number;

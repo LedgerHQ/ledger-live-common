@@ -532,7 +532,7 @@ const envDefinitions = {
     desc: "version used for the platform api",
   },
   MARKET_API_URL: {
-    def: "https://api.coingecko.com/api/v3", // @TODO replace with prod API proxy whenever ready
+    def: "https://proxycg.api.live.ledger.com/api/v3",
     parser: stringParser,
     desc: "url used to fetch platform catalog",
   },

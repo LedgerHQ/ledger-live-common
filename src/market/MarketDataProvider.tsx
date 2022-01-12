@@ -26,6 +26,7 @@ type Props = {
   children: React.ReactNode;
   fetchApi?: MarketDataApi;
   countervalue?: Currency;
+  initState?: Partial<State>;
 };
 type API = {
   refresh: (param?: MarketListRequestParams) => void;
@@ -198,8 +199,12 @@ export const MarketDataProvider = ({
   children,
   fetchApi,
   countervalue,
+  initState = {},
 }: Props): ReactElement => {
-  const [state, dispatch] = useReducer(marketDataReducer, initialState);
+  const [state, dispatch] = useReducer(marketDataReducer, {
+    ...initialState,
+    ...initState,
+  });
   const api = fetchApi || defaultFetchApi;
   const {
     marketData,

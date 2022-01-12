@@ -156,6 +156,7 @@ async function listPaginated({
       id: currency.id,
       name: currency.name,
       image: currency.image,
+      isLiveSupported: LIVE_COINS_LIST.includes(currency.id),
       internalCurrency: cryptoCurrenciesList.find(
         ({ ticker }) => ticker.toLowerCase() === currency.symbol
       ),
