@@ -7,7 +7,6 @@ import { Registry, TxBodyEncodeObject } from "@cosmjs/proto-signing";
 import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
 import { encodeOperationId } from "../../operation";
 import { LedgerSigner } from "@cosmjs/ledger-amino";
-import { makeSignDoc } from "@cosmjs/amino";
 import { AminoTypes } from "@cosmjs/stargate";
 import { stringToPath } from "@cosmjs/crypto";
 import buildTransaction from "./js-buildTransaction";
@@ -49,23 +48,6 @@ const signOperation = ({
           aminoTypes.toAmino(msg)
         );
 
-        const signDoc = makeSignDoc(
-          msgs,
-          {
-            amount: [
-              {
-                denom: transaction.fees?.toString() as string,
-                amount: "uatom",
-              },
-            ],
-            gas: transaction.gas?.toString() as string,
-          },
-          chainId,
-          transaction.memo || "",
-          accountNumber,
-          sequence
-        );
-
         // Note:
         // We don't use Cosmos App,
         // Cosmos App support legacy StdTx and required to be ordered in a strict way,
@@ -74,7 +56,22 @@ const signOperation = ({
 
         const { signature } = await ledgerSigner.signAmino(
           account.freshAddress,
-          signDoc
+          {
+            chain_id: chainId,
+            account_number: accountNumber.toString(),
+            sequence: sequence.toString(),
+            fee: {
+              amount: [
+                {
+                  denom: transaction.fees?.toString() as string,
+                  amount: "uatom",
+                },
+              ],
+              gas: transaction.gas?.toString() as string,
+            },
+            msgs: msgs,
+            memo: transaction.memo || "",
+          }
         );
 
         const txBodyFields: TxBodyEncodeObject = {
