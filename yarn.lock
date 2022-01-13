@@ -1359,6 +1359,13 @@
     bignumber.js "^9.0.1"
     json-rpc-2.0 "^0.2.16"
 
+"@ledgerhq/live-app-sdk@git+ssh://git@github.com:LedgerHQ/live-app-sdk.git#adding-token-support":
+  version "0.5.0"
+  resolved "git+ssh://git@github.com:LedgerHQ/live-app-sdk.git#68682f62e0ff504573316e8f13ddfb010d55993d"
+  dependencies:
+    bignumber.js "^9.0.1"
+    json-rpc-2.0 "^0.2.16"
+
 "@ledgerhq/logs@6.10.0", "@ledgerhq/logs@^6.10.0":
   version "6.10.0"
   resolved "https://registry.yarnpkg.com/@ledgerhq/logs/-/logs-6.10.0.tgz#c012c1ecc1a0e53d50e6af381618dca5268461c1"
