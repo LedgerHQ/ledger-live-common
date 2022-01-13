@@ -6,11 +6,21 @@ import { Registry, TxBodyEncodeObject } from "@cosmjs/proto-signing";
 import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
 import { getEnv } from "../../env";
 import buildTransaction from "./js-buildTransaction";
+import { getMaxEstimatedBalance } from "./logic";
 
 const prepareTransaction = async (
   account: Account,
   transaction: Transaction
 ): Promise<Transaction> => {
+  if (transaction.useAllAmount) {
+    // Cosmos don't support estimation with overestimate value anymore
+    // Use a 1.2 coeff
+    transaction.amount = getMaxEstimatedBalance(
+      account,
+      account.balance.multipliedBy(0.2).integerValue(BigNumber.ROUND_CEIL)
+    );
+  }
+
   const unsignedPayload = await buildTransaction(account, transaction);
 
   const txBodyFields: TxBodyEncodeObject = {
