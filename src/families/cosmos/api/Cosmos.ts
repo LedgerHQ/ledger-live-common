@@ -203,15 +203,19 @@ export const getBlock = async (height: number): Promise<any> => {
 };
 
 export const simulate = async (tx_bytes: any): Promise<any> => {
-  const { data } = await network({
-    method: "POST",
-    url: `${defaultEndpoint}/cosmos/tx/v1beta1/simulate`,
-    data: {
-      tx_bytes: tx_bytes,
-    },
-  });
+  try {
+    const { data } = await network({
+      method: "POST",
+      url: `${defaultEndpoint}/cosmos/tx/v1beta1/simulate`,
+      data: {
+        tx_bytes: tx_bytes,
+      },
+    });
 
-  return data;
+    return data;
+  } catch (e) {
+    return undefined;
+  }
 };
 
 export const getHeight = async (): Promise<number> => {
