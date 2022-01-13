@@ -6,7 +6,7 @@ import { getAccountInfo } from "./api/Cosmos";
 import { encodeOperationId } from "../../operation";
 
 const txToOps = (info: any, id: string, txs: any): any => {
-  const { address } = info;
+  const { address, currency } = info;
   const ops: Operation[] = [];
 
   for (const tx of txs) {
@@ -44,7 +44,9 @@ const txToOps = (info: any, id: string, txs: any): any => {
             break;
           case "amount":
             if (op.value.eq(0)) {
-              op.value = op.value.plus(a.value.replace("uatom", ""));
+              op.value = op.value.plus(
+                a.value.replace(currency.units[1].code, "")
+              );
             }
 
             break;

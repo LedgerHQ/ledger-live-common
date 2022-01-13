@@ -64,7 +64,7 @@ const signOperation = ({
             fee: {
               amount: [
                 {
-                  denom: "uatom",
+                  denom: account.currency.units[1].code,
                   amount: transaction.fees?.toString() as string,
                 },
               ],

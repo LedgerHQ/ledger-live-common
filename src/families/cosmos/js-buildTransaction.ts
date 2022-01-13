@@ -31,7 +31,7 @@ const buildTransaction = async (
             toAddress: transaction.recipient,
             amount: [
               {
-                denom: "uatom",
+                denom: account.currency.units[1].code,
                 amount: transaction.amount.toString(),
               },
             ],
@@ -50,7 +50,7 @@ const buildTransaction = async (
             // validatorAddress: transaction.validator,
             amount: [
               {
-                denom: "uatom",
+                denom: account.currency.units[1].code,
                 amount: transaction.amount.toString(),
               },
             ],
@@ -69,7 +69,7 @@ const buildTransaction = async (
             // validatorAddress: transaction.validator,
             amount: [
               {
-                denom: "uatom",
+                denom: account.currency.units[1].code,
                 amount: transaction.amount.toString(),
               },
             ],
@@ -87,7 +87,7 @@ const buildTransaction = async (
     [
       {
         amount: transaction.fees?.toString() || defaultFees.toString(),
-        denom: "uatom",
+        denom: account.currency.units[1].code,
       },
     ],
     transaction.gas?.toNumber() || defaultGas.toNumber(),
