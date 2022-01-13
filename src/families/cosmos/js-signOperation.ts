@@ -30,6 +30,7 @@ const signOperation = ({
         const { accountNumber, sequence } = await getAccount(
           account.freshAddress
         );
+
         const chainId = await getChainId();
 
         const registry = new Registry();
