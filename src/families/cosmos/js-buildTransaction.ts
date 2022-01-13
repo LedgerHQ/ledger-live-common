@@ -9,7 +9,7 @@ const buildTransaction = async (
   account: Account,
   transaction: Transaction
 ): Promise<any> => {
-  const defaultGas = new BigNumber(80000);
+  const defaultGas = new BigNumber(60000);
   const defaultFees = new BigNumber(2500);
 
   const { sequence } = await getAccount(account.freshAddress);
