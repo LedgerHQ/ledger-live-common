@@ -44,6 +44,10 @@ const prepareTransaction = async (
     .multipliedBy(transaction.gas)
     .integerValue(BigNumber.ROUND_CEIL);
 
+  if (transaction.mode !== "send" && !transaction.memo) {
+    transaction.memo = "Ledger Live";
+  }
+
   return transaction;
 };
 
