@@ -115,8 +115,6 @@ const signOperation = ({
           value: transaction.amount,
           fee: transaction.fees,
           extra: {
-            storageLimit: 0,
-            gasLimit: 0,
             tx_bytes: tx_bytes,
           },
           blockHash: null,
