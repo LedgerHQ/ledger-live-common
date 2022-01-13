@@ -3,11 +3,13 @@ import { Transaction } from "./types";
 import {
   AmountRequired,
   FeeNotLoaded,
+  InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughBalance,
   RecipientRequired,
 } from "@ledgerhq/errors";
 import { BigNumber } from "bignumber.js";
+import { isValidAddress } from "@celo/utils/lib/address";
 
 const getTransactionStatus = async (
   account: Account,
@@ -47,6 +49,8 @@ const getTransactionStatus = async (
 
   if (!transaction.recipient) {
     errors.recipient = new RecipientRequired();
+  } else if (!isValidAddress(transaction.recipient)) {
+    errors.recipient = new InvalidAddress();
   }
 
   return Promise.resolve({

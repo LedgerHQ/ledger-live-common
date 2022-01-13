@@ -1,6 +1,7 @@
 import { Account } from "../../types";
 import { Transaction } from "./types";
 import getFeesForTransaction from "./js-getFeesForTransaction";
+import { isValidAddress } from "@celo/utils/lib/address";
 
 const sameFees = (a, b) => (!a || !b ? a === b : a.eq(b));
 
@@ -8,7 +9,12 @@ const prepareTransaction = async (
   account: Account,
   transaction: Transaction
 ) => {
-  if (!transaction.recipient) return transaction;
+  if (
+    !transaction.recipient ||
+    (transaction.recipient && !isValidAddress(transaction.recipient))
+  ) {
+    return transaction;
+  }
 
   const fees = await getFeesForTransaction({ account, transaction });
 
