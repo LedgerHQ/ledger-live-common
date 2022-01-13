@@ -228,19 +228,18 @@ export const getHeight = async (): Promise<number> => {
 };
 
 export const getAllBalances = async (address: string): Promise<BigNumber> => {
-  try {
-    const { data } = await network({
-      method: "GET",
-      url: `${defaultEndpoint}/cosmos/bank/v1beta1/balances/${address}`,
-    });
+  const { data } = await network({
+    method: "GET",
+    url: `${defaultEndpoint}/cosmos/bank/v1beta1/balances/${address}`,
+  });
 
-    // todo:
-    // handle correct currency
-    // and iterate over multiple
-    return new BigNumber(data.balances[0].amount);
-  } catch (e) {
-    return new BigNumber(0);
-  }
+  let amount = new BigNumber(0);
+
+  data.balances.forEach((elem) => {
+    amount = amount.plus(elem.amount);
+  });
+
+  return amount;
 };
 
 export const getChainId = async (): Promise<string> => {
