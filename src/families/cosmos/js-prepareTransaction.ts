@@ -46,9 +46,9 @@ const prepareTransaction = async (
 
   const gasPrice = new BigNumber(getEnv("COSMOS_GAS_PRICE"));
 
-  transaction.gas = new BigNumber(simulation.gas_info.gas_used).multipliedBy(
-    getEnv("COSMOS_GAS_AMPLIFIER")
-  );
+  transaction.gas = new BigNumber(
+    simulation?.gas_info?.gas_used || 0
+  ).multipliedBy(getEnv("COSMOS_GAS_AMPLIFIER"));
 
   transaction.fees = gasPrice
     .multipliedBy(transaction.gas)
