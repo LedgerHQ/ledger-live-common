@@ -136,16 +136,12 @@ export const getWithdrawAddress = async (address: string): Promise<string> => {
 };
 
 export const getTransactions = async (address: string): Promise<any> => {
-  const txs: Array<any> = [];
-
   const receive = await network({
     method: "GET",
     url:
       `${defaultEndpoint}/cosmos/tx/v1beta1/txs?events=` +
       encodeURI(`transfer.recipient='${address}'`),
   });
-
-  receive.data.tx_responses.forEach((forEach) => txs.push(forEach));
 
   const send = await network({
     method: "GET",
@@ -154,9 +150,7 @@ export const getTransactions = async (address: string): Promise<any> => {
       encodeURI(`message.sender='${address}'`),
   });
 
-  send.data.tx_responses.forEach((forEach) => txs.push(forEach));
-
-  return txs;
+  return [...receive.data.tx_responses, ...send.data.tx_responses];
 };
 
 export const broadcast = async ({
