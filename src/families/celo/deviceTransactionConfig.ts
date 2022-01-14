@@ -4,11 +4,6 @@ function getDeviceTransactionConfig(): Array<DeviceTransactionField> {
   const fields: Array<DeviceTransactionField> = [];
 
   fields.push({
-    type: "text",
-    label: "Method",
-    value: "Send",
-  });
-  fields.push({
     type: "amount",
     label: "Amount",
   });
