@@ -5,7 +5,7 @@ import { encodeAccountId } from "../../account";
 import { getAccountInfo } from "./api/Cosmos";
 import { encodeOperationId } from "../../operation";
 
-const txToOps = (info: any, id: string, txs: any): any => {
+const txToOps = (info: any, id: string, txs: any): Operation[] => {
   const { address, currency } = info;
   const ops: Operation[] = [];
 
@@ -33,60 +33,66 @@ const txToOps = (info: any, id: string, txs: any): any => {
       },
     };
 
-    for (const t of tx.logs[0].events) {
-      for (const a of t.attributes) {
-        switch (a.key) {
-          case "sender":
-            op.senders.push(a.value);
-            break;
-          case "recipient":
-            op.recipients.push(a.value);
-            break;
-          case "amount":
-            if (op.value.eq(0)) {
-              op.value = op.value.plus(
-                a.value.replace(currency.units[1].code, "")
-              );
-            }
+    tx.logs[0].events.forEach((message) => {
+      // parse attributes as key:value
+      const attributes: { [id: string]: any } = {};
+      message.attributes.forEach((item) => (attributes[item.key] = item.value));
 
-            break;
-          case "validator":
-            op.extra.validators.push({ amount: op.value, address: a.value });
-            break;
-          case "new_shares":
-            break;
-        }
+      // https://docs.cosmos.network/v0.42/modules/staking/07_events.html
+      switch (message.type) {
+        case "transfer":
+          op.senders.push(attributes["sender"]);
+          op.recipients.push(attributes["recipient"]);
+
+          op.value = op.value.plus(
+            attributes["amount"].replace(currency.units[1].code, "")
+          );
+
+          if (attributes["sender"] === address) {
+            op.type = "OUT";
+            op.value = op.value.plus(fees);
+          } else if (attributes["recipient"] === address) {
+            op.type = "IN";
+          }
+          break;
+
+        case "withdraw_rewards":
+          op.type = "REWARD";
+          op.value = new BigNumber(fees);
+          op.extra.validators.push({
+            amount: attributes["amount"].replace(currency.units[1].code, ""),
+            address: attributes.validator,
+          });
+          break;
+
+        case "delegate":
+          op.type = "DELEGATE";
+          op.value = new BigNumber(fees);
+          op.extra.validators.push({
+            amount: attributes["amount"].replace(currency.units[1].code, ""),
+            address: attributes.validator,
+          });
+          break;
+
+        case "redelegate":
+          op.type = "REDELEGATE";
+          op.value = new BigNumber(fees);
+          op.extra.validators.push({
+            amount: attributes["amount"].replace(currency.units[1].code, ""),
+            address: attributes.destination_validator,
+          });
+          op.extra.cosmosSourceValidator = attributes.source_validator;
+          break;
+
+        case "unbond":
+          op.type = "UNDELEGATE";
+          op.value = new BigNumber(fees);
+          op.extra.validators.push({
+            amount: attributes["amount"].replace(currency.units[1].code, ""),
+            address: attributes.validator,
+          });
+          break;
       }
-
-      // todo: handle REDELEGATE and UNDELEGATE operations
-
-      if (t.type === "delegate") {
-        op.type = "DELEGATE";
-        op.value = new BigNumber(fees);
-      }
-
-      if (t.type === "withdraw_rewards") {
-        op.type = "REWARD";
-        op.value = new BigNumber(fees);
-      }
-    }
-
-    if (!op.type && address === op.senders[0]) {
-      op.type = "OUT";
-      op.value = op.value.plus(fees);
-    }
-
-    if (!op.type && address === op.recipients[0]) {
-      op.type = "IN";
-    }
-
-    // remove duplicates
-    op.recipients = op.recipients.filter((element, index) => {
-      return op.recipients.indexOf(element) === index;
-    });
-
-    op.senders = op.senders.filter((element, index) => {
-      return op.senders.indexOf(element) === index;
     });
 
     op.id = encodeOperationId(id, tx.txhash, op.type);
