@@ -143,12 +143,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
     }
   }
 
-  // todo: calculate estimatedFees
-  const estimatedFees = new BigNumber(0);
-
-  let spendableBalance = balance
-    .minus(estimatedFees)
-    .minus(unbondingBalance.plus(delegatedBalance));
+  let spendableBalance = balance.minus(unbondingBalance.plus(delegatedBalance));
 
   if (spendableBalance.lt(0)) {
     spendableBalance = new BigNumber(0);
