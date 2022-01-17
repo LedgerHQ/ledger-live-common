@@ -10,6 +10,12 @@ import { LedgerSigner } from "@cosmjs/ledger-amino";
 import { AminoTypes } from "@cosmjs/stargate";
 import { stringToPath } from "@cosmjs/crypto";
 import buildTransaction from "./js-buildTransaction";
+import {
+  MsgDelegate,
+  MsgUndelegate,
+  MsgBeginRedelegate,
+} from "cosmjs-types/cosmos/staking/v1beta1/tx";
+import { MsgWithdrawDelegatorReward } from "cosmjs-types/cosmos/distribution/v1beta1/tx";
 
 const aminoTypes = new AminoTypes({ prefix: "cosmos" });
 
@@ -33,7 +39,15 @@ const signOperation = ({
 
         const chainId = await getChainId();
 
-        const registry = new Registry();
+        const registry = new Registry([
+          ["/cosmos.staking.v1beta1.MsgDelegate", MsgDelegate],
+          ["/cosmos.staking.v1beta1.MsgUndelegate", MsgUndelegate],
+          ["/cosmos.staking.v1beta1.MsgBeginRedelegate", MsgBeginRedelegate],
+          [
+            "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
+            MsgWithdrawDelegatorReward,
+          ],
+        ]);
 
         const hdPaths: any = stringToPath("m/" + account.freshAddressPath);
 

@@ -19,67 +19,109 @@ const buildTransaction = async (
     value: Buffer.from(account.seedIdentifier, "hex").toString("base64"),
   });
 
-  let msg;
+  const msg: Array<{ typeUrl: string; value: any }> = [];
 
   switch (transaction.mode) {
     case "send":
-      msg = [
-        {
-          typeUrl: "/cosmos.bank.v1beta1.MsgSend",
-          value: {
-            fromAddress: account.freshAddress,
-            toAddress: transaction.recipient,
-            amount: [
-              {
-                denom: account.currency.units[1].code,
-                amount: transaction.amount.toString(),
-              },
-            ],
-          },
+      msg.push({
+        typeUrl: "/cosmos.bank.v1beta1.MsgSend",
+        value: {
+          fromAddress: account.freshAddress,
+          toAddress: transaction.recipient,
+          amount: [
+            {
+              denom: account.currency.units[1].code,
+              amount: transaction.amount.toString(),
+            },
+          ],
         },
-      ];
+      });
       break;
 
     case "delegate":
-      msg = [
-        {
+      transaction.validators.forEach((validator) => {
+        msg.push({
           typeUrl: "/cosmos.staking.v1beta1.MsgDelegate",
           value: {
             delegatorAddress: account.freshAddress,
-            // todo:
-            // validatorAddress: transaction.validator,
+            validatorAddress: validator.address,
             amount: [
               {
                 denom: account.currency.units[1].code,
-                amount: transaction.amount.toString(),
+                amount: validator.amount.toString(),
               },
             ],
           },
-        },
-      ];
+        });
+      });
       break;
 
     case "undelegate":
-      msg = [
-        {
-          typeUrl: "/cosmos.staking.v1beta1.MsgUndelegate",
-          value: {
-            delegatorAddress: account.freshAddress,
-            // todo:
-            // validatorAddress: transaction.validator,
-            amount: [
-              {
-                denom: account.currency.units[1].code,
-                amount: transaction.amount.toString(),
-              },
-            ],
-          },
+      msg.push({
+        typeUrl: "/cosmos.staking.v1beta1.MsgUndelegate",
+        value: {
+          delegatorAddress: account.freshAddress,
+          validatorAddress: transaction.validators[0].address,
+          amount: [
+            {
+              denom: account.currency.units[1].code,
+              amount: transaction.validators[0].amount.toString(),
+            },
+          ],
         },
-      ];
+      });
       break;
 
-    default:
-      throw "not supported";
+    case "redelegate":
+      msg.push({
+        typeUrl: "/cosmos.staking.v1beta1.MsgBeginRedelegate",
+        value: {
+          validatorSrcAddress: transaction.cosmosSourceValidator,
+          delegatorAddress: account.freshAddress,
+          validatorAddress: transaction.validators[0].address,
+          amount: [
+            {
+              denom: account.currency.units[1].code,
+              amount: transaction.validators[0].amount.toString(),
+            },
+          ],
+        },
+      });
+      break;
+
+    case "claimReward":
+      msg.push({
+        typeUrl: "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
+        value: {
+          delegatorAddress: account.freshAddress,
+          validatorAddress: transaction.validators[0].address,
+        },
+      });
+      break;
+
+    case "claimRewardCompound":
+      msg.push({
+        typeUrl: "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
+        value: {
+          delegatorAddress: account.freshAddress,
+          validatorAddress: transaction.validators[0].address,
+        },
+      });
+
+      msg.push({
+        typeUrl: "/cosmos.staking.v1beta1.MsgDelegate",
+        value: {
+          delegatorAddress: account.freshAddress,
+          validatorAddress: transaction.validators[0].address,
+          amount: [
+            {
+              denom: account.currency.units[1].code,
+              amount: transaction.validators[0].amount.toString(),
+            },
+          ],
+        },
+      });
+      break;
   }
 
   const authInfoBytes = makeAuthInfoBytes(
