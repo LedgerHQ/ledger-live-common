@@ -8,7 +8,7 @@ const defaultEndpoint = getEnv(
   "API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT"
 ).replace(/\/$/, "");
 
-export const getAccountInfo = async (address: string) => {
+export const getAccountInfo = async (address: string): Promise<any> => {
   const [
     { accountNumber, sequence },
     balances,
@@ -196,7 +196,7 @@ export const getBlock = async (height: number): Promise<any> => {
   }
 };
 
-export const simulate = async (tx_bytes: any): Promise<any> => {
+export const simulate = async (tx_bytes: Array<any>): Promise<any> => {
   try {
     const { data } = await network({
       method: "POST",
