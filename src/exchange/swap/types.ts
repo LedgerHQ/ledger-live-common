@@ -130,6 +130,7 @@ export type SwapRequestEvent =
       type: "init-swap-result";
       initSwapResult: InitSwapResult;
     };
+
 export type SwapHistorySection = {
   day: Date;
   data: MappedSwapOperation[];

@@ -48,6 +48,11 @@ export const whitelistDependencies = ["Decred", "Decred Testnet"];
   ["Compound", "Ethereum"],
   ["Opensea", "Ethereum"],
   ["StakeDAO", "Ethereum"],
+  ["Yearn", "Ethereum"],
+  ["RocketPool", "Ethereum"],
+  ["POAP", "Ethereum"],
+  ["OlympusDAO", "Ethereum"],
+  ["Rarible", "Ethereum"],
 ].forEach(([name, dep]) => declareDep(name, dep));
 export const getDependencies = (appName: string): string[] =>
   directDep[appName] || [];

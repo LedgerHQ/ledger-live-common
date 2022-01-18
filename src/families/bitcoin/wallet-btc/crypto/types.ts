@@ -1,14 +1,6 @@
-import { DerivationModes } from "../types";
-
-// all things derivation
-export interface DerivationMode {
-  [index: string]: DerivationModes;
-}
-
 export interface ICrypto {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   network: any;
-  derivationMode: DerivationMode;
   getAddress(
     derivationMode: string,
     xpub: string,
@@ -19,6 +11,7 @@ export interface ICrypto {
 
   toOutputScript(address: string): Buffer;
   validateAddress(address: string): boolean;
+  isTaprootAddress(address: string): boolean;
 }
 
 export type Currency =
@@ -39,4 +32,5 @@ export type Currency =
   | "viacoin"
   | "stakenet"
   | "stealthcoin"
+  | "decred"
   | "bitcoin_testnet";

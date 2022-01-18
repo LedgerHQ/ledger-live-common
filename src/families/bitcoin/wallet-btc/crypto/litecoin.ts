@@ -3,21 +3,15 @@ import * as bip32 from "bip32";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { toOutputScript } from "bitcoinjs-lib/src/address";
-import { bech32 } from "bech32";
+import * as bech32 from "bech32";
 import { DerivationModes } from "../types";
-import { ICrypto, DerivationMode } from "./types";
+import { ICrypto } from "./types";
 import Base from "./base";
 
 // Todo copy paste from bitcoin.ts. we can merge them later
 class Litecoin extends Base implements ICrypto {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   network: any;
-
-  derivationMode: DerivationMode = {
-    LEGACY: DerivationModes.LEGACY,
-    SEGWIT: DerivationModes.SEGWIT,
-    NATIVE_SEGWIT: DerivationModes.NATIVE_SEGWIT,
-  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor({ network }: { network: any }) {
@@ -65,28 +59,38 @@ class Litecoin extends Base implements ICrypto {
     account: number,
     index: number
   ): string {
+    if (Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`]) {
+      return Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`];
+    }
+    let address: string;
     switch (derivationMode) {
-      case this.derivationMode.LEGACY:
-        return this.getLegacyAddress(xpub, account, index);
-      case this.derivationMode.SEGWIT:
-        return this.getSegWitAddress(xpub, account, index);
-      case this.derivationMode.NATIVE_SEGWIT:
-        return this.getNativeSegWitAddress(xpub, account, index);
+      case DerivationModes.LEGACY:
+        address = this.getLegacyAddress(xpub, account, index);
+        break;
+      case DerivationModes.SEGWIT:
+        address = this.getSegWitAddress(xpub, account, index);
+        break;
+      case DerivationModes.NATIVE_SEGWIT:
+        address = this.getNativeSegWitAddress(xpub, account, index);
+        break;
       default:
         throw new Error("Should not be reachable");
     }
+    Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`] =
+      address;
+    return address;
   }
 
   // infer address type from its syntax
   getDerivationMode(address: string) {
     if (address.match("^(ltc1).*")) {
-      return this.derivationMode.NATIVE_SEGWIT;
+      return DerivationModes.NATIVE_SEGWIT;
     }
     if (address.match("^(3|2|M).*")) {
-      return this.derivationMode.SEGWIT;
+      return DerivationModes.SEGWIT;
     }
     if (address.match("^(1|n|m|L).*")) {
-      return this.derivationMode.LEGACY;
+      return DerivationModes.LEGACY;
     }
     throw new Error(
       "INVALID ADDRESS: ".concat(address).concat(" is not a valid address")

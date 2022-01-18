@@ -10,7 +10,7 @@ describe("testing wallet", () => {
   let account: Account;
   it("should generate an account", async () => {
     account = await wallet.generateAccount({
-      btc: new MockBtc(),
+      xpub: "xpub6CV2NfQJYxHn7MbSQjQip3JMjTZGUbeoKz5xqkBftSZZPc7ssVPdjKrgh6N8U1zoQDxtSo6jLarYAQahpd35SJoUKokfqf1DZgdJWZhSMqP",
       path: "44'/0'",
       index: 0,
       currency: "bitcoin",
@@ -56,13 +56,14 @@ describe("testing wallet", () => {
       amount: new BigNumber(100000),
       feePerByte: 5,
       utxoPickingStrategy,
+      sequence: 0,
     });
     const tx = await wallet.signAccountTx({
       btc: new MockBtc(),
       fromAccount: account,
       txInfo,
     });
-    expect(tx).toEqual("a1e3e67bfc06cc1ae259474beebc423b2890a19a");
+    expect(Buffer.from(tx, "hex")).toHaveLength(20);
   });
 
   it("should allow to build a transaction splitting outputs", async () => {
@@ -79,13 +80,14 @@ describe("testing wallet", () => {
       amount: new BigNumber(100000),
       feePerByte: 5,
       utxoPickingStrategy,
+      sequence: 0,
     });
     const tx = await wallet.signAccountTx({
       btc: new MockBtc(),
       fromAccount: account,
       txInfo,
     });
-    expect(tx).toEqual("637a8cb808fa1cd8b81a97e27b6bab94d87b899f");
+    expect(Buffer.from(tx, "hex")).toHaveLength(20);
   });
 
   it("should throw during sync if there is an error in explorer", async () => {

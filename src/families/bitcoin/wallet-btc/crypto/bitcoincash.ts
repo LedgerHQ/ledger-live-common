@@ -5,17 +5,15 @@ import bchaddr from "bchaddrjs";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { toOutputScript } from "bitcoinjs-lib/src/address";
+import { InvalidAddress } from "@ledgerhq/errors";
 import { DerivationModes } from "../types";
-import { ICrypto, DerivationMode } from "./types";
+import { ICrypto } from "./types";
+import Base from "./base";
 
 // a mock explorer class that just use js objects
 class BitcoinCash implements ICrypto {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   network: any;
-
-  derivationMode: DerivationMode = {
-    LEGACY: DerivationModes.LEGACY,
-  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor({ network }: { network: any }) {
@@ -49,7 +47,13 @@ class BitcoinCash implements ICrypto {
     account: number,
     index: number
   ): string {
-    return this.getLegacyBitcoinCashAddress(xpub, account, index);
+    if (Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`]) {
+      return Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`];
+    }
+    const address = this.getLegacyBitcoinCashAddress(xpub, account, index);
+    Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`] =
+      address;
+    return address;
   }
 
   // infer address type from its syntax
@@ -59,12 +63,12 @@ class BitcoinCash implements ICrypto {
   // could match a native Bitcoin address type for instance)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getDerivationMode(address: string) {
-    return this.derivationMode.LEGACY;
+    return DerivationModes.LEGACY;
   }
 
   toOutputScript(address: string) {
     if (!this.validateAddress(address)) {
-      throw new Error("Invalid address");
+      throw new InvalidAddress();
     }
     // TODO find a better way to calculate the script from bch address instead of converting to bitcoin address
     return toOutputScript(bchaddr.toLegacyAddress(address), this.network);
@@ -73,6 +77,11 @@ class BitcoinCash implements ICrypto {
   // eslint-disable-next-line class-methods-use-this
   validateAddress(address: string): boolean {
     return bchaddr.isValidAddress(address);
+  }
+
+  // eslint-disable-next-line
+  isTaprootAddress(address: string): boolean {
+    return false;
   }
 }
 

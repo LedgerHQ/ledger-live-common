@@ -56,6 +56,10 @@ export type BitcoinResourcesRaw = {
   walletAccount?: WalletAccountRaw;
 };
 
+export const initialBitcoinResourcesValue = {
+  utxos: [],
+};
+
 export const BitcoinLikeFeePolicy = Object.freeze({
   PER_BYTE: "PER_BYTE",
   PER_KBYTE: "PER_KBYTE",
@@ -102,6 +106,7 @@ export type FeeItem = {
 export type FeeItems = {
   items: FeeItem[];
   defaultFeePerByte: BigNumber;
+  relayFee?: number;
 };
 export type FeeItemRaw = {
   key: string;

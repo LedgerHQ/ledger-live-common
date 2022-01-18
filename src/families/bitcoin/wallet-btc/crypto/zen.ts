@@ -5,9 +5,11 @@ import { toOutputScript } from "bitcoinjs-lib/src/address";
 // @ts-ignore
 import zec from "zcash-bitcore-lib";
 import bs58check from "bs58check";
-import { DerivationModes } from "../types";
-import { ICrypto, DerivationMode } from "./types";
 import coininfo from "coininfo";
+import { InvalidAddress } from "@ledgerhq/errors";
+import { DerivationModes } from "../types";
+import { ICrypto } from "./types";
+import Base from "./base";
 
 class Zen implements ICrypto {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,10 +39,6 @@ class Zen implements ICrypto {
     this.network.dustPolicy = "FIXED";
     this.network.usesTimestampedTransaction = false;
   }
-
-  derivationMode: DerivationMode = {
-    LEGACY: DerivationModes.LEGACY,
-  };
 
   // eslint-disable-next-line
   baddrToTaddr(baddrStr: string) {
@@ -75,23 +73,34 @@ class Zen implements ICrypto {
     account: number,
     index: number
   ): string {
-    return this.getLegacyAddress(xpub, account, index);
+    if (Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`]) {
+      return Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`];
+    }
+    const address = this.getLegacyAddress(xpub, account, index);
+    Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`] =
+      address;
+    return address;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getDerivationMode(address: string) {
-    return this.derivationMode.LEGACY;
+    return DerivationModes.LEGACY;
   }
 
   toOutputScript(address: string) {
     if (!this.validateAddress(address)) {
-      throw new Error("Invalid address");
+      throw new InvalidAddress();
     }
-    // TODO find a better way to calculate the script from zen address instead of converting to bitcoin address
-    return toOutputScript(
+    const outputScript = toOutputScript(
       Zen.toBitcoinAddr(address),
       coininfo.bitcoin.main.toBitcoinJS()
     );
+    // refer to https://github.com/LedgerHQ/lib-ledger-core/blob/fc9d762b83fc2b269d072b662065747a64ab2816/core/src/wallet/bitcoin/scripts/BitcoinLikeScript.cpp#L139 and https://github.com/LedgerHQ/lib-ledger-core/blob/fc9d762b83fc2b269d072b662065747a64ab2816/core/src/wallet/bitcoin/networks.cpp#L39 for bip115 Script and its network parameters
+    const bip115Script = Buffer.from(
+      "209ec9845acb02fab24e1c0368b3b517c1a4488fba97f0e3459ac053ea0100000003c01f02b4",
+      "hex"
+    );
+    return Buffer.concat([outputScript, bip115Script]);
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -105,6 +114,11 @@ class Zen implements ICrypto {
       res[0] === 0x20 &&
       (res[1] === 0x89 || res[1] === 0x96)
     );
+  }
+
+  // eslint-disable-next-line
+  isTaprootAddress(address: string): boolean {
+    return false;
   }
 }
 

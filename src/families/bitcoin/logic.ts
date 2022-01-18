@@ -59,11 +59,13 @@ export const isValidRecipient = async (params: {
     valid = isValidAddress(params.recipient, <Currency>params.currency.id);
   } catch (e: any) {
     // isValidAddress() will throw Error if c is not an actual Currency
-    return Promise.reject(new InvalidAddress(e.message));
+    valid = false;
   }
   if (!valid) {
     return Promise.reject(
-      new InvalidAddress("Invalid address for currency " + params.currency.name)
+      new InvalidAddress("", {
+        currencyName: params.currency.name,
+      })
     );
   }
   return Promise.resolve(null);
@@ -77,7 +79,7 @@ export function isChangeOutput(output: BitcoinOutput): boolean {
 type UTXOStatus =
   | {
       excluded: true;
-      reason: "pickUnconfirmedRBF" | "userExclusion";
+      reason: "pickUnconfirmedRBF" | "pickPendingNonRBF" | "userExclusion";
     }
   | {
       excluded: false;
@@ -92,7 +94,12 @@ export const getUTXOStatus = (
       reason: "pickUnconfirmedRBF",
     };
   }
-
+  if (!utxo.rbf && !utxo.blockHeight) {
+    return {
+      excluded: true,
+      reason: "pickPendingNonRBF",
+    };
+  }
   if (
     utxoStrategy.excludeUTXOs.some(
       (u) => u.hash === utxo.hash && u.outputIndex === utxo.outputIndex

@@ -168,6 +168,13 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
     return fees;
   }
 
+  async getRelayFee() {
+    const client = await this.client.acquire();
+    const fees = (await client.client.get(`/network`)).data;
+    await this.client.release(client);
+    return parseFloat(fees["relay_fee"]);
+  }
+
   async getPendings(address: Address, nbMax?: number) {
     const params: {
       no_token?: string;
@@ -200,7 +207,7 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
 
     // TODO add a test for failure (at the sync level)
     const client = await this.client.acquire();
-    const res: { txs: TX[] } = (
+    const res = (
       await client.client.get(url, {
         params,
         // some altcoin may have outputs with values > MAX_SAFE_INTEGER
@@ -217,7 +224,7 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
             return value;
           }),
       })
-    ).data;
+    ).data as { txs: TX[] };
     await this.client.release(client);
 
     this.emit("fetched-address-transaction", { url, params, res });
@@ -239,17 +246,13 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
     tx.index = address.index;
     // eslint-disable-next-line no-param-reassign
     tx.address = address.address;
-
     tx.outputs.forEach((output) => {
       // eslint-disable-next-line no-param-reassign
       output.output_hash = tx.hash;
       // eslint-disable-next-line no-param-reassign
       output.block_height = tx.block ? tx.block.height : null;
       // Definition of replaceable, per the standard: https://github.com/bitcoin/bips/blob/61ccc84930051e5b4a99926510d0db4a8475a4e6/bip-0125.mediawiki#summary
-      // eslint-disable-next-line no-param-reassign
-      output.rbf = !!(
-        tx.inputs[0]?.sequence && tx.inputs[0].sequence < 0xffffffff
-      );
+      output.rbf = tx.inputs[0] ? tx.inputs[0].sequence < 0xffffffff : false;
     });
   }
 
@@ -289,12 +292,7 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
 
     // faster than mapping
     res.txs.forEach((tx) => {
-      if (!tx.block) {
-        return;
-      }
-
       this.hydrateTx(address, tx);
-
       hydratedTxs.push(tx);
     });
 
