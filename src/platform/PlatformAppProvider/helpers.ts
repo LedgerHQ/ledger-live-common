@@ -6,8 +6,7 @@ export type FilterParams = {
   private?: boolean;
   version?: string;
 };
-import path from "path";
-import { readFileSync } from "fs";
+import { getEnv } from "../../env";
 
 function matchVersion(filterParams: FilterParams, manifest: AppManifest) {
   return (
@@ -55,25 +54,30 @@ export function mergeManifestLists(
   return [...list1.filter((elem) => !newIds.has(elem.id)), ...list2];
 }
 
-export function getLocalManifest(fileName: any) {
-  const filePath = path.resolve(fileName);
-  console.info(filePath);
-  let manifestMap;
+export const initializeLocalManifest = (): Map<string, AppManifest> => {
+  const localManifestJsonRaw: string | null | undefined = getEnv(
+    "PLATFORM_LOCAL_MANIFEST_JSON"
+  );
 
-  try {
-    const data = readFileSync(filePath);
-    console.info(data);
-    const manifest = JSON.parse(data.toString());
-    console.info(manifest);
-    manifestMap = new Map(manifest);
-
-    // Array.isArray(manifest)
-    //  ? manifest.forEach(m => new Map(m))
-    //  :
-    // TODO: PLEASE HALP ME HANDLE SEVERAL Dapps at a time
-  } catch (parseError) {
-    console.info("readFile error:", parseError);
+  if (!localManifestJsonRaw) {
+    return new Map();
   }
 
-  return manifestMap;
-}
+  try {
+    const manifest: AppManifest | [AppManifest] =
+      JSON.parse(localManifestJsonRaw);
+
+    const manifestArray = Array.isArray(manifest) ? manifest : [manifest];
+
+    const map = new Map(manifestArray.map((m) => [m.id, m]));
+
+    return map;
+  } catch (error) {
+    /**
+     * Probable error during `JSON.parse` call, log error and return empty map
+     * as if env variable was not defined
+     */
+    console.error(error);
+    return new Map();
+  }
+};

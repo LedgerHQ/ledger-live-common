@@ -9,15 +9,12 @@ import React, {
 import type { PlatformAppContextType, Props, State } from "./types";
 import api from "./api";
 import type { AppManifest } from "../types";
-import { getEnv } from "../../env";
-import { getLocalManifest } from "./helpers";
+import { initializeLocalManifest } from "./helpers";
 
 // @ts-expect-error empty object creates an error
 const PlatformAppContext = createContext<PlatformAppContextType>({});
 const initialState: State = {
-  localManifests: getEnv("PLATFORM_LOCAL_MANIFEST_PATH")
-    ? getLocalManifest(getEnv("PLATFORM_LOCAL_MANIFEST_PATH"))
-    : new Map(),
+  localManifests: initializeLocalManifest(),
   remoteManifests: new Map(),
   isLoading: false,
   lastUpdateTime: undefined,
@@ -32,7 +29,7 @@ export function PlatformAppProvider({
   autoUpdateDelay,
   platformAppsServerURL,
   children,
-}: Props) {
+}: Props): JSX.Element {
   const [state, setState] = useState<State>(initialState);
 
   const addLocalManifest = useCallback((manifest: AppManifest) => {
