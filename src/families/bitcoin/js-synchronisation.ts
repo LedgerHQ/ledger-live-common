@@ -9,6 +9,7 @@ import { DerivationModes as WalletDerivationModes } from "./wallet-btc";
 import { BigNumber } from "bignumber.js";
 import Btc from "@ledgerhq/hw-app-btc";
 import { log } from "@ledgerhq/logs";
+import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import type {
   Account,
   Operation,
@@ -20,29 +21,30 @@ import { makeSync, makeScanAccounts, mergeOps } from "../../bridge/jsHelpers";
 import { findCurrencyExplorer } from "../../api/Ledger";
 import { encodeAccountId } from "../../account";
 import { encodeOperationId } from "../../operation";
+import {
+  isSegwitDerivationMode,
+  isNativeSegwitDerivationMode,
+  isTaprootDerivationMode,
+} from "../../derivation";
 import { BitcoinOutput } from "./types";
 import { perCoinLogic } from "./logic";
 import wallet from "./wallet-btc";
-import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
+import { getAddressWithBtcInstance } from "./hw-getAddress";
 
 // Map LL's DerivationMode to wallet-btc's
 const toWalletDerivationMode = (
   mode: DerivationMode
 ): WalletDerivationModes => {
-  switch (mode) {
-    case "segwit":
-    case "segwit_on_legacy":
-    case "segwit_unsplit":
-    case "bch_on_bitcoin_segwit":
-    case "vertcoin_128_segwit":
-      return WalletDerivationModes.SEGWIT;
-
-    case "native_segwit":
-      return WalletDerivationModes.NATIVE_SEGWIT;
-
-    default:
-      return WalletDerivationModes.LEGACY;
+  if (isTaprootDerivationMode(mode)) {
+    return WalletDerivationModes.TAPROOT;
   }
+  if (isNativeSegwitDerivationMode(mode)) {
+    return WalletDerivationModes.NATIVE_SEGWIT;
+  }
+  if (isSegwitDerivationMode(mode)) {
+    return WalletDerivationModes.SEGWIT;
+  }
+  return WalletDerivationModes.LEGACY;
 };
 
 // Map LL's currency ID to wallet-btc's Account.params.network
@@ -89,8 +91,8 @@ const mapTxToOperations = (
   tx: TX,
   currencyId: string,
   accountId: string,
-  accountAddresses: string[],
-  changeAddresses: string[]
+  accountAddresses: Set<string>,
+  changeAddresses: Set<string>
 ): $Shape<Operation[]> => {
   const operations: Operation[] = [];
   const hash = tx.hash;
@@ -114,7 +116,7 @@ const mapTxToOperations = (
       );
 
       if (input.value) {
-        if (accountAddresses.includes(input.address)) {
+        if (accountAddresses.has(input.address)) {
           // This address is part of the account
           value = value.plus(input.value);
           accountInputs.push(input);
@@ -126,18 +128,45 @@ const mapTxToOperations = (
   // All inputs of a same transaction have the same sequence
   const transactionSequenceNumber =
     (accountInputs.length > 0 && accountInputs[0].sequence) || undefined;
+
   const hasSpentNothing = value.eq(0);
+  // Change output is always the last one
+  const changeOutputIndex = tx.outputs
+    .map((o) => o.output_index)
+    .reduce((p, c) => (p > c ? p : c));
 
   for (const output of tx.outputs) {
     if (output.address) {
-      if (accountAddresses.includes(output.address)) {
+      if (!accountAddresses.has(output.address)) {
+        // The output doesn't belong to this account
+        if (
+          accountInputs.length > 0 && // It's a SEND operation
+          (tx.outputs.length === 1 || // The transaction has only 1 output
+            output.output_index < changeOutputIndex) // The output isn't the change output
+        ) {
+          recipients.push(
+            syncReplaceAddress
+              ? syncReplaceAddress(output.address)
+              : output.address
+          );
+        }
+      } else {
+        // The output belongs to this account
         accountOutputs.push(output);
 
-        if (changeAddresses.includes(output.address)) {
+        if (!changeAddresses.has(output.address)) {
+          // The output isn't a change output of this account
+          recipients.push(
+            syncReplaceAddress
+              ? syncReplaceAddress(output.address)
+              : output.address
+          );
+        } else {
+          // The output is a change output of this account,
+          // we count it as a recipient only in some special cases
           if (
             (recipients.length === 0 &&
-              output.output_hash ===
-                tx.outputs[tx.outputs.length - 1].output_hash) ||
+              output.output_index >= changeOutputIndex) ||
             hasSpentNothing
           ) {
             recipients.push(
@@ -146,19 +175,7 @@ const mapTxToOperations = (
                 : output.address
             );
           }
-        } else {
-          recipients.push(
-            syncReplaceAddress
-              ? syncReplaceAddress(output.address)
-              : output.address
-          );
         }
-      } else {
-        recipients.push(
-          syncReplaceAddress
-            ? syncReplaceAddress(output.address)
-            : output.address
-        );
       }
     }
   }
@@ -166,7 +183,7 @@ const mapTxToOperations = (
   if (accountInputs.length > 0) {
     // It's a SEND operation
     for (const output of accountOutputs) {
-      if (changeAddresses.includes(output.address)) {
+      if (changeAddresses.has(output.address)) {
         value = value.minus(output.value);
       }
     }
@@ -197,7 +214,7 @@ const mapTxToOperations = (
     let finalAmount = new BigNumber(0);
 
     for (const output of accountOutputs) {
-      if (!filterChangeAddresses || !changeAddresses.includes(output.address)) {
+      if (!filterChangeAddresses || !changeAddresses.has(output.address)) {
         finalAmount = finalAmount.plus(output.value);
         accountOutputCount += 1;
       }
@@ -241,6 +258,7 @@ const getAccountShape: GetAccountShape = async (info) => {
   // 44'/0'/0'/0/0 --> 44'/0'
   // FIXME Only the CLI provides a full derivationPath: why?
   const rootPath = derivationPath.split("/", 2).join("/");
+  const accountPath = `${rootPath}/${index}'`;
 
   const paramXpub = initialAccount?.xpub;
 
@@ -250,14 +268,16 @@ const getAccountShape: GetAccountShape = async (info) => {
 
     if (!transport) {
       // hwapp not provided
-      throw new Error("generateXpub needs a hwapp");
+      throw new Error("hwapp required to generate the xpub");
     }
-    generatedXpub = await wallet.generateXpub(
-      new Btc(transport),
-      <Currency>currency.id,
-      rootPath,
-      index
-    );
+    const btc = new Btc(transport);
+    const { bitcoinLikeInfo } = currency;
+    const { XPUBVersion: xpubVersion } = bitcoinLikeInfo as {
+      // FIXME It's supposed to be optional
+      //XPUBVersion?: number;
+      XPUBVersion: number;
+    };
+    generatedXpub = await btc.getWalletXpub({ path: accountPath, xpubVersion });
   }
   const xpub = paramXpub || generatedXpub;
 
@@ -304,17 +324,18 @@ const getAccountShape: GetAccountShape = async (info) => {
   const { txs: transactions } = await wallet.getAccountTransactions(
     walletAccount
   );
+
+  const accountAddresses: Set<string> = new Set<string>();
   const accountAddressesWithInfo = await walletAccount.xpub.getXpubAddresses();
-  const accountAddresses = accountAddressesWithInfo
-    ? accountAddressesWithInfo.map((a) => a.address)
-    : [];
+  accountAddressesWithInfo.forEach((a) => accountAddresses.add(a.address));
+
+  const changeAddresses: Set<string> = new Set<string>();
   const changeAddressesWithInfo =
     await walletAccount.xpub.storage.getUniquesAddresses({
       account: 1,
     });
-  const changeAddresses = changeAddressesWithInfo
-    ? changeAddressesWithInfo.map((a) => a.address)
-    : [];
+  changeAddressesWithInfo.forEach((a) => changeAddresses.add(a.address));
+
   const newOperations = transactions
     ?.map((tx) =>
       mapTxToOperations(
@@ -337,6 +358,8 @@ const getAccountShape: GetAccountShape = async (info) => {
     spendableBalance: balance,
     operations,
     operationsCount: operations.length,
+    freshAddress: walletAccount.xpub.freshAddress,
+    freshAddressPath: `${accountPath}/0/${walletAccount.xpub.freshAddressIndex}`,
     blockHeight,
     bitcoinResources: {
       utxos,
@@ -380,5 +403,10 @@ const postSync = (initial: Account, synced: Account) => {
   return synced;
 };
 
-export const scanAccounts = makeScanAccounts(getAccountShape);
+const getAddressFn = (transport) => {
+  const btc = new Btc(transport);
+  return (opts) => getAddressWithBtcInstance(transport, btc, opts);
+};
+
+export const scanAccounts = makeScanAccounts(getAccountShape, getAddressFn);
 export const sync = makeSync(getAccountShape, postSync);

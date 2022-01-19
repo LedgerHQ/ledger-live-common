@@ -20,30 +20,7 @@ import { getMainAccount } from "../account";
 import { getAccountBridge } from "../bridge";
 import jsBridges from "../generated/bridge/js";
 
-const experimentalIntegrations = [
-  "bitcoin",
-  "bsc",
-  "bitcoin_cash",
-  "litecoin",
-  "dash",
-  "qtum",
-  "zcash",
-  "bitcoin_gold",
-  "stratis",
-  "dogecoin",
-  "digibyte",
-  "komodo",
-  "pivx",
-  "zencash",
-  "vertcoin",
-  "peercoin",
-  "viacoin",
-  "stakenet",
-  "stealthcoin",
-  "decred",
-  "bitcoin_testnet",
-  "tezos",
-];
+const experimentalIntegrations = ["algorand", "tezos"];
 export function shouldUseJS(currency: CryptoCurrency) {
   const jsBridge = jsBridges[currency.family];
   if (!jsBridge) return false;
@@ -74,7 +51,8 @@ export const shouldShowNewAccount = (
   // native segwit being not yet supported everywhere, segwit is always available for creation
   if (
     derivationMode === "segwit" ||
-    (currency.family === "bitcoin" && derivationMode === "native_segwit")
+    (currency.family === "bitcoin" &&
+      (derivationMode === "native_segwit" || derivationMode === "taproot"))
   )
     return true;
   return false;

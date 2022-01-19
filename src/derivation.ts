@@ -21,6 +21,8 @@ export type ModeSpec = {
   overridesDerivation?: string;
   libcoreConfig?: LibcoreConfig;
   isSegwit?: boolean;
+  isNativeSegwit?: boolean;
+  isTaproot?: boolean;
   // TODO drop
   isUnsplit?: boolean;
   // TODO drop
@@ -57,8 +59,6 @@ const extraConfigPerCurrency: Record<string, LibcoreConfig> = {
   algorand: {
     BLOCKCHAIN_EXPLORER_API_ENDPOINT: () =>
       getEnv("API_ALGORAND_BLOCKCHAIN_EXPLORER_API_ENDPOINT"),
-    BLOCKCHAIN_EXPLORER_API_KEY: () =>
-      getEnv("API_ALGORAND_BLOCKCHAIN_EXPLORER_API_KEY"),
   },
 };
 const modes = Object.freeze({
@@ -147,6 +147,13 @@ const modes = Object.freeze({
       TEZOS_XPUB_CURVE: "ED25519",
     },
   },
+  taproot: {
+    purpose: 86,
+    addressFormat: "bech32m",
+    tag: "taproot",
+    isSegwit: true,
+    isTaproot: true,
+  },
   native_segwit: {
     purpose: 84,
     libcoreConfig: {
@@ -155,6 +162,7 @@ const modes = Object.freeze({
     addressFormat: "bech32",
     tag: "native segwit",
     isSegwit: true,
+    isNativeSegwit: true,
   },
   segwit: {
     isSegwit: true,
@@ -211,6 +219,13 @@ const modes = Object.freeze({
   filecoin: {
     overridesDerivation: "44'/461'/0'/0/<account>",
   },
+  solanaMain: {
+    isNonIterable: true,
+    overridesDerivation: "44'/501'",
+  },
+  solanaSub: {
+    overridesDerivation: "44'/501'/<account>'",
+  },
 });
 modes as Record<DerivationMode, ModeSpec>; // eslint-disable-line
 
@@ -255,6 +270,15 @@ export const isSegwitDerivationMode = (
   derivationMode: DerivationMode
 ): boolean =>
   (modes[derivationMode] as { isSegwit: boolean }).isSegwit || false;
+export const isNativeSegwitDerivationMode = (
+  derivationMode: DerivationMode
+): boolean =>
+  (modes[derivationMode] as { isNativeSegwit: boolean }).isNativeSegwit ||
+  false;
+export const isTaprootDerivationMode = (
+  derivationMode: DerivationMode
+): boolean =>
+  (modes[derivationMode] as { isTaproot: boolean }).isTaproot || false;
 export const getLibcoreConfig = (
   currency: CryptoCurrency,
   derivationMode: DerivationMode
@@ -397,11 +421,13 @@ const disableBIP44 = {
   // current workaround, device app does not seem to support bip44
   stellar: true,
   polkadot: true,
+  solana: true,
 };
 const seedIdentifierPath = {
   neo: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
   filecoin: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
-  _: ({ purpose, coinType }) => `${purpose}'/${coinType}'`,
+  solana: ({ purpose, coinType }) => `${purpose}'/${coinType}'`,
+  _: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'`,
 };
 export const getSeedIdentifierDerivation = (
   currency: CryptoCurrency,
@@ -449,6 +475,13 @@ export const getDerivationModesForCurrency = (
     all.push("native_segwit");
   }
 
+  // taproot logic. FIXME should move per family
+  if (currency.family === "bitcoin") {
+    if (currency.id === "bitcoin" || currency.id === "bitcoin_testnet") {
+      all.push("taproot");
+    }
+  }
+
   if (currency.supportsSegwit) {
     all.push("segwit");
   }
@@ -457,13 +490,22 @@ export const getDerivationModesForCurrency = (
     all.push("");
   }
 
+  if (currency.family === "solana") {
+    all.push("solanaMain", "solanaSub");
+  }
+
   if (!getEnv("SCAN_FOR_INVALID_PATHS")) {
     return all.filter((a) => !isInvalidDerivationMode(a));
   }
 
   return all;
 };
-const preferredList = ["native_segwit", "segwit", ""];
+const preferredList: DerivationMode[] = [
+  "native_segwit",
+  "taproot",
+  "segwit",
+  "",
+];
 // null => no settings
 // [ .. ]
 export const getPreferredNewAccountScheme = (

@@ -137,11 +137,9 @@ const erc20approve: ModeModule = {
 
   fillOptimisticOperation(_account, _transaction, operation) {
     operation.type = "FEES";
-    operation.extra = {
-      ...operation.extra,
-      approving: true, // workaround to track the status ENABLING
-    };
   },
+
+  getResolutionConfig: () => ({ erc20: true, externalPlugins: true }),
 };
 export const modes: Record<Modes, ModeModule> = {
   "erc20.approve": erc20approve,

@@ -17,6 +17,16 @@ export function findOperationInAccount(
         if (internalOp.id === operationId) return internalOp;
       }
     }
+
+    if (op.nftOperations) {
+      const nftOps = op.nftOperations;
+
+      for (let j = 0; j < nftOps.length; j++) {
+        const nftOp = nftOps[j];
+
+        if (nftOp.id === operationId) return nftOp;
+      }
+    }
   }
 
   for (let i = 0; i < pendingOperations.length; i++) {
@@ -66,7 +76,9 @@ export function patchOperationWithHash(
   };
 }
 
-export function flattenOperationWithInternals(op: Operation): Operation[] {
+export function flattenOperationWithInternalsAndNfts(
+  op: Operation
+): Operation[] {
   let ops: Operation[] = [];
 
   // ops of type NONE does not appear in lists
@@ -77,6 +89,11 @@ export function flattenOperationWithInternals(op: Operation): Operation[] {
   // all internal operations are expanded after the main op
   if (op.internalOperations) {
     ops = ops.concat(op.internalOperations);
+  }
+
+  // all nfts operations are expanded after the main op
+  if (op.nftOperations) {
+    ops = ops.concat(op.nftOperations);
   }
 
   return ops;
@@ -122,7 +139,7 @@ export function getOperationAmountNumber(op: Operation): BigNumber {
 export function getOperationAmountNumberWithInternals(
   op: Operation
 ): BigNumber {
-  return flattenOperationWithInternals(op).reduce(
+  return flattenOperationWithInternalsAndNfts(op).reduce(
     (amount: BigNumber, op) => amount.plus(getOperationAmountNumber(op)),
     new BigNumber(0)
   );
@@ -148,5 +165,5 @@ export const isConfirmedOperation = (
   confirmationsNb: number
 ): boolean =>
   operation.blockHeight
-    ? account.blockHeight - operation.blockHeight > confirmationsNb
+    ? account.blockHeight - operation.blockHeight + 1 >= confirmationsNb
     : false;

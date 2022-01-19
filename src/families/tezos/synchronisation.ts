@@ -48,9 +48,10 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
     derivationMode,
   });
 
-  const initialStableOperations = initialAccount
-    ? initialAccount.operations
-    : [];
+  const initialStableOperations =
+    initialAccount && initialAccount.id === accountId
+      ? initialAccount.operations
+      : [];
 
   // fetch transactions, incrementally if possible
   const mostRecentStableOperation = initialStableOperations[0];
@@ -75,6 +76,11 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
       id: accountId,
       blockHeight,
       lastSyncDate: new Date(),
+      tezosResources: {
+        revealed: false,
+        counter: 0,
+        publicKey: "",
+      },
     };
   }
   invariant(
@@ -221,7 +227,7 @@ const txToOp =
     }
 
     return {
-      id: encodeOperationId(accountId, hash, type),
+      id: encodeOperationId(accountId, hash + String(tx.id), type),
       hash,
       type,
       value,
@@ -232,9 +238,7 @@ const txToOp =
       blockHash,
       accountId,
       date: new Date(timestamp),
-      extra: {
-        id,
-      },
+      extra: { id },
       hasFailed,
     };
   };

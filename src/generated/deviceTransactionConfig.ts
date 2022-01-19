@@ -4,6 +4,8 @@ import bitcoin from "../families/bitcoin/deviceTransactionConfig";
 
 import cosmos from "../families/cosmos/deviceTransactionConfig";
 
+import crypto_org from "../families/crypto_org/deviceTransactionConfig";
+
 import elrond from "../families/elrond/deviceTransactionConfig";
 
 import ethereum from "../families/ethereum/deviceTransactionConfig";
@@ -11,6 +13,8 @@ import ethereum from "../families/ethereum/deviceTransactionConfig";
 import polkadot from "../families/polkadot/deviceTransactionConfig";
 
 import ripple from "../families/ripple/deviceTransactionConfig";
+
+import solana from "../families/solana/deviceTransactionConfig";
 
 import stellar from "../families/stellar/deviceTransactionConfig";
 
@@ -23,10 +27,12 @@ export default {
   algorand,
   bitcoin,
   cosmos,
+  crypto_org,
   elrond,
   ethereum,
   polkadot,
   ripple,
+  solana,
   stellar,
   tezos,
   tron,

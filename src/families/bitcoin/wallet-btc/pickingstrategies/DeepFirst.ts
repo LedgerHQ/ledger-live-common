@@ -5,18 +5,20 @@ import { Output } from "../storage/types";
 import Xpub from "../xpub";
 import { PickingStrategy } from "./types";
 import * as utils from "../utils";
+import { log } from "@ledgerhq/logs";
+import { OutputInfo } from "..";
 
 export class DeepFirst extends PickingStrategy {
   // eslint-disable-next-line class-methods-use-this
   async selectUnspentUtxosToUse(
     xpub: Xpub,
-    amount: BigNumber,
-    feePerByte: number,
-    nbOutputsWithoutChange: number
+    outputs: OutputInfo[],
+    feePerByte: number
   ) {
     // get the utxos to use as input
     // from all addresses of the account
     const addresses = await xpub.getXpubAddresses();
+    log("picking strategy", "Deepfirst");
 
     let unspentUtxos = flatten(
       await Promise.all(
@@ -29,26 +31,47 @@ export class DeepFirst extends PickingStrategy {
         ).length
     );
 
+    const outputAddresses = outputs.map((o) => o.address);
     unspentUtxos = sortBy(unspentUtxos, "block_height");
     // https://metamug.com/article/security/bitcoin-transaction-fee-satoshi-per-byte.html
-    const txSizeNoInput = utils.estimateTxSize(
+    const txSizeNoInput = utils.maxTxSize(
       0,
-      nbOutputsWithoutChange,
+      outputAddresses,
+      false,
       this.crypto,
       this.derivationMode
     );
     let fee = txSizeNoInput * feePerByte;
+    const emptyTxSize = utils.maxTxSizeCeil(
+      0,
+      [],
+      false,
+      this.crypto,
+      this.derivationMode
+    );
     const sizePerInput =
-      utils.estimateTxSize(1, 0, this.crypto, this.derivationMode) -
-      utils.estimateTxSize(0, 0, this.crypto, this.derivationMode);
+      utils.maxTxSize(1, [], false, this.crypto, this.derivationMode) -
+      emptyTxSize;
 
     const sizePerOutput =
-      utils.estimateTxSize(0, 1, this.crypto, this.derivationMode) -
-      utils.estimateTxSize(0, 0, this.crypto, this.derivationMode);
+      (outputAddresses[0]
+        ? utils.maxTxSize(
+            0,
+            [outputAddresses[0]],
+            false,
+            this.crypto,
+            this.derivationMode
+          )
+        : utils.maxTxSize(0, [], true, this.crypto, this.derivationMode)) -
+      emptyTxSize;
 
     let total = new BigNumber(0);
     const unspentUtxoSelected: Output[] = [];
 
+    const amount = outputs.reduce(
+      (sum, output) => sum.plus(output.value),
+      new BigNumber(0)
+    );
     let i = 0;
     while (total.lt(amount.plus(fee))) {
       if (!unspentUtxos[i]) {

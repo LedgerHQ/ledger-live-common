@@ -1,18 +1,23 @@
 import type { BigNumber } from "bignumber.js";
+import { NFTStandards } from "./nft";
+
 export type OperationType =
   | "IN"
   | "OUT"
   | "NONE"
   | "CREATE"
   | "REVEAL"
+  // COSMOS
   | "DELEGATE"
   | "UNDELEGATE"
   | "REDELEGATE"
   | "REWARD"
-  | "FEES" // TRON
+  // TRON
+  | "FEES"
   | "FREEZE"
   | "UNFREEZE"
-  | "VOTE" // POLKADOT
+  // POLKADOT
+  | "VOTE"
   | "REWARD_PAYOUT"
   | "BOND"
   | "UNBOND"
@@ -20,13 +25,17 @@ export type OperationType =
   | "SET_CONTROLLER"
   | "SLASH"
   | "NOMINATE"
-  | "CHILL" // COMPOUND TYPE OPERATIONS
+  | "CHILL"
+  // COMPOUND TYPE OPERATIONS
   | "SUPPLY"
   | "REDEEM"
   | "APPROVE"
+  // ALGORAND
   | "OPT_IN"
   | "OPT_OUT"
-  | "CLOSE_ACCOUNT";
+  // NFT
+  | "NFT_IN"
+  | "NFT_OUT";
 export type Operation = {
   // unique identifier (usually hash)
   id: string;
@@ -54,6 +63,15 @@ export type Operation = {
   transactionSequenceNumber?: number;
   // the account id. available for convenient reason
   accountId: string;
+  // --------------------------------------------- properties related to NFTs
+  // the specification used for the transaction's event
+  standard?: NFTStandards | string;
+  // address of an account/contract that is approved to make the transfer
+  operator?: string;
+  // address of the contract/collection containing an NFT (tokenId)
+  contract?: string;
+  // Id of an NFT inside its collection/contract
+  tokenId?: string;
   // --------------------------------------------- specific operation raw fields
   // transaction date
   date: Date;
@@ -67,6 +85,8 @@ export type Operation = {
   // in context of accounts that have internal transactions that belong to a parent transaction
   // we have internal operations. Those are not included in the top level operations but can be presented to UI at that same level
   internalOperations?: Operation[];
+  // Operations related to ERC721 | ERC1155 tokens
+  nftOperations?: Operation[];
 };
 export type OperationRaw = {
   id: string;
@@ -81,6 +101,11 @@ export type OperationRaw = {
   transactionSequenceNumber?: number;
   accountId: string;
   hasFailed?: boolean;
+  // --------------------------------------------- properties related to NFTs
+  standard?: NFTStandards | string;
+  operator?: string;
+  contract?: string;
+  tokenId?: string;
   // --------------------------------------------- specific operation raw fields
   date: string;
   extra: Record<string, any>;
@@ -89,4 +114,6 @@ export type OperationRaw = {
   // in context of accounts that have internal transactions that belong to a parent transaction
   // we have internal operations. Those are not included in the top level operations but can be presented to UI at that same level
   internalOperations?: OperationRaw[];
+  // Operations related to ERC721 | ERC1155 tokens
+  nftOperations?: OperationRaw[];
 };

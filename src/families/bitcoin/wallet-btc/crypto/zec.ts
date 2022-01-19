@@ -5,13 +5,16 @@ import { toOutputScript } from "bitcoinjs-lib/src/address";
 // @ts-ignore
 import zec from "zcash-bitcore-lib";
 import bs58check from "bs58check";
-import { DerivationModes } from "../types";
-import { ICrypto, DerivationMode } from "./types";
 import coininfo from "coininfo";
+import { InvalidAddress } from "@ledgerhq/errors";
+import { DerivationModes } from "../types";
+import { ICrypto } from "./types";
+import Base from "./base";
 
 class ZCash implements ICrypto {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   network: any;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor({ network }: { network: any }) {
     this.network = network;
@@ -19,10 +22,6 @@ class ZCash implements ICrypto {
     this.network.dustPolicy = "FIXED";
     this.network.usesTimestampedTransaction = false;
   }
-
-  derivationMode: DerivationMode = {
-    LEGACY: DerivationModes.LEGACY,
-  };
 
   // eslint-disable-next-line
   baddrToTaddr(baddrStr: string) {
@@ -54,17 +53,23 @@ class ZCash implements ICrypto {
     account: number,
     index: number
   ): string {
-    return this.getLegacyAddress(xpub, account, index);
+    if (Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`]) {
+      return Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`];
+    }
+    const address = this.getLegacyAddress(xpub, account, index);
+    Base.addressCache[`${derivationMode}-${xpub}-${account}-${index}`] =
+      address;
+    return address;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getDerivationMode(address: string) {
-    return this.derivationMode.LEGACY;
+    return DerivationModes.LEGACY;
   }
 
   toOutputScript(address: string) {
     if (!this.validateAddress(address)) {
-      throw new Error("Invalid address");
+      throw new InvalidAddress();
     }
     // TODO find a better way to calculate the script from zec address instead of converting to bitcoin address
     return toOutputScript(
@@ -76,6 +81,11 @@ class ZCash implements ICrypto {
   // eslint-disable-next-line class-methods-use-this
   validateAddress(address: string): boolean {
     return zec.Address.isValid(address, "livenet");
+  }
+
+  // eslint-disable-next-line
+  isTaprootAddress(address: string): boolean {
+    return false;
   }
 }
 

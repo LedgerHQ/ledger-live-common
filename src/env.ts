@@ -40,11 +40,6 @@ const envDefinitions = {
     parser: stringParser,
     desc: "Node API endpoint for algorand",
   },
-  API_ALGORAND_BLOCKCHAIN_EXPLORER_API_KEY: {
-    def: "",
-    parser: stringParser,
-    desc: "Node API key for algorand",
-  },
   API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
     def: "https://cosmoshub4.coin.ledger.com/",
     parser: stringParser,
@@ -67,7 +62,7 @@ const envDefinitions = {
   },
   API_RIPPLE_WS: {
     parser: stringParser,
-    def: "wss://xrplcluster.com",
+    def: "wss://xrplcluster.com/ledgerlive",
     desc: "XRP Ledger full history open WebSocket endpoint",
   },
   API_FILECOIN_ENDPOINT: {
@@ -111,7 +106,7 @@ const envDefinitions = {
     desc: "Ledger explorer API for tezos",
   },
   API_TEZOS_TZKT_API: {
-    def: "http://xtz-tzkt-explorer.api-01.live.ledger-stg.com",
+    def: "https://xtz-tzkt-explorer.api.live.ledger.com",
     parser: stringParser,
     desc: "tzkt.io explorer",
   },
@@ -376,6 +371,30 @@ const envDefinitions = {
     parser: stringParser,
     desc: "mock the server response for the exchange KYC check, options are 'open', 'pending', 'closed' or 'approved'.",
   },
+  /**
+   * Note: the mocked cryptoassets config and test partner are signed with the
+   * Ledger test private key
+   */
+  MOCK_EXCHANGE_TEST_CONFIG: {
+    def: false,
+    parser: boolParser,
+    desc: "mock the cryptoassets config and test partner (in the context of app-exchange)",
+  },
+  NFT: {
+    def: false,
+    parser: boolParser,
+    desc: "synchronizing nfts",
+  },
+  NFT_CURRENCIES: {
+    def: "ethereum",
+    parser: stringParser,
+    desc: "set the currencies where NFT is active",
+  },
+  NFT_ETH_METADATA_SERVICE: {
+    def: "https://nft.api.live.ledger.com",
+    parser: stringParser,
+    desc: "service uri used to get the metadata of an nft",
+  },
   OPERATION_ADDRESSES_LIMIT: {
     def: 100,
     parser: intParser,
@@ -496,6 +515,11 @@ const envDefinitions = {
     parser: boolParser,
     desc: "enable visibility of debug apps and tools in Platform Catalog",
   },
+  PLATFORM_EXPERIMENTAL_APPS: {
+    def: false,
+    parser: boolParser,
+    desc: "enable visibility of experimental apps and tools in Platform Catalog",
+  },
   PLATFORM_MANIFEST_API_URL: {
     def: "https://cdn.live.ledger.com/platform/apps/v1/data.json",
     parser: stringParser,
@@ -515,6 +539,11 @@ const envDefinitions = {
     def: 1,
     parser: intParser,
     desc: "version used for the platform api",
+  },
+  MARKET_API_URL: {
+    def: "https://proxycg.api.live.ledger.com/api/v3",
+    parser: stringParser,
+    desc: "Market data api",
   },
 };
 

@@ -100,6 +100,7 @@ describe.skip("testing xpub segwit transactions", () => {
         feePerByte: 100,
         changeAddress,
         utxoPickingStrategy,
+        sequence: 0,
       });
 
     inputs.forEach((input, i) => {
@@ -177,9 +178,10 @@ describe.skip("testing xpub segwit transactions", () => {
     await xpubs[1].xpub.sync();
 
     expectedFee1 =
-      utils.estimateTxSize(
+      utils.maxTxSizeCeil(
         inputs.length,
-        outputs.length,
+        outputs.map((o) => o.address),
+        false,
         crypto,
         DerivationModes.SEGWIT
       ) * 100;

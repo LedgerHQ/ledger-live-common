@@ -13,15 +13,28 @@ import type { DeviceTransactionField } from "../../../transaction";
 import * as compound from "./compound";
 import * as erc20 from "./erc20";
 import * as send from "./send";
+import * as erc721 from "./erc721";
+import * as erc1155 from "./erc1155";
 import type { Modes as CompoundModes } from "./compound";
 import type { Modes as ERC20Modes } from "./erc20";
 import type { Modes as SendModes } from "./send";
+import type { Modes as ERC721Modes } from "./erc721";
+import type { Modes as ERC1155Modes } from "./erc1155";
+import { ResolutionConfig } from "@ledgerhq/hw-app-eth/lib/services/types";
+
 const modules = {
   erc20,
   compound,
   send,
+  erc721,
+  erc1155,
 };
-export type TransactionMode = CompoundModes | ERC20Modes | SendModes;
+export type TransactionMode =
+  | CompoundModes
+  | ERC20Modes
+  | SendModes
+  | ERC721Modes
+  | ERC1155Modes;
 
 /**
  * A ModeModule enable a new transaction mode in Ethereum family
@@ -79,6 +92,22 @@ export type ModeModule = {
     arg1: Transaction,
     arg2: Operation
   ) => void;
+
+  /**
+   * hook to resolve a transaction like the prepareTransaction of the bridge
+   */
+  prepareTransaction?: (
+    account: Account,
+    transaction: Transaction
+  ) => Promise<Transaction>;
+
+  /**
+   * tells what needs to be resolved in the transaction
+   */
+  getResolutionConfig?: (
+    account: Account,
+    transaction: Transaction
+  ) => ResolutionConfig;
 };
 export const modes: Record<TransactionMode, ModeModule> = {} as Record<
   TransactionMode,
@@ -126,6 +155,18 @@ export function hydrate(value: unknown, currency: CryptoCurrency): void {
     }
   }
 }
+export const prepareTransaction = (
+  account: Account,
+  transaction: Transaction
+): Promise<Transaction> =>
+  values(modules)
+    // @ts-expect-error some module implement it
+    .map((m) => m.prepareTransaction)
+    .filter(Boolean)
+    .reduce(
+      (p, fn) => p.then((t) => fn(account, t)),
+      Promise.resolve(transaction)
+    );
 export const prepareTokenAccounts = (
   currency: CryptoCurrency,
   subAccounts: TokenAccount[],

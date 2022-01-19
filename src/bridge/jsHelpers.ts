@@ -26,7 +26,7 @@ import {
   recalculateAccountBalanceHistories,
   encodeAccountId,
 } from "../account";
-import { FreshAddressIndexInvalid } from "../errors";
+import { FreshAddressIndexInvalid, UnsupportedDerivation } from "../errors";
 import type {
   Operation,
   Account,
@@ -34,9 +34,11 @@ import type {
   SyncConfig,
   CryptoCurrency,
   DerivationMode,
+  NFT,
 } from "../types";
 import type { CurrencyBridge, AccountBridge } from "../types/bridge";
 import getAddress from "../hw/getAddress";
+import type { Result, GetAddressOptions } from "../hw/getAddress/types";
 import { open, close } from "../hw";
 import { withDevice } from "../hw/deviceAccess";
 
@@ -61,11 +63,12 @@ type AccountUpdater = (arg0: Account) => Account;
 const sameDate = (a, b) => Math.abs(a - b) < 1000 * 60 * 30;
 
 // an operation is relatively immutable, however we saw that sometimes it can temporarily change due to reorg,..
-export const sameOp = (a: Operation, b: Operation) =>
+export const sameOp = (a: Operation, b: Operation): boolean =>
   a === b ||
   (a.id === b.id && // hash, accountId, type are in id
     (a.fee ? a.fee.isEqualTo(b.fee) : a.fee === b.fee) &&
     (a.value ? a.value.isEqualTo(b.value) : a.value === b.value) &&
+    a.nftOperations?.length === b.nftOperations?.length &&
     sameDate(a.date, b.date) &&
     a.blockHeight === b.blockHeight &&
     isEqual(a.senders, b.senders) &&
@@ -97,7 +100,7 @@ Operation[] {
   // return existins when there is no real new operations
   if (newOps.length === 0) return existing;
   // edge case, existing can be empty. return the sorted list.
-  if (existing.length === 0) return newOps;
+  if (existing.length === 0) return Object.values(newOpsIds);
   // building up merging the ops
   const all: Operation[] = [];
 
@@ -114,6 +117,35 @@ Operation[] {
 
   return all;
 }
+
+export const mergeNfts = (oldNfts: NFT[], newNfts: NFT[]): NFT[] => {
+  // Getting a map of id => NFT
+  const newNftsPerId: Record<string, NFT> = {};
+  newNfts.forEach((n) => {
+    newNftsPerId[n.id] = n;
+  });
+
+  // copying the argument to avoid mutating it
+  const nfts = oldNfts.slice();
+  for (let i = 0; i < nfts.length; i++) {
+    const nft = nfts[i];
+
+    // The NFTs are the same, do don't anything
+    if (!newNftsPerId[nft.id]) {
+      nfts.splice(i, 1);
+      i--;
+    } else if (!isEqual(nft, newNftsPerId[nft.id])) {
+      // Use the new NFT instead
+      nfts[i] = newNftsPerId[nft.id];
+    }
+
+    // Delete it from the newNfts to keep only the un-added ones at the end
+    delete newNftsPerId[nft.id];
+  }
+
+  // Prepending newNfts to respect nfts's newest to oldest order
+  return Object.values(newNftsPerId).concat(nfts);
+};
 
 export const makeSync =
   (
@@ -183,7 +215,12 @@ export const makeSync =
     });
 
 export const makeScanAccounts =
-  (getAccountShape: GetAccountShape): CurrencyBridge["scanAccounts"] =>
+  (
+    getAccountShape: GetAccountShape,
+    getAddressFn?: (
+      transport: Transport
+    ) => (opts: GetAddressOptions) => Promise<Result>
+  ): CurrencyBridge["scanAccounts"] =>
   ({ currency, deviceId, syncConfig }): Observable<ScanAccountEvent> =>
     Observable.create((o) => {
       let finished = false;
@@ -282,6 +319,9 @@ export const makeScanAccounts =
 
         try {
           transport = await open(deviceId);
+          const getAddr = getAddressFn
+            ? getAddressFn(transport)
+            : (opts) => getAddress(transport, opts);
           const derivationModes = getDerivationModesForCurrency(currency);
 
           for (const derivationMode of derivationModes) {
@@ -294,12 +334,23 @@ export const makeScanAccounts =
             let result = derivationsCache[path];
 
             if (!result) {
-              result = await getAddress(transport, {
-                currency,
-                path,
-                derivationMode,
-              });
-              derivationsCache[path] = result;
+              try {
+                result = await getAddr({
+                  currency,
+                  path,
+                  derivationMode,
+                });
+                derivationsCache[path] = result;
+              } catch (e) {
+                if (e instanceof UnsupportedDerivation) {
+                  log(
+                    "scanAccounts",
+                    "ignore derivationMode=" + derivationMode
+                  );
+                  continue;
+                }
+                throw e;
+              }
             }
 
             if (!result) continue;
@@ -357,6 +408,14 @@ export const makeScanAccounts =
                 seedIdentifier,
                 transport
               );
+              // Bitcoin needs to compute the freshAddressPath itself,
+              // so we update it afterwards
+              if (account?.freshAddressPath) {
+                res.address = account.freshAddress;
+                derivationsCache[account.freshAddressPath] = res;
+              }
+              log("scanAccounts", "derivationsCache", res);
+
               log(
                 "scanAccounts",
                 `scanning ${currency.id} at ${freshAddressPath}: ${

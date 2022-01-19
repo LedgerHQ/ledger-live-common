@@ -23,6 +23,9 @@ export const LowerThanMinimumRelayFee = createCustomErrorClass(
 export const TransactionRefusedOnDevice = createCustomErrorClass(
   "TransactionRefusedOnDevice"
 );
+export const InvalidAddressBecauseAlreadyDelegated = createCustomErrorClass(
+  "InvalidAddressBecauseAlreadyDelegated"
+);
 export const TronNoFrozenForBandwidth = createCustomErrorClass(
   "TronNoFrozenForBandwidth"
 );
@@ -197,4 +200,10 @@ export const OutdatedApp = createCustomErrorClass("OutdatedApp");
 export const FreshAddressIndexInvalid = createCustomErrorClass(
   "FreshAddressIndexInvalid"
 );
+
+export const UnsupportedDerivation = createCustomErrorClass(
+  "UnsupportedDerivation"
+);
+
 export * from "./families/polkadot/errors";
+export * from "./families/solana/errors";

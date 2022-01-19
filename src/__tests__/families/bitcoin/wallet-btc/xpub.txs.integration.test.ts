@@ -108,6 +108,7 @@ describe.skip("testing xpub legacy transactions", () => {
         feePerByte: 100,
         changeAddress,
         utxoPickingStrategy,
+        sequence: 0,
       });
 
     inputs.forEach((i: InputInfo) => {
@@ -147,9 +148,10 @@ describe.skip("testing xpub legacy transactions", () => {
     }
 
     expectedFee1 =
-      utils.estimateTxSize(
+      utils.maxTxSizeCeil(
         inputs.length,
-        outputs.length,
+        outputs.map((o) => o.address),
+        false,
         crypto,
         DerivationModes.LEGACY
       ) * 100;
@@ -225,6 +227,7 @@ describe.skip("testing xpub legacy transactions", () => {
         feePerByte: 100,
         changeAddress,
         utxoPickingStrategy,
+        sequence: 0,
       });
 
     inputs.forEach((i) => {
@@ -278,9 +281,10 @@ describe.skip("testing xpub legacy transactions", () => {
     await xpubs[1].xpub.sync();
 
     expectedFee2 =
-      utils.estimateTxSize(
+      utils.maxTxSizeCeil(
         inputs.length,
-        outputs.length,
+        outputs.map((o) => o.address),
+        false,
         crypto,
         DerivationModes.LEGACY
       ) * 100;
