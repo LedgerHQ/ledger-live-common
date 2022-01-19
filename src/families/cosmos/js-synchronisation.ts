@@ -125,7 +125,13 @@ export const getAccountShape: GetAccountShape = async (info) => {
     derivationMode,
   });
 
-  const { balances, blockHeight, txs, delegations, withdrawAddress } =
+  const {
+    balances,
+    blockHeight,
+    txs,
+    delegations,
+    redelegations,
+    withdrawAddress,
   } = await getAccountInfo(xpubOrAddress);
 
   const oldOperations = initialAccount?.operations || [];
@@ -164,8 +170,8 @@ export const getAccountShape: GetAccountShape = async (info) => {
     blockHeight,
     cosmosResources: {
       delegations,
-      redelegations: [],
       unbondings: [],
+      redelegations,
       delegatedBalance,
       pendingRewardsBalance,
       unbondingBalance,

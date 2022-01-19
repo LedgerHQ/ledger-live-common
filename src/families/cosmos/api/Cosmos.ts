@@ -15,6 +15,7 @@ export const getAccountInfo = async (address: string): Promise<any> => {
     blockHeight,
     txs,
     delegations,
+    redelegations,
     withdrawAddress,
   ] = await Promise.all([
     getAccount(address),
@@ -22,6 +23,7 @@ export const getAccountInfo = async (address: string): Promise<any> => {
     getHeight(),
     getTransactions(address),
     getDelegators(address),
+    getRedelegations(address),
     getWithdrawAddress(address),
   ]);
 
@@ -30,6 +32,7 @@ export const getAccountInfo = async (address: string): Promise<any> => {
     blockHeight,
     txs,
     delegations,
+    redelegations,
     withdrawAddress,
     accountNumber,
     sequence,
@@ -107,6 +110,28 @@ export const getDelegators = async (address: string): Promise<any> => {
   } catch (e) {
     return [];
   }
+};
+
+export const getRedelegations = async (address: string): Promise<any> => {
+  const redelegations: Array<any> = [];
+
+  const { data } = await network({
+    method: "GET",
+    url: `${defaultEndpoint}/cosmos/staking/v1beta1/delegators/${address}/redelegations`,
+  });
+
+  data.redelegation_responses.forEach((elem) => {
+    elem.entries.forEach((entries) => {
+      redelegations.push({
+        validatorSrcAddress: elem.validator_src_address,
+        validatorDstAddress: elem.validator_dst_address,
+        amount: new BigNumber(entries.initial_balance),
+        completionDate: new Date(entries.completion_time),
+      });
+    });
+  });
+
+  return redelegations;
 };
 
 export const isValidRecipent = async (address: string): Promise<boolean> => {
