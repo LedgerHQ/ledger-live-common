@@ -131,6 +131,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
     txs,
     delegations,
     redelegations,
+    unbondings,
     withdrawAddress,
   } = await getAccountInfo(xpubOrAddress);
 
@@ -170,8 +171,8 @@ export const getAccountShape: GetAccountShape = async (info) => {
     blockHeight,
     cosmosResources: {
       delegations,
-      unbondings: [],
       redelegations,
+      unbondings,
       delegatedBalance,
       pendingRewardsBalance,
       unbondingBalance,
