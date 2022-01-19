@@ -3,6 +3,7 @@ import { BigNumber } from "bignumber.js";
 import { makeSync, GetAccountShape, mergeOps } from "../../bridge/jsHelpers";
 import { encodeAccountId } from "../../account";
 import { getAccountInfo } from "./api/Cosmos";
+import { pubkeyToAddress, decodeBech32Pubkey } from "@cosmjs/amino";
 import { encodeOperationId } from "../../operation";
 
 const txToOps = (info: any, id: string, txs: any): Operation[] => {
@@ -109,17 +110,23 @@ const postSync = (initial: Account, parent: Account) => parent;
 
 export const getAccountShape: GetAccountShape = async (info) => {
   const { address, currency, derivationMode, initialAccount } = info;
+  let xpubOrAddress = address;
+
+  if (address.match("cosmospub")) {
+    const pubkey = decodeBech32Pubkey(address);
+    xpubOrAddress = pubkeyToAddress(pubkey as any, "cosmos");
+  }
 
   const accountId = encodeAccountId({
     type: "js",
     version: "2",
     currencyId: currency.id,
-    xpubOrAddress: address,
+    xpubOrAddress,
     derivationMode,
   });
 
   const { balances, blockHeight, txs, delegations, withdrawAddress } =
-    await getAccountInfo(address);
+  } = await getAccountInfo(xpubOrAddress);
 
   const oldOperations = initialAccount?.operations || [];
   const newOperations = txToOps(info, accountId, txs);
