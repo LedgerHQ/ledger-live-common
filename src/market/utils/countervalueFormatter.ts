@@ -17,7 +17,7 @@ export const counterValueFormatter = ({
     style: currency ? "currency" : "decimal",
     currency,
     notation: shorten ? "compact" : "standard",
-    maximumFractionDigits: value >= 1000 ? 3 : 8,
+    maximumFractionDigits: shorten ? 3 : 8,
   }).format(value);
 };
 
