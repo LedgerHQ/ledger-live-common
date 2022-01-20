@@ -16,7 +16,11 @@ export const usePickDefaultAccount = (
   useEffect(() => {
     if (!fromAccount && allCurrencies.length > 0) {
       const defaultAccount: Account | TokenAccount | undefined = allCurrencies
-        .map(({ id }) => getAvailableAccountsById(id, accounts).filter(account => account.balance.gt(0)))
+        .map(({ id }) =>
+          getAvailableAccountsById(id, accounts).filter((account) =>
+            account.balance.gt(0)
+          )
+        )
         .flat(1)
         .find(Boolean);
 

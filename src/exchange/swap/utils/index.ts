@@ -70,7 +70,9 @@ export function getAccountTuplesForCurrency(
 export const getAvailableAccountsById = (
   id: string,
   accounts: ((Account | TokenAccount) & { disabled?: boolean })[]
-) =>
+): ((Account | TokenAccount) & {
+  disabled?: boolean | undefined;
+})[] =>
   accounts
     .filter((acc) => getAccountCurrency(acc)?.id === id && !acc.disabled)
     .sort((a, b) => b.balance.minus(a.balance).toNumber());
