@@ -455,9 +455,9 @@ const cosmos: CurrenciesData<Transaction> = {
   ],
 };
 const dataset: DatasetTest<Transaction> = {
-  implementations: ["libcore"],
+  implementations: ["js"],
   currencies: {
-    // cosmos, // LL-7872
+    cosmos, // LL-7872
   },
 };
 export default dataset;
