@@ -50,7 +50,9 @@ const getTransactionStatus = async (
   if (!transaction.recipient) {
     errors.recipient = new RecipientRequired();
   } else if (!isValidAddress(transaction.recipient)) {
-    errors.recipient = new InvalidAddress();
+    errors.recipient = new InvalidAddress("", {
+      currencyName: account.currency.name,
+    });
   }
 
   return Promise.resolve({

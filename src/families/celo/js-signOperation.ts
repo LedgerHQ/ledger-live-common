@@ -8,6 +8,7 @@ import { encodeOperationId } from "../../operation";
 import { CeloApp } from "./hw-app-celo";
 import buildTransaction from "./js-buildTransaction";
 import { rlpEncodedTx, encodeTransaction } from "@celo/wallet-base";
+import { withDevice } from "../../hw/deviceAccess";
 
 const buildOptimisticOperation = (
   account: Account,
@@ -77,57 +78,64 @@ const signOperation = ({
   deviceId: any;
   transaction: Transaction;
 }): Observable<SignOperationEvent> =>
-  new Observable((o) => {
-    async function main() {
-      const transport = await open(deviceId);
-      try {
-        o.next({ type: "device-signature-requested" });
+  withDevice(deviceId)(
+    (transport) =>
+      new Observable((o) => {
+        let cancelled;
 
-        if (!transaction.fees) {
-          throw new FeeNotLoaded();
+        async function main() {
+          if (!transaction.fees) {
+            throw new FeeNotLoaded();
+          }
+
+          const celo = new CeloApp(transport);
+
+          const unsigned = await buildTransaction(account, transaction);
+
+          const { chainId } = unsigned;
+
+          const rlpEncoded = rlpEncodedTx(unsigned);
+
+          o.next({ type: "device-signature-requested" });
+
+          const response = await celo.signTransaction(
+            account.freshAddressPath,
+            trimLeading0x(rlpEncoded.rlpEncode)
+          );
+
+          if (cancelled) return;
+
+          const signature = parseSigningResponse(response, chainId || 1);
+
+          o.next({ type: "device-signature-granted" });
+
+          const encodedTx = await encodeTransaction(rlpEncoded, signature);
+
+          const operation = buildOptimisticOperation(
+            account,
+            transaction,
+            transaction.fees ?? new BigNumber(0)
+          );
+
+          o.next({
+            type: "signed",
+            signedOperation: {
+              operation,
+              signature: encodedTx.raw,
+              expirationDate: null,
+            },
+          });
         }
 
-        const celo = new CeloApp(transport);
-
-        const unsigned = await buildTransaction(account, transaction);
-
-        const { chainId } = unsigned;
-
-        const rlpEncoded = rlpEncodedTx(unsigned);
-
-        const response = await celo.signTransaction(
-          account.freshAddressPath,
-          trimLeading0x(rlpEncoded.rlpEncode)
+        main().then(
+          () => o.complete(),
+          (e) => o.error(e)
         );
 
-        const signature = parseSigningResponse(response, chainId || 1);
-
-        o.next({ type: "device-signature-granted" });
-
-        const encodedTx = await encodeTransaction(rlpEncoded, signature);
-
-        const operation = buildOptimisticOperation(
-          account,
-          transaction,
-          transaction.fees ?? new BigNumber(0)
-        );
-
-        o.next({
-          type: "signed",
-          signedOperation: {
-            operation,
-            signature: encodedTx.raw,
-            expirationDate: null,
-          },
-        });
-      } finally {
-        await close(transport, deviceId);
-      }
-    }
-    main().then(
-      () => o.complete(),
-      (e) => o.error(e)
-    );
-  });
+        return () => {
+          cancelled = true;
+        };
+      })
+  );
 
 export default signOperation;

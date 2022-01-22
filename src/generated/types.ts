@@ -21,8 +21,6 @@ import { CoreOperationSpecifics as CoreOperationSpecifics_celo } from "../famili
 import { CoreCurrencySpecifics as CoreCurrencySpecifics_celo } from "../families/celo/types";
 import { Transaction as celoTransaction } from "../families/celo/types";
 import { TransactionRaw as celoTransactionRaw } from "../families/celo/types";
-import { NetworkInfo as celoNetworkInfo } from "../families/celo/types";
-import { NetworkInfoRaw as celoNetworkInfoRaw } from "../families/celo/types";
 import { reflect as cosmosReflect } from "../families/cosmos/types";
 import { CoreStatics as CoreStatics_cosmos } from "../families/cosmos/types";
 import { CoreAccountSpecifics as CoreAccountSpecifics_cosmos } from "../families/cosmos/types";
@@ -226,7 +224,6 @@ export type TransactionRaw =
   | tronTransactionRaw
 export type NetworkInfo =
   | bitcoinNetworkInfo
-  | celoNetworkInfo
   | cosmosNetworkInfo
   | crypto_orgNetworkInfo
   | elrondNetworkInfo
@@ -239,7 +236,6 @@ export type NetworkInfo =
   | tronNetworkInfo
 export type NetworkInfoRaw =
   | bitcoinNetworkInfoRaw
-  | celoNetworkInfoRaw
   | cosmosNetworkInfoRaw
   | crypto_orgNetworkInfoRaw
   | elrondNetworkInfoRaw

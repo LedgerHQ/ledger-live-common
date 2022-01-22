@@ -4,12 +4,6 @@ import type {
   TransactionCommonRaw,
 } from "../../types/transaction";
 
-export type NetworkInfo = {
-  family: "celo";
-};
-export type NetworkInfoRaw = {
-  family: "celo";
-};
 export type Transaction = TransactionCommon & {
   family: "celo";
   fees: BigNumber | null | undefined;
