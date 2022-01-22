@@ -11,10 +11,10 @@ const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
     {
       title: "Amount",
       button: "Rr",
-      expectedValue: ({ account, transaction }) => {
+      expectedValue: ({ account, status }) => {
         const formattedValue =
           "CELO " +
-          formatCurrencyUnit(account.unit, transaction.amount, {
+          formatCurrencyUnit(account.unit, status.amount, {
             disableRounding: true,
           });
 

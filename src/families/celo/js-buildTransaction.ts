@@ -12,14 +12,19 @@ const buildTransaction = async (account: Account, transaction: Transaction) => {
       : amount
   ).toString();
 
-  const celoTransaction: CeloTx = {
+  const txParams = {
     from: account.freshAddress,
     value,
     to: transaction.recipient,
   };
 
-  // This fetches nonce and chainId from a node
-  return await kit.connection.paramsPopulator.populate(celoTransaction);
+  return {
+    ...txParams,
+    chainId: await kit.connection.chainId(),
+    nonce: await kit.connection.nonce(account.freshAddress),
+    gas: await kit.connection.estimateGas(txParams),
+    gasPrice: await kit.connection.gasPrice(),
+  } as CeloTx;
 };
 
 export default buildTransaction;
