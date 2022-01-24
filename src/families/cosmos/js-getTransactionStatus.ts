@@ -4,6 +4,7 @@ import {
   InvalidAddress,
   InvalidAddressBecauseDestinationIsAlsoSource,
   NotEnoughBalance,
+  RecipientRequired,
   RecommendUndelegation,
 } from "@ledgerhq/errors";
 import {
@@ -195,11 +196,15 @@ const getSendTransactionStatus = async (
   const errors: StatusErrorMap = {};
   const warnings: StatusErrorMap = {};
 
-  if (a.freshAddress === t.recipient) {
+  if (!t.recipient) {
+    errors.recipient = new RecipientRequired("");
+  } else if (a.freshAddress === t.recipient) {
     errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
   } else {
     if (!(await isValidRecipent(t.recipient))) {
-      errors.recipient = new Error("invalid recipient");
+      errors.recipient = new InvalidAddress(undefined, {
+        currencyName: a.currency.name,
+      });
     }
   }
 
