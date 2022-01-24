@@ -47,45 +47,98 @@ export type AppManifest = {
   domains: string[];
 };
 
-export type PromotedApp = {
-  id: string; // Should match the id in /platform/apps/v1/data.json
-  thumbnailUrl: string; // Should match an image in /icons/platform/thumbnails/
-};
+const categories = [
+  "trade",
+  "earn",
+  "spend",
+  "nft",
+  "services",
+  "other",
+] as const;
+/** Weird way of declaring this type but we actually want to loop on the array in data validation scripts  */
+type Category = typeof categories[number];
 
-export type AppMetadata = {
+type Tag =
+  | "buy"
+  | "card"
+  | "dex"
+  | "exchange"
+  | "gift card"
+  | "lend"
+  | "nft"
+  | "portfolio"
+  | "stake"
+  | "swap"
+  | "tools";
+
+type AppMetadata = {
   /**
    * Identifier of the Live App.
    * Should match the id in platform/apps/v1/data.json
-   *  */
+   */
   id: string;
 
   /**
-   * Identifier of a category for this app. The purpose is to show it as a tag
-   * in Ledger Live.
+   * Tags.
    */
-  category: string;
+  tags: Tag[];
 
   /**
-   * Identifier of a supercategory for this app. The purpose is to use this for
-   * filtering apps in Ledger Live
+   * Categories.
    */
-  supercategory: string;
+  categories: Category[];
+
+  /**
+   * Compatible platform.
+   */
+  platform: AppPlatform;
+
+  /**
+   * Branch.
+   */
+  branch: AppBranch;
+
+  /**
+   * Currencies.
+   */
+  currencies: string[] | "*";
+
+  /**
+   * Content (description, short description)
+   */
+  content: {
+    shortDescription: TranslatableString;
+    description: TranslatableString;
+  };
+};
+
+type PromotedApp = {
+  /** Should match the id in /platform/apps/v1/data.json */
+  id: string;
+  /**
+   * Should match an image in /icons/platform/thumbnails/
+   * https://www.figma.com/file/mT7CJQEuwoTAJvlZLfzgkL/?node-id=2709%3A18285
+   * */
+  thumbnailUrl: string;
+  /**
+   * Description to display as an overlay of the thumbnail
+   * https://www.figma.com/file/mT7CJQEuwoTAJvlZLfzgkL/?node-id=2709%3A18285
+   * */
+  description: {
+    en: string;
+    [locale: string]: string;
+  };
 };
 
 /**
  * Typing for ./data.json
  */
 export type CatalogMetadata = {
-  compatibleAppsManifestVersions: string[];
   /**
-   * List of all existing categories.
+   * Arbitrarily ordered list of existing categories.
+   * Defines the default order in which to display categories in Ledger Live.
    */
-  categories: string[];
-
-  /**
-   * List of all existing supercategories.
-   */
-  supercategories: string[];
+  orderedCategories: Category[];
   /**
    * Sorted array of the promoted apps.
    * The first app in the array will be the first of the promoted apps displayed
