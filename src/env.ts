@@ -130,6 +130,11 @@ const envDefinitions = {
     parser: intParser,
     desc: "bot's default timeout for scanAccounts",
   },
+  CARDANO_API_ENDPOINT: {
+    def: "",
+    parser: stringParser,
+    desc: "Cardano API url",
+  },
   COINAPPS: {
     def: "",
     parser: stringParser,
@@ -216,7 +221,7 @@ const envDefinitions = {
     desc: "enable experimental support of Bluetooth",
   },
   EXPERIMENTAL_CURRENCIES: {
-    def: "cardano",
+    def: "",
     parser: stringParser,
     desc: "enable experimental support of currencies (comma separated)",
   },
