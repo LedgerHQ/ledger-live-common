@@ -457,7 +457,7 @@ const cosmos: CurrenciesData<Transaction> = {
 const dataset: DatasetTest<Transaction> = {
   implementations: ["js"],
   currencies: {
-    cosmos, // LL-7872
+    cosmos,
   },
 };
 export default dataset;
