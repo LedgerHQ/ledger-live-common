@@ -1,7 +1,7 @@
 import { getEnv } from "../../../env";
 import BigNumber from "bignumber.js";
 import network from "../../../network";
-import { Operation, SignedOperation } from "../../../types";
+import { Operation } from "../../../types";
 import { patchOperationWithHash } from "../../../operation";
 
 const defaultEndpoint = getEnv(
@@ -222,12 +222,8 @@ export const getTransactions = async (address: string): Promise<any> => {
 };
 
 export const broadcast = async ({
-  signedOperation,
-}: {
-  signedOperation: SignedOperation;
+  signedOperation: { operation },
 }): Promise<Operation> => {
-  const { operation } = signedOperation;
-
   const { data } = await network({
     method: "POST",
     url: `${defaultEndpoint}/cosmos/tx/v1beta1/txs`,

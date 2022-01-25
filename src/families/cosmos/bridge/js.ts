@@ -59,11 +59,7 @@ const accountBridge: AccountBridge<Transaction> = {
   sync,
   receive,
   signOperation,
-  broadcast: async ({ signedOperation }) => {
-    return broadcast({
-      signedOperation,
-    });
-  },
+  broadcast,
 };
 
 export default {
