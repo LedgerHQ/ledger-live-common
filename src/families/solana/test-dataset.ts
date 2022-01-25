@@ -75,6 +75,7 @@ const fees = (signatureCount: number) =>
 
 const zero = new BigNumber(0);
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const solana = {
   scanAccounts: [scanAccounts1],
   accounts: [
