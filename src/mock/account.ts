@@ -336,20 +336,14 @@ export function genTokenAccount(
   return tokenAccount;
 }
 
-export function genNFTs(id: number | string): NFT[] {
-  const rng = new Prando(id);
-
-  const nfts: NFT[] = [];
-  for (let i = 0; i < 50; i++) {
-    nfts.push(mockNFTs[rng.nextInt(0, mockNFTs.length - 1)]);
-  }
-
-  return nfts;
+export function genNFTs(index: number): NFT[] {
+  return index % 3 === 0 ? [...mockNFTs] : [];
 }
 
 export function genAccount(
   id: number | string,
-  opts: GenAccountOptions = {}
+  opts: GenAccountOptions = {},
+  index?: number
 ): Account {
   const rng = new Prando(id);
   const currency = opts.currency || rng.nextArrayItem(currencies);
@@ -407,16 +401,22 @@ export function genAccount(
         toAmount: new BigNumber("2000"),
       })),
     balanceHistoryCache: emptyHistoryCache,
-    nfts: currency.id === "ethereum" ? genNFTs(id) : [],
+    nfts: currency.id === "ethereum" && index !== undefined ? genNFTs(index) : [],
   };
 
   if (
     ["ethereum", "ethereum_ropsten", "tron", "algorand"].includes(currency.id)
   ) {
-    const tokenCount =
+    let tokenCount =
       typeof opts.subAccountsCount === "number"
         ? opts.subAccountsCount
         : rng.nextInt(0, 8);
+
+    // specific case for eth account playwright tests
+    if (currency.id === "ethereum") { 
+      tokenCount = index === 2 ? 3 : 0;
+    }
+    
     const all = listTokensForCryptoCurrency(account.currency).filter((t) =>
       hardcodedMarketcap.includes(t.id)
     );
