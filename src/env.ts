@@ -371,10 +371,14 @@ const envDefinitions = {
     parser: stringParser,
     desc: "mock the server response for the exchange KYC check, options are 'open', 'pending', 'closed' or 'approved'.",
   },
-  NFT: {
+  /**
+   * Note: the mocked cryptoassets config and test partner are signed with the
+   * Ledger test private key
+   */
+  MOCK_EXCHANGE_TEST_CONFIG: {
     def: false,
     parser: boolParser,
-    desc: "synchronizing nfts",
+    desc: "mock the cryptoassets config and test partner (in the context of app-exchange)",
   },
   NFT_CURRENCIES: {
     def: "ethereum",
@@ -530,6 +534,11 @@ const envDefinitions = {
     def: 1,
     parser: intParser,
     desc: "version used for the platform api",
+  },
+  MARKET_API_URL: {
+    def: "https://proxycg.api.live.ledger.com/api/v3",
+    parser: stringParser,
+    desc: "Market data api",
   },
 };
 
