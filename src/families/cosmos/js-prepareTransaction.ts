@@ -19,11 +19,11 @@ const prepareTransaction = async (
   transaction: Transaction
 ): Promise<Transaction> => {
   if (transaction.useAllAmount) {
-    // Cosmos don't support estimation with overestimate value anymore
-    // Use a 1.2 coeff
     transaction.amount = getMaxEstimatedBalance(
       account,
-      account.balance.multipliedBy(0.2).integerValue(BigNumber.ROUND_CEIL)
+      account.balance
+        .dividedBy(new BigNumber(getEnv("COSMOS_GAS_AMPLIFIER")))
+        .integerValue(BigNumber.ROUND_CEIL)
     );
   }
 
@@ -60,12 +60,11 @@ const prepareTransaction = async (
 
   const gasPrice = new BigNumber(getEnv("COSMOS_GAS_PRICE"));
 
-  transaction.gas = new BigNumber(
-    simulation?.gas_info?.gas_used || 0
-  ).multipliedBy(gasPrice);
+  transaction.gas = new BigNumber(simulation?.gas_info?.gas_used || 60000);
 
   transaction.fees = gasPrice
     .multipliedBy(transaction.gas)
+    .multipliedBy(new BigNumber(getEnv("COSMOS_GAS_AMPLIFIER")))
     .integerValue(BigNumber.ROUND_CEIL);
 
   if (transaction.mode !== "send" && !transaction.memo) {
