@@ -1,4 +1,5 @@
 import { clusterApiUrl } from "@solana/web3.js";
+import { getEnv } from "../../env";
 
 export const assertUnreachable = (_: never): never => {
   throw new Error("unreachable assertion failed");
@@ -18,7 +19,7 @@ export async function drainSeqAsyncGen<T>(
 
 export function endpointByCurrencyId(currencyId: string): string {
   const endpoints: Record<string, string> = {
-    solana: "https://solana.coin.ledger.com",
+    solana: getEnv("API_SOLANA_PROXY"),
     solana_devnet: clusterApiUrl("devnet"),
     solana_testnet: clusterApiUrl("testnet"),
   };
