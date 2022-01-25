@@ -89,7 +89,7 @@ export const getDelegators = async (address: string): Promise<any> => {
       BOND_STATUS_BONDED: "bonded",
     };
 
-    for (const d of data.delegation_responses) {
+    data.delegation_responses.forEach(async (d) => {
       try {
         const { data } = await network({
           method: "GET",
@@ -104,10 +104,29 @@ export const getDelegators = async (address: string): Promise<any> => {
       delegators.push({
         validatorAddress: d.delegation.validator_address,
         amount: new BigNumber(d.balance.amount),
-        pendingRewards: new BigNumber(d.balance.amount), // todo: ?
+        pendingRewards: new BigNumber(0),
         status,
       });
-    }
+    });
+
+    delegators.forEach(async (d) => {
+      try {
+        const { data } = await network({
+          method: "GET",
+          url: `${defaultEndpoint}/cosmos/distribution/v1beta1/delegators/${address}/rewards`,
+        });
+
+        data.rewards.forEach((r) => {
+          if (r.validator_address === d.validatorAddress) {
+            d.pendingRewards = new BigNumber(d.reward.amount).integerValue(
+              BigNumber.ROUND_CEIL
+            );
+          }
+        });
+
+        // eslint-disable-next-line no-empty
+      } catch (e) {}
+    });
 
     return delegators;
   } catch (e) {
