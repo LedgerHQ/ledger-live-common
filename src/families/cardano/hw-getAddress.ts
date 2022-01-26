@@ -4,14 +4,14 @@ import Ada, {
   AddressType,
 } from "@cardano-foundation/ledgerjs-hw-app-cardano";
 import { str_to_path } from "@cardano-foundation/ledgerjs-hw-app-cardano/dist/utils";
-import { getBipPathObject, getBipPathString } from "./helpers";
+import { getBipPathFromString, getBipPathString } from "./helpers";
 import { StakeChain } from "./types";
 import { STAKING_ADDRESS_INDEX } from "./constants";
 
 const resolver: Resolver = async (transport, { path }) => {
-  const spendingPathObj = getBipPathObject(path);
+  const spendingPath = getBipPathFromString(path);
   const stakingPathString = getBipPathString({
-    account: spendingPathObj.account,
+    account: spendingPath.account,
     chain: StakeChain.stake,
     index: STAKING_ADDRESS_INDEX,
   });

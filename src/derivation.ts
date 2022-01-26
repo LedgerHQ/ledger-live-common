@@ -228,7 +228,7 @@ const modes = Object.freeze({
   },
   cardano: {
     purpose: 1852,
-    overridesDerivation: "1852'/1815'/<account>'/<chain_type>/<address>",
+    overridesDerivation: "1852'/1815'/<account>'/<node>/<address>",
   },
 });
 modes as Record<DerivationMode, ModeSpec>; // eslint-disable-line
@@ -433,6 +433,7 @@ const seedIdentifierPath = {
   neo: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
   filecoin: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
   solana: ({ purpose, coinType }) => `${purpose}'/${coinType}'`,
+  cardano: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
   _: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'`,
 };
 export const getSeedIdentifierDerivation = (

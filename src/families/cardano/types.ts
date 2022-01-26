@@ -19,7 +19,7 @@ export enum StakeChain {
   stake = 2,
 }
 
-export declare type BipPath = {
+export type BipPath = {
   purpose: 1852;
   coin: 1815;
   account: number;
@@ -41,18 +41,51 @@ export type TokenRaw = {
 
 export type PaymentCredential = {
   isUsed: boolean;
-  balance: BigNumber;
   key: string;
   bipPath: BipPath;
-  tokens: Array<Token>;
 };
 
 export type PaymentCredentialRaw = {
   isUsed: boolean;
-  balance: string;
   key: string;
   bipPath: BipPath;
+};
+
+export type StakeCredential = {
+  key: string;
+  bipPath: BipPath;
+};
+
+export type CardanoOutput = {
+  hash: string;
+  index: number;
+  address: string;
+  amount: BigNumber;
+  tokens: Array<Token>;
+  paymentCredential: {
+    key: string;
+    bipPath?: BipPath;
+  };
+  stakeCredential?: {
+    key: string;
+    bipPath?: BipPath;
+  };
+};
+
+export type CardanoOutputRaw = {
+  hash: string;
+  index: number;
+  address: string;
+  amount: string;
   tokens: Array<TokenRaw>;
+  paymentCredential: {
+    key: string;
+    bipPath?: BipPath;
+  };
+  stakeCredential?: {
+    key: string;
+    bipPath?: BipPath;
+  };
 };
 
 /**
@@ -61,6 +94,7 @@ export type PaymentCredentialRaw = {
 export type CardanoResources = {
   externalCredentials: Array<PaymentCredential>;
   internalCredentials: Array<PaymentCredential>;
+  utxos: Array<CardanoOutput>;
 };
 
 /**
@@ -69,6 +103,7 @@ export type CardanoResources = {
 export type CardanoResourcesRaw = {
   externalCredentials: Array<PaymentCredentialRaw>;
   internalCredentials: Array<PaymentCredentialRaw>;
+  utxos: Array<CardanoOutputRaw>;
 };
 
 /**

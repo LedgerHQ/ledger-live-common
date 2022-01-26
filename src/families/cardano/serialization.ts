@@ -1,5 +1,7 @@
 import { BigNumber } from "bignumber.js";
 import type {
+  CardanoOutput,
+  CardanoOutputRaw,
   CardanoResources,
   CardanoResourcesRaw,
   PaymentCredential,
@@ -9,7 +11,7 @@ import type {
 } from "./types";
 
 function toTokenRaw(r: Token): TokenRaw {
-  return Object.assign(r, { value: r.value.toString() });
+  return { ...r, value: r.value.toString() };
 }
 
 function fromTokenRaw(r: TokenRaw): Token {
@@ -17,21 +19,28 @@ function fromTokenRaw(r: TokenRaw): Token {
 }
 
 function toPaymentCredentialRaw(r: PaymentCredential): PaymentCredentialRaw {
-  return {
-    ...r,
-    balance: r.balance.toString(),
-    tokens: r.tokens.map((t) => toTokenRaw(t)),
-  };
+  return r;
 }
 
 function fromPaymentCredentialRaw(r: PaymentCredentialRaw): PaymentCredential {
+  return r;
+}
+
+function toCardanoOutputRaw(r: CardanoOutput): CardanoOutputRaw {
   return {
     ...r,
-    balance: new BigNumber(r.balance),
-    tokens: r.tokens.map((t) => fromTokenRaw(t)),
+    amount: r.amount.toString(),
+    tokens: r.tokens.map(toTokenRaw),
   };
 }
 
+function fromCardanoOutputRaw(r: CardanoOutputRaw): CardanoOutput {
+  return {
+    ...r,
+    amount: new BigNumber(r.amount),
+    tokens: r.tokens.map(fromTokenRaw),
+  };
+}
 export function toCardanoResourceRaw(r: CardanoResources): CardanoResourcesRaw {
   return {
     internalCredentials: r.internalCredentials.map((c) =>
@@ -40,6 +49,7 @@ export function toCardanoResourceRaw(r: CardanoResources): CardanoResourcesRaw {
     externalCredentials: r.externalCredentials.map((c) =>
       toPaymentCredentialRaw(c)
     ),
+    utxos: r.utxos.map(toCardanoOutputRaw),
   };
 }
 
@@ -53,5 +63,6 @@ export function fromCardanoResourceRaw(
     externalCredentials: r.externalCredentials.map((c) =>
       fromPaymentCredentialRaw(c)
     ),
+    utxos: r.utxos.map(fromCardanoOutputRaw),
   };
 }
