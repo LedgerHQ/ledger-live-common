@@ -120,6 +120,11 @@ const envDefinitions = {
     def: "https://tron.coin.ledger.com",
     desc: "proxy url for trongrid API",
   },
+  API_SOLANA_PROXY: {
+    parser: stringParser,
+    def: "https://solana.coin.ledger.com",
+    desc: "proxy url for solana API",
+  },
   BASE_SOCKET_URL: {
     def: "wss://scriptrunner.api.live.ledger.com/update",
     parser: stringParser,
@@ -379,11 +384,6 @@ const envDefinitions = {
     def: false,
     parser: boolParser,
     desc: "mock the cryptoassets config and test partner (in the context of app-exchange)",
-  },
-  NFT: {
-    def: false,
-    parser: boolParser,
-    desc: "synchronizing nfts",
   },
   NFT_CURRENCIES: {
     def: "ethereum",
