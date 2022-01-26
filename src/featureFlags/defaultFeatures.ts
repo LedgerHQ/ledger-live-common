@@ -1,6 +1,13 @@
-import { DefaultFeatures } from "../types";
+import { DefaultFeatures } from "./types";
 
 export const defaultFeatures: DefaultFeatures = {
-  feature_foo: false,
-  feature_bar: false,
+  discover: {
+    enabled: false,
+  },
+  send: {
+    enabled: false,
+  },
+  market: {
+    enabled: false,
+  },
 };
