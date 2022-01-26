@@ -70,6 +70,10 @@ export class CeloApp {
     const s = response.slice(1 + 32, 1 + 32 + 32).toString("hex");
     return { v, r, s };
   }
+
+  provideERC20TokenInformation({ data }: { data: Buffer }): Promise<boolean> {
+    return provideERC20TokenInformation(this.transport, data);
+  }
 }
 
 function splitPath(path: string): number[] {
@@ -86,4 +90,19 @@ function splitPath(path: string): number[] {
     result.push(number);
   });
   return result;
+}
+
+function provideERC20TokenInformation(
+  transport: Transport,
+  data: Buffer
+): Promise<boolean> {
+  return transport.send(0xe0, 0x0a, 0x00, 0x00, data).then(
+    () => true,
+    (e) => {
+      if (e && e.statusCode === 0x6d00) {
+        return false;
+      }
+      throw e;
+    }
+  );
 }

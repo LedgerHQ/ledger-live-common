@@ -7,6 +7,7 @@ import { encodeOperationId } from "../../operation";
 import { CeloApp } from "./hw-app-celo";
 import buildTransaction from "./js-buildTransaction";
 import { rlpEncodedTx, encodeTransaction } from "@celo/wallet-base";
+import { tokenInfoByAddressAndChainId } from '@celo/wallet-ledger/lib/tokens'
 import { withDevice } from "../../hw/deviceAccess";
 
 const buildOptimisticOperation = (
@@ -88,27 +89,32 @@ const signOperation = ({
           }
 
           const celo = new CeloApp(transport);
+          const unsignedTransaction = await buildTransaction(
+            account,
+            transaction
+          );
+          const { chainId, to } = unsignedTransaction;
+          const rlpEncodedTransaction = rlpEncodedTx(unsignedTransaction);
 
-          const unsigned = await buildTransaction(account, transaction);
-
-          const { chainId } = unsigned;
-
-          const rlpEncoded = rlpEncodedTx(unsigned);
+          const tokenInfo = tokenInfoByAddressAndChainId(to!, chainId!)
+          if (tokenInfo) {
+            await celo.provideERC20TokenInformation(tokenInfo);
+          }
 
           o.next({ type: "device-signature-requested" });
 
           const response = await celo.signTransaction(
             account.freshAddressPath,
-            trimLeading0x(rlpEncoded.rlpEncode)
+            trimLeading0x(rlpEncodedTransaction.rlpEncode)
           );
 
           if (cancelled) return;
 
-          const signature = parseSigningResponse(response, chainId || 1);
+          const signature = parseSigningResponse(response, chainId!);
 
           o.next({ type: "device-signature-granted" });
 
-          const encodedTx = await encodeTransaction(rlpEncoded, signature);
+          const encodedTransaction = await encodeTransaction(rlpEncodedTransaction, signature);
 
           const operation = buildOptimisticOperation(
             account,
@@ -120,7 +126,7 @@ const signOperation = ({
             type: "signed",
             signedOperation: {
               operation,
-              signature: encodedTx.raw,
+              signature: encodedTransaction.raw,
               expirationDate: null,
             },
           });
