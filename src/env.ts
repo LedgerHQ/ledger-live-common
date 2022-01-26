@@ -41,12 +41,12 @@ const envDefinitions = {
     desc: "Node API endpoint for algorand",
   },
   API_CELO_INDEXER: {
-    def: "http://localhost:9292", // def: "https://celo.coin.ledger.com",
+    def: "https://celo.coin.ledger.com/indexer/",
     parser: stringParser,
     desc: "Explorer API for celo",
   },
   API_CELO_NODE: {
-    def: "http://localhost:9393", // def: "https://celo.coin.ledger.com",
+    def: "https://celo.coin.ledger.com/archive/",
     parser: stringParser,
     desc: "Node endpoint for celo",
   },
