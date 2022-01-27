@@ -16,10 +16,14 @@ const getFeesForTransaction = async ({
   // A workaround - estimating gas throws an error if value > funds
   const value = BigNumber.minimum(amount, account.spendableBalance).toString();
 
-  const celoTransaction: CeloTx = {
+  const celoToken = await kit.contracts.getGoldToken();
+
+  const celoTransaction = {
     from: account.freshAddress,
-    value,
-    to: transaction.recipient,
+    to: celoToken.address,
+    data: celoToken
+      .transfer(transaction.recipient, new BigNumber(value).toFixed())
+      .txo.encodeABI(),
   };
 
   const gasPrice = new BigNumber(await kit.connection.gasPrice());

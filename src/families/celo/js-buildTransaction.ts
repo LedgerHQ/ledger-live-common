@@ -18,7 +18,9 @@ const buildTransaction = async (account: Account, transaction: Transaction) => {
   const txParams = {
     from: account.freshAddress,
     to: celoToken.address,
-    data: celoToken.transfer(transaction.recipient, new BigNumber(value).toFixed()).txo.encodeABI(),
+    data: celoToken
+      .transfer(transaction.recipient, new BigNumber(value).toFixed())
+      .txo.encodeABI(),
   };
 
   return {
