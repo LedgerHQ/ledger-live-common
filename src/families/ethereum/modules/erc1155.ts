@@ -14,7 +14,9 @@ import { prepareTransaction } from "./erc721";
 const notOwnedNft = createCustomErrorClass("NotOwnedNft");
 const notEnoughNftOwned = createCustomErrorClass("NotEnoughNftOwned");
 const notTokenIdsProvided = createCustomErrorClass("NotTokenIdsProvided");
-const quantityNeedsToBePositive = createCustomErrorClass("QuantityNeedsToBePositive");
+const quantityNeedsToBePositive = createCustomErrorClass(
+  "QuantityNeedsToBePositive"
+);
 
 export type Modes = "erc1155.transfer";
 
@@ -45,7 +47,7 @@ const erc1155Transfer: ModeModule = {
       }
 
       t.quantities?.forEach((quantity) => {
-        if(quantity.isLessThan(1)) {
+        if (quantity.isLessThan(1)) {
           result.errors.amount = new quantityNeedsToBePositive();
         }
       });
