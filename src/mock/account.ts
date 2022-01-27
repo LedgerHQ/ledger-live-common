@@ -401,7 +401,8 @@ export function genAccount(
         toAmount: new BigNumber("2000"),
       })),
     balanceHistoryCache: emptyHistoryCache,
-    nfts: currency.id === "ethereum" && index !== undefined ? genNFTs(index) : [],
+    nfts:
+      currency.id === "ethereum" && index !== undefined ? genNFTs(index) : [],
   };
 
   if (
@@ -413,10 +414,10 @@ export function genAccount(
         : rng.nextInt(0, 8);
 
     // specific case for eth account playwright tests
-    if (currency.id === "ethereum") { 
+    if (currency.id === "ethereum") {
       tokenCount = index === 2 ? 3 : 0;
     }
-    
+
     const all = listTokensForCryptoCurrency(account.currency).filter((t) =>
       hardcodedMarketcap.includes(t.id)
     );

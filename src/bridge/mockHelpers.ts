@@ -136,10 +136,14 @@ export const scanAccounts: CurrencyBridge["scanAccounts"] = ({ currency }) =>
       for (let i = 0; i < nbAccountToGen && !unsubscribed; i++) {
         const isLast = i === 2;
         await delay(500);
-        const account = genAccount(`${MOCK_DATA_SEED}_${currency.id}_${i}`, {
-          operationsSize: isLast ? 0 : 100,
-          currency,
-        }, i);
+        const account = genAccount(
+          `${MOCK_DATA_SEED}_${currency.id}_${i}`,
+          {
+            operationsSize: isLast ? 0 : 100,
+            currency,
+          },
+          i
+        );
         account.unit = currency.units[0];
         account.index = i;
         account.operations = isLast
