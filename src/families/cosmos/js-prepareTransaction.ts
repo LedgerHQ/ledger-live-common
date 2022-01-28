@@ -27,7 +27,14 @@ const prepareTransaction = async (
     );
   }
 
+  if (transaction.mode !== "send" && !transaction.memo) {
+    transaction.memo = "Ledger Live";
+  }
+
   const unsignedPayload = await buildTransaction(account, transaction);
+
+  // be sure payload is complete
+  if (!unsignedPayload.isComplete) return transaction;
 
   const txBodyFields: TxBodyEncodeObject = {
     typeUrl: "/cosmos.tx.v1beta1.TxBody",
@@ -66,10 +73,6 @@ const prepareTransaction = async (
     .multipliedBy(transaction.gas)
     .multipliedBy(new BigNumber(getEnv("COSMOS_GAS_AMPLIFIER")))
     .integerValue(BigNumber.ROUND_CEIL);
-
-  if (transaction.mode !== "send" && !transaction.memo) {
-    transaction.memo = "Ledger Live";
-  }
 
   return transaction;
 };
