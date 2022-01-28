@@ -226,7 +226,8 @@ export const broadcast = async ({
 }): Promise<Operation> => {
   const { data } = await network({
     method: "POST",
-    url: `${defaultEndpoint}/cosmos/tx/v1beta1/txs`,
+    // url: `${defaultEndpoint}/cosmos/tx/v1beta1/txs`, // FIXME LL-9159
+    url: `https://node.atomscan.com/cosmos/tx/v1beta1/txs`,
     data: {
       tx_bytes: operation.extra.tx_bytes,
       mode: "BROADCAST_MODE_SYNC",
