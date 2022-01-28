@@ -66,7 +66,9 @@ export const signOperation = ({
 
               const txHex = tx.serialize().toString("hex");
 
-              const loadConfig: LoadConfig = {};
+              const loadConfig: LoadConfig = {
+                strictMode: getEnv("ETHEREUM_STRICT_MODE"),
+              };
               if (isNFTActive(account.currency)) {
                 loadConfig.nftExplorerBaseURL =
                   getEnv("NFT_ETH_METADATA_SERVICE") + "/v1/ethereum";

@@ -215,6 +215,11 @@ const envDefinitions = {
     parser: floatParser,
     desc: "Ethereum gasLimit multiplier for contracts to prevent out of gas issue",
   },
+  ETHEREUM_STRICT_MODE: {
+    def: true,
+    parser: boolParser,
+    desc: "Determine if the live should reject some errors on transaction signing (blind sign for example)",
+  },
   EXPERIMENTAL_BLE: {
     def: false,
     parser: boolParser,
