@@ -7,7 +7,7 @@ import { encodeOperationId } from "../../operation";
 import { CeloApp } from "./hw-app-celo";
 import buildTransaction from "./js-buildTransaction";
 import { rlpEncodedTx, encodeTransaction } from "@celo/wallet-base";
-import { tokenInfoByAddressAndChainId } from '@celo/wallet-ledger/lib/tokens'
+import { tokenInfoByAddressAndChainId } from "@celo/wallet-ledger/lib/tokens";
 import { withDevice } from "../../hw/deviceAccess";
 
 const buildOptimisticOperation = (
@@ -96,7 +96,7 @@ const signOperation = ({
           const { chainId, to } = unsignedTransaction;
           const rlpEncodedTransaction = rlpEncodedTx(unsignedTransaction);
 
-          const tokenInfo = tokenInfoByAddressAndChainId(to!, chainId!)
+          const tokenInfo = tokenInfoByAddressAndChainId(to!, chainId!);
           if (tokenInfo) {
             await celo.provideERC20TokenInformation(tokenInfo);
           }
@@ -114,7 +114,10 @@ const signOperation = ({
 
           o.next({ type: "device-signature-granted" });
 
-          const encodedTransaction = await encodeTransaction(rlpEncodedTransaction, signature);
+          const encodedTransaction = await encodeTransaction(
+            rlpEncodedTransaction,
+            signature
+          );
 
           const operation = buildOptimisticOperation(
             account,

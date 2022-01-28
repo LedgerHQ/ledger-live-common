@@ -1,4 +1,3 @@
-import { CeloTx } from "@celo/connect";
 import { BigNumber } from "bignumber.js";
 import { Account, Transaction } from "../../types";
 import { celoKit } from "./api/sdk";
