@@ -436,9 +436,9 @@ const solana = {
 };
 
 const dataset: DatasetTest<Transaction> = {
-  implementations: [getEnv("MOCK") ? "mock" : "js"], // FIXME we should actually put both mock and js like other dataset do
+  implementations: ["mock", "js"],
   currencies: {
-    // solana, // TODO re enable when it's ready
+    solana,
   },
 };
 
