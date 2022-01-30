@@ -47,6 +47,17 @@ async function getUtxosByPaymentKeys(
   });
 }
 
+async function getUsedPaymentKeys(
+  paymentKeyList: Array<string>
+): Promise<Array<string>> {
+  const res = await axios.get("/v1/address/paymentKey/used", {
+    params: {
+      paymentKeys: paymentKeyList,
+    },
+  });
+  return res.data.paymentKeys as Array<string>;
+}
+
 async function getSyncedPaymentCredentialAndUtxo(
   account: {
     key: Bip32PublicKey;
@@ -59,8 +70,7 @@ async function getSyncedPaymentCredentialAndUtxo(
 }> {
   let isSynced = false;
   const keyChainRange = getEnv("KEYCHAIN_OBSERVABLE_RANGE") || 20;
-  const paymentCredentials: Record<string, PaymentCredential> = {};
-  const utxos: Array<CardanoOutput> = [];
+  const paymentCredentialsMap: Record<string, PaymentCredential> = {};
   let fetchedRounds = 0;
   while (!isSynced) {
     let newPaymentKeys: Array<string> = [];
@@ -75,34 +85,47 @@ async function getSyncedPaymentCredentialAndUtxo(
         getBipPath({ account: account.index, chain: chainType, index })
       );
       newPaymentKeys.push(paymentCredentialKey.key);
-      paymentCredentials[paymentCredentialKey.key] = {
+      paymentCredentialsMap[paymentCredentialKey.key] = {
         isUsed: false,
         key: paymentCredentialKey.key,
         bipPath: paymentCredentialKey.path,
       };
     }
-    const newUtxos = await getUtxosByPaymentKeys(newPaymentKeys);
-    newUtxos.forEach((u) => {
-      const paymentKey = u.paymentCredential.key;
-      u.paymentCredential.bipPath = paymentCredentials[paymentKey].bipPath;
-      paymentCredentials[paymentKey].isUsed = true;
-      utxos.push(...newUtxos);
-    });
+    const usedPaymentKeys = await getUsedPaymentKeys(newPaymentKeys);
+    usedPaymentKeys.forEach(
+      (key) => (paymentCredentialsMap[key].isUsed = true)
+    );
 
     newPaymentKeys = [];
-    isSynced = newUtxos.length === 0;
+    isSynced = usedPaymentKeys.length === 0;
     fetchedRounds += 1;
   }
-  return { paymentCredentials: Object.values(paymentCredentials), utxos };
-}
 
-// TODO: return bech32 address
-// function getBech32ReceiveAddress(
-//   paymentCred: PaymentCredential,
-//   stakeCred: StakeCredential
-// ) {
-//   return `${paymentCred.key}${stakeCred.key}`;
-// }
+  const paymentCredentials = Object.values(paymentCredentialsMap);
+  const usedPaymentKeys = paymentCredentials.reduce(
+    (paymentKeys, paymentCred) => {
+      if (paymentCred.isUsed) {
+        paymentKeys.push(paymentCred.key);
+      }
+      return paymentKeys;
+    },
+    [] as Array<string>
+  );
+
+  const usedPaymentKeysChunk = _(usedPaymentKeys).chunk(30).value();
+  const utxos = await Promise.all(
+    usedPaymentKeysChunk.map(getUtxosByPaymentKeys)
+  );
+
+  return {
+    paymentCredentials: paymentCredentials,
+    utxos: utxos.flat().map((u) => {
+      u.paymentCredential.bipPath =
+        paymentCredentialsMap[u.paymentCredential.key].bipPath;
+      return u;
+    }),
+  };
+}
 
 export async function getCardanoResourseForAccount({
   xpub,
@@ -113,51 +136,25 @@ export async function getCardanoResourseForAccount({
 }): Promise<CardanoResources> {
   const accountPubKey = getExtendedPublicKeyFromHex(xpub);
   const {
-    paymentCredentials: externalPaymentCredential,
+    paymentCredentials: externalPaymentCredentials,
     utxos: externalUtxos,
   } = await getSyncedPaymentCredentialAndUtxo(
     { key: accountPubKey, index: accountIndex },
     PaymentChain.external
   );
   const {
-    paymentCredentials: internalPaymentCredential,
+    paymentCredentials: internalPaymentCredentials,
     utxos: internalUtxos,
   } = await getSyncedPaymentCredentialAndUtxo(
     { key: accountPubKey, index: accountIndex },
     PaymentChain.internal
   );
 
-  // const stakeCredentialKey = getCredentialKey(
-  //   accountPubKey,
-  //   getBipPath({
-  //     account: accountIndex,
-  //     chain: StakeChain.stake,
-  //     index: STAKING_ADDRESS_INDEX,
-  //   })
-  // );
-  // const stakeCredential: StakeCredential = {
-  //   key: stakeCredentialKey.key,
-  //   bipPath: stakeCredentialKey.path,
-  // };
-
-  // const freshAddresses: Array<Address> = externalCredentials
-  //   .filter((cred) => !cred.isUsed)
-  //   .map((cred) => {
-  //     return {
-  //       address: getBech32ReceiveAddress(cred, stakeCredential),
-  //       derivationPath: getBipPathString({
-  //         account: cred.bipPath.account,
-  //         chain: cred.bipPath.chain,
-  //         index: cred.bipPath.index,
-  //       }),
-  //     };
-  //   });
-
   return {
-    internalCredentials: _(internalPaymentCredential)
+    internalCredentials: _(internalPaymentCredentials)
       .sortBy((cred) => cred.bipPath.index)
       .value(),
-    externalCredentials: _(externalPaymentCredential)
+    externalCredentials: _(externalPaymentCredentials)
       .sortBy((cred) => cred.bipPath.index)
       .value(),
     utxos: _([...internalUtxos, ...externalUtxos])
