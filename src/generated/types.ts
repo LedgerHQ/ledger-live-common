@@ -21,6 +21,13 @@ import { CoreOperationSpecifics as CoreOperationSpecifics_cardano } from "../fam
 import { CoreCurrencySpecifics as CoreCurrencySpecifics_cardano } from "../families/cardano/types";
 import { Transaction as cardanoTransaction } from "../families/cardano/types";
 import { TransactionRaw as cardanoTransactionRaw } from "../families/cardano/types";
+import { reflect as celoReflect } from "../families/celo/types";
+import { CoreStatics as CoreStatics_celo } from "../families/celo/types";
+import { CoreAccountSpecifics as CoreAccountSpecifics_celo } from "../families/celo/types";
+import { CoreOperationSpecifics as CoreOperationSpecifics_celo } from "../families/celo/types";
+import { CoreCurrencySpecifics as CoreCurrencySpecifics_celo } from "../families/celo/types";
+import { Transaction as celoTransaction } from "../families/celo/types";
+import { TransactionRaw as celoTransactionRaw } from "../families/celo/types";
 import { reflect as cosmosReflect } from "../families/cosmos/types";
 import { CoreStatics as CoreStatics_cosmos } from "../families/cosmos/types";
 import { CoreAccountSpecifics as CoreAccountSpecifics_cosmos } from "../families/cosmos/types";
@@ -130,6 +137,7 @@ export type SpecificStatics = {}
 & CoreStatics_algorand
 & CoreStatics_bitcoin
 & CoreStatics_cardano
+& CoreStatics_celo
 & CoreStatics_cosmos
 & CoreStatics_crypto_org
 & CoreStatics_elrond
@@ -146,6 +154,7 @@ export type CoreAccountSpecifics = {}
 & CoreAccountSpecifics_algorand
 & CoreAccountSpecifics_bitcoin
 & CoreAccountSpecifics_cardano
+& CoreAccountSpecifics_celo
 & CoreAccountSpecifics_cosmos
 & CoreAccountSpecifics_crypto_org
 & CoreAccountSpecifics_elrond
@@ -162,6 +171,7 @@ export type CoreOperationSpecifics = {}
 & CoreOperationSpecifics_algorand
 & CoreOperationSpecifics_bitcoin
 & CoreOperationSpecifics_cardano
+& CoreOperationSpecifics_celo
 & CoreOperationSpecifics_cosmos
 & CoreOperationSpecifics_crypto_org
 & CoreOperationSpecifics_elrond
@@ -178,6 +188,7 @@ export type CoreCurrencySpecifics = {}
 & CoreCurrencySpecifics_algorand
 & CoreCurrencySpecifics_bitcoin
 & CoreCurrencySpecifics_cardano
+& CoreCurrencySpecifics_celo
 & CoreCurrencySpecifics_cosmos
 & CoreCurrencySpecifics_crypto_org
 & CoreCurrencySpecifics_elrond
@@ -194,6 +205,7 @@ export type Transaction =
   | algorandTransaction
   | bitcoinTransaction
   | cardanoTransaction
+  | celoTransaction
   | cosmosTransaction
   | crypto_orgTransaction
   | elrondTransaction
@@ -210,6 +222,7 @@ export type TransactionRaw =
   | algorandTransactionRaw
   | bitcoinTransactionRaw
   | cardanoTransactionRaw
+  | celoTransactionRaw
   | cosmosTransactionRaw
   | crypto_orgTransactionRaw
   | elrondTransactionRaw
@@ -250,6 +263,7 @@ export const reflectSpecifics = (declare: any): Array<{ OperationMethods: Record
   algorandReflect(declare),
   bitcoinReflect(declare),
   cardanoReflect(declare),
+  celoReflect(declare),
   cosmosReflect(declare),
   crypto_orgReflect(declare),
   elrondReflect(declare),
