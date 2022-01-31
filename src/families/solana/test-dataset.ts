@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js";
-import { DatasetTest, encodeAccountId } from "../../types";
+import { CurrenciesData, DatasetTest, encodeAccountId } from "../../types";
 
 import { Transaction, TransactionModel } from "./types";
 
@@ -27,7 +27,6 @@ import {
 import createTransaction from "./js-createTransaction";
 import { compact } from "lodash/fp";
 import { assertUnreachable } from "./utils";
-import { getEnv } from "../../env";
 
 // do not change real properties or the test will break
 const testOnChainData = {
@@ -76,7 +75,7 @@ const fees = (signatureCount: number) =>
 const zero = new BigNumber(0);
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const solana = {
+const solana: CurrenciesData<Transaction> = {
   scanAccounts: [scanAccounts1],
   accounts: [
     {
