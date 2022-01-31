@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/LedgerHQ/ledger-live-common"
   },
-  "version": "21.30.1",
+  "version": "21.31.0",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "license": "Apache-2.0",
@@ -42,6 +42,9 @@
     "https": false
   },
   "dependencies": {
+    "@celo/contractkit": "^1.5.1",
+    "@celo/wallet-base": "^1.5.1",
+    "@celo/wallet-ledger": "^1.5.1",
     "@cosmjs/crypto": "^0.26.5",
     "@cosmjs/ledger-amino": "^0.26.5",
     "@cosmjs/proto-signing": "^0.26.5",
