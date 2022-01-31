@@ -29,7 +29,7 @@ const cosmos: AppSpec<Transaction> = {
   currency: getCryptoCurrencyById("cosmos"),
   appQuery: {
     model: DeviceModelId.nanoS,
-    firmware: "<=2.0.0",
+    firmware: "2.0.0",
     appName: "Cosmos",
   },
   transactionCheck: ({ maxSpendable }) => {
