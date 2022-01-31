@@ -5,32 +5,9 @@ on:
       - bots-staging
 
 jobs:
-  start-runner:
-    name: "start ec2 instance (Linux)"
-    if: ${{ always() }}
-    uses: ledgerhq/actions/.github/workflows/start-linux-runner.yml@main
-    secrets:
-      CI_BOT_TOKEN: ${{ secrets.CI_BOT_TOKEN }}
-
-  stop-runner:
-    name: "stop ec2 instance (Linux)"
-    needs: [start-runner, run-bot]
-    uses: ledgerhq/actions/.github/workflows/stop-linux-runner.yml@main
-    if: ${{ always() }}
-    with:
-      label: ${{ needs.start-runner.outputs.label }}
-      ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
-    secrets:
-      CI_BOT_TOKEN: ${{ secrets.CI_BOT_TOKEN }}
-
   run-bot:
-    runs-on: ${{ needs.start-runner.outputs.label }}
-    needs: [start-runner]
+    runs-on: ubuntu-latest
     steps:
-      - name: prepare runner
-        run: |
-          sudo growpart /dev/nvme0n1 1
-          sudo resize2fs /dev/nvme0n1p1
       - uses: actions/checkout@v2
       - name: Retrieving coin apps
         uses: actions/checkout@v2
@@ -41,8 +18,7 @@ jobs:
       - uses: actions/setup-node@master
         with:
           node-version: 14.x
-      - name: install yarn
-        run: npm i -g yarn
+          cache: yarn
       - name: pull docker image
         run: docker pull ghcr.io/ledgerhq/speculos
       - name: kill apt-get
