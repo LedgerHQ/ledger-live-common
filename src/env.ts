@@ -156,7 +156,7 @@ const envDefinitions = {
     desc: "location of the compound API",
   },
   COSMOS_GAS_AMPLIFIER: {
-    def: 1.6,
+    def: 1.8,
     parser: intParser,
     desc: "estimate gas multiplier",
   },

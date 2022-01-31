@@ -62,12 +62,10 @@ const buildTransaction = async (
             value: {
               delegatorAddress: account.freshAddress,
               validatorAddress: validator.address,
-              amount: [
-                {
-                  denom: account.currency.units[1].code,
-                  amount: validator.amount.toString(),
-                },
-              ],
+              amount: {
+                denom: account.currency.units[1].code,
+                amount: validator.amount.toString(),
+              },
             },
           });
         });
@@ -88,12 +86,10 @@ const buildTransaction = async (
           value: {
             delegatorAddress: account.freshAddress,
             validatorAddress: transaction.validators[0].address,
-            amount: [
-              {
-                denom: account.currency.units[1].code,
-                amount: transaction.validators[0].amount.toString(),
-              },
-            ],
+            amount: {
+              denom: account.currency.units[1].code,
+              amount: transaction.validators[0].amount.toString(),
+            },
           },
         });
       }
@@ -115,12 +111,10 @@ const buildTransaction = async (
             validatorSrcAddress: transaction.cosmosSourceValidator,
             delegatorAddress: account.freshAddress,
             validatorAddress: transaction.validators[0].address,
-            amount: [
-              {
-                denom: account.currency.units[1].code,
-                amount: transaction.validators[0].amount.toString(),
-              },
-            ],
+            amount: {
+              denom: account.currency.units[1].code,
+              amount: transaction.validators[0].amount.toString(),
+            },
           },
         });
       }
@@ -166,12 +160,10 @@ const buildTransaction = async (
           value: {
             delegatorAddress: account.freshAddress,
             validatorAddress: transaction.validators[0].address,
-            amount: [
-              {
-                denom: account.currency.units[1].code,
-                amount: transaction.validators[0].amount.toString(),
-              },
-            ],
+            amount: {
+              denom: account.currency.units[1].code,
+              amount: transaction.validators[0].amount.toString(),
+            },
           },
         });
       }
