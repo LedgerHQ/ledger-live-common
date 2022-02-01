@@ -7,7 +7,8 @@ import BigNumber from "bignumber.js";
 
 const buildTransaction = async (
   account: Account,
-  transaction: Transaction
+  transaction: Transaction,
+  pubKey?: string
 ): Promise<any> => {
   const defaultGas = new BigNumber(250000);
   const defaultFees = new BigNumber(2500);
@@ -16,7 +17,9 @@ const buildTransaction = async (
 
   const pubkey = encodePubkey({
     type: "tendermint/PubKeySecp256k1",
-    value: Buffer.from(account.seedIdentifier, "hex").toString("base64"),
+    value: Buffer.from(pubKey || account.seedIdentifier, "hex").toString(
+      "base64"
+    ),
   });
 
   const msg: Array<{ typeUrl: string; value: any }> = [];
