@@ -40,10 +40,15 @@ const envDefinitions = {
     parser: stringParser,
     desc: "Node API endpoint for algorand",
   },
-  API_ALGORAND_BLOCKCHAIN_EXPLORER_API_KEY: {
-    def: "",
+  API_CELO_INDEXER: {
+    def: "https://celo.coin.ledger.com/indexer/",
     parser: stringParser,
-    desc: "Node API key for algorand",
+    desc: "Explorer API for celo",
+  },
+  API_CELO_NODE: {
+    def: "https://celo.coin.ledger.com/archive/",
+    parser: stringParser,
+    desc: "Node endpoint for celo",
   },
   API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
     def: "https://cosmoshub4.coin.ledger.com/",
@@ -111,7 +116,7 @@ const envDefinitions = {
     desc: "Ledger explorer API for tezos",
   },
   API_TEZOS_TZKT_API: {
-    def: "http://xtz-tzkt-explorer.api-01.live.ledger-stg.com",
+    def: "https://xtz-tzkt-explorer.api.live.ledger.com",
     parser: stringParser,
     desc: "tzkt.io explorer",
   },
@@ -124,6 +129,11 @@ const envDefinitions = {
     parser: stringParser,
     def: "https://tron.coin.ledger.com",
     desc: "proxy url for trongrid API",
+  },
+  API_SOLANA_PROXY: {
+    parser: stringParser,
+    def: "https://solana.coin.ledger.com",
+    desc: "proxy url for solana API",
   },
   BASE_SOCKET_URL: {
     def: "wss://scriptrunner.api.live.ledger.com/update",
@@ -376,10 +386,14 @@ const envDefinitions = {
     parser: stringParser,
     desc: "mock the server response for the exchange KYC check, options are 'open', 'pending', 'closed' or 'approved'.",
   },
-  NFT: {
+  /**
+   * Note: the mocked cryptoassets config and test partner are signed with the
+   * Ledger test private key
+   */
+  MOCK_EXCHANGE_TEST_CONFIG: {
     def: false,
     parser: boolParser,
-    desc: "synchronizing nfts",
+    desc: "mock the cryptoassets config and test partner (in the context of app-exchange)",
   },
   NFT_CURRENCIES: {
     def: "ethereum",
@@ -387,8 +401,7 @@ const envDefinitions = {
     desc: "set the currencies where NFT is active",
   },
   NFT_ETH_METADATA_SERVICE: {
-    // FIXME LL-8001
-    def: "https://nft.staging.aws.ledger.fr/v1/ethereum/1/contracts/tokens/infos",
+    def: "https://nft.api.live.ledger.com",
     parser: stringParser,
     desc: "service uri used to get the metadata of an nft",
   },
@@ -512,6 +525,11 @@ const envDefinitions = {
     parser: boolParser,
     desc: "enable visibility of debug apps and tools in Platform Catalog",
   },
+  PLATFORM_EXPERIMENTAL_APPS: {
+    def: false,
+    parser: boolParser,
+    desc: "enable visibility of experimental apps and tools in Platform Catalog",
+  },
   PLATFORM_MANIFEST_API_URL: {
     def: "https://cdn.live.ledger.com/platform/apps/v1/data.json",
     parser: stringParser,
@@ -531,6 +549,11 @@ const envDefinitions = {
     def: 1,
     parser: intParser,
     desc: "version used for the platform api",
+  },
+  MARKET_API_URL: {
+    def: "https://proxycg.api.live.ledger.com/api/v3",
+    parser: stringParser,
+    desc: "Market data api",
   },
 };
 

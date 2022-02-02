@@ -401,7 +401,7 @@ export async function runOnAccount<T extends Transaction>({
       }
     }
 
-    // without recovering mecanism, we simply assume an error is a failure
+    // without recovering mechanism, we simply assume an error is a failure
     if (errors.length) {
       throw errors[0];
     }
@@ -678,7 +678,7 @@ function transactionTest<T>({
   const dt = Date.now().valueOf() - operation.date.valueOf();
   invariant(dt > 0, "operation.date must not be in in future");
   expect(dt).toBeLessThan(timingThreshold);
-  invariant(!operation.hasFailed, "operation must be hasFailed");
+  invariant(!operation.hasFailed, "operation has failed");
   const { blockAvgTime } = account.currency;
 
   if (blockAvgTime && account.blockHeight) {

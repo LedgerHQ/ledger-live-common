@@ -4,18 +4,17 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import {
-  Cluster,
-  clusterApiUrl,
   Connection,
   FeeCalculator,
   PublicKey,
+  sendAndConfirmRawTransaction,
   SignaturesForAddressOptions,
   StakeProgram,
 } from "@solana/web3.js";
 import { Awaited } from "../../logic";
 
 export type Config = {
-  readonly cluster: Cluster;
+  readonly endpoint: string;
 };
 
 export type ChainAPI = Readonly<{
@@ -80,8 +79,7 @@ export type ChainAPI = Readonly<{
 }>;
 
 export function getChainAPI(config: Config): ChainAPI {
-  const connection = () =>
-    new Connection(clusterApiUrl(config.cluster), "finalized");
+  const connection = () => new Connection(config.endpoint, "finalized");
 
   return {
     getBalance: (address: string) =>
@@ -152,8 +150,11 @@ export function getChainAPI(config: Config): ChainAPI {
         .getParsedAccountInfo(new PublicKey(address))
         .then((r) => r.value),
 
-    sendRawTransaction: (buffer: Buffer) =>
-      connection().sendRawTransaction(buffer),
+    sendRawTransaction: (buffer: Buffer) => {
+      return sendAndConfirmRawTransaction(connection(), buffer, {
+        commitment: "confirmed",
+      });
+    },
 
     findAssocTokenAccAddress: (owner: string, mint: string) =>
       Token.getAssociatedTokenAddress(
