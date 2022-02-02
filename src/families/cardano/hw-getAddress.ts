@@ -6,7 +6,8 @@ import Ada, {
 import { str_to_path } from "@cardano-foundation/ledgerjs-hw-app-cardano/dist/utils";
 import { getBipPathFromString, getBipPathString } from "./helpers";
 import { StakeChain } from "./types";
-import { STAKING_ADDRESS_INDEX } from "./constants";
+import { CARDANO_NETWORK_ID, STAKING_ADDRESS_INDEX } from "./constants";
+import { utils as TyphonUtils } from "@stricahq/typhonjs";
 
 const resolver: Resolver = async (transport, { path }) => {
   const spendingPath = getBipPathFromString(path);
@@ -17,7 +18,10 @@ const resolver: Resolver = async (transport, { path }) => {
   });
   const ada = new Ada(transport);
   const r = await ada.deriveAddress({
-    network: Networks.Mainnet,
+    network:
+      CARDANO_NETWORK_ID === Networks.Mainnet.networkId
+        ? Networks.Mainnet
+        : Networks.Testnet,
     address: {
       type: AddressType.BASE_PAYMENT_KEY_STAKE_KEY,
       params: {
@@ -26,9 +30,8 @@ const resolver: Resolver = async (transport, { path }) => {
       },
     },
   });
-  // TODO: return Bech32 encoded address
   return {
-    address: r.addressHex,
+    address: TyphonUtils.getAddressFromHex(r.addressHex).getBech32(),
     publicKey: "",
     path,
   };

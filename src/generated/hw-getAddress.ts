@@ -3,6 +3,7 @@ import algorand from "../families/algorand/hw-getAddress";
 import bitcoin from "../families/bitcoin/hw-getAddress";
 
 import cardano from "../families/cardano/hw-getAddress";
+
 import celo from "../families/celo/hw-getAddress";
 
 import cosmos from "../families/cosmos/hw-getAddress";

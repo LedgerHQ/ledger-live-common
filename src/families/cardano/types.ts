@@ -19,6 +19,11 @@ export enum StakeChain {
   stake = 2,
 }
 
+export enum NetworkId {
+  testnet = 0,
+  mainnet = 1,
+}
+
 export type BipPath = {
   purpose: 1852;
   coin: 1815;

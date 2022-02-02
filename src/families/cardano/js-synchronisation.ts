@@ -9,21 +9,14 @@ import { str_to_path } from "@cardano-foundation/ledgerjs-hw-app-cardano/dist/ut
 import { getCardanoResourseForAccount } from "./api/getAccount";
 import { getOperations } from "./api";
 import {
+  getBech32Address,
   getBipPath,
   getBipPathString,
   getCredentialKey,
   getExtendedPublicKeyFromHex,
 } from "./helpers";
-import { PaymentCredential, StakeChain, StakeCredential } from "./types";
+import { StakeChain, StakeCredential } from "./types";
 import { STAKING_ADDRESS_INDEX } from "./constants";
-
-// TODO: return bech32 address
-function getBech32ReceiveAddress(
-  paymentCred: PaymentCredential,
-  stakeCred: StakeCredential
-) {
-  return `${paymentCred.key}${stakeCred.key}`;
-}
 
 const postSync = (initial: Account, parent: Account) => parent;
 
@@ -101,7 +94,7 @@ const getAccountShape: GetAccountShape = async (info) => {
     .filter((cred) => !cred.isUsed)
     .map((cred) => {
       return {
-        address: getBech32ReceiveAddress(cred, stakeCredential),
+        address: getBech32Address(cred, stakeCredential),
         derivationPath: getBipPathString(cred.bipPath),
       };
     });

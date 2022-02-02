@@ -1,5 +1,17 @@
 import { Bip32PublicKey } from "@stricahq/bip32ed25519";
-import { BipPath, PaymentChain, StakeChain } from "./types";
+import {
+  BipPath,
+  PaymentChain,
+  PaymentCredential,
+  StakeChain,
+  StakeCredential,
+} from "./types";
+
+import {
+  address as TyphonAddress,
+  types as TyphonTypes,
+} from "@stricahq/typhonjs";
+import { CARDANO_NETWORK_ID } from "./constants";
 
 export function getBipPathFromString(path: string): BipPath {
   const regEx = new RegExp(/^1852'\/1815'\/(\d*)'\/([012])\/(\d*)/);
@@ -62,4 +74,26 @@ export function getCredentialKey(
     key: pubKeyHex,
     path,
   };
+}
+
+export function getBech32Address(
+  paymentCred: PaymentCredential,
+  stakeCred: StakeCredential
+): string {
+  const networkId = CARDANO_NETWORK_ID;
+
+  const paymentCredential: TyphonTypes.HashCredential = {
+    hash: paymentCred.key,
+    type: TyphonTypes.HashType.ADDRESS,
+  };
+
+  const stakeCredential: TyphonTypes.HashCredential = {
+    hash: stakeCred.key,
+    type: TyphonTypes.HashType.ADDRESS,
+  };
+  return new TyphonAddress.BaseAddress(
+    networkId,
+    paymentCredential,
+    stakeCredential
+  ).getBech32();
 }
