@@ -201,6 +201,7 @@ const prepareTransaction = async (
           mutez: true,
           to: transaction.recipient,
           amount: amount.toNumber(),
+          storageLimit: 257 // https://github.com/TezTech/eztz/blob/master/PROTO_003_FEES.md for originating an account
         });
         break;
       case "delegate":
