@@ -57,7 +57,13 @@ const signOperation = ({
 
         o.next({ type: "device-signature-requested" });
 
-        const unsignedPayload = await buildTransaction(account, transaction);
+        const accounts = await ledgerSigner.getAccounts();
+
+        const unsignedPayload = await buildTransaction(
+          account,
+          transaction,
+          Buffer.from(accounts[0].pubkey).toString("hex")
+        );
 
         const msgs = unsignedPayload.messages.map((msg) =>
           aminoTypes.toAmino(msg)
