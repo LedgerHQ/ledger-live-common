@@ -59,6 +59,14 @@ const signOperation = ({
 
         const accounts = await ledgerSigner.getAccounts();
 
+        let pubkey;
+
+        accounts.forEach((a) => {
+          if (a.address == account.freshAddress) {
+            pubkey = accounts[0].pubkey;
+          }
+        });
+
         const unsignedPayload = await buildTransaction(
           account,
           transaction,
