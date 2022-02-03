@@ -63,7 +63,7 @@ const signOperation = ({
 
         accounts.forEach((a) => {
           if (a.address == account.freshAddress) {
-            pubkey = accounts[0].pubkey;
+            pubkey = a.pubkey;
           }
         });
 
