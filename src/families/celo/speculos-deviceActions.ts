@@ -34,7 +34,10 @@ const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
     {
       title: "Max Fees",
       button: "Rr",
-      expectedValue: () => "CELO",
+      expectedValue: ({ account, status }) =>
+        formatCurrencyUnit(account.unit, status.estimatedFees, {
+          disableRounding: true,
+        }) + " CELO",
     },
     {
       title: "No Gateway Fee",
