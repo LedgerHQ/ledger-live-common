@@ -117,9 +117,9 @@ const signOperation = ({
           ],
         });
 
-        const signature = Buffer.from(
-          Array.from(Uint8Array.from(TxRaw.encode(txRaw).finish()))
-        ).toString("hex");
+        const signature = Buffer.from(TxRaw.encode(txRaw).finish()).toString(
+          "hex"
+        );
 
         if (cancelled) {
           return;
