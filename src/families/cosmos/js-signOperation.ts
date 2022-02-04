@@ -59,10 +59,18 @@ const signOperation = ({
 
         const accounts = await ledgerSigner.getAccounts();
 
+        let pubkey;
+
+        accounts.forEach((a) => {
+          if (a.address == account.freshAddress) {
+            pubkey = a.pubkey;
+          }
+        });
+
         const unsignedPayload = await buildTransaction(
           account,
           transaction,
-          Buffer.from(accounts[0].pubkey).toString("hex")
+          Buffer.from(pubkey || null).toString("hex")
         );
 
         const msgs = unsignedPayload.messages.map((msg) =>
@@ -75,25 +83,22 @@ const signOperation = ({
         // Cosmos API expects a different sorting, resulting in a separate signature.
         // https://github.com/LedgerHQ/app-cosmos/blob/6c194daa28936e273f9548eabca9e72ba04bb632/app/src/tx_parser.c#L52
 
-        const { signature } = await ledgerSigner.signAmino(
-          account.freshAddress,
-          {
-            chain_id: chainId,
-            account_number: accountNumber.toString(),
-            sequence: sequence.toString(),
-            fee: {
-              amount: [
-                {
-                  denom: account.currency.units[1].code,
-                  amount: transaction.fees?.toString() as string,
-                },
-              ],
-              gas: transaction.gas?.toString() as string,
-            },
-            msgs: msgs,
-            memo: transaction.memo || "",
-          }
-        );
+        const signed = await ledgerSigner.signAmino(account.freshAddress, {
+          chain_id: chainId,
+          account_number: accountNumber.toString(),
+          sequence: sequence.toString(),
+          fee: {
+            amount: [
+              {
+                denom: account.currency.units[1].code,
+                amount: transaction.fees?.toString() as string,
+              },
+            ],
+            gas: transaction.gas?.toString() as string,
+          },
+          msgs: msgs,
+          memo: transaction.memo || "",
+        });
 
         const txBodyFields: TxBodyEncodeObject = {
           typeUrl: "/cosmos.tx.v1beta1.TxBody",
@@ -108,13 +113,13 @@ const signOperation = ({
           bodyBytes: txBodyBytes,
           authInfoBytes: unsignedPayload.auth,
           signatures: [
-            new Uint8Array(Buffer.from(signature.signature, "base64")),
+            new Uint8Array(Buffer.from(signed.signature.signature, "base64")),
           ],
         });
 
-        const tx_bytes = Array.from(
-          Uint8Array.from(TxRaw.encode(txRaw).finish())
-        );
+        const signature = Buffer.from(
+          Array.from(Uint8Array.from(TxRaw.encode(txRaw).finish()))
+        ).toString("hex");
 
         if (cancelled) {
           return;
@@ -134,9 +139,7 @@ const signOperation = ({
           type: "OUT",
           value: transaction.amount,
           fee: transaction.fees,
-          extra: {
-            tx_bytes: tx_bytes,
-          },
+          extra: {},
           blockHash: null,
           blockHeight: null,
           senders,

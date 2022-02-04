@@ -222,14 +222,14 @@ export const getTransactions = async (address: string): Promise<any> => {
 };
 
 export const broadcast = async ({
-  signedOperation: { operation },
+  signedOperation: { operation, signature },
 }): Promise<Operation> => {
   const { data } = await network({
     method: "POST",
     // url: `${defaultEndpoint}/cosmos/tx/v1beta1/txs`, // FIXME LL-9159
     url: `https://node.atomscan.com/cosmos/tx/v1beta1/txs`,
     data: {
-      tx_bytes: operation.extra.tx_bytes,
+      tx_bytes: Array.from(Uint8Array.from(Buffer.from(signature, "hex"))),
       mode: "BROADCAST_MODE_SYNC",
     },
   });
