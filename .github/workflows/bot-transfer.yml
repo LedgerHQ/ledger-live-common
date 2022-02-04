@@ -62,8 +62,8 @@ jobs:
           yarn ci-setup-cli
       - name: BOT
         env:
-          SEED: ${{format("secrets.SEED{0}", github.event.inputs.origin)}}
-          SEED_RECIPIENT: ${{format("secrets.SEED{0}", github.event.inputs.recipient)}}
+          SEED: ${{ secrets[format('SEED{0}', github.event.inputs.origin)] }}
+          SEED_RECIPIENT: ${{ secrets[format('SEED{0}', github.event.inputs.recipient)] }}
           VERBOSE_FILE: bot-transfer.txt
         run: COINAPPS=$PWD/coin-apps ledger-live botTransfer
         timeout-minutes: 120
