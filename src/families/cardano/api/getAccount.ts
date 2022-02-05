@@ -3,17 +3,19 @@ import {
   getBipPath,
   getExtendedPublicKeyFromHex,
   getCredentialKey,
-} from "../helpers";
+} from "../logic";
 import {
   CardanoOutput,
   CardanoResources,
   PaymentChain,
   PaymentCredential,
+  StakeChain,
 } from "../types";
 import _ from "lodash";
 import { Bip32PublicKey } from "@stricahq/bip32ed25519";
 import { getEnv } from "../../../env";
 import axios from "./axios";
+import { STAKING_ADDRESS_INDEX } from "../constants";
 
 async function getUtxosByPaymentKeys(
   paymentKeyList: Array<string>
@@ -33,7 +35,7 @@ async function getUtxosByPaymentKeys(
       tokens: (u.tokens as Array<Record<string, unknown>>).map((t) => ({
         assetName: t.assetName as string,
         policyId: t.policyId as string,
-        value: new BigNumber(t.value as string),
+        amount: new BigNumber(t.value as string),
       })),
       paymentCredential: {
         key: (u.paymentCredential as Record<string, unknown>).key as string,
@@ -149,6 +151,14 @@ export async function getCardanoResourseForAccount({
     { key: accountPubKey, index: accountIndex },
     PaymentChain.internal
   );
+  const stakeCredential = getCredentialKey(
+    accountPubKey,
+    getBipPath({
+      account: accountIndex,
+      chain: StakeChain.stake,
+      index: STAKING_ADDRESS_INDEX,
+    })
+  );
 
   return {
     internalCredentials: _(internalPaymentCredentials)
@@ -157,6 +167,10 @@ export async function getCardanoResourseForAccount({
     externalCredentials: _(externalPaymentCredentials)
       .sortBy((cred) => cred.bipPath.index)
       .value(),
+    stakeCredential: {
+      key: stakeCredential.key,
+      bipPath: stakeCredential.path,
+    },
     utxos: _([...internalUtxos, ...externalUtxos])
       .uniqBy((u) => `${u.hash}${u.index}`)
       .value(),

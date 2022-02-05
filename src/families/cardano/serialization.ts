@@ -6,16 +6,18 @@ import type {
   CardanoResourcesRaw,
   PaymentCredential,
   PaymentCredentialRaw,
+  StakeCredential,
+  StakeCredentialRaw,
   Token,
   TokenRaw,
 } from "./types";
 
 function toTokenRaw(r: Token): TokenRaw {
-  return { ...r, value: r.value.toString() };
+  return { ...r, amount: r.amount.toString() };
 }
 
 function fromTokenRaw(r: TokenRaw): Token {
-  return { ...r, value: new BigNumber(r.value) };
+  return { ...r, amount: new BigNumber(r.amount) };
 }
 
 function toPaymentCredentialRaw(r: PaymentCredential): PaymentCredentialRaw {
@@ -23,6 +25,14 @@ function toPaymentCredentialRaw(r: PaymentCredential): PaymentCredentialRaw {
 }
 
 function fromPaymentCredentialRaw(r: PaymentCredentialRaw): PaymentCredential {
+  return r;
+}
+
+function toStakeCredentialRaw(r: StakeCredential): StakeCredentialRaw {
+  return r;
+}
+
+function fromStakeCredentialRaw(r: StakeCredentialRaw): StakeCredential {
   return r;
 }
 
@@ -49,6 +59,7 @@ export function toCardanoResourceRaw(r: CardanoResources): CardanoResourcesRaw {
     externalCredentials: r.externalCredentials.map((c) =>
       toPaymentCredentialRaw(c)
     ),
+    stakeCredential: toStakeCredentialRaw(r.stakeCredential),
     utxos: r.utxos.map(toCardanoOutputRaw),
   };
 }
@@ -63,6 +74,7 @@ export function fromCardanoResourceRaw(
     externalCredentials: r.externalCredentials.map((c) =>
       fromPaymentCredentialRaw(c)
     ),
+    stakeCredential: fromStakeCredentialRaw(r.stakeCredential),
     utxos: r.utxos.map(fromCardanoOutputRaw),
   };
 }

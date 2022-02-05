@@ -32,16 +32,24 @@ export type BipPath = {
   index: number;
 };
 
+export type BipPathRaw = {
+  purpose: 1852;
+  coin: 1815;
+  account: number;
+  chain: number;
+  index: number;
+};
+
 export type Token = {
   assetName: string;
   policyId: string;
-  value: BigNumber;
+  amount: BigNumber;
 };
 
 export type TokenRaw = {
   assetName: string;
   policyId: string;
-  value: string;
+  amount: string;
 };
 
 export type PaymentCredential = {
@@ -53,12 +61,17 @@ export type PaymentCredential = {
 export type PaymentCredentialRaw = {
   isUsed: boolean;
   key: string;
-  bipPath: BipPath;
+  bipPath: BipPathRaw;
 };
 
 export type StakeCredential = {
   key: string;
   bipPath: BipPath;
+};
+
+export type StakeCredentialRaw = {
+  key: string;
+  bipPath: BipPathRaw;
 };
 
 export type CardanoOutput = {
@@ -99,6 +112,7 @@ export type CardanoOutputRaw = {
 export type CardanoResources = {
   externalCredentials: Array<PaymentCredential>;
   internalCredentials: Array<PaymentCredential>;
+  stakeCredential: StakeCredential;
   utxos: Array<CardanoOutput>;
 };
 
@@ -108,6 +122,7 @@ export type CardanoResources = {
 export type CardanoResourcesRaw = {
   externalCredentials: Array<PaymentCredentialRaw>;
   internalCredentials: Array<PaymentCredentialRaw>;
+  stakeCredential: StakeCredentialRaw;
   utxos: Array<CardanoOutputRaw>;
 };
 

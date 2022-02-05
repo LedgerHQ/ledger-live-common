@@ -4,7 +4,7 @@ import Ada, {
   AddressType,
 } from "@cardano-foundation/ledgerjs-hw-app-cardano";
 import { str_to_path } from "@cardano-foundation/ledgerjs-hw-app-cardano/dist/utils";
-import { getBipPathFromString, getBipPathString } from "./helpers";
+import { getBipPathFromString, getBipPathString } from "./logic";
 import { StakeChain } from "./types";
 import { CARDANO_NETWORK_ID, STAKING_ADDRESS_INDEX } from "./constants";
 import { utils as TyphonUtils } from "@stricahq/typhonjs";

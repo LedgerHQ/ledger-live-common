@@ -8,15 +8,7 @@ import Ada from "@cardano-foundation/ledgerjs-hw-app-cardano";
 import { str_to_path } from "@cardano-foundation/ledgerjs-hw-app-cardano/dist/utils";
 import { getCardanoResourseForAccount } from "./api/getAccount";
 import { getOperations } from "./api";
-import {
-  getBech32Address,
-  getBipPath,
-  getBipPathString,
-  getCredentialKey,
-  getExtendedPublicKeyFromHex,
-} from "./helpers";
-import { StakeChain, StakeCredential } from "./types";
-import { STAKING_ADDRESS_INDEX } from "./constants";
+import { getBaseAddress, getBipPathString } from "./logic";
 
 const postSync = (initial: Account, parent: Account) => parent;
 
@@ -66,35 +58,24 @@ const getAccountShape: GetAccountShape = async (info) => {
     ...cardanoResources.externalCredentials,
     ...cardanoResources.internalCredentials,
   ].map((cred) => cred.key);
-  const operations = await getOperations({ usedPaymentKeys, accountId });
+  const { operations, blockHeight } = await getOperations({
+    usedPaymentKeys,
+    accountId,
+  });
 
   const balance = cardanoResources.utxos.reduce(
     (sum, u) => sum.plus(u.amount),
     new BigNumber(0)
   );
 
-  // TODO: get latest blockHeight from API
-  const blockHeight = 3277071;
-
-  const accountPubKey = getExtendedPublicKeyFromHex(xpub);
-  const stakeCredentialKey = getCredentialKey(
-    accountPubKey,
-    getBipPath({
-      account: index,
-      chain: StakeChain.stake,
-      index: STAKING_ADDRESS_INDEX,
-    })
-  );
-  const stakeCredential: StakeCredential = {
-    key: stakeCredentialKey.key,
-    bipPath: stakeCredentialKey.path,
-  };
-
   const freshAddresses: Array<Address> = cardanoResources.externalCredentials
     .filter((cred) => !cred.isUsed)
     .map((cred) => {
       return {
-        address: getBech32Address(cred, stakeCredential),
+        address: getBaseAddress({
+          paymentCred: cred,
+          stakeCred: cardanoResources.stakeCredential,
+        }).getBech32(),
         derivationPath: getBipPathString(cred.bipPath),
       };
     });

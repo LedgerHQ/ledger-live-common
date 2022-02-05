@@ -1,4 +1,17 @@
-import { Bip32PublicKey } from "@stricahq/bip32ed25519";
+import {
+  CARDANO_NETWORK_ID,
+  SHELLEY_SLOT_DURATION,
+  SHELLEY_START_DATE,
+  SHELLEY_START_SLOT,
+  TTL_GAP,
+} from "./constants";
+
+import {
+  utils as TyphonUtils,
+  types as TyphonTypes,
+  address as TyphonAddress,
+} from "@stricahq/typhonjs";
+import { CARDANO_ENV } from "./env";
 import {
   BipPath,
   PaymentChain,
@@ -6,13 +19,13 @@ import {
   StakeChain,
   StakeCredential,
 } from "./types";
+import { Bip32PublicKey } from "@stricahq/bip32ed25519";
 
-import {
-  address as TyphonAddress,
-  types as TyphonTypes,
-} from "@stricahq/typhonjs";
-import { CARDANO_NETWORK_ID } from "./constants";
-
+/**
+ *  returns BipPath object with account, chain and index field for cardano
+ *
+ * @param {string} path
+ */
 export function getBipPathFromString(path: string): BipPath {
   const regEx = new RegExp(/^1852'\/1815'\/(\d*)'\/([012])\/(\d*)/);
   const result = path.match(regEx);
@@ -26,6 +39,9 @@ export function getBipPathFromString(path: string): BipPath {
   });
 }
 
+/**
+ * returns complete bipPath with purpose, coin, account, chain and index for cardano
+ */
 export function getBipPath({
   account,
   chain,
@@ -44,6 +60,9 @@ export function getBipPath({
   };
 }
 
+/**
+ * returns bipPathString from account, chain and index for cardano
+ */
 export function getBipPathString({
   account,
   chain,
@@ -76,24 +95,69 @@ export function getCredentialKey(
   };
 }
 
-export function getBech32Address(
-  paymentCred: PaymentCredential,
-  stakeCred: StakeCredential
-): string {
+/**
+ * returns cardano base address by paymentKey and stakeKey
+ */
+export function getBaseAddress({
+  paymentCred,
+  stakeCred,
+}: {
+  paymentCred: PaymentCredential;
+  stakeCred: StakeCredential;
+}): TyphonAddress.BaseAddress {
   const networkId = CARDANO_NETWORK_ID;
 
   const paymentCredential: TyphonTypes.HashCredential = {
     hash: paymentCred.key,
     type: TyphonTypes.HashType.ADDRESS,
+    bipPath: paymentCred.bipPath,
   };
 
   const stakeCredential: TyphonTypes.HashCredential = {
     hash: stakeCred.key,
     type: TyphonTypes.HashType.ADDRESS,
+    bipPath: stakeCred.bipPath,
   };
   return new TyphonAddress.BaseAddress(
     networkId,
     paymentCredential,
     stakeCredential
-  ).getBech32();
+  );
 }
+
+/**
+ * Returns true if address is a valid
+ *
+ * @param {string} address
+ */
+export const isValidAddress = (address: string): boolean => {
+  if (!address) return false;
+
+  // try {
+  // TODO:CARDANO validate byron address
+  // bs58.decode(address); // check Byron Address
+  // } catch (error) {
+  try {
+    const hexAddress = TyphonUtils.decodeBech32(address);
+    const networkId = Number(hexAddress.value.toLowerCase().charAt(1));
+    if (CARDANO_ENV.NETWORK !== networkId) {
+      return false;
+    }
+  } catch (error) {
+    return false;
+  }
+  // }
+  return true;
+};
+
+/**
+ * Returns the time to live for transaction
+ *
+ * @returns {number}
+ */
+export const getTTL: () => number = () => {
+  const slots = Math.floor(
+    (Date.now() - SHELLEY_START_DATE) / SHELLEY_SLOT_DURATION
+  );
+  return SHELLEY_START_SLOT + slots + TTL_GAP;
+};
