@@ -150,6 +150,12 @@ const envDefinitions = {
     parser: stringParser,
     desc: "Cardano API url",
   },
+  //TODO:CARDANO remove this once the ledger indexer is in place for cardano
+  CARDANO_API_ENDPOINT_AUTH: {
+    def: "",
+    parser: stringParser,
+    desc: "Cardano backend service authorization",
+  },
   COINAPPS: {
     def: "",
     parser: stringParser,
@@ -236,7 +242,7 @@ const envDefinitions = {
     desc: "enable experimental support of Bluetooth",
   },
   EXPERIMENTAL_CURRENCIES: {
-    def: "",
+    def: "cardano",
     parser: stringParser,
     desc: "enable experimental support of currencies (comma separated)",
   },
