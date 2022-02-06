@@ -150,7 +150,7 @@ const envDefinitions = {
     parser: stringParser,
     desc: "Cardano API url",
   },
-  //TODO:CARDANO remove this once the ledger indexer is in place for cardano
+  //TODO:CARDANO remove CARDANO_API_ENDPOINT_AUTH once ledger proxy is setup
   CARDANO_API_ENDPOINT_AUTH: {
     def: "",
     parser: stringParser,

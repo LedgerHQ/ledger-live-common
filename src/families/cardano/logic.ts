@@ -13,6 +13,14 @@ import {
 } from "@stricahq/typhonjs";
 import { CARDANO_ENV } from "./env";
 import {
+  AddressType,
+  TxInput,
+  TxOutput,
+  TxOutputDestination,
+  TxOutputDestinationType,
+} from "@cardano-foundation/ledgerjs-hw-app-cardano";
+import { str_to_path } from "@cardano-foundation/ledgerjs-hw-app-cardano/dist/utils";
+import {
   BipPath,
   PaymentChain,
   PaymentCredential,
@@ -20,6 +28,7 @@ import {
   StakeCredential,
 } from "./types";
 import { Bip32PublicKey } from "@stricahq/bip32ed25519";
+import bs58 from "bs58";
 
 /**
  *  returns BipPath object with account, chain and index field for cardano
@@ -133,20 +142,20 @@ export function getBaseAddress({
 export const isValidAddress = (address: string): boolean => {
   if (!address) return false;
 
-  // try {
-  // TODO:CARDANO validate byron address
-  // bs58.decode(address); // check Byron Address
-  // } catch (error) {
   try {
-    const hexAddress = TyphonUtils.decodeBech32(address);
-    const networkId = Number(hexAddress.value.toLowerCase().charAt(1));
-    if (CARDANO_ENV.NETWORK !== networkId) {
+    // check if it is byron address
+    bs58.decode(address);
+  } catch (error) {
+    try {
+      const hexAddress = TyphonUtils.decodeBech32(address);
+      const networkId = Number(hexAddress.value.toLowerCase().charAt(1));
+      if (CARDANO_ENV.NETWORK !== networkId) {
+        return false;
+      }
+    } catch (error) {
       return false;
     }
-  } catch (error) {
-    return false;
   }
-  // }
   return true;
 };
 
@@ -161,3 +170,104 @@ export const getTTL: () => number = () => {
   );
   return SHELLEY_START_SLOT + slots + TTL_GAP;
 };
+
+/**
+ * returns the formatted transactionOutput for ledger cardano app
+ *
+ * @param output
+ * @param accountIndex
+ * @returns {TxOutput}
+ */
+export function prepareLedgerOutput(
+  output: TyphonTypes.Output,
+  accountIndex: number
+): TxOutput {
+  const isByronAddress = output.address instanceof TyphonAddress.ByronAddress;
+  let isDeviceOwnedAddress = false;
+  let destination: TxOutputDestination;
+
+  if (!isByronAddress) {
+    const address = output.address as TyphonTypes.ShelleyAddress;
+    isDeviceOwnedAddress =
+      address.paymentCredential &&
+      address.paymentCredential.type === TyphonTypes.HashType.ADDRESS &&
+      address.paymentCredential.bipPath !== undefined;
+  }
+
+  if (isDeviceOwnedAddress) {
+    const address = output.address as TyphonAddress.BaseAddress;
+
+    const paymentKeyPath = (
+      address.paymentCredential as TyphonTypes.HashCredential
+    ).bipPath as TyphonTypes.BipPath;
+    const stakingKeyPath = (
+      address.stakeCredential as TyphonTypes.HashCredential
+    ).bipPath as TyphonTypes.BipPath;
+
+    const paymentKeyPathString = getBipPathString({
+      account: accountIndex,
+      chain: paymentKeyPath.chain,
+      index: paymentKeyPath.index,
+    });
+    const stakingKeyPathString = getBipPathString({
+      account: accountIndex,
+      chain: stakingKeyPath.chain,
+      index: stakingKeyPath.index,
+    });
+
+    destination = {
+      type: TxOutputDestinationType.DEVICE_OWNED,
+      params: {
+        type: AddressType.BASE_PAYMENT_KEY_STAKE_KEY,
+        params: {
+          spendingPath: str_to_path(paymentKeyPathString),
+          stakingPath: str_to_path(stakingKeyPathString),
+        },
+      },
+    };
+  } else {
+    const address = output.address;
+    destination = {
+      type: TxOutputDestinationType.THIRD_PARTY,
+      params: {
+        addressHex: address.getHex(),
+      },
+    };
+  }
+
+  return {
+    amount: output.amount.toString(),
+    destination,
+    tokenBundle: [],
+  };
+}
+
+/**
+ * returns the formatted transactionInput for ledger cardano app
+ *
+ * @param {TyphonTypes.Input} input
+ * @param {number} accountIndex
+ * @returns {TxInput}
+ */
+export function prepareLedgerInput(
+  input: TyphonTypes.Input,
+  accountIndex: number
+): TxInput {
+  const paymentKeyPath =
+    input.address.paymentCredential.type === TyphonTypes.HashType.ADDRESS
+      ? input.address.paymentCredential.bipPath
+      : undefined;
+  return {
+    txHashHex: input.txId,
+    outputIndex: input.index,
+    path: paymentKeyPath
+      ? str_to_path(
+          getBipPathString({
+            account: accountIndex,
+            chain: paymentKeyPath.chain,
+            index: paymentKeyPath.index,
+          })
+        )
+      : null,
+  };
+}
