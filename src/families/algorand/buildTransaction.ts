@@ -1,6 +1,5 @@
 import { encode as msgpackEncode } from "algo-msgpack-with-bigint";
 import type {
-  SuggestedParams as AlgoSuggestedParams,
   Transaction as AlgoTransaction,
   EncodedTransaction as AlgoTransactionPayload,
   EncodedSignedTransaction as AlgoSignedTransactionPayload,
