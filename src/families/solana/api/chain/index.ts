@@ -75,6 +75,8 @@ export type ChainAPI = Readonly<{
 
   getMinimumBalanceForRentExemption: (dataLength: number) => Promise<number>;
 
+  getEpochInfo: () => ReturnType<Connection["getEpochInfo"]>;
+
   config: Config;
 }>;
 
@@ -169,6 +171,8 @@ export function getChainAPI(config: Config): ChainAPI {
 
     getMinimumBalanceForRentExemption: (dataLength: number) =>
       connection().getMinimumBalanceForRentExemption(dataLength),
+
+    getEpochInfo: () => connection().getEpochInfo(),
 
     config,
   };

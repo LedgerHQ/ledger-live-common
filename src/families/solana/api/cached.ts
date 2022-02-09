@@ -122,6 +122,8 @@ export function cached(api: ChainAPI): ChainAPI {
     // do not cache
     sendRawTransaction: api.sendRawTransaction,
 
+    getEpochInfo: makeLRUCache(api.getEpochInfo, cacheKeyEmpty, minutes(1)),
+
     config: api.config,
   };
 }

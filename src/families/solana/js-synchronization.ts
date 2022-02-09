@@ -20,9 +20,11 @@ import { encodeOperationId } from "../../operation";
 import {
   Awaited,
   encodeAccountIdWithTokenAccountAddress,
+  isStakeLockUpInForce,
   tokenIsListedOnLedger,
   toTokenId,
   toTokenMint,
+  withdrawableFromStake,
 } from "./logic";
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import {
@@ -143,23 +145,27 @@ export const getAccountShapeWithAPI = async (
     nextSubAccs.push(nextSubAcc);
   }
 
+  const { epoch } = await api.getEpochInfo();
+
   const stakes: SolanaStake[] = onChainStakes.map(
     ({ account, activation, reward }) => {
       const {
         info: { meta, stake },
       } = account;
+      const rentExemptReserve = account.info.meta.rentExemptReserve.toNumber();
+      const stakeAccBalance = account.onChainAcc.account.lamports;
       return {
         stakeAccAddr: account.onChainAcc.pubkey.toBase58(),
-        stakeAccBalance: account.onChainAcc.account.lamports,
+        stakeAccBalance,
+        rentExemptReserve,
         hasStakeAuth: meta.authorized.staker.toBase58() === mainAccAddress,
         hasWithdrawAuth:
-          meta.authorized.withdrawer.toBase58() === mainAccAddress,
-        lockup:
-          meta.lockup.unixTimestamp === 0
-            ? undefined
-            : {
-                unixTimestamp: meta.lockup.unixTimestamp,
-              },
+          meta.authorized.withdrawer.toBase58() === mainAccAddress &&
+          !isStakeLockUpInForce({
+            lockup: meta.lockup,
+            custodianAddress: mainAccAddress,
+            epoch,
+          }),
         delegation:
           stake === null
             ? undefined
@@ -168,6 +174,11 @@ export const getAccountShapeWithAPI = async (
                 voteAccAddr: stake.delegation.voter.toBase58(),
               },
         activation,
+        withdrawable: withdrawableFromStake({
+          stakeAccBalance,
+          activation,
+          rentExemptReserve,
+        }),
         reward:
           reward === null
             ? undefined
@@ -612,18 +623,22 @@ async function getAccount(
     compact
   )();
 
+  /*
+  Ledger team still decides if we should show rewards
   const stakeRewards = await api.getInflationReward(
     stakeAccounts.map(({ onChainAcc }) => onChainAcc.pubkey.toBase58())
   );
+  */
 
   const stakes = await drainSeq(
-    stakeAccounts.map((account, idx) => async () => {
+    stakeAccounts.map((account) => async () => {
       return {
         account,
         activation: await api.getStakeActivation(
           account.onChainAcc.pubkey.toBase58()
         ),
-        reward: stakeRewards[idx],
+        //reward: stakeRewards[idx],
+        reward: null,
       };
     })
   );

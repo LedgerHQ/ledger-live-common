@@ -200,14 +200,12 @@ export type SolanaStake = {
   stakeAccAddr: string;
   hasStakeAuth: boolean;
   hasWithdrawAuth: boolean;
-  lockup?: {
-    unixTimestamp: number;
-  };
   delegation?: {
     stake: number;
     voteAccAddr: string;
   };
   stakeAccBalance: number;
+  rentExemptReserve: number;
   activation: {
     state: "active" | "inactive" | "activating" | "deactivating";
     active: number;

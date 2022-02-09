@@ -1,6 +1,7 @@
 import { findTokenById } from "@ledgerhq/cryptoassets";
 import { PublicKey } from "@solana/web3.js";
 import { TokenAccount } from "../../types/account";
+import { StakeMeta } from "./api/chain/account/stake";
 import { SolanaStake } from "./types";
 import { assertUnreachable } from "./utils";
 
@@ -68,4 +69,46 @@ export function stakeActions(
     default:
       return assertUnreachable(activationState);
   }
+}
+
+export function withdrawableFromStake({
+  stakeAccBalance,
+  activation,
+  rentExemptReserve,
+}: {
+  stakeAccBalance: number;
+  activation: SolanaStake["activation"];
+  rentExemptReserve: number;
+}) {
+  switch (activation.state) {
+    case "active":
+    case "activating":
+      return (
+        stakeAccBalance -
+        rentExemptReserve -
+        activation.active -
+        activation.inactive
+      );
+    case "deactivating":
+      return stakeAccBalance - rentExemptReserve - activation.active;
+    case "inactive":
+      return stakeAccBalance;
+    default:
+      return assertUnreachable(activation.state);
+  }
+}
+
+export function isStakeLockUpInForce({
+  lockup,
+  custodianAddress,
+  epoch,
+}: {
+  lockup: StakeMeta["lockup"];
+  custodianAddress: string;
+  epoch: number;
+}) {
+  if (custodianAddress === lockup.custodian.toBase58()) {
+    return false;
+  }
+  return lockup.unixTimestamp > Date.now() / 1000 || lockup.epoch > epoch;
 }
