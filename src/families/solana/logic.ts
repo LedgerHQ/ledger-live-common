@@ -54,21 +54,31 @@ export function tokenIsListedOnLedger(mint: string): boolean {
   return findTokenById(toTokenId(mint))?.type === "TokenCurrency";
 }
 
-export function stakeActions(
-  activationState: SolanaStake["activation"]["state"]
-): ("unstake" | "restake" | "undelegate" | "redelegate")[] {
-  switch (activationState) {
-    case "active":
-      return ["unstake"];
-    case "activating":
-      return ["unstake"];
-    case "deactivating":
-      return ["restake"];
-    case "inactive":
-      return ["undelegate", "restake", "redelegate"];
-    default:
-      return assertUnreachable(activationState);
+type StakeAction = "deactivate" | "activate" | "withdraw" | "reactivate";
+
+export function stakeActions(stake: SolanaStake): StakeAction[] {
+  const actions: StakeAction[] = [];
+
+  if (stake.withdrawable > 0) {
+    actions.push("withdraw");
   }
+
+  switch (stake.activation.state) {
+    case "active":
+    case "activating":
+      actions.push("deactivate");
+      break;
+    case "deactivating":
+      actions.push("reactivate");
+      break;
+    case "inactive":
+      actions.push("activate");
+      break;
+    default:
+      return assertUnreachable(stake.activation.state);
+  }
+
+  return actions;
 }
 
 export function withdrawableFromStake({

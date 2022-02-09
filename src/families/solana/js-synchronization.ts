@@ -154,18 +154,19 @@ export const getAccountShapeWithAPI = async (
       } = account;
       const rentExemptReserve = account.info.meta.rentExemptReserve.toNumber();
       const stakeAccBalance = account.onChainAcc.account.lamports;
+      const hasWithdrawAuth =
+        meta.authorized.withdrawer.toBase58() === mainAccAddress &&
+        !isStakeLockUpInForce({
+          lockup: meta.lockup,
+          custodianAddress: mainAccAddress,
+          epoch,
+        });
       return {
         stakeAccAddr: account.onChainAcc.pubkey.toBase58(),
         stakeAccBalance,
         rentExemptReserve,
         hasStakeAuth: meta.authorized.staker.toBase58() === mainAccAddress,
-        hasWithdrawAuth:
-          meta.authorized.withdrawer.toBase58() === mainAccAddress &&
-          !isStakeLockUpInForce({
-            lockup: meta.lockup,
-            custodianAddress: mainAccAddress,
-            epoch,
-          }),
+        //hasWithdrawAuth,
         delegation:
           stake === null
             ? undefined
@@ -174,11 +175,13 @@ export const getAccountShapeWithAPI = async (
                 voteAccAddr: stake.delegation.voter.toBase58(),
               },
         activation,
-        withdrawable: withdrawableFromStake({
-          stakeAccBalance,
-          activation,
-          rentExemptReserve,
-        }),
+        withdrawable: hasWithdrawAuth
+          ? withdrawableFromStake({
+              stakeAccBalance,
+              activation,
+              rentExemptReserve,
+            })
+          : 0,
         reward:
           reward === null
             ? undefined
