@@ -1,8 +1,14 @@
 import { Account } from "../../types";
 import { Transaction } from "./types";
 import BigNumber from "bignumber.js";
-import { simulate } from "./api/Cosmos";
-import { Registry, TxBodyEncodeObject } from "@cosmjs/proto-signing";
+import { getAccount, simulate } from "./api/Cosmos";
+import {
+  encodePubkey,
+  makeAuthInfoBytes,
+  Registry,
+  TxBodyEncodeObject,
+} from "@cosmjs/proto-signing";
+import { SignMode } from "cosmjs-types/cosmos/tx/signing/v1beta1/signing";
 import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
 import {
   MsgDelegate,
@@ -18,8 +24,13 @@ const prepareTransaction = async (
   account: Account,
   transaction: Transaction
 ): Promise<Transaction> => {
+  const patch: Partial<Transaction> = {};
+
+  let gasQty = new BigNumber(250000);
+  const gasPrice = new BigNumber(getEnv("COSMOS_GAS_PRICE"));
+
   if (transaction.useAllAmount) {
-    transaction.amount = getMaxEstimatedBalance(
+    patch.amount = getMaxEstimatedBalance(
       account,
       account.balance
         .dividedBy(new BigNumber(getEnv("COSMOS_GAS_AMPLIFIER")))
@@ -28,54 +39,76 @@ const prepareTransaction = async (
   }
 
   if (transaction.mode !== "send" && !transaction.memo) {
-    transaction.memo = "Ledger Live";
+    patch.memo = "Ledger Live";
   }
 
   const unsignedPayload = await buildTransaction(account, transaction);
 
   // be sure payload is complete
-  if (!unsignedPayload.isComplete) return transaction;
+  if (unsignedPayload) {
+    const txBodyFields: TxBodyEncodeObject = {
+      typeUrl: "/cosmos.tx.v1beta1.TxBody",
+      value: {
+        messages: unsignedPayload,
+      },
+    };
 
-  const txBodyFields: TxBodyEncodeObject = {
-    typeUrl: "/cosmos.tx.v1beta1.TxBody",
-    value: {
-      messages: unsignedPayload.messages,
-    },
-  };
+    const registry = new Registry([
+      ["/cosmos.staking.v1beta1.MsgDelegate", MsgDelegate],
+      ["/cosmos.staking.v1beta1.MsgUndelegate", MsgUndelegate],
+      ["/cosmos.staking.v1beta1.MsgBeginRedelegate", MsgBeginRedelegate],
+      [
+        "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
+        MsgWithdrawDelegatorReward,
+      ],
+    ]);
 
-  const registry = new Registry([
-    ["/cosmos.staking.v1beta1.MsgDelegate", MsgDelegate],
-    ["/cosmos.staking.v1beta1.MsgUndelegate", MsgUndelegate],
-    ["/cosmos.staking.v1beta1.MsgBeginRedelegate", MsgBeginRedelegate],
-    [
-      "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
-      MsgWithdrawDelegatorReward,
-    ],
-  ]);
+    const { sequence } = await getAccount(account.freshAddress);
 
-  const txBodyBytes = registry.encode(txBodyFields);
+    const pubkey = encodePubkey({
+      type: "tendermint/PubKeySecp256k1",
+      value: Buffer.from(account.seedIdentifier, "hex").toString("base64"),
+    });
 
-  const txRaw = TxRaw.fromPartial({
-    bodyBytes: txBodyBytes,
-    authInfoBytes: unsignedPayload.auth,
-    signatures: [new Uint8Array(Buffer.from(account.seedIdentifier, "hex"))],
-  });
+    const txBodyBytes = registry.encode(txBodyFields);
 
-  const tx_bytes = Array.from(Uint8Array.from(TxRaw.encode(txRaw).finish()));
+    const authInfoBytes = makeAuthInfoBytes(
+      [{ pubkey, sequence }],
+      [
+        {
+          amount:
+            transaction.fees?.toString() || new BigNumber(2500).toString(),
+          denom: account.currency.units[1].code,
+        },
+      ],
+      transaction.gas?.toNumber() || new BigNumber(250000).toNumber(),
+      SignMode.SIGN_MODE_LEGACY_AMINO_JSON
+    );
 
-  const simulation = await simulate(tx_bytes);
+    const txRaw = TxRaw.fromPartial({
+      bodyBytes: txBodyBytes,
+      authInfoBytes,
+      signatures: [new Uint8Array(Buffer.from(account.seedIdentifier, "hex"))],
+    });
 
-  const gasPrice = new BigNumber(getEnv("COSMOS_GAS_PRICE"));
+    const tx_bytes = Array.from(Uint8Array.from(TxRaw.encode(txRaw).finish()));
 
-  transaction.gas = new BigNumber(simulation?.gas_info?.gas_used || 60000)
+    const gasUsed = await simulate(tx_bytes);
+
+    if (gasUsed) {
+      gasQty = new BigNumber(gasUsed);
+    }
+  }
+
+  patch.gas = gasQty
     .multipliedBy(new BigNumber(getEnv("COSMOS_GAS_AMPLIFIER")))
     .integerValue(BigNumber.ROUND_CEIL);
 
-  transaction.fees = gasPrice
-    .multipliedBy(transaction.gas)
+  patch.fees = gasPrice
+    .multipliedBy(patch.gas)
     .integerValue(BigNumber.ROUND_CEIL);
 
-  return transaction;
+  return { ...transaction, ...patch };
 };
 
 export default prepareTransaction;
