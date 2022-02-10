@@ -261,7 +261,7 @@ export const getBlock = async (height: number): Promise<any> => {
   }
 };
 
-export const simulate = async (tx_bytes: Array<any>): Promise<number> => {
+export const simulate = async (tx_bytes: Array<any>): Promise<BigNumber> => {
   try {
     const { data } = await network({
       method: "POST",
@@ -272,9 +272,9 @@ export const simulate = async (tx_bytes: Array<any>): Promise<number> => {
       },
     });
 
-    return data?.gas_info?.gas_used || 0;
+    return new BigNumber(data?.gas_info?.gas_used || 0);
   } catch (e) {
-    return 0;
+    return new BigNumber(0);
   }
 };
 

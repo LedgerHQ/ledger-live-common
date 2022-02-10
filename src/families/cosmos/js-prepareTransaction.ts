@@ -34,7 +34,7 @@ const prepareTransaction = async (
       account,
       account.balance
         .dividedBy(new BigNumber(getEnv("COSMOS_GAS_AMPLIFIER")))
-        .integerValue(BigNumber.ROUND_CEIL)
+        .integerValue()
     );
   }
 
@@ -95,18 +95,16 @@ const prepareTransaction = async (
 
     const gasUsed = await simulate(tx_bytes);
 
-    if (gasUsed) {
-      gasQty = new BigNumber(gasUsed);
+    if (gasUsed.gt(0)) {
+      gasQty = gasUsed
+        .multipliedBy(new BigNumber(getEnv("COSMOS_GAS_AMPLIFIER")))
+        .integerValue();
     }
   }
 
-  patch.gas = gasQty
-    .multipliedBy(new BigNumber(getEnv("COSMOS_GAS_AMPLIFIER")))
-    .integerValue(BigNumber.ROUND_CEIL);
+  patch.gas = gasQty;
 
-  patch.fees = gasPrice
-    .multipliedBy(patch.gas)
-    .integerValue(BigNumber.ROUND_CEIL);
+  patch.fees = gasPrice.multipliedBy(gasQty).integerValue();
 
   return { ...transaction, ...patch };
 };
