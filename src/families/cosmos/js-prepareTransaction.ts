@@ -97,7 +97,12 @@ const prepareTransaction = async (
 
     if (gasUsed.gt(0)) {
       gasQty = gasUsed
-        .multipliedBy(new BigNumber(getEnv("COSMOS_GAS_AMPLIFIER")))
+        // Don't known what is going on,
+        // Ledger Live Desktop return half of what it should,
+        // Ledger Live Common CLI do the math correctly.
+        // Use coeff 2 as trick..
+        // .multipliedBy(new BigNumber(getEnv("COSMOS_GAS_AMPLIFIER")))
+        .multipliedBy(new BigNumber(getEnv("COSMOS_GAS_AMPLIFIER") * 2))
         .integerValue();
     }
   }
