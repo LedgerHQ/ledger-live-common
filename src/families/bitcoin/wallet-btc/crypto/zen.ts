@@ -1,16 +1,16 @@
 import bs58check from "bs58check";
 import { InvalidAddress } from "@ledgerhq/errors";
 import { DerivationModes } from "../types";
-import { ICrypto } from "./types";
 import Base from "./base";
 import * as bjs from "bitcoinjs-lib";
 
-class Zen implements ICrypto {
+class Zen extends Base {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   network: any;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor({ network }: { network: any }) {
+    super({ network });
     // refer to https://github.com/HorizenOfficial/zen/blob/master/src/chainparams.cpp for the blockchain params
     this.network = network;
     this.network.versions = {

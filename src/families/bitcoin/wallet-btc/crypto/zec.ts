@@ -5,15 +5,15 @@ import bs58check from "bs58check";
 import * as bjs from "bitcoinjs-lib";
 import { InvalidAddress } from "@ledgerhq/errors";
 import { DerivationModes } from "../types";
-import { ICrypto } from "./types";
 import Base from "./base";
 
-class ZCash implements ICrypto {
+class ZCash extends Base {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   network: any;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor({ network }: { network: any }) {
+    super({ network });
     this.network = network;
     this.network.dustThreshold = 10000;
     this.network.dustPolicy = "FIXED";
