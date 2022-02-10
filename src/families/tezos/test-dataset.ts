@@ -45,7 +45,6 @@ const dataset: DatasetTest<Transaction> = {
     tezos: {
       FIXME_ignoreOperationFields: ["blockHeight"],
       scanAccounts: [tezosScanAccounts1],
-      scanAccounts: [],
       accounts: [
         {
           raw: accountTZrevealedDelegating,
