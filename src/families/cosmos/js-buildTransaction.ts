@@ -1,27 +1,10 @@
 import { Account } from "../../types";
 import { Transaction } from "./types";
-import { getAccount } from "./api/Cosmos";
-import { encodePubkey, makeAuthInfoBytes } from "@cosmjs/proto-signing";
-import { SignMode } from "cosmjs-types/cosmos/tx/signing/v1beta1/signing";
-import BigNumber from "bignumber.js";
 
 const buildTransaction = async (
   account: Account,
-  transaction: Transaction,
-  pubKey?: string
+  transaction: Transaction
 ): Promise<any> => {
-  const defaultGas = new BigNumber(250000);
-  const defaultFees = new BigNumber(2500);
-
-  const { sequence } = await getAccount(account.freshAddress);
-
-  const pubkey = encodePubkey({
-    type: "tendermint/PubKeySecp256k1",
-    value: Buffer.from(pubKey || account.seedIdentifier, "hex").toString(
-      "base64"
-    ),
-  });
-
   const msg: Array<{ typeUrl: string; value: any }> = [];
 
   // Ledger Live is able to build transaction atomically,
@@ -173,23 +156,11 @@ const buildTransaction = async (
       break;
   }
 
-  const authInfoBytes = makeAuthInfoBytes(
-    [{ pubkey, sequence }],
-    [
-      {
-        amount: transaction.fees?.toString() || defaultFees.toString(),
-        denom: account.currency.units[1].code,
-      },
-    ],
-    transaction.gas?.toNumber() || defaultGas.toNumber(),
-    SignMode.SIGN_MODE_LEGACY_AMINO_JSON
-  );
+  if (!isComplete) {
+    return [];
+  }
 
-  return {
-    messages: msg,
-    auth: authInfoBytes,
-    isComplete,
-  };
+  return msg;
 };
 
 export default buildTransaction;

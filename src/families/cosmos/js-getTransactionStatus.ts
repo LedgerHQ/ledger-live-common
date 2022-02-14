@@ -28,14 +28,13 @@ import { isValidRecipent } from "./api/Cosmos";
 
 export const getTransactionStatus = async (
   a: Account,
-  t: Transaction,
-  isPreValidation = false
+  t: Transaction
 ): Promise<TransactionStatus> => {
   if (t.mode === "send") {
     // We isolate the send transaction that it's a little bit different from the rest
-    return await getSendTransactionStatus(a, t, isPreValidation);
+    return await getSendTransactionStatus(a, t);
   } else if (t.mode === "delegate") {
-    return await getDelegateTransactionStatus(a, t, isPreValidation);
+    return await getDelegateTransactionStatus(a, t);
   }
 
   const errors: StatusErrorMap = {};
@@ -87,7 +86,7 @@ export const getTransactionStatus = async (
 
   const estimatedFees = t.fees || new BigNumber(0);
 
-  if (!isPreValidation && !t.fees) {
+  if (!t.fees) {
     errors.fees = new FeeNotLoaded();
   }
 
@@ -129,8 +128,7 @@ export const getTransactionStatus = async (
 
 const getDelegateTransactionStatus = async (
   a: Account,
-  t: Transaction,
-  isPreValidation = false
+  t: Transaction
 ): Promise<TransactionStatus> => {
   const errors: StatusErrorMap = {};
   const warnings: StatusErrorMap = {};
@@ -159,7 +157,7 @@ const getDelegateTransactionStatus = async (
 
   const estimatedFees = t.fees || new BigNumber(0);
 
-  if (!isPreValidation && !t.fees) {
+  if (!t.fees) {
     errors.fees = new FeeNotLoaded();
   }
 
@@ -190,8 +188,7 @@ const getDelegateTransactionStatus = async (
 
 const getSendTransactionStatus = async (
   a: Account,
-  t: Transaction,
-  isPreValidation = false
+  t: Transaction
 ): Promise<TransactionStatus> => {
   const errors: StatusErrorMap = {};
   const warnings: StatusErrorMap = {};
@@ -216,7 +213,7 @@ const getSendTransactionStatus = async (
 
   const estimatedFees = t.fees || new BigNumber(0);
 
-  if (!isPreValidation && (!t.fees || !t.fees.gt(0))) {
+  if (!t.fees || !t.fees.gt(0)) {
     errors.fees = new FeeNotLoaded();
   }
 

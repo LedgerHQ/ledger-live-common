@@ -3,7 +3,13 @@ import type { Transaction } from "./types";
 import { getAccount, getChainId } from "./api/Cosmos";
 import { Observable } from "rxjs";
 import { withDevice } from "../../hw/deviceAccess";
-import { Registry, TxBodyEncodeObject } from "@cosmjs/proto-signing";
+import {
+  encodePubkey,
+  makeAuthInfoBytes,
+  Registry,
+  TxBodyEncodeObject,
+} from "@cosmjs/proto-signing";
+import { SignMode } from "cosmjs-types/cosmos/tx/signing/v1beta1/signing";
 import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
 import { encodeOperationId } from "../../operation";
 import { LedgerSigner } from "@cosmjs/ledger-amino";
@@ -16,6 +22,8 @@ import {
   MsgBeginRedelegate,
 } from "cosmjs-types/cosmos/staking/v1beta1/tx";
 import { MsgWithdrawDelegatorReward } from "cosmjs-types/cosmos/distribution/v1beta1/tx";
+import BigNumber from "bignumber.js";
+import { log } from "@ledgerhq/logs";
 
 const aminoTypes = new AminoTypes({ prefix: "cosmos" });
 
@@ -61,21 +69,22 @@ const signOperation = ({
 
         let pubkey;
 
+        log("engine", "look for pubkey for address", account.freshAddress);
+        log("engine", "path", account.freshAddressPath);
+
         accounts.forEach((a) => {
           if (a.address == account.freshAddress) {
-            pubkey = a.pubkey;
+            log("engine", "found pubkey with same address");
+            pubkey = encodePubkey({
+              type: "tendermint/PubKeySecp256k1",
+              value: Buffer.from(a.pubkey).toString("base64"),
+            });
           }
         });
 
-        const unsignedPayload = await buildTransaction(
-          account,
-          transaction,
-          Buffer.from(pubkey || null).toString("hex")
-        );
+        const unsignedPayload = await buildTransaction(account, transaction);
 
-        const msgs = unsignedPayload.messages.map((msg) =>
-          aminoTypes.toAmino(msg)
-        );
+        const msgs = unsignedPayload.map((msg) => aminoTypes.toAmino(msg));
 
         // Note:
         // We don't use Cosmos App,
@@ -109,17 +118,30 @@ const signOperation = ({
 
         const txBodyBytes = registry.encode(txBodyFields);
 
+        const authInfoBytes = makeAuthInfoBytes(
+          [{ pubkey, sequence }],
+          [
+            {
+              amount:
+                transaction.fees?.toString() || new BigNumber(2500).toString(),
+              denom: account.currency.units[1].code,
+            },
+          ],
+          transaction.gas?.toNumber() || new BigNumber(250000).toNumber(),
+          SignMode.SIGN_MODE_LEGACY_AMINO_JSON
+        );
+
         const txRaw = TxRaw.fromPartial({
           bodyBytes: txBodyBytes,
-          authInfoBytes: unsignedPayload.auth,
+          authInfoBytes,
           signatures: [
             new Uint8Array(Buffer.from(signed.signature.signature, "base64")),
           ],
         });
 
-        const signature = Buffer.from(
-          Array.from(Uint8Array.from(TxRaw.encode(txRaw).finish()))
-        ).toString("hex");
+        const signature = Buffer.from(TxRaw.encode(txRaw).finish()).toString(
+          "hex"
+        );
 
         if (cancelled) {
           return;
