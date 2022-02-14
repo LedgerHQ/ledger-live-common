@@ -165,6 +165,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
 
   const shape = {
     id: accountId,
+    xpub: xpubOrAddress,
     balance: balance,
     spendableBalance,
     operationsCount: operations.length,
