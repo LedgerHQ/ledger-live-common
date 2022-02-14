@@ -81,6 +81,9 @@ export async function runWithAppSpec<T extends Transaction>(
   const mutationReports: MutationReport<T>[] = [];
   const { appQuery, currency, dependency } = spec;
   const appCandidate = findAppCandidate(appCandidates, appQuery);
+  if (!appCandidate) {
+    console.warn("no app found for " + spec.name, { appQuery, appCandidates });
+  }
   invariant(
     appCandidate,
     "%s: no app found. Are you sure your COINAPPS is up to date?",
@@ -401,7 +404,7 @@ export async function runOnAccount<T extends Transaction>({
       }
     }
 
-    // without recovering mecanism, we simply assume an error is a failure
+    // without recovering mechanism, we simply assume an error is a failure
     if (errors.length) {
       throw errors[0];
     }
