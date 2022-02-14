@@ -23,6 +23,7 @@ import {
 } from "cosmjs-types/cosmos/staking/v1beta1/tx";
 import { MsgWithdrawDelegatorReward } from "cosmjs-types/cosmos/distribution/v1beta1/tx";
 import BigNumber from "bignumber.js";
+import { log } from "@ledgerhq/logs";
 
 const aminoTypes = new AminoTypes({ prefix: "cosmos" });
 
@@ -68,8 +69,12 @@ const signOperation = ({
 
         let pubkey;
 
+        log("engine", "look for pubkey for address", account.freshAddress);
+        log("engine", "path", account.freshAddressPath);
+
         accounts.forEach((a) => {
           if (a.address == account.freshAddress) {
+            log("engine", "found pubkey with same address");
             pubkey = encodePubkey({
               type: "tendermint/PubKeySecp256k1",
               value: Buffer.from(a.pubkey).toString("base64"),
