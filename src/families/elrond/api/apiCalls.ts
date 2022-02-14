@@ -103,20 +103,22 @@ export default class ElrondApi {
   async getHistory(addr: string, startAt: number) {
     const { data: transactionsCount } = await network({
       method: "GET",
-      url: `${this.API_URL}/transactions/count?condition=should&sender=${addr}&receiver=${addr}&after=${startAt}`,
+      url: `${this.API_URL}/accounts/${addr}/transactions/count?after=${startAt}`,
     });
 
     let allTransactions: any[] = [];
     let from = 0;
+    let before = Math.floor(Date.now() / 1000);
     while (from <= transactionsCount) {
       const { data: transactions } = await network({
         method: "GET",
-        url: `${this.API_URL}/transactions?condition=should&sender=${addr}&receiver=${addr}&after=${startAt}&from=${from}&size=${TRANSACTIONS_SIZE}`,
+        url: `${this.API_URL}/accounts/${addr}/transactions?before=${before}&after=${startAt}&size=${TRANSACTIONS_SIZE}`,
       });
 
       allTransactions = [...allTransactions, ...transactions];
 
       from = from + TRANSACTIONS_SIZE;
+      before = transactions.slice(-1).timestamp;
     }
 
     return allTransactions;
