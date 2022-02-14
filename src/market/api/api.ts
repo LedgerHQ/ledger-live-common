@@ -45,11 +45,11 @@ async function setSupportedCoinsList(): Promise<SupportedCoins> {
 
 const matchSearch =
   (search: string) =>
-  (currency: MarketCoin): boolean => {
-    if (!search) return false;
-    const match = `${currency.symbol}|${currency.name}`;
-    return match.toLowerCase().includes(search.toLowerCase());
-  };
+    (currency: MarketCoin): boolean => {
+      if (!search) return false;
+      const match = `${currency.symbol}|${currency.name}`;
+      return match.toLowerCase().includes(search.toLowerCase());
+    };
 
 function distributedCopy(items: number[], n: number): number[] {
   const elements = [items[0]];
@@ -83,6 +83,7 @@ function sparklineAsSvgData(points: number[]): SparklineSvgData {
       })
       .join(" "),
     viewBox: `0 0 ${totalXSteps} ${sparklineYHeight + 3}`,
+    isPositive: points[0] <= points[points.length - 1],
   };
 }
 
@@ -121,8 +122,7 @@ async function listPaginated({
 
   const url =
     `${ROOT_PATH}/coins/markets?vs_currency=${counterCurrency}&order=${orderBy}_${order}&per_page=${limit}` +
-    `&sparkline=${
-      sparkline ? "true" : "false"
+    `&sparkline=${sparkline ? "true" : "false"
     }&price_change_percentage=${range}` +
     `${ids.length > 0 ? `&page=1&&ids=${ids.toString()}` : `&page=${page}`}`;
 
@@ -180,8 +180,8 @@ async function listPaginated({
       atlDate: currency.atl_date,
       sparklineIn7d: currency?.sparkline_in_7d?.price
         ? sparklineAsSvgData(
-            distributedCopy(currency.sparkline_in_7d.price, 6 * 7)
-          ) // keep 6 points per day
+          distributedCopy(currency.sparkline_in_7d.price, 6 * 7)
+        ) // keep 6 points per day
         : null,
       chartData: [],
     })
