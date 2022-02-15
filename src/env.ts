@@ -146,15 +146,9 @@ const envDefinitions = {
     desc: "bot's default timeout for scanAccounts",
   },
   CARDANO_API_ENDPOINT: {
-    def: "",
+    def: "https://apitestnet.typhonwallet.io/api/ledger",
     parser: stringParser,
     desc: "Cardano API url",
-  },
-  //TODO:CARDANO remove CARDANO_API_ENDPOINT_AUTH once ledger proxy is setup
-  CARDANO_API_ENDPOINT_AUTH: {
-    def: "",
-    parser: stringParser,
-    desc: "Cardano backend service authorization",
   },
   COINAPPS: {
     def: "",
