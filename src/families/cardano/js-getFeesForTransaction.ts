@@ -18,7 +18,7 @@ const getEstimatedFees = async ({
   a: Account;
   t: Transaction;
 }): Promise<BigNumber> => {
-  const unsigned = buildTransaction(a, t);
+  const unsigned = await buildTransaction(a, t);
   return unsigned.getFee();
 };
 

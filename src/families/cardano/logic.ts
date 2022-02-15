@@ -11,7 +11,6 @@ import {
   types as TyphonTypes,
   address as TyphonAddress,
 } from "@stricahq/typhonjs";
-import { CARDANO_ENV } from "./env";
 import {
   AddressType,
   TxInput,
@@ -149,7 +148,7 @@ export const isValidAddress = (address: string): boolean => {
     try {
       const hexAddress = TyphonUtils.decodeBech32(address);
       const networkId = Number(hexAddress.value.toLowerCase().charAt(1));
-      if (CARDANO_ENV.NETWORK !== networkId) {
+      if (CARDANO_NETWORK_ID !== networkId) {
         return false;
       }
     } catch (error) {

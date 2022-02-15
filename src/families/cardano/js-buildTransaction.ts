@@ -11,7 +11,6 @@ import {
   utils as TyphonUtils,
 } from "@stricahq/typhonjs";
 import BigNumber from "bignumber.js";
-import { CARDANO_ENV } from "./env";
 import {
   getBaseAddress,
   getBipPath,
@@ -19,6 +18,7 @@ import {
   getExtendedPublicKeyFromHex,
   getTTL,
 } from "./logic";
+import { getCurrentCardanoPreloadData, hydrate, preload } from "./preload";
 
 /**
  *
@@ -27,24 +27,32 @@ import {
  *
  * @returns {TyphonTransaction}
  */
-export const buildTransaction = (
+export const buildTransaction = async (
   a: Account,
   t: Transaction
-): TyphonTransaction => {
+): Promise<TyphonTransaction> => {
+  let cardanoPreloadedData = getCurrentCardanoPreloadData();
+  //TODO: confirm this code
+  if (cardanoPreloadedData == undefined) {
+    cardanoPreloadedData = await preload();
+    hydrate(cardanoPreloadedData);
+  }
   const transaction = new TyphonTransaction({
     protocolParams: {
-      minFeeA: new BigNumber(CARDANO_ENV.PROTO_PARAM.feesA),
-      minFeeB: new BigNumber(CARDANO_ENV.PROTO_PARAM.feesB),
-      stakeKeyDeposit: new BigNumber(CARDANO_ENV.PROTO_PARAM.keyDeposit),
+      minFeeA: new BigNumber(cardanoPreloadedData.protocolParams.minFeeA),
+      minFeeB: new BigNumber(cardanoPreloadedData.protocolParams.minFeeB),
+      stakeKeyDeposit: new BigNumber(
+        cardanoPreloadedData.protocolParams.stakeKeyDeposit
+      ),
       lovelacePerUtxoWord: new BigNumber(
-        CARDANO_ENV.PROTO_PARAM.lovelacePerUtxoWord
+        cardanoPreloadedData.protocolParams.lovelacePerUtxoWord
       ),
       collateralPercent: new BigNumber(
-        CARDANO_ENV.PROTO_PARAM.collateralPercent
+        cardanoPreloadedData.protocolParams.collateralPercent
       ),
-      priceSteps: new BigNumber(CARDANO_ENV.PROTO_PARAM.priceSteps),
-      priceMem: new BigNumber(CARDANO_ENV.PROTO_PARAM.priceMemory),
-      languageView: CARDANO_ENV.costModel,
+      priceSteps: new BigNumber(cardanoPreloadedData.protocolParams.priceSteps),
+      priceMem: new BigNumber(cardanoPreloadedData.protocolParams.priceMem),
+      languageView: cardanoPreloadedData.protocolParams.languageView,
     },
   });
 

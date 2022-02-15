@@ -3,6 +3,7 @@ import type {
   TransactionCommon,
   TransactionCommonRaw,
 } from "../../types/transaction";
+import { types as TyphonTypes } from "@stricahq/typhonjs";
 
 // for legacy
 export type CoreStatics = Record<any, any>;
@@ -146,13 +147,22 @@ export type TransactionRaw = TransactionCommonRaw & {
   // also the transaction fields as raw JSON data
 };
 
-// /**
-//  * Cardano currency data that will be preloaded.
-//  * You can for instance add a list of validators for Proof-of-Stake blockchains,
-//  * or any volatile data that could not be set as constants in the code (staking progress, fee estimation variables, etc.)
-//  */
-// export type CardanoPreloadData = {
-//   somePreloadedData: Record<any, any>;
-// };
+export type ProtocolParams = {
+  minFeeA: string;
+  minFeeB: string;
+  stakeKeyDeposit: string;
+  lovelacePerUtxoWord: string;
+  collateralPercent: string;
+  priceSteps: string;
+  priceMem: string;
+  languageView: TyphonTypes.LanguageView;
+};
+
+/**
+ * Cardano currency data that will be preloaded.
+ */
+export type CardanoPreloadData = {
+  protocolParams: ProtocolParams;
+};
 
 export const reflect = (_declare: unknown): void => {};

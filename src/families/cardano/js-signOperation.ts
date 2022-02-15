@@ -16,7 +16,6 @@ import Ada, {
   TransactionSigningMode,
   Witness,
 } from "@cardano-foundation/ledgerjs-hw-app-cardano";
-import { CARDANO_ENV } from "./env";
 import {
   types as TyphonTypes,
   Transaction as TyphonTransaction,
@@ -27,6 +26,7 @@ import {
   prepareLedgerInput,
   prepareLedgerOutput,
 } from "./logic";
+import { CARDANO_NETWORK_ID } from "./constants";
 
 const buildOptimisticOperation = (
   account: Account,
@@ -126,7 +126,7 @@ const signOperation = ({
           signingMode: TransactionSigningMode.ORDINARY_TRANSACTION,
           tx: {
             network:
-              CARDANO_ENV.NETWORK === Networks.Mainnet.networkId
+              CARDANO_NETWORK_ID === Networks.Mainnet.networkId
                 ? Networks.Mainnet
                 : Networks.Testnet,
             inputs: ledgerAppInputs,
