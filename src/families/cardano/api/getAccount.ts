@@ -14,13 +14,15 @@ import {
 import _ from "lodash";
 import { Bip32PublicKey } from "@stricahq/bip32ed25519";
 import { getEnv } from "../../../env";
-import axios from "./axios";
-import { STAKING_ADDRESS_INDEX } from "../constants";
+import { STAKING_ADDRESS_INDEX, CARDANO_API_ENDPOINT } from "../constants";
+import network from "../../../network";
 
 async function getUtxosByPaymentKeys(
   paymentKeyList: Array<string>
 ): Promise<Array<CardanoOutput>> {
-  const res = await axios.get("/v1/utxo", {
+  const res = await network({
+    method: "GET",
+    url: `${CARDANO_API_ENDPOINT}/v1/utxo`,
     params: {
       paymentKeys: paymentKeyList,
     },
@@ -52,7 +54,9 @@ async function getUtxosByPaymentKeys(
 async function getUsedPaymentKeys(
   paymentKeyList: Array<string>
 ): Promise<Array<string>> {
-  const res = await axios.get("/v1/address/paymentKey/used", {
+  const res = await network({
+    method: "GET",
+    url: `${CARDANO_API_ENDPOINT}/v1/address/paymentKey/used`,
     params: {
       paymentKeys: paymentKeyList,
     },

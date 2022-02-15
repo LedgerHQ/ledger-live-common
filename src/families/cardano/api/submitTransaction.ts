@@ -1,5 +1,6 @@
 import BigNumber from "bignumber.js";
-import axios from "./axios";
+import network from "../../../network";
+import { CARDANO_API_ENDPOINT } from "../constants";
 
 type Token = {
   assetName: string;
@@ -125,9 +126,13 @@ export async function submitTransaction(
   id: string,
   transaction: string
 ): Promise<TransactionObject> {
-  const res = await axios.post("/v1/transaction/submit", {
-    id,
-    transaction,
+  const res = await network({
+    method: "POST",
+    url: `${CARDANO_API_ENDPOINT}/v1/transaction/submit`,
+    data: {
+      id,
+      transaction,
+    },
   });
   return toTransactionObject(res.data.transaction);
 }

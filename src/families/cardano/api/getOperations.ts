@@ -2,14 +2,17 @@ import BigNumber from "bignumber.js";
 import _ from "lodash";
 import { Operation, OperationType } from "../../../types";
 import * as ApiTypes from "./api-types";
-import axios from "./axios";
 import { utils as TyphonUtils } from "@stricahq/typhonjs";
+import network from "../../../network";
+import { CARDANO_API_ENDPOINT } from "../constants";
 
 async function getRecentTransactions(paymentKeyList: Array<string>): Promise<{
   blockHeight: number;
   transactions: Array<ApiTypes.TransactionRaw>;
 }> {
-  const res = await axios.get("/v1/transaction/recent", {
+  const res = await network({
+    method: "GET",
+    url: `${CARDANO_API_ENDPOINT}/v1/transaction/recent`,
     params: {
       paymentKeys: paymentKeyList,
     },
