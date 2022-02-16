@@ -108,6 +108,7 @@ const signOperation = ({
           typeUrl: "/cosmos.tx.v1beta1.TxBody",
           value: {
             messages: msgs.map((msg) => aminoTypes.fromAmino(msg)),
+            memo: transaction.memo || "",
           },
         };
 
