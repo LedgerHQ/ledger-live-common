@@ -10,6 +10,7 @@ const resolver: Resolver = async (transport, { path, verify }) => {
 
   const publicKey = bs58.encode(address);
 
+  
   return {
     address: publicKey,
     publicKey,
