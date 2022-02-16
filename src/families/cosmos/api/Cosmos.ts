@@ -226,8 +226,7 @@ export const broadcast = async ({
 }): Promise<Operation> => {
   const { data } = await network({
     method: "POST",
-    // url: `${defaultEndpoint}/cosmos/tx/v1beta1/txs`, // FIXME LL-9159
-    url: `https://node.atomscan.com/cosmos/tx/v1beta1/txs`,
+    url: `${defaultEndpoint}/cosmos/tx/v1beta1/txs`,
     data: {
       tx_bytes: Array.from(Uint8Array.from(Buffer.from(signature, "hex"))),
       mode: "BROADCAST_MODE_SYNC",
@@ -265,8 +264,7 @@ export const simulate = async (tx_bytes: Array<any>): Promise<BigNumber> => {
   try {
     const { data } = await network({
       method: "POST",
-      // url: `${defaultEndpoint}/cosmos/tx/v1beta1/simulate`, // FIXME LL-9159
-      url: `https://node.atomscan.com/cosmos/tx/v1beta1/simulate`,
+      url: `${defaultEndpoint}/cosmos/tx/v1beta1/simulate`,
       data: {
         tx_bytes: tx_bytes,
       },
