@@ -26,6 +26,7 @@ import { disconnectAll } from "@ledgerhq/live-common/lib/api";
 
 checkLibs({
   NotEnoughBalance,
+  // @ts-ignore
   React,
   log,
   Transport,
