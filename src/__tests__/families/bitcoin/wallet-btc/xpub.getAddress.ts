@@ -91,4 +91,34 @@ describe("Unit tests for getAddress", () => {
       "a914df23c5eaba30b4d95798c5d5d0e2ecc2a3dc4ff287209ec9845acb02fab24e1c0368b3b517c1a4488fba97f0e3459ac053ea0100000003c01f02b4"
     );
   }, 30000);
+  it.skip("Get legacy address benchmark", async () => {
+    const btcCrypto = new BTCCrypto({
+      network: coininfo.bitcoin.main.toBitcoinJS(),
+    });
+    for (let i = 0; i < 1; i++) {
+      for (let j = 0; j < 1000; j++) {
+        btcCrypto.getAddress(
+          DerivationModes.LEGACY,
+          "xpub6CThYZbX4PTeA7KRYZ8YXP3F6HwT2eVKPQap3Avieds3p1eos35UzSsJtTbJ3vQ8d3fjRwk4bCEz4m4H6mkFW49q29ZZ6gS8tvahs4WCZ9X",
+          i,
+          j
+        );
+      }
+    }
+  }, 30000);
+  it.skip("Get taproot address benchmark", async () => {
+    const btcCrypto = new BTCCrypto({
+      network: coininfo.bitcoin.main.toBitcoinJS(),
+    });
+    for (let i = 0; i < 1; i++) {
+      for (let j = 0; j < 1000; j++) {
+        btcCrypto.getAddress(
+          DerivationModes.TAPROOT,
+          "xpub6CThYZbX4PTeA7KRYZ8YXP3F6HwT2eVKPQap3Avieds3p1eos35UzSsJtTbJ3vQ8d3fjRwk4bCEz4m4H6mkFW49q29ZZ6gS8tvahs4WCZ9X",
+          i,
+          j
+        );
+      }
+    }
+  }, 30000);
 });
