@@ -51,7 +51,8 @@ const envDefinitions = {
     desc: "Node endpoint for celo",
   },
   API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
-    def: "https://cosmoshub4.coin.ledger.com/",
+    //def: "https://cosmoshub4.coin.ledger.com/",
+    def: "https://node.atomscan.com/",
     parser: stringParser,
     desc: "Node endpoint for cosmos",
   },
