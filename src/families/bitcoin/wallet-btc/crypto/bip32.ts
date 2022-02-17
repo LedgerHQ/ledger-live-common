@@ -33,7 +33,7 @@ class BIP32 {
       typeof navigator !== "undefined" && navigator.product === "ReactNative"
         ? secp256k1.Point.fromCompressedHex(this.publicKey)
             .add(secp256k1.Point.fromPrivateKey(IL))
-            .toRawBytes(true)
+            .toCompressedRawBytes()
         : publicKeyTweakAdd(this.publicKey, IL)
     );
     return new BIP32(Ki, IR, this.network, this.depth + 1, index);
