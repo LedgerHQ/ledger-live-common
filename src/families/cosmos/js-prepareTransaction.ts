@@ -50,6 +50,7 @@ const prepareTransaction = async (
       typeUrl: "/cosmos.tx.v1beta1.TxBody",
       value: {
         messages: unsignedPayload,
+        memo: transaction.memo || patch.memo || "",
       },
     };
 
