@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - cosmos-js
+      - cosmos-js-*
 
 jobs:
   start-runner:
@@ -79,4 +80,3 @@ jobs:
         with:
           name: bot-tests.txt
           path: bot-tests.txt
-
