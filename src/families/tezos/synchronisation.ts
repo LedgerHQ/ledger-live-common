@@ -42,7 +42,7 @@ function restorePublicKey(
     const { tezosResources } = initialAccount;
     if (tezosResources) {
       if (isStringHex(tezosResources.publicKey)) {
-        return encodeHexToPubKey(tezosResources.publicKey)
+        return encodeHexToPubKey(tezosResources.publicKey);
       }
       return tezosResources.publicKey;
     }
