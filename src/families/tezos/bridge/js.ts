@@ -107,7 +107,9 @@ const getTransactionStatus = async (
       errors.amount = new AmountRequired();
     } else if (!errors.amount && t.amount.gt(spendableBalance)) {
       errors.amount = new NotEnoughBalance();
-      amount = new BigNumber(0);
+      if (t.useAllAmount) {
+        amount = new BigNumber(0);
+      }
     } else if (t.amount.gt(0) && estimatedFees.times(10).gt(t.amount)) {
       warnings.feeTooHigh = new FeeTooHigh();
     }
