@@ -7,7 +7,7 @@ import { log } from "@ledgerhq/logs";
 import Transport from "@ledgerhq/hw-transport";
 import getVersion from "./getVersion";
 import getAppAndVersion from "./getAppAndVersion";
-import type { DeviceInfo, OnboardingInfo, SeedSize } from "../types/manager";
+import type { DeviceInfo } from "../types/manager";
 import { PROVIDERS } from "../manager/provider";
 import { isDashboardName } from "./isDashboardName";
 const ManagerAllowedFlag = 0x08;
@@ -67,7 +67,7 @@ export default async function getDeviceInfo(
       mcuVersion +
       (isOSU ? " (osu)" : isBootloader ? " (bootloader)" : "")
   );
-  
+
   return {
     version,
     mcuVersion,

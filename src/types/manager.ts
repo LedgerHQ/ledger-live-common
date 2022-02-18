@@ -23,7 +23,7 @@ export type OnboardingInfo = {
   seedSize?: SeedSize;
   // Starting from 1 to totalNbSeedWords
   currentWord?: number;
-}
+};
 
 export type DeviceInfo = {
   mcuVersion: string;
