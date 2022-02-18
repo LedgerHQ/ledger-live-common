@@ -15,7 +15,6 @@ import { compressPublicKey } from "@taquito/ledger-signer/dist/lib/utils";
 import { b58cencode, prefix, Prefix } from "@taquito/utils";
 
 function isStringHex(s: string): boolean {
-  const res: number[] = [];
   for (let i = 0; i < s.length; i += 2) {
     const ss = s.slice(i, i + 2);
     const x = parseInt(ss, 16);
