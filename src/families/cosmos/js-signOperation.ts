@@ -150,7 +150,7 @@ const signOperation = ({
 
         o.next({ type: "device-signature-granted" });
 
-        const txHash = ""; // resolved at broadcast time
+        const hash = ""; // resolved at broadcast time
         const accountId = account.id;
         const type: OperationType =
           transaction.mode === "undelegate"
@@ -165,9 +165,9 @@ const signOperation = ({
 
         // build optimistic operation
         const operation: Operation = {
-          id: encodeOperationId(accountId, txHash, type),
-          hash: txHash,
-          type: type,
+          id: encodeOperationId(accountId, hash, type),
+          hash,
+          type,
           value: transaction.amount,
           fee: transaction.fees || new BigNumber(0),
           extra: {},
@@ -175,7 +175,7 @@ const signOperation = ({
           blockHeight: null,
           senders: [account.freshAddress],
           recipients: [transaction.recipient],
-          accountId: accountId,
+          accountId,
           date: new Date(),
         };
 
