@@ -40,6 +40,16 @@ const envDefinitions = {
     parser: stringParser,
     desc: "Node API endpoint for algorand",
   },
+  API_CELO_INDEXER: {
+    def: "https://celo.coin.ledger.com/indexer/",
+    parser: stringParser,
+    desc: "Explorer API for celo",
+  },
+  API_CELO_NODE: {
+    def: "https://celo.coin.ledger.com/archive/",
+    parser: stringParser,
+    desc: "Node endpoint for celo",
+  },
   API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
     def: "https://cosmoshub4.coin.ledger.com/",
     parser: stringParser,
@@ -119,6 +129,11 @@ const envDefinitions = {
     parser: stringParser,
     def: "https://tron.coin.ledger.com",
     desc: "proxy url for trongrid API",
+  },
+  API_SOLANA_PROXY: {
+    parser: stringParser,
+    def: "https://solana.coin.ledger.com",
+    desc: "proxy url for solana API",
   },
   BASE_SOCKET_URL: {
     def: "wss://scriptrunner.api.live.ledger.com/update",
@@ -524,6 +539,11 @@ const envDefinitions = {
     def: "https://cdn.live.ledger-stg.com/platform/apps/v1/data.json",
     parser: stringParser,
     desc: "url used to fetch platform app manifests (staging)",
+  },
+  PLATFORM_LOCAL_MANIFEST_JSON: {
+    def: "",
+    parser: stringParser,
+    desc: 'json manifest for a local (test) platform app manifests. How to use: PLATFORM_LOCAL_MANIFEST_JSON="$(cat /path/to/file.json)"',
   },
   PLATFORM_API_URL: {
     def: "",
