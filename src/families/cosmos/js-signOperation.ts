@@ -1,4 +1,4 @@
-import { Account, OperationType, SignOperationEvent } from "../../types";
+import { Account, Operation, OperationType, SignOperationEvent } from "../../types";
 import type { Transaction } from "./types";
 import { getAccount, getChainId } from "./api/Cosmos";
 import { Observable } from "rxjs";
@@ -159,18 +159,18 @@ const signOperation = ({
             : "OUT";
 
         // build optimistic operation
-        const operation = {
+        const operation: Operation = {
           id: encodeOperationId(accountId, txHash, type),
           hash: txHash,
           type: type,
           value: transaction.amount,
-          fee: transaction.fees,
+          fee: transaction.fees || new BigNumber(0),
           extra: {},
           blockHash: null,
           blockHeight: null,
           senders: [account.freshAddress],
           recipients: [transaction.recipient],
-          account: accountId,
+          accountId: accountId,
           date: new Date(),
         };
 
