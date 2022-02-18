@@ -45,15 +45,16 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
           if (
             attributes["sender"] &&
             attributes["recipient"] &&
-            attributes["amount"] &&
-            attributes["amount"].indexOf(currency.units[1].code) != -1
+            attributes["amount"]
           ) {
             op.senders.push(attributes["sender"]);
             op.recipients.push(attributes["recipient"]);
 
-            op.value = op.value.plus(
-              attributes["amount"].replace(currency.units[1].code, "")
-            );
+            if (attributes["amount"].indexOf(currency.units[1].code) != -1) {
+              op.value = op.value.plus(
+                attributes["amount"].replace(currency.units[1].code, "")
+              );
+            }
 
             if (attributes["sender"] === address) {
               op.type = "OUT";
