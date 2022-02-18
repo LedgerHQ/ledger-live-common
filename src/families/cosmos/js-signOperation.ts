@@ -163,6 +163,14 @@ const signOperation = ({
             ? "REWARD"
             : "OUT";
 
+        const senders = [] as any;
+        const recipients = [] as any;
+
+        if (type === "OUT") {
+          senders.push(account.freshAddress);
+          recipients.push(transaction.recipient);
+        }
+
         // build optimistic operation
         const operation: Operation = {
           id: encodeOperationId(accountId, hash, type),
@@ -173,8 +181,8 @@ const signOperation = ({
           extra: {},
           blockHash: null,
           blockHeight: null,
-          senders: [account.freshAddress],
-          recipients: [transaction.recipient],
+          senders,
+          recipients,
           accountId,
           date: new Date(),
         };
