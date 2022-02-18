@@ -39,7 +39,6 @@ export type DeviceInfo = {
   providerName: string | null | undefined;
   managerAllowed: boolean;
   pinValidated: boolean;
-  onboarding?: OnboardingInfo;
   // more precised raw versions
   seVersion?: string;
   mcuBlVersion?: string;
