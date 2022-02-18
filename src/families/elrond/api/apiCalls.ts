@@ -132,10 +132,11 @@ export default class ElrondApi {
 
     let allTransactions: Transaction[] = [];
     let from = 0;
+    let before = Math.floor(Date.now() / 1000);
     while (from <= transactionsCount) {
       let { data: transactions } = await network({
         method: "GET",
-        url: `${this.API_URL}/accounts/${addr}/transactions?after=${startAt}&from=${from}&size=${MAX_PAGINATION_SIZE}`,
+        url: `${this.API_URL}/accounts/${addr}/transactions?after=${startAt}&before=${before}&size=${MAX_PAGINATION_SIZE}`,
       });
 
       transactions = transactions.filter(
@@ -145,6 +146,7 @@ export default class ElrondApi {
       allTransactions = [...allTransactions, ...transactions];
 
       from = from + MAX_PAGINATION_SIZE;
+      before = transactions.slice(-1).timestamp;
     }
 
     return allTransactions;
@@ -161,15 +163,17 @@ export default class ElrondApi {
 
     let allTokenTransactions: Transaction[] = [];
     let from = 0;
+    let before = Math.floor(Date.now() / 1000);
     while (from <= tokenTransactionsCount) {
       const { data: tokenTransactions } = await network({
         method: "GET",
-        url: `${this.API_URL}/accounts/${addr}/transactions?token=${token}&from=${from}&size=${MAX_PAGINATION_SIZE}`,
+        url: `${this.API_URL}/accounts/${addr}/transactions?token=${token}&before=${before}&size=${MAX_PAGINATION_SIZE}`,
       });
 
       allTokenTransactions = [...allTokenTransactions, ...tokenTransactions];
 
       from = from + MAX_PAGINATION_SIZE;
+      before = tokenTransactions.slice(-1).timestamp;
     }
 
     for (const esdtTransaction of allTokenTransactions) {
