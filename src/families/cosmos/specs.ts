@@ -32,6 +32,7 @@ const cosmos: AppSpec<Transaction> = {
     firmware: "2.0.0",
     appName: "Cosmos",
   },
+  testTimeout: 2 * 60 * 1000,
   transactionCheck: ({ maxSpendable }) => {
     invariant(maxSpendable.gt(COSMOS_MIN_SAFE), "balance is too low");
   },
