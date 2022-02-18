@@ -1,4 +1,9 @@
-import { Account, Operation, OperationType, SignOperationEvent } from "../../types";
+import {
+  Account,
+  Operation,
+  OperationType,
+  SignOperationEvent,
+} from "../../types";
 import type { Transaction } from "./types";
 import { getAccount, getChainId } from "./api/Cosmos";
 import { Observable } from "rxjs";
