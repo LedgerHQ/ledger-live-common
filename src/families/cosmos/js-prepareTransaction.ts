@@ -42,7 +42,10 @@ const prepareTransaction = async (
     patch.memo = "Ledger Live";
   }
 
-  const unsignedPayload = await buildTransaction(account, transaction);
+  const unsignedPayload = await buildTransaction(account, {
+    ...transaction,
+    ...patch,
+  });
 
   // be sure payload is complete
   if (unsignedPayload) {

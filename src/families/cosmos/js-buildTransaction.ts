@@ -96,7 +96,7 @@ const buildTransaction = async (
           value: {
             validatorSrcAddress: transaction.cosmosSourceValidator,
             delegatorAddress: account.freshAddress,
-            validatorAddress: transaction.validators[0].address,
+            validatorDstAddress: transaction.validators[0].address,
             amount: {
               denom: account.currency.units[1].code,
               amount: transaction.validators[0].amount.toString(),
