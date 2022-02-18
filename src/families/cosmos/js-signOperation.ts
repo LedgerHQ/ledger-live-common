@@ -161,7 +161,7 @@ const signOperation = ({
         const operation = {
           id: encodeOperationId(account.id, txHash, type),
           hash: txHash,
-          type: transaction.mode,
+          type: type,
           value: transaction.amount,
           fee: transaction.fees,
           extra: {},
