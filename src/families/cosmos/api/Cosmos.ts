@@ -143,12 +143,12 @@ export const getRedelegations = async (address: string): Promise<any> => {
   });
 
   data.redelegation_responses.forEach((elem) => {
-    elem.entries.forEach((entries) => {
+    elem.entries.forEach((entry) => {
       redelegations.push({
-        validatorSrcAddress: elem.validator_src_address,
-        validatorDstAddress: elem.validator_dst_address,
-        amount: new BigNumber(entries.initial_balance),
-        completionDate: new Date(entries.completion_time),
+        validatorSrcAddress: elem.redelegation.validator_src_address,
+        validatorDstAddress: elem.redelegation.validator_dst_address,
+        amount: new BigNumber(entry.redelegation_entry.initial_balance),
+        completionDate: new Date(entry.redelegation_entry.completion_time),
       });
     });
   });
