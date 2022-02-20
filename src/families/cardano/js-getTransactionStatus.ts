@@ -4,11 +4,14 @@ import {
   RecipientRequired,
   FeeNotLoaded,
   InvalidAddress,
-  createCustomErrorClass,
+  AmountRequired,
 } from "@ledgerhq/errors";
 import type { Account, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
 import { isValidAddress } from "./logic";
+import { utils as TyphonUtils } from "@stricahq/typhonjs";
+import { getCurrentCardanoPreloadData } from "./preload";
+import { CardanoMinAmountError } from "./errors";
 
 const getTransactionStatus = async (
   a: Account,
@@ -18,22 +21,15 @@ const getTransactionStatus = async (
   const warnings: Record<string, Error> = {};
   const useAllAmount = !!t.useAllAmount;
 
+  const estimatedFees = t.fees || new BigNumber(0);
+  const amount = t.amount;
+  const totalSpent = new BigNumber(amount).plus(estimatedFees);
+  const tokensToSend = []; //TODO: read from transaction
+
+  const cardanoPreloadedData = getCurrentCardanoPreloadData();
+
   if (!t.fees) {
     errors.fees = new FeeNotLoaded();
-  }
-
-  const estimatedFees = t.fees || new BigNumber(0);
-
-  const totalSpent = useAllAmount
-    ? a.balance
-    : new BigNumber(t.amount).plus(estimatedFees);
-
-  const amount = useAllAmount
-    ? a.balance.minus(estimatedFees)
-    : new BigNumber(t.amount);
-
-  if (totalSpent.gt(a.balance)) {
-    errors.amount = new NotEnoughBalance();
   }
 
   if (!t.recipient) {
@@ -42,11 +38,22 @@ const getTransactionStatus = async (
     errors.recipient = new InvalidAddress();
   }
 
-  //TODO:CARDANO add useAllAmount support
-  if (t.useAllAmount) {
-    errors.useAllAmount = new (createCustomErrorClass(
-      "useAllAmountNotSupported"
-    ))("Use all amount is currently not supported");
+  const minTransactionAmount = TyphonUtils.calculateMinUtxoAmount(
+    tokensToSend,
+    new BigNumber(cardanoPreloadedData.protocolParams.lovelacePerUtxoWord),
+    false
+  );
+
+  if (!amount.gt(0)) {
+    errors.amount = useAllAmount
+      ? new NotEnoughBalance()
+      : new AmountRequired();
+  } else if (amount.lt(minTransactionAmount)) {
+    errors.amount = new CardanoMinAmountError(
+      `Minimum ${minTransactionAmount.div(1e6)} ADA required`
+    );
+  } else if (totalSpent.gt(a.balance)) {
+    errors.amount = new NotEnoughBalance();
   }
 
   return Promise.resolve({

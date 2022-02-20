@@ -28,6 +28,8 @@ import {
 } from "./types";
 import { Bip32PublicKey } from "@stricahq/bip32ed25519";
 import bs58 from "bs58";
+import _ from "lodash";
+import BigNumber from "bignumber.js";
 
 /**
  *  returns BipPath object with account, chain and index field for cardano
@@ -163,12 +165,42 @@ export const isValidAddress = (address: string): boolean => {
  *
  * @returns {number}
  */
-export const getTTL: () => number = () => {
+export function getTTL(): number {
   const slots = Math.floor(
     (Date.now() - SHELLEY_START_DATE) / SHELLEY_SLOT_DURATION
   );
   return SHELLEY_START_SLOT + slots + TTL_GAP;
-};
+}
+
+export function mergeTokens(
+  tokens: Array<TyphonTypes.Token>
+): Array<TyphonTypes.Token> {
+  return _(tokens)
+    .groupBy((t) => `${t.policyId}${t.assetName}`)
+    .map((similarTokens) => ({
+      policyId: similarTokens[0].policyId,
+      assetName: similarTokens[0].assetName,
+      amount: similarTokens.reduce(
+        (total, token) => total.plus(token.amount),
+        new BigNumber(0)
+      ),
+    }))
+    .value();
+}
+
+/**
+ * @param { Array<TyphonTypes.Token> } b
+ * @param { Array<TyphonTypes.Token> } a
+ * @returns a - b
+ */
+export function getTokenDiff(
+  a: Array<TyphonTypes.Token>,
+  b: Array<TyphonTypes.Token>
+): Array<TyphonTypes.Token> {
+  return mergeTokens(
+    a.concat(b.map((t) => ({ ...t, amount: t.amount.negated() })))
+  ).filter((t) => !t.amount.eq(0));
+}
 
 /**
  * returns the formatted transactionOutput for ledger cardano app

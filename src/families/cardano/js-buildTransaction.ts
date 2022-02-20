@@ -16,9 +16,26 @@ import {
   getBipPath,
   getCredentialKey,
   getExtendedPublicKeyFromHex,
+  getTokenDiff,
   getTTL,
 } from "./logic";
 import { getCurrentCardanoPreloadData, hydrate, preload } from "./preload";
+
+function getTyphonInputFromUtxo(utxo: CardanoOutput): TyphonTypes.Input {
+  const address = TyphonUtils.getAddressFromHex(
+    utxo.address
+  ) as TyphonTypes.ShelleyAddress;
+  if (address.paymentCredential.type === TyphonTypes.HashType.ADDRESS) {
+    address.paymentCredential.bipPath = utxo.paymentCredential.bipPath;
+  }
+  return {
+    txId: utxo.hash,
+    index: utxo.index,
+    amount: new BigNumber(utxo.amount),
+    tokens: utxo.tokens,
+    address: address,
+  };
+}
 
 /**
  *
@@ -37,31 +54,6 @@ export const buildTransaction = async (
     cardanoPreloadedData = await preload();
     hydrate(cardanoPreloadedData);
   }
-  const transaction = new TyphonTransaction({
-    protocolParams: {
-      minFeeA: new BigNumber(cardanoPreloadedData.protocolParams.minFeeA),
-      minFeeB: new BigNumber(cardanoPreloadedData.protocolParams.minFeeB),
-      stakeKeyDeposit: new BigNumber(
-        cardanoPreloadedData.protocolParams.stakeKeyDeposit
-      ),
-      lovelacePerUtxoWord: new BigNumber(
-        cardanoPreloadedData.protocolParams.lovelacePerUtxoWord
-      ),
-      collateralPercent: new BigNumber(
-        cardanoPreloadedData.protocolParams.collateralPercent
-      ),
-      priceSteps: new BigNumber(cardanoPreloadedData.protocolParams.priceSteps),
-      priceMem: new BigNumber(cardanoPreloadedData.protocolParams.priceMem),
-      languageView: cardanoPreloadedData.protocolParams.languageView,
-    },
-  });
-
-  // TODO:CARDANO add tokens support
-  const receiverOutput: TyphonTypes.Output = {
-    address: TyphonUtils.getAddressFromBech32(t.recipient),
-    amount: t.amount,
-    tokens: [],
-  };
 
   const cardanoResources = a.cardanoResources as CardanoResources;
 
@@ -69,6 +61,7 @@ export const buildTransaction = async (
     (cred) => !cred.isUsed
   );
 
+  const receiverAddress = TyphonUtils.getAddressFromBech32(t.recipient);
   let changeAddress;
   if (unusedInternalCred) {
     changeAddress = getBaseAddress({
@@ -96,7 +89,57 @@ export const buildTransaction = async (
     });
   }
 
-  transaction.addOutput(receiverOutput);
+  const transaction = new TyphonTransaction({
+    protocolParams: {
+      minFeeA: new BigNumber(cardanoPreloadedData.protocolParams.minFeeA),
+      minFeeB: new BigNumber(cardanoPreloadedData.protocolParams.minFeeB),
+      stakeKeyDeposit: new BigNumber(
+        cardanoPreloadedData.protocolParams.stakeKeyDeposit
+      ),
+      lovelacePerUtxoWord: new BigNumber(
+        cardanoPreloadedData.protocolParams.lovelacePerUtxoWord
+      ),
+      collateralPercent: new BigNumber(
+        cardanoPreloadedData.protocolParams.collateralPercent
+      ),
+      priceSteps: new BigNumber(cardanoPreloadedData.protocolParams.priceSteps),
+      priceMem: new BigNumber(cardanoPreloadedData.protocolParams.priceMem),
+      languageView: cardanoPreloadedData.protocolParams.languageView,
+    },
+  });
+
+  const ttl = getTTL();
+  transaction.setTTL(ttl);
+
+  if (t.useAllAmount) {
+    // add all utxo as input
+    cardanoResources.utxos.forEach((u) =>
+      transaction.addInput(getTyphonInputFromUtxo(u))
+    );
+
+    const tokenBalance = cardanoResources.utxos.map((u) => u.tokens).flat();
+    const tokensToKeep = getTokenDiff(tokenBalance, []); // TODO: support tokens
+
+    // if account holds any tokens then send it to changeAddress with
+    // minimum required ADA to spend it
+    if (tokensToKeep.length) {
+      const minAmountToSpendTokens = TyphonUtils.calculateMinUtxoAmount(
+        tokensToKeep,
+        new BigNumber(cardanoPreloadedData.protocolParams.lovelacePerUtxoWord),
+        false
+      );
+      transaction.addOutput({
+        address: changeAddress,
+        amount: minAmountToSpendTokens,
+        tokens: tokensToKeep,
+      });
+    }
+
+    return transaction.prepareTransaction({
+      inputs: [],
+      changeAddress: receiverAddress,
+    });
+  }
 
   // sorting utxo from higher to lower ADA value
   // to minimize the number of utxo use in transaction
@@ -113,26 +156,17 @@ export const buildTransaction = async (
     i < sortedUtxos.length && usedUtxoAdaAmount.lte(t.amount);
     i++
   ) {
-    const utxo = sortedUtxos[i] as CardanoOutput;
-    const address = TyphonUtils.getAddressFromHex(
-      utxo.address
-    ) as TyphonTypes.ShelleyAddress;
-    if (address.paymentCredential.type === TyphonTypes.HashType.ADDRESS) {
-      address.paymentCredential.bipPath = utxo.paymentCredential.bipPath;
-    }
-    const transactionInput = {
-      txId: utxo.hash,
-      index: utxo.index,
-      amount: new BigNumber(utxo.amount),
-      tokens: utxo.tokens,
-      address: address,
-    };
+    const utxo = sortedUtxos[i];
+    const transactionInput = getTyphonInputFromUtxo(utxo);
     transactionInputs.push(transactionInput);
     usedUtxoAdaAmount.plus(transactionInput.amount);
   }
 
-  const ttl = getTTL();
-  transaction.setTTL(ttl);
+  transaction.addOutput({
+    address: receiverAddress,
+    amount: t.amount,
+    tokens: [], //TODO: support tokens
+  });
 
   return transaction.prepareTransaction({
     inputs: transactionInputs,

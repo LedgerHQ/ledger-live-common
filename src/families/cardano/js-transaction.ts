@@ -1,10 +1,12 @@
 import { BigNumber } from "bignumber.js";
 import type { Account } from "../../types";
 import { Transaction } from "./types";
+import {
+  types as TyphonTypes,
+  address as TyphonAddress,
+} from "@stricahq/typhonjs";
 
-import getEstimatedFees from "./js-getFeesForTransaction";
-
-const sameFees = (a, b) => (!a || !b ? a === b : a.eq(b));
+import { buildTransaction } from "./js-buildTransaction";
 
 /**
  * Create an empty transaction
@@ -41,12 +43,22 @@ export const prepareTransaction = async (
   a: Account,
   t: Transaction
 ): Promise<Transaction> => {
-  let fees = t.fees;
-  fees = await getEstimatedFees({ a, t });
+  const transaction = await buildTransaction(a, t);
 
-  if (!sameFees(t.fees, fees)) {
-    return { ...t, fees };
+  const transactionFees = transaction.getFee();
+  const transactionAmount = transaction
+    .getOutputs()
+    .filter(
+      (o) =>
+        !(o.address instanceof TyphonAddress.BaseAddress) ||
+        !(o.address.paymentCredential.type === TyphonTypes.HashType.ADDRESS) ||
+        o.address.paymentCredential.bipPath === undefined
+    )
+    .reduce((total, o) => total.plus(o.amount), new BigNumber(0));
+
+  if (transactionFees.eq(t.fees || 0) && transactionAmount.eq(t.amount)) {
+    return t;
   }
 
-  return t;
+  return { ...t, fees: transactionFees, amount: transactionAmount };
 };
