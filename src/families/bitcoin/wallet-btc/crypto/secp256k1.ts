@@ -1,4 +1,5 @@
 /* eslint-disable */
+BigInt = require('big-integer')
 // refer to https://github.com/fingera/react-native-secp256k1/blob/master/index.js
 const _0n = BigInt(0);
 const _1n = BigInt(1);
@@ -302,28 +303,12 @@ export class Point {
   }
 }
 
-function sliceDer(s) {
-  return Number.parseInt(s[0], 16) >= 8 ? "00" + s : s;
-}
 function bytesToHex(uint8a) {
   let hex = "";
   for (let i = 0; i < uint8a.length; i++) {
     hex += uint8a[i].toString(16).padStart(2, "0");
   }
   return hex;
-}
-function pad64(num) {
-  return num.toString(16).padStart(64, "0");
-}
-function pad32b(num) {
-  return hexToBytes(pad64(num));
-}
-function numberToHex(num) {
-  const hex = num.toString(16);
-  return hex.length & 1 ? `0${hex}` : hex;
-}
-function hexToNumber(hex) {
-  return BigInt(`0x${hex}`);
 }
 function hexToBytes(hex) {
   const array = new Uint8Array(hex.length / 2);
@@ -333,9 +318,7 @@ function hexToBytes(hex) {
   }
   return array;
 }
-function ensureBytes(hex) {
-  return hex instanceof Uint8Array ? hex : hexToBytes(hex);
-}
+
 function bytesToNumber(bytes) {
   return BigInt(`0x${bytesToHex(bytes)}`);
 }
@@ -433,29 +416,4 @@ function splitScalarEndo(k: bigint) {
   if (k2neg) k2 = n - k2;
   return {k1neg, k1, k2neg, k2};
 }
-
-function isWithinCurveOrder(num) {
-  return 0 < num && num < CURVE.n;
-}
-function calcQRSFromK(v, msg, priv) {
-  const k = bytesToNumber(v);
-  if (!isWithinCurveOrder(k)) return;
-  const max = CURVE.n;
-  const q = Point.BASE.multiply(k);
-  const r = mod(q.x, max);
-  const s = mod(invert(k, max) * (msg + r * priv), max);
-  if (r === _0n || s === _0n) return;
-  return [q, r, s];
-}
-function normalizePrivateKey(key) {
-  return bytesToNumber(key);
-}
-function getPublicKey(privateKey, isCompressed = false) {
-  const point = Point.fromPrivateKey(privateKey);
-  if (typeof privateKey === "string") {
-    return point.toHex(isCompressed);
-  }
-  return point.toRawBytes(isCompressed);
-}
-exports.getPublicKey = getPublicKey;
 /* eslint-enable */
