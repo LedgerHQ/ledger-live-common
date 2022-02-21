@@ -123,6 +123,11 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
       }
     });
 
+    if (!["IN", "OUT"].includes(op.type)) {
+      op.senders = [];
+      op.recipients = [];
+    }
+
     op.id = encodeOperationId(id, tx.txhash, op.type);
 
     if (op.type) {
