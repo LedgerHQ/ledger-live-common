@@ -20,20 +20,6 @@ import { getMainAccount } from "../account";
 import { getAccountBridge } from "../bridge";
 import jsBridges from "../generated/bridge/js";
 
-const experimentalIntegrations = ["tezos"];
-
-export function shouldUseJS(currency: CryptoCurrency) {
-  const jsBridge = jsBridges[currency.family];
-  if (!jsBridge) return false;
-
-  if (experimentalIntegrations.includes(currency.id)) {
-    return getEnv("EXPERIMENTAL_CURRENCIES_JS_BRIDGE")
-      .split(",")
-      .includes(currency.id);
-  }
-
-  return true;
-}
 export const libcoreNoGoBalanceHistory = () =>
   getEnv("LIBCORE_BALANCE_HISTORY_NOGO").split(",");
 export const shouldShowNewAccount = (
