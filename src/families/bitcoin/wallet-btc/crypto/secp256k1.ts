@@ -1,5 +1,4 @@
-/* eslint-disable */
-const BigInt = require('big-integer');
+import BigInt from 'big-integer';
 // refer to https://github.com/fingera/react-native-secp256k1/blob/master/index.js
 const _0n = BigInt(0);
 const _1n = BigInt(1);
@@ -131,8 +130,8 @@ class JacobianPoint {
     let k2p = JacobianPoint.ZERO;
     let d: JacobianPoint = this;
     while (k1.isPositive() || k2.isPositive()) {
-      if (k1 & _1n) k1p = k1p.add(d);
-      if (k2 & _1n) k2p = k2p.add(d);
+      if (k1.isOdd()) k1p = k1p.add(d);
+      if (k2.isOdd()) k2p = k2p.add(d);
       d = d.double();
       k1=k1.shiftRight(1);
       k2=k2.shiftRight(1);
@@ -234,7 +233,7 @@ export class Point {
     const x = bytesToNumber(bytes.slice(1));
     const y2 = weistrass(x); // y² = x³ + ax + b
     let y = sqrtMod(y2); // y = y² ^ (p+1)/4
-    const isYOdd = (y.and(_1n)).eq(_1n);
+    const isYOdd = y.isOdd();
     const isFirstByteOdd = (bytes[0] & 1) === 1;
     if (isFirstByteOdd !== isYOdd) y = mod(_0n.subtract(y));
     return new Point(x, y);
@@ -250,13 +249,13 @@ export class Point {
   }
 
   toCompressedRawBytes(): Uint8Array {
-    return hexToBytes(`${this.y.and(_1n).neq(0) ? "03" : "02"}${numTo32bStr(this.x)}`);
+    return hexToBytes(`${this.y.isOdd() ? "03" : "02"}${numTo32bStr(this.x)}`);
   }
 
   toHex(isCompressed = false): string {
     const x = numTo32bStr(this.x);
     if (isCompressed) {
-      return `${this.y.and(_1n).neq(0) ? "03" : "02"}${x}`;
+      return `${this.y.isOdd() ? "03" : "02"}${x}`;
     } else {
       return `04${x}${numTo32bStr(this.y)}`;
     }
@@ -417,4 +416,3 @@ function splitScalarEndo(k: any) {
   if (k2neg) k2 = n.subtract(k2);
   return {k1neg, k1, k2neg, k2};
 }
-/* eslint-enable */
