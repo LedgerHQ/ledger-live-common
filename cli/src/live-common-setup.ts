@@ -26,6 +26,7 @@ import { disconnectAll } from "@ledgerhq/live-common/lib/api";
 
 checkLibs({
   NotEnoughBalance,
+  // Can't run CI on windows without it
   // @ts-ignore
   React,
   log,
