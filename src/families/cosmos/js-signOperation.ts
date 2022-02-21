@@ -163,8 +163,8 @@ const signOperation = ({
             ? "REWARD"
             : "OUT";
 
-        const senders = [] as any;
-        const recipients = [] as any;
+        const senders: string[] = [];
+        const recipients: string[] = [];
 
         if (type === "OUT") {
           senders.push(account.freshAddress);

@@ -42,24 +42,20 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
       // https://docs.cosmos.network/v0.42/modules/staking/07_events.html
       switch (message.type) {
         case "transfer":
-          if (
-            attributes["sender"] &&
-            attributes["recipient"] &&
-            attributes["amount"]
-          ) {
-            op.senders.push(attributes["sender"]);
-            op.recipients.push(attributes["recipient"]);
+          if (attributes.sender && attributes.recipient && attributes.amount) {
+            op.senders.push(attributes.sender);
+            op.recipients.push(attributes.recipient);
 
-            if (attributes["amount"].indexOf(currency.units[1].code) != -1) {
+            if (attributes.amount.indexOf(currency.units[1].code) != -1) {
               op.value = op.value.plus(
-                attributes["amount"].replace(currency.units[1].code, "")
+                attributes.amount.replace(currency.units[1].code, "")
               );
             }
 
-            if (attributes["sender"] === address) {
+            if (attributes.sender === address) {
               op.type = "OUT";
               op.value = op.value.plus(fees);
-            } else if (attributes["recipient"] === address) {
+            } else if (attributes.recipient === address) {
               op.type = "IN";
             }
           }
@@ -67,13 +63,13 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
 
         case "withdraw_rewards":
           if (
-            attributes["amount"] &&
-            attributes["amount"].indexOf(currency.units[1].code) != -1
+            attributes.amount &&
+            attributes.amount.indexOf(currency.units[1].code) != -1
           ) {
             op.type = "REWARD";
             op.value = new BigNumber(fees);
             op.extra.validators.push({
-              amount: attributes["amount"].replace(currency.units[1].code, ""),
+              amount: attributes.amount.replace(currency.units[1].code, ""),
               address: attributes.validator,
             });
           }
@@ -81,13 +77,13 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
 
         case "delegate":
           if (
-            attributes["amount"] &&
-            attributes["amount"].indexOf(currency.units[1].code) != -1
+            attributes.amount &&
+            attributes.amount.indexOf(currency.units[1].code) != -1
           ) {
             op.type = "DELEGATE";
             op.value = new BigNumber(fees);
             op.extra.validators.push({
-              amount: attributes["amount"].replace(currency.units[1].code, ""),
+              amount: attributes.amount.replace(currency.units[1].code, ""),
               address: attributes.validator,
             });
           }
@@ -95,15 +91,15 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
 
         case "redelegate":
           if (
-            attributes["amount"] &&
-            attributes["amount"].indexOf(currency.units[1].code) != -1 &&
+            attributes.amount &&
+            attributes.amount.indexOf(currency.units[1].code) != -1 &&
             attributes.destination_validator &&
             attributes.source_validator
           ) {
             op.type = "REDELEGATE";
             op.value = new BigNumber(fees);
             op.extra.validators.push({
-              amount: attributes["amount"].replace(currency.units[1].code, ""),
+              amount: attributes.amount.replace(currency.units[1].code, ""),
               address: attributes.destination_validator,
             });
             op.extra.cosmosSourceValidator = attributes.source_validator;
@@ -112,20 +108,25 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
 
         case "unbond":
           if (
-            attributes["amount"] &&
-            attributes["amount"].indexOf(currency.units[1].code) != -1 &&
+            attributes.amount &&
+            attributes.amount.indexOf(currency.units[1].code) != -1 &&
             attributes.validator
           ) {
             op.type = "UNDELEGATE";
             op.value = new BigNumber(fees);
             op.extra.validators.push({
-              amount: attributes["amount"].replace(currency.units[1].code, ""),
+              amount: attributes.amount.replace(currency.units[1].code, ""),
               address: attributes.validator,
             });
           }
           break;
       }
     });
+
+    if (!["IN", "OUT"].includes(op.type)) {
+      op.senders = [];
+      op.recipients = [];
+    }
 
     op.id = encodeOperationId(id, tx.txhash, op.type);
 
