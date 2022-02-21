@@ -27,7 +27,7 @@ export const getCurrencyBridge = (currency: CryptoCurrency): CurrencyBridge => {
   const jsBridge = jsBridges[currency.family];
   const libcoreBridge = libcoreBridges[currency.family];
 
-  if (jsBridge && (!libcoreBridge)) {
+  if (jsBridge && !libcoreBridge) {
     return jsBridge.currencyBridge;
   }
 
