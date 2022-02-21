@@ -1,7 +1,7 @@
 export type SeedSize = 12 | 18 | 24;
 
 export type OnboardingInfo = {
-  isOnboarded: boolean;
+  isOnboarded?: boolean;
   // in recovery mode vs in normal mode
   isRecoveryMode?: boolean;
   // seed Recovery vs new seed

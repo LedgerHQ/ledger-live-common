@@ -1,5 +1,6 @@
 import type { CryptoCurrency } from "./currencies";
 import type { DeviceModelId } from "@ledgerhq/devices";
+import { OnboardingInfo } from "./onboarding";
 // FIXME we need to clearly differentiate what is API types and what is our inner own type
 export type Id = number;
 export type LedgerScriptParams = {
@@ -26,6 +27,7 @@ export type DeviceInfo = {
   providerName: string | null | undefined;
   managerAllowed: boolean;
   pinValidated: boolean;
+  onboarding: OnboardingInfo;
   // more precised raw versions
   seVersion?: string;
   mcuBlVersion?: string;

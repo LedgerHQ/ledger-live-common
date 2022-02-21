@@ -10,6 +10,7 @@ import getAppAndVersion from "./getAppAndVersion";
 import type { DeviceInfo } from "../types/manager";
 import { PROVIDERS } from "../manager/provider";
 import { isDashboardName } from "./isDashboardName";
+import getOnboardingStatus from "./getOnboardingStatus";
 const ManagerAllowedFlag = 0x08;
 const PinValidatedFlag = 0x80;
 
@@ -38,6 +39,7 @@ export default async function getDeviceInfo(
     throw new DeviceOnDashboardExpected();
   }
 
+  const onboarding = await getOnboardingStatus(transport);
   const res = await getVersion(transport);
   const {
     isBootloader,
@@ -82,5 +84,6 @@ export default async function getDeviceInfo(
     isBootloader,
     managerAllowed,
     pinValidated,
+    onboarding,
   };
 }
