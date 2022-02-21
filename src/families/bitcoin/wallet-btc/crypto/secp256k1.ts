@@ -1,5 +1,6 @@
+
 /* eslint-disable */
-BigInt = require('big-integer')
+const BigInt = require('big-integer');
 // refer to https://github.com/fingera/react-native-secp256k1/blob/master/index.js
 const _0n = BigInt(0);
 const _1n = BigInt(1);
@@ -22,9 +23,9 @@ const CURVE = {
   a: _0n,
   b: BigInt(7),
   // Field over which we'll do calculations
-  P: POW_2_256 - BigInt("4294967296") - BigInt(977),
+  P: POW_2_256.minus(BigInt("4294967296")).minus(BigInt(977)),
   // Curve order, a number of valid points in the field
-  n: POW_2_256 - BigInt("432420386565659656852420866394968145599"),
+  n: POW_2_256.minus(BigInt("432420386565659656852420866394968145599")),
   // Cofactor. It's 1, so other subgroups don't exist, and default subgroup is prime-order
   h: _1n,
   // Base point (x, y) aka generator point
@@ -39,17 +40,17 @@ const CURVE = {
     "55594575648329892869085402983802832744385952214688224221778511981742606582254"
   ),
 };
-function weistrass(x: bigint): bigint {
+function weistrass(x: any): any {
   const { a, b } = CURVE;
-  return mod(x * x * x + a * x + b);
+  return mod(x.multiply(x).multiply(x).add(a.multiply(x)).add(b));
 }
 
-function numTo32bStr(num: number | bigint): string {
+function numTo32bStr(num: any): string {
   return num.toString(16).padStart(64, "0");
 }
 
 class JacobianPoint {
-  constructor(readonly x: bigint, readonly y: bigint, readonly z: bigint) {}
+  constructor(readonly x: any, readonly y: any, readonly z: any) {}
   static readonly BASE = new JacobianPoint(CURVE.Gx, CURVE.Gy, _1n);
   static readonly ZERO = new JacobianPoint(_0n, _1n, _0n);
   static fromAffine(p) {
@@ -63,30 +64,30 @@ class JacobianPoint {
     return JacobianPoint.toAffineBatch(points).map(JacobianPoint.fromAffine);
   }
   equals(other: JacobianPoint) {
-    const az2 = mod(this.z * this.z);
-    const az3 = mod(this.z * az2);
-    const bz2 = mod(other.z * other.z);
-    const bz3 = mod(other.z * bz2);
+    const az2 = mod(this.z.multiply(this.z));
+    const az3 = mod(this.z.multiply(az2));
+    const bz2 = mod(other.z.multiply(other.z));
+    const bz3 = mod(other.z.multiply(bz2));
     return (
-      mod(this.x * bz2) === mod(az2 * other.x) && mod(this.y * bz3) === mod(az3 * other.y)
+      mod(this.x.multiply(bz2)).eq(mod(az2.multiply(other.x))) && mod(this.y.multiply(bz3)).eq(mod(az3.multiply(other.y)))
     );
   }
   negate() {
-    return new JacobianPoint(this.x, mod(-this.y), this.z);
+    return new JacobianPoint(this.x, mod(_0n.subtract(this.y)), this.z);
   }
   double() {
     const X1 = this.x;
     const Y1 = this.y;
     const Z1 = this.z;
-    const A = mod(X1 * X1);
-    const B = mod(Y1 * Y1);
-    const C = mod(B * B);
-    const D = mod(_2n * (mod(mod((X1 + B) * (X1 + B))) - A - C));
-    const E = mod(_3n * A);
-    const F = mod(E * E);
-    const X3 = mod(F - _2n * D);
-    const Y3 = mod(E * (D - X3) - _8n * C);
-    const Z3 = mod(_2n * Y1 * Z1);
+    const A = mod(X1.multiply(X1));
+    const B = mod(Y1.multiply(Y1));
+    const C = mod(B.multiply(B));
+    const D = mod(_2n.multiply(mod(mod((X1.add(B)).multiply(X1.add(B)))).subtract(A).subtract(C)));
+    const E = mod(_3n.multiply(A));
+    const F = mod(E.multiply(E));
+    const X3 = mod(F.subtract(_2n.multiply(D)));
+    const Y3 = mod(E.multiply((D.subtract(X3))).subtract(_8n.multiply(C)));
+    const Z3 = mod(_2n.multiply(Y1).multiply(Z1));
     return new JacobianPoint(X3, Y3, Z3);
   }
   add(other: JacobianPoint) {
@@ -96,51 +97,50 @@ class JacobianPoint {
     const X2 = other.x;
     const Y2 = other.y;
     const Z2 = other.z;
-    if (X2 === _0n || Y2 === _0n) return this;
-    if (X1 === _0n || Y1 === _0n) return other;
-    const Z1Z1 = mod(Z1 * Z1);
-    const Z2Z2 = mod(Z2 * Z2);
-    const U1 = mod(X1 * Z2Z2);
-    const U2 = mod(X2 * Z1Z1);
-    const S1 = mod(Y1 * Z2 * Z2Z2);
-    const S2 = mod(mod(Y2 * Z1) * Z1Z1);
-    const H = mod(U2 - U1);
-    const r = mod(S2 - S1);
-    if (H === _0n) {
-      if (r === _0n) {
+    if (X2.isZero() || Y2.isZero()) return this;
+    if (X1.isZero() || Y1.isZero()) return other;
+    const Z1Z1 = mod(Z1.multiply(Z1));
+    const Z2Z2 = mod(Z2.multiply(Z2));
+    const U1 = mod(X1.multiply(Z2Z2));
+    const U2 = mod(X2.multiply(Z1Z1));
+    const S1 = mod(Y1.multiply(Z2).multiply(Z2Z2));
+    const S2 = mod(mod(Y2.multiply(Z1)).multiply(Z1Z1));
+    const H = mod(U2.subtract(U1));
+    const r = mod(S2.subtract(S1));
+    if (H.isZero()) {
+      if (r.isZero()) {
         return this.double();
       } else {
         return JacobianPoint.ZERO;
       }
     }
-    const HH = mod(H * H);
-    const HHH = mod(H * HH);
-    const V = mod(U1 * HH);
-    const X3 = mod(r * r - HHH - _2n * V);
-    const Y3 = mod(r * (V - X3) - S1 * HHH);
-    const Z3 = mod(Z1 * Z2 * H);
+    const HH = mod(H.multiply(H));
+    const HHH = mod(H.multiply(HH));
+    const V = mod(U1.multiply(HH));
+    const X3 = mod(r.multiply(r).subtract(HHH).subtract(_2n.multiply(V)));
+    const Y3 = mod(r.multiply(V.subtract(X3)).subtract(S1.multiply(HHH)));
+    const Z3 = mod(Z1.multiply(Z2).multiply(H));
     return new JacobianPoint(X3, Y3, Z3);
   }
   subtract(other) {
     return this.add(other.negate());
   }
-  multiplyUnsafe(scalar: bigint) {
+  multiplyUnsafe(scalar: any) {
     const n = mod(BigInt(scalar), CURVE.n);
-    //const [k1neg, k1, k2neg, k2] = splitScalarEndo(n);
     let { k1neg, k1, k2neg, k2 } = splitScalarEndo(n);
     let k1p = JacobianPoint.ZERO;
     let k2p = JacobianPoint.ZERO;
     let d: JacobianPoint = this;
-    while (k1 > _0n || k2 > _0n) {
+    while (k1.isPositive() || k2.isPositive()) {
       if (k1 & _1n) k1p = k1p.add(d);
       if (k2 & _1n) k2p = k2p.add(d);
       d = d.double();
-      k1 >>=_1n;
-      k2 >>=_1n;
+      k1=k1.shiftRight(1);
+      k2=k2.shiftRight(1);
     }
     if (k1neg) k1p = k1p.negate();
     if (k2neg) k2p = k2p.negate();
-    k2p = new JacobianPoint(mod(k2p.x * CURVE.beta), k2p.y, k2p.z);
+    k2p = new JacobianPoint(mod(k2p.x.multiply(CURVE.beta)), k2p.y, k2p.z);
     return k1p.add(k2p);
   }
   private precomputeWindow(W: number): JacobianPoint[] {
@@ -151,8 +151,8 @@ class JacobianPoint {
     let base = p;
     for (let window = 0; window < windows; window++) {
       base = p;
-      points.push(base);
-      for (let i = 1; i < 2 ** (W - 1); i++) {
+      points.push(base);      
+      for (let i = 1; i < Math.pow(2, W-1); i++) {
         base = base.add(p);
         points.push(base);
       }
@@ -175,17 +175,17 @@ class JacobianPoint {
     let p = JacobianPoint.ZERO;
     let f = JacobianPoint.ZERO;
     const windows = 128 / W + 1;
-    const windowSize = 2 ** (W - 1);
-    const mask = BigInt(2 ** W - 1);
-    const maxNumber = 2 ** W;
-    const shiftBy = BigInt(W);
+    const windowSize = Math.pow(2, W - 1);
+    const mask = BigInt(Math.pow(2, W) - 1);
+    const maxNumber = Math.pow(2, W);
+    const shiftBy = W;
     for (let window = 0; window < windows; window++) {
       const offset = window * windowSize;
-      let wbits = Number(n & mask);
-      n >>= shiftBy;
+      let wbits = n.and(mask).toJSNumber();
+      n = n.shiftRight(shiftBy);
       if (wbits > windowSize) {
         wbits -= maxNumber;
-        n +=_1n;
+        n = n.add(1);
       }
       if (wbits === 0) {
         f = f.add(
@@ -208,14 +208,14 @@ class JacobianPoint {
     [k2p, f2p] = this.wNAF(k2, affinePoint);
     if (k1neg) k1p = k1p.negate();
     if (k2neg) k2p = k2p.negate();
-    k2p = new JacobianPoint(mod(k2p.x * CURVE.beta), k2p.y, k2p.z);
+    k2p = new JacobianPoint(mod(k2p.x.multiply(CURVE.beta)), k2p.y, k2p.z);
     [point, fake] = [k1p.add(k2p), f1p.add(f2p)];
     return JacobianPoint.normalizeZ([point, fake])[0];
   }
   toAffine(invZ = invert(this.z)) {
-    const invZ2 = invZ * invZ;
-    const x = mod(this.x * invZ2);
-    const y = mod(this.y * invZ2 * invZ);
+    const invZ2 = invZ.multiply(invZ);
+    const x = mod(this.x.multiply(invZ2));
+    const y = mod(this.y.multiply(invZ2).multiply(invZ));
     return new Point(x, y);
   }
 }
@@ -226,7 +226,7 @@ const pointPrecomputes = new WeakMap();
 export class Point {
   static BASE: Point = new Point(CURVE.Gx, CURVE.Gy);
   _WINDOW_SIZE: number = 8;
-  constructor(readonly x: bigint, readonly y: bigint) {}
+  constructor(readonly x: any, readonly y: any) {}
   _setWindowSize(windowSize) {
     this._WINDOW_SIZE = windowSize;
     pointPrecomputes.delete(this);
@@ -235,9 +235,9 @@ export class Point {
     const x = bytesToNumber(bytes.slice(1));
     const y2 = weistrass(x); // y² = x³ + ax + b
     let y = sqrtMod(y2); // y = y² ^ (p+1)/4
-    const isYOdd = (y & _1n) === _1n;
+    const isYOdd = (y.and(_1n)).eq(_1n);
     const isFirstByteOdd = (bytes[0] & 1) === 1;
-    if (isFirstByteOdd !== isYOdd) y = mod(-y);
+    if (isFirstByteOdd !== isYOdd) y = mod(_0n.subtract(y));
     return new Point(x, y);
   }
 
@@ -251,13 +251,13 @@ export class Point {
   }
 
   toCompressedRawBytes(): Uint8Array {
-    return hexToBytes(`${this.y & _1n ? "03" : "02"}${numTo32bStr(this.x)}`);
+    return hexToBytes(`${this.y.and(_1n).neq(0) ? "03" : "02"}${numTo32bStr(this.x)}`);
   }
 
   toHex(isCompressed = false): string {
     const x = numTo32bStr(this.x);
     if (isCompressed) {
-      return `${this.y & _1n ? "03" : "02"}${x}`;
+      return `${this.y.and(_1n).neq(0) ? "03" : "02"}${x}`;
     } else {
       return `04${x}${numTo32bStr(this.y)}`;
     }
@@ -273,12 +273,12 @@ export class Point {
   }
 
   equals(other: Point): boolean {
-    return this.x === other.x && this.y === other.y;
+    return this.x.eq(other.x) && this.y.eq(other.y);
   }
 
   // Returns the same point with inverted `y`
   negate() {
-    return new Point(this.x, mod(-this.y));
+    return new Point(this.x, mod(_0n.subtract(this.y)));
   }
 
   // Adds point to itself
@@ -298,7 +298,7 @@ export class Point {
     return this.add(other.negate());
   }
 
-  multiply(scalar: number | bigint) {
+  multiply(scalar: any) {
     return JacobianPoint.fromAffine(this).multiply(scalar, this).toAffine();
   }
 }
@@ -320,27 +320,28 @@ function hexToBytes(hex) {
 }
 
 function bytesToNumber(bytes) {
-  return BigInt(`0x${bytesToHex(bytes)}`);
+  return BigInt(`${bytesToHex(bytes)}`, 16);
 }
 
 // Calculates a modulo b
-function mod(a: bigint, b: bigint = CURVE.P): bigint {
-  const result = a % b;
-  return result >= _0n ? result : b + result;
+function mod(a: any, b: any = CURVE.P): any {
+  const result = a.mod(b);
+  return result.greaterOrEquals(0) ? result : b.add(result);
 }
 
 // Does x ^ (2 ^ power). E.g. 30 ^ (2 ^ 4)
-function pow2(x: bigint, power: bigint): bigint {
+function pow2(x: any, power: any): any {
   const { P } = CURVE;
+  let p = power.toJSNumber()
   let res = x;
-  while (power-- > _0n) {
-    res *= res;
-    res %= P;
+  while (p-- > 0) {
+    res = res.multiply(res);
+    res = res.mod(P);
   }
   return res;
 }
 
-function sqrtMod(x: bigint): bigint {
+function sqrtMod(x: any): any {
   const { P } = CURVE;
   const _6n = BigInt(6);
   const _11n = BigInt(11);
@@ -348,72 +349,73 @@ function sqrtMod(x: bigint): bigint {
   const _23n = BigInt(23);
   const _44n = BigInt(44);
   const _88n = BigInt(88);
-  const b2 = (x * x * x) % P; // x^3, 11
-  const b3 = (b2 * b2 * x) % P; // x^7
-  const b6 = (pow2(b3, _3n) * b3) % P;
-  const b9 = (pow2(b6, _3n) * b3) % P;
-  const b11 = (pow2(b9, _2n) * b2) % P;
-  const b22 = (pow2(b11, _11n) * b11) % P;
-  const b44 = (pow2(b22, _22n) * b22) % P;
-  const b88 = (pow2(b44, _44n) * b44) % P;
-  const b176 = (pow2(b88, _88n) * b88) % P;
-  const b220 = (pow2(b176, _44n) * b44) % P;
-  const b223 = (pow2(b220, _3n) * b3) % P;
-  const t1 = (pow2(b223, _23n) * b22) % P;
-  const t2 = (pow2(t1, _6n) * b2) % P;
+  const b2 = (x.multiply(x).multiply(x)).mod(P); // x^3, 11
+  const b3 = (b2.multiply(b2).multiply(x)).mod(P); // x^7
+  const b6 = (pow2(b3, _3n).multiply(b3)).mod(P);
+  const b9 = (pow2(b6, _3n).multiply(b3)).mod(P);
+  const b11 = (pow2(b9, _2n).multiply(b2)).mod(P);
+  const b22 = (pow2(b11, _11n).multiply(b11)).mod(P);
+  const b44 = (pow2(b22, _22n).multiply(b22)).mod(P);
+  const b88 = (pow2(b44, _44n).multiply(b44)).mod(P);
+  const b176 = (pow2(b88, _88n).multiply(b88)).mod(P);
+  const b220 = (pow2(b176, _44n).multiply(b44)).mod(P);
+  const b223 = (pow2(b220, _3n).multiply(b3)).mod(P);
+  const t1 = (pow2(b223, _23n).multiply(b22)).mod(P);
+  const t2 = (pow2(t1, _6n).multiply(b2)).mod(P);
   return pow2(t2, _2n);
 }
+
 function invert(number, modulo = CURVE.P) {
   let a = mod(number, modulo);
   let b = modulo;
   let [x, y, u, v] = [_0n, _1n, _1n, _0n];
-  while (a !== _0n) {
-    const q = b / a;
-    const r = b % a;
-    const m = x - u * q;
-    const n = y - v * q;
+  while (a.neq(0)) {
+    const q = b.divide(a);
+    const r = b.mod(a);
+    const m = x.subtract(u.multiply(q));
+    const n = y.subtract(v.multiply(q));
     [b, a] = [a, r];
     [x, y] = [u, v];
     [u, v] = [m, n];
   }
-  const gcd = b;
-  if (gcd !==_1n) throw new Error("invert: does not exist");
   return mod(x, modulo);
 }
+
 function invertBatch(nums, n = CURVE.P) {
   const len = nums.length;
   const scratch = new Array(len);
   let acc =_1n;
   for (let i = 0; i < len; i++) {
-    if (nums[i] === _0n) continue;
+    if (nums[i].eq(0)) continue;
     scratch[i] = acc;
-    acc = mod(acc * nums[i], n);
+    acc = mod(acc.multiply(nums[i]), n);
   }
   acc = invert(acc, n);
   for (let i = len - 1; i >= 0; i--) {
-    if (nums[i] === _0n) continue;
-    const tmp = mod(acc * nums[i], n);
-    nums[i] = mod(acc * scratch[i], n);
+    if (nums[i].eq(0)) continue;
+    const tmp = mod(acc.multiply(nums[i]), n);
+    nums[i] = mod(acc.multiply(scratch[i]), n);
     acc = tmp;
   }
   return nums;
 }
-const divNearest = (a: bigint, b: bigint) => (a + b / _2n) / b;
+const divNearest = (a: any, b: any) => (a.add(b.divide(_2n))).divide(b);
 const POW_2_128 = BigInt("340282366920938463463374607431768211456");
-function splitScalarEndo(k: bigint) {
+function splitScalarEndo(k: any) {
   const { n } = CURVE;
-  const a1 = BigInt("0x3086d221a7d46bcde86c90e49284eb15");
+  const a1 = BigInt("3086d221a7d46bcde86c90e49284eb15", 16);
   const b1 = BigInt("-303414439467246543595250775667605759171");
-  const a2 = BigInt("0x114ca50f7a8e2f3f657c1108d9d44cfd8");
+  const b1_ = BigInt("303414439467246543595250775667605759171");
+  const a2 = BigInt("114ca50f7a8e2f3f657c1108d9d44cfd8", 16);
   const b2 = a1;
-  const c1 = divNearest(b2 * k, n);
-  const c2 = divNearest(-b1 * k, n);
-  let k1 = mod(k - c1 * a1 - c2 * a2, n);
-  let k2 = mod(-c1 * b1 - c2 * b2, n);
-  const k1neg = k1 > POW_2_128;
-  const k2neg = k2 > POW_2_128;
-  if (k1neg) k1 = n - k1;
-  if (k2neg) k2 = n - k2;
+  const c1 = divNearest(b2.multiply(k), n);
+  const c2 = divNearest(b1_.multiply(k), n);
+  let k1 = mod(k.subtract(c1.multiply(a1)).subtract(c2.multiply(a2)), n);
+  let k2 = mod(_0n.subtract(c1.multiply(b1)).subtract(c2.multiply(b2)), n);
+  const k1neg = k1.greater(POW_2_128);
+  const k2neg = k2.greater(POW_2_128);
+  if (k1neg) k1 = n.subtract(k1);
+  if (k2neg) k2 = n.subtract(k2);
   return {k1neg, k1, k2neg, k2};
 }
 /* eslint-enable */
