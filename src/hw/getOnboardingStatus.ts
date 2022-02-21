@@ -11,16 +11,6 @@ const seedSizeFlag = 0x60;
 const currentWordFlag = 0x1f;
 const confirmingWordsFlag = 0x01;
 
-// Before closing the PR
-// const flagsList = [
-//   {
-//     flagName: "onboarded",
-//     path: "onboarding", // Use object-path
-//     byteIndex: 0,
-//     hex: 0x01,
-//   },
-// ]
-
 export default async function getOnboardingStatus(
   transport: Transport
 ): Promise<OnboardingInfo> {
