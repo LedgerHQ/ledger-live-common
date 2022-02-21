@@ -16,7 +16,7 @@ export default async function getOnboardingStatus(
 ): Promise<OnboardingInfo> {
   const { flags } = await getVersion(transport);
 
-  if(!flags || flags.length < 4){
+  if (!flags || flags.length < 4) {
     return {};
   }
 
