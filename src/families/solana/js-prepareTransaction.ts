@@ -325,7 +325,7 @@ async function deriveTransferCommandDescriptor(
   } else {
     if (txAmount.lte(0)) {
       errors.amount = new AmountRequired();
-    } else if (txAmount.plus(fee).lt(mainAccount.balance)) {
+    } else if (txAmount.plus(fee).gt(mainAccount.balance)) {
       errors.amount = new NotEnoughBalance();
     }
   }
@@ -631,8 +631,6 @@ async function validateRecipientCommon(
     errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
   } else if (!isValidBase58Address(tx.recipient)) {
     errors.recipient = new InvalidAddress();
-  } else if (!isEd25519Address(tx.recipient)) {
-    warnings.recipientOffCurve = new SolanaAddressOffEd25519();
   } else {
     const recipientWalletIsUnfunded = !(await isAccountFunded(
       tx.recipient,
@@ -641,6 +639,9 @@ async function validateRecipientCommon(
 
     if (recipientWalletIsUnfunded) {
       warnings.recipient = new SolanaAccountNotFunded();
+    }
+    if (!isEd25519Address(tx.recipient)) {
+      warnings.recipientOffCurve = new SolanaAddressOffEd25519();
     }
   }
 }

@@ -454,12 +454,14 @@ type TransactionTestSpec = Exclude<
 
 function recipientRequired(): TransactionTestSpec[] {
   const models: TransactionModel[] = [
+    /*
     {
       kind: "token.transfer",
       uiState: {
         subAccountId: "",
       },
     },
+    */
     {
       kind: "transfer",
       uiState: {},
