@@ -1,4 +1,9 @@
-import { Account, Operation, OperationType, SignOperationEvent } from "../../types";
+import {
+  Account,
+  Operation,
+  OperationType,
+  SignOperationEvent,
+} from "../../types";
 import type { Transaction } from "./types";
 import { getAccount, getChainId } from "./api/Cosmos";
 import { Observable } from "rxjs";
@@ -145,7 +150,7 @@ const signOperation = ({
 
         o.next({ type: "device-signature-granted" });
 
-        const txHash = ""; // resolved at broadcast time
+        const hash = ""; // resolved at broadcast time
         const accountId = account.id;
         const type: OperationType =
           transaction.mode === "undelegate"
@@ -158,19 +163,27 @@ const signOperation = ({
             ? "REWARD"
             : "OUT";
 
+        const senders = [] as any;
+        const recipients = [] as any;
+
+        if (type === "OUT") {
+          senders.push(account.freshAddress);
+          recipients.push(transaction.recipient);
+        }
+
         // build optimistic operation
         const operation: Operation = {
-          id: encodeOperationId(accountId, txHash, type),
-          hash: txHash,
-          type: type,
+          id: encodeOperationId(accountId, hash, type),
+          hash,
+          type,
           value: transaction.amount,
           fee: transaction.fees || new BigNumber(0),
           extra: {},
           blockHash: null,
           blockHeight: null,
-          senders: [account.freshAddress],
-          recipients: [transaction.recipient],
-          accountId: accountId,
+          senders,
+          recipients,
+          accountId,
           date: new Date(),
         };
 
