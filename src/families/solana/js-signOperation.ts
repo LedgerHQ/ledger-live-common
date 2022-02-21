@@ -8,16 +8,15 @@ import type {
 import { open, close } from "../../hw";
 import type {
   Command,
+  CommandDescriptor,
   StakeCreateAccountCommand,
   StakeDelegateCommand,
   StakeSplitCommand,
   StakeUndelegateCommand,
   StakeWithdrawCommand,
-  TokenCreateATACommand,
   TokenTransferCommand,
   Transaction,
   TransferCommand,
-  ValidCommandDescriptor,
 } from "./types";
 import { buildTransactionWithAPI } from "./js-buildTransaction";
 import Solana from "@ledgerhq/hw-app-solana";
@@ -36,18 +35,15 @@ const buildOptimisticOperation = (
 
   const { commandDescriptor } = transaction.model;
 
-  switch (commandDescriptor.status) {
-    case "valid":
-      return buildOptimisticOperationForCommand(
-        account,
-        transaction,
-        commandDescriptor
-      );
-    case "invalid":
-      throw new Error("invalid command");
-    default:
-      return assertUnreachable(commandDescriptor);
+  if (Object.keys(commandDescriptor.errors).length > 0) {
+    throw new Error("invalid command");
   }
+
+  return buildOptimisticOperationForCommand(
+    account,
+    transaction,
+    commandDescriptor
+  );
 };
 
 export const signOperationWithAPI = (
@@ -109,7 +105,7 @@ export const signOperationWithAPI = (
 function buildOptimisticOperationForCommand(
   account: Account,
   transaction: Transaction,
-  commandDescriptor: ValidCommandDescriptor
+  commandDescriptor: CommandDescriptor
 ): Operation {
   const { command } = commandDescriptor;
   switch (command.kind) {
@@ -128,12 +124,7 @@ function buildOptimisticOperationForCommand(
         commandDescriptor
       );
     case "token.createATA":
-      return optimisticOpForCATA(
-        account,
-        transaction,
-        command,
-        commandDescriptor
-      );
+      return optimisticOpForCATA(account, commandDescriptor);
     case "stake.createAccount":
       return optimisticOpForStakeCreateAccount(
         account,
@@ -142,33 +133,17 @@ function buildOptimisticOperationForCommand(
         commandDescriptor
       );
     case "stake.delegate":
-      return optimisticOpForStakeDelegate(
-        account,
-        transaction,
-        command,
-        commandDescriptor
-      );
+      return optimisticOpForStakeDelegate(account, command, commandDescriptor);
     case "stake.undelegate":
       return optimisticOpForStakeUndelegate(
         account,
-        transaction,
         command,
         commandDescriptor
       );
     case "stake.withdraw":
-      return optimisticOpForStakeWithdraw(
-        account,
-        transaction,
-        command,
-        commandDescriptor
-      );
+      return optimisticOpForStakeWithdraw(account, command, commandDescriptor);
     case "stake.split":
-      return optimisticOpForStakeSplit(
-        account,
-        transaction,
-        command,
-        commandDescriptor
-      );
+      return optimisticOpForStakeSplit(account, command, commandDescriptor);
     default:
       return assertUnreachable(command);
   }
@@ -177,9 +152,9 @@ function optimisticOpForTransfer(
   account: Account,
   transaction: Transaction,
   command: TransferCommand,
-  commandDescriptor: ValidCommandDescriptor
+  commandDescriptor: CommandDescriptor
 ): Operation {
-  const commons = optimisticOpcommons(transaction, commandDescriptor);
+  const commons = optimisticOpcommons(commandDescriptor);
   return {
     ...commons,
     id: encodeOperationId(account.id, "", "OUT"),
@@ -196,13 +171,13 @@ function optimisticOpForTokenTransfer(
   account: Account,
   transaction: Transaction,
   command: TokenTransferCommand,
-  commandDescriptor: ValidCommandDescriptor
+  commandDescriptor: CommandDescriptor
 ): Operation {
   if (!transaction.subAccountId) {
     throw new Error("sub account id is required for token transfer");
   }
   return {
-    ...optimisticOpcommons(transaction, commandDescriptor),
+    ...optimisticOpcommons(commandDescriptor),
     id: encodeOperationId(account.id, "", "FEES"),
     type: "FEES",
     accountId: account.id,
@@ -212,7 +187,7 @@ function optimisticOpForTokenTransfer(
     extra: getOpExtras(command),
     subOperations: [
       {
-        ...optimisticOpcommons(transaction, commandDescriptor),
+        ...optimisticOpcommons(commandDescriptor),
         id: encodeOperationId(transaction.subAccountId, "", "OUT"),
         type: "OUT",
         accountId: transaction.subAccountId,
@@ -227,36 +202,25 @@ function optimisticOpForTokenTransfer(
 
 function optimisticOpForCATA(
   account: Account,
-  transaction: Transaction,
-  _: TokenCreateATACommand,
-  commandDescriptor: ValidCommandDescriptor
+  commandDescriptor: CommandDescriptor
 ): Operation {
   const opType: OperationType = "OPT_IN";
 
   return {
-    ...optimisticOpcommons(transaction, commandDescriptor),
+    ...optimisticOpcommons(commandDescriptor),
     id: encodeOperationId(account.id, "", opType),
     type: opType,
     accountId: account.id,
     senders: [],
     recipients: [],
-    value: new BigNumber(commandDescriptor.fees ?? 0),
+    value: new BigNumber(commandDescriptor.fee),
   };
 }
 
-function optimisticOpcommons(
-  transaction: Transaction,
-  commandDescriptor: ValidCommandDescriptor
-) {
-  if (!transaction.feeCalculator) {
-    throw new Error("fee calculator is not loaded");
-  }
-  const fees =
-    transaction.feeCalculator.lamportsPerSignature +
-    (commandDescriptor.fees ?? 0);
+function optimisticOpcommons(commandDescriptor: CommandDescriptor) {
   return {
     hash: "",
-    fee: new BigNumber(fees),
+    fee: new BigNumber(commandDescriptor.fee),
     blockHash: null,
     blockHeight: null,
     date: new Date(),
@@ -290,11 +254,11 @@ function optimisticOpForStakeCreateAccount(
   account: Account,
   transaction: Transaction,
   command: StakeCreateAccountCommand,
-  commandDescriptor: ValidCommandDescriptor
+  commandDescriptor: CommandDescriptor
 ): Operation {
   const opType: OperationType =
     command.delegate === undefined ? "OUT" : "DELEGATE";
-  const commons = optimisticOpcommons(transaction, commandDescriptor);
+  const commons = optimisticOpcommons(commandDescriptor);
   const recipients: string[] = [command.stakeAccAddress];
 
   if (command.delegate !== undefined) {
@@ -314,11 +278,10 @@ function optimisticOpForStakeCreateAccount(
 
 function optimisticOpForStakeDelegate(
   account: Account,
-  transaction: Transaction,
   command: StakeDelegateCommand,
-  commandDescriptor: ValidCommandDescriptor
+  commandDescriptor: CommandDescriptor
 ): Operation {
-  const commons = optimisticOpcommons(transaction, commandDescriptor);
+  const commons = optimisticOpcommons(commandDescriptor);
   const opType: OperationType = "DELEGATE";
   return {
     ...commons,
@@ -334,11 +297,10 @@ function optimisticOpForStakeDelegate(
 
 function optimisticOpForStakeUndelegate(
   account: Account,
-  transaction: Transaction,
   command: StakeUndelegateCommand,
-  commandDescriptor: ValidCommandDescriptor
+  commandDescriptor: CommandDescriptor
 ): Operation {
-  const commons = optimisticOpcommons(transaction, commandDescriptor);
+  const commons = optimisticOpcommons(commandDescriptor);
   const opType: OperationType = "UNDELEGATE";
   return {
     ...commons,
@@ -354,11 +316,10 @@ function optimisticOpForStakeUndelegate(
 
 function optimisticOpForStakeWithdraw(
   account: Account,
-  transaction: Transaction,
   command: StakeWithdrawCommand,
-  commandDescriptor: ValidCommandDescriptor
+  commandDescriptor: CommandDescriptor
 ): Operation {
-  const commons = optimisticOpcommons(transaction, commandDescriptor);
+  const commons = optimisticOpcommons(commandDescriptor);
   // TODO: should we reuse existing op types or create specific ones for Solana?
   const opType: OperationType = "WITHDRAW_UNBONDED";
   return {
@@ -375,11 +336,10 @@ function optimisticOpForStakeWithdraw(
 
 function optimisticOpForStakeSplit(
   account: Account,
-  transaction: Transaction,
   command: StakeSplitCommand,
-  commandDescriptor: ValidCommandDescriptor
+  commandDescriptor: CommandDescriptor
 ): Operation {
-  const commons = optimisticOpcommons(transaction, commandDescriptor);
+  const commons = optimisticOpcommons(commandDescriptor);
   // TODO: fix op type
   const opType: OperationType = "OUT";
   return {

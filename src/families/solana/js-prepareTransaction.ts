@@ -45,52 +45,23 @@ import type {
   TokenTransferTransaction,
   Transaction,
   TransactionModel,
+  TransferCommand,
   TransferTransaction,
 } from "./types";
 import { assertUnreachable } from "./utils";
 
-type TransactionWithFeeCalculator = Transaction & {
-  feeCalculator: Exclude<Transaction["feeCalculator"], undefined>;
-};
-
 async function deriveCommandDescriptor(
   mainAccount: Account,
-  tx: TransactionWithFeeCalculator,
+  tx: Transaction,
   api: ChainAPI
 ): Promise<CommandDescriptor> {
-  const errors: Record<string, Error> = {};
-
   const { model } = tx;
 
   switch (model.kind) {
     case "transfer":
+      return deriveTransferCommandDescriptor(mainAccount, tx, model, api);
     case "token.transfer":
-      if (!tx.recipient) {
-        errors.recipient = new RecipientRequired();
-      } else if (mainAccount.freshAddress === tx.recipient) {
-        errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
-      } else if (!isValidBase58Address(tx.recipient)) {
-        errors.recipient = new InvalidAddress();
-      }
-
-      if (model.uiState.memo) {
-        const memoBytes = Buffer.from(model.uiState.memo, "utf-8");
-        if (memoBytes.byteLength > MAX_MEMO_LENGTH) {
-          errors.memo = errors.memo = new SolanaMemoIsTooLong(undefined, {
-            maxLength: MAX_MEMO_LENGTH,
-          });
-          // LLM expects <transaction> as error key to disable continue button
-          errors.transaction = errors.memo;
-        }
-      }
-
-      if (Object.keys(errors).length > 0) {
-        return toInvalidStatusCommand(errors);
-      }
-
-      return model.kind === "transfer"
-        ? deriveTransferCommandDescriptor(mainAccount, tx, model, api)
-        : deriveTokenTransferCommandDescriptor(mainAccount, tx, model, api);
+      return deriveTokenTransferCommandDescriptor(mainAccount, tx, model, api);
     case "token.createATA":
       return deriveCreateAssociatedTokenAccountCommandDescriptor(
         mainAccount,
@@ -107,9 +78,9 @@ async function deriveCommandDescriptor(
     case "stake.delegate":
       return deriveStakeDelegateCommandDescriptor(mainAccount, model, api);
     case "stake.undelegate":
-      return deriveStakeUndelegateCommandDescriptor(mainAccount, model);
+      return deriveStakeUndelegateCommandDescriptor(mainAccount, model, api);
     case "stake.withdraw":
-      return deriveStakeWithdrawCommandDescriptor(mainAccount, tx, model);
+      return deriveStakeWithdrawCommandDescriptor(mainAccount, tx, model, api);
     case "stake.split":
       return deriveStakeSplitCommandDescriptor(mainAccount, tx, model, api);
     default:
@@ -122,21 +93,7 @@ const prepareTransaction = async (
   tx: Transaction,
   api: ChainAPI
 ): Promise<Transaction> => {
-  const patch: Partial<Transaction> = {};
-  const errors: Record<string, Error> = {};
-
-  const feeCalculator = tx.feeCalculator ?? (await api.getTxFeeCalculator());
-
-  if (tx.feeCalculator === undefined) {
-    patch.feeCalculator = feeCalculator;
-    // LLM requires this field to be truthy to show fees
-    (patch as any).networkInfo = true;
-  }
-
-  const txToDeriveFrom = {
-    ...updateModelIfSubAccountIdPresent(tx),
-    feeCalculator,
-  };
+  const txToDeriveFrom = updateModelIfSubAccountIdPresent(tx);
 
   const commandDescriptor = await deriveCommandDescriptor(
     mainAccount,
@@ -144,48 +101,20 @@ const prepareTransaction = async (
     api
   );
 
-  if (commandDescriptor.status === "invalid") {
-    return toInvalidTx(
-      tx,
-      patch,
-      commandDescriptor.errors,
-      commandDescriptor.warnings
-    );
-  }
-
-  const command = commandDescriptor.command;
-  switch (command.kind) {
-    case "transfer": {
-      const totalSpend = command.amount + feeCalculator.lamportsPerSignature;
-      if (mainAccount.balance.lt(totalSpend)) {
-        errors.amount = new NotEnoughBalance();
-      }
-      break;
-    }
-    default: {
-      const totalFees =
-        feeCalculator.lamportsPerSignature + (commandDescriptor.fees ?? 0);
-      if (mainAccount.balance.lt(totalFees)) {
-        errors.amount = new NotEnoughBalance();
-      }
-    }
-  }
-
-  if (Object.keys(errors).length > 0) {
-    return toInvalidTx(tx, patch, errors);
-  }
-
-  patch.model = {
+  const model: TransactionModel = {
     ...tx.model,
     commandDescriptor,
   };
 
-  return Object.keys(patch).length > 0
-    ? {
-        ...tx,
-        ...patch,
-      }
-    : tx;
+  const preparedTx: Transaction = {
+    ...tx,
+    model,
+  };
+
+  // LLM requires this field to be truthy to show fees
+  (preparedTx as any).networkInfo = true;
+
+  return preparedTx;
 };
 
 const deriveTokenTransferCommandDescriptor = async (
@@ -206,6 +135,14 @@ const deriveTokenTransferCommandDescriptor = async (
     throw new Error("subaccount not found");
   }
 
+  await validateRecipientCommon(mainAccount, tx, errors, warnings, api);
+
+  const memo = model.uiState.memo;
+
+  if (typeof memo === "string" && memo.length > 0) {
+    validateMemoCommon(memo, errors);
+  }
+
   const tokenIdParts = subAccount.token.id.split("/");
   const mintAddress = tokenIdParts[tokenIdParts.length - 1];
   const mintDecimals = subAccount.token.units[0].magnitude;
@@ -213,51 +150,57 @@ const deriveTokenTransferCommandDescriptor = async (
   const senderAssociatedTokenAccountAddress =
     decodeAccountIdWithTokenAccountAddress(subAccount.id).address;
 
-  if (tx.recipient === senderAssociatedTokenAccountAddress) {
+  if (
+    !errors.recipient &&
+    tx.recipient === senderAssociatedTokenAccountAddress
+  ) {
     errors.recipient = new SolanaTokenRecipientIsSenderATA();
-    return toInvalidStatusCommand(errors, warnings);
   }
 
-  const recipientDescriptor = await getTokenRecipient(
-    tx.recipient,
-    mintAddress,
-    api
-  );
+  const defaultRecipientDescriptor: TokenRecipientDescriptor = {
+    shouldCreateAsAssociatedTokenAccount: false,
+    tokenAccAddress: "",
+    walletAddress: "",
+  };
 
-  if (recipientDescriptor instanceof Error) {
-    errors.recipient = recipientDescriptor;
-    return toInvalidStatusCommand(errors, warnings);
+  const recipientDescriptorOrError = errors.recipient
+    ? defaultRecipientDescriptor
+    : await getTokenRecipient(tx.recipient, mintAddress, api);
+
+  if (!errors.recipient && recipientDescriptorOrError instanceof Error) {
+    errors.recipient = recipientDescriptorOrError;
   }
 
-  const fees = recipientDescriptor.shouldCreateAsAssociatedTokenAccount
-    ? await api.getAssocTokenAccMinNativeBalance()
-    : 0;
+  const recipientDescriptor: TokenRecipientDescriptor =
+    recipientDescriptorOrError instanceof Error
+      ? defaultRecipientDescriptor
+      : recipientDescriptorOrError;
+
+  // TODO: check if SOL balance enough to pay fees
+  const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
+  const assocAccRentExempt =
+    recipientDescriptor.shouldCreateAsAssociatedTokenAccount
+      ? await api.getAssocTokenAccMinNativeBalance()
+      : 0;
 
   if (recipientDescriptor.shouldCreateAsAssociatedTokenAccount) {
-    warnings.recipientAssociatedTokenAccount =
+    warnings.recipient =
       new SolanaRecipientAssociatedTokenAccountWillBeFunded();
-
-    if (!(await isAccountFunded(tx.recipient, api))) {
-      warnings.recipient = new SolanaAccountNotFunded();
-    }
   }
 
   if (!tx.useAllAmount && tx.amount.lte(0)) {
     errors.amount = new AmountRequired();
-    return toInvalidStatusCommand(errors, warnings);
   }
 
   const txAmount = tx.useAllAmount
     ? subAccount.spendableBalance.toNumber()
     : tx.amount.toNumber();
 
-  if (txAmount > subAccount.spendableBalance.toNumber()) {
+  if (!errors.amount && txAmount > subAccount.spendableBalance.toNumber()) {
     errors.amount = new NotEnoughBalance();
-    return toInvalidStatusCommand(errors, warnings);
   }
 
   return {
-    status: "valid",
     command: {
       kind: "token.transfer",
       ownerAddress: mainAccount.freshAddress,
@@ -268,8 +211,9 @@ const deriveTokenTransferCommandDescriptor = async (
       recipientDescriptor: recipientDescriptor,
       memo: model.uiState.memo,
     },
-    fees,
+    fee: txFee + assocAccRentExempt,
     warnings,
+    errors,
   };
 };
 
@@ -335,86 +279,100 @@ async function deriveCreateAssociatedTokenAccountCommandDescriptor(
     mint
   );
 
-  const fees = await api.getAssocTokenAccMinNativeBalance();
+  const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
+  const assocAccRentExempt = await api.getAssocTokenAccMinNativeBalance();
 
   return {
-    status: "valid",
-    fees,
+    fee: txFee + assocAccRentExempt,
     command: {
       kind: model.kind,
       mint: mint,
       owner: mainAccount.freshAddress,
       associatedTokenAccountAddress,
     },
+    warnings: {},
+    errors: {},
   };
 }
 
 async function deriveTransferCommandDescriptor(
   mainAccount: Account,
-  tx: TransactionWithFeeCalculator,
+  tx: Transaction,
   model: TransactionModel & { kind: TransferTransaction["kind"] },
   api: ChainAPI
 ): Promise<CommandDescriptor> {
   const errors: Record<string, Error> = {};
   const warnings: Record<string, Error> = {};
 
-  if (!isEd25519Address(tx.recipient)) {
-    warnings.recipientOffCurve = new SolanaAddressOffEd25519();
+  await validateRecipientCommon(mainAccount, tx, errors, warnings, api);
+
+  const memo = model.uiState.memo;
+
+  if (typeof memo === "string" && memo.length > 0) {
+    validateMemoCommon(memo, errors);
   }
 
-  const recipientWalletIsUnfunded = !(await isAccountFunded(tx.recipient, api));
-  if (recipientWalletIsUnfunded) {
-    warnings.recipient = new SolanaAccountNotFunded();
-  }
-
-  if (!tx.useAllAmount && tx.amount.lte(0)) {
-    errors.amount = new AmountRequired();
-    return toInvalidStatusCommand(errors, warnings);
-  }
-
-  const fee = tx.feeCalculator.lamportsPerSignature;
+  const fee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 
   const txAmount = tx.useAllAmount
     ? BigNumber.max(mainAccount.balance.minus(fee), 0)
     : tx.amount;
 
-  if (txAmount.plus(fee).gt(mainAccount.balance)) {
-    errors.amount = new NotEnoughBalance();
-    return toInvalidStatusCommand(errors, warnings);
+  if (tx.useAllAmount) {
+    if (txAmount.eq(0)) {
+      errors.amount = new NotEnoughBalance();
+    }
+  } else {
+    if (txAmount.lte(0)) {
+      errors.amount = new AmountRequired();
+    } else if (txAmount.plus(fee).lt(mainAccount.balance)) {
+      errors.amount = new NotEnoughBalance();
+    }
   }
+  const command: TransferCommand = {
+    kind: "transfer",
+    amount: txAmount.toNumber(),
+    sender: mainAccount.freshAddress,
+    recipient: tx.recipient,
+    memo: model.uiState.memo,
+  };
 
   return {
-    status: "valid",
-    command: {
-      kind: "transfer",
-      sender: mainAccount.freshAddress,
-      recipient: tx.recipient,
-      amount: txAmount.toNumber(),
-      memo: model.uiState.memo,
-    },
-    warnings: Object.keys(warnings).length > 0 ? warnings : undefined,
+    command,
+    fee,
+    warnings,
+    errors,
   };
 }
 
 async function deriveStakeCreateAccountCommandDescriptor(
   mainAccount: Account,
-  tx: TransactionWithFeeCalculator,
+  tx: Transaction,
   model: TransactionModel & { kind: StakeCreateAccountTransaction["kind"] },
   api: ChainAPI
 ): Promise<CommandDescriptor> {
   const errors: Record<string, Error> = {};
 
-  const txFee = tx.feeCalculator.lamportsPerSignature;
+  if (!tx.useAllAmount && tx.amount.lte(0)) {
+    errors.amount = new AmountRequired();
+  }
 
-  // TODO: warning to leave some balance on main acc to pay fees
-  const amount = tx.useAllAmount ? mainAccount.balance.minus(txFee) : tx.amount;
+  const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
+  const stakeAccRentExemptAmount =
+    await getStakeAccountMinimumBalanceForRentExemption(api);
+
+  const fee = txFee + stakeAccRentExemptAmount;
+
+  const amount = tx.useAllAmount
+    ? BigNumber.max(mainAccount.balance.minus(fee), 0)
+    : tx.amount;
+
+  if (!errors.amount && mainAccount.balance.lt(amount.plus(fee))) {
+    errors.amount = new NotEnoughBalance();
+  }
 
   const { uiState } = model;
   const { delegate } = uiState;
-
-  if (mainAccount.balance.lt(amount.plus(txFee))) {
-    errors.amount = new NotEnoughBalance();
-  }
 
   if (delegate !== undefined) {
     if (!isValidBase58Address(delegate.voteAccAddress)) {
@@ -428,26 +386,22 @@ async function deriveStakeCreateAccountCommandDescriptor(
     }
   }
 
-  if (Object.keys(errors).length > 0) {
-    return toInvalidStatusCommand(errors);
-  }
-
-  const commandFees = await getStakeAccountMinimumBalanceForRentExemption(api);
-
   const { addr: stakeAccAddress, seed: stakeAccAddressSeed } =
     await nextStakeAccAddr(mainAccount);
 
   return {
-    status: "valid",
     command: {
       kind: "stake.createAccount",
       amount: amount.toNumber(),
+      stakeAccRentExemptAmount,
       fromAccAddress: mainAccount.freshAddress,
       stakeAccAddress,
       delegate,
       seed: stakeAccAddressSeed,
     },
-    fees: commandFees,
+    fee,
+    warnings: {},
+    errors,
   };
 }
 
@@ -474,24 +428,25 @@ async function deriveStakeDelegateCommandDescriptor(
     }
   }
 
-  if (Object.keys(errors).length > 0) {
-    return toInvalidStatusCommand(errors);
-  }
+  const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 
   return {
-    status: "valid",
     command: {
       kind: "stake.delegate",
       authorizedAccAddr: mainAccount.freshAddress,
       stakeAccAddr: uiState.stakeAccAddr,
       voteAccAddr: uiState.voteAccAddr,
     },
+    fee: txFee,
+    warnings: {},
+    errors,
   };
 }
 
 async function deriveStakeUndelegateCommandDescriptor(
   mainAccount: Account,
-  model: TransactionModel & { kind: StakeUndelegateTransaction["kind"] }
+  model: TransactionModel & { kind: StakeUndelegateTransaction["kind"] },
+  api: ChainAPI
 ): Promise<CommandDescriptor> {
   const errors: Record<string, Error> = {};
 
@@ -501,66 +456,66 @@ async function deriveStakeUndelegateCommandDescriptor(
     errors.stakeAccAddr = new InvalidAddress();
   }
 
-  if (Object.keys(errors).length > 0) {
-    return toInvalidStatusCommand(errors);
-  }
+  const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 
   return {
-    status: "valid",
     command: {
       kind: "stake.undelegate",
       authorizedAccAddr: mainAccount.freshAddress,
       stakeAccAddr: uiState.stakeAccAddr,
     },
+    fee: txFee,
+    warnings: {},
+    errors,
   };
 }
 
 async function deriveStakeWithdrawCommandDescriptor(
   mainAccount: Account,
-  tx: TransactionWithFeeCalculator,
-  model: TransactionModel & { kind: StakeWithdrawTransaction["kind"] }
+  tx: Transaction,
+  model: TransactionModel & { kind: StakeWithdrawTransaction["kind"] },
+  api: ChainAPI
 ): Promise<CommandDescriptor> {
-  const errors: Record<string, Error> = {};
-
-  // TODO: find stake account in the main acc when synced
   const { uiState } = model;
 
-  if (tx.recipient.length > 0 && !isValidBase58Address(tx.recipient)) {
-    errors.recipient = new InvalidAddress();
+  const stake = mainAccount.solanaResources?.stakes.find(
+    (stake) => stake.stakeAccAddr === uiState.stakeAccAddr
+  );
+
+  if (stake === undefined) {
+    throw new Error(
+      `stake with account address <${uiState.stakeAccAddr}> not found`
+    );
   }
 
-  // TODO: use all amount
-  if (tx.amount.lte(0)) {
-    errors.amount = new AmountRequired();
-  }
-  // TODO: else if amount > stake balance
-
-  if (!isValidBase58Address(uiState.stakeAccAddr)) {
-    errors.stakeAccAddr = new InvalidAddress();
+  if (stake.withdrawable !== tx.amount.toNumber()) {
+    throw new Error(
+      `expected stake withdrawable amount <${
+        stake.withdrawable
+      }> to match transaction amount <${tx.amount.toNumber()}>`
+    );
   }
 
-  if (Object.keys(errors).length > 0) {
-    return toInvalidStatusCommand(errors);
-  }
-
-  const recipient =
-    tx.recipient.length > 0 ? tx.recipient : mainAccount.freshAddress;
+  //TODO: what is user balance is less then fee?
+  const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 
   return {
-    status: "valid",
     command: {
       kind: "stake.withdraw",
       authorizedAccAddr: mainAccount.freshAddress,
-      stakeAccAddr: uiState.stakeAccAddr,
-      amount: tx.amount.toNumber(),
-      toAccAddr: recipient,
+      stakeAccAddr: stake.stakeAccAddr,
+      amount: stake.withdrawable,
+      toAccAddr: mainAccount.freshAddress,
     },
+    fee: txFee,
+    warnings: {},
+    errors: {},
   };
 }
 
 async function deriveStakeSplitCommandDescriptor(
   mainAccount: Account,
-  tx: TransactionWithFeeCalculator,
+  tx: Transaction,
   model: TransactionModel & { kind: StakeSplitTransaction["kind"] },
   api: ChainAPI
 ): Promise<CommandDescriptor> {
@@ -579,10 +534,6 @@ async function deriveStakeSplitCommandDescriptor(
     errors.stakeAccAddr = new InvalidAddress();
   }
 
-  if (Object.keys(errors).length > 0) {
-    return toInvalidStatusCommand(errors);
-  }
-
   mainAccount.solanaResources?.stakes ?? [];
 
   const commandFees = await getStakeAccountMinimumBalanceForRentExemption(api);
@@ -591,7 +542,6 @@ async function deriveStakeSplitCommandDescriptor(
     await nextStakeAccAddr(mainAccount);
 
   return {
-    status: "valid",
     command: {
       kind: "stake.split",
       authorizedAccAddr: mainAccount.freshAddress,
@@ -600,34 +550,9 @@ async function deriveStakeSplitCommandDescriptor(
       seed: splitStakeAccAddrSeed,
       splitStakeAccAddr,
     },
-    fees: commandFees,
-  };
-}
-
-function toInvalidTx(
-  tx: Transaction,
-  patch: Partial<Transaction>,
-  errors: Record<string, Error>,
-  warnings?: Record<string, Error>
-): Transaction {
-  return {
-    ...tx,
-    ...patch,
-    model: {
-      ...tx.model,
-      commandDescriptor: toInvalidStatusCommand(errors, warnings),
-    },
-  };
-}
-
-function toInvalidStatusCommand(
-  errors: Record<string, Error>,
-  warnings?: Record<string, Error>
-) {
-  return {
-    status: "invalid" as const,
-    errors,
-    warnings,
+    fee: commandFees,
+    warnings: {},
+    errors: {},
   };
 }
 
@@ -691,6 +616,44 @@ async function nextStakeAccAddrRoutine(
         seed,
         addr,
       };
+}
+
+async function validateRecipientCommon(
+  mainAccount: Account,
+  tx: Transaction,
+  errors: Record<string, Error>,
+  warnings: Record<string, Error>,
+  api: ChainAPI
+) {
+  if (!tx.recipient) {
+    errors.recipient = new RecipientRequired();
+  } else if (mainAccount.freshAddress === tx.recipient) {
+    errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
+  } else if (!isValidBase58Address(tx.recipient)) {
+    errors.recipient = new InvalidAddress();
+  } else if (!isEd25519Address(tx.recipient)) {
+    warnings.recipientOffCurve = new SolanaAddressOffEd25519();
+  } else {
+    const recipientWalletIsUnfunded = !(await isAccountFunded(
+      tx.recipient,
+      api
+    ));
+
+    if (recipientWalletIsUnfunded) {
+      warnings.recipient = new SolanaAccountNotFunded();
+    }
+  }
+}
+
+function validateMemoCommon(memo: string, errors: Record<string, Error>) {
+  const memoBytes = Buffer.from(memo, "utf-8");
+  if (memoBytes.byteLength > MAX_MEMO_LENGTH) {
+    errors.memo = errors.memo = new SolanaMemoIsTooLong(undefined, {
+      maxLength: MAX_MEMO_LENGTH,
+    });
+    // LLM expects <transaction> as error key to disable continue button
+    errors.transaction = errors.memo;
+  }
 }
 
 export { prepareTransaction };

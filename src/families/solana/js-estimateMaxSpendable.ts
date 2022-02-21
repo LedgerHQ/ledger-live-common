@@ -6,19 +6,14 @@ import { ChainAPI } from "./api";
 const estimateMaxSpendableWithAPI = async (
   {
     account,
-    transaction,
   }: Parameters<AccountBridge<Transaction>["estimateMaxSpendable"]>[0],
   api: ChainAPI
 ): Promise<BigNumber> => {
-  const feeCalculator =
-    transaction?.feeCalculator ?? (await api.getTxFeeCalculator());
+  const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 
   switch (account.type) {
     case "Account":
-      return BigNumber.max(
-        account.balance.minus(feeCalculator.lamportsPerSignature),
-        0
-      );
+      return BigNumber.max(account.balance.minus(txFee), 0);
     case "TokenAccount":
       return account.balance;
   }

@@ -30,6 +30,7 @@ export type StakeCreateAccountCommand = {
   stakeAccAddress: string;
   seed: string;
   amount: number;
+  stakeAccRentExemptAmount: number;
   delegate?: {
     voteAccAddress: string;
   };
@@ -92,22 +93,12 @@ export type Command =
   | StakeWithdrawCommand
   | StakeSplitCommand;
 
-export type ValidCommandDescriptor = {
-  status: "valid";
+export type CommandDescriptor = {
   command: Command;
-  fees?: number;
-  warnings?: Record<string, Error>;
-};
-
-export type InvalidCommandDescriptor = {
-  status: "invalid";
+  fee: number;
+  warnings: Record<string, Error>;
   errors: Record<string, Error>;
-  warnings?: Record<string, Error>;
 };
-
-export type CommandDescriptor<> =
-  | ValidCommandDescriptor
-  | InvalidCommandDescriptor;
 
 export type TransferTransaction = {
   kind: "transfer";
@@ -183,17 +174,11 @@ export type TransactionModel = { commandDescriptor?: CommandDescriptor } & (
 export type Transaction = TransactionCommon & {
   family: "solana";
   model: TransactionModel;
-  feeCalculator?: {
-    lamportsPerSignature: number;
-  };
 };
 
 export type TransactionRaw = TransactionCommonRaw & {
   family: "solana";
   model: string;
-  feeCalculator?: {
-    lamportsPerSignature: number;
-  };
 };
 
 export type SolanaStake = {

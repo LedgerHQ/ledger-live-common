@@ -24,23 +24,21 @@ import { toTokenId } from "./logic";
 
 export const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
   const common = fromTransactionCommonRaw(tr);
-  const { family, model, feeCalculator } = tr;
+  const { family, model } = tr;
   return {
     ...common,
     family,
     model: JSON.parse(model),
-    feeCalculator,
   };
 };
 
 export const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
-  const { family, model, feeCalculator } = t;
+  const { family, model } = t;
   return {
     ...common,
     family,
     model: JSON.stringify(model),
-    feeCalculator,
   };
 };
 
@@ -59,14 +57,11 @@ export const formatTransaction = (
     throw new Error("can not format unprepared transaction");
   }
   const { commandDescriptor } = tx.model;
-  switch (commandDescriptor.status) {
-    case "valid":
-      return formatCommand(mainAccount, tx, commandDescriptor.command);
-    case "invalid":
-      throw new Error("can not format invalid transaction");
-    default:
-      return assertUnreachable(commandDescriptor);
+
+  if (Object.keys(commandDescriptor.errors).length > 0) {
+    throw new Error("can not format invalid transaction");
   }
+  return formatCommand(mainAccount, tx, commandDescriptor.command);
 };
 
 function formatCommand(

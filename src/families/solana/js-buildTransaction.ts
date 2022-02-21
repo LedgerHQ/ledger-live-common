@@ -54,14 +54,10 @@ function buildInstructions(tx: Transaction): TransactionInstruction[] {
   if (commandDescriptor === undefined) {
     throw new Error("missing command descriptor");
   }
-  switch (commandDescriptor.status) {
-    case "valid":
-      return buildInstructionsForCommand(commandDescriptor.command);
-    case "invalid":
-      throw new Error("can not build invalid command");
-    default:
-      return assertUnreachable(commandDescriptor);
+  if (Object.keys(commandDescriptor.errors).length > 0) {
+    throw new Error("can not build invalid command");
   }
+  return buildInstructionsForCommand(commandDescriptor.command);
 }
 
 function buildInstructionsForCommand(

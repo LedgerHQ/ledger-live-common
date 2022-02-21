@@ -9,7 +9,7 @@ import type {
   TokenTransferCommand,
   Transaction,
   TransferCommand,
-  ValidCommandDescriptor,
+  CommandDescriptor,
 } from "./types";
 import type { DeviceTransactionField } from "../../transaction";
 import { assertUnreachable } from "./utils";
@@ -27,19 +27,16 @@ function getDeviceTransactionConfig({
   if (commandDescriptor === undefined) {
     throw new Error("missing command descriptor");
   }
-  switch (commandDescriptor.status) {
-    case "valid":
-      return fieldsForCommand(commandDescriptor);
-    case "invalid":
-      throw new Error("unexpected invalid command");
-    default:
-      return assertUnreachable(commandDescriptor);
+  if (Object.keys(commandDescriptor.errors).length > 0) {
+    throw new Error("unexpected invalid command");
   }
+
+  return fieldsForCommand(commandDescriptor);
 }
 
 export default getDeviceTransactionConfig;
 function fieldsForCommand(
-  commandDescriptor: ValidCommandDescriptor
+  commandDescriptor: CommandDescriptor
 ): DeviceTransactionField[] {
   const { command } = commandDescriptor;
   switch (command.kind) {

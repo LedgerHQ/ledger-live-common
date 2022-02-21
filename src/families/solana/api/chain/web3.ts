@@ -400,6 +400,7 @@ export function buildStakeCreateAccountInstructions({
   stakeAccAddress,
   seed,
   amount,
+  stakeAccRentExemptAmount,
   delegate,
 }: StakeCreateAccountCommand): TransactionInstruction[] {
   const fromPubkey = new PublicKey(fromAccAddress);
@@ -410,7 +411,7 @@ export function buildStakeCreateAccountInstructions({
     stakePubkey,
     basePubkey: fromPubkey,
     seed,
-    lamports: amount,
+    lamports: amount + stakeAccRentExemptAmount,
     authorized: {
       staker: fromPubkey,
       withdrawer: fromPubkey,

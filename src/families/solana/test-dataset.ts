@@ -119,7 +119,6 @@ const solana: CurrenciesData<Transaction> = {
             },
             amount: testOnChainData.fundedSenderBalance.dividedBy(2),
             recipient: testOnChainData.fundedAddress,
-            feeCalculator: testOnChainData.feeCalculator,
             family: "solana",
           },
           expectedStatus: {
@@ -142,7 +141,6 @@ const solana: CurrenciesData<Transaction> = {
             useAllAmount: true,
             amount: zero,
             recipient: testOnChainData.fundedAddress,
-            feeCalculator: testOnChainData.feeCalculator,
             family: "solana",
           },
           expectedStatus: {
@@ -162,7 +160,6 @@ const solana: CurrenciesData<Transaction> = {
             },
             amount: testOnChainData.fundedSenderBalance,
             recipient: testOnChainData.fundedAddress,
-            feeCalculator: testOnChainData.feeCalculator,
             family: "solana",
           },
           expectedStatus: {
@@ -187,11 +184,6 @@ const solana: CurrenciesData<Transaction> = {
             useAllAmount: true,
             amount: zero,
             recipient: testOnChainData.fundedAddress,
-            feeCalculator: {
-              lamportsPerSignature: testOnChainData.fundedSenderBalance
-                .plus(1)
-                .toNumber(),
-            },
             family: "solana",
           },
           expectedStatus: {
@@ -213,7 +205,6 @@ const solana: CurrenciesData<Transaction> = {
             },
             amount: zero,
             recipient: testOnChainData.fundedAddress,
-            feeCalculator: testOnChainData.feeCalculator,
             family: "solana",
           },
           expectedStatus: {
@@ -235,7 +226,6 @@ const solana: CurrenciesData<Transaction> = {
             },
             amount: new BigNumber(-1),
             recipient: testOnChainData.fundedAddress,
-            feeCalculator: testOnChainData.feeCalculator,
             family: "solana",
           },
           expectedStatus: {
@@ -257,7 +247,6 @@ const solana: CurrenciesData<Transaction> = {
             },
             amount: new BigNumber(1),
             recipient: testOnChainData.unfundedAddress,
-            feeCalculator: testOnChainData.feeCalculator,
             family: "solana",
           },
           expectedStatus: {
@@ -279,7 +268,6 @@ const solana: CurrenciesData<Transaction> = {
             },
             amount: new BigNumber(1),
             recipient: testOnChainData.offEd25519Address,
-            feeCalculator: testOnChainData.feeCalculator,
             family: "solana",
           },
           expectedStatus: {
@@ -307,7 +295,6 @@ const solana: CurrenciesData<Transaction> = {
             amount:
               testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
             recipient: testOnChainData.fundedAddress,
-            feeCalculator: testOnChainData.feeCalculator,
             family: "solana",
           },
           expectedStatus: {
@@ -333,7 +320,6 @@ const solana: CurrenciesData<Transaction> = {
               testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
             recipient:
               testOnChainData.wSolFundedAccountAssocTokenAccAddress,
-            feeCalculator: testOnChainData.feeCalculator,
             family: "solana",
           },
           expectedStatus: {
@@ -358,7 +344,6 @@ const solana: CurrenciesData<Transaction> = {
             amount:
               testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
             recipient: testOnChainData.notWSolTokenAccAddress,
-            feeCalculator: testOnChainData.feeCalculator,
             family: "solana",
           },
           expectedStatus: {
@@ -384,7 +369,6 @@ const solana: CurrenciesData<Transaction> = {
             amount:
               testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
             recipient: testOnChainData.offEd25519Address,
-            feeCalculator: testOnChainData.feeCalculator,
             family: "solana",
           },
           expectedStatus: {
@@ -410,7 +394,6 @@ const solana: CurrenciesData<Transaction> = {
             amount:
               testOnChainData.wSolSenderAssocTokenAccBalance.dividedBy(2),
             recipient: testOnChainData.unfundedAddress,
-            feeCalculator: testOnChainData.feeCalculator,
             family: "solana",
           },
           expectedStatus: {
@@ -489,7 +472,6 @@ function recipientRequired(): TransactionTestSpec[] {
         model,
         amount: zero,
         recipient: "",
-        feeCalculator: testOnChainData.feeCalculator,
         family: "solana",
       },
       expectedStatus: {
