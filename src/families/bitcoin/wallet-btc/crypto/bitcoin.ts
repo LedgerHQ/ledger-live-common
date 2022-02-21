@@ -200,7 +200,7 @@ class Bitcoin extends Base {
       typeof navigator !== "undefined" && navigator.product === "ReactNative"
         ? secp256k1.Point.fromCompressedHex(evenEcdsaPubkey)
             .add(secp256k1.Point.fromPrivateKey(tweak))
-            .toCompressedRawBytes()
+            .toRawBytes(true)
         : publicKeyTweakAdd(evenEcdsaPubkey, tweak)
     );
     // Convert to schnorr.

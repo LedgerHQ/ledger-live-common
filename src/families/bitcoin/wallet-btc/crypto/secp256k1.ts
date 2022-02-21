@@ -1,4 +1,3 @@
-
 /* eslint-disable */
 const BigInt = require('big-integer');
 // refer to https://github.com/fingera/react-native-secp256k1/blob/master/index.js
