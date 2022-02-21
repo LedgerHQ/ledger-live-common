@@ -220,6 +220,8 @@ const txToOp =
       level: blockHeight,
       block: blockHash,
       timestamp,
+      storageLimit,
+      gasLimit,
     } = tx;
 
     if (!hash) {
@@ -254,7 +256,7 @@ const txToOp =
       blockHash,
       accountId,
       date: new Date(timestamp),
-      extra: { id },
+      extra: { gasLimit: gasLimit, storageLimit: storageLimit, id },
       hasFailed,
     };
   };
