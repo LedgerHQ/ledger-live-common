@@ -8,7 +8,7 @@ import type {
 } from "../types";
 import { decodeAccountId, getMainAccount } from "../account";
 import { getEnv } from "../env";
-import { checkAccountSupported } from "../account/support";
+import { checkAccountSupported, shouldUseJS } from "../account/support";
 import jsBridges from "../generated/bridge/js";
 import mockBridges from "../generated/bridge/mock";
 import libcoreBridges from "../generated/bridge/libcore";
@@ -27,7 +27,7 @@ export const getCurrencyBridge = (currency: CryptoCurrency): CurrencyBridge => {
   const jsBridge = jsBridges[currency.family];
   const libcoreBridge = libcoreBridges[currency.family];
 
-  if (jsBridge && !libcoreBridge) {
+  if (jsBridge && (!libcoreBridge || shouldUseJS(currency))) {
     return jsBridge.currencyBridge;
   }
 
@@ -70,7 +70,7 @@ export const getAccountBridge = (
   const jsBridge = jsBridges[family];
 
   if (type === "libcore") {
-    if (jsBridge) {
+    if (jsBridge && shouldUseJS(currency)) {
       return jsBridge.accountBridge;
     }
 
