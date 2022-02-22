@@ -20,9 +20,7 @@ export async function preloadWithAPI(
         activatedStake: acc.activatedStake,
         commission: acc.commission,
       },
-      meta: {
-        name: Math.random() > 0.5 ? "Dummy Name" : undefined,
-      },
+      meta: {},
     })),
   };
 

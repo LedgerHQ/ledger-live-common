@@ -37,6 +37,7 @@ import {
   map,
   uniqBy,
   flow,
+  sortBy,
 } from "lodash/fp";
 import { parseQuiet } from "./api/chain/program";
 import {
@@ -166,7 +167,6 @@ export const getAccountShapeWithAPI = async (
         stakeAccBalance,
         rentExemptReserve,
         hasStakeAuth: meta.authorized.staker.toBase58() === mainAccAddress,
-        //hasWithdrawAuth,
         delegation:
           stake === null
             ? undefined
@@ -191,6 +191,15 @@ export const getAccountShapeWithAPI = async (
       };
     }
   );
+
+  const sortedStakes = flow(
+    () => stakes,
+    sortBy([
+      (stake) => -stake.withdrawable,
+      (stake) => -(stake.delegation?.stake ?? 0),
+      (stake) => -stake.stakeAccAddr,
+    ])
+  )();
 
   const mainAccountLastTxSignature = mainInitialAcc?.operations[0]?.hash;
 
@@ -220,7 +229,7 @@ export const getAccountShapeWithAPI = async (
     operations: mainAccTotalOperations,
     operationsCount: mainAccTotalOperations.length,
     solanaResources: {
-      stakes,
+      stakes: sortedStakes,
     },
   };
 
