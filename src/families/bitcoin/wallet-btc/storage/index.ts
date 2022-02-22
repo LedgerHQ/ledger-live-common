@@ -1,14 +1,17 @@
-import { findLast, filter, uniqBy, findIndex, has } from "lodash";
+import { findLast, filter, uniqBy, findIndex } from "lodash";
 import Base from "../crypto/base";
 import { Input, IStorage, Output, TX, Address } from "./types";
 
 // a mock storage class that just use js objects
 // sql.js would be perfect for the job
 class BitcoinLikeStorage implements IStorage {
-  txs: TX[] = [];
+  private txs: TX[] = [];
 
-  // indexes
+  // indexe: address + hash -> tx
   primaryIndex: { [key: string]: number } = {};
+
+  // indexe: account + index -> tx
+  accountIndex: { [key: string]: number[] } = {};
 
   // accounting
   unspentUtxos: { [key: string]: Output[] } = {};
@@ -20,23 +23,26 @@ class BitcoinLikeStorage implements IStorage {
   // returning unordered tx within the same block)
   spentUtxos: { [key: string]: Input[] } = {};
 
-  getLastTx(txFilter: {
-    account?: number;
-    index?: number;
-    address?: string;
-    confirmed?: boolean;
-  }) {
+  getLastTx(txFilter: { account: number; index: number; confirmed?: boolean }) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const tx: TX | undefined = findLast(this.txs, (t) => {
       return (
-        (!has(txFilter, "account") || t.account === txFilter.account) &&
-        (!has(txFilter, "index") || t.index === txFilter.index) &&
-        (!has(txFilter, "address") || t.address === txFilter.address) &&
-        (!has(txFilter, "confirmed") ||
+        t.account === txFilter.account &&
+        t.index === txFilter.index &&
+        (typeof txFilter.confirmed === "undefined" ||
           (txFilter.confirmed && t.block) ||
           (!txFilter.confirmed && !t.block))
       );
+    });
+    return tx;
+  }
+
+  getLastUnconfirmedTx() {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const tx: TX | undefined = findLast(this.txs, (t) => {
+      return !t.block;
     });
     return tx;
   }
