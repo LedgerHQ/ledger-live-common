@@ -15,7 +15,7 @@ const CURVE = {
   a: _0n,
   b: BigInt(7),
   // Field over which we'll do calculations
-  P: POW_2_256.minus(BigInt("4294967296")).minus(BigInt(977)),
+  P: POW_2_256.minus(4294967296).minus(977),
   // Curve order, a number of valid points in the field
   n: POW_2_256.minus(BigInt("432420386565659656852420866394968145599")),
   // Cofactor. It's 1, so other subgroups don't exist, and default subgroup is prime-order
@@ -311,11 +311,10 @@ function mod(a: any, b: any = CURVE.P): any {
 }
 
 // Does x ^ (2 ^ power). E.g. 30 ^ (2 ^ 4)
-function pow2(x: any, power: any): any {
+function pow2(x: any, power: number): any {
   const { P } = CURVE;
-  let p = power.toJSNumber();
   let res = x;
-  while (p-- > 0) {
+  while (power-- > 0) {
     res = res.multiply(res);
     res = res.mod(P);
   }
@@ -324,26 +323,20 @@ function pow2(x: any, power: any): any {
 
 function sqrtMod(x: any): any {
   const { P } = CURVE;
-  const _6n = BigInt(6);
-  const _11n = BigInt(11);
-  const _22n = BigInt(22);
-  const _23n = BigInt(23);
-  const _44n = BigInt(44);
-  const _88n = BigInt(88);
   const b2 = x.multiply(x).multiply(x).mod(P); // x^3, 11
   const b3 = b2.multiply(b2).multiply(x).mod(P); // x^7
-  const b6 = pow2(b3, _3n).multiply(b3).mod(P);
-  const b9 = pow2(b6, _3n).multiply(b3).mod(P);
-  const b11 = pow2(b9, _2n).multiply(b2).mod(P);
-  const b22 = pow2(b11, _11n).multiply(b11).mod(P);
-  const b44 = pow2(b22, _22n).multiply(b22).mod(P);
-  const b88 = pow2(b44, _44n).multiply(b44).mod(P);
-  const b176 = pow2(b88, _88n).multiply(b88).mod(P);
-  const b220 = pow2(b176, _44n).multiply(b44).mod(P);
-  const b223 = pow2(b220, _3n).multiply(b3).mod(P);
-  const t1 = pow2(b223, _23n).multiply(b22).mod(P);
-  const t2 = pow2(t1, _6n).multiply(b2).mod(P);
-  return pow2(t2, _2n);
+  const b6 = pow2(b3, 3).multiply(b3).mod(P);
+  const b9 = pow2(b6, 3).multiply(b3).mod(P);
+  const b11 = pow2(b9, 2).multiply(b2).mod(P);
+  const b22 = pow2(b11, 11).multiply(b11).mod(P);
+  const b44 = pow2(b22, 22).multiply(b22).mod(P);
+  const b88 = pow2(b44, 44).multiply(b44).mod(P);
+  const b176 = pow2(b88, 88).multiply(b88).mod(P);
+  const b220 = pow2(b176, 44).multiply(b44).mod(P);
+  const b223 = pow2(b220, 3).multiply(b3).mod(P);
+  const t1 = pow2(b223, 23).multiply(b22).mod(P);
+  const t2 = pow2(t1, 6).multiply(b2).mod(P);
+  return pow2(t2, 2);
 }
 
 function invert(number, modulo = CURVE.P) {
@@ -380,7 +373,7 @@ function invertBatch(nums, n = CURVE.P) {
   }
   return nums;
 }
-const divNearest = (a: any, b: any) => a.add(b.divide(_2n)).divide(b);
+const divNearest = (a: any, b: any) => a.add(b.divide(2)).divide(b);
 function splitScalarEndo(k: any) {
   const { n } = CURVE;
   const a1 = BigInt("3086d221a7d46bcde86c90e49284eb15", 16);
