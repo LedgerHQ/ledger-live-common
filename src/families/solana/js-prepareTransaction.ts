@@ -422,7 +422,7 @@ async function deriveStakeDelegateCommandDescriptor(
     const voteAcc = await getMaybeVoteAccount(uiState.voteAccAddr, api);
 
     if (voteAcc instanceof Error || voteAcc === undefined) {
-      errors.voteAccAddress = new SolanaInvalidValidator();
+      errors.voteAccAddr = new SolanaInvalidValidator();
     }
   }
 
