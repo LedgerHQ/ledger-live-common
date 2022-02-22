@@ -24,6 +24,9 @@ import {
   getMaxDelegationAvailable,
 } from "./logic";
 import { DeviceModelId } from "@ledgerhq/devices";
+
+const maxAccounts = 12;
+
 const cosmos: AppSpec<Transaction> = {
   name: "Cosmos",
   currency: getCryptoCurrencyById("cosmos"),
@@ -57,13 +60,13 @@ const cosmos: AppSpec<Transaction> = {
   mutations: [
     {
       name: "send some",
-      maxRun: 2,
+      maxRun: 3,
       transaction: ({ account, siblings, bridge, maxSpendable }) => {
         return {
           transaction: bridge.createTransaction(account),
           updates: [
             {
-              recipient: pickSiblings(siblings, 7).freshAddress,
+              recipient: pickSiblings(siblings, maxAccounts).freshAddress,
             },
             {
               amount: maxSpendable
@@ -87,7 +90,7 @@ const cosmos: AppSpec<Transaction> = {
           transaction: bridge.createTransaction(account),
           updates: [
             {
-              recipient: pickSiblings(siblings, 7).freshAddress,
+              recipient: pickSiblings(siblings, maxAccounts).freshAddress,
             },
             {
               useAllAmount: true,
@@ -101,17 +104,17 @@ const cosmos: AppSpec<Transaction> = {
     },
     {
       name: "delegate new validators",
-      maxRun: 2,
+      maxRun: 1,
       transaction: ({ account, bridge }) => {
         invariant(
-          account.index % 10 > 0,
-          "one out of 10 accounts is not going to delegate"
+          account.index % 4 > 0,
+          "one out of 4 accounts is not going to delegate"
         );
         invariant(canDelegate(account), "can delegate");
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         invariant(
-          (cosmosResources as CosmosResources).delegations.length < 10,
+          (cosmosResources as CosmosResources).delegations.length < 4,
           "already enough delegations"
         );
         const data = getCurrentCosmosPreloadData();
