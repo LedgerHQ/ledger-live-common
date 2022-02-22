@@ -25,6 +25,8 @@ import {
   SolanaTokenRecipientIsSenderATA,
   SolanaTokenAccounNotInitialized,
   SolanaInvalidValidator,
+  SolanaValidatorRequired,
+  SolanaStakeAccountRequired,
 } from "./errors";
 import {
   decodeAccountIdWithTokenAccountAddress,
@@ -371,18 +373,11 @@ async function deriveStakeCreateAccountCommandDescriptor(
     errors.amount = new NotEnoughBalance();
   }
 
-  const { uiState } = model;
-  const { delegate } = uiState;
+  const {
+    uiState: { delegate },
+  } = model;
 
-  if (!isValidBase58Address(delegate.voteAccAddress)) {
-    errors.voteAccAddress = new InvalidAddress();
-  } else {
-    const voteAcc = await getMaybeVoteAccount(delegate.voteAccAddress, api);
-
-    if (voteAcc instanceof Error || voteAcc === undefined) {
-      errors.voteAccAddress = new SolanaInvalidValidator();
-    }
-  }
+  validateValidatorCommon(delegate.voteAccAddress, errors, api);
 
   const { addr: stakeAccAddress, seed: stakeAccAddressSeed } =
     await nextStakeAccAddr(mainAccount);
@@ -412,19 +407,13 @@ async function deriveStakeDelegateCommandDescriptor(
 
   const { uiState } = model;
 
-  if (!isValidBase58Address(uiState.stakeAccAddr)) {
+  if (uiState.stakeAccAddr.length === 0) {
+    errors.stakeAccAddr = new SolanaStakeAccountRequired();
+  } else if (!isValidBase58Address(uiState.stakeAccAddr)) {
     errors.stakeAccAddr = new InvalidAddress();
   }
 
-  if (!isValidBase58Address(uiState.voteAccAddr)) {
-    errors.voteAccAddr = new InvalidAddress();
-  } else {
-    const voteAcc = await getMaybeVoteAccount(uiState.voteAccAddr, api);
-
-    if (voteAcc instanceof Error || voteAcc === undefined) {
-      errors.voteAccAddr = new SolanaInvalidValidator();
-    }
-  }
+  validateValidatorCommon(uiState.voteAccAddr, errors, api);
 
   const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 
@@ -652,6 +641,24 @@ function validateMemoCommon(memo: string, errors: Record<string, Error>) {
     });
     // LLM expects <transaction> as error key to disable continue button
     errors.transaction = errors.memo;
+  }
+}
+
+async function validateValidatorCommon(
+  addr: string,
+  errors: Record<string, Error>,
+  api: ChainAPI
+) {
+  if (addr.length === 0) {
+    errors.voteAccAddr = new SolanaValidatorRequired();
+  } else if (!isValidBase58Address(addr)) {
+    errors.voteAccAddr = new InvalidAddress();
+  } else {
+    const voteAcc = await getMaybeVoteAccount(addr, api);
+
+    if (voteAcc instanceof Error || voteAcc === undefined) {
+      errors.voteAccAddr = new SolanaInvalidValidator();
+    }
   }
 }
 

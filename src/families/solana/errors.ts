@@ -27,6 +27,14 @@ export const SolanaTokenRecipientIsSenderATA = createCustomErrorClass(
   "SolanaTokenRecipientIsSenderATA"
 );
 
+export const SolanaValidatorRequired = createCustomErrorClass(
+  "SolanaValidatorRequired"
+);
+
 export const SolanaInvalidValidator = createCustomErrorClass(
   "SolanaInvalidValidator"
+);
+
+export const SolanaStakeAccountRequired = createCustomErrorClass(
+  "SolanaStakeAccountRequired"
 );
