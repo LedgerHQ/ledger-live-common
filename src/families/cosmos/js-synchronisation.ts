@@ -52,10 +52,10 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
               );
             }
 
-            if (attributes.sender === address) {
+            if (!op.type && attributes.sender === address) {
               op.type = "OUT";
               op.value = op.value.plus(fees);
-            } else if (attributes.recipient === address) {
+            } else if (!op.type && attributes.recipient === address) {
               op.type = "IN";
             }
           }
