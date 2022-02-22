@@ -172,6 +172,7 @@ const solana: CurrenciesData<Transaction> = {
             totalSpent: testOnChainData.fundedSenderBalance.plus(fees(1)),
           },
         },
+        /*
         {
           name: "transfer :: status is error: not enough balance, all amount",
           transaction: {
@@ -196,6 +197,7 @@ const solana: CurrenciesData<Transaction> = {
             totalSpent: testOnChainData.fundedSenderBalance.plus(1),
           },
         },
+        */
         {
           name: "transfer :: status is error: amount is 0",
           transaction: {
@@ -414,6 +416,18 @@ const solana: CurrenciesData<Transaction> = {
         */
       ],
     },
+    /*
+    {
+      FIXME_tests: [
+        "balance is sum of ops",
+        "Default empty recipient have a recipientError",
+        "invalid recipient have a recipientError",
+        "can be called on an empty transaction",
+      ],
+      raw: makeAccount(testOnChainData.unfundedAddress),
+      transactions: [],
+    },
+    */
   ],
 };
 

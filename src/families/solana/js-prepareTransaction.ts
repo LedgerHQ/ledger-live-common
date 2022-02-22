@@ -374,15 +374,13 @@ async function deriveStakeCreateAccountCommandDescriptor(
   const { uiState } = model;
   const { delegate } = uiState;
 
-  if (delegate !== undefined) {
-    if (!isValidBase58Address(delegate.voteAccAddress)) {
-      errors.voteAccAddress = new InvalidAddress();
-    } else {
-      const voteAcc = await getMaybeVoteAccount(delegate.voteAccAddress, api);
+  if (!isValidBase58Address(delegate.voteAccAddress)) {
+    errors.voteAccAddress = new InvalidAddress();
+  } else {
+    const voteAcc = await getMaybeVoteAccount(delegate.voteAccAddress, api);
 
-      if (voteAcc instanceof Error || voteAcc === undefined) {
-        errors.voteAccAddress = new SolanaInvalidValidator();
-      }
+    if (voteAcc instanceof Error || voteAcc === undefined) {
+      errors.voteAccAddress = new SolanaInvalidValidator();
     }
   }
 

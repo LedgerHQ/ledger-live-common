@@ -125,7 +125,7 @@ export type TokenCreateATATransaction = {
 export type StakeCreateAccountTransaction = {
   kind: "stake.createAccount";
   uiState: {
-    delegate?: {
+    delegate: {
       voteAccAddress: string;
     };
   };

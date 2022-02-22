@@ -120,18 +120,17 @@ function inferTransactions(
       }
       case "stake.createAccount": {
         const validator = opts.solanaValidator;
-        const delegate =
-          validator === undefined
-            ? undefined
-            : {
-                voteAccAddress: validator,
-              };
+        if (typeof validator !== "string") {
+          throw new Error("solanaValidator is required");
+        }
         return {
           ...transaction,
           model: {
             kind: "stake.createAccount",
             uiState: {
-              delegate,
+              delegate: {
+                voteAccAddress: validator,
+              },
             },
           },
         };
