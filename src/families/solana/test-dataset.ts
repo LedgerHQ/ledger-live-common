@@ -18,6 +18,7 @@ import {
   SolanaMemoIsTooLong,
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   SolanaRecipientAssociatedTokenAccountWillBeFunded,
+  SolanaStakeAccountRequired,
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   SolanaTokenAccountHoldsAnotherToken,
   SolanaValidatorRequired,
@@ -49,12 +50,13 @@ const testOnChainData = {
   // 0/0
   notWSolTokenAccAddress: "Hsm3S2rhX4HwxYBaCyqgJ1cCtFyFSBu6HLy1bdvh7fKs",
   validatorAddress: "9QU2QSxhb24FUX3Tu2FpczXjpK3VYrvRudywSZaM29mF",
+  fees: {
+    stakeAccountRentExempt: 2282880,
+    lamportsPerSignature: 5000,
+  },
   // ---  maybe outdated or not real, fine for tests ---
   offEd25519Address: "6D8GtWkKJgToM5UoiByHqjQCCC9Dq1Hh7iNmU4jKSs14",
   offEd25519Address2: "12rqwuEgBYiGhBrDJStCiqEtzQpTTiZbh7teNVLuYcFA",
-  feeCalculator: {
-    lamportsPerSignature: 5000,
-  },
 };
 
 const mainAccId = encodeAccountId({
@@ -72,9 +74,7 @@ const wSolSubAccId = encodeAccountIdWithTokenAccountAddress(
 );
 
 const fees = (signatureCount: number) =>
-  new BigNumber(
-    signatureCount * testOnChainData.feeCalculator.lamportsPerSignature
-  );
+  new BigNumber(signatureCount * testOnChainData.fees.lamportsPerSignature);
 
 const zero = new BigNumber(0);
 
@@ -406,7 +406,7 @@ function transferTests(): TransactionTestSpec[] {
         warnings: {},
         estimatedFees: fees(1),
         amount: new BigNumber(-1),
-        totalSpent: new BigNumber(-1).plus(fees(1)),
+        totalSpent: zero,
       },
     },
     {
@@ -592,6 +592,11 @@ function stakingTests(): TransactionTestSpec[] {
         amount: new BigNumber(-1),
       },
       expectedStatus: {
+        amount: new BigNumber(-1),
+        estimatedFees: fees(1).plus(
+          testOnChainData.fees.stakeAccountRentExempt
+        ),
+        totalSpent: zero,
         errors: {
           amount: new AmountRequired(),
         },
@@ -611,6 +616,11 @@ function stakingTests(): TransactionTestSpec[] {
         amount: zero,
       },
       expectedStatus: {
+        amount: zero,
+        estimatedFees: fees(1).plus(
+          testOnChainData.fees.stakeAccountRentExempt
+        ),
+        totalSpent: fees(1).plus(testOnChainData.fees.stakeAccountRentExempt),
         errors: {
           amount: new AmountRequired(),
         },
@@ -630,6 +640,13 @@ function stakingTests(): TransactionTestSpec[] {
         amount: testOnChainData.fundedSenderBalance,
       },
       expectedStatus: {
+        amount: testOnChainData.fundedSenderBalance,
+        estimatedFees: fees(1).plus(
+          testOnChainData.fees.stakeAccountRentExempt
+        ),
+        totalSpent: fees(1)
+          .plus(testOnChainData.fees.stakeAccountRentExempt)
+          .plus(testOnChainData.fundedSenderBalance),
         errors: {
           amount: new NotEnoughBalance(),
         },
@@ -670,6 +687,13 @@ function stakingTests(): TransactionTestSpec[] {
         amount: new BigNumber(1),
       },
       expectedStatus: {
+        amount: new BigNumber(1),
+        estimatedFees: fees(1).plus(
+          testOnChainData.fees.stakeAccountRentExempt
+        ),
+        totalSpent: fees(1)
+          .plus(testOnChainData.fees.stakeAccountRentExempt)
+          .plus(1),
         errors: {
           voteAccAddr: new SolanaValidatorRequired(),
         },
@@ -689,6 +713,13 @@ function stakingTests(): TransactionTestSpec[] {
         amount: new BigNumber(1),
       },
       expectedStatus: {
+        amount: new BigNumber(1),
+        estimatedFees: fees(1).plus(
+          testOnChainData.fees.stakeAccountRentExempt
+        ),
+        totalSpent: fees(1)
+          .plus(testOnChainData.fees.stakeAccountRentExempt)
+          .plus(1),
         errors: {
           voteAccAddr: new InvalidAddress(),
         },
@@ -708,9 +739,110 @@ function stakingTests(): TransactionTestSpec[] {
         amount: new BigNumber(1),
       },
       expectedStatus: {
+        amount: new BigNumber(1),
+        estimatedFees: fees(1).plus(
+          testOnChainData.fees.stakeAccountRentExempt
+        ),
+        totalSpent: fees(1)
+          .plus(testOnChainData.fees.stakeAccountRentExempt)
+          .plus(1),
         errors: {
           voteAccAddr: new SolanaInvalidValidator(),
         },
+      },
+    },
+    {
+      // TODO: use all amount in another account
+      name: "stake.createAccount :: status is success, not all amount",
+      transaction: {
+        family: "solana",
+        model: {
+          kind: "stake.createAccount",
+          uiState: {
+            delegate: { voteAccAddress: testOnChainData.validatorAddress },
+          },
+        },
+        recipient: "",
+        amount: new BigNumber(1),
+      },
+      expectedStatus: {
+        amount: new BigNumber(1),
+        estimatedFees: fees(1).plus(
+          testOnChainData.fees.stakeAccountRentExempt
+        ),
+        totalSpent: fees(1)
+          .plus(testOnChainData.fees.stakeAccountRentExempt)
+          .plus(1),
+        errors: {},
+      },
+    },
+    {
+      name: "stake.delegate :: status is error: stake account address and validator address required",
+      transaction: {
+        family: "solana",
+        model: {
+          kind: "stake.delegate",
+          uiState: {
+            stakeAccAddr: "",
+            voteAccAddr: "",
+          },
+        },
+        recipient: "",
+        amount: zero,
+      },
+      expectedStatus: {
+        amount: zero,
+        estimatedFees: fees(1),
+        totalSpent: fees(1),
+        errors: {
+          stakeAccAddr: new SolanaStakeAccountRequired(),
+          voteAccAddr: new SolanaValidatorRequired(),
+        },
+      },
+    },
+    {
+      name: "stake.delegate :: status is error: stake account address and validator address are invalid",
+      transaction: {
+        family: "solana",
+        model: {
+          kind: "stake.delegate",
+          uiState: {
+            stakeAccAddr: "invalid address",
+            voteAccAddr: "invalid address",
+          },
+        },
+        recipient: "",
+        amount: zero,
+      },
+      expectedStatus: {
+        amount: zero,
+        estimatedFees: fees(1),
+        totalSpent: fees(1),
+        errors: {
+          stakeAccAddr: new InvalidAddress(),
+          voteAccAddr: new InvalidAddress(),
+        },
+      },
+    },
+    {
+      name: "stake.delegate :: status is success",
+      transaction: {
+        family: "solana",
+        model: {
+          kind: "stake.delegate",
+          uiState: {
+            stakeAccAddr: testOnChainData.unfundedAddress,
+            voteAccAddr: testOnChainData.validatorAddress,
+          },
+        },
+        recipient: "",
+        amount: zero,
+      },
+      expectedStatus: {
+        amount: zero,
+        estimatedFees: fees(1),
+        totalSpent: fees(1),
+        errors: {},
       },
     },
   ];

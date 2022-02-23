@@ -1,6 +1,6 @@
 import { BigNumber } from "bignumber.js";
 import type { Account, TransactionStatus } from "../../types";
-import type { Command, Transaction } from "./types";
+import type { Command, CommandDescriptor, Transaction } from "./types";
 import { assertUnreachable } from "./utils";
 
 const getTransactionStatus = async (
@@ -23,7 +23,7 @@ const getTransactionStatus = async (
 
   const amount = new BigNumber(getAmount(command));
   const estimatedFees = new BigNumber(fee);
-  const totalSpent = new BigNumber(getTotalSpent(command, fee));
+  const totalSpent = new BigNumber(getTotalSpent(commandDescriptor));
 
   return {
     amount,
@@ -51,13 +51,13 @@ function getAmount(command: Command) {
   }
 }
 
-function getTotalSpent(command: Command, fee: number) {
+function getTotalSpent({ command, fee }: CommandDescriptor) {
   switch (command.kind) {
     case "transfer":
     case "stake.createAccount":
-      return command.amount + fee;
+      return command.amount < 0 ? 0 : command.amount + fee;
     case "token.transfer":
-      return command.amount;
+      return Math.max(command.amount, 0);
     case "token.createATA":
     case "stake.delegate":
     case "stake.undelegate":
