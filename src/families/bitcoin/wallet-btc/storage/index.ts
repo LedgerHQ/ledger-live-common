@@ -1,4 +1,4 @@
-import { findLast, filter, uniqBy, findIndex } from "lodash";
+import _, { findLast, filter, uniqBy, findIndex } from "lodash";
 import Base from "../crypto/base";
 import { Input, IStorage, Output, TX, Address } from "./types";
 
@@ -24,17 +24,26 @@ class BitcoinLikeStorage implements IStorage {
   spentUtxos: { [key: string]: Input[] } = {};
 
   getLastTx(txFilter: { account: number; index: number; confirmed?: boolean }) {
+    if (
+      typeof this.accountIndex[`${txFilter.account}-${txFilter.index}`] ===
+      "undefined"
+    ) {
+      return undefined;
+    }
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const tx: TX | undefined = findLast(this.txs, (t) => {
-      return (
-        t.account === txFilter.account &&
-        t.index === txFilter.index &&
-        (typeof txFilter.confirmed === "undefined" ||
+    const tx: TX | undefined = findLast(
+      this.accountIndex[`${txFilter.account}-${txFilter.index}`].map(
+        (i) => this.txs[i]
+      ),
+      (t) => {
+        return (
+          typeof txFilter.confirmed === "undefined" ||
           (txFilter.confirmed && t.block) ||
-          (!txFilter.confirmed && !t.block))
-      );
-    });
+          (!txFilter.confirmed && !t.block)
+        );
+      }
+    );
     return tx;
   }
 
@@ -69,8 +78,14 @@ class BitcoinLikeStorage implements IStorage {
       if (this.txs[this.primaryIndex[index]]) {
         return;
       }
-
-      this.primaryIndex[index] = this.txs.push(tx) - 1;
+      if (
+        typeof this.accountIndex[`${tx.account}-${tx.index}`] === "undefined"
+      ) {
+        this.accountIndex[`${tx.account}-${tx.index}`] = [];
+      }
+      const idx = this.txs.push(tx) - 1;
+      this.primaryIndex[index] = idx;
+      this.accountIndex[`${tx.account}-${tx.index}`].push(idx);
       this.unspentUtxos[indexAddress] = this.unspentUtxos[indexAddress] || [];
       this.spentUtxos[indexAddress] = this.spentUtxos[indexAddress] || [];
 
@@ -123,7 +138,7 @@ class BitcoinLikeStorage implements IStorage {
   removeTxs(txsFilter: { account: number; index: number }) {
     const newTxs: TX[] = [];
     this.primaryIndex = {};
-
+    this.accountIndex = {};
     this.txs.forEach((tx: TX) => {
       // clean
       const indexAddress = tx.address;
@@ -137,8 +152,8 @@ class BitcoinLikeStorage implements IStorage {
       delete this.unspentUtxos[indexAddress];
       delete this.spentUtxos[indexAddress];
     });
-
     this.txs = newTxs;
+    this.createAccountIndex();
   }
 
   // We are a bit ugly because we can't rely undo unspentUTXO
@@ -147,7 +162,7 @@ class BitcoinLikeStorage implements IStorage {
     const newTxs: TX[] = [];
     const txsToReAdd: TX[] = [];
     this.primaryIndex = {};
-
+    this.accountIndex = {};
     this.txs.forEach((tx: TX) => {
       // clean
       const indexAddress = tx.address;
@@ -167,6 +182,7 @@ class BitcoinLikeStorage implements IStorage {
     });
 
     this.txs = newTxs;
+    this.createAccountIndex();
     this.appendTxs(txsToReAdd);
   }
 
@@ -181,6 +197,7 @@ class BitcoinLikeStorage implements IStorage {
     return {
       txs: this.txs,
       primaryIndex: this.primaryIndex,
+      accountIndex: this.accountIndex,
       unspentUtxos: this.unspentUtxos,
       addressCache: this.addressCache,
     };
@@ -189,14 +206,23 @@ class BitcoinLikeStorage implements IStorage {
   loadSync(data: {
     txs: TX[];
     primaryIndex: { [key: string]: number };
+    accountIndex: { [key: string]: number[] };
     unspentUtxos: { [key: string]: Output[] };
     addressCache: { [key: string]: string };
   }) {
     this.txs = data.txs;
     this.primaryIndex = data.primaryIndex;
+    this.accountIndex = data.accountIndex;
     this.unspentUtxos = data.unspentUtxos;
     this.addressCache = data.addressCache;
     Base.addressCache = { ...Base.addressCache, ...this.addressCache };
+    if (
+      (!this.accountIndex || _.isEmpty(this.accountIndex)) &&
+      this.txs.length > 0
+    ) {
+      this.accountIndex = {};
+      this.createAccountIndex();
+    }
   }
 
   async export() {
@@ -206,10 +232,22 @@ class BitcoinLikeStorage implements IStorage {
   async load(data: {
     txs: TX[];
     primaryIndex: { [key: string]: number };
+    accountIndex: { [key: string]: number[] };
     unspentUtxos: { [key: string]: Output[] };
     addressCache: { [key: string]: string };
   }) {
     return this.loadSync(data);
+  }
+
+  private createAccountIndex() {
+    this.txs.forEach((tx: TX, idx: number) => {
+      if (
+        typeof this.accountIndex[`${tx.account}-${tx.index}`] === "undefined"
+      ) {
+        this.accountIndex[`${tx.account}-${tx.index}`] = [];
+      }
+      this.accountIndex[`${tx.account}-${tx.index}`].push(idx);
+    });
   }
 }
 
