@@ -450,6 +450,7 @@ async function deriveStakeUndelegateCommandDescriptor(
   } else if (!isValidBase58Address(uiState.stakeAccAddr)) {
     errors.stakeAccAddr = new InvalidAddress();
   }
+  // TODO: search for the stacking account in resources
 
   const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 

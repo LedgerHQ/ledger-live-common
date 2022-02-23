@@ -144,16 +144,12 @@ function inferTransactions(
           },
         };
       case "stake.undelegate":
-        if (opts.solanaStakeAccount === undefined) {
-          throw new Error("stake account is required");
-        }
-
         return {
           ...transaction,
           model: {
             kind: "stake.undelegate",
             uiState: {
-              stakeAccAddr: opts.solanaStakeAccount,
+              stakeAccAddr: opts.solanaStakeAccount ?? "",
             },
           },
         };
