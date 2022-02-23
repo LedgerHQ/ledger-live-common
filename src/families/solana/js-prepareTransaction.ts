@@ -377,7 +377,7 @@ async function deriveStakeCreateAccountCommandDescriptor(
     uiState: { delegate },
   } = model;
 
-  validateValidatorCommon(delegate.voteAccAddress, errors, api);
+  await validateValidatorCommon(delegate.voteAccAddress, errors, api);
 
   const { addr: stakeAccAddress, seed: stakeAccAddressSeed } =
     await nextStakeAccAddr(mainAccount);
@@ -413,9 +413,13 @@ async function deriveStakeDelegateCommandDescriptor(
     errors.stakeAccAddr = new InvalidAddress();
   }
 
-  validateValidatorCommon(uiState.voteAccAddr, errors, api);
+  await validateValidatorCommon(uiState.voteAccAddr, errors, api);
 
   const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
+
+  if (mainAccount.balance.lt(txFee)) {
+    errors.fee = new NotEnoughBalance();
+  }
 
   return {
     command: {
@@ -445,6 +449,10 @@ async function deriveStakeUndelegateCommandDescriptor(
 
   const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 
+  if (mainAccount.balance.lt(txFee)) {
+    errors.fee = new NotEnoughBalance();
+  }
+
   return {
     command: {
       kind: "stake.undelegate",
@@ -463,6 +471,7 @@ async function deriveStakeWithdrawCommandDescriptor(
   model: TransactionModel & { kind: StakeWithdrawTransaction["kind"] },
   api: ChainAPI
 ): Promise<CommandDescriptor> {
+  const errors: Record<string, Error> = {};
   const { uiState } = model;
 
   const stake = mainAccount.solanaResources?.stakes.find(
@@ -483,8 +492,11 @@ async function deriveStakeWithdrawCommandDescriptor(
     );
   }
 
-  //TODO: what is user balance is less then fee?
   const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
+
+  if (mainAccount.balance.lt(txFee)) {
+    errors.fee = new NotEnoughBalance();
+  }
 
   return {
     command: {
@@ -496,7 +508,7 @@ async function deriveStakeWithdrawCommandDescriptor(
     },
     fee: txFee,
     warnings: {},
-    errors: {},
+    errors,
   };
 }
 
