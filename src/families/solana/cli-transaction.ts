@@ -133,21 +133,13 @@ function inferTransactions(
         };
       }
       case "stake.delegate":
-        if (opts.solanaStakeAccount === undefined) {
-          throw new Error("stake account is required");
-        }
-
-        if (opts.solanaValidator === undefined) {
-          throw new Error("validator is required");
-        }
-
         return {
           ...transaction,
           model: {
             kind: "stake.delegate",
             uiState: {
-              stakeAccAddr: opts.solanaStakeAccount,
-              voteAccAddr: opts.solanaValidator,
+              stakeAccAddr: opts.solanaStakeAccount ?? "",
+              voteAccAddr: opts.solanaValidator ?? "",
             },
           },
         };
