@@ -845,6 +845,92 @@ function stakingTests(): TransactionTestSpec[] {
         errors: {},
       },
     },
+    {
+      name: "stake.undelegate :: status is error: stake account required",
+      transaction: {
+        family: "solana",
+        model: {
+          kind: "stake.undelegate",
+          uiState: {
+            stakeAccAddr: "",
+          },
+        },
+        recipient: "",
+        amount: zero,
+      },
+      expectedStatus: {
+        amount: zero,
+        estimatedFees: fees(1),
+        totalSpent: fees(1),
+        errors: {
+          stakeAccAddr: new SolanaStakeAccountRequired(),
+        },
+      },
+    },
+    {
+      name: "stake.undelegate :: status is error: stake account invalid",
+      transaction: {
+        family: "solana",
+        model: {
+          kind: "stake.undelegate",
+          uiState: {
+            stakeAccAddr: "invalid address",
+          },
+        },
+        recipient: "",
+        amount: zero,
+      },
+      expectedStatus: {
+        amount: zero,
+        estimatedFees: fees(1),
+        totalSpent: fees(1),
+        errors: {
+          stakeAccAddr: new InvalidAddress(),
+        },
+      },
+    },
+    {
+      name: "stake.undelegate :: status is success",
+      transaction: {
+        family: "solana",
+        model: {
+          kind: "stake.undelegate",
+          uiState: {
+            stakeAccAddr: testOnChainData.unfundedAddress,
+          },
+        },
+        recipient: "",
+        amount: zero,
+      },
+      expectedStatus: {
+        amount: zero,
+        estimatedFees: fees(1),
+        totalSpent: fees(1),
+        errors: {},
+      },
+    },
+    // TODO: add fee check
+    {
+      name: "stake.withdraw :: status is error: stake account not found",
+      transaction: {
+        family: "solana",
+        model: {
+          kind: "stake.withdraw",
+          uiState: {
+            stakeAccAddr: testOnChainData.unfundedAddress,
+          },
+        },
+        recipient: "",
+        amount: zero,
+      },
+      expectedStatus: {
+        amount: zero,
+        estimatedFees: fees(1),
+        totalSpent: fees(1),
+        errors: {},
+      },
+    },
+    // TODO: create a staking account for the funded address?
   ];
 }
 

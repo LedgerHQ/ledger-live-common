@@ -38,3 +38,11 @@ export const SolanaInvalidValidator = createCustomErrorClass(
 export const SolanaStakeAccountRequired = createCustomErrorClass(
   "SolanaStakeAccountRequired"
 );
+
+export const SolanaStakeAccountNotFound = createCustomErrorClass(
+  "SolanaStakeAccountNotFound"
+);
+
+export const SolanaStakeAccountNothingToWithdraw = createCustomErrorClass(
+  "SolanaStakeAccountNothingToWithdraw"
+);

@@ -27,6 +27,8 @@ import {
   SolanaInvalidValidator,
   SolanaValidatorRequired,
   SolanaStakeAccountRequired,
+  SolanaStakeAccountNotFound,
+  SolanaStakeAccountNothingToWithdraw,
 } from "./errors";
 import {
   decodeAccountIdWithTokenAccountAddress,
@@ -443,7 +445,9 @@ async function deriveStakeUndelegateCommandDescriptor(
 
   const { uiState } = model;
 
-  if (!isValidBase58Address(uiState.stakeAccAddr)) {
+  if (uiState.stakeAccAddr.length === 0) {
+    errors.stakeAccAddr = new SolanaStakeAccountRequired();
+  } else if (!isValidBase58Address(uiState.stakeAccAddr)) {
     errors.stakeAccAddr = new InvalidAddress();
   }
 
@@ -479,17 +483,9 @@ async function deriveStakeWithdrawCommandDescriptor(
   );
 
   if (stake === undefined) {
-    throw new Error(
-      `stake with account address <${uiState.stakeAccAddr}> not found`
-    );
-  }
-
-  if (stake.withdrawable !== tx.amount.toNumber()) {
-    throw new Error(
-      `expected stake withdrawable amount <${
-        stake.withdrawable
-      }> to match transaction amount <${tx.amount.toNumber()}>`
-    );
+    errors.stakeAccAddr = new SolanaStakeAccountNotFound();
+  } else if (stake.withdrawable <= 0) {
+    errors.stakeAccAddr = new SolanaStakeAccountNothingToWithdraw();
   }
 
   const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
@@ -502,8 +498,8 @@ async function deriveStakeWithdrawCommandDescriptor(
     command: {
       kind: "stake.withdraw",
       authorizedAccAddr: mainAccount.freshAddress,
-      stakeAccAddr: stake.stakeAccAddr,
-      amount: stake.withdrawable,
+      stakeAccAddr: uiState.stakeAccAddr,
+      amount: stake?.withdrawable ?? 0,
       toAccAddr: mainAccount.freshAddress,
     },
     fee: txFee,
