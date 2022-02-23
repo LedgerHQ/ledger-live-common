@@ -256,14 +256,12 @@ function optimisticOpForStakeCreateAccount(
   command: StakeCreateAccountCommand,
   commandDescriptor: CommandDescriptor
 ): Operation {
-  const opType: OperationType =
-    command.delegate === undefined ? "OUT" : "DELEGATE";
+  const opType: OperationType = "DELEGATE";
   const commons = optimisticOpcommons(commandDescriptor);
   const recipients: string[] = [command.stakeAccAddress];
 
-  if (command.delegate !== undefined) {
-    recipients.push(command.delegate.voteAccAddress);
-  }
+  recipients.push(command.delegate.voteAccAddress);
+
   return {
     ...commons,
     id: encodeOperationId(account.id, "", opType),

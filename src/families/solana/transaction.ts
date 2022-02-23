@@ -102,10 +102,7 @@ function formatStakeCreateAccount(
     `  FROM: ${command.fromAccAddress}`,
     `  AMOUNT: ${amount}${tx.useAllAmount ? " (ALL)" : ""}`,
     `  SEED: ${command.seed}`,
-    `  AUTO DELEGATE: ${command.delegate === undefined ? "FALSE" : "TRUE"}`,
-    command.delegate === undefined
-      ? ""
-      : `  VOTE ACCOUNT: ${command.delegate.voteAccAddress}`,
+    `  VALIDATOR: ${command.delegate.voteAccAddress}`,
   ]
     .filter(Boolean)
     .join("\n");

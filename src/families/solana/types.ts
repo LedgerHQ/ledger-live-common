@@ -31,7 +31,7 @@ export type StakeCreateAccountCommand = {
   seed: string;
   amount: number;
   stakeAccRentExemptAmount: number;
-  delegate?: {
+  delegate: {
     voteAccAddress: string;
   };
 };

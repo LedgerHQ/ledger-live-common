@@ -418,15 +418,13 @@ export function buildStakeCreateAccountInstructions({
     },
   });
 
-  if (delegate !== undefined) {
-    tx.add(
-      StakeProgram.delegate({
-        authorizedPubkey: fromPubkey,
-        stakePubkey,
-        votePubkey: new PublicKey(delegate.voteAccAddress),
-      })
-    );
-  }
+  tx.add(
+    StakeProgram.delegate({
+      authorizedPubkey: fromPubkey,
+      stakePubkey,
+      votePubkey: new PublicKey(delegate.voteAccAddress),
+    })
+  );
 
   return tx.instructions;
 }
