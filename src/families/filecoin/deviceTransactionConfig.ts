@@ -37,11 +37,6 @@ function getDeviceTransactionConfig(input: {
   const fields: Array<DeviceTransactionField> = [];
 
   fields.push({
-    type: "filecoin.method",
-    label: "Method",
-    value: methodToString(input.transaction.method),
-  });
-  fields.push({
     type: "amount",
     label: "Value",
   });
@@ -49,6 +44,14 @@ function getDeviceTransactionConfig(input: {
     type: "filecoin.gasLimit",
     label: "Gas Limit",
     value: input.transaction.gasLimit.toFixed(),
+  });
+  fields.push({
+    type: "filecoin.gasPremium",
+    label: "Gas Premium",
+    value: formatCurrencyUnit(currency.units[0], input.transaction.gasPremium, {
+      showCode: false,
+      disableRounding: true,
+    }),
   });
   fields.push({
     type: "filecoin.gasFeeCap",
@@ -59,12 +62,9 @@ function getDeviceTransactionConfig(input: {
     }),
   });
   fields.push({
-    type: "filecoin.gasPremium",
-    label: "Gas Premium",
-    value: formatCurrencyUnit(currency.units[0], input.transaction.gasPremium, {
-      showCode: false,
-      disableRounding: true,
-    }),
+    type: "filecoin.method",
+    label: "Method",
+    value: methodToString(input.transaction.method),
   });
 
   return fields;
