@@ -2,6 +2,7 @@ import type { DeviceTransactionField } from "../../transaction";
 import type { Account, AccountLike, TransactionStatus } from "../../types";
 import type { Transaction } from "./types";
 import { formatCurrencyUnit, getCryptoCurrencyById } from "../../currencies";
+import { methodToString } from "./utils";
 
 const currency = getCryptoCurrencyById("filecoin");
 
@@ -36,6 +37,20 @@ function getDeviceTransactionConfig(input: {
   const fields: Array<DeviceTransactionField> = [];
 
   fields.push({
+    type: "filecoin.method",
+    label: "Method",
+    value: methodToString(input.transaction.method),
+  });
+  fields.push({
+    type: "amount",
+    label: "Value",
+  });
+  fields.push({
+    type: "filecoin.gasLimit",
+    label: "Gas Limit",
+    value: input.transaction.gasLimit.toFixed(),
+  });
+  fields.push({
     type: "filecoin.gasFeeCap",
     label: "Gas Fee Cap",
     value: formatCurrencyUnit(currency.units[0], input.transaction.gasFeeCap, {
@@ -50,16 +65,6 @@ function getDeviceTransactionConfig(input: {
       showCode: false,
       disableRounding: true,
     }),
-  });
-  fields.push({
-    type: "filecoin.gasLimit",
-    label: "Gas Limit",
-    value: input.transaction.gasLimit.toFixed(),
-  });
-  fields.push({
-    type: "filecoin.method",
-    label: "Method",
-    value: input.transaction.method.toString(),
   });
 
   return fields;
