@@ -176,11 +176,13 @@ const prepareTransaction = async (
 const sync = makeSync(getAccountShape);
 
 const broadcast: BroadcastFnSignature = async ({
-  signedOperation: { operation },
+  signedOperation: { operation, signature },
 }) => {
   // log("debug", "[broadcast] start fn");
 
-  const resp = await broadcastTx(operation.extra.reqToBroadcast);
+  const tx = getTxToBroadcast(operation, signature);
+
+  const resp = await broadcastTx(tx);
   const { hash } = resp;
 
   const result = patchOperationWithHash(operation, hash);
@@ -201,8 +203,17 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
         async function main() {
           // log("debug", "[signOperation] start fn");
 
+          const {
+            recipient,
+            method,
+            version,
+            nonce,
+            gasFeeCap,
+            gasLimit,
+            gasPremium,
+            useAllAmount,
+          } = transaction;
           let { amount } = transaction;
-          const { recipient, gasFeeCap, gasLimit, useAllAmount } = transaction;
           const { id: accountId, balance } = account;
           const { address, derivationPath } = getAddress(account);
 
@@ -251,19 +262,11 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
               type: "device-signature-granted",
             });
 
-            const value = amount.plus(fee);
-
             // resolved at broadcast time
             const txHash = "";
 
             // build signature on the correct format
             const signature = `${result.signature_compact.toString("base64")}`;
-
-            const reqToBroadcast = getTxToBroadcast(
-              account,
-              transaction,
-              signature
-            );
 
             const operation: Operation = {
               id: `${accountId}-${txHash}-OUT`,
@@ -272,13 +275,19 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
               senders: [address],
               recipients: [recipient],
               accountId,
-              value,
+              value: amount,
               fee,
               blockHash: null,
               blockHeight: null,
               date: new Date(),
               extra: {
-                reqToBroadcast,
+                gasLimit,
+                gasFeeCap,
+                gasPremium,
+                method,
+                version,
+                nonce,
+                signatureType: 1,
               },
             };
 
