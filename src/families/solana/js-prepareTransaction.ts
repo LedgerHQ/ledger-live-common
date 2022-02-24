@@ -409,11 +409,7 @@ async function deriveStakeDelegateCommandDescriptor(
 
   const { uiState } = model;
 
-  if (uiState.stakeAccAddr.length === 0) {
-    errors.stakeAccAddr = new SolanaStakeAccountRequired();
-  } else if (!isValidBase58Address(uiState.stakeAccAddr)) {
-    errors.stakeAccAddr = new InvalidAddress();
-  }
+  validateStakeAccountCommon(mainAccount, uiState.stakeAccAddr, errors);
 
   await validateValidatorCommon(uiState.voteAccAddr, errors, api);
 
@@ -445,12 +441,7 @@ async function deriveStakeUndelegateCommandDescriptor(
 
   const { uiState } = model;
 
-  if (uiState.stakeAccAddr.length === 0) {
-    errors.stakeAccAddr = new SolanaStakeAccountRequired();
-  } else if (!isValidBase58Address(uiState.stakeAccAddr)) {
-    errors.stakeAccAddr = new InvalidAddress();
-  }
-  // TODO: search for the stacking account in resources
+  validateStakeAccountCommon(mainAccount, uiState.stakeAccAddr, errors);
 
   const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 
@@ -479,13 +470,15 @@ async function deriveStakeWithdrawCommandDescriptor(
   const errors: Record<string, Error> = {};
   const { uiState } = model;
 
-  const stake = mainAccount.solanaResources?.stakes.find(
-    (stake) => stake.stakeAccAddr === uiState.stakeAccAddr
-  );
+  validateStakeAccountCommon(mainAccount, uiState.stakeAccAddr, errors);
 
-  if (stake === undefined) {
-    errors.stakeAccAddr = new SolanaStakeAccountNotFound();
-  } else if (stake.withdrawable <= 0) {
+  const stake = errors.stakeAccAddr
+    ? undefined
+    : mainAccount.solanaResources?.stakes.find(
+        (stake) => stake.stakeAccAddr === uiState.stakeAccAddr
+      );
+
+  if (stake !== undefined && stake.withdrawable <= 0) {
     errors.stakeAccAddr = new SolanaStakeAccountNothingToWithdraw();
   }
 
@@ -667,6 +660,28 @@ async function validateValidatorCommon(
 
     if (voteAcc instanceof Error || voteAcc === undefined) {
       errors.voteAccAddr = new SolanaInvalidValidator();
+    }
+  }
+}
+
+function validateStakeAccountCommon(
+  account: Account,
+  stakeAccAddr: string,
+  errors: Record<string, Error>
+) {
+  if (stakeAccAddr.length === 0) {
+    errors.stakeAccAddr = new SolanaStakeAccountRequired();
+  } else if (!isValidBase58Address(stakeAccAddr)) {
+    errors.stakeAccAddr = new InvalidAddress();
+  }
+
+  if (!errors.stakeAccAddr) {
+    const stake = account.solanaResources?.stakes.find(
+      (stake) => stake.stakeAccAddr === stakeAccAddr
+    );
+
+    if (stake === undefined) {
+      errors.stakeAccAddr = new SolanaStakeAccountNotFound();
     }
   }
 }

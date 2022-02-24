@@ -18,6 +18,7 @@ import {
   SolanaMemoIsTooLong,
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   SolanaRecipientAssociatedTokenAccountWillBeFunded,
+  SolanaStakeAccountNotFound,
   SolanaStakeAccountRequired,
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   SolanaTokenAccountHoldsAnotherToken,
@@ -825,7 +826,7 @@ function stakingTests(): TransactionTestSpec[] {
       },
     },
     {
-      name: "stake.delegate :: status is success",
+      name: "stake.delegate :: status is error: stake account not found",
       transaction: {
         family: "solana",
         model: {
@@ -842,7 +843,9 @@ function stakingTests(): TransactionTestSpec[] {
         amount: zero,
         estimatedFees: fees(1),
         totalSpent: fees(1),
-        errors: {},
+        errors: {
+          stakeAccAddr: new SolanaStakeAccountNotFound(),
+        },
       },
     },
     {
@@ -890,7 +893,7 @@ function stakingTests(): TransactionTestSpec[] {
       },
     },
     {
-      name: "stake.undelegate :: status is success",
+      name: "stake.undelegate :: status is error: stake account not found",
       transaction: {
         family: "solana",
         model: {
@@ -906,10 +909,56 @@ function stakingTests(): TransactionTestSpec[] {
         amount: zero,
         estimatedFees: fees(1),
         totalSpent: fees(1),
-        errors: {},
+        errors: {
+          stakeAccAddr: new SolanaStakeAccountNotFound(),
+        },
       },
     },
     // TODO: add fee check
+    {
+      name: "stake.withdraw :: status is error: stake account required",
+      transaction: {
+        family: "solana",
+        model: {
+          kind: "stake.withdraw",
+          uiState: {
+            stakeAccAddr: "",
+          },
+        },
+        recipient: "",
+        amount: zero,
+      },
+      expectedStatus: {
+        amount: zero,
+        estimatedFees: fees(1),
+        totalSpent: fees(1),
+        errors: {
+          stakeAccAddr: new SolanaStakeAccountRequired(),
+        },
+      },
+    },
+    {
+      name: "stake.withdraw :: status is error: stake account address invalid",
+      transaction: {
+        family: "solana",
+        model: {
+          kind: "stake.withdraw",
+          uiState: {
+            stakeAccAddr: "invalid address",
+          },
+        },
+        recipient: "",
+        amount: zero,
+      },
+      expectedStatus: {
+        amount: zero,
+        estimatedFees: fees(1),
+        totalSpent: fees(1),
+        errors: {
+          stakeAccAddr: new InvalidAddress(),
+        },
+      },
+    },
     {
       name: "stake.withdraw :: status is error: stake account not found",
       transaction: {
@@ -927,9 +976,12 @@ function stakingTests(): TransactionTestSpec[] {
         amount: zero,
         estimatedFees: fees(1),
         totalSpent: fees(1),
-        errors: {},
+        errors: {
+          stakeAccAddr: new SolanaStakeAccountNotFound(),
+        },
       },
     },
+    // TODO: check fee and nothing to withdraw
     // TODO: create a staking account for the funded address?
   ];
 }

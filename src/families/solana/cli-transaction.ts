@@ -154,16 +154,12 @@ function inferTransactions(
           },
         };
       case "stake.withdraw":
-        if (opts.solanaStakeAccount === undefined) {
-          throw new Error("stake account is required");
-        }
-
         return {
           ...transaction,
           model: {
             kind: "stake.withdraw",
             uiState: {
-              stakeAccAddr: opts.solanaStakeAccount,
+              stakeAccAddr: opts.solanaStakeAccount ?? "",
             },
           },
         };
