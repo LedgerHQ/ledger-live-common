@@ -31,6 +31,8 @@ import type {
   SidecarRuntimeSpec,
 } from "./sidecar.types";
 
+const DOT_TO_PLANCK = new BigNumber(10000000000);
+
 /**
  * Get indexer base url.
  *
@@ -208,7 +210,11 @@ export const getMinimumBondBalance = async (): Promise<BigNumber> => {
     url: getSidecarUrl(`/pallets/staking/storage/minNominatorBond`),
   });
 
-  return (data.value && new BigNumber(data.value)) || new BigNumber(0);
+  // Polkadot decided to change the unit of that value from PLANCK to DOT...
+  return (
+    (data.value && new BigNumber(data.value).times(DOT_TO_PLANCK)) ||
+    new BigNumber(0)
+  );
 };
 
 /**
