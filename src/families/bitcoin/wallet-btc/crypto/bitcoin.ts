@@ -3,8 +3,7 @@
 import * as bech32 from "bech32";
 import { bech32m } from "../../bech32m";
 import * as bjs from "bitcoinjs-lib";
-import * as secp256k1 from "./secp256k1";
-import { publicKeyTweakAdd } from "secp256k1";
+import { publicKeyTweakAdd } from "./secp256k1";
 import { InvalidAddress } from "@ledgerhq/errors";
 import { DerivationModes } from "../types";
 import Base from "./base";
@@ -197,11 +196,7 @@ class Bitcoin extends Base {
 
     // Q = P + int(hash_TapTweak(bytes(P)))G
     const outputEcdsaKey = Buffer.from(
-      typeof navigator !== "undefined" && navigator.product === "ReactNative"
-        ? secp256k1.Point.fromCompressedHex(evenEcdsaPubkey)
-            .add(secp256k1.Point.fromPrivateKey(tweak))
-            .toCompressedRawBytes()
-        : publicKeyTweakAdd(evenEcdsaPubkey, tweak)
+      publicKeyTweakAdd(evenEcdsaPubkey, tweak)
     );
     // Convert to schnorr.
     const outputSchnorrKey = outputEcdsaKey.slice(1);

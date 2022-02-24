@@ -1,6 +1,5 @@
 import createHmac from "create-hmac";
-import * as secp256k1 from "./secp256k1";
-import { publicKeyTweakAdd } from "secp256k1";
+import { publicKeyTweakAdd } from "./secp256k1";
 
 // the BIP32 class is inspired from https://github.com/bitcoinjs/bip32/blob/master/src/bip32.js
 class BIP32 {
@@ -29,13 +28,7 @@ class BIP32 {
     const I = createHmac("sha512", this.chainCode).update(data).digest();
     const IL = I.slice(0, 32);
     const IR = I.slice(32);
-    const Ki = Buffer.from(
-      typeof navigator !== "undefined" && navigator.product === "ReactNative"
-        ? secp256k1.Point.fromCompressedHex(this.publicKey)
-            .add(secp256k1.Point.fromPrivateKey(IL))
-            .toCompressedRawBytes()
-        : publicKeyTweakAdd(this.publicKey, IL)
-    );
+    const Ki = Buffer.from(publicKeyTweakAdd(this.publicKey, IL));
     return new BIP32(Ki, IR, this.network, this.depth + 1, index);
   }
 }
