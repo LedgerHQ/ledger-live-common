@@ -201,8 +201,8 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
         async function main() {
           // log("debug", "[signOperation] start fn");
 
-          const { recipient, gasFeeCap, gasLimit, useAllAmount, amount } =
-            transaction;
+          let { amount } = transaction;
+          const { recipient, gasFeeCap, gasLimit, useAllAmount } = transaction;
           const { id: accountId, balance } = account;
           const { address, derivationPath } = getAddress(account);
 
@@ -220,6 +220,11 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
             o.next({
               type: "device-signature-requested",
             });
+
+            const fee = calculateEstimatedFees(gasFeeCap, gasLimit);
+            if (useAllAmount) amount = balance.minus(fee);
+
+            transaction = { ...transaction, amount };
 
             // Serialize tx
             const serializedTx = toCBOR(
@@ -246,8 +251,7 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
               type: "device-signature-granted",
             });
 
-            const fee = calculateEstimatedFees(gasFeeCap, gasLimit);
-            const value = useAllAmount ? balance.minus(fee) : amount;
+            const value = amount.plus(fee);
 
             // resolved at broadcast time
             const txHash = "";
