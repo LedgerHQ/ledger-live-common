@@ -66,8 +66,10 @@ const getTransactionStatus = async (
   const errors: TransactionStatus["errors"] = {};
   const warnings: TransactionStatus["warnings"] = {};
 
+  const { balance } = a;
   const { address } = getAddress(a);
-  const { recipient, amount, gasPremium, gasFeeCap, gasLimit } = t;
+  const { recipient, useAllAmount, gasPremium, gasFeeCap, gasLimit } = t;
+  let { amount } = t;
 
   if (!recipient) errors.recipient = new RecipientRequired();
   else if (!validateAddress(recipient).isValid)
@@ -81,8 +83,8 @@ const getTransactionStatus = async (
   // This is the worst case scenario (the tx won't cost more than this value)
   const estimatedFees = calculateEstimatedFees(gasFeeCap, gasLimit);
 
-  // Add the estimated fees to the tx amount
-  const totalSpent = amount.plus(estimatedFees);
+  const totalSpent = useAllAmount ? balance : amount.plus(estimatedFees);
+  amount = useAllAmount ? balance.minus(estimatedFees) : amount;
 
   if (amount.lte(0)) errors.amount = new AmountRequired();
   if (totalSpent.gt(a.spendableBalance)) errors.amount = new NotEnoughBalance();
@@ -199,8 +201,9 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
         async function main() {
           // log("debug", "[signOperation] start fn");
 
-          const { recipient, amount, gasFeeCap, gasLimit } = transaction;
-          const { id: accountId } = account;
+          const { recipient, gasFeeCap, gasLimit, useAllAmount, amount } =
+            transaction;
+          const { id: accountId, balance } = account;
           const { address, derivationPath } = getAddress(account);
 
           if (!gasFeeCap.gt(0) || !gasLimit.gt(0)) {
@@ -244,7 +247,7 @@ const signOperation: SignOperationFnSignature<Transaction> = ({
             });
 
             const fee = calculateEstimatedFees(gasFeeCap, gasLimit);
-            const value = amount.plus(fee);
+            const value = useAllAmount ? balance.minus(fee) : amount;
 
             // resolved at broadcast time
             const txHash = "";
