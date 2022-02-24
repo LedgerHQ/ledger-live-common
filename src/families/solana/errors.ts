@@ -46,3 +46,15 @@ export const SolanaStakeAccountNotFound = createCustomErrorClass(
 export const SolanaStakeAccountNothingToWithdraw = createCustomErrorClass(
   "SolanaStakeAccountNothingToWithdraw"
 );
+
+export const SolanaStakeAccountIsNotDelegatable = createCustomErrorClass(
+  "SolanaStakeAccountIsNotDelegatable"
+);
+
+export const SolanaStakeAccountIsNotUndelegatable = createCustomErrorClass(
+  "SolanaStakeAccountIsNotUndelegatable"
+);
+
+export const SolanaStakeAccountValidatorIsUnchangeable = createCustomErrorClass(
+  "SolanaStakeAccountValidatorIsUnchangeable"
+);

@@ -29,6 +29,9 @@ import {
   SolanaStakeAccountRequired,
   SolanaStakeAccountNotFound,
   SolanaStakeAccountNothingToWithdraw,
+  SolanaStakeAccountIsNotDelegatable,
+  SolanaStakeAccountValidatorIsUnchangeable,
+  SolanaStakeAccountIsNotUndelegatable,
 } from "./errors";
 import {
   decodeAccountIdWithTokenAccountAddress,
@@ -39,6 +42,7 @@ import {
 
 import type {
   CommandDescriptor,
+  SolanaStake,
   StakeCreateAccountTransaction,
   StakeDelegateTransaction,
   StakeSplitTransaction,
@@ -409,9 +413,31 @@ async function deriveStakeDelegateCommandDescriptor(
 
   const { uiState } = model;
 
-  validateStakeAccountCommon(mainAccount, uiState.stakeAccAddr, errors);
+  const stake = validateAndTryGetStakeAccount(
+    mainAccount,
+    uiState.stakeAccAddr,
+    errors
+  );
 
   await validateValidatorCommon(uiState.voteAccAddr, errors, api);
+
+  if (!errors.voteAccAddr && stake !== undefined) {
+    switch (stake.activation.state) {
+      case "active":
+      case "activating":
+        errors.stakeAccAddr = new SolanaStakeAccountIsNotDelegatable();
+        break;
+      case "inactive":
+        break;
+      case "deactivating":
+        if (stake.delegation?.voteAccAddr !== uiState.voteAccAddr) {
+          errors.stakeAccAddr = new SolanaStakeAccountValidatorIsUnchangeable();
+        }
+        break;
+      default:
+        return assertUnreachable(stake.activation.state);
+    }
+  }
 
   const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 
@@ -441,7 +467,25 @@ async function deriveStakeUndelegateCommandDescriptor(
 
   const { uiState } = model;
 
-  validateStakeAccountCommon(mainAccount, uiState.stakeAccAddr, errors);
+  const stake = validateAndTryGetStakeAccount(
+    mainAccount,
+    uiState.stakeAccAddr,
+    errors
+  );
+
+  if (stake !== undefined) {
+    switch (stake.activation.state) {
+      case "active":
+      case "activating":
+        break;
+      case "inactive":
+      case "deactivating":
+        errors.stakeAccAddr = new SolanaStakeAccountIsNotUndelegatable();
+        break;
+      default:
+        return assertUnreachable(stake.activation.state);
+    }
+  }
 
   const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 
@@ -470,13 +514,11 @@ async function deriveStakeWithdrawCommandDescriptor(
   const errors: Record<string, Error> = {};
   const { uiState } = model;
 
-  validateStakeAccountCommon(mainAccount, uiState.stakeAccAddr, errors);
-
-  const stake = errors.stakeAccAddr
-    ? undefined
-    : mainAccount.solanaResources?.stakes.find(
-        (stake) => stake.stakeAccAddr === uiState.stakeAccAddr
-      );
+  const stake = validateAndTryGetStakeAccount(
+    mainAccount,
+    uiState.stakeAccAddr,
+    errors
+  );
 
   if (stake !== undefined && stake.withdrawable <= 0) {
     errors.stakeAccAddr = new SolanaStakeAccountNothingToWithdraw();
@@ -664,11 +706,11 @@ async function validateValidatorCommon(
   }
 }
 
-function validateStakeAccountCommon(
+function validateAndTryGetStakeAccount(
   account: Account,
   stakeAccAddr: string,
   errors: Record<string, Error>
-) {
+): SolanaStake | undefined {
   if (stakeAccAddr.length === 0) {
     errors.stakeAccAddr = new SolanaStakeAccountRequired();
   } else if (!isValidBase58Address(stakeAccAddr)) {
@@ -683,7 +725,11 @@ function validateStakeAccountCommon(
     if (stake === undefined) {
       errors.stakeAccAddr = new SolanaStakeAccountNotFound();
     }
+
+    return stake;
   }
+
+  return undefined;
 }
 
 export { prepareTransaction };
