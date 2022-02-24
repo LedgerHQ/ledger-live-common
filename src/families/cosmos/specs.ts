@@ -25,6 +25,7 @@ import {
 } from "./logic";
 import { DeviceModelId } from "@ledgerhq/devices";
 
+const minAmount = new BigNumber(50000);
 const maxAccounts = 12;
 
 const cosmos: AppSpec<Transaction> = {
@@ -37,7 +38,7 @@ const cosmos: AppSpec<Transaction> = {
   },
   testTimeout: 2 * 60 * 1000,
   transactionCheck: ({ maxSpendable }) => {
-    invariant(maxSpendable.gt(COSMOS_MIN_SAFE), "balance is too low");
+    invariant(maxSpendable.gt(minAmount), "balance is too low");
   },
   test: ({ operation, optimisticOperation }) => {
     const opExpected: Record<string, any> = toOperationRaw({
@@ -49,18 +50,16 @@ const cosmos: AppSpec<Transaction> = {
     delete opExpected.blockHash;
     delete opExpected.blockHeight;
     expect(toOperationRaw(operation)).toMatchObject(opExpected); // TODO check it is between operation.value-fees (excluded) and operation.value
-
-    /*
-    // balance move
-    expect(account.balance.toString()).toBe(
-      accountBeforeTransaction.balance.minus(operation.value).toString()
-    );
-    */
   },
   mutations: [
     {
       name: "send some",
       maxRun: 3,
+      test: ({ account, accountBeforeTransaction, operation }) => {
+        expect(account.balance.toString()).toBe(
+          accountBeforeTransaction.balance.minus(operation.value).toString()
+        );
+      },
       transaction: ({ account, siblings, bridge, maxSpendable }) => {
         return {
           transaction: bridge.createTransaction(account),
@@ -107,8 +106,8 @@ const cosmos: AppSpec<Transaction> = {
       maxRun: 1,
       transaction: ({ account, bridge }) => {
         invariant(
-          account.index % 4 > 0,
-          "one out of 4 accounts is not going to delegate"
+          account.index % 2 > 0,
+          "only one out of 2 accounts is not going to delegate"
         );
         invariant(canDelegate(account), "can delegate");
         const { cosmosResources } = account;
@@ -118,9 +117,9 @@ const cosmos: AppSpec<Transaction> = {
           "already enough delegations"
         );
         const data = getCurrentCosmosPreloadData();
-        const count = 1 + Math.floor(5 * Math.random());
+        const count = 1 + Math.floor(2.5 * Math.random());
         let remaining = getMaxDelegationAvailable(account, count).times(
-          Math.random()
+          0.5 * Math.random()
         );
         const all = data.validators.filter(
           (v) =>
