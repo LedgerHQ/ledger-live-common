@@ -16,7 +16,6 @@ import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
 import { toOperationRaw } from "../../account";
 import {
-  COSMOS_MIN_SAFE,
   canClaimRewards,
   canDelegate,
   canUndelegate,
