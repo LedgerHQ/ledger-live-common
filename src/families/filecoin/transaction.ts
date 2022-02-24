@@ -56,8 +56,44 @@ const toTransactionRaw = (t: Transaction): TransactionRaw => {
   };
 };
 
+export function fromOperationExtraRaw(
+  extra: Record<string, any> | null | undefined
+): Record<string, any> | null | undefined {
+  if (extra) {
+    const newExtra = { ...extra };
+    const { gasLimit, gasPremium, gasFeeCap } = extra;
+
+    if (gasLimit !== undefined) newExtra.gasLimit = new BigNumber(gasLimit);
+    if (gasPremium !== undefined)
+      newExtra.gasPremium = new BigNumber(gasPremium);
+    if (gasFeeCap !== undefined) newExtra.gasFeeCap = new BigNumber(gasFeeCap);
+
+    return newExtra;
+  }
+
+  return extra;
+}
+export function toOperationExtraRaw(
+  extra: Record<string, any> | null | undefined
+): Record<string, any> | null | undefined {
+  if (extra) {
+    const newExtra = { ...extra };
+    const { gasLimit, gasPremium, gasFeeCap } = extra;
+
+    if (gasLimit !== undefined) newExtra.gasLimit = gasLimit.toNumber();
+    if (gasPremium !== undefined) newExtra.gasPremium = gasPremium.toFixed();
+    if (gasFeeCap !== undefined) newExtra.gasFeeCap = gasFeeCap.toFixed();
+
+    return newExtra;
+  }
+
+  return extra;
+}
+
 export default {
   formatTransaction,
   fromTransactionRaw,
   toTransactionRaw,
+  fromOperationExtraRaw,
+  toOperationExtraRaw,
 };
