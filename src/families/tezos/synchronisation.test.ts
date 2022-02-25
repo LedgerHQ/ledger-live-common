@@ -48,7 +48,7 @@ function expectSumOfOpsIsBalance(account) {
   ).toEqual(account.balance.toString());
 }
 
-const sync = makeSync(getAccountShape);
+const sync = makeSync({ getAccountShape });
 
 const defaultSyncConfig = {
   paginationConfig: {},

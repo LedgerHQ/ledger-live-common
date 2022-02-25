@@ -171,7 +171,7 @@ const prepareTransaction = async (
   return t;
 };
 
-const sync = makeSync(getAccountShape);
+const sync = makeSync({ getAccountShape });
 
 const broadcast: BroadcastFnSignature = async ({
   signedOperation: { operation },

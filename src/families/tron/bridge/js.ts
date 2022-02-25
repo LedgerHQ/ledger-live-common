@@ -490,7 +490,7 @@ const postSync = (initial: Account, parent: Account): Account => {
   return parent;
 };
 
-const sync = makeSync(getAccountShape, postSync);
+const sync = makeSync({ getAccountShape, postSync });
 
 const currencyBridge: CurrencyBridge = {
   preload: async () => {

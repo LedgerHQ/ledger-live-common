@@ -149,12 +149,14 @@ export const mergeNfts = (oldNfts: NFT[], newNfts: NFT[]): NFT[] => {
   return Object.values(newNftsPerId).concat(nfts);
 };
 
-// TODO use object as param instead of list? same as makeScanAccounts
 export const makeSync =
-  (
-    getAccountShape: GetAccountShape,
-    postSync: (initial: Account, synced: Account) => Account = (_, a) => a
-  ): AccountBridge<any>["sync"] =>
+  ({
+    getAccountShape,
+    postSync = (_, a) => a,
+  }: {
+    getAccountShape: GetAccountShape;
+    postSync?: (initial: Account, synced: Account) => Account;
+  }): AccountBridge<any>["sync"] =>
   (initial, syncConfig): Observable<AccountUpdater> =>
     Observable.create((o) => {
       async function main() {
