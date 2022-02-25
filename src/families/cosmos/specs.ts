@@ -60,6 +60,10 @@ const cosmos: AppSpec<Transaction> = {
         );
       },
       transaction: ({ account, siblings, bridge, maxSpendable }) => {
+        const amount = maxSpendable
+          .times(0.3 + 0.4 * Math.random())
+          .integerValue();
+        invariant(amount.gt(0), "random amount to be positive");
         return {
           transaction: bridge.createTransaction(account),
           updates: [
@@ -67,9 +71,7 @@ const cosmos: AppSpec<Transaction> = {
               recipient: pickSiblings(siblings, maxAccounts).freshAddress,
             },
             {
-              amount: maxSpendable
-                .times(0.3 + 0.4 * Math.random())
-                .integerValue(),
+              amount,
             },
             Math.random() < 0.5
               ? {
@@ -269,6 +271,13 @@ const cosmos: AppSpec<Transaction> = {
               (sourceDelegation as CosmosDelegation).validatorAddress
           )
         );
+        const amount = (sourceDelegation as CosmosDelegation).amount
+          .times(
+            // most of the time redelegate all
+            Math.random() > 0.3 ? 1 : Math.random()
+          )
+          .integerValue();
+        invariant(amount.gt(0), "random amount to be positive");
         return {
           transaction: bridge.createTransaction(account),
           updates: [
@@ -280,12 +289,7 @@ const cosmos: AppSpec<Transaction> = {
               validators: [
                 {
                   address: (delegation as CosmosDelegation).validatorAddress,
-                  amount: (sourceDelegation as CosmosDelegation).amount
-                    .times(
-                      // most of the time redelegate all
-                      Math.random() > 0.3 ? 1 : Math.random()
-                    )
-                    .integerValue(),
+                  amount,
                 },
               ],
             },
