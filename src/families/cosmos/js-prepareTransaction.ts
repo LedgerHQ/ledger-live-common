@@ -24,13 +24,16 @@ const prepareTransaction = async (
   account: Account,
   transaction: Transaction
 ): Promise<Transaction> => {
-  const patch: Partial<Transaction> = {};
+  let memo = transaction.memo;
+  let fees = transaction.fees;
+  let gas = transaction.gas;
+  let amount = transaction.amount;
 
   let gasQty = new BigNumber(250000);
   const gasPrice = new BigNumber(getEnv("COSMOS_GAS_PRICE"));
 
   if (transaction.useAllAmount) {
-    patch.amount = getMaxEstimatedBalance(
+    amount = getMaxEstimatedBalance(
       account,
       account.balance
         .dividedBy(new BigNumber(getEnv("COSMOS_GAS_AMPLIFIER")))
@@ -39,12 +42,12 @@ const prepareTransaction = async (
   }
 
   if (transaction.mode !== "send" && !transaction.memo) {
-    patch.memo = "Ledger Live";
+    memo = "Ledger Live";
   }
 
   const unsignedPayload = await buildTransaction(account, {
     ...transaction,
-    ...patch,
+    amount,
   });
 
   // be sure payload is complete
@@ -53,7 +56,7 @@ const prepareTransaction = async (
       typeUrl: "/cosmos.tx.v1beta1.TxBody",
       value: {
         messages: unsignedPayload,
-        memo: transaction.memo || patch.memo || "",
+        memo: transaction.memo || memo || "",
       },
     };
 
@@ -111,11 +114,19 @@ const prepareTransaction = async (
     }
   }
 
-  patch.gas = gasQty;
+  gas = gasQty;
 
-  patch.fees = gasPrice.multipliedBy(gasQty).integerValue();
+  fees = gasPrice.multipliedBy(gasQty).integerValue();
 
-  return { ...transaction, ...patch };
+  if (
+    transaction.memo !== memo ||
+    transaction.fees !== fees ||
+    transaction.gas !== gas
+  ) {
+    return { ...transaction, memo, fees, gas };
+  }
+
+  return transaction;
 };
 
 export default prepareTransaction;
