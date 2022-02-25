@@ -15,7 +15,7 @@ const buildTransaction = async (
 
   switch (transaction.mode) {
     case "send":
-      if (!transaction.recipient || !transaction.amount) {
+      if (!transaction.recipient || transaction.amount.lte(0)) {
         isComplete = false;
       } else {
         msg.push({
@@ -39,7 +39,7 @@ const buildTransaction = async (
         isComplete = false;
       } else {
         transaction.validators.forEach((validator) => {
-          if (!validator.address || !validator.amount) {
+          if (!validator.address || validator.amount.lte(0)) {
             isComplete = false;
           }
 
@@ -63,7 +63,7 @@ const buildTransaction = async (
         !transaction.validators ||
         transaction.validators.length < 1 ||
         !transaction.validators[0].address ||
-        !transaction.validators[0].amount
+        transaction.validators[0].amount.lte(0)
       ) {
         isComplete = false;
       } else {
@@ -87,7 +87,7 @@ const buildTransaction = async (
         !transaction.validators ||
         transaction.validators.length < 1 ||
         !transaction.validators[0].address ||
-        !transaction.validators[0].amount
+        transaction.validators[0].amount.lte(0)
       ) {
         isComplete = false;
       } else {
@@ -129,7 +129,7 @@ const buildTransaction = async (
         !transaction.validators ||
         transaction.validators.length < 1 ||
         !transaction.validators[0].address ||
-        !transaction.validators[0].amount
+        transaction.validators[0].amount.lte(0)
       ) {
         isComplete = false;
       } else {
