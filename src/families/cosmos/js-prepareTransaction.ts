@@ -39,13 +39,10 @@ const prepareTransaction = async (
   }
 
   if (transaction.mode !== "send" && !transaction.memo) {
-    patch.memo = "Ledger Live";
+    transaction.memo = "Ledger Live";
   }
 
-  const unsignedPayload = await buildTransaction(account, {
-    ...transaction,
-    ...patch,
-  });
+  const unsignedPayload = await buildTransaction(account, transaction);
 
   // be sure payload is complete
   if (unsignedPayload) {
@@ -53,7 +50,7 @@ const prepareTransaction = async (
       typeUrl: "/cosmos.tx.v1beta1.TxBody",
       value: {
         messages: unsignedPayload,
-        memo: transaction.memo || patch.memo || "",
+        memo: transaction.memo || "",
       },
     };
 
@@ -111,11 +108,11 @@ const prepareTransaction = async (
     }
   }
 
-  patch.gas = gasQty;
+  transaction.gas = gasQty;
 
-  patch.fees = gasPrice.multipliedBy(gasQty).integerValue();
+  transaction.fees = gasPrice.multipliedBy(gasQty).integerValue();
 
-  return { ...transaction, ...patch };
+  return transaction;
 };
 
 export default prepareTransaction;
