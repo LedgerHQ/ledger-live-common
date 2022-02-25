@@ -42,6 +42,8 @@ import type { Result, GetAddressOptions } from "../hw/getAddress/types";
 import { open, close } from "../hw";
 import { withDevice } from "../hw/deviceAccess";
 
+export type GetAddressesFromPubkey = (pubkey: string) => Promise<Array<string>>;
+
 export type GetAccountShapeArg0 = {
   currency: CryptoCurrency;
   address: string;
@@ -147,6 +149,7 @@ export const mergeNfts = (oldNfts: NFT[], newNfts: NFT[]): NFT[] => {
   return Object.values(newNftsPerId).concat(nfts);
 };
 
+// TODO use object as param instead of list? same as makeScanAccounts
 export const makeSync =
   (
     getAccountShape: GetAccountShape,
@@ -215,12 +218,17 @@ export const makeSync =
     });
 
 export const makeScanAccounts =
-  (
-    getAccountShape: GetAccountShape,
+  ({
+    getAccountShape,
+    getAddressesFromPubkey,
+    getAddressFn,
+  }: {
+    getAccountShape: GetAccountShape;
+    getAddressesFromPubkey?: GetAddressesFromPubkey;
     getAddressFn?: (
       transport: Transport
-    ) => (opts: GetAddressOptions) => Promise<Result>
-  ): CurrencyBridge["scanAccounts"] =>
+    ) => (opts: GetAddressOptions) => Promise<Result>;
+  }): CurrencyBridge["scanAccounts"] =>
   ({ currency, deviceId, syncConfig }): Observable<ScanAccountEvent> =>
     Observable.create((o) => {
       let finished = false;
@@ -235,12 +243,14 @@ export const makeScanAccounts =
       // return mergeMap(addressesObservable, address => fetchAccount(address))
       async function stepAccount(
         index,
-        { address, path: freshAddressPath, ...rest },
+        res: Result,
         derivationMode,
         seedIdentifier,
         transport
       ): Promise<Account | null | undefined> {
         if (finished) return;
+
+        const { address, path: freshAddressPath, ...rest } = res;
 
         const accountShape: Partial<Account> = await getAccountShape(
           {
@@ -310,6 +320,51 @@ export const makeScanAccounts =
           account.used = !isAccountEmpty(account);
         }
 
+        // Bitcoin needs to compute the freshAddressPath itself,
+        // so we update it afterwards
+        if (account?.freshAddressPath) {
+          res.address = account.freshAddress;
+          derivationsCache[account.freshAddressPath] = res;
+        }
+
+        log("scanAccounts", "derivationsCache", res);
+
+        log(
+          "scanAccounts",
+          `scanning ${currency.id} at ${freshAddressPath}: ${
+            res.address
+          } resulted of ${
+            account
+              ? `Account with ${account.operations.length} txs`
+              : "no account"
+          }`
+        );
+        if (!account) return;
+        account.name = !account.used
+          ? getNewAccountPlaceholderName({
+              currency,
+              index,
+              derivationMode,
+            })
+          : getAccountPlaceholderName({
+              currency,
+              index,
+              derivationMode,
+            });
+
+        const showNewAccount = shouldShowNewAccount(currency, derivationMode);
+
+        if (account.used || showNewAccount) {
+          log(
+            "debug",
+            `Emit 'discovered' event for a new account found. AccountUsed: ${account.used} - showNewAccount: ${showNewAccount}`
+          );
+          o.next({
+            type: "discovered",
+            account,
+          });
+        }
+
         return account;
       }
 
@@ -331,7 +386,7 @@ export const makeScanAccounts =
               "scanAccounts",
               `scanning ${currency.id} on derivationMode=${derivationMode}`
             );
-            let result = derivationsCache[path];
+            let result: Result = derivationsCache[path];
 
             if (!result) {
               try {
@@ -340,6 +395,7 @@ export const makeScanAccounts =
                   path,
                   derivationMode,
                 });
+
                 derivationsCache[path] = result;
               } catch (e) {
                 if (e instanceof UnsupportedDerivation) {
@@ -362,97 +418,104 @@ export const makeScanAccounts =
               derivationMode,
               currency,
             });
-            const showNewAccount = shouldShowNewAccount(
-              currency,
-              derivationMode
-            );
-            const stopAt = isIterableDerivationMode(derivationMode) ? 255 : 1;
-            const startsAt = getDerivationModeStartsAt(derivationMode);
 
-            log(
-              "debug",
-              `start scanning account process. MandatoryEmptyAccountSkip ${mandatoryEmptyAccountSkip} / StartsAt: ${startsAt} - StopAt: ${stopAt}`
-            );
+            let res: Result;
+            let account: Account | null | undefined;
 
-            for (let index = startsAt; index < stopAt; index++) {
-              log("debug", `start to scan a new account. Index: ${index}`);
-
-              if (finished) {
-                log("debug", `new account scanning process has been finished`);
-                break;
-              }
-
-              if (!derivationModeSupportsIndex(derivationMode, index)) continue;
-              const freshAddressPath = runDerivationScheme(
-                derivationScheme,
-                currency,
-                {
-                  account: index,
-                }
+            if (getAddressesFromPubkey) {
+              // 1. get addresses from pubkey
+              const addresses: string[] = await getAddressesFromPubkey(
+                result.publicKey
               );
-              let res = derivationsCache[freshAddressPath];
 
-              if (!res) {
-                res = await getAddress(transport, {
+              // 2. stepAccount for each address
+              for (let index = 0; index < addresses.length; index++) {
+                if (!derivationModeSupportsIndex(derivationMode, index))
+                  continue;
+
+                const freshAddressPath = runDerivationScheme(
+                  derivationScheme,
                   currency,
-                  path: freshAddressPath,
-                  derivationMode,
-                });
-                derivationsCache[freshAddressPath] = res;
-              }
+                  {
+                    account: index,
+                  }
+                );
 
-              const account = await stepAccount(
-                index,
-                res,
-                derivationMode,
-                seedIdentifier,
-                transport
-              );
-              // Bitcoin needs to compute the freshAddressPath itself,
-              // so we update it afterwards
-              if (account?.freshAddressPath) {
-                res.address = account.freshAddress;
-                derivationsCache[account.freshAddressPath] = res;
+                res = derivationsCache[freshAddressPath];
+                if (!res) {
+                  res = {
+                    address: addresses[index],
+                    publicKey: addresses[index],
+                    path: freshAddressPath,
+                  };
+                }
+
+                account = await stepAccount(
+                  index,
+                  res,
+                  derivationMode,
+                  seedIdentifier,
+                  transport
+                );
+
+                if (account && !account.used) {
+                  if (emptyCount >= mandatoryEmptyAccountSkip) break;
+                  emptyCount++;
+                }
               }
-              log("scanAccounts", "derivationsCache", res);
+            } else {
+              const stopAt = isIterableDerivationMode(derivationMode) ? 255 : 1;
+              const startsAt = getDerivationModeStartsAt(derivationMode);
 
               log(
-                "scanAccounts",
-                `scanning ${currency.id} at ${freshAddressPath}: ${
-                  res.address
-                } resulted of ${
-                  account
-                    ? `Account with ${account.operations.length} txs`
-                    : "no account"
-                }`
+                "debug",
+                `start scanning account process. MandatoryEmptyAccountSkip ${mandatoryEmptyAccountSkip} / StartsAt: ${startsAt} - StopAt: ${stopAt}`
               );
-              if (!account) return;
-              account.name = !account.used
-                ? getNewAccountPlaceholderName({
+
+              for (let index = startsAt; index < stopAt; index++) {
+                log("debug", `start to scan a new account. Index: ${index}`);
+
+                if (finished) {
+                  log(
+                    "debug",
+                    `new account scanning process has been finished`
+                  );
+                  break;
+                }
+
+                if (!derivationModeSupportsIndex(derivationMode, index))
+                  continue;
+                const freshAddressPath = runDerivationScheme(
+                  derivationScheme,
+                  currency,
+                  {
+                    account: index,
+                  }
+                );
+
+                res = derivationsCache[freshAddressPath];
+
+                if (!res) {
+                  res = await getAddress(transport, {
                     currency,
-                    index,
-                    derivationMode,
-                  })
-                : getAccountPlaceholderName({
-                    currency,
-                    index,
+                    path: freshAddressPath,
                     derivationMode,
                   });
+                  derivationsCache[freshAddressPath] = res;
+                }
 
-              if (account.used || showNewAccount) {
-                log(
-                  "debug",
-                  `Emit 'discovered' event for a new account found. AccountUsed: ${account.used} - showNewAccount: ${showNewAccount}`
+                account = await stepAccount(
+                  index,
+                  res,
+                  derivationMode,
+                  seedIdentifier,
+                  transport
                 );
-                o.next({
-                  type: "discovered",
-                  account,
-                });
-              }
 
-              if (!account.used) {
-                if (emptyCount >= mandatoryEmptyAccountSkip) break;
-                emptyCount++;
+                if (account && !account.used) {
+                  if (emptyCount >= mandatoryEmptyAccountSkip) break;
+                  emptyCount++;
+                }
               }
             }
           }
