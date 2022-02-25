@@ -16,7 +16,6 @@ import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
 import { toOperationRaw } from "../../account";
 import {
-  COSMOS_MIN_SAFE,
   canClaimRewards,
   canDelegate,
   canUndelegate,
@@ -25,6 +24,7 @@ import {
 } from "./logic";
 import { DeviceModelId } from "@ledgerhq/devices";
 
+const minAmount = new BigNumber(50000);
 const maxAccounts = 12;
 
 const cosmos: AppSpec<Transaction> = {
@@ -37,7 +37,7 @@ const cosmos: AppSpec<Transaction> = {
   },
   testTimeout: 2 * 60 * 1000,
   transactionCheck: ({ maxSpendable }) => {
-    invariant(maxSpendable.gt(COSMOS_MIN_SAFE), "balance is too low");
+    invariant(maxSpendable.gt(minAmount), "balance is too low");
   },
   test: ({ operation, optimisticOperation }) => {
     const opExpected: Record<string, any> = toOperationRaw({
@@ -49,19 +49,21 @@ const cosmos: AppSpec<Transaction> = {
     delete opExpected.blockHash;
     delete opExpected.blockHeight;
     expect(toOperationRaw(operation)).toMatchObject(opExpected); // TODO check it is between operation.value-fees (excluded) and operation.value
-
-    /*
-    // balance move
-    expect(account.balance.toString()).toBe(
-      accountBeforeTransaction.balance.minus(operation.value).toString()
-    );
-    */
   },
   mutations: [
     {
       name: "send some",
       maxRun: 3,
+      test: ({ account, accountBeforeTransaction, operation }) => {
+        expect(account.balance.toString()).toBe(
+          accountBeforeTransaction.balance.minus(operation.value).toString()
+        );
+      },
       transaction: ({ account, siblings, bridge, maxSpendable }) => {
+        const amount = maxSpendable
+          .times(0.3 + 0.4 * Math.random())
+          .integerValue();
+        invariant(amount.gt(0), "random amount to be positive");
         return {
           transaction: bridge.createTransaction(account),
           updates: [
@@ -69,9 +71,7 @@ const cosmos: AppSpec<Transaction> = {
               recipient: pickSiblings(siblings, maxAccounts).freshAddress,
             },
             {
-              amount: maxSpendable
-                .times(0.3 + 0.4 * Math.random())
-                .integerValue(),
+              amount,
             },
             Math.random() < 0.5
               ? {
@@ -107,8 +107,8 @@ const cosmos: AppSpec<Transaction> = {
       maxRun: 1,
       transaction: ({ account, bridge }) => {
         invariant(
-          account.index % 4 > 0,
-          "one out of 4 accounts is not going to delegate"
+          account.index % 2 > 0,
+          "only one out of 2 accounts is not going to delegate"
         );
         invariant(canDelegate(account), "can delegate");
         const { cosmosResources } = account;
@@ -118,9 +118,9 @@ const cosmos: AppSpec<Transaction> = {
           "already enough delegations"
         );
         const data = getCurrentCosmosPreloadData();
-        const count = 1 + Math.floor(5 * Math.random());
+        const count = 1 + Math.floor(2.5 * Math.random());
         let remaining = getMaxDelegationAvailable(account, count).times(
-          Math.random()
+          0.5 * Math.random()
         );
         const all = data.validators.filter(
           (v) =>
@@ -271,6 +271,13 @@ const cosmos: AppSpec<Transaction> = {
               (sourceDelegation as CosmosDelegation).validatorAddress
           )
         );
+        const amount = (sourceDelegation as CosmosDelegation).amount
+          .times(
+            // most of the time redelegate all
+            Math.random() > 0.3 ? 1 : Math.random()
+          )
+          .integerValue();
+        invariant(amount.gt(0), "random amount to be positive");
         return {
           transaction: bridge.createTransaction(account),
           updates: [
@@ -282,12 +289,7 @@ const cosmos: AppSpec<Transaction> = {
               validators: [
                 {
                   address: (delegation as CosmosDelegation).validatorAddress,
-                  amount: (sourceDelegation as CosmosDelegation).amount
-                    .times(
-                      // most of the time redelegate all
-                      Math.random() > 0.3 ? 1 : Math.random()
-                    )
-                    .integerValue(),
+                  amount,
                 },
               ],
             },
