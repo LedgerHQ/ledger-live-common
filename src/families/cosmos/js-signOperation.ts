@@ -45,7 +45,7 @@ const signOperation = ({
       let cancelled;
 
       async function main() {
-        const { accountNumber, sequence, spendableBalance } = await getAccount(
+        const { accountNumber, sequence } = await getAccount(
           account.freshAddress
         );
 
@@ -179,7 +179,7 @@ const signOperation = ({
           hash,
           type,
           value: transaction.useAllAmount
-            ? spendableBalance
+            ? account.spendableBalance
             : transaction.amount.plus(fee),
           fee,
           extra: {},
