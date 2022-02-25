@@ -8,25 +8,12 @@ import type { Transaction } from "./types";
 import { getAccount, getChainId } from "./api/Cosmos";
 import { Observable } from "rxjs";
 import { withDevice } from "../../hw/deviceAccess";
-import {
-  encodePubkey,
-  makeAuthInfoBytes,
-  Registry,
-  TxBodyEncodeObject,
-} from "@cosmjs/proto-signing";
-import { SignMode } from "cosmjs-types/cosmos/tx/signing/v1beta1/signing";
-import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
+import { encodePubkey } from "@cosmjs/proto-signing";
 import { encodeOperationId } from "../../operation";
 import { LedgerSigner } from "@cosmjs/ledger-amino";
 import { AminoTypes } from "@cosmjs/stargate";
 import { stringToPath } from "@cosmjs/crypto";
-import buildTransaction from "./js-buildTransaction";
-import {
-  MsgDelegate,
-  MsgUndelegate,
-  MsgBeginRedelegate,
-} from "cosmjs-types/cosmos/staking/v1beta1/tx";
-import { MsgWithdrawDelegatorReward } from "cosmjs-types/cosmos/distribution/v1beta1/tx";
+import { buildTransaction, postBuildTransaction } from "./js-buildTransaction";
 import BigNumber from "bignumber.js";
 
 const aminoTypes = new AminoTypes({ prefix: "cosmos" });
@@ -50,16 +37,6 @@ const signOperation = ({
         );
 
         const chainId = await getChainId();
-
-        const registry = new Registry([
-          ["/cosmos.staking.v1beta1.MsgDelegate", MsgDelegate],
-          ["/cosmos.staking.v1beta1.MsgUndelegate", MsgUndelegate],
-          ["/cosmos.staking.v1beta1.MsgBeginRedelegate", MsgBeginRedelegate],
-          [
-            "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
-            MsgWithdrawDelegatorReward,
-          ],
-        ]);
 
         const hdPaths: any = stringToPath("m/" + account.freshAddressPath);
 
@@ -109,40 +86,15 @@ const signOperation = ({
           memo: transaction.memo || "",
         });
 
-        const txBodyFields: TxBodyEncodeObject = {
-          typeUrl: "/cosmos.tx.v1beta1.TxBody",
-          value: {
-            messages: msgs.map((msg) => aminoTypes.fromAmino(msg)),
-            memo: transaction.memo || "",
-          },
-        };
-
-        const txBodyBytes = registry.encode(txBodyFields);
-
-        const authInfoBytes = makeAuthInfoBytes(
-          [{ pubkey, sequence }],
-          [
-            {
-              amount:
-                transaction.fees?.toString() || new BigNumber(2500).toString(),
-              denom: account.currency.units[1].code,
-            },
-          ],
-          transaction.gas?.toNumber() || new BigNumber(250000).toNumber(),
-          SignMode.SIGN_MODE_LEGACY_AMINO_JSON
+        const tx_bytes = await postBuildTransaction(
+          account,
+          transaction,
+          pubkey,
+          unsignedPayload,
+          new Uint8Array(Buffer.from(signed.signature.signature, "base64"))
         );
 
-        const txRaw = TxRaw.fromPartial({
-          bodyBytes: txBodyBytes,
-          authInfoBytes,
-          signatures: [
-            new Uint8Array(Buffer.from(signed.signature.signature, "base64")),
-          ],
-        });
-
-        const signature = Buffer.from(TxRaw.encode(txRaw).finish()).toString(
-          "hex"
-        );
+        const signature = Buffer.from(tx_bytes).toString("hex");
 
         if (cancelled) {
           return;
