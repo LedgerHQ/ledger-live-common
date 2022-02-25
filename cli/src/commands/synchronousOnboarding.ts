@@ -2,6 +2,7 @@ import { from, interval, Observable } from "rxjs";
 import { withDevice } from "@ledgerhq/live-common/lib/hw/deviceAccess";
 import getOnboardingStatus from "@ledgerhq/live-common/lib/hw/getOnboardingStatus";
 import { concatMap, tap } from "rxjs/operators";
+import getDeviceInfo from "@ledgerhq/live-common/lib/hw/getDeviceInfo";
 
 export default {
   description:
@@ -18,9 +19,9 @@ export default {
   }: Partial<{
     device: string;
   }>) => interval(1000).pipe(
-      concatMap(() => withDevice(device || "")((t) => from(getOnboardingStatus(t)))),
+      concatMap(() => withDevice(device || "")((t) => from(getDeviceInfo(t)))),
       // pairwise()
-      tap((onboarding => {
+      tap( ({onboarding}) => {
         if(!onboarding){
           return
         }
@@ -55,6 +56,6 @@ export default {
         console.log(`---------------------
     ${sentence}
 ---------------------`);
-      }))
+      })
     )
 };

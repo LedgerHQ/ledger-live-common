@@ -1,6 +1,4 @@
 /* eslint-disable no-bitwise */
-import Transport from "@ledgerhq/hw-transport";
-import getVersion from "./getVersion";
 import type { OnboardingInfo, SeedSize } from "../types/onboarding";
 
 // Cf https://ledgerhq.atlassian.net/wiki/spaces/FW/pages/3258089508/Synchronous+onboarding
@@ -12,10 +10,8 @@ const currentWordFlag = 0x1f;
 const confirmingWordsFlag = 0x01;
 
 export default async function getOnboardingStatus(
-  transport: Transport
+  flags: Buffer
 ): Promise<OnboardingInfo> {
-  const { flags } = await getVersion(transport);
-
   if (!flags || flags.length < 4) {
     return {};
   }

@@ -39,7 +39,6 @@ export default async function getDeviceInfo(
     throw new DeviceOnDashboardExpected();
   }
 
-  const onboarding = await getOnboardingStatus(transport);
   const res = await getVersion(transport);
   const {
     isBootloader,
@@ -69,6 +68,8 @@ export default async function getDeviceInfo(
       mcuVersion +
       (isOSU ? " (osu)" : isBootloader ? " (bootloader)" : "")
   );
+
+  const onboarding = await getOnboardingStatus(flags);
 
   return {
     version,
