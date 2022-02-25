@@ -102,8 +102,16 @@ function makeEstimateMaxSpendable(
     return estimateMaxSpendableWithAPI(arg, api);
   }
 
-  const cacheKeyByAccBalance = ({ account }: { account: AccountLike }) =>
-    `${account.id}:${account.balance.toString()}`;
+  const cacheKeyByAccBalance = ({
+    account,
+    transaction,
+  }: {
+    account: AccountLike;
+    transaction?: Transaction | null;
+  }) =>
+    `${account.id}:${account.balance.toString()}:tx:${
+      transaction?.model.kind ?? "<no transaction>"
+    }`;
 
   return makeLRUCache(estimateMaxSpendable, cacheKeyByAccBalance, minutes(5));
 }

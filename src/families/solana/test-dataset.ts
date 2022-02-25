@@ -119,18 +119,6 @@ const solana: CurrenciesData<Transaction> = {
         //...tokenTests()
       ],
     },
-    /*
-    {
-      FIXME_tests: [
-        "balance is sum of ops",
-        "Default empty recipient have a recipientError",
-        "invalid recipient have a recipientError",
-        "can be called on an empty transaction",
-      ],
-      raw: makeAccount(testOnChainData.unfundedAddress),
-      transactions: [],
-    },
-    */
   ],
 };
 
@@ -342,32 +330,6 @@ function transferTests(): TransactionTestSpec[] {
         totalSpent: testOnChainData.fundedSenderBalance.plus(fees(1)),
       },
     },
-    /*
-    {
-      name: "transfer :: status is error: not enough balance, all amount",
-      transaction: {
-        model: {
-          kind: "transfer",
-          uiState: {
-            memo: "a memo",
-          },
-        },
-        useAllAmount: true,
-        amount: zero,
-        recipient: testOnChainData.fundedAddress,
-        family: "solana",
-      },
-      expectedStatus: {
-        errors: {
-          amount: new NotEnoughBalance(),
-        },
-        warnings: {},
-        estimatedFees: testOnChainData.fundedSenderBalance.plus(1),
-        amount: zero,
-        totalSpent: testOnChainData.fundedSenderBalance.plus(1),
-      },
-    },
-    */
     {
       name: "transfer :: status is error: amount is 0",
       transaction: {
@@ -653,27 +615,6 @@ function stakingTests(): TransactionTestSpec[] {
         },
       },
     },
-    /*
-    {
-      name: "stake.createAccount :: status is error: not enough balance, all amount",
-      transaction: {
-        family: "solana",
-        model: {
-          kind: "stake.createAccount",
-          uiState: {
-            delegate: { voteAccAddress: testOnChainData.validatorAddress },
-          },
-        },
-        recipient: "",
-        amount: testOnChainData.fundedSenderBalance,
-      },
-      expectedStatus: {
-        errors: {
-          amount: new NotEnoughBalance(),
-        },
-      },
-    },
-    */
     {
       name: "stake.createAccount :: status is error: validator required",
       transaction: {
@@ -753,7 +694,6 @@ function stakingTests(): TransactionTestSpec[] {
       },
     },
     {
-      // TODO: use all amount in another account
       name: "stake.createAccount :: status is success, not all amount",
       transaction: {
         family: "solana",
@@ -774,6 +714,31 @@ function stakingTests(): TransactionTestSpec[] {
         totalSpent: fees(1)
           .plus(testOnChainData.fees.stakeAccountRentExempt)
           .plus(1),
+        errors: {},
+      },
+    },
+    {
+      name: "stake.createAccount :: status is success, all amount",
+      transaction: {
+        family: "solana",
+        model: {
+          kind: "stake.createAccount",
+          uiState: {
+            delegate: { voteAccAddress: testOnChainData.validatorAddress },
+          },
+        },
+        recipient: "",
+        useAllAmount: true,
+        amount: zero,
+      },
+      expectedStatus: {
+        amount: testOnChainData.fundedSenderBalance
+          .minus(fees(1))
+          .minus(testOnChainData.fees.stakeAccountRentExempt),
+        estimatedFees: fees(1).plus(
+          testOnChainData.fees.stakeAccountRentExempt
+        ),
+        totalSpent: testOnChainData.fundedSenderBalance,
         errors: {},
       },
     },
@@ -914,7 +879,6 @@ function stakingTests(): TransactionTestSpec[] {
         },
       },
     },
-    // TODO: add fee check
     {
       name: "stake.withdraw :: status is error: stake account required",
       transaction: {
@@ -981,8 +945,6 @@ function stakingTests(): TransactionTestSpec[] {
         },
       },
     },
-    // TODO: check fee and nothing to withdraw
-    // TODO: create a staking account for the funded address?
   ];
 }
 
