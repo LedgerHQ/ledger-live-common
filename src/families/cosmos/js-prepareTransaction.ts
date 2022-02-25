@@ -121,9 +121,10 @@ const prepareTransaction = async (
   if (
     transaction.memo !== memo ||
     transaction.fees !== fees ||
-    transaction.gas !== gas
+    transaction.gas !== gas ||
+    transaction.amount !== amount
   ) {
-    return { ...transaction, memo, fees, gas };
+    return { ...transaction, memo, fees, gas, amount };
   }
 
   return transaction;
