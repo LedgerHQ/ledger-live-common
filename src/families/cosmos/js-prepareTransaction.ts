@@ -120,9 +120,9 @@ const prepareTransaction = async (
 
   if (
     transaction.memo !== memo ||
-    transaction.fees !== fees ||
-    transaction.gas !== gas ||
-    transaction.amount !== amount
+    !fees.eq(transaction.fees || new BigNumber(0)) ||
+    !gas.eq(transaction.gas || new BigNumber(0)) ||
+    !amount.eq(transaction.amount)
   ) {
     return { ...transaction, memo, fees, gas, amount };
   }
