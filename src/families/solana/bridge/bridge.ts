@@ -70,7 +70,7 @@ function makeSyncAndScan(getChainAPI: (config: Config) => Promise<ChainAPI>) {
   };
   return {
     sync: makeSyncHelper(getAccountShape),
-    scan: makeScanHelper(getAccountShape),
+    scan: makeScanHelper({ getAccountShape }),
   };
 }
 

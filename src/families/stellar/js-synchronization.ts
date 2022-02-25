@@ -37,4 +37,4 @@ const postSync = (initial: Account, parent: Account) => {
 };
 
 export const sync = makeSync(getAccountShape, postSync);
-export const scanAccounts = makeScanAccounts(getAccountShape);
+export const scanAccounts = makeScanAccounts({ getAccountShape });

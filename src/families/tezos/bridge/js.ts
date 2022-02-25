@@ -339,7 +339,7 @@ const broadcast = async ({ signedOperation: { operation, signature } }) => {
   return patchOperationWithHash(operation, hash);
 };
 
-const scanAccounts = makeScanAccounts(getAccountShape);
+const scanAccounts = makeScanAccounts({ getAccountShape });
 
 const sync = makeSync(getAccountShape);
 

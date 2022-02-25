@@ -45,7 +45,7 @@ const broadcast = async ({
   return patchOperationWithHash(operation, hash);
 };
 
-const scanAccounts = makeScanAccounts(getAccountShape);
+const scanAccounts = makeScanAccounts({ getAccountShape });
 const sync = makeSync(getAccountShape, postSyncPatch);
 
 const createTransaction = (): Transaction => ({

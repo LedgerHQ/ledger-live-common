@@ -466,7 +466,7 @@ const getAccountShape = async (info: GetAccountShapeArg0, syncConfig) => {
   };
 };
 
-const scanAccounts = makeScanAccounts(getAccountShape);
+const scanAccounts = makeScanAccounts({ getAccountShape });
 // the balance does not update straightaway so we should ignore recent operations if they are in pending for a bit
 const preferPendingOperationsUntilBlockValidation = 35;
 

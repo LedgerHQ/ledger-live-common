@@ -132,7 +132,7 @@ const getAccountShape = async (info) => {
   };
 };
 
-const scanAccounts = makeScanAccounts(getAccountShape);
+const scanAccounts = makeScanAccounts({ getAccountShape });
 const sync = makeSync(getAccountShape);
 const currencyBridge: CurrencyBridge = {
   preload: () => Promise.resolve({}),

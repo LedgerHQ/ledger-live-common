@@ -38,5 +38,5 @@ const getAccountShape: GetAccountShape = async (info) => {
 
 const postSync = (initial: Account, parent: Account) => parent;
 
-export const scanAccounts = makeScanAccounts(getAccountShape);
+export const scanAccounts = makeScanAccounts({ getAccountShape });
 export const sync = makeSync(getAccountShape, postSync);
