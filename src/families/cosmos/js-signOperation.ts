@@ -45,7 +45,7 @@ const signOperation = ({
       let cancelled;
 
       async function main() {
-        const { accountNumber, sequence } = await getAccount(
+        const { accountNumber, sequence, spendableBalance } = await getAccount(
           account.freshAddress
         );
 
@@ -152,6 +152,8 @@ const signOperation = ({
 
         const hash = ""; // resolved at broadcast time
         const accountId = account.id;
+        const fee = transaction.fees || new BigNumber(0);
+
         const type: OperationType =
           transaction.mode === "undelegate"
             ? "UNDELEGATE"
@@ -176,8 +178,10 @@ const signOperation = ({
           id: encodeOperationId(accountId, hash, type),
           hash,
           type,
-          value: transaction.amount,
-          fee: transaction.fees || new BigNumber(0),
+          value: transaction.useAllAmount
+            ? spendableBalance
+            : transaction.amount.plus(fee),
+          fee,
           extra: {},
           blockHash: null,
           blockHeight: null,
