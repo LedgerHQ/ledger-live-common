@@ -9,9 +9,8 @@ const seedSizeFlag = 0x60;
 const currentWordFlag = 0x1f;
 const confirmingWordsFlag = 0x01;
 
-export default async function getOnboardingStatus(
-  flags: Buffer
-): Promise<OnboardingInfo> {
+export default function getOnboardingStatus(flags: Buffer
+): OnboardingInfo {
   if (!flags || flags.length < 4) {
     return {};
   }

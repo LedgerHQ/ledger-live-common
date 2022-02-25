@@ -69,7 +69,7 @@ export default async function getDeviceInfo(
       (isOSU ? " (osu)" : isBootloader ? " (bootloader)" : "")
   );
 
-  const onboarding = await getOnboardingStatus(flags);
+  const onboarding = getOnboardingStatus(flags);
 
   return {
     version,
