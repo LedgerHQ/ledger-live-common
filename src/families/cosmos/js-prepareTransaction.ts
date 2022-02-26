@@ -1,28 +1,16 @@
 import { Account } from "../../types";
 import { Transaction } from "./types";
 import BigNumber from "bignumber.js";
-import { getAccount, simulate } from "./api/Cosmos";
-import {
-  encodePubkey,
-  makeAuthInfoBytes,
-  Registry,
-  TxBodyEncodeObject,
-} from "@cosmjs/proto-signing";
-import { SignMode } from "cosmjs-types/cosmos/tx/signing/v1beta1/signing";
-import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
-import {
-  MsgDelegate,
-  MsgUndelegate,
-  MsgBeginRedelegate,
-} from "cosmjs-types/cosmos/staking/v1beta1/tx";
-import { MsgWithdrawDelegatorReward } from "cosmjs-types/cosmos/distribution/v1beta1/tx";
+import { simulate } from "./api/Cosmos";
+import { encodePubkey } from "@cosmjs/proto-signing";
 import { getEnv } from "../../env";
-import buildTransaction from "./js-buildTransaction";
+import { buildTransaction, postBuildTransaction } from "./js-buildTransaction";
 import { getMaxEstimatedBalance } from "./logic";
 
 const prepareTransaction = async (
   account: Account,
-  transaction: Transaction
+  transaction: Transaction,
+  calculateFees?: boolean
 ): Promise<Transaction> => {
   let memo = transaction.memo;
   let fees = transaction.fees;
@@ -32,12 +20,19 @@ const prepareTransaction = async (
   let gasQty = new BigNumber(250000);
   const gasPrice = new BigNumber(getEnv("COSMOS_GAS_PRICE"));
 
-  if (transaction.useAllAmount) {
+  if (transaction.useAllAmount && !calculateFees) {
+    const tempTransaction = await prepareTransaction(
+      account,
+      {
+        ...transaction,
+        amount: account.spendableBalance.minus(new BigNumber(2500)),
+      },
+      true
+    );
+
     amount = getMaxEstimatedBalance(
       account,
-      account.balance
-        .dividedBy(new BigNumber(getEnv("COSMOS_GAS_AMPLIFIER")))
-        .integerValue()
+      tempTransaction.fees || new BigNumber(0)
     );
   }
 
@@ -52,53 +47,18 @@ const prepareTransaction = async (
 
   // be sure payload is complete
   if (unsignedPayload) {
-    const txBodyFields: TxBodyEncodeObject = {
-      typeUrl: "/cosmos.tx.v1beta1.TxBody",
-      value: {
-        messages: unsignedPayload,
-        memo: transaction.memo || memo || "",
-      },
-    };
-
-    const registry = new Registry([
-      ["/cosmos.staking.v1beta1.MsgDelegate", MsgDelegate],
-      ["/cosmos.staking.v1beta1.MsgUndelegate", MsgUndelegate],
-      ["/cosmos.staking.v1beta1.MsgBeginRedelegate", MsgBeginRedelegate],
-      [
-        "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
-        MsgWithdrawDelegatorReward,
-      ],
-    ]);
-
-    const { sequence } = await getAccount(account.freshAddress);
-
     const pubkey = encodePubkey({
       type: "tendermint/PubKeySecp256k1",
       value: Buffer.from(account.seedIdentifier, "hex").toString("base64"),
     });
 
-    const txBodyBytes = registry.encode(txBodyFields);
-
-    const authInfoBytes = makeAuthInfoBytes(
-      [{ pubkey, sequence }],
-      [
-        {
-          amount:
-            transaction.fees?.toString() || new BigNumber(2500).toString(),
-          denom: account.currency.units[1].code,
-        },
-      ],
-      transaction.gas?.toNumber() || new BigNumber(250000).toNumber(),
-      SignMode.SIGN_MODE_LEGACY_AMINO_JSON
+    const tx_bytes = await postBuildTransaction(
+      account,
+      { ...transaction, memo, fees, gas, amount },
+      pubkey,
+      unsignedPayload,
+      new Uint8Array(Buffer.from(account.seedIdentifier, "hex"))
     );
-
-    const txRaw = TxRaw.fromPartial({
-      bodyBytes: txBodyBytes,
-      authInfoBytes,
-      signatures: [new Uint8Array(Buffer.from(account.seedIdentifier, "hex"))],
-    });
-
-    const tx_bytes = Array.from(Uint8Array.from(TxRaw.encode(txRaw).finish()));
 
     const gasUsed = await simulate(tx_bytes);
 
