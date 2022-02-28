@@ -58,3 +58,11 @@ export const SolanaStakeAccountIsNotUndelegatable = createCustomErrorClass(
 export const SolanaStakeAccountValidatorIsUnchangeable = createCustomErrorClass(
   "SolanaStakeAccountValidatorIsUnchangeable"
 );
+
+export const SolanaStakeNoWithdrawAuth = createCustomErrorClass(
+  "SolanaStakeNoWithdrawAuth"
+);
+
+export const SolanaStakeNoStakeAuth = createCustomErrorClass(
+  "SolanaStakeNoStakeAuth"
+);

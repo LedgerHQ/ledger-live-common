@@ -32,6 +32,8 @@ import {
   SolanaStakeAccountIsNotDelegatable,
   SolanaStakeAccountValidatorIsUnchangeable,
   SolanaStakeAccountIsNotUndelegatable,
+  SolanaStakeNoWithdrawAuth,
+  SolanaStakeNoStakeAuth,
 } from "./errors";
 import {
   decodeAccountIdWithTokenAccountAddress,
@@ -419,6 +421,10 @@ async function deriveStakeDelegateCommandDescriptor(
     errors
   );
 
+  if (stake !== undefined && !stake.hasStakeAuth && !stake.hasWithdrawAuth) {
+    errors.stakeAccAddr = new SolanaStakeNoStakeAuth();
+  }
+
   await validateValidatorCommon(uiState.voteAccAddr, errors, api);
 
   if (!errors.voteAccAddr && stake !== undefined) {
@@ -520,8 +526,12 @@ async function deriveStakeWithdrawCommandDescriptor(
     errors
   );
 
-  if (stake !== undefined && stake.withdrawable <= 0) {
-    errors.stakeAccAddr = new SolanaStakeAccountNothingToWithdraw();
+  if (stake !== undefined) {
+    if (!stake.hasWithdrawAuth) {
+      errors.stakeAccAddr = new SolanaStakeNoWithdrawAuth();
+    } else if (stake.withdrawable <= 0) {
+      errors.stakeAccAddr = new SolanaStakeAccountNothingToWithdraw();
+    }
   }
 
   const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;

@@ -184,7 +184,7 @@ export type TransactionRaw = TransactionCommonRaw & {
 export type SolanaStake = {
   stakeAccAddr: string;
   hasStakeAuth: boolean;
-  //hasWithdrawAuth: boolean;
+  hasWithdrawAuth: boolean;
   delegation?: {
     stake: number;
     voteAccAddr: string;
@@ -196,9 +196,6 @@ export type SolanaStake = {
     state: "active" | "inactive" | "activating" | "deactivating";
     active: number;
     inactive: number;
-  };
-  reward?: {
-    amount: number;
   };
 };
 

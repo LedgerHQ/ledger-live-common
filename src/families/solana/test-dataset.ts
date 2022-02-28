@@ -34,7 +34,7 @@ import { assertUnreachable } from "./utils";
 import { getEnv } from "../../env";
 
 // do not change real properties or the test will break
-const testOnChainData = {
+export const testOnChainData = {
   //  --- real props ---
   unfundedAddress: "7b6Q3ap8qRzfyvDw1Qce3fUV8C7WgFNzJQwYNTJm3KQo",
   // 0/0

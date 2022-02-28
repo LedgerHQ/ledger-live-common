@@ -167,6 +167,7 @@ export const getAccountShapeWithAPI = async (
         stakeAccBalance,
         rentExemptReserve,
         hasStakeAuth: meta.authorized.staker.toBase58() === mainAccAddress,
+        hasWithdrawAuth,
         delegation:
           stake === null
             ? undefined
