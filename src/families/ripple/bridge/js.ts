@@ -210,7 +210,7 @@ interface Currency {
 interface TxXRPL {
   meta: {
     TransactionResult: string;
-    delivered_amount: Currency| string;
+    delivered_amount: Currency | string;
   };
   tx: {
     TransactionType: string;
@@ -228,7 +228,11 @@ interface TxXRPL {
 
 const filterOperations: any = (transactions: TxXRPL[], account: Account) => {
   return transactions
-    .filter((tx: TxXRPL) => tx.tx.TransactionType === "Payment" && (typeof tx.meta.delivered_amount === "string"))
+    .filter(
+      (tx: TxXRPL) =>
+        tx.tx.TransactionType === "Payment" &&
+        typeof tx.meta.delivered_amount === "string"
+    )
     .map(txToOperation(account))
     .filter(Boolean);
 };
@@ -250,7 +254,7 @@ const txToOperation =
   }: TxXRPL): Operation | null | undefined => {
     const type = Account === account.freshAddress ? "OUT" : "IN";
     let value =
-      delivered_amount && !Number.isNaN(delivered_amount)
+      delivered_amount && typeof delivered_amount === "string"
         ? new BigNumber(delivered_amount)
         : new BigNumber(0);
     const feeValue = new BigNumber(Fee);
@@ -617,7 +621,7 @@ const prepareTransaction = async (a: Account, t: Transaction) => {
     try {
       const info = await getServerInfo(a.endpointConfig);
       const serverFee = parseAPIValue(
-        String(info.info.validated_ledger.base_fee_xrp)
+        info.info.validated_ledger.base_fee_xrp.toString()
       );
       networkInfo = {
         family: "ripple",
@@ -649,7 +653,7 @@ const getTransactionStatus = async (a, t) => {
   } = {};
   const r = await getServerInfo(a.endpointConfig);
   const reserveBaseXRP = parseAPIValue(
-    String(r.info.validated_ledger.reserve_base_xrp)
+    r.info.validated_ledger.reserve_base_xrp.toString()
   );
   const estimatedFees = new BigNumber(t.fee || 0);
   const totalSpent = new BigNumber(t.amount).plus(estimatedFees);
