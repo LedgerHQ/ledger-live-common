@@ -202,10 +202,15 @@ function isRecipientValid(recipient) {
   }
 }
 
+interface Currency {
+  currency: string;
+  amount: string;
+}
+
 interface TxXRPL {
   meta: {
     TransactionResult: string;
-    delivered_amount: string;
+    delivered_amount: Currency| string;
   };
   tx: {
     TransactionType: string;
@@ -220,6 +225,13 @@ interface TxXRPL {
     hash: string;
   };
 }
+
+const filterOperations: any = (transactions: TxXRPL[], account: Account) => {
+  return transactions
+    .filter((tx: TxXRPL) => tx.tx.TransactionType === "Payment" && (typeof tx.meta.delivered_amount === "string"))
+    .map(txToOperation(account))
+    .filter(Boolean);
+};
 
 const txToOperation =
   (account: Account) =>
@@ -237,9 +249,10 @@ const txToOperation =
     },
   }: TxXRPL): Operation | null | undefined => {
     const type = Account === account.freshAddress ? "OUT" : "IN";
-    let value = delivered_amount
-      ? new BigNumber(delivered_amount)
-      : new BigNumber(0);
+    let value =
+      delivered_amount && !Number.isNaN(delivered_amount)
+        ? new BigNumber(delivered_amount)
+        : new BigNumber(0);
     const feeValue = new BigNumber(Fee);
 
     if (type === "OUT") {
@@ -465,10 +478,7 @@ const currencyBridge: CurrencyBridge = {
                 swapHistory: [],
                 balanceHistoryCache: emptyHistoryCache, // calculated in the jsHelpers
               };
-              account.operations = transactions
-                .filter((tx: TxXRPL) => tx.tx.TransactionType === "Payment")
-                .map(txToOperation(account))
-                .filter(Boolean);
+              account.operations = filterOperations(transactions, account);
               account.operationsCount = account.operations.length;
 
               if (account.operations.length > 0) {
@@ -556,9 +566,7 @@ const sync = ({
         ).transactions;
         if (finished) return;
         o.next((a) => {
-          const newOps = transactions
-            .filter((tx: TxXRPL) => tx.tx.TransactionType === "Payment")
-            .map(txToOperation(a));
+          const newOps = filterOperations(transactions, a);
           const operations = mergeOps(a.operations, newOps);
           const [last] = operations;
           const pendingOperations = a.pendingOperations.filter(
