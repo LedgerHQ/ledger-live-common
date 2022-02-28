@@ -113,11 +113,11 @@ const cosmos: AppSpec<Transaction> = {
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         invariant(
-          (cosmosResources as CosmosResources).delegations.length < 4,
+          (cosmosResources as CosmosResources).delegations.length < 3,
           "already enough delegations"
         );
         const data = getCurrentCosmosPreloadData();
-        const count = 1 + Math.floor(2.5 * Math.random());
+        const count = 1 + Math.floor(2 * Math.random());
         let remaining = getMaxDelegationAvailable(account, count).times(
           0.5 * Math.random()
         );
