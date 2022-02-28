@@ -109,24 +109,26 @@ export const getDelegators = async (address: string): Promise<any> => {
       });
     });
 
-    delegators.forEach(async (d) => {
-      try {
-        const { data } = await network({
-          method: "GET",
-          url: `${defaultEndpoint}/cosmos/distribution/v1beta1/delegators/${address}/rewards`,
-        });
+    try {
+      const { data } = await network({
+        method: "GET",
+        url: `${defaultEndpoint}/cosmos/distribution/v1beta1/delegators/${address}/rewards`,
+      });
 
-        data.rewards.forEach((r) => {
+      data.rewards.forEach((r) => {
+        delegators.forEach(async (d) => {
           if (r.validator_address === d.validatorAddress) {
-            d.pendingRewards = new BigNumber(d.reward.amount).integerValue(
-              BigNumber.ROUND_CEIL
-            );
+            r.reward.forEach(async (v) => {
+              d.pendingRewards = d.pendingRewards.plus(
+                new BigNumber(v.amount).integerValue(BigNumber.ROUND_CEIL)
+              );
+            });
           }
         });
+      });
 
-        // eslint-disable-next-line no-empty
-      } catch (e) {}
-    });
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
 
     return delegators;
   } catch (e) {
