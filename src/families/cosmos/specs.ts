@@ -338,7 +338,7 @@ const cosmos: AppSpec<Transaction> = {
           (cosmosResources as CosmosResources).delegations.filter(
             // FIXME
             // (d) => canClaimRewards(account, d) && d.pendingRewards.gt(2000)
-            (d) => d.pendingRewards.gt(2000)
+            (d) => d.pendingRewards.gt(1000)
           )
         );
         invariant(delegation, "no delegation to claim");
