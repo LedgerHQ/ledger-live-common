@@ -205,6 +205,12 @@ const cosmos: AppSpec<Transaction> = {
           )
         );
         invariant(undelegateCandidate, "already pending");
+
+        const amount = (undelegateCandidate as CosmosDelegation).amount // most of the time, undelegate all
+          .times(Math.random() > 0.3 ? 1 : Math.random())
+          .integerValue();
+        invariant(amount.gt(0), "random amount to be positive");
+
         return {
           transaction: bridge.createTransaction(account),
           updates: [
@@ -217,9 +223,7 @@ const cosmos: AppSpec<Transaction> = {
                 {
                   address: (undelegateCandidate as CosmosDelegation)
                     .validatorAddress,
-                  amount: (undelegateCandidate as CosmosDelegation).amount // most of the time, undelegate all
-                    .times(Math.random() > 0.3 ? 1 : Math.random())
-                    .integerValue(),
+                  amount,
                 },
               ],
             },
