@@ -42,7 +42,7 @@ import type { Result, GetAddressOptions } from "../hw/getAddress/types";
 import { open, close } from "../hw";
 import { withDevice } from "../hw/deviceAccess";
 
-export type GetAddressesFromPubkey = (pubkey: string) => Promise<Array<string>>;
+export type GetAddressesFromPubkey = (pubkey: string) => Promise<string[]>;
 
 export type GetAccountShapeArg0 = {
   currency: CryptoCurrency;
