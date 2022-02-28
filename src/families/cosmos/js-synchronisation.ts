@@ -183,10 +183,10 @@ export const getAccountShape: GetAccountShape = async (info) => {
     pendingRewardsBalance = pendingRewardsBalance.plus(
       delegation.pendingRewards
     );
+  }
 
-    if (delegation.status === "unbonding") {
-      unbondingBalance = unbondingBalance.plus(delegation.amount);
-    }
+  for (const unbonding of unbondings) {
+    unbondingBalance = unbondingBalance.plus(unbonding.amount);
   }
 
   let spendableBalance = balance.minus(unbondingBalance.plus(delegatedBalance));
