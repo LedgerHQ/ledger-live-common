@@ -3301,7 +3301,7 @@ braces@^3.0.1:
   dependencies:
     fill-range "^7.0.1"
 
-brorand@^1.0.1, brorand@^1.0.5, brorand@^1.1.0:
+brorand@^1.0.1, brorand@^1.1.0:
   version "1.1.0"
   resolved "https://registry.npmjs.org/brorand/-/brorand-1.1.0.tgz"
   integrity sha1-EsJe/kCkXjwyPrhnWgoM5XsiNx8=
@@ -8130,17 +8130,6 @@ ripple-bs58check@^2.0.2:
     create-hash "^1.1.0"
     ripple-bs58 "^4.0.0"
 
-ripple-keypairs@^1.1.3:
-  version "1.1.3"
-  resolved "https://registry.yarnpkg.com/ripple-keypairs/-/ripple-keypairs-1.1.3.tgz#3af825ffe85c1777b0aa78d832e9fc5750d4529d"
-  integrity sha512-y74Y3c0g652BgpDhWsf0x98GnUyY2D9eO2ay2exienUfbIe00TeIiFhYXQhCGVnliGsxeV9WTpU+YuEWuIxuhw==
-  dependencies:
-    bn.js "^5.1.1"
-    brorand "^1.0.5"
-    elliptic "^6.5.4"
-    hash.js "^1.0.3"
-    ripple-address-codec "^4.2.3"
-
 rlp@^2.0.0, rlp@^2.2.3:
   version "2.2.6"
   resolved "https://registry.npmjs.org/rlp/-/rlp-2.2.6.tgz"
@@ -9757,11 +9746,6 @@ ws@^3.0.0:
     safe-buffer "~5.1.0"
     ultron "~1.1.0"
 
-ws@^8.2.2:
-  version "8.5.0"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-8.5.0.tgz#bfb4be96600757fe5382de12c670dab984a1ed4f"
-  integrity sha512-BWX0SWVgLPzYwF8lTzEy1egjhS4S4OEAHfsO8o65WOVsrnSRGaSiUaa9e0ggGlkMTtBlmOpEXiie9RUcBO86qg==
-
 xhr-request-promise@^0.1.2:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/xhr-request-promise/-/xhr-request-promise-0.1.3.tgz#2d5f4b16d8c6c893be97f1a62b0ed4cf3ca5f96c"
@@ -9808,21 +9792,6 @@ xmlchars@^2.2.0:
   version "2.2.0"
   resolved "https://registry.npmjs.org/xmlchars/-/xmlchars-2.2.0.tgz"
   integrity sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==
-
-xrpl@^2.1.1:
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/xrpl/-/xrpl-2.1.1.tgz#c00a197dfcaed8e779fb4c728aa384b940093cbf"
-  integrity sha512-s8qg5ll0m1WuPji+qLOO02uhk8tu12zA68vspwwabH2XH4kzzDnABxTeQQlZisjr+B1EBalmlt0yMI+Gv7fnbg==
-  dependencies:
-    bignumber.js "^9.0.0"
-    bip32 "^2.0.6"
-    bip39 "^3.0.4"
-    https-proxy-agent "^5.0.0"
-    lodash "^4.17.4"
-    ripple-address-codec "^4.2.3"
-    ripple-binary-codec "^1.3.0"
-    ripple-keypairs "^1.1.3"
-    ws "^8.2.2"
 
 xstate@^4.28.1:
   version "4.28.1"
