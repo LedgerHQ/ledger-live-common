@@ -339,12 +339,10 @@ const cosmos: AppSpec<Transaction> = {
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         const delegation = sample(
-          (cosmosResources as CosmosResources).delegations.filter(
-            // FIXME
-            // (d) => canClaimRewards(account, d) && d.pendingRewards.gt(2000)
-            (d) => d.pendingRewards.gt(1000)
+          (cosmosResources as CosmosResources).delegations.filter((d) =>
+            d.pendingRewards.gt(1000)
           )
-        );
+        ) as CosmosDelegation;
         invariant(delegation, "no delegation to claim");
         return {
           transaction: bridge.createTransaction(account),
@@ -354,13 +352,8 @@ const cosmos: AppSpec<Transaction> = {
               memo: "LedgerLiveBot",
               validators: [
                 {
-                  address: (delegation as CosmosDelegation).validatorAddress,
-                  // TODO: the test should be
-                  // amount: delegation.pendingRewards,
-                  // but it won't work until COIN-665 is fixed until then,
-                  // amount is set to 0 in
-                  // src/families/cosmos/libcore-buildOperation in the REWARD case
-                  amount: new BigNumber(0),
+                  address: delegation.validatorAddress,
+                  amount: delegation.pendingRewards,
                 },
               ],
             },
