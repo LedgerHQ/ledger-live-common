@@ -100,9 +100,12 @@ const getTransactionStatus = async (
   }
 
   if (t.mode === "send") {
-    const spendableBalance = account.balance.minus(EXISTENTIAL_DEPOSIT).lt(0)
-      ? account.balance.minus(EXISTENTIAL_DEPOSIT)
-      : account.balance;
+    let spendableBalance = account.balance
+      .minus(estimatedFees)
+      .minus(EXISTENTIAL_DEPOSIT);
+    spendableBalance = spendableBalance.lt(0)
+      ? account.balance
+      : spendableBalance;
     if (!errors.amount && t.amount.eq(0) && !t.useAllAmount) {
       errors.amount = new AmountRequired();
     } else if (!errors.amount && t.amount.gt(spendableBalance)) {
@@ -113,7 +116,6 @@ const getTransactionStatus = async (
     } else if (t.amount.gt(0) && estimatedFees.times(10).gt(t.amount)) {
       warnings.feeTooHigh = new FeeTooHigh();
     }
-
     if (
       !errors.amount &&
       (await api.getAccountByAddress(t.recipient)).type === "empty" &&

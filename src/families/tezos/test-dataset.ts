@@ -66,20 +66,6 @@ const dataset: DatasetTest<Transaction> = {
                 warnings: {},
               },
             },
-            {
-              name: "send more than min allowed",
-              transaction: (t, account) => ({
-                ...t,
-                amount: account.balance.minus("100"),
-                recipient: "tz1VSichevvJSNkSSntgwKDKikWNB6iqNJii",
-              }),
-              expectedStatus: {
-                errors: {
-                  amount: new NotEnoughBalance(),
-                },
-                warnings: {},
-              },
-            },
           ],
         },
         {
@@ -99,6 +85,20 @@ const dataset: DatasetTest<Transaction> = {
               expectedStatus: {
                 errors: {
                   amount: new NotEnoughBalanceBecauseDestinationNotCreated(),
+                },
+                warnings: {},
+              },
+            },
+            {
+              name: "send more than min allowed",
+              transaction: (t, account) => ({
+                ...t,
+                amount: account.balance.minus("100"),
+                recipient: "tz1VSichevvJSNkSSntgwKDKikWNB6iqNJii",
+              }),
+              expectedStatus: {
+                errors: {
+                  amount: new NotEnoughBalance(),
                 },
                 warnings: {},
               },
