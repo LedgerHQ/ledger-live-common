@@ -12,7 +12,6 @@ import {
 import { fetchBalances, fetchBlockHeight, fetchTxs } from "./api";
 import { encodeAccountId } from "../../../../account";
 import flatMap from "lodash/flatMap";
-import { Transaction } from "../../types";
 
 type TxsById = {
   [id: string]: {
