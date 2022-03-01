@@ -110,14 +110,12 @@ const dataset: DatasetTest<Transaction> = {
                 amount: account.balance,
                 recipient: accountTZnew.freshAddress,
               }),
-              expectedStatus: (acc, tr) =>{
-                console.log(tr); 
-                return {
+              expectedStatus: {
                 errors: {
                   amount: new NotEnoughBalance(),
                 },
                 warnings: {},
-              }},
+              },
             },
           ],
         },
