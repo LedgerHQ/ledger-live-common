@@ -491,6 +491,10 @@ async function deriveStakeUndelegateCommandDescriptor(
       default:
         return assertUnreachable(stake.activation.state);
     }
+
+    if (!errors.stakeAccAddr && !stake.hasStakeAuth && !stake.hasWithdrawAuth) {
+      errors.stakeAccAddr = new SolanaStakeNoStakeAuth();
+    }
   }
 
   const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
@@ -526,7 +530,7 @@ async function deriveStakeWithdrawCommandDescriptor(
     errors
   );
 
-  if (stake !== undefined) {
+  if (!errors.stakeAccAddr && stake !== undefined) {
     if (!stake.hasWithdrawAuth) {
       errors.stakeAccAddr = new SolanaStakeNoWithdrawAuth();
     } else if (stake.withdrawable <= 0) {

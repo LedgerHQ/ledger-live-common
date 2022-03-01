@@ -1,11 +1,38 @@
+import { AmountRequired, NotEnoughBalance } from "@ledgerhq/errors";
 import BigNumber from "bignumber.js";
 import { Account, TransactionStatus } from "../../types";
 import { ChainAPI } from "./api";
-import { SolanaStakeAccountIsNotDelegatable } from "./errors";
+import {
+  SolanaStakeAccountIsNotDelegatable,
+  SolanaStakeAccountValidatorIsUnchangeable,
+} from "./errors";
 import getTransactionStatus from "./js-getTransactionStatus";
 import { prepareTransaction } from "./js-prepareTransaction";
 import { testOnChainData } from "./test-dataset";
 import { SolanaStake, Transaction } from "./types";
+
+const baseAccount = {
+  balance: new BigNumber(0),
+} as Account;
+
+const baseTx = {
+  family: "solana",
+  recipient: "",
+  amount: new BigNumber(0),
+} as Transaction;
+
+const baseAPI = {
+  getTxFeeCalculator: () =>
+    Promise.resolve({
+      lamportsPerSignature: testOnChainData.fees.lamportsPerSignature,
+    }),
+} as ChainAPI;
+
+type StakeTestSpec = {
+  activationState: SolanaStake["activation"]["state"];
+  txModel: Transaction["model"];
+  expectedErrors: Record<string, Error>;
+};
 
 /**
  * Some business logic can not be described in terms of transactions and expected status
@@ -15,80 +42,124 @@ import { SolanaStake, Transaction } from "./types";
  */
 export default () => {
   // delegate, undelegate, nothing to withdraw, record mocks so it works with MOCK=true
-  const baseAccount = {
-    balance: new BigNumber(0),
-  } as Account;
-
-  const baseTx = {
-    family: "solana",
-    recipient: "",
-    amount: new BigNumber(0),
-  } as Transaction;
-
-  const baseAPI = {
-    getTxFeeCalculator: () =>
-      Promise.resolve({
-        lamportsPerSignature: testOnChainData.fees.lamportsPerSignature,
-      }),
-  } as ChainAPI;
-
   describe("solana staking", () => {
     test("stake.delegate :: status is error: stake account is not delegatable", async () => {
-      const api = {
-        ...baseAPI,
-        getMinimumBalanceForRentExemption: () =>
-          Promise.resolve(testOnChainData.fees.stakeAccountRentExempt),
-        getAccountInfo: () => {
-          return Promise.resolve({ data: mockedVoteAccount } as any);
-        },
-      } as ChainAPI;
+      // active, activating : delegate -> not delegatable
+      // deactivating : delegate -> not delegatable
+      // inactive, deactivating: delegate -> not undelegatable
+      // no stake auth, no withdraw: delegate -> no stake auth
+      // no withdraw auth: withdraw -> no withdraw auth
+      //
 
-      const account: Account = {
-        ...baseAccount,
-        balance: new BigNumber(testOnChainData.fees.lamportsPerSignature),
-        solanaResources: {
-          stakes: [
-            {
-              stakeAccAddr: testOnChainData.unfundedAddress,
-              delegation: {
-                stake: 1,
-                voteAccAddr: testOnChainData.validatorAddress,
-              },
-              activation: {
-                state: "activating",
-              },
-            } as SolanaStake,
-          ],
+      // command      activation state    auth    error
+      //
+      // delegate     active              -       not delegatable
+      // delegate     activating          -       not delegatable
+      // delegate     -          no st or wd auth       no stake auth
+      //
+      // undelegate   inactive, deactivating            -       not undelegatable
+      // undelegate   activating    no st or wd auth       not delegatable
+      // undelegate   -             no st or wd auth       no stake auth
+
+      // withdraw     any           no wid auth       no wd auth
+      // withdraw     any           wd auth           nothing to wd if 0 able
+
+      const stakeDelegateModel: Transaction["model"] & {
+        kind: "stake.delegate";
+      } = {
+        kind: "stake.delegate",
+        uiState: {
+          stakeAccAddr: testOnChainData.unfundedAddress,
+          voteAccAddr: testOnChainData.validatorAddress,
         },
       };
 
-      const tx: Transaction = {
-        ...baseTx,
-        model: {
-          kind: "stake.delegate",
-          uiState: {
-            stakeAccAddr: testOnChainData.unfundedAddress,
-            voteAccAddr: testOnChainData.validatorAddress,
+      const stakeTests: StakeTestSpec[] = [
+        {
+          activationState: "activating",
+          txModel: stakeDelegateModel,
+          expectedErrors: {
+            fee: new NotEnoughBalance(),
+            stakeAccAddr: new SolanaStakeAccountIsNotDelegatable(),
           },
         },
-      };
-      const preparedTx = await prepareTransaction(account, tx, api);
-      const status = await getTransactionStatus(account, preparedTx);
-
-      const expectedStatus: TransactionStatus = {
-        amount: new BigNumber(0),
-        estimatedFees: new BigNumber(testOnChainData.fees.lamportsPerSignature),
-        totalSpent: new BigNumber(testOnChainData.fees.lamportsPerSignature),
-        errors: {
-          stakeAccAddr: new SolanaStakeAccountIsNotDelegatable(),
+        {
+          activationState: "active",
+          txModel: stakeDelegateModel,
+          expectedErrors: {
+            fee: new NotEnoughBalance(),
+            stakeAccAddr: new SolanaStakeAccountIsNotDelegatable(),
+          },
         },
-        warnings: {},
-      };
+        {
+          activationState: "deactivating",
+          txModel: {
+            ...stakeDelegateModel,
+            uiState: {
+              ...stakeDelegateModel.uiState,
+              voteAccAddr: testOnChainData.unfundedAddress,
+            },
+          },
+          expectedErrors: {
+            fee: new NotEnoughBalance(),
+            stakeAccAddr: new SolanaStakeAccountValidatorIsUnchangeable(),
+          },
+        },
+      ];
 
-      expect(status).toEqual(expectedStatus);
+      for (const stakeTest of stakeTests) {
+        await runStakeTest(stakeTest);
+      }
     });
   });
 };
+
+async function runStakeTest(stakeTestSpec: StakeTestSpec) {
+  const api = {
+    ...baseAPI,
+    getMinimumBalanceForRentExemption: () =>
+      Promise.resolve(testOnChainData.fees.stakeAccountRentExempt),
+    getAccountInfo: () => {
+      return Promise.resolve({ data: mockedVoteAccount } as any);
+    },
+  } as ChainAPI;
+
+  const account: Account = {
+    ...baseAccount,
+    solanaResources: {
+      stakes: [
+        {
+          stakeAccAddr: testOnChainData.unfundedAddress,
+          delegation: {
+            stake: 1,
+            voteAccAddr: testOnChainData.validatorAddress,
+          },
+          activation: {
+            state: stakeTestSpec.activationState,
+          },
+        } as SolanaStake,
+      ],
+    },
+  };
+
+  const tx: Transaction = {
+    ...baseTx,
+    model: stakeTestSpec.txModel,
+  };
+
+  const preparedTx = await prepareTransaction(account, tx, api);
+  const status = await getTransactionStatus(account, preparedTx);
+
+  const expectedStatus: TransactionStatus = {
+    amount: new BigNumber(0),
+    estimatedFees: new BigNumber(testOnChainData.fees.lamportsPerSignature),
+    totalSpent: new BigNumber(testOnChainData.fees.lamportsPerSignature),
+    errors: stakeTestSpec.expectedErrors,
+    warnings: {},
+  };
+
+  expect(status).toEqual(expectedStatus);
+}
 
 const mockedVoteAccount = {
   parsed: {
