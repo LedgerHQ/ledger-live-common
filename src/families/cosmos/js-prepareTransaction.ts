@@ -6,44 +6,47 @@ import { encodePubkey } from "@cosmjs/proto-signing";
 import { getEnv } from "../../env";
 import { buildTransaction, postBuildTransaction } from "./js-buildTransaction";
 import { getMaxEstimatedBalance } from "./logic";
+import { CacheRes, makeLRUCache } from "../../cache";
 
-const prepareTransaction = async (
+export const calculateFees: CacheRes<
+  Array<{
+    account: Account;
+    transaction: Transaction;
+  }>,
+  {
+    estimatedFees: BigNumber;
+    estimatedGas: BigNumber;
+  }
+> = makeLRUCache(
+  async ({
+    account,
+    transaction,
+  }): Promise<{
+    estimatedFees: BigNumber;
+    estimatedGas: BigNumber;
+  }> => {
+    return await getEstimatedFees(account, transaction);
+  },
+  ({ account, transaction }) =>
+    `${account.id}_${account.currency.id}_${transaction.amount.toString()}_${
+      transaction.recipient
+    }_${String(transaction.useAllAmount)}_${transaction.mode}_${
+      transaction.validators
+        ? transaction.validators.map((v) => v.address).join("-")
+        : ""
+    }_${transaction.memo ? transaction.memo.toString() : ""}_${
+      transaction.cosmosSourceValidator ? transaction.cosmosSourceValidator : ""
+    }`
+);
+
+const getEstimatedFees = async (
   account: Account,
-  transaction: Transaction,
-  calculateFees?: boolean
-): Promise<Transaction> => {
-  let memo = transaction.memo;
-  let fees = transaction.fees;
-  let gas = transaction.gas;
-  let amount = transaction.amount;
-
+  transaction: Transaction
+): Promise<any> => {
   let gasQty = new BigNumber(250000);
   const gasPrice = new BigNumber(getEnv("COSMOS_GAS_PRICE"));
 
-  if (transaction.useAllAmount && !calculateFees) {
-    const tempTransaction = await prepareTransaction(
-      account,
-      {
-        ...transaction,
-        amount: account.spendableBalance.minus(new BigNumber(2500)),
-      },
-      true
-    );
-
-    amount = getMaxEstimatedBalance(
-      account,
-      tempTransaction.fees || new BigNumber(0)
-    );
-  }
-
-  if (transaction.mode !== "send" && !transaction.memo) {
-    memo = "Ledger Live";
-  }
-
-  const unsignedPayload = await buildTransaction(account, {
-    ...transaction,
-    amount,
-  });
+  const unsignedPayload = await buildTransaction(account, transaction);
 
   // be sure payload is complete
   if (unsignedPayload) {
@@ -54,7 +57,7 @@ const prepareTransaction = async (
 
     const tx_bytes = await postBuildTransaction(
       account,
-      { ...transaction, memo, fees, gas, amount },
+      transaction,
       pubkey,
       unsignedPayload,
       new Uint8Array(Buffer.from(account.seedIdentifier, "hex"))
@@ -74,17 +77,52 @@ const prepareTransaction = async (
     }
   }
 
-  gas = gasQty;
+  const estimatedGas = gasQty;
 
-  fees = gasPrice.multipliedBy(gasQty).integerValue();
+  const estimatedFees = gasPrice.multipliedBy(gasQty).integerValue();
+
+  return { estimatedFees, estimatedGas };
+};
+
+export const prepareTransaction = async (
+  account: Account,
+  transaction: Transaction
+): Promise<Transaction> => {
+  let memo = transaction.memo;
+  let amount = transaction.amount;
+
+  if (transaction.mode !== "send" && !transaction.memo) {
+    memo = "Ledger Live";
+  }
+
+  const { estimatedFees, estimatedGas } = await calculateFees({
+    account,
+    transaction: {
+      ...transaction,
+      amount: transaction.useAllAmount
+        ? account.spendableBalance.minus(new BigNumber(2500))
+        : amount,
+      memo,
+    },
+  });
+
+  if (transaction.useAllAmount) {
+    amount = getMaxEstimatedBalance(account, estimatedFees);
+  }
 
   if (
     transaction.memo !== memo ||
-    !fees.eq(transaction.fees || new BigNumber(0)) ||
-    !gas.eq(transaction.gas || new BigNumber(0)) ||
+    !estimatedFees.eq(transaction.fees || new BigNumber(0)) ||
+    !estimatedGas.eq(transaction.gas || new BigNumber(0)) ||
     !amount.eq(transaction.amount)
   ) {
-    return { ...transaction, memo, fees, gas, amount };
+    return {
+      ...transaction,
+      memo,
+      fees: estimatedFees,
+      gas: estimatedGas,
+      amount,
+    };
   }
 
   return transaction;
