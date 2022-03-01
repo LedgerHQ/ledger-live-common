@@ -24,7 +24,7 @@ const accounts = [
   "tz1fAfYNSkgci3ko2xikDtYtcSf1X1YdAKoK",
 ];
 
-jest.setTimeout(30 * 1000);
+jest.setTimeout(120 * 1000);
 
 accounts.forEach((address) => {
   describe(address + " account works", () => {
