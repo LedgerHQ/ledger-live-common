@@ -100,8 +100,12 @@ const getTransactionStatus = async (
   }
 
   if (t.mode === "send") {
-    let spendableBalance = account.balance.minus(estimatedFees).minus(EXISTENTIAL_DEPOSIT);
-    spendableBalance = spendableBalance.lt(0) ? account.balance : spendableBalance;
+    let spendableBalance = account.balance
+      .minus(estimatedFees)
+      .minus(EXISTENTIAL_DEPOSIT);
+    spendableBalance = spendableBalance.lt(0)
+      ? account.balance
+      : spendableBalance;
     if (!errors.amount && t.amount.eq(0) && !t.useAllAmount) {
       errors.amount = new AmountRequired();
     } else if (!errors.amount && t.amount.gt(spendableBalance)) {
