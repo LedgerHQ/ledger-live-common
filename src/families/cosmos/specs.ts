@@ -24,7 +24,7 @@ import {
 } from "./logic";
 import { DeviceModelId } from "@ledgerhq/devices";
 
-const minAmount = new BigNumber(50000);
+const minAmount = new BigNumber(20000);
 const maxAccounts = 12;
 
 const cosmos: AppSpec<Transaction> = {
@@ -118,9 +118,10 @@ const cosmos: AppSpec<Transaction> = {
         );
         const data = getCurrentCosmosPreloadData();
         const count = 1 + Math.floor(2 * Math.random());
-        let remaining = getMaxDelegationAvailable(account, count).times(
-          0.5 * Math.random()
-        );
+        let remaining = getMaxDelegationAvailable(account, count)
+          .minus(minAmount.times(2))
+          .times(0.5 * Math.random());
+        invariant(remaining.gt(0), "not enough funds in account for delegate");
         const all = data.validators.filter(
           (v) =>
             !(cosmosResources as CosmosResources).delegations.some(
