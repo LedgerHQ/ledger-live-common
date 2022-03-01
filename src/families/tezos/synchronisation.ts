@@ -244,7 +244,7 @@ const txToOp =
     }
 
     return {
-      id: encodeOperationId(accountId, hash + String(tx.id), type),
+      id: encodeOperationId(accountId, hash, type),
       hash,
       type,
       value,
