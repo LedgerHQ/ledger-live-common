@@ -275,6 +275,7 @@ const prepareTransaction = async (
     if (typeof e !== "object" || !e) throw e;
     if ("id" in e) {
       t.taquitoError = (e as { id: string }).id;
+      log("taquito-error", "taquito got error " + t.taquitoError);
     } else if ("status" in e) {
       // in case of http 400, log & ignore (more case to handle)
       log(
