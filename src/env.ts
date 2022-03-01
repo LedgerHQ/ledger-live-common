@@ -176,7 +176,7 @@ const envDefinitions = {
     desc: "location of the crypto.org indexer testnet API",
   },
   CRYPTO_ORG_RPC_URL: {
-    def: "https://cryptoorg-rpc-node.coin.ledger",
+    def: "https://cryptoorg-rpc-node.coin.ledger.com",
     parser: stringParser,
     desc: "location of the crypto.org chain node",
   },
