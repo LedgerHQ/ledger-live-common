@@ -2,7 +2,7 @@ name: Bot 'Tezos'
 on:
   push:
     branches:
-      - tezos-js
+      - tezos-*
 
 jobs:
   start-runner:

@@ -2,8 +2,7 @@ name: Bot 'Mooncake'
 on:
   push:
     branches:
-      - bitcoin-js
-      - bitcoin-js-*
+      - bitcoin-*
 
 jobs:
   start-runner:
