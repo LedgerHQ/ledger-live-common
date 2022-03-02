@@ -87,8 +87,8 @@ export const close = (
 export const setAllowAutoDisconnect = (
   transport: Transport,
   deviceId: string,
-  allow: boolean,
-): Promise<void> => {
+  allow: boolean
+): Promise<void> | null | undefined => {
   for (let i = 0; i < modules.length; i++) {
     const m = modules[i];
     const p =
@@ -96,9 +96,6 @@ export const setAllowAutoDisconnect = (
       m.setAllowAutoDisconnect(transport, deviceId, allow);
     if (p) return p;
   }
-
-  // fallback on an actual close
-  return transport.close();
 };
 export const disconnect = (deviceId: string): Promise<void> => {
   for (let i = 0; i < modules.length; i++) {
