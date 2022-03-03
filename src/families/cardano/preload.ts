@@ -2,7 +2,7 @@ import { Observable, Subject } from "rxjs";
 import { log } from "@ledgerhq/logs";
 
 import type { CardanoPreloadData } from "./types";
-import { getPreloadedData } from "./api";
+import { getPreloadedData } from "./api/getPreloadedData";
 
 const PRELOAD_MAX_AGE = 24 * 60 * 60 * 1000; // 1 day
 
@@ -15,6 +15,9 @@ function fromHydratePreloadData(data: any): CardanoPreloadData {
 const updates = new Subject<CardanoPreloadData>();
 
 export function getCurrentCardanoPreloadData(): CardanoPreloadData {
+  if (currentPreloadedData == undefined) {
+    throw new Error("cardano preload data is not defined");
+  }
   return currentPreloadedData;
 }
 
