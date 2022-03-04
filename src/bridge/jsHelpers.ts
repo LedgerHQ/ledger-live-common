@@ -42,6 +42,7 @@ import type { Result, GetAddressOptions } from "../hw/getAddress/types";
 import { open, close } from "../hw";
 import { withDevice } from "../hw/deviceAccess";
 
+// Customize the way to iterate on the keychain derivation
 type IterateResult = ({
   transport: Transport,
   index: number,
