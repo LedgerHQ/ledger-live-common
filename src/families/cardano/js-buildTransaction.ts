@@ -12,6 +12,7 @@ import {
 } from "@stricahq/typhonjs";
 import BigNumber from "bignumber.js";
 import {
+  getAccountStakeCredential,
   getBaseAddress,
   getBipPath,
   getCredentialKey,
@@ -19,14 +20,14 @@ import {
   getTokenDiff,
   getTTL,
 } from "./logic";
-import { getCurrentCardanoPreloadData, hydrate, preload } from "./preload";
+import { getCurrentCardanoPreloadData } from "./preload";
 
 function getTyphonInputFromUtxo(utxo: CardanoOutput): TyphonTypes.Input {
   const address = TyphonUtils.getAddressFromHex(
     utxo.address
   ) as TyphonTypes.ShelleyAddress;
   if (address.paymentCredential.type === TyphonTypes.HashType.ADDRESS) {
-    address.paymentCredential.bipPath = utxo.paymentCredential.bipPath;
+    address.paymentCredential.bipPath = utxo.paymentCredential.path;
   }
   return {
     txId: utxo.hash,
@@ -48,25 +49,21 @@ export const buildTransaction = async (
   a: Account,
   t: Transaction
 ): Promise<TyphonTransaction> => {
-  let cardanoPreloadedData = getCurrentCardanoPreloadData();
-  //TODO: confirm this code
-  if (cardanoPreloadedData == undefined) {
-    cardanoPreloadedData = await preload();
-    hydrate(cardanoPreloadedData);
-  }
+  const cardanoPreloadedData = getCurrentCardanoPreloadData();
 
   const cardanoResources = a.cardanoResources as CardanoResources;
 
   const unusedInternalCred = cardanoResources.internalCredentials.find(
     (cred) => !cred.isUsed
   );
+  const stakeCredential = getAccountStakeCredential(a.xpub as string, a.index);
 
   const receiverAddress = TyphonUtils.getAddressFromBech32(t.recipient);
   let changeAddress;
   if (unusedInternalCred) {
     changeAddress = getBaseAddress({
       paymentCred: unusedInternalCred,
-      stakeCred: cardanoResources.stakeCredential,
+      stakeCred: stakeCredential,
     });
   } else {
     // create new internalCred if there's no unusedCred present in internalCredentials
@@ -82,10 +79,10 @@ export const buildTransaction = async (
     changeAddress = getBaseAddress({
       paymentCred: {
         key: paymentKey.key,
-        bipPath: paymentKey.path,
+        path: paymentKey.path,
         isUsed: false,
       },
-      stakeCred: cardanoResources.stakeCredential,
+      stakeCred: stakeCredential,
     });
   }
 
@@ -108,7 +105,9 @@ export const buildTransaction = async (
     },
   });
 
-  const ttl = getTTL();
+  //TODO: remove fixed cardano_testnet
+  // const ttl = getTTL(a.currency.id);
+  const ttl = getTTL("cardano_testnet");
   transaction.setTTL(ttl);
 
   if (t.useAllAmount) {
@@ -120,8 +119,8 @@ export const buildTransaction = async (
     const tokenBalance = cardanoResources.utxos.map((u) => u.tokens).flat();
     const tokensToKeep = getTokenDiff(tokenBalance, []); // TODO: support tokens
 
-    // if account holds any tokens then send it to changeAddress with
-    // minimum required ADA to spend it
+    // if account holds any tokens then add it to changeAddress,
+    // with minimum required ADA to spend those tokens
     if (tokensToKeep.length) {
       const minAmountToSpendTokens = TyphonUtils.calculateMinUtxoAmount(
         tokensToKeep,

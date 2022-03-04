@@ -1,8 +1,6 @@
 import {
   CARDANO_NETWORK_ID,
-  SHELLEY_SLOT_DURATION,
-  SHELLEY_START_DATE,
-  SHELLEY_START_SLOT,
+  STAKING_ADDRESS_INDEX,
   TTL_GAP,
 } from "./constants";
 
@@ -30,6 +28,8 @@ import { Bip32PublicKey } from "@stricahq/bip32ed25519";
 import bs58 from "bs58";
 import _ from "lodash";
 import BigNumber from "bignumber.js";
+import { getNetworkParameters } from "./networks";
+import { OperationType } from "../../types";
 
 /**
  *  returns BipPath object with account, chain and index field for cardano
@@ -120,13 +120,13 @@ export function getBaseAddress({
   const paymentCredential: TyphonTypes.HashCredential = {
     hash: paymentCred.key,
     type: TyphonTypes.HashType.ADDRESS,
-    bipPath: paymentCred.bipPath,
+    bipPath: paymentCred.path,
   };
 
   const stakeCredential: TyphonTypes.HashCredential = {
     hash: stakeCred.key,
     type: TyphonTypes.HashType.ADDRESS,
-    bipPath: stakeCred.bipPath,
+    bipPath: stakeCred.path,
   };
   return new TyphonAddress.BaseAddress(
     networkId,
@@ -160,16 +160,31 @@ export const isValidAddress = (address: string): boolean => {
   return true;
 };
 
+export const getAbsoluteSlot = function (
+  networkName: string,
+  time: Date
+): number {
+  const networkParams = getNetworkParameters(networkName);
+  const byronChainEndSlots =
+    networkParams.shelleyStartEpoch * networkParams.byronSlotsPerEpoch;
+  const byronChainEndTime =
+    byronChainEndSlots * networkParams.byronSlotDuration;
+
+  const shelleyChainTime =
+    time.getTime() - networkParams.chainStartTime - byronChainEndTime;
+  const shelleyChainSlots = Math.floor(
+    shelleyChainTime / networkParams.shelleySlotDuration
+  );
+  return byronChainEndSlots + shelleyChainSlots;
+};
+
 /**
  * Returns the time to live for transaction
  *
  * @returns {number}
  */
-export function getTTL(): number {
-  const slots = Math.floor(
-    (Date.now() - SHELLEY_START_DATE) / SHELLEY_SLOT_DURATION
-  );
-  return SHELLEY_START_SLOT + slots + TTL_GAP;
+export function getTTL(networkName: string): number {
+  return getAbsoluteSlot(networkName, new Date()) + TTL_GAP;
 }
 
 export function mergeTokens(
@@ -301,4 +316,39 @@ export function prepareLedgerInput(
         )
       : null,
   };
+}
+
+export function getAccountStakeCredential(
+  xpub: string,
+  index: number
+): StakeCredential {
+  const accountXPubKey = getExtendedPublicKeyFromHex(xpub);
+  const keyPath = getCredentialKey(
+    accountXPubKey,
+    getBipPath({
+      account: index,
+      chain: StakeChain.stake,
+      index: STAKING_ADDRESS_INDEX,
+    })
+  );
+  return {
+    key: keyPath.key,
+    path: keyPath.path,
+  };
+}
+
+export function getOperationType({
+  accountChange,
+  fees,
+}: {
+  accountChange: BigNumber;
+  fees: BigNumber;
+}): OperationType {
+  return accountChange.isNegative()
+    ? accountChange.eq(fees)
+      ? "FEES"
+      : "OUT"
+    : accountChange.isPositive()
+    ? "IN"
+    : "NONE";
 }

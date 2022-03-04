@@ -1,21 +1,28 @@
-export type TransactionRaw = {
+export type APITransaction = {
   fees: string;
   hash: string;
+  timestamp: string;
+  blockHeight: number;
+  absSlot: number;
   inputs: Array<{
     txId: string;
     index: number;
     address: string;
     value: string;
     paymentKey: string;
-    tokens: Array<{ assetId: string; policyId: string; value: string }>;
+    tokens: Array<{ assentName: string; policyId: string; value: string }>;
   }>;
   outputs: Array<{
     address: string;
     value: string;
     paymentKey: string;
-    tokens: Array<{ assetId: string; policyId: string; value: string }>;
+    tokens: Array<{ assentName: string; policyId: string; value: string }>;
   }>;
-  timestamp: string;
+};
+
+export type APIFetchTransactions = {
+  pageNo: number;
+  limit: number;
   blockHeight: number;
-  metadata: any;
+  transactions: Array<APITransaction>;
 };
