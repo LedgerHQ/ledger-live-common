@@ -42,7 +42,21 @@ import type { Result, GetAddressOptions } from "../hw/getAddress/types";
 import { open, close } from "../hw";
 import { withDevice } from "../hw/deviceAccess";
 
-export type GetAddressesFromPubkey = (pubkey: string) => Promise<string[]>;
+// Customize the way to iterate on the keychain derivation
+type IterateResult = ({
+  transport: Transport,
+  index: number,
+  derivationsCache: Object,
+  derivationScheme: string,
+  derivationMode: DerivationMode,
+  currency: CryptoCurrency,
+}) => Promise<Result | null>;
+
+export type IterateResultBuilder = ({
+  result: Result, // derivation on the "root" of the derivation
+  derivationMode: DerivationMode, // identify the current derivation scheme
+  derivationScheme: string,
+}) => Promise<IterateResult>;
 
 export type GetAccountShapeArg0 = {
   currency: CryptoCurrency;
@@ -219,14 +233,41 @@ export const makeSync =
       main();
     });
 
+const iterateResultWithAddressDerivation: IterateResult = async ({
+  transport,
+  index,
+  derivationsCache,
+  derivationScheme,
+  derivationMode,
+  currency,
+}) => {
+  let res;
+  const freshAddressPath = runDerivationScheme(derivationScheme, currency, {
+    account: index,
+  });
+  res = derivationsCache[freshAddressPath];
+  if (!res) {
+    res = await getAddress(transport, {
+      currency,
+      path: freshAddressPath,
+      derivationMode,
+    });
+    derivationsCache[freshAddressPath] = res;
+  }
+  return res;
+};
+
+const defaultIterateResultBuilder = () =>
+  Promise.resolve(iterateResultWithAddressDerivation);
+
 export const makeScanAccounts =
   ({
     getAccountShape,
-    getAddressesFromPubkey,
+    buildIterateResult = defaultIterateResultBuilder,
     getAddressFn,
   }: {
     getAccountShape: GetAccountShape;
-    getAddressesFromPubkey?: GetAddressesFromPubkey;
+    buildIterateResult?: IterateResultBuilder;
     getAddressFn?: (
       transport: Transport
     ) => (opts: GetAddressOptions) => Promise<Result>;
@@ -241,8 +282,6 @@ export const makeScanAccounts =
 
       const derivationsCache = {};
 
-      // in future ideally what we want is:
-      // return mergeMap(addressesObservable, address => fetchAccount(address))
       async function stepAccount(
         index,
         res: Result,
@@ -421,106 +460,56 @@ export const makeScanAccounts =
               currency,
             });
 
-            let res: Result;
-            let account: Account | null | undefined;
+            const stopAt = isIterableDerivationMode(derivationMode) ? 255 : 1;
+            const startsAt = getDerivationModeStartsAt(derivationMode);
 
-            if (getAddressesFromPubkey) {
-              // 1. get addresses from pubkey
-              const addresses: string[] = await getAddressesFromPubkey(
-                result.publicKey
-              );
+            log(
+              "debug",
+              `start scanning account process. MandatoryEmptyAccountSkip ${mandatoryEmptyAccountSkip} / StartsAt: ${startsAt} - StopAt: ${stopAt}`
+            );
 
-              // 2. stepAccount for each address
-              for (let index = 0; index < addresses.length; index++) {
-                if (!derivationModeSupportsIndex(derivationMode, index))
-                  continue;
+            const iterateResult = await buildIterateResult({
+              result,
+              derivationMode,
+              derivationScheme,
+            });
 
-                const freshAddressPath = runDerivationScheme(
-                  derivationScheme,
-                  currency,
-                  {
-                    account: index,
-                  }
-                );
+            for (let index = startsAt; index < stopAt; index++) {
+              log("debug", `start to scan a new account. Index: ${index}`);
 
-                res = derivationsCache[freshAddressPath];
-                if (!res) {
-                  res = {
-                    address: addresses[index],
-                    publicKey: addresses[index],
-                    path: freshAddressPath,
-                  };
-                }
-
-                account = await stepAccount(
-                  index,
-                  res,
-                  derivationMode,
-                  seedIdentifier,
-                  transport
-                );
-
-                if (account && !account.used) {
-                  if (emptyCount >= mandatoryEmptyAccountSkip) break;
-                  emptyCount++;
-                }
+              if (finished) {
+                log("debug", `new account scanning process has been finished`);
+                break;
               }
-            } else {
-              const stopAt = isIterableDerivationMode(derivationMode) ? 255 : 1;
-              const startsAt = getDerivationModeStartsAt(derivationMode);
 
-              log(
-                "debug",
-                `start scanning account process. MandatoryEmptyAccountSkip ${mandatoryEmptyAccountSkip} / StartsAt: ${startsAt} - StopAt: ${stopAt}`
+              if (!derivationModeSupportsIndex(derivationMode, index)) continue;
+
+              const res = await iterateResult({
+                transport,
+                index,
+                derivationsCache,
+                derivationMode,
+                derivationScheme,
+                currency,
+              });
+
+              if (!res) break;
+
+              const account = await stepAccount(
+                index,
+                res,
+                derivationMode,
+                seedIdentifier,
+                transport
               );
 
-              for (let index = startsAt; index < stopAt; index++) {
-                log("debug", `start to scan a new account. Index: ${index}`);
-
-                if (finished) {
-                  log(
-                    "debug",
-                    `new account scanning process has been finished`
-                  );
-                  break;
-                }
-
-                if (!derivationModeSupportsIndex(derivationMode, index))
-                  continue;
-                const freshAddressPath = runDerivationScheme(
-                  derivationScheme,
-                  currency,
-                  {
-                    account: index,
-                  }
-                );
-
-                res = derivationsCache[freshAddressPath];
-
-                if (!res) {
-                  res = await getAddress(transport, {
-                    currency,
-                    path: freshAddressPath,
-                    derivationMode,
-                  });
-                  derivationsCache[freshAddressPath] = res;
-                }
-
-                account = await stepAccount(
-                  index,
-                  res,
-                  derivationMode,
-                  seedIdentifier,
-                  transport
-                );
-
-                if (account && !account.used) {
-                  if (emptyCount >= mandatoryEmptyAccountSkip) break;
-                  emptyCount++;
-                }
+              if (account && !account.used) {
+                if (emptyCount >= mandatoryEmptyAccountSkip) break;
+                emptyCount++;
               }
             }
           }
+          // }
 
           o.complete();
         } catch (e) {
