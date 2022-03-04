@@ -40,7 +40,9 @@ import api from "../api/tzkt";
 
 const receive = makeAccountBridgeReceive();
 
-const EXISTENTIAL_DEPOSIT = new BigNumber(275000);
+const EXISTENTIAL_DEPOSIT = new BigNumber(
+  DEFAULT_STORAGE_LIMIT.ORIGINATION * 1000
+);
 
 const createTransaction: () => Transaction = () => ({
   family: "tezos",
