@@ -158,6 +158,16 @@ export type ProtocolParams = {
   languageView: TyphonTypes.LanguageView;
 };
 
+export type CardanoLikeNetworkParameters = {
+  identifier: string;
+  chainStartTime: number;
+  byronSlotDuration: number;
+  byronSlotsPerEpoch: number;
+  shelleyStartEpoch: number;
+  shelleySlotDuration: number;
+  shelleySlotsPerEpoch: number;
+};
+
 /**
  * Cardano currency data that will be preloaded.
  */
