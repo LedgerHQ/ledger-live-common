@@ -19,7 +19,7 @@ export function accountToPlatformAccount(
 ): PlatformAccount {
   if (account.type === "TokenAccount") {
     if (!parentAccount) {
-      throw new Error("No parent account account provided for token account");
+      throw new Error("No 'parentAccount' account provided for token account");
     }
 
     return {
