@@ -59,6 +59,11 @@ function getOperationType(
  */
 function getOperationValue(transaction: Transaction, addr: string): BigNumber {
   if (transaction.transfer === ElrondTransferOptions.esdt) {
+    if (transaction.action) {
+      return new BigNumber(
+        transaction.action.arguments.transfers[0].value ?? 0
+      );
+    }
     return new BigNumber(transaction.tokenValue ?? 0);
   }
 

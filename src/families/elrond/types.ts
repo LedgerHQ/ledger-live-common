@@ -66,6 +66,7 @@ export type Transaction = TransactionCommon & {
   data?: string;
   tokenIdentifier?: string;
   tokenValue?: string;
+  action?: any;
 };
 
 export enum ElrondTransferOptions {
