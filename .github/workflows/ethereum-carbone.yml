@@ -2,7 +2,7 @@ name: Bot 'Ethereum on Carbone'
 on:
   push:
     branches:
-      - family/tezos
+      - family/ethereum
 
 jobs:
   start-runner:
