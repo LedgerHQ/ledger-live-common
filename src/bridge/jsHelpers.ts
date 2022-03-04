@@ -50,7 +50,7 @@ type IterateResult = ({
   derivationScheme: string,
   derivationMode: DerivationMode,
   currency: CryptoCurrency,
-}) => Promise<Result>;
+}) => Promise<Result | null>;
 
 type IterateResultBuilder = ({
   result: Result, // derivation on the "root" of the derivation
