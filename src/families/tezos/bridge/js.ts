@@ -287,6 +287,7 @@ const prepareTransaction = async (
         String((e as { message: string }).message || ""),
         { transaction: t }
       );
+      throw e;
     } else {
       throw e;
     }
