@@ -116,15 +116,6 @@ const getTransactionStatus = async (
     } else if (t.amount.gt(0) && estimatedFees.times(10).gt(t.amount)) {
       warnings.feeTooHigh = new FeeTooHigh();
     }
-    if (
-      !errors.amount &&
-      (await api.getAccountByAddress(t.recipient)).type === "empty" &&
-      t.amount.lt(EXISTENTIAL_DEPOSIT)
-    ) {
-      errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {
-        minimalAmount: "0.275 XTZ",
-      });
-    }
 
     const thresholdWarning = 0.5 * 10 ** account.currency.units[0].magnitude;
 
@@ -149,7 +140,16 @@ const getTransactionStatus = async (
     // remap taquito errors
     if (t.taquitoError.endsWith("balance_too_low")) {
       if (t.mode === "send") {
-        errors.amount = new NotEnoughBalance();
+        if (
+          (await api.getAccountByAddress(t.recipient)).type === "empty" &&
+          t.amount.lt(EXISTENTIAL_DEPOSIT)
+        ) {
+          errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {
+            minimalAmount: "0.275 XTZ",
+          });
+        } else {
+          errors.amount = new NotEnoughBalance();
+        }
       } else {
         errors.amount = new NotEnoughBalanceToDelegate();
       }
