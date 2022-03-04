@@ -10,7 +10,7 @@ import type { Operation, OperationType } from "../../../types";
 import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";
 import { getTransactionParams } from "../cache";
-import { ESDT_TRANSFER_GAS } from "../constants";
+import { GAS } from "../constants";
 const api = new ElrondApi(getEnv("ELROND_API_ENDPOINT"));
 
 /**
@@ -156,7 +156,7 @@ export const getFees = async (t: Transaction): Promise<BigNumber> => {
 
   let gasLimit = minGasLimit;
   if (t.subAccountId) {
-    gasLimit = ESDT_TRANSFER_GAS;
+    gasLimit = GAS.ESDT_TRANSFER;
   }
 
   const transactionData = Buffer.from(t.data?.trim() || []);
@@ -164,7 +164,7 @@ export const getFees = async (t: Transaction): Promise<BigNumber> => {
   const moveBalanceGas = minGasLimit + transactionData.length * gasPerByte;
 
   if (t.subAccountId) {
-    gasLimit = ESDT_TRANSFER_GAS;
+    gasLimit = GAS.ESDT_TRANSFER;
   }
 
   gasPrice = new BigNumber(gasPrice);
@@ -185,6 +185,9 @@ export const getFees = async (t: Transaction): Promise<BigNumber> => {
 /**
  * Broadcast blob to blockchain
  */
-export const broadcastTransaction = async (blob: any): Promise<string> => {
-  return await api.submit(blob);
+export const broadcastTransaction = async (
+  operation: Operation,
+  signature: string
+): Promise<string> => {
+  return await api.submit(operation, signature);
 };

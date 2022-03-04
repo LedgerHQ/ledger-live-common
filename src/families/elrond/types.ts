@@ -31,11 +31,23 @@ export type ElrondProtocolTransaction = {
   version: number;
   options: number;
 };
+
+/**
+ * Elrond mode of transaction
+ */
+export type ElrondTransactionMode =
+  | "send"
+  | "delegate"
+  | "reDelegateRewards"
+  | "unDelegate"
+  | "claimRewards"
+  | "withdraw";
+
 /**
  * Elrond transaction
  */
 export type Transaction = TransactionCommon & {
-  mode: string;
+  mode: ElrondTransactionMode;
   transfer?: ElrondTransferOptions;
   family: "elrond";
   fees: BigNumber | null | undefined;
@@ -72,7 +84,7 @@ export type ESDTToken = {
  */
 export type TransactionRaw = TransactionCommonRaw & {
   family: "elrond";
-  mode: string;
+  mode: ElrondTransactionMode;
   fees: string | null | undefined;
 };
 export type ElrondValidator = {
@@ -111,4 +123,4 @@ export type NetworkInfoRaw = {
 export type ElrondPreloadData = {
   validators: Record<string, any>;
 };
-export const reflect = (_declare: any) => {};
+export const reflect = (_declare: any) => { };

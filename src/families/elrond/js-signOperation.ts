@@ -22,13 +22,13 @@ const buildOptimisticOperation = (
       account.subAccounts &&
       account.subAccounts.find((ta) => ta.id === transaction.subAccountId)) ||
     null;
-  let value;
+
+  let value = transaction.useAllAmount
+    ? account.balance.minus(fee)
+    : new BigNumber(transaction.amount);
+
   if (tokenAccount) {
-    value = new BigNumber(0);
-  } else {
-    value = transaction.useAllAmount
-      ? account.balance.minus(fee)
-      : new BigNumber(transaction.amount);
+    value = transaction.amount;
   }
 
   const operation: Operation = {
