@@ -2,7 +2,7 @@ import { BigNumber } from "bignumber.js";
 import { Observable } from "rxjs";
 import { FeeNotLoaded } from "@ledgerhq/errors";
 
-import type { Transaction } from "./types";
+import type { CardanoResources, Transaction } from "./types";
 import type { Account, Operation, SignOperationEvent } from "../../types";
 
 import { open, close } from "../../hw";
@@ -30,21 +30,48 @@ import { CARDANO_NETWORK_ID } from "./constants";
 
 const buildOptimisticOperation = (
   account: Account,
-  amount: BigNumber,
   transaction: TyphonTransaction
 ): Operation => {
-  //TODO:CARDANO check for internal transaction type
-  const type = "OUT";
+  const cardanoResources = account.cardanoResources as CardanoResources;
+  const accountCreds = new Set(
+    [
+      ...cardanoResources.externalCredentials,
+      ...cardanoResources.internalCredentials,
+    ].map((cred) => cred.key)
+  );
 
-  const value = new BigNumber(amount).plus(transaction.getFee());
+  const accountInput = transaction
+    .getInputs()
+    .reduce(
+      (total, i) =>
+        accountCreds.has(i.address.paymentCredential.hash)
+          ? total.plus(i.amount)
+          : total.plus(0),
+      new BigNumber(0)
+    );
+
+  const accountOutput = transaction
+    .getOutputs()
+    .reduce(
+      (total, o) =>
+        o.address instanceof ShelleyTypeAddress &&
+        accountCreds.has(o.address.paymentCredential.hash)
+          ? total.plus(o.amount)
+          : total.plus(0),
+      new BigNumber(0)
+    );
+
+  const accountChange = accountOutput.minus(accountInput);
+  const type = getOperationType({ accountChange, fees: transaction.getFee() });
+  const transactionHash = transaction.getTransactionHash().toString("hex");
 
   const operation: Operation = {
-    id: encodeOperationId(account.id, "", type),
-    hash: transaction.getTransactionHash().toString("hex"),
+    id: encodeOperationId(account.id, transactionHash, type),
+    hash: transactionHash,
     type,
-    value,
+    value: accountChange.absoluteValue(),
     fee: transaction.getFee(),
-    blockHash: null,
+    blockHash: undefined,
     blockHeight: null,
     senders: transaction.getInputs().map((i) => i.address.getBech32()),
     recipients: transaction.getOutputs().map((o) => o.address.getBech32()),
@@ -149,7 +176,6 @@ const signOperation = ({
 
         const operation = buildOptimisticOperation(
           account,
-          transaction.amount,
           unsignedTransaction
         );
 
