@@ -14,6 +14,7 @@ import Ada, {
   Networks,
   SignTransactionRequest,
   TransactionSigningMode,
+  TxAuxiliaryDataType,
   Witness,
 } from "@cardano-foundation/ledgerjs-hw-app-cardano";
 import {
@@ -23,10 +24,12 @@ import {
 import { Bip32PublicKey } from "@stricahq/bip32ed25519";
 import {
   getExtendedPublicKeyFromHex,
+  getOperationType,
   prepareLedgerInput,
   prepareLedgerOutput,
 } from "./logic";
 import { CARDANO_NETWORK_ID } from "./constants";
+import ShelleyTypeAddress from "@stricahq/typhonjs/dist/address/ShelleyTypeAddress";
 
 const buildOptimisticOperation = (
   account: Account,
@@ -149,6 +152,9 @@ const signOperation = ({
           prepareLedgerOutput(o, account.index)
         );
 
+        const auxiliaryDataHashHex =
+          unsignedTransaction.getAuxiliaryDataHashHex();
+
         const trxOptions: SignTransactionRequest = {
           signingMode: TransactionSigningMode.ORDINARY_TRANSACTION,
           tx: {
@@ -163,7 +169,14 @@ const signOperation = ({
             fee: unsignedTransaction.getFee().toString(),
             ttl: unsignedTransaction.getTTL()?.toString(),
             validityIntervalStart: null,
-            auxiliaryData: null,
+            auxiliaryData: auxiliaryDataHashHex
+              ? {
+                  type: TxAuxiliaryDataType.ARBITRARY_HASH,
+                  params: {
+                    hashHex: auxiliaryDataHashHex,
+                  },
+                }
+              : null,
           },
           additionalWitnessPaths: [],
         };

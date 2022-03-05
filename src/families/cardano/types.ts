@@ -124,6 +124,7 @@ export type Transaction = TransactionCommon & {
   mode: string;
   family: "cardano";
   fees?: BigNumber;
+  memo?: string;
   // add here all transaction-specific fields if you implement other modes than "send"
 };
 
@@ -134,6 +135,7 @@ export type TransactionRaw = TransactionCommonRaw & {
   family: "cardano";
   mode: string;
   fees?: string;
+  memo?: string;
   // also the transaction fields as raw JSON data
 };
 

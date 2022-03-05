@@ -105,6 +105,18 @@ export const buildTransaction = async (
     },
   });
 
+  const metadata: Array<TyphonTypes.Metadata> = [];
+  if (t.memo) {
+    metadata.push({
+      label: 674,
+      data: new Map([["msg", [t.memo]]]),
+    });
+  }
+
+  if (metadata.length) {
+    transaction.setAuxiliaryData({ metadata });
+  }
+
   //TODO: remove fixed cardano_testnet
   // const ttl = getTTL(a.currency.id);
   const ttl = getTTL("cardano_testnet");
