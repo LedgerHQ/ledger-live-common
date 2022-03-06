@@ -7,14 +7,20 @@ import { submitTransaction } from "./api/submitTransaction";
  * @param {signature: string, operation: string} signedOperation
  */
 const broadcast = async ({
-  signedOperation: { operation, signatureRaw },
+  signedOperation,
 }: {
   signedOperation: SignedOperation;
 }): Promise<Operation> => {
-  const trx = signatureRaw as { hash: string; payload: string };
-  const pendingTransaction = await submitTransaction(trx.hash, trx.payload);
+  const trx = signedOperation.signatureRaw as { hash: string; payload: string };
+  const pendingTransaction = await submitTransaction({
+    hash: trx.hash,
+    transaction: trx.payload,
+  });
 
-  return patchOperationWithHash(operation, pendingTransaction.hash);
+  return patchOperationWithHash(
+    signedOperation.operation,
+    pendingTransaction.hash
+  );
 };
 
 export default broadcast;

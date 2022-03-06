@@ -3,7 +3,12 @@ import { Observable } from "rxjs";
 import { FeeNotLoaded } from "@ledgerhq/errors";
 
 import type { CardanoResources, Transaction } from "./types";
-import type { Account, Operation, SignOperationEvent } from "../../types";
+import type {
+  Account,
+  Operation,
+  SignedOperation,
+  SignOperationEvent,
+} from "../../types";
 
 import { open, close } from "../../hw";
 import { encodeOperationId } from "../../operation";
@@ -199,7 +204,7 @@ const signOperation = ({
             signature: signed.payload,
             signatureRaw: signed,
             expirationDate: null,
-          },
+          } as SignedOperation,
         });
       } finally {
         close(transport, deviceId);
