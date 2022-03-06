@@ -12,12 +12,18 @@ import {
 import range from "lodash/range";
 import chunk from "lodash/chunk";
 import { Account } from "../../../types";
+import { APITransaction } from "./api-types";
 
 async function fetchTransactions(
   paymentKeys: Array<string>,
   pageNo: number,
   absSlot: number
-): Promise<ApiTypes.APIFetchTransactions> {
+): Promise<{
+  pageNo: number;
+  limit: number;
+  blockHeight: number;
+  transactions: Array<APITransaction>;
+}> {
   const res = await network({
     method: "POST",
     url: `${CARDANO_API_ENDPOINT}/v1/transaction`,

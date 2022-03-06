@@ -26,10 +26,10 @@ import {
 } from "./types";
 import { Bip32PublicKey } from "@stricahq/bip32ed25519";
 import bs58 from "bs58";
-import _ from "lodash";
 import BigNumber from "bignumber.js";
 import { getNetworkParameters } from "./networks";
 import { OperationType } from "../../types";
+import groupBy from "lodash/groupBy";
 
 /**
  *  returns BipPath object with account, chain and index field for cardano
@@ -190,17 +190,16 @@ export function getTTL(networkName: string): number {
 export function mergeTokens(
   tokens: Array<TyphonTypes.Token>
 ): Array<TyphonTypes.Token> {
-  return _(tokens)
-    .groupBy((t) => `${t.policyId}${t.assetName}`)
-    .map((similarTokens) => ({
-      policyId: similarTokens[0].policyId,
-      assetName: similarTokens[0].assetName,
-      amount: similarTokens.reduce(
-        (total, token) => total.plus(token.amount),
-        new BigNumber(0)
-      ),
-    }))
-    .value();
+  return Object.values(
+    groupBy(tokens, (t) => `${t.policyId}${t.assetName}`)
+  ).map((similarTokens) => ({
+    policyId: similarTokens[0].policyId,
+    assetName: similarTokens[0].assetName,
+    amount: similarTokens.reduce(
+      (total, token) => total.plus(token.amount),
+      new BigNumber(0)
+    ),
+  }));
 }
 
 /**
@@ -345,7 +344,7 @@ export function getOperationType({
   fees: BigNumber;
 }): OperationType {
   return accountChange.isNegative()
-    ? accountChange.eq(fees)
+    ? accountChange.absoluteValue().eq(fees)
       ? "FEES"
       : "OUT"
     : accountChange.isPositive()

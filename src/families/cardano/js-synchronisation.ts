@@ -1,4 +1,4 @@
-import type { Account, Operation } from "../../types";
+import type { Operation } from "../../types";
 import {
   GetAccountShape,
   makeScanAccounts,
@@ -23,8 +23,6 @@ import {
 } from "./logic";
 import { encodeOperationId } from "../../operation";
 import { getOperations } from "./api/getOperations";
-
-const postSync = (initial: Account, parent: Account) => parent;
 
 function getAccountChange(
   t: APITransaction,
@@ -162,6 +160,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
   });
 
   const requiredConfirmations = 90;
+  //TODO: remove fixed cardano_testnet
   const syncFromAbsoluteSlot = initialAccount
     ? getAbsoluteSlot("cardano_testnet", initialAccount.lastSyncDate) -
       (currency.blockAvgTime || 20) * requiredConfirmations
@@ -243,4 +242,4 @@ export const getAccountShape: GetAccountShape = async (info) => {
 
 export const scanAccounts = makeScanAccounts(getAccountShape);
 
-export const sync = makeSync(getAccountShape, postSync);
+export const sync = makeSync(getAccountShape);

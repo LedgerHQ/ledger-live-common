@@ -1,3 +1,5 @@
+type APIToken = { assentName: string; policyId: string; value: string };
+
 export type APITransaction = {
   fees: string;
   hash: string;
@@ -10,19 +12,12 @@ export type APITransaction = {
     address: string;
     value: string;
     paymentKey: string;
-    tokens: Array<{ assentName: string; policyId: string; value: string }>;
+    tokens: Array<APIToken>;
   }>;
   outputs: Array<{
     address: string;
     value: string;
     paymentKey: string;
-    tokens: Array<{ assentName: string; policyId: string; value: string }>;
+    tokens: Array<APIToken>;
   }>;
-};
-
-export type APIFetchTransactions = {
-  pageNo: number;
-  limit: number;
-  blockHeight: number;
-  transactions: Array<APITransaction>;
 };
