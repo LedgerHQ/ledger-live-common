@@ -78,6 +78,7 @@ const getTransactionStatus = async (
     feeTooHigh?: Error;
     recipient?: Error;
   } = {};
+  let amountMustReset = false;
 
   // Recipient validation logic
   if (t.mode !== "undelegate") {
@@ -101,6 +102,7 @@ const getTransactionStatus = async (
   const estimatedFees = t.estimatedFees || new BigNumber(0);
   if (t.mode === "send") {
     if (!errors.amount && t.amount.eq(0) && !t.useAllAmount) {
+      amountMustReset = true;
       errors.amount = new AmountRequired();
     } else if (t.amount.gt(0) && estimatedFees.times(10).gt(t.amount)) {
       warnings.feeTooHigh = new FeeTooHigh();
@@ -132,10 +134,12 @@ const getTransactionStatus = async (
           (await api.getAccountByAddress(t.recipient)).type === "empty" &&
           t.amount.lt(EXISTENTIAL_DEPOSIT)
         ) {
+          amountMustReset = true;
           errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {
             minimalAmount: "0.275 XTZ",
           });
         } else {
+          amountMustReset = true;
           errors.amount = new NotEnoughBalance();
         }
       } else {
@@ -146,14 +150,16 @@ const getTransactionStatus = async (
     } else if (!errors.amount) {
       // unidentified error case
       errors.amount = new Error(t.taquitoError);
+      amountMustReset = true;
     }
   }
 
   if (!errors.amount && account.balance.lte(0)) {
+    amountMustReset = true;
     errors.amount = new NotEnoughBalance();
   }
 
-  const amount = errors.amount ? new BigNumber(0) : t.amount;
+  const amount = amountMustReset ? new BigNumber(0) : t.amount;
 
   const result = {
     errors,
@@ -288,12 +294,11 @@ const prepareTransaction = async (
 
   // nothing changed
   if (
-    bnEq(t.fees, transaction.fees) &&
+    bnEq(t.estimatedFees, transaction.estimatedFees) &&
     bnEq(t.fees, transaction.fees) &&
     bnEq(t.gasLimit, transaction.gasLimit) &&
-    bnEq(t.amount, transaction.amount) &&
     bnEq(t.storageLimit, transaction.storageLimit) &&
-    bnEq(t.estimatedFees, transaction.estimatedFees) &&
+    bnEq(t.amount, transaction.amount) &&
     t.taquitoError === transaction.taquitoError
   ) {
     return transaction;
