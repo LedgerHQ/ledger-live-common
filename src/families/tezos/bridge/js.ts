@@ -79,12 +79,7 @@ const getTransactionStatus = async (
     recipient?: Error;
   } = {};
 
-  const estimatedFees = t.estimatedFees || new BigNumber(0);
-  let amount = t.amount;
-
-  const { tezosResources } = account;
-  if (!tezosResources) throw new Error("tezosResources is missing");
-
+  // Recipient validation logic
   if (t.mode !== "undelegate") {
     if (account.freshAddress === t.recipient) {
       errors.recipient = new InvalidAddressBecauseDestinationIsAlsoSource();
@@ -93,37 +88,24 @@ const getTransactionStatus = async (
         account.currency,
         t.recipient
       );
-
       if (recipientError) {
         errors.recipient = recipientError;
       }
-
       if (recipientWarning) {
         warnings.recipient = recipientWarning;
       }
     }
   }
 
+  // Pre validation of amount field
+  const estimatedFees = t.estimatedFees || new BigNumber(0);
   if (t.mode === "send") {
-    let spendableBalance = account.balance
-      .minus(estimatedFees)
-      .minus(EXISTENTIAL_DEPOSIT);
-    spendableBalance = spendableBalance.lt(0)
-      ? account.balance
-      : spendableBalance;
     if (!errors.amount && t.amount.eq(0) && !t.useAllAmount) {
       errors.amount = new AmountRequired();
-    } else if (!errors.amount && t.amount.gt(spendableBalance)) {
-      errors.amount = new NotEnoughBalance();
-      if (t.useAllAmount) {
-        amount = new BigNumber(0);
-      }
     } else if (t.amount.gt(0) && estimatedFees.times(10).gt(t.amount)) {
       warnings.feeTooHigh = new FeeTooHigh();
     }
-
     const thresholdWarning = 0.5 * 10 ** account.currency.units[0].magnitude;
-
     if (
       !errors.amount &&
       account.balance.minus(t.amount).minus(estimatedFees).lt(thresholdWarning)
@@ -170,11 +152,13 @@ const getTransactionStatus = async (
     errors.amount = new NotEnoughBalance();
   }
 
+  // effective amount
+  const amount = t.useAllAmount ? new BigNumber(0) : t.amount;
   const result = {
     errors,
     warnings,
     estimatedFees,
-    amount: amount,
+    amount,
     totalSpent: amount.plus(estimatedFees),
   };
   return Promise.resolve(result);
