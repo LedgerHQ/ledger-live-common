@@ -39,7 +39,12 @@ const cosmos: AppSpec<Transaction> = {
   transactionCheck: ({ maxSpendable }) => {
     invariant(maxSpendable.gt(minAmount), "balance is too low");
   },
-  test: ({ operation, optimisticOperation }) => {
+  test: ({ account, operation, optimisticOperation }) => {
+    expect({
+      allOperationsMatchingId: account.operations.filter(
+        (op) => op.id === operation.id
+      ),
+    }).toEqual({ allOperationsMatchingId: [operation] });
     const opExpected: Record<string, any> = toOperationRaw({
       ...optimisticOperation,
     });
