@@ -120,6 +120,7 @@ const getTransactionStatus = async (
     }
   }
 
+  // effective amount
   // if we also have taquitoError, we interprete them and they override the previously inferred errors
   if (t.taquitoError) {
     log("taquitoerror", String(t.taquitoError));
@@ -152,8 +153,8 @@ const getTransactionStatus = async (
     errors.amount = new NotEnoughBalance();
   }
 
-  // effective amount
-  const amount = t.useAllAmount ? new BigNumber(0) : t.amount;
+  const amount = errors.amount ? new BigNumber(0) : t.amount;
+
   const result = {
     errors,
     warnings,
@@ -211,10 +212,7 @@ const prepareTransaction = async (
 
   let amount = transaction.amount;
   if (transaction.useAllAmount) {
-    // taquito does not accept 0, so we do 1
-    // only failing case is when the account precisely has fees + 1. which is
-    // unlikely
-    amount = new BigNumber(1);
+    amount = new BigNumber(1); // send max do a pre-estimation with minimum amount (taquito refuses 0)
   }
 
   try {
