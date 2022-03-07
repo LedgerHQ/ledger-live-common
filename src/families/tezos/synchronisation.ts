@@ -101,6 +101,7 @@ export const getAccountShape: GetAccountShape = async (infoInput) => {
     return {
       id: accountId,
       xpub: publicKey,
+      freshAddress: address,
       blockHeight,
       lastSyncDate: new Date(),
       tezosResources: {
