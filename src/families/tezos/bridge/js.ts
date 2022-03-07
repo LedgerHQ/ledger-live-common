@@ -5,6 +5,9 @@ import {
   DEFAULT_FEE,
   DEFAULT_STORAGE_LIMIT,
 } from "@taquito/taquito";
+import { DerivationType } from "@taquito/ledger-signer";
+import { compressPublicKey } from "@taquito/ledger-signer/dist/lib/utils";
+import { b58cencode, prefix, Prefix } from "@taquito/utils";
 import {
   AmountRequired,
   NotEnoughBalance,
@@ -202,11 +205,19 @@ const prepareTransaction = async (
     }
   }
 
+  const encodedPubKey = b58cencode(
+    compressPublicKey(
+      Buffer.from(account.xpub || "", "hex"),
+      DerivationType.ED25519
+    ),
+    prefix[Prefix.EDPK]
+  );
+
   const tezos = new TezosToolkit(getEnv("API_TEZOS_NODE"));
   tezos.setProvider({
     signer: {
       publicKeyHash: async () => account.freshAddress,
-      publicKey: async () => tezosResources.publicKey,
+      publicKey: async () => encodedPubKey,
       sign: () => Promise.reject(new Error("unsupported")),
       secretKey: () => Promise.reject(new Error("unsupported")),
     },
