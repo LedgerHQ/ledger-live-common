@@ -50,7 +50,6 @@ export function LiveAppProvider({
 }: LiveAppProviderProps): JSX.Element {
   const [state, setState] = useState<Loadable<LiveAppRegistry>>(initialState);
 
-  console.log("LiveAppProvider", { state });
   const updateManifests = useCallback(async () => {
     setState((currentState) => ({
       ...currentState,
