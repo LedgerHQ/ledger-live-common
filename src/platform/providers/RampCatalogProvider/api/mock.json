@@ -1,0 +1,41 @@
+{
+  "onRamp": [
+    {
+      "appId": "coinify",
+      "name": "Coinify",
+      "paymentProviders": ["visa", "mastercard", "maestro", "paypal", "sepa"],
+      "cryptoCurrencies": ["bitcoin", "ethereum"],
+      "fiatCurrencies": ["euro", "usd"]
+    },
+    {
+      "appId": "btcdirect",
+      "name": "BTC Direct",
+      "paymentProviders": ["visa", "mastercard", "maestro", "paypal"],
+      "cryptoCurrencies": ["bitcoin", "ethereum"],
+      "fiatCurrencies": ["euro", "usd"]
+    },
+    {
+      "appId": "moonpay",
+      "name": "MoonPay",
+      "paymentProviders": ["visa", "mastercard", "maestro", "applepay", "googlepay"],
+      "cryptoCurrencies": ["bitcoin", "ethereum"],
+      "fiatCurrencies": ["euro", "usd"]
+    },
+    {
+      "appId": "wyre",
+      "name": "Wyre",
+      "paymentProviders": ["visa", "mastercard", "maestro", "applepay", "googlepay"],
+      "cryptoCurrencies": ["bitcoin", "ethereum"],
+      "fiatCurrencies": ["euro", "usd"]
+    }
+  ],
+  "offRamp": [
+    {
+      "appId": "coinify",
+      "name": "Coinify",
+      "paymentProviders": ["sepa"],
+      "cryptoCurrencies": ["bitcoin", "ethereum"],
+      "fiatCurrencies": ["euro", "usd"]
+    }
+  ] 
+}
