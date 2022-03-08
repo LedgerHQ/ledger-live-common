@@ -75,6 +75,7 @@ class ZCash extends Base {
       const version = Number(
         "0x" + bs58check.decode(address).slice(0, 2).toString("hex")
       );
+      // refer to https://github.com/zcash-hackworks/bitcore-lib-zcash/blob/master/lib%2Faddress.js for the address validation
       if (
         version === this.network.pubKeyHash ||
         version === this.network.scriptHash

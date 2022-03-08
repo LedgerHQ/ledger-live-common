@@ -1,4 +1,4 @@
-import _, { findLast, filter, uniqBy, findIndex } from "lodash";
+import { findLast, filter, uniqBy, findIndex, isEmpty } from "lodash";
 import Base from "../crypto/base";
 import { Input, IStorage, Output, TX, Address } from "./types";
 
@@ -217,7 +217,7 @@ class BitcoinLikeStorage implements IStorage {
     this.addressCache = data.addressCache;
     Base.addressCache = { ...Base.addressCache, ...this.addressCache };
     if (
-      (!this.accountIndex || _.isEmpty(this.accountIndex)) &&
+      (!this.accountIndex || isEmpty(this.accountIndex)) &&
       this.txs.length > 0
     ) {
       this.accountIndex = {};
