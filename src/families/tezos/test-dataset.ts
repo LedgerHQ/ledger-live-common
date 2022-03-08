@@ -65,20 +65,6 @@ const dataset: DatasetTest<Transaction> = {
           raw: accountTZnotRevealed,
           transactions: [
             {
-              name: "Send to new account",
-              transaction: (t) => ({
-                ...t,
-                amount: new BigNumber(100),
-                recipient: accountTZnew.freshAddress,
-              }),
-              expectedStatus: {
-                errors: {
-                  amount: new NotEnoughBalanceBecauseDestinationNotCreated(),
-                },
-                warnings: {},
-              },
-            },
-            {
               name: "send more than min allowed",
               transaction: (t, account) => ({
                 ...t,
