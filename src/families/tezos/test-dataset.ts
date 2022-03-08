@@ -1,9 +1,4 @@
-import {
-  AmountRequired,
-  NotEnoughBalance,
-  NotEnoughBalanceBecauseDestinationNotCreated,
-} from "@ledgerhq/errors";
-import BigNumber from "bignumber.js";
+import { AmountRequired, NotEnoughBalance } from "@ledgerhq/errors";
 import type { DatasetTest } from "../../types";
 import type { Transaction } from "./types";
 
