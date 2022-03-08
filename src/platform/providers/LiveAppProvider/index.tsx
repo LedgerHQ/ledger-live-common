@@ -1,4 +1,3 @@
-import { access } from "fs";
 import React, {
   useContext,
   useEffect,
@@ -65,7 +64,7 @@ export function LiveAppProvider({
           liveAppByIndex: allManifests,
           liveAppById: allManifests.reduce((acc, liveAppManifest) => {
             acc[liveAppManifest.id] = liveAppManifest;
-            return access;
+            return acc;
           }, {}),
         },
         error: null,
