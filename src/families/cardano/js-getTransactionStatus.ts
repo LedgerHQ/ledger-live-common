@@ -49,9 +49,9 @@ const getTransactionStatus = async (
       ? new NotEnoughBalance()
       : new AmountRequired();
   } else if (amount.lt(minTransactionAmount)) {
-    errors.amount = new CardanoMinAmountError(
-      `Minimum ${minTransactionAmount.div(1e6)} ADA required`
-    );
+    errors.amount = new CardanoMinAmountError("", {
+      value: minTransactionAmount.div(1e6).toString(),
+    });
   } else if (totalSpent.gt(a.balance)) {
     errors.amount = new NotEnoughBalance();
   }
