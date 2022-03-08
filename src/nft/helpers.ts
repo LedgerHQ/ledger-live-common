@@ -1,21 +1,15 @@
 import eip55 from "eip55";
 import BigNumber from "bignumber.js";
-import { NFT, Operation } from "../types";
 import { encodeNftId } from ".";
+import { decodeAccountId } from "../account";
 
-type Collection = NFT["collection"];
+import type { Operation, ProtoNFT, NFT } from "../types";
 
-type CollectionMap<C> = Record<string, C>;
-
-export type CollectionWithNFT = Collection & {
-  nfts: Array<Omit<NFT, "collection">>;
-};
-
-export const nftsFromOperations = (ops: Operation[]): NFT[] => {
+export const nftsFromOperations = (ops: Operation[]): ProtoNFT[] => {
   const nftsMap = ops
     // if ops are Operations get the prop nftOperations, else ops are considered nftOperations already
     .flatMap((op) => (op?.nftOperations?.length ? op.nftOperations : op))
-    .reduce((acc: Record<string, NFT>, nftOp: Operation) => {
+    .reduce((acc: Record<string, ProtoNFT>, nftOp: Operation) => {
       let { contract } = nftOp;
       if (!contract) {
         return acc;
@@ -24,15 +18,18 @@ export const nftsFromOperations = (ops: Operation[]): NFT[] => {
       // Creating a "token for a contract" unique key
       contract = eip55.encode(contract);
       const { tokenId, standard, accountId } = nftOp;
+      const { currencyId } = decodeAccountId(nftOp.accountId);
       if (!tokenId || !standard) return acc;
-      const id = encodeNftId(accountId, contract, tokenId || "");
+      const id = encodeNftId(accountId, contract, tokenId, currencyId);
 
       const nft = (acc[id] || {
         id,
         tokenId,
         amount: new BigNumber(0),
-        collection: { contract, standard },
-      }) as NFT;
+        contract,
+        standard,
+        currencyId,
+      }) as ProtoNFT;
 
       if (nftOp.type === "NFT_IN") {
         nft.amount = nft.amount.plus(nftOp.value);
@@ -49,30 +46,27 @@ export const nftsFromOperations = (ops: Operation[]): NFT[] => {
 };
 
 export const nftsByCollections = (
-  nfts: NFT[] = [],
+  nfts: Array<ProtoNFT | NFT> = [],
   collectionAddress?: string
-): CollectionWithNFT[] => {
-  const filteredNfts = collectionAddress
-    ? nfts.filter((n) => n.collection.contract === collectionAddress)
-    : nfts;
+): Record<string, Array<ProtoNFT | NFT>> | Array<ProtoNFT | NFT> => {
+  return collectionAddress
+    ? nfts?.filter((n) => n.contract === collectionAddress)
+    : nfts.reduce((acc, nft) => {
+        const { contract } = nft;
 
-  const collectionMap = filteredNfts.reduce(
-    (acc: CollectionMap<CollectionWithNFT>, nft: NFT) => {
-      const { collection, ...nftWithoutCollection } = nft;
+        if (!acc[contract]) {
+          acc[contract] = [];
+        }
+        acc[contract].push(nft);
 
-      if (!acc[collection.contract]) {
-        acc[collection.contract] = { ...collection, nfts: [] };
-      }
-      acc[collection.contract].nfts.push(nftWithoutCollection);
-
-      return acc;
-    },
-    {} as CollectionMap<CollectionWithNFT>
-  );
-
-  return Object.values(collectionMap);
+        return acc;
+      }, {});
 };
 
-export const getNftKey = (contract: string, tokenId: string): string => {
-  return `${contract}-${tokenId}`;
+export const getNftKey = (
+  contract: string,
+  tokenId: string,
+  currencyId: string
+): string => {
+  return `${currencyId}-${contract}-${tokenId}`;
 };
