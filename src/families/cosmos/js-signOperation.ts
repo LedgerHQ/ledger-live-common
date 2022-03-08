@@ -120,11 +120,6 @@ const signOperation = ({
         const senders: string[] = [];
         const recipients: string[] = [];
 
-        if (type === "OUT") {
-          senders.push(account.freshAddress);
-          recipients.push(transaction.recipient);
-        }
-
         // build optimistic operation
         const operation: Operation = {
           id: encodeOperationId(accountId, hash, type),
@@ -142,6 +137,22 @@ const signOperation = ({
           accountId,
           date: new Date(),
         };
+
+        switch (type) {
+          case "OUT":
+            operation.senders.push(account.freshAddress);
+            operation.recipients.push(transaction.recipient);
+            break;
+
+          case "REWARD":
+          case "DELEGATE":
+          case "UNDELEGATE":
+            operation.value = new BigNumber(fee);
+            operation.extra.validators = transaction.validators;
+            operation.extra.cosmosSourceValidator =
+              transaction.cosmosSourceValidator;
+            break;
+        }
 
         o.next({
           type: "signed",
