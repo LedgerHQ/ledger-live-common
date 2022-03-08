@@ -1,12 +1,12 @@
 let secp256k1;
 try {
-  secp256k1 = require("secp256k1/bindings");
+  secp256k1 = require("./secp256k1-js");
 } catch (err) {
-  secp256k1 = require("./noble-secp256k1");
+  secp256k1 = require("./secp256k1-rn");
 }
-export function publicKeyTweakAdd(
+export async function publicKeyTweakAdd(
   publicKey: Uint8Array,
   tweak: Uint8Array
-): Uint8Array {
-  return secp256k1.publicKeyTweakAdd(publicKey, tweak);
+): Promise<Buffer> {
+  return await secp256k1.publicKeyTweakAdd(publicKey, tweak);
 }

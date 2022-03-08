@@ -119,15 +119,15 @@ class Bitcoin extends Base {
   }
 
   // get address given an address type
-  customGetAddress(
+  async customGetAddress(
     derivationMode: string,
     xpub: string,
     account: number,
     index: number
-  ): string {
+  ): Promise<string> {
     switch (derivationMode) {
       case DerivationModes.TAPROOT:
-        return this.getTaprootAddress(xpub, account, index);
+        return await this.getTaprootAddress(xpub, account, index);
       default:
         return super.customGetAddress(derivationMode, xpub, account, index);
     }
@@ -176,12 +176,12 @@ class Bitcoin extends Base {
     return bjs.crypto.sha256(Buffer.concat([h, h, x]));
   }
 
-  private getTaprootAddress(
+  private async getTaprootAddress(
     xpub: string,
     account: number,
     index: number
-  ): string {
-    const ecdsaPubkey = this.getPubkeyAt(xpub, account, index);
+  ): Promise<string> {
+    const ecdsaPubkey = await this.getPubkeyAt(xpub, account, index);
     // A BIP32 derived key can be converted to a schnorr pubkey by dropping
     // the first byte, which represent the oddness/evenness. In schnorr all
     // pubkeys are even.
@@ -195,9 +195,7 @@ class Bitcoin extends Base {
     const tweak = this.hashTapTweak(schnorrInternalPubkey);
 
     // Q = P + int(hash_TapTweak(bytes(P)))G
-    const outputEcdsaKey = Buffer.from(
-      publicKeyTweakAdd(evenEcdsaPubkey, tweak)
-    );
+    const outputEcdsaKey = await publicKeyTweakAdd(evenEcdsaPubkey, tweak);
     // Convert to schnorr.
     const outputSchnorrKey = outputEcdsaKey.slice(1);
     // Create address

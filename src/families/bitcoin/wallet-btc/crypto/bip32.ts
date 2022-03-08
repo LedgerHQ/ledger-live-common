@@ -21,14 +21,14 @@ class BIP32 {
     this.depth = depth;
     this.index = index;
   }
-  derive(index: number) {
+  async derive(index: number) {
     const data = Buffer.allocUnsafe(37);
     this.publicKey.copy(data, 0);
     data.writeUInt32BE(index, 33);
     const I = createHmac("sha512", this.chainCode).update(data).digest();
     const IL = I.slice(0, 32);
     const IR = I.slice(32);
-    const Ki = Buffer.from(publicKeyTweakAdd(this.publicKey, IL));
+    const Ki = await publicKeyTweakAdd(this.publicKey, IL);
     return new BIP32(Ki, IR, this.network, this.depth + 1, index);
   }
 }

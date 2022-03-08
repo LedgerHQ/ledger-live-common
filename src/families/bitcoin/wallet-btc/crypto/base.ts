@@ -41,7 +41,11 @@ class Base implements ICrypto {
     this.network.usesTimestampedTransaction = false;
   }
 
-  protected getPubkeyAt(xpub: string, account: number, index: number): Buffer {
+  protected async getPubkeyAt(
+    xpub: string,
+    account: number,
+    index: number
+  ): Promise<Buffer> {
     if (!Base.bech32Cache[`${this.network.name}-${xpub}`]) {
       const buffer: Buffer = bs58.decode(xpub);
       const depth: number = buffer[4];
@@ -64,43 +68,53 @@ class Base implements ICrypto {
       ];
     }
     if (Base.publickeyCache[`${this.network.name}-${xpub}-${account}`]) {
-      const publicKey =
-        Base.publickeyCache[`${this.network.name}-${xpub}-${account}`].derive(
-          index
-        ).publicKey;
+      const publicKey = (
+        await Base.publickeyCache[
+          `${this.network.name}-${xpub}-${account}`
+        ].derive(index)
+      ).publicKey;
       Base.publickeyCache[`${this.network.name}-${xpub}-${account}-${index}`] =
         publicKey;
       return publicKey;
     }
     Base.publickeyCache[`${this.network.name}-${xpub}-${account}`] =
-      Base.bech32Cache[`${this.network.name}-${xpub}`].derive(account);
-    const publicKey =
-      Base.publickeyCache[`${this.network.name}-${xpub}-${account}`].derive(
-        index
-      ).publicKey;
+      await Base.bech32Cache[`${this.network.name}-${xpub}`].derive(account);
+    const publicKey = (
+      await Base.publickeyCache[
+        `${this.network.name}-${xpub}-${account}`
+      ].derive(index)
+    ).publicKey;
     Base.publickeyCache[`${this.network.name}-${xpub}-${account}-${index}`] =
       publicKey;
     return publicKey;
   }
 
   // derive legacy address at account and index positions
-  protected getLegacyAddress(
+  protected async getLegacyAddress(
     xpub: string,
     account: number,
     index: number
-  ): string {
-    const publicKeyBuffer: Buffer = this.getPubkeyAt(xpub, account, index);
+  ): Promise<string> {
+    const publicKeyBuffer: Buffer = await this.getPubkeyAt(
+      xpub,
+      account,
+      index
+    );
     const publicKeyHash160: Buffer = bjs.crypto.hash160(publicKeyBuffer);
     return bjs.address.toBase58Check(publicKeyHash160, this.network.pubKeyHash);
   }
 
   // derive native SegWit at account and index positions
-  private getNativeSegWitAddress(
+  private async getNativeSegWitAddress(
     xpub: string,
     account: number,
     index: number
-  ): string {
-    const publicKeyBuffer: Buffer = this.getPubkeyAt(xpub, account, index);
+  ): Promise<string> {
+    const publicKeyBuffer: Buffer = await this.getPubkeyAt(
+      xpub,
+      account,
+      index
+    );
     const publicKeyHash160: Buffer = bjs.crypto.hash160(publicKeyBuffer);
     const words: number[] = bech32.toWords(publicKeyHash160);
     words.unshift(0x00);
@@ -108,12 +122,16 @@ class Base implements ICrypto {
   }
 
   // derive SegWit at account and index positions
-  private getSegWitAddress(
+  private async getSegWitAddress(
     xpub: string,
     account: number,
     index: number
-  ): string {
-    const publicKeyBuffer: Buffer = this.getPubkeyAt(xpub, account, index);
+  ): Promise<string> {
+    const publicKeyBuffer: Buffer = await this.getPubkeyAt(
+      xpub,
+      account,
+      index
+    );
     const redeemOutput: Buffer = bjs.script.compile([
       0,
       bjs.crypto.hash160(publicKeyBuffer),
@@ -126,12 +144,12 @@ class Base implements ICrypto {
   }
 
   // get address given an address type
-  getAddress(
+  async getAddress(
     derivationMode: string,
     xpub: string,
     account: number,
     index: number
-  ): string {
+  ): Promise<string> {
     if (
       Base.addressCache[
         `${this.network.name}-${derivationMode}-${xpub}-${account}-${index}`
@@ -148,19 +166,19 @@ class Base implements ICrypto {
     return res;
   }
 
-  customGetAddress(
+  async customGetAddress(
     derivationMode: string,
     xpub: string,
     account: number,
     index: number
-  ): string {
+  ): Promise<string> {
     switch (derivationMode) {
       case DerivationModes.LEGACY:
-        return this.getLegacyAddress(xpub, account, index);
+        return await this.getLegacyAddress(xpub, account, index);
       case DerivationModes.SEGWIT:
-        return this.getSegWitAddress(xpub, account, index);
+        return await this.getSegWitAddress(xpub, account, index);
       case DerivationModes.NATIVE_SEGWIT:
-        return this.getNativeSegWitAddress(xpub, account, index);
+        return await this.getNativeSegWitAddress(xpub, account, index);
       default:
         throw new Error(`Invalid derivation Mode: ${derivationMode}`);
     }
