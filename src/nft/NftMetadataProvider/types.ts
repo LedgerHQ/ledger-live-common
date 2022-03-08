@@ -10,7 +10,7 @@ export type NFTResourceLoading = {
 
 export type NFTResourceLoaded = {
   status: "loaded";
-  metadata: Pick<NFTMetadataResponse, "result">;
+  metadata: NFTMetadataResponse["result"];
   updatedAt: number;
 };
 
