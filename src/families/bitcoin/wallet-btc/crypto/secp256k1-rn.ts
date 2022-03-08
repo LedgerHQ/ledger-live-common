@@ -1,4 +1,4 @@
-import secp256k1 from "react-native-secp256k1";
+import secp256k1 from "@ledgerhq/react-native-secp256k1";
 export async function publicKeyTweakAdd(
   publicKey: Uint8Array,
   tweak: Uint8Array
