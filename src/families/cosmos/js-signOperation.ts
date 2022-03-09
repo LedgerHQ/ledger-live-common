@@ -121,18 +121,6 @@ const signOperation = ({
         const senders: string[] = [account.freshAddress];
         const recipients: string[] = [transaction.recipient];
 
-        if (transaction.mode === "redelegate") {
-          Object.assign(extra, {
-            cosmosSourceValidator: transaction.cosmosSourceValidator,
-          });
-        }
-
-        if (transaction.mode !== "send") {
-          Object.assign(extra, {
-            validators: transaction.validators,
-          });
-        }
-
         if (transaction.mode === "send") {
           senders.push(account.freshAddress);
           recipients.push(transaction.recipient);
