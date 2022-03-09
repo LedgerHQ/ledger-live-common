@@ -118,8 +118,8 @@ const signOperation = ({
             ? "REWARD"
             : "OUT";
 
-        const senders: string[] = [account.freshAddress];
-        const recipients: string[] = [transaction.recipient];
+        const senders: string[] = [];
+        const recipients: string[] = [];
 
         if (transaction.mode === "send") {
           senders.push(account.freshAddress);
