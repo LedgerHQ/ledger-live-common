@@ -53,23 +53,24 @@ export const getAccount = async (address: string): Promise<any> => {
     sequence: 0,
   };
 
-  const { data } = await network({
-    method: "GET",
-    url: `${defaultEndpoint}/cosmos/auth/v1beta1/accounts/${address}`,
-  });
+  try {
+    const { data } = await network({
+      method: "GET",
+      url: `${defaultEndpoint}/cosmos/auth/v1beta1/accounts/${address}`,
+    });
 
-  if (data.account.address) {
-    response.address = data.account.address;
-  }
+    if (data.account.address) {
+      response.address = data.account.address;
+    }
 
-  if (data.account.account_number) {
-    response.accountNumber = parseInt(data.account.account_number);
-  }
+    if (data.account.account_number) {
+      response.accountNumber = parseInt(data.account.account_number);
+    }
 
-  if (data.account.sequence) {
-    response.sequence = parseInt(data.account.sequence);
-  }
-
+    if (data.account.sequence) {
+      response.sequence = parseInt(data.account.sequence);
+    }
+  } catch (e) {}
   return response;
 };
 
@@ -241,15 +242,19 @@ export const isValidRecipent = async (address: string): Promise<boolean> => {
 };
 
 export const simulate = async (tx_bytes: Array<any>): Promise<BigNumber> => {
-  const { data } = await network({
-    method: "POST",
-    url: `${defaultEndpoint}/cosmos/tx/v1beta1/simulate`,
-    data: {
-      tx_bytes: tx_bytes,
-    },
-  });
+  try {
+    const { data } = await network({
+      method: "POST",
+      url: `${defaultEndpoint}/cosmos/tx/v1beta1/simulate`,
+      data: {
+        tx_bytes: tx_bytes,
+      },
+    });
 
-  return new BigNumber(data?.gas_info?.gas_used || 0);
+    return new BigNumber(data?.gas_info?.gas_used || 0);
+  } catch (e) {
+    return new BigNumber(0);
+  }
 };
 
 export const broadcast = async ({
