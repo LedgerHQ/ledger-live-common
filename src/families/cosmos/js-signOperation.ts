@@ -133,6 +133,23 @@ const signOperation = ({
           });
         }
 
+        if (transaction.mode === "send") {
+          senders.push(account.freshAddress);
+          recipients.push(transaction.recipient);
+        }
+
+        if (transaction.mode === "redelegate") {
+          Object.assign(extra, {
+            cosmosSourceValidator: transaction.cosmosSourceValidator,
+          });
+        }
+
+        if (transaction.mode !== "send") {
+          Object.assign(extra, {
+            validators: transaction.validators,
+          });
+        }
+
         // build optimistic operation
         const operation: Operation = {
           id: encodeOperationId(accountId, hash, type),
