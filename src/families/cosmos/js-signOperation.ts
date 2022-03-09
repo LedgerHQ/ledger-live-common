@@ -105,6 +105,7 @@ const signOperation = ({
         const hash = ""; // resolved at broadcast time
         const accountId = account.id;
         const fee = transaction.fees || new BigNumber(0);
+        const extra = {};
 
         const type: OperationType =
           transaction.mode === "undelegate"
@@ -117,8 +118,20 @@ const signOperation = ({
             ? "REWARD"
             : "OUT";
 
-        const senders: string[] = [];
-        const recipients: string[] = [];
+        const senders: string[] = [account.freshAddress];
+        const recipients: string[] = [transaction.recipient];
+
+        if (transaction.mode === "redelegate") {
+          Object.assign(extra, {
+            cosmosSourceValidator: transaction.cosmosSourceValidator,
+          });
+        }
+
+        if (transaction.mode !== "send") {
+          Object.assign(extra, {
+            validators: transaction.validators,
+          });
+        }
 
         // build optimistic operation
         const operation: Operation = {
@@ -129,7 +142,7 @@ const signOperation = ({
             ? account.spendableBalance
             : transaction.amount.plus(fee),
           fee,
-          extra: {},
+          extra,
           blockHash: null,
           blockHeight: null,
           senders,
@@ -137,22 +150,6 @@ const signOperation = ({
           accountId,
           date: new Date(),
         };
-
-        switch (type) {
-          case "OUT":
-            operation.senders.push(account.freshAddress);
-            operation.recipients.push(transaction.recipient);
-            break;
-
-          case "REWARD":
-          case "DELEGATE":
-          case "UNDELEGATE":
-            operation.value = new BigNumber(fee);
-            operation.extra.validators = transaction.validators;
-            operation.extra.cosmosSourceValidator =
-              transaction.cosmosSourceValidator;
-            break;
-        }
 
         o.next({
           type: "signed",
