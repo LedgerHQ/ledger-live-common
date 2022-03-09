@@ -246,7 +246,10 @@ export const broadcast = async ({
     );
   }
 
-  return patchOperationWithHash(operation, data.tx_response.txhash);
+  return patchOperationWithHash(
+    { ...operation, blockHeight: data.tx_response.height },
+    data.tx_response.txhash
+  );
 };
 
 export const getBlock = async (height: number): Promise<any> => {
