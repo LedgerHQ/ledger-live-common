@@ -99,15 +99,15 @@ const getAllBalances = async (address: string): Promise<BigNumber> => {
 
   let amount = new BigNumber(0);
 
-  data.balances.forEach((elem) => {
+  for (const elem of data.balances) {
     amount = amount.plus(elem.amount);
-  });
+  }
 
   return amount;
 };
 
 const getDelegations = async (address: string): Promise<any> => {
-  const delegators: Array<any> = [];
+  const delegations: Array<any> = [];
 
   const { data: data1 } = await network({
     method: "GET",
@@ -121,7 +121,7 @@ const getDelegations = async (address: string): Promise<any> => {
     BOND_STATUS_BONDED: "bonded",
   };
 
-  data1.delegation_responses.forEach(async (d) => {
+  for (const d of data1.delegation_responses) {
     const { data: data2 } = await network({
       method: "GET",
       url: `${defaultEndpoint}/cosmos/staking/v1beta1/validators/${d.delegation.validator_address}`,
@@ -129,32 +129,32 @@ const getDelegations = async (address: string): Promise<any> => {
 
     status = statusMap[data2.validator.status] || "unbonded";
 
-    delegators.push({
+    delegations.push({
       validatorAddress: d.delegation.validator_address,
       amount: new BigNumber(d.balance.amount),
       pendingRewards: new BigNumber(0),
       status,
     });
-  });
+  }
 
   const { data: data3 } = await network({
     method: "GET",
     url: `${defaultEndpoint}/cosmos/distribution/v1beta1/delegators/${address}/rewards`,
   });
 
-  data3.rewards.forEach((r) => {
-    delegators.forEach(async (d) => {
+  for (const r of data3.rewards) {
+    for (const d of delegations) {
       if (r.validator_address === d.validatorAddress) {
-        r.reward.forEach(async (v) => {
+        for (const reward of r.reward) {
           d.pendingRewards = d.pendingRewards.plus(
-            new BigNumber(v.amount).integerValue(BigNumber.ROUND_CEIL)
+            new BigNumber(reward.amount).integerValue(BigNumber.ROUND_CEIL)
           );
-        });
+        }
       }
-    });
-  });
+    }
+  }
 
-  return delegators;
+  return delegations;
 };
 
 const getRedelegations = async (address: string): Promise<any> => {
@@ -165,16 +165,16 @@ const getRedelegations = async (address: string): Promise<any> => {
     url: `${defaultEndpoint}/cosmos/staking/v1beta1/delegators/${address}/redelegations`,
   });
 
-  data.redelegation_responses.forEach((elem) => {
-    elem.entries.forEach((entry) => {
+  for (const r of data.redelegation_responses) {
+    for (const entry of r.entries) {
       redelegations.push({
-        validatorSrcAddress: elem.redelegation.validator_src_address,
-        validatorDstAddress: elem.redelegation.validator_dst_address,
+        validatorSrcAddress: r.redelegation.validator_src_address,
+        validatorDstAddress: r.redelegation.validator_dst_address,
         amount: new BigNumber(entry.redelegation_entry.initial_balance),
         completionDate: new Date(entry.redelegation_entry.completion_time),
       });
-    });
-  });
+    }
+  }
 
   return redelegations;
 };
@@ -187,15 +187,15 @@ const getUnbondings = async (address: string): Promise<any> => {
     url: `${defaultEndpoint}/cosmos/staking/v1beta1/delegators/${address}/unbonding_delegations`,
   });
 
-  data.unbonding_responses.forEach((elem) => {
-    elem.entries.forEach((entries) => {
+  for (const u of data.unbonding_responses) {
+    for (const entry of u.entries) {
       unbondings.push({
-        validatorAddress: elem.validator_address,
-        amount: new BigNumber(entries.initial_balance),
-        completionDate: new Date(entries.completion_time),
+        validatorAddress: u.validator_address,
+        amount: new BigNumber(entry.initial_balance),
+        completionDate: new Date(entry.completion_time),
       });
-    });
-  });
+    }
+  }
 
   return unbondings;
 };
