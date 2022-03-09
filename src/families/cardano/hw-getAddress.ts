@@ -8,6 +8,7 @@ import { getBipPathFromString, getBipPathString } from "./logic";
 import { StakeChain } from "./types";
 import { CARDANO_NETWORK_ID, STAKING_ADDRESS_INDEX } from "./constants";
 import { utils as TyphonUtils } from "@stricahq/typhonjs";
+import { address as TyphonAddress } from "@stricahq/typhonjs";
 
 const resolver: Resolver = async (transport, { path, verify }) => {
   const spendingPath = getBipPathFromString(path);
@@ -43,9 +44,13 @@ const resolver: Resolver = async (transport, { path, verify }) => {
       },
     });
   }
+  const address = TyphonUtils.getAddressFromHex(
+    r.addressHex
+  ) as TyphonAddress.BaseAddress;
   return {
-    address: TyphonUtils.getAddressFromHex(r.addressHex).getBech32(),
-    publicKey: "",
+    address: address.getBech32(),
+    // Here, we use publicKey hash, as cardano app doesn't export the public key
+    publicKey: address.paymentCredential.hash,
     path,
   };
 };
