@@ -9,37 +9,41 @@ const defaultEndpoint = getEnv(
 ).replace(/\/$/, "");
 
 export const getAccountInfo = async (address: string): Promise<any> => {
-  const [
-    { accountNumber, sequence },
-    balances,
-    blockHeight,
-    txs,
-    delegations,
-    redelegations,
-    unbondings,
-    withdrawAddress,
-  ] = await Promise.all([
-    getAccount(address),
-    getAllBalances(address),
-    getHeight(),
-    getTransactions(address),
-    getDelegators(address),
-    getRedelegations(address),
-    getUnbondings(address),
-    getWithdrawAddress(address),
-  ]);
+  try {
+    const [
+      { accountNumber, sequence },
+      balances,
+      blockHeight,
+      txs,
+      delegations,
+      redelegations,
+      unbondings,
+      withdrawAddress,
+    ] = await Promise.all([
+      getAccount(address),
+      getAllBalances(address),
+      getHeight(),
+      getTransactions(address),
+      getDelegations(address),
+      getRedelegations(address),
+      getUnbondings(address),
+      getWithdrawAddress(address),
+    ]);
 
-  return {
-    balances,
-    blockHeight,
-    txs,
-    delegations,
-    redelegations,
-    unbondings,
-    withdrawAddress,
-    accountNumber,
-    sequence,
-  };
+    return {
+      balances,
+      blockHeight,
+      txs,
+      delegations,
+      redelegations,
+      unbondings,
+      withdrawAddress,
+      accountNumber,
+      sequence,
+    };
+  } catch (e: any) {
+    throw new Error(`"Error during cosmos synchronization: "${e.message}`);
+  }
 };
 
 export const getAccount = async (address: string): Promise<any> => {
@@ -66,77 +70,96 @@ export const getAccount = async (address: string): Promise<any> => {
     if (data.account.sequence) {
       response.sequence = parseInt(data.account.sequence);
     }
-
     // eslint-disable-next-line no-empty
   } catch (e) {}
-
   return response;
 };
 
-export const getDelegators = async (address: string): Promise<any> => {
-  const delegators: Array<any> = [];
+export const getChainId = async (): Promise<string> => {
+  const { data } = await network({
+    method: "GET",
+    url: `${defaultEndpoint}/node_info`,
+  });
 
-  try {
-    const { data } = await network({
-      method: "GET",
-      url: `${defaultEndpoint}/cosmos/staking/v1beta1/delegations/${address}`,
-    });
-
-    let status = "unbonded";
-    const statusMap = {
-      BOND_STATUS_UNBONDED: "unbonded",
-      BOND_STATUS_UNBONDING: "unbonding",
-      BOND_STATUS_BONDED: "bonded",
-    };
-
-    data.delegation_responses.forEach(async (d) => {
-      try {
-        const { data } = await network({
-          method: "GET",
-          url: `${defaultEndpoint}/cosmos/staking/v1beta1/validators/${d.delegation.validator_address}`,
-        });
-
-        status = statusMap[data.validator.status] || "unbonded";
-
-        // eslint-disable-next-line no-empty
-      } catch (e) {}
-
-      delegators.push({
-        validatorAddress: d.delegation.validator_address,
-        amount: new BigNumber(d.balance.amount),
-        pendingRewards: new BigNumber(0),
-        status,
-      });
-    });
-
-    try {
-      const { data } = await network({
-        method: "GET",
-        url: `${defaultEndpoint}/cosmos/distribution/v1beta1/delegators/${address}/rewards`,
-      });
-
-      data.rewards.forEach((r) => {
-        delegators.forEach(async (d) => {
-          if (r.validator_address === d.validatorAddress) {
-            r.reward.forEach(async (v) => {
-              d.pendingRewards = d.pendingRewards.plus(
-                new BigNumber(v.amount).integerValue(BigNumber.ROUND_CEIL)
-              );
-            });
-          }
-        });
-      });
-
-      // eslint-disable-next-line no-empty
-    } catch (e) {}
-
-    return delegators;
-  } catch (e) {
-    return [];
-  }
+  return data.node_info.network;
 };
 
-export const getRedelegations = async (address: string): Promise<any> => {
+const getHeight = async (): Promise<number> => {
+  const { data } = await network({
+    method: "GET",
+    url: `${defaultEndpoint}/cosmos/base/tendermint/v1beta1/blocks/latest`,
+  });
+
+  return data.block.header.height;
+};
+
+const getAllBalances = async (address: string): Promise<BigNumber> => {
+  const { data } = await network({
+    method: "GET",
+    url: `${defaultEndpoint}/cosmos/bank/v1beta1/balances/${address}`,
+  });
+
+  let amount = new BigNumber(0);
+
+  for (const elem of data.balances) {
+    amount = amount.plus(elem.amount);
+  }
+
+  return amount;
+};
+
+const getDelegations = async (address: string): Promise<any> => {
+  const delegations: Array<any> = [];
+
+  const { data: data1 } = await network({
+    method: "GET",
+    url: `${defaultEndpoint}/cosmos/staking/v1beta1/delegations/${address}`,
+  });
+
+  let status = "unbonded";
+  const statusMap = {
+    BOND_STATUS_UNBONDED: "unbonded",
+    BOND_STATUS_UNBONDING: "unbonding",
+    BOND_STATUS_BONDED: "bonded",
+  };
+
+  for (const d of data1.delegation_responses) {
+    const { data: data2 } = await network({
+      method: "GET",
+      url: `${defaultEndpoint}/cosmos/staking/v1beta1/validators/${d.delegation.validator_address}`,
+    });
+
+    status = statusMap[data2.validator.status] || "unbonded";
+
+    delegations.push({
+      validatorAddress: d.delegation.validator_address,
+      amount: new BigNumber(d.balance.amount),
+      pendingRewards: new BigNumber(0),
+      status,
+    });
+  }
+
+  const { data: data3 } = await network({
+    method: "GET",
+    url: `${defaultEndpoint}/cosmos/distribution/v1beta1/delegators/${address}/rewards`,
+  });
+
+  for (const r of data3.rewards) {
+    for (const d of delegations) {
+      if (r.validator_address === d.validatorAddress) {
+        for (const reward of r.reward) {
+          d.pendingRewards = d.pendingRewards.plus(
+            new BigNumber(reward.amount).integerValue(BigNumber.ROUND_CEIL)
+          );
+        }
+      }
+    }
+  }
+
+  return delegations;
+};
+
+const getRedelegations = async (address: string): Promise<any> => {
   const redelegations: Array<any> = [];
 
   const { data } = await network({
@@ -144,21 +167,21 @@ export const getRedelegations = async (address: string): Promise<any> => {
     url: `${defaultEndpoint}/cosmos/staking/v1beta1/delegators/${address}/redelegations`,
   });
 
-  data.redelegation_responses.forEach((elem) => {
-    elem.entries.forEach((entry) => {
+  for (const r of data.redelegation_responses) {
+    for (const entry of r.entries) {
       redelegations.push({
-        validatorSrcAddress: elem.redelegation.validator_src_address,
-        validatorDstAddress: elem.redelegation.validator_dst_address,
+        validatorSrcAddress: r.redelegation.validator_src_address,
+        validatorDstAddress: r.redelegation.validator_dst_address,
         amount: new BigNumber(entry.redelegation_entry.initial_balance),
         completionDate: new Date(entry.redelegation_entry.completion_time),
       });
-    });
-  });
+    }
+  }
 
   return redelegations;
 };
 
-export const getUnbondings = async (address: string): Promise<any> => {
+const getUnbondings = async (address: string): Promise<any> => {
   const unbondings: Array<any> = [];
 
   const { data } = await network({
@@ -166,46 +189,29 @@ export const getUnbondings = async (address: string): Promise<any> => {
     url: `${defaultEndpoint}/cosmos/staking/v1beta1/delegators/${address}/unbonding_delegations`,
   });
 
-  data.unbonding_responses.forEach((elem) => {
-    elem.entries.forEach((entries) => {
+  for (const u of data.unbonding_responses) {
+    for (const entry of u.entries) {
       unbondings.push({
-        validatorAddress: elem.validator_address,
-        amount: new BigNumber(entries.initial_balance),
-        completionDate: new Date(entries.completion_time),
+        validatorAddress: u.validator_address,
+        amount: new BigNumber(entry.initial_balance),
+        completionDate: new Date(entry.completion_time),
       });
-    });
-  });
+    }
+  }
 
   return unbondings;
 };
 
-export const isValidRecipent = async (address: string): Promise<boolean> => {
-  try {
-    await network({
-      method: "GET",
-      url: `${defaultEndpoint}/cosmos/bank/v1beta1/balances/${address}`,
-    });
+const getWithdrawAddress = async (address: string): Promise<string> => {
+  const { data } = await network({
+    method: "GET",
+    url: `${defaultEndpoint}/cosmos/distribution/v1beta1/delegators/${address}/withdraw_address`,
+  });
 
-    return true;
-  } catch (e) {
-    return false;
-  }
+  return data.withdraw_address;
 };
 
-export const getWithdrawAddress = async (address: string): Promise<string> => {
-  try {
-    const { data } = await network({
-      method: "GET",
-      url: `${defaultEndpoint}/cosmos/distribution/v1beta1/delegators/${address}/withdraw_address`,
-    });
-
-    return data.withdraw_address;
-  } catch (e) {
-    return "";
-  }
-};
-
-export const getTransactions = async (address: string): Promise<any> => {
+const getTransactions = async (address: string): Promise<any> => {
   const receive = await network({
     method: "GET",
     url:
@@ -221,6 +227,35 @@ export const getTransactions = async (address: string): Promise<any> => {
   });
 
   return [...receive.data.tx_responses, ...send.data.tx_responses];
+};
+
+export const isValidRecipent = async (address: string): Promise<boolean> => {
+  try {
+    await network({
+      method: "GET",
+      url: `${defaultEndpoint}/cosmos/bank/v1beta1/balances/${address}`,
+    });
+
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+export const simulate = async (tx_bytes: Array<any>): Promise<BigNumber> => {
+  try {
+    const { data } = await network({
+      method: "POST",
+      url: `${defaultEndpoint}/cosmos/tx/v1beta1/simulate`,
+      data: {
+        tx_bytes: tx_bytes,
+      },
+    });
+
+    return new BigNumber(data?.gas_info?.gas_used || 0);
+  } catch (e) {
+    return new BigNumber(0);
+  }
 };
 
 export const broadcast = async ({
@@ -250,100 +285,4 @@ export const broadcast = async ({
     { ...operation, blockHeight: data.tx_response.height },
     data.tx_response.txhash
   );
-};
-
-export const getBlock = async (height: number): Promise<any> => {
-  try {
-    const { data } = await network({
-      method: "GET",
-      url: `${defaultEndpoint}/cosmos/base/tendermint/v1beta1/blocks/${height}`,
-    });
-
-    return data;
-  } catch (e) {
-    return {};
-  }
-};
-
-export const simulate = async (tx_bytes: Array<any>): Promise<BigNumber> => {
-  try {
-    const { data } = await network({
-      method: "POST",
-      url: `${defaultEndpoint}/cosmos/tx/v1beta1/simulate`,
-      data: {
-        tx_bytes: tx_bytes,
-      },
-    });
-
-    return new BigNumber(data?.gas_info?.gas_used || 0);
-  } catch (e) {
-    return new BigNumber(0);
-  }
-};
-
-export const getHeight = async (): Promise<number> => {
-  try {
-    const { data } = await network({
-      method: "GET",
-      url: `${defaultEndpoint}/cosmos/base/tendermint/v1beta1/blocks/latest`,
-    });
-
-    return data.block.header.height;
-  } catch (e) {
-    return 0;
-  }
-};
-
-export const getAllBalances = async (address: string): Promise<BigNumber> => {
-  const { data } = await network({
-    method: "GET",
-    url: `${defaultEndpoint}/cosmos/bank/v1beta1/balances/${address}`,
-  });
-
-  let amount = new BigNumber(0);
-
-  data.balances.forEach((elem) => {
-    amount = amount.plus(elem.amount);
-  });
-
-  return amount;
-};
-
-export const getChainId = async (): Promise<string> => {
-  try {
-    const { data } = await network({
-      method: "GET",
-      url: `${defaultEndpoint}/node_info`,
-    });
-
-    return data.node_info.network;
-  } catch (e) {
-    return "";
-  }
-};
-
-export const getSequence = async (address: string): Promise<number> => {
-  try {
-    const { data } = await network({
-      method: "GET",
-      url: `${defaultEndpoint}/cosmos/auth/v1beta1/accounts/${address}`,
-    });
-
-    return data.account.sequence;
-  } catch (e) {
-    return 0;
-  }
-};
-
-export const getAccountNumber = async (address: string): Promise<number> => {
-  try {
-    const { data } = await network({
-      method: "GET",
-      url: `${defaultEndpoint}/cosmos/auth/v1beta1/accounts/${address}`,
-    });
-
-    return data.account.account_number;
-  } catch (e) {
-    return 0;
-  }
 };
