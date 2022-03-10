@@ -8,6 +8,6 @@ export function setSecp256k1Instance(secp256k1: any): void {
 export async function publicKeyTweakAdd(
   publicKey: Uint8Array,
   tweak: Uint8Array
-): Promise<any> {
-  return Promise.resolve(secp256k1Instance.publicKeyTweakAdd(publicKey, tweak));
+): Promise<number[]> {
+  return Array.from(secp256k1Instance.publicKeyTweakAdd(publicKey, tweak));
 }
