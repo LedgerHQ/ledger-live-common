@@ -63,8 +63,11 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
 
         case "withdraw_rewards":
           if (
-            attributes.amount &&
-            attributes.amount.indexOf(currency.units[1].code) != -1
+            (attributes.amount &&
+              attributes.amount.indexOf(currency.units[1].code) != -1) ||
+            // handle specifc case with empty amount value like
+            // tx DF458FE6A82C310837D7A33735FA5298BCF71B0BFF7A4134641AAE30F6F1050
+            attributes.amount === ""
           ) {
             op.type = "REWARD";
             op.value = new BigNumber(fees);
