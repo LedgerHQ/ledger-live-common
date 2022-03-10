@@ -195,7 +195,9 @@ class Bitcoin extends Base {
     const tweak = this.hashTapTweak(schnorrInternalPubkey);
 
     // Q = P + int(hash_TapTweak(bytes(P)))G
-    const outputEcdsaKey = await publicKeyTweakAdd(evenEcdsaPubkey, tweak);
+    const outputEcdsaKey = Buffer.from(
+      await publicKeyTweakAdd(evenEcdsaPubkey, tweak)
+    );
     // Convert to schnorr.
     const outputSchnorrKey = outputEcdsaKey.slice(1);
     // Create address

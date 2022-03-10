@@ -9,7 +9,5 @@ export async function publicKeyTweakAdd(
   publicKey: Uint8Array,
   tweak: Uint8Array
 ): Promise<any> {
-  return Promise.resolve(
-    secp256k1Instance.publicKeyTweakAdd(publicKey, tweak)
-  );
+  return Promise.resolve(secp256k1Instance.publicKeyTweakAdd(publicKey, tweak));
 }
