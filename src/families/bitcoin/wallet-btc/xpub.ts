@@ -28,7 +28,7 @@ class Xpub extends EventEmitter {
   // only works with number so we need to be sure to pass correct numbers
   OUTPUT_VALUE_MAX: number = Number.MAX_SAFE_INTEGER;
 
-  GAP = 1;
+  GAP = 20;
 
   syncing: { [key: string]: boolean } = {};
 
