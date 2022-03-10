@@ -70,6 +70,7 @@ export const getAccount = async (address: string): Promise<any> => {
     if (data.account.sequence) {
       response.sequence = parseInt(data.account.sequence);
     }
+    // eslint-disable-next-line no-empty
   } catch (e) {}
   return response;
 };
