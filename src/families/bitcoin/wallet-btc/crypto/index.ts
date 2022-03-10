@@ -16,3 +16,4 @@ export { default as Qtum } from "./qtum";
 export { default as Vertcoin } from "./vtc";
 export { default as ViaCoin } from "./via";
 export { default as Decred } from "./decred";
+export { setSecp256k1Instance, publicKeyTweakAdd } from "./secp256k1";

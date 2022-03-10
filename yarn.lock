@@ -1400,11 +1400,6 @@
   resolved "https://registry.yarnpkg.com/@ledgerhq/logs/-/logs-5.50.0.tgz#29c6419e8379d496ab6d0426eadf3c4d100cd186"
   integrity sha512-swKHYCOZUGyVt4ge0u8a7AwNcA//h4nx5wIi0sruGye1IJ5Cva0GyK9L2/WdX+kWVTKp92ZiEo1df31lrWGPgA==
 
-"@ledgerhq/react-native-secp256k1@^1.0.6":
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/react-native-secp256k1/-/react-native-secp256k1-1.0.6.tgz#e0eb0d26fe325dd783b37dffb8465a4cd0f0211b"
-  integrity sha512-8STVPFgaq38o65udmCTxGbkTI9unvB1tylv5+fvAB8CD/c6K8tSYbZtLaJU8ecEHvvxjpO8k2tWohJBDNTdD9Q==
-
 "@noble/hashes@1.0.0", "@noble/hashes@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.0.0.tgz#d5e38bfbdaba174805a4e649f13be9a9ed3351ae"
