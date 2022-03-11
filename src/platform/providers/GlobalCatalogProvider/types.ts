@@ -1,9 +1,3 @@
-export type Loadable<T> = {
-  error: any | null;
-  isLoading: boolean;
-  value: T | null;
-};
-
 interface GenericGlobalCatalogEntry {
   platform: string;
   branch: string;

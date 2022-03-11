@@ -6,7 +6,8 @@ import React, {
   useState,
   useCallback,
 } from "react";
-import { Loadable, GlobalCatalog } from "./types";
+import { GlobalCatalog } from "./types";
+import { Loadable } from "../types";
 
 import api from "./api";
 

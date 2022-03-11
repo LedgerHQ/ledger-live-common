@@ -6,7 +6,8 @@ import React, {
   useState,
   useCallback,
 } from "react";
-import { Loadable, LiveAppManifest, LiveAppRegistry } from "./types";
+import { LiveAppRegistry } from "./types";
+import { LiveAppManifest, Loadable } from "../types";
 
 import api from "./api";
 
@@ -32,7 +33,9 @@ type LiveAppProviderProps = {
   updateFrequency: number;
 };
 
-export function useLiveAppManifest(appId: string): LiveAppManifest | undefined {
+export function useRemoteLiveAppManifest(
+  appId: string
+): LiveAppManifest | undefined {
   const liveAppRegistry = useContext(liveAppContext).state;
 
   if (!liveAppRegistry.value) {
@@ -42,7 +45,11 @@ export function useLiveAppManifest(appId: string): LiveAppManifest | undefined {
   return liveAppRegistry.value.liveAppById[appId];
 }
 
-export function LiveAppProvider({
+export function useRemoteLiveAppContext(): LiveAppContextType {
+  return useContext(liveAppContext);
+}
+
+export function RemoteLiveAppProvider({
   children,
   provider,
   updateFrequency,

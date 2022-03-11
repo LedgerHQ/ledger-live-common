@@ -32,12 +32,3 @@ export type LiveAppManifest = {
   permissions: LiveAppPermission[];
   domains: string[];
 };
-
-export type LiveAppRegistry = {
-  liveAppById: { [appId: string]: LiveAppManifest };
-  liveAppByIndex: LiveAppManifest[];
-};
-
-export type LiveAppDataAPI = {
-  fetchLiveAppManifests: (url: string) => Promise<LiveAppManifest[]>;
-};

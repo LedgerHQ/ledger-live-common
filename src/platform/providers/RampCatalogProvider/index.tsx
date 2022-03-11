@@ -6,7 +6,9 @@ import React, {
   useState,
   useCallback,
 } from "react";
-import { Loadable, RampCatalog } from "./types";
+import { RampCatalog } from "./types";
+import { Loadable } from "../types";
+
 import api from "./api";
 
 const initialState: Loadable<RampCatalog> = {

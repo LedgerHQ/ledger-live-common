@@ -1,13 +1,37 @@
-export type Loadable<T> = {
-  error: any | null;
-  isLoading: boolean;
-  value: T | null;
+export type PaymentServiceProvider =
+  | "visa"
+  | "mastercard"
+  | "maestro"
+  | "paypal"
+  | "sepa"
+  | "ach"
+  | "applepay"
+  | "googlepay";
+
+export type QueryParams = {
+  accountId?: string;
+  accountAddress?: string;
+  language?: string;
+  fiatCurrencyId?: string;
+  cryptoCurrencyId?: string;
+  primaryColor?: string;
+  type?: string;
+  fiatAmount?: string;
+  cryptoAmount?: string;
+  address?: string;
+};
+
+export type CryptoCurrency = {
+  id: string;
+  providerId: string;
+  ticker: string;
 };
 
 export interface GenericRampCatalogEntry {
   name: string;
-  paymentProviders: string[];
-  cryptoCurrencies: string[];
+  paramsMapping: QueryParams;
+  paymentProviders: PaymentServiceProvider[];
+  cryptoCurrencies: CryptoCurrency[];
   fiatCurrencies: string[];
 }
 
