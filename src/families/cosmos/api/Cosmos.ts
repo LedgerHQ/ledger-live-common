@@ -3,6 +3,8 @@ import BigNumber from "bignumber.js";
 import network from "../../../network";
 import { Operation } from "../../../types";
 import { patchOperationWithHash } from "../../../operation";
+import { log } from "@ledgerhq/logs";
+import { toOperationRaw } from "../../../account";
 
 const defaultEndpoint = getEnv(
   "API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT"
@@ -281,8 +283,12 @@ export const broadcast = async ({
     );
   }
 
-  return patchOperationWithHash(
+  const patchedOperation = patchOperationWithHash(
     { ...operation, blockHeight: data.tx_response.height },
     data.tx_response.txhash
   );
+
+  log("info", "debug operation: ", toOperationRaw(patchedOperation));
+
+  return patchedOperation;
 };
