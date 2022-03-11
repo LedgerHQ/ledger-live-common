@@ -25,7 +25,7 @@ import {
 import { DeviceModelId } from "@ledgerhq/devices";
 
 const minAmount = new BigNumber(20000);
-const maxAccounts = 12;
+const maxAccounts = 24;
 
 const cosmos: AppSpec<Transaction> = {
   name: "Cosmos",
