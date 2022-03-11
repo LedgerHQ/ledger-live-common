@@ -154,6 +154,7 @@ const signOperation = ({
           recipients,
           accountId,
           date: new Date(),
+          transactionSequenceNumber: sequence,
         };
 
         o.next({

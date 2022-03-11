@@ -33,6 +33,7 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
       extra: {
         validators: [] as CosmosDelegationInfo[],
       },
+      transactionSequenceNumber: tx.tx.auth_info.signer_infos.sequence,
     };
 
     tx.logs[0].events.forEach((message) => {
