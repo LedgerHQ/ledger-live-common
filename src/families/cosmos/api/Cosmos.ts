@@ -4,6 +4,7 @@ import network from "../../../network";
 import { Operation } from "../../../types";
 import { patchOperationWithHash } from "../../../operation";
 import { log } from "@ledgerhq/logs";
+import { toOperationRaw } from "../../../account";
 
 const defaultEndpoint = getEnv(
   "API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT"
@@ -285,9 +286,11 @@ export const broadcast = async ({
   log(
     "info",
     "debug operation: ",
-    patchOperationWithHash(
-      { ...operation, blockHeight: data.tx_response.height },
-      data.tx_response.txhash
+    toOperationRaw(
+      patchOperationWithHash(
+        { ...operation, blockHeight: data.tx_response.height },
+        data.tx_response.txhash
+      )
     )
   );
 
