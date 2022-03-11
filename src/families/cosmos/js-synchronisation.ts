@@ -5,6 +5,7 @@ import { encodeAccountId } from "../../account";
 import { getAccountInfo } from "./api/Cosmos";
 import { pubkeyToAddress, decodeBech32Pubkey } from "@cosmjs/amino";
 import { encodeOperationId } from "../../operation";
+import { CosmosDelegationInfo } from "./types";
 
 const txToOps = (info: any, id: string, txs: any): Operation[] => {
   const { address, currency } = info;
@@ -24,13 +25,13 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
       value: new BigNumber(0),
       fee: fees,
       blockHash: null,
-      blockHeight: null,
+      blockHeight: tx.height,
       senders: [] as string[],
       recipients: [] as string[],
       accountId: id,
       date: new Date(tx.timestamp),
       extra: {
-        validators: [] as any,
+        validators: [] as CosmosDelegationInfo[],
       },
     };
 
@@ -72,8 +73,8 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
             op.type = "REWARD";
             op.value = new BigNumber(fees);
             op.extra.validators.push({
-              amount: attributes.amount.replace(currency.units[1].code, ""),
               address: attributes.validator,
+              amount: attributes.amount.replace(currency.units[1].code, ""),
             });
           }
           break;
@@ -86,8 +87,8 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
             op.type = "DELEGATE";
             op.value = new BigNumber(fees);
             op.extra.validators.push({
-              amount: attributes.amount.replace(currency.units[1].code, ""),
               address: attributes.validator,
+              amount: attributes.amount.replace(currency.units[1].code, ""),
             });
           }
           break;
@@ -102,8 +103,8 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
             op.type = "REDELEGATE";
             op.value = new BigNumber(fees);
             op.extra.validators.push({
-              amount: attributes.amount.replace(currency.units[1].code, ""),
               address: attributes.destination_validator,
+              amount: attributes.amount.replace(currency.units[1].code, ""),
             });
             op.extra.cosmosSourceValidator = attributes.source_validator;
           }
@@ -118,8 +119,8 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
             op.type = "UNDELEGATE";
             op.value = new BigNumber(fees);
             op.extra.validators.push({
-              amount: attributes.amount.replace(currency.units[1].code, ""),
               address: attributes.validator,
+              amount: attributes.amount.replace(currency.units[1].code, ""),
             });
           }
           break;
