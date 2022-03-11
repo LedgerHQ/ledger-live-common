@@ -283,19 +283,12 @@ export const broadcast = async ({
     );
   }
 
-  log(
-    "info",
-    "debug operation: ",
-    toOperationRaw(
-      patchOperationWithHash(
-        { ...operation, blockHeight: data.tx_response.height },
-        data.tx_response.txhash
-      )
-    )
-  );
-
-  return patchOperationWithHash(
+  const patchedOperation = patchOperationWithHash(
     { ...operation, blockHeight: data.tx_response.height },
     data.tx_response.txhash
   );
+
+  log("info", "debug operation: ", toOperationRaw(patchedOperation));
+
+  return patchedOperation;
 };
