@@ -5,6 +5,7 @@ import { encodeAccountId } from "../../account";
 import { getAccountInfo } from "./api/Cosmos";
 import { pubkeyToAddress, decodeBech32Pubkey } from "@cosmjs/amino";
 import { encodeOperationId } from "../../operation";
+import { CosmosDelegationInfo } from "./types";
 
 const txToOps = (info: any, id: string, txs: any): Operation[] => {
   const { address, currency } = info;
@@ -30,7 +31,7 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
       accountId: id,
       date: new Date(tx.timestamp),
       extra: {
-        validators: [] as any,
+        validators: [] as CosmosDelegationInfo[],
       },
     };
 
