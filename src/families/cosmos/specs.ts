@@ -23,7 +23,6 @@ import {
   getMaxDelegationAvailable,
 } from "./logic";
 import { DeviceModelId } from "@ledgerhq/devices";
-import { all } from "lodash/fp";
 
 const minAmount = new BigNumber(20000);
 const maxAccounts = 12;
