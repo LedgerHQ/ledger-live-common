@@ -25,7 +25,7 @@ import {
 import { DeviceModelId } from "@ledgerhq/devices";
 
 const minAmount = new BigNumber(20000);
-const maxAccounts = 12;
+const maxAccounts = 24;
 
 const cosmos: AppSpec<Transaction> = {
   name: "Cosmos",
@@ -40,11 +40,15 @@ const cosmos: AppSpec<Transaction> = {
     invariant(maxSpendable.gt(minAmount), "balance is too low");
   },
   test: ({ account, operation, optimisticOperation }) => {
-    expect({
-      allOperationsMatchingId: account.operations.filter(
-        (op) => op.id === operation.id
-      ),
-    }).toEqual({ allOperationsMatchingId: [operation] });
+    const allOperationsMatchingId = account.operations.filter(
+      (op) => op.id === operation.id
+    );
+    if (allOperationsMatchingId.length > 1) {
+      console.warn(allOperationsMatchingId);
+    }
+    expect({ allOperationsMatchingId }).toEqual({
+      allOperationsMatchingId: [operation],
+    });
     const opExpected: Record<string, any> = toOperationRaw({
       ...optimisticOperation,
     });
