@@ -1,4 +1,4 @@
-import { Account, Operation } from "../../types";
+import { Account, Operation, OperationType } from "../../types";
 import { BigNumber } from "bignumber.js";
 import { makeSync, GetAccountShape, mergeOps } from "../../bridge/jsHelpers";
 import { encodeAccountId } from "../../account";
@@ -20,13 +20,13 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
     const op: Operation = {
       id: "",
       hash: tx.txhash,
-      type: "" as any,
+      type: "" as OperationType,
       value: new BigNumber(0),
       fee: fees,
       blockHash: null,
-      blockHeight: tx.height,
-      senders: [] as any,
-      recipients: [] as any,
+      blockHeight: null,
+      senders: [] as string[],
+      recipients: [] as string[],
       accountId: id,
       date: new Date(tx.timestamp),
       extra: {
