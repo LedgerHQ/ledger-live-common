@@ -1,5 +1,5 @@
 import { BigNumber } from "bignumber.js";
-import type { Transaction } from "./types";
+import type { CosmosDelegationInfo, Transaction } from "./types";
 
 /**
  * Create an empty transaction
@@ -17,7 +17,7 @@ const createTransaction = (): Transaction => ({
   networkInfo: null,
   memo: null,
   cosmosSourceValidator: null,
-  validators: [],
+  validators: [] as CosmosDelegationInfo[],
 });
 
 export default createTransaction;
