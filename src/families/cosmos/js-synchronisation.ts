@@ -73,8 +73,8 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
             op.type = "REWARD";
             op.value = new BigNumber(fees);
             op.extra.validators.push({
-              amount: attributes.amount.replace(currency.units[1].code, ""),
               address: attributes.validator,
+              amount: attributes.amount.replace(currency.units[1].code, ""),
             });
           }
           break;
@@ -87,8 +87,8 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
             op.type = "DELEGATE";
             op.value = new BigNumber(fees);
             op.extra.validators.push({
-              amount: attributes.amount.replace(currency.units[1].code, ""),
               address: attributes.validator,
+              amount: attributes.amount.replace(currency.units[1].code, ""),
             });
           }
           break;
@@ -103,8 +103,8 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
             op.type = "REDELEGATE";
             op.value = new BigNumber(fees);
             op.extra.validators.push({
-              amount: attributes.amount.replace(currency.units[1].code, ""),
               address: attributes.destination_validator,
+              amount: attributes.amount.replace(currency.units[1].code, ""),
             });
             op.extra.cosmosSourceValidator = attributes.source_validator;
           }
@@ -119,8 +119,8 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
             op.type = "UNDELEGATE";
             op.value = new BigNumber(fees);
             op.extra.validators.push({
-              amount: attributes.amount.replace(currency.units[1].code, ""),
               address: attributes.validator,
+              amount: attributes.amount.replace(currency.units[1].code, ""),
             });
           }
           break;
