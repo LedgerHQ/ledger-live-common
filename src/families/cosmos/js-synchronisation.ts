@@ -24,7 +24,7 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
       value: new BigNumber(0),
       fee: fees,
       blockHash: null,
-      blockHeight: null,
+      blockHeight: tx.height,
       senders: [] as string[],
       recipients: [] as string[],
       accountId: id,
