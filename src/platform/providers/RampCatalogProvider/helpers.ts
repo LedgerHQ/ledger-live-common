@@ -66,8 +66,8 @@ export function filterRampCatalogEntries(
     if (
       filters.tickers &&
       !filterArray(
-        entry.cryptoCurrencies.map((entry) => entry.ticker),
-        filters.tickers
+        entry.cryptoCurrencies.map((entry) => entry.ticker.toLowerCase()),
+        filters.tickers.map((ticker) => ticker.toLowerCase())
       )
     ) {
       return false;
