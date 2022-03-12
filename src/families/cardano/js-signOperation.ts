@@ -70,7 +70,10 @@ const buildOptimisticOperation = (
     );
 
   const accountChange = accountOutput.minus(accountInput);
-  const type = getOperationType({ accountChange, fees: transaction.getFee() });
+  const type = getOperationType({
+    valueChange: accountChange,
+    fees: transaction.getFee(),
+  });
   const transactionHash = transaction.getTransactionHash().toString("hex");
 
   const operation: Operation = {

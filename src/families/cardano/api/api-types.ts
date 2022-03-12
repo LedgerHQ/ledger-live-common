@@ -1,4 +1,4 @@
-type APIToken = { assentName: string; policyId: string; value: string };
+type APIToken = { assetName: string; policyId: string; value: string };
 
 export type APITransaction = {
   fees: string;

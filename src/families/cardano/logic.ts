@@ -23,6 +23,7 @@ import {
   PaymentCredential,
   StakeChain,
   StakeCredential,
+  Token,
 } from "./types";
 import { Bip32PublicKey } from "@stricahq/bip32ed25519";
 import bs58 from "bs58";
@@ -337,17 +338,21 @@ export function getAccountStakeCredential(
 }
 
 export function getOperationType({
-  accountChange,
+  valueChange,
   fees,
 }: {
-  accountChange: BigNumber;
+  valueChange: BigNumber;
   fees: BigNumber;
 }): OperationType {
-  return accountChange.isNegative()
-    ? accountChange.absoluteValue().eq(fees)
+  return valueChange.isNegative()
+    ? valueChange.absoluteValue().eq(fees)
       ? "FEES"
       : "OUT"
-    : accountChange.isPositive()
+    : valueChange.isPositive()
     ? "IN"
     : "NONE";
+}
+
+export function getTokenAssetId(t: Token): string {
+  return `${t.policyId}${t.assetName}`;
 }
