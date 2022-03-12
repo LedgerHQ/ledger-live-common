@@ -37,7 +37,11 @@ export type NFTMetadataContextState = {
 };
 
 export type NFTMetadataContextAPI = {
-  loadNFTMetadata: (contract: string, tokenId: string) => Promise<void>;
+  loadNFTMetadata: (
+    contract: string,
+    tokenId: string,
+    currencyId: string
+  ) => Promise<void>;
   clearCache: () => void;
 };
 
