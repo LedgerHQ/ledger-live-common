@@ -15,7 +15,7 @@ export type QueryParams = {
   fiatCurrencyId?: string;
   cryptoCurrencyId?: string;
   primaryColor?: string;
-  type?: string;
+  mode?: string;
   fiatAmount?: string;
   cryptoAmount?: string;
   address?: string;
