@@ -12,6 +12,7 @@ import { isValidAddress } from "./logic";
 import { utils as TyphonUtils } from "@stricahq/typhonjs";
 import { getCurrentCardanoPreloadData } from "./preload";
 import { CardanoMinAmountError } from "./errors";
+import { AccountAwaitingSendPendingOperations } from "../../errors";
 
 const getTransactionStatus = async (
   a: Account,
@@ -25,6 +26,10 @@ const getTransactionStatus = async (
   const amount = t.amount;
   const totalSpent = new BigNumber(amount).plus(estimatedFees);
   const tokensToSend = []; //TODO: read from transaction
+
+  if (a.pendingOperations.length > 0) {
+    throw new AccountAwaitingSendPendingOperations();
+  }
 
   const cardanoPreloadedData = getCurrentCardanoPreloadData();
 
@@ -50,7 +55,7 @@ const getTransactionStatus = async (
       : new AmountRequired();
   } else if (amount.lt(minTransactionAmount)) {
     errors.amount = new CardanoMinAmountError("", {
-      value: minTransactionAmount.div(1e6).toString(),
+      amount: minTransactionAmount.div(1e6).toString(),
     });
   } else if (totalSpent.gt(a.balance)) {
     errors.amount = new NotEnoughBalance();
