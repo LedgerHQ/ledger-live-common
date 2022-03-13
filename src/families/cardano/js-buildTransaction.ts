@@ -21,6 +21,7 @@ import {
   getTTL,
 } from "./logic";
 import { getCurrentCardanoPreloadData } from "./preload";
+import { getNetworkParameters } from "./networks";
 
 function getTyphonInputFromUtxo(utxo: CardanoOutput): TyphonTypes.Input {
   const address = TyphonUtils.getAddressFromHex(
@@ -52,6 +53,9 @@ export const buildTransaction = async (
   const cardanoPreloadedData = getCurrentCardanoPreloadData();
 
   const cardanoResources = a.cardanoResources as CardanoResources;
+  // TODO: remove fix currencyId cardano_testnet
+  // const networkParams = getNetworkParameters(account.currency.id);
+  const networkParams = getNetworkParameters("cardano_testnet");
 
   const unusedInternalCred = cardanoResources.internalCredentials.find(
     (cred) => !cred.isUsed
@@ -62,6 +66,7 @@ export const buildTransaction = async (
   let changeAddress;
   if (unusedInternalCred) {
     changeAddress = getBaseAddress({
+      networkId: networkParams.networkId,
       paymentCred: unusedInternalCred,
       stakeCred: stakeCredential,
     });
@@ -77,6 +82,7 @@ export const buildTransaction = async (
       })
     );
     changeAddress = getBaseAddress({
+      networkId: networkParams.networkId,
       paymentCred: {
         key: paymentKey.key,
         path: paymentKey.path,

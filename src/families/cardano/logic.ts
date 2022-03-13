@@ -1,8 +1,4 @@
-import {
-  CARDANO_NETWORK_ID,
-  STAKING_ADDRESS_INDEX,
-  TTL_GAP,
-} from "./constants";
+import { STAKING_ADDRESS_INDEX, TTL_GAP } from "./constants";
 
 import {
   utils as TyphonUtils,
@@ -110,14 +106,14 @@ export function getCredentialKey(
  * returns cardano base address by paymentKey and stakeKey
  */
 export function getBaseAddress({
+  networkId,
   paymentCred,
   stakeCred,
 }: {
+  networkId: number;
   paymentCred: PaymentCredential;
   stakeCred: StakeCredential;
 }): TyphonAddress.BaseAddress {
-  const networkId = CARDANO_NETWORK_ID;
-
   const paymentCredential: TyphonTypes.HashCredential = {
     hash: paymentCred.key,
     type: TyphonTypes.HashType.ADDRESS,
@@ -141,7 +137,7 @@ export function getBaseAddress({
  *
  * @param {string} address
  */
-export const isValidAddress = (address: string): boolean => {
+export const isValidAddress = (address: string, networkId: number): boolean => {
   if (!address) return false;
 
   try {
@@ -150,8 +146,8 @@ export const isValidAddress = (address: string): boolean => {
   } catch (error) {
     try {
       const hexAddress = TyphonUtils.decodeBech32(address);
-      const networkId = Number(hexAddress.value.toLowerCase().charAt(1));
-      if (CARDANO_NETWORK_ID !== networkId) {
+      const addressNetworkId = Number(hexAddress.value.toLowerCase().charAt(1));
+      if (addressNetworkId !== networkId) {
         return false;
       }
     } catch (error) {

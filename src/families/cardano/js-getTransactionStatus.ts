@@ -13,6 +13,7 @@ import { utils as TyphonUtils } from "@stricahq/typhonjs";
 import { getCurrentCardanoPreloadData } from "./preload";
 import { CardanoMinAmountError } from "./errors";
 import { AccountAwaitingSendPendingOperations } from "../../errors";
+import { getNetworkParameters } from "./networks";
 
 const getTransactionStatus = async (
   a: Account,
@@ -32,6 +33,9 @@ const getTransactionStatus = async (
   }
 
   const cardanoPreloadedData = getCurrentCardanoPreloadData();
+  // TODO: remove fix currencyId cardano_testnet
+  // const networkParams = getNetworkParameters(account.currency.id);
+  const networkParams = getNetworkParameters("cardano_testnet");
 
   if (!t.fees) {
     errors.fees = new FeeNotLoaded();
@@ -39,7 +43,7 @@ const getTransactionStatus = async (
 
   if (!t.recipient) {
     errors.recipient = new RecipientRequired();
-  } else if (!isValidAddress(t.recipient)) {
+  } else if (!isValidAddress(t.recipient, networkParams.networkId)) {
     errors.recipient = new InvalidAddress();
   }
 

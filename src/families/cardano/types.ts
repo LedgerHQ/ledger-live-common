@@ -152,12 +152,14 @@ export type ProtocolParams = {
 
 export type CardanoLikeNetworkParameters = {
   identifier: string;
+  networkId: number;
   chainStartTime: number;
   byronSlotDuration: number;
   byronSlotsPerEpoch: number;
   shelleyStartEpoch: number;
   shelleySlotDuration: number;
   shelleySlotsPerEpoch: number;
+  addressPrefix: string;
 };
 
 /**

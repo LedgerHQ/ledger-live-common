@@ -32,6 +32,7 @@ import {
 import { encodeOperationId } from "../../operation";
 import { getOperations } from "./api/getOperations";
 import groupBy from "lodash/groupBy";
+import { getNetworkParameters } from "./networks";
 
 function getAccountChange(
   t: APITransaction,
@@ -364,11 +365,15 @@ export const getAccountShape: GetAccountShape = async (info) => {
   // });
 
   const stakeCredential = getAccountStakeCredential(xpub, accountIndex);
+  // TODO: remove fix currencyId cardano_testnet
+  // const networkParams = getNetworkParameters(account.currency.id);
+  const networkParams = getNetworkParameters("cardano_testnet");
   const freshAddresses = externalCredentials
     .filter((c) => !c.isUsed)
     .map((c) => ({
       derivationPath: getBipPathString(c.path),
       address: getBaseAddress({
+        networkId: networkParams.networkId,
         paymentCred: c,
         stakeCred: stakeCredential,
       }).getBech32(),

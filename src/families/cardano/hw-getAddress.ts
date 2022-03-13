@@ -6,9 +6,10 @@ import Ada, {
 import { str_to_path } from "@cardano-foundation/ledgerjs-hw-app-cardano/dist/utils";
 import { getBipPathFromString, getBipPathString } from "./logic";
 import { StakeChain } from "./types";
-import { CARDANO_NETWORK_ID, STAKING_ADDRESS_INDEX } from "./constants";
+import { STAKING_ADDRESS_INDEX } from "./constants";
 import { utils as TyphonUtils } from "@stricahq/typhonjs";
 import { address as TyphonAddress } from "@stricahq/typhonjs";
+import { getNetworkParameters } from "./networks";
 
 const resolver: Resolver = async (transport, { path, verify }) => {
   const spendingPath = getBipPathFromString(path);
@@ -17,10 +18,14 @@ const resolver: Resolver = async (transport, { path, verify }) => {
     chain: StakeChain.stake,
     index: STAKING_ADDRESS_INDEX,
   });
+  // TODO: remove fix currencyId cardano_testnet
+  // const networkParams = getNetworkParameters(account.currency.id);
+  const networkParams = getNetworkParameters("cardano_testnet");
   const network =
-    CARDANO_NETWORK_ID === Networks.Mainnet.networkId
+    networkParams.networkId === Networks.Mainnet.networkId
       ? Networks.Mainnet
       : Networks.Testnet;
+
   const ada = new Ada(transport);
   const r = await ada.deriveAddress({
     network,

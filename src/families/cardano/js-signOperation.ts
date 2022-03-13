@@ -33,8 +33,8 @@ import {
   prepareLedgerInput,
   prepareLedgerOutput,
 } from "./logic";
-import { CARDANO_NETWORK_ID } from "./constants";
 import ShelleyTypeAddress from "@stricahq/typhonjs/dist/address/ShelleyTypeAddress";
+import { getNetworkParameters } from "./networks";
 
 const buildOptimisticOperation = (
   account: Account,
@@ -163,13 +163,18 @@ const signOperation = ({
         const auxiliaryDataHashHex =
           unsignedTransaction.getAuxiliaryDataHashHex();
 
+        // TODO: remove fix currencyId cardano_testnet
+        // const networkParams = getNetworkParameters(account.currency.id);
+        const networkParams = getNetworkParameters("cardano_testnet");
+        const network =
+          networkParams.networkId === Networks.Mainnet.networkId
+            ? Networks.Mainnet
+            : Networks.Testnet;
+
         const trxOptions: SignTransactionRequest = {
           signingMode: TransactionSigningMode.ORDINARY_TRANSACTION,
           tx: {
-            network:
-              CARDANO_NETWORK_ID === Networks.Mainnet.networkId
-                ? Networks.Mainnet
-                : Networks.Testnet,
+            network,
             inputs: ledgerAppInputs,
             outputs: ledgerAppOutputs,
             certificates: [],
