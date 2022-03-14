@@ -27,6 +27,24 @@ import { DeviceModelId } from "@ledgerhq/devices";
 const minAmount = new BigNumber(20000);
 const maxAccounts = 24;
 
+// amounts of delegation are not exact so we are applying an approximation
+function approximateValue(value) {
+  return "~" + value.div(100).integerValue().times(100).toString();
+}
+
+function approximateExtra(extra) {
+  extra = { ...extra };
+  if (extra.validators && Array.isArray(extra.validators)) {
+    extra.validators = extra.validators.map((v) => {
+      if (!v) return v;
+      const { amount, ...rest } = v;
+      if (!amount || typeof amount !== "string") return v;
+      return { ...rest, amount: approximateValue(new BigNumber(amount)) };
+    });
+  }
+  return extra;
+}
+
 const cosmos: AppSpec<Transaction> = {
   name: "Cosmos",
   currency: getCryptoCurrencyById("cosmos"),
@@ -57,7 +75,11 @@ const cosmos: AppSpec<Transaction> = {
     delete opExpected.date;
     delete opExpected.blockHash;
     delete opExpected.blockHeight;
-    expect(toOperationRaw(operation)).toMatchObject(opExpected); // TODO check it is between operation.value-fees (excluded) and operation.value
+    const extra = opExpected.extra;
+    delete opExpected.extra;
+    const op = toOperationRaw(operation);
+    expect(op).toMatchObject(opExpected);
+    expect(approximateExtra(op.extra)).toMatchObject(approximateExtra(extra));
   },
   mutations: [
     {
@@ -175,17 +197,10 @@ const cosmos: AppSpec<Transaction> = {
           invariant(d, "delegated %s must be found in account", v.address);
           expect({
             address: v.address,
-            // we round last digit
-            amount: "~" + v.amount.div(10).integerValue().times(10).toString(),
+            amount: approximateValue(v.amount),
           }).toMatchObject({
             address: (d as CosmosDelegation).validatorAddress,
-            amount:
-              "~" +
-              (d as CosmosDelegation).amount
-                .div(10)
-                .integerValue()
-                .times(10)
-                .toString(),
+            amount: approximateValue((d as CosmosDelegation).amount),
           });
         });
       },
@@ -250,17 +265,10 @@ const cosmos: AppSpec<Transaction> = {
           invariant(d, "undelegated %s must be found in account", v.address);
           expect({
             address: v.address,
-            // we round last digit
-            amount: "~" + v.amount.div(10).integerValue().times(10).toString(),
+            amount: approximateValue(v.amount),
           }).toMatchObject({
             address: (d as CosmosUnbonding).validatorAddress,
-            amount:
-              "~" +
-              (d as CosmosUnbonding).amount
-                .div(10)
-                .integerValue()
-                .times(10)
-                .toString(),
+            amount: approximateValue((d as CosmosUnbonding).amount),
           });
         });
       },
@@ -327,17 +335,10 @@ const cosmos: AppSpec<Transaction> = {
           invariant(d, "redelegated %s must be found in account", v.address);
           expect({
             address: v.address,
-            // we round last digit
-            amount: "~" + v.amount.div(10).integerValue().times(10).toString(),
+            amount: approximateValue(v.amount),
           }).toMatchObject({
             address: (d as CosmosRedelegation).validatorDstAddress,
-            amount:
-              "~" +
-              (d as CosmosRedelegation).amount
-                .div(10)
-                .integerValue()
-                .times(10)
-                .toString(),
+            amount: approximateValue((d as CosmosRedelegation).amount),
           });
         });
       },
