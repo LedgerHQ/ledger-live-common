@@ -317,7 +317,7 @@ const cosmos: AppSpec<Transaction> = {
           ],
         };
       },
-      test: ({ account, transaction, accountBeforeTransaction }) => {
+      test: ({ account, transaction }) => {
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         transaction.validators.forEach((v) => {
