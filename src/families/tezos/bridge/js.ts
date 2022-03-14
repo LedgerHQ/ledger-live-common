@@ -43,9 +43,7 @@ import api from "../api/tzkt";
 
 const receive = makeAccountBridgeReceive();
 
-const EXISTENTIAL_DEPOSIT = new BigNumber(
-  DEFAULT_STORAGE_LIMIT.ORIGINATION * 1000
-);
+const EXISTENTIAL_DEPOSIT = new BigNumber(275000);
 
 const createTransaction: () => Transaction = () => ({
   family: "tezos",
@@ -130,18 +128,8 @@ const getTransactionStatus = async (
     // remap taquito errors
     if (t.taquitoError.endsWith("balance_too_low")) {
       if (t.mode === "send") {
-        if (
-          (await api.getAccountByAddress(t.recipient)).type === "empty" &&
-          t.amount.lt(EXISTENTIAL_DEPOSIT)
-        ) {
-          amountMustReset = true;
-          errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {
-            minimalAmount: "0.275 XTZ",
-          });
-        } else {
-          amountMustReset = true;
-          errors.amount = new NotEnoughBalance();
-        }
+        amountMustReset = true;
+        errors.amount = new NotEnoughBalance();
       } else {
         errors.amount = new NotEnoughBalanceToDelegate();
       }
@@ -157,6 +145,19 @@ const getTransactionStatus = async (
   if (!errors.amount && account.balance.lte(0)) {
     amountMustReset = true;
     errors.amount = new NotEnoughBalance();
+  }
+
+  // Catch a specific case that requires a minimum amount
+  if (
+    !errors.amount &&
+    t.mode === "send" &&
+    t.amount.lt(EXISTENTIAL_DEPOSIT) &&
+    (await api.getAccountByAddress(t.recipient)).type === "empty"
+  ) {
+    amountMustReset = true;
+    errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {
+      minimalAmount: "0.275 XTZ",
+    });
   }
 
   const amount = amountMustReset ? new BigNumber(0) : t.amount;
