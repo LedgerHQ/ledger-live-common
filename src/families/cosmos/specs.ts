@@ -317,29 +317,50 @@ const cosmos: AppSpec<Transaction> = {
           ],
         };
       },
-      test: ({ account, transaction }) => {
+      test: ({ account, transaction, accountBeforeTransaction }) => {
         const { cosmosResources } = account;
         invariant(cosmosResources, "cosmos");
         transaction.validators.forEach((v) => {
-          const d = (cosmosResources as CosmosResources).redelegations
-            .slice(0) // recent first
-            .sort(
-              // FIXME: valueOf for date arithmetic operations in typescript
-              (a, b) => b.completionDate.valueOf() - a.completionDate.valueOf()
-            ) // find the related redelegation
-            .find(
-              (d) =>
-                d.validatorDstAddress === v.address &&
-                d.validatorSrcAddress === transaction.cosmosSourceValidator
-            );
-          invariant(d, "redelegated %s must be found in account", v.address);
-          expect({
-            address: v.address,
-            amount: approximateValue(v.amount),
-          }).toMatchObject({
-            address: (d as CosmosRedelegation).validatorDstAddress,
-            amount: approximateValue((d as CosmosRedelegation).amount),
-          });
+          // we possibly are moving from one existing delegation to another existing.
+          // in that case it's not a redelegation, it effects immediately
+          const existing = (
+            cosmosResources as CosmosResources
+          ).delegations.find((d) => d.validatorAddress === v.address);
+          if (existing) {
+            const prev =
+              accountBeforeTransaction.cosmosResources?.delegations.find(
+                (d) => d.validatorAddress === v.address
+              );
+            expect({
+              addedAmount: approximateValue(v.amount),
+            }).toMatchObject({
+              addedAmount: approximateValue(
+                existing.amount.plus(prev?.amount || 0)
+              ),
+            });
+          } else {
+            // in other case, we will find it in a redelegation
+            const d = (cosmosResources as CosmosResources).redelegations
+              .slice(0) // recent first
+              .sort(
+                // FIXME: valueOf for date arithmetic operations in typescript
+                (a, b) =>
+                  b.completionDate.valueOf() - a.completionDate.valueOf()
+              ) // find the related redelegation
+              .find(
+                (d) =>
+                  d.validatorDstAddress === v.address &&
+                  d.validatorSrcAddress === transaction.cosmosSourceValidator
+              );
+            invariant(d, "redelegated %s must be found in account", v.address);
+            expect({
+              address: v.address,
+              amount: approximateValue(v.amount),
+            }).toMatchObject({
+              address: (d as CosmosRedelegation).validatorDstAddress,
+              amount: approximateValue((d as CosmosRedelegation).amount),
+            });
+          }
         });
       },
     },
