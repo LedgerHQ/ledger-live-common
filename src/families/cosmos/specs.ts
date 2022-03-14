@@ -326,19 +326,7 @@ const cosmos: AppSpec<Transaction> = {
           const existing = (
             cosmosResources as CosmosResources
           ).delegations.find((d) => d.validatorAddress === v.address);
-          if (existing) {
-            const prev =
-              accountBeforeTransaction.cosmosResources?.delegations.find(
-                (d) => d.validatorAddress === v.address
-              );
-            expect({
-              addedAmount: approximateValue(v.amount),
-            }).toMatchObject({
-              addedAmount: approximateValue(
-                existing.amount.plus(prev?.amount || 0)
-              ),
-            });
-          } else {
+          if (!existing) {
             // in other case, we will find it in a redelegation
             const d = (cosmosResources as CosmosResources).redelegations
               .slice(0) // recent first
