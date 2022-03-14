@@ -177,14 +177,6 @@ export const getAccountShape: GetAccountShape = async (info) => {
   const oldOperations = initialAccount?.operations || [];
   const newOperations = txToOps(info, accountId, txs);
   const operations = mergeOps(oldOperations, newOperations);
-  // Workaround on duplicated operation just after a broadcast
-  if (
-    operations !== oldOperations &&
-    operations.length > 1 &&
-    operations[0].id === operations[1].id
-  ) {
-    operations.splice(0, 1); // remove last operation [0] because it's already present in [1]
-  }
 
   let balance = balances;
   let delegatedBalance = new BigNumber(0);
