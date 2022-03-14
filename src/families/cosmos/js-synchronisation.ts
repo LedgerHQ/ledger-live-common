@@ -38,96 +38,104 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
       ),
     };
 
-    tx.logs[0].events.forEach((message) => {
-      // parse attributes as key:value
-      const attributes: { [id: string]: any } = {};
-      message.attributes.forEach((item) => (attributes[item.key] = item.value));
+    tx.logs.forEach((log) => {
+      log.events.forEach((message) => {
+        // parse attributes as key:value
+        const attributes: { [id: string]: any } = {};
+        message.attributes.forEach(
+          (item) => (attributes[item.key] = item.value)
+        );
 
-      // https://docs.cosmos.network/v0.42/modules/staking/07_events.html
-      switch (message.type) {
-        case "transfer":
-          if (attributes.sender && attributes.recipient && attributes.amount) {
-            op.senders.push(attributes.sender);
-            op.recipients.push(attributes.recipient);
+        // https://docs.cosmos.network/v0.42/modules/staking/07_events.html
+        switch (message.type) {
+          case "transfer":
+            if (
+              attributes.sender &&
+              attributes.recipient &&
+              attributes.amount
+            ) {
+              op.senders.push(attributes.sender);
+              op.recipients.push(attributes.recipient);
 
-            if (attributes.amount.indexOf(currency.units[1].code) != -1) {
-              op.value = op.value.plus(
-                attributes.amount.replace(currency.units[1].code, "")
-              );
+              if (attributes.amount.indexOf(currency.units[1].code) != -1) {
+                op.value = op.value.plus(
+                  attributes.amount.replace(currency.units[1].code, "")
+                );
+              }
+
+              if (!op.type && attributes.sender === address) {
+                op.type = "OUT";
+                op.value = op.value.plus(fees);
+              } else if (!op.type && attributes.recipient === address) {
+                op.type = "IN";
+              }
             }
+            break;
 
-            if (!op.type && attributes.sender === address) {
-              op.type = "OUT";
-              op.value = op.value.plus(fees);
-            } else if (!op.type && attributes.recipient === address) {
-              op.type = "IN";
+          case "withdraw_rewards":
+            if (
+              (attributes.amount &&
+                attributes.amount.indexOf(currency.units[1].code) != -1) ||
+              // handle specifc case with empty amount value like
+              // tx DF458FE6A82C310837D7A33735FA5298BCF71B0BFF7A4134641AAE30F6F1050
+              attributes.amount === ""
+            ) {
+              op.type = "REWARD";
+              op.value = new BigNumber(fees);
+              op.extra.validators.push({
+                address: attributes.validator,
+                amount: attributes.amount.replace(currency.units[1].code, ""),
+              });
             }
-          }
-          break;
+            break;
 
-        case "withdraw_rewards":
-          if (
-            (attributes.amount &&
-              attributes.amount.indexOf(currency.units[1].code) != -1) ||
-            // handle specifc case with empty amount value like
-            // tx DF458FE6A82C310837D7A33735FA5298BCF71B0BFF7A4134641AAE30F6F1050
-            attributes.amount === ""
-          ) {
-            op.type = "REWARD";
-            op.value = new BigNumber(fees);
-            op.extra.validators.push({
-              address: attributes.validator,
-              amount: attributes.amount.replace(currency.units[1].code, ""),
-            });
-          }
-          break;
+          case "delegate":
+            if (
+              attributes.amount &&
+              attributes.amount.indexOf(currency.units[1].code) != -1
+            ) {
+              op.type = "DELEGATE";
+              op.value = new BigNumber(fees);
+              op.extra.validators.push({
+                address: attributes.validator,
+                amount: attributes.amount.replace(currency.units[1].code, ""),
+              });
+            }
+            break;
 
-        case "delegate":
-          if (
-            attributes.amount &&
-            attributes.amount.indexOf(currency.units[1].code) != -1
-          ) {
-            op.type = "DELEGATE";
-            op.value = new BigNumber(fees);
-            op.extra.validators.push({
-              address: attributes.validator,
-              amount: attributes.amount.replace(currency.units[1].code, ""),
-            });
-          }
-          break;
+          case "redelegate":
+            if (
+              attributes.amount &&
+              attributes.amount.indexOf(currency.units[1].code) != -1 &&
+              attributes.destination_validator &&
+              attributes.source_validator
+            ) {
+              op.type = "REDELEGATE";
+              op.value = new BigNumber(fees);
+              op.extra.validators.push({
+                address: attributes.destination_validator,
+                amount: attributes.amount.replace(currency.units[1].code, ""),
+              });
+              op.extra.cosmosSourceValidator = attributes.source_validator;
+            }
+            break;
 
-        case "redelegate":
-          if (
-            attributes.amount &&
-            attributes.amount.indexOf(currency.units[1].code) != -1 &&
-            attributes.destination_validator &&
-            attributes.source_validator
-          ) {
-            op.type = "REDELEGATE";
-            op.value = new BigNumber(fees);
-            op.extra.validators.push({
-              address: attributes.destination_validator,
-              amount: attributes.amount.replace(currency.units[1].code, ""),
-            });
-            op.extra.cosmosSourceValidator = attributes.source_validator;
-          }
-          break;
-
-        case "unbond":
-          if (
-            attributes.amount &&
-            attributes.amount.indexOf(currency.units[1].code) != -1 &&
-            attributes.validator
-          ) {
-            op.type = "UNDELEGATE";
-            op.value = new BigNumber(fees);
-            op.extra.validators.push({
-              address: attributes.validator,
-              amount: attributes.amount.replace(currency.units[1].code, ""),
-            });
-          }
-          break;
-      }
+          case "unbond":
+            if (
+              attributes.amount &&
+              attributes.amount.indexOf(currency.units[1].code) != -1 &&
+              attributes.validator
+            ) {
+              op.type = "UNDELEGATE";
+              op.value = new BigNumber(fees);
+              op.extra.validators.push({
+                address: attributes.validator,
+                amount: attributes.amount.replace(currency.units[1].code, ""),
+              });
+            }
+            break;
+        }
+      });
     });
 
     if (!["IN", "OUT"].includes(op.type)) {
