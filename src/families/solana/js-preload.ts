@@ -3,6 +3,7 @@ import { ChainAPI } from "./api";
 import { SolanaPreloadData, SolanaPreloadDataV1 } from "./types";
 import { assertUnreachable } from "./utils";
 import { setSolanaPreloadData as setPreloadData } from "./js-preload-data";
+import { getValidators } from "./validator-app";
 
 export async function preloadWithAPI(
   currency: CryptoCurrency,
@@ -22,6 +23,7 @@ export async function preloadWithAPI(
       },
       meta: {},
     })),
+    validators: await getValidators(),
   };
 
   setPreloadData(data, currency);
