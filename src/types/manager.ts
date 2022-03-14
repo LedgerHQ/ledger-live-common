@@ -30,6 +30,7 @@ export type DeviceInfo = {
   mcuBlVersion?: string;
   mcuTargetId?: number;
   seTargetId?: number;
+  onboarded?: boolean;
 };
 export type DeviceModelInfo = {
   modelId: DeviceModelId;
@@ -155,9 +156,10 @@ export type Application = {
   compatibleWalletsJSON: string | null | undefined;
 };
 export enum AppType {
-  APP = "app",
-  PLUGIN = "plugin",
-  TOOL = "tool", // Nb not used for now
+  app = "app",
+  plugin = "plugin",
+  tool = "tool",
+  swap = "swap",
 }
 // App is higher level on top of Application and ApplicationVersion
 // with all fields Live needs and in normalized form (but still serializable)
