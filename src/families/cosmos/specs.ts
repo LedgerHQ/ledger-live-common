@@ -25,7 +25,7 @@ import {
 import { DeviceModelId } from "@ledgerhq/devices";
 
 const minAmount = new BigNumber(20000);
-const maxAccounts = 24;
+const maxAccounts = 32;
 
 // amounts of delegation are not exact so we are applying an approximation
 function approximateValue(value) {
