@@ -46,7 +46,9 @@ export const getAccountInfo = async (address: string): Promise<any> => {
   }
 };
 
-export const getAccount = async (address: string): Promise<any> => {
+export const getAccount = async (
+  address: string
+): Promise<{ address: string; accountNumber: number; sequence: number }> => {
   const response = {
     address: address,
     accountNumber: 0,
