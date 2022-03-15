@@ -51,7 +51,7 @@ const tezos: AppSpec<Transaction> = {
         const recipient = sibling.freshAddress;
         const amount = maxSpendable.div(2).integerValue();
         if (
-          isAccountEmpty(sibling) &&
+          sibling.balance.eq(0) &&
           amount.lt(parseCurrencyUnit(tezosUnit, "0.3"))
         ) {
           throw new Error("need more funds to send to new address");
@@ -71,7 +71,7 @@ const tezos: AppSpec<Transaction> = {
         const recipient = sibling.freshAddress;
         const amount = maxSpendable.div(2).integerValue();
         if (
-          isAccountEmpty(sibling) &&
+          sibling.balance.eq(0) &&
           amount.lt(parseCurrencyUnit(tezosUnit, "0.3"))
         ) {
           throw new Error("need more funds to send to new address");
@@ -93,7 +93,7 @@ const tezos: AppSpec<Transaction> = {
         const sibling = pickSiblings(siblings, maxAccount);
         const recipient = sibling.freshAddress;
         if (
-          isAccountEmpty(sibling) &&
+          sibling.balance.eq(0) &&
           maxSpendable.lt(parseCurrencyUnit(tezosUnit, "0.3"))
         ) {
           throw new Error("need more funds to send to new address");
