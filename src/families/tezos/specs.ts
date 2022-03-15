@@ -2,7 +2,6 @@
 import sample from "lodash/sample";
 import invariant from "invariant";
 import type { Transaction } from "./types";
-import { isAccountEmpty } from "../../account";
 import { getCryptoCurrencyById, parseCurrencyUnit } from "../../currencies";
 import { pickSiblings } from "../../bot/specs";
 import type { AppSpec } from "../../bot/types";
