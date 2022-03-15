@@ -1,15 +1,17 @@
 import { Cluster } from "@solana/web3.js";
 import { AxiosRequestConfig, AxiosResponse } from "axios";
+import { compact } from "lodash/fp";
 import network from "../../../network";
 
-export type ValidatorAppValidator = {
-  active_stake: number;
-  commission: number;
-  total_score: number;
-  vote_account: string;
+export type ValidatorsAppValidatorRaw = {
+  active_stake?: number | null;
+  commission?: number | null;
+  total_score?: number | null;
+  vote_account?: string | null;
   name?: string | null;
   avatar_url?: string | null;
   delinquent?: boolean | null;
+  www_url?: string | null;
 
   // not used data
   /*
@@ -40,16 +42,26 @@ export type ValidatorAppValidator = {
   */
 };
 
+export type ValidatorsAppValidator = {
+  activeStake: number;
+  commission: number;
+  totalScore: number;
+  voteAccount: string;
+  name?: string;
+  avatarUrl?: string;
+  wwwUrl?: string;
+};
+
 const URLS = {
-  validatorList: (cluster: Exclude<Cluster, "devnet">) => {
+  validatorList: (cluster: Extract<Cluster, "mainnet-beta" | "testnet">) => {
     const clusterSlug = cluster === "mainnet-beta" ? "mainnet" : cluster;
     return `https://www.validators.app/api/v1/validators/${clusterSlug}.json?order=score`;
   },
 };
 
 export async function getValidators(
-  cluster: Exclude<Cluster, "devnet">
-): Promise<ValidatorAppValidator[]> {
+  cluster: Extract<Cluster, "mainnet-beta" | "testnet">
+): Promise<ValidatorsAppValidator[]> {
   const config: AxiosRequestConfig = {
     method: "GET",
     url: URLS.validatorList(cluster),
@@ -58,23 +70,36 @@ export async function getValidators(
     },
   };
 
-  const response: AxiosResponse<ValidatorAppValidator[]> = await network(
+  const response: AxiosResponse<ValidatorsAppValidatorRaw[]> = await network(
     config
   );
 
-  const allValidators = response.status === 200 ? response.data : [];
+  const allRawValidators = response.status === 200 ? response.data : [];
 
   // validators app data is not clean: random properties can randomly contain
   // data, null, undefined
-  const isUsableValidator = (v: Partial<ValidatorAppValidator>) => {
-    return (
+  const tryFromRawValidator = (
+    v: ValidatorsAppValidatorRaw
+  ): ValidatorsAppValidator | undefined => {
+    if (
       typeof v.active_stake === "number" &&
       typeof v.commission === "number" &&
       typeof v.total_score === "number" &&
       typeof v.vote_account === "string" &&
       v.delinquent !== true
-    );
+    ) {
+      return {
+        activeStake: v.active_stake,
+        commission: v.commission,
+        totalScore: v.total_score,
+        voteAccount: v.vote_account,
+        name: v.name ?? undefined,
+        avatarUrl: v.avatar_url ?? undefined,
+        wwwUrl: v.www_url ?? undefined,
+      };
+    }
+    return undefined;
   };
 
-  return allValidators.filter(isUsableValidator);
+  return compact(allRawValidators.map(tryFromRawValidator));
 }

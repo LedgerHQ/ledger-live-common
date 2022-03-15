@@ -3,7 +3,7 @@ import { ChainAPI } from "./api";
 import { SolanaPreloadData, SolanaPreloadDataV1 } from "./types";
 import { assertUnreachable, clusterByCurrencyId } from "./utils";
 import { setSolanaPreloadData as setPreloadData } from "./js-preload-data";
-import { getValidators, ValidatorAppValidator } from "./validator-app";
+import { getValidators, ValidatorsAppValidator } from "./validator-app";
 
 export async function preloadWithAPI(
   currency: CryptoCurrency,
@@ -13,7 +13,7 @@ export async function preloadWithAPI(
 
   const cluster = clusterByCurrencyId(currency.id);
 
-  const validators: ValidatorAppValidator[] =
+  const validators: ValidatorsAppValidator[] =
     cluster === "devnet"
       ? await loadDevnetValidators(api)
       : await getValidators(cluster);
@@ -31,12 +31,11 @@ export async function preloadWithAPI(
 
 async function loadDevnetValidators(api: ChainAPI) {
   const voteAccs = await api.getVoteAccounts();
-  const validators: ValidatorAppValidator[] = voteAccs.current.map((acc) => ({
-    active_stake: acc.activatedStake,
+  const validators: ValidatorsAppValidator[] = voteAccs.current.map((acc) => ({
+    activeStake: acc.activatedStake,
     commission: acc.commission,
-    delinquent: false,
-    total_score: 0,
-    vote_account: acc.votePubkey,
+    totalScore: 0,
+    voteAccount: acc.votePubkey,
   }));
   return validators;
 }

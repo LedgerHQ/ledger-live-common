@@ -2,7 +2,7 @@ import type {
   TransactionCommon,
   TransactionCommonRaw,
 } from "../../types/transaction";
-import { ValidatorAppValidator } from "./validator-app";
+import { ValidatorsAppValidator } from "./validator-app";
 
 // for legacy reasons export the types
 export type CoreStatics = Record<string, never>;
@@ -227,7 +227,7 @@ export type SolanaValidator = {
 export type SolanaPreloadDataV1 = {
   version: "1";
   validatorsWithMeta: SolanaValidatorWithMeta[];
-  validators: ValidatorAppValidator[];
+  validators: ValidatorsAppValidator[];
 };
 
 // exists for discriminated union to work
