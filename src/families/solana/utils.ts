@@ -1,4 +1,4 @@
-import { clusterApiUrl } from "@solana/web3.js";
+import { Cluster, clusterApiUrl } from "@solana/web3.js";
 import { getEnv } from "../../env";
 
 export const assertUnreachable = (_: never): never => {
@@ -34,6 +34,22 @@ export function endpointByCurrencyId(currencyId: string): string {
 
   if (currencyId in endpoints) {
     return endpoints[currencyId];
+  }
+
+  throw Error(
+    `unexpected currency id format <${currencyId}>, should be like solana[_(testnet | devnet)]`
+  );
+}
+
+export function clusterByCurrencyId(currencyId: string): Cluster {
+  const clusters: Record<string, Cluster> = {
+    solana: "mainnet-beta",
+    solana_devnet: "devnet",
+    solana_testnet: "testnet",
+  };
+
+  if (currencyId in clusters) {
+    return clusters[currencyId];
   }
 
   throw Error(

@@ -1,3 +1,4 @@
+import { Cluster } from "@solana/web3.js";
 import { AxiosRequestConfig, AxiosResponse } from "axios";
 import network from "../../../network";
 
@@ -40,14 +41,18 @@ export type ValidatorAppValidator = {
 };
 
 const URLS = {
-  validatorList:
-    "https://www.validators.app/api/v1/validators/mainnet.json?order=score",
+  validatorList: (cluster: Exclude<Cluster, "devnet">) => {
+    const clusterSlug = cluster === "mainnet-beta" ? "mainnet" : cluster;
+    return `https://www.validators.app/api/v1/validators/${clusterSlug}.json?order=score`;
+  },
 };
 
-export async function getValidators(): Promise<ValidatorAppValidator[]> {
+export async function getValidators(
+  cluster: Exclude<Cluster, "devnet">
+): Promise<ValidatorAppValidator[]> {
   const config: AxiosRequestConfig = {
     method: "GET",
-    url: URLS.validatorList,
+    url: URLS.validatorList(cluster),
     headers: {
       Token: "3Y5dGxVc7JS9SktzH6JL2eZX",
     },

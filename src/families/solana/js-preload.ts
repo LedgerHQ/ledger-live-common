@@ -1,9 +1,9 @@
 import { CryptoCurrency } from "@ledgerhq/cryptoassets";
 import { ChainAPI } from "./api";
 import { SolanaPreloadData, SolanaPreloadDataV1 } from "./types";
-import { assertUnreachable } from "./utils";
+import { assertUnreachable, clusterByCurrencyId } from "./utils";
 import { setSolanaPreloadData as setPreloadData } from "./js-preload-data";
-import { getValidators } from "./validator-app";
+import { getValidators, ValidatorAppValidator } from "./validator-app";
 
 export async function preloadWithAPI(
   currency: CryptoCurrency,
@@ -11,24 +11,34 @@ export async function preloadWithAPI(
 ): Promise<Record<string, any>> {
   const api = await getAPI();
 
-  const voteAccs = await api.getVoteAccounts();
+  const cluster = clusterByCurrencyId(currency.id);
+
+  const validators: ValidatorAppValidator[] =
+    cluster === "devnet"
+      ? await loadDevnetValidators(api)
+      : await getValidators(cluster);
 
   const data: SolanaPreloadData = {
     version: "1",
-    validatorsWithMeta: voteAccs.current.map((acc) => ({
-      validator: {
-        voteAccAddr: acc.votePubkey,
-        activatedStake: acc.activatedStake,
-        commission: acc.commission,
-      },
-      meta: {},
-    })),
-    validators: await getValidators(),
+    validatorsWithMeta: [],
+    validators,
   };
 
   setPreloadData(data, currency);
 
   return data;
+}
+
+async function loadDevnetValidators(api: ChainAPI) {
+  const voteAccs = await api.getVoteAccounts();
+  const validators: ValidatorAppValidator[] = voteAccs.current.map((acc) => ({
+    active_stake: acc.activatedStake,
+    commission: acc.commission,
+    delinquent: false,
+    total_score: 0,
+    vote_account: acc.votePubkey,
+  }));
+  return validators;
 }
 
 export function hydrate(
