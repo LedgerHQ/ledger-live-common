@@ -25,13 +25,10 @@ export function useSolanaStakesWithMeta(
     return [];
   }
 
-  const { validatorsWithMeta } = data;
+  const { validators } = data;
 
   const validatorByVoteAccAddr = new Map(
-    validatorsWithMeta.map((validatorWithMeta) => [
-      validatorWithMeta.validator.voteAccAddr,
-      validatorWithMeta,
-    ])
+    validators.map((v) => [v.voteAccount, v])
   );
 
   return stakes.map((stake) => {
@@ -45,8 +42,9 @@ export function useSolanaStakesWithMeta(
       stake,
       meta: {
         validator: {
-          img: undefined,
-          name: validator?.meta.name,
+          img: validator?.avatarUrl,
+          name: validator?.name,
+          url: validator?.wwwUrl,
         },
       },
     };

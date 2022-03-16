@@ -206,6 +206,7 @@ export type SolanaStakeWithMeta = {
     validator?: {
       name?: string;
       img?: string;
+      url?: string;
     };
   };
 };
