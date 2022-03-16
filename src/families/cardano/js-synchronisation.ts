@@ -21,13 +21,13 @@ import { APITransaction } from "./api/api-types";
 import { CardanoOutput, PaymentCredential, Token } from "./types";
 import uniqBy from "lodash/uniqBy";
 import {
-  getAbsoluteSlot,
   getAccountStakeCredential,
   getBaseAddress,
   getBipPathString,
   getOperationType,
   getTokenAssetId,
   getTokenDiff,
+  // mergeTokens,
 } from "./logic";
 import { encodeOperationId } from "../../operation";
 import { getOperations } from "./api/getOperations";
@@ -100,9 +100,7 @@ function mapApiTxToOperation(
     ),
     blockHeight: tx.blockHeight,
     date: new Date(tx.timestamp),
-    extra: {
-      absoluteSlot: tx.absSlot,
-    },
+    extra: {},
     blockHash: undefined,
   };
   operations.push(mainOperation);
@@ -303,11 +301,12 @@ export const getAccountShape: GetAccountShape = async (info) => {
   });
 
   const requiredConfirmations = 90;
-  //TODO: remove fixed cardano_testnet
-  const syncFromAbsoluteSlot = initialAccount
-    ? getAbsoluteSlot("cardano_testnet", initialAccount.lastSyncDate) -
-      (currency.blockAvgTime || 20) * requiredConfirmations
-    : 0;
+  const syncFromBlockHeight =
+    initialAccount?.blockHeight &&
+    initialAccount.blockHeight > requiredConfirmations
+      ? initialAccount.blockHeight - requiredConfirmations
+      : 0;
+
   const {
     transactions: newTransactions,
     blockHeight,
@@ -317,7 +316,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
     xpub,
     accountIndex,
     initialAccount,
-    syncFromAbsoluteSlot
+    syncFromBlockHeight
   );
 
   const accountCredentialsMap = [
@@ -330,7 +329,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
 
   const stableOperationsIds = {};
   (initialAccount?.operations || []).forEach((o) => {
-    if (o.extra.absoluteSlot < syncFromAbsoluteSlot) {
+    if ((o.blockHeight as number) < syncFromBlockHeight) {
       stableOperationsIds[o.hash] = o;
     }
   });

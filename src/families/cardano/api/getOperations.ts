@@ -17,7 +17,7 @@ import { APITransaction } from "./api-types";
 async function fetchTransactions(
   paymentKeys: Array<string>,
   pageNo: number,
-  absSlot: number
+  blockHeight: number
 ): Promise<{
   pageNo: number;
   limit: number;
@@ -30,7 +30,7 @@ async function fetchTransactions(
     data: {
       paymentKeys,
       pageNo,
-      absSlot: Math.max(absSlot, 0),
+      blockHeight,
     },
   });
   return res.data;
@@ -38,7 +38,7 @@ async function fetchTransactions(
 
 async function getAllTransactionsByKeys(
   paymentKeys: Array<string>,
-  absoluteSlot: number
+  blockHeight: number
 ): Promise<{
   transactions: Array<ApiTypes.APITransaction>;
   blockHeight: number;
@@ -49,7 +49,7 @@ async function getAllTransactionsByKeys(
   let pageNo = 1;
 
   while (!isAllTrxFetched) {
-    const res = await fetchTransactions(paymentKeys, pageNo, absoluteSlot);
+    const res = await fetchTransactions(paymentKeys, pageNo, blockHeight);
     transactions.push(...res.transactions);
     latestBlockHeight = Math.max(res.blockHeight, latestBlockHeight);
     isAllTrxFetched = res.transactions.length < res.limit;
@@ -65,11 +65,11 @@ async function getSyncedTransactionsByChain(
   accountPubKey: Bip32PublicKey,
   accountIndex: number,
   chainType: PaymentChain,
-  absoluteSlot: number,
+  blockHeight: number,
   initialPaymentCredentials: Array<PaymentCredential>
 ): Promise<{
   transactions: Array<ApiTypes.APITransaction>;
-  blockHeight: number;
+  latestBlockHeight: number;
   paymentCredentials: Array<PaymentCredential>;
 }> {
   const keyChainRange = getEnv("KEYCHAIN_OBSERVABLE_RANGE") || 20;
@@ -86,19 +86,21 @@ async function getSyncedTransactionsByChain(
   let latestBlockHeight = 0;
 
   // fetch transactions for existing keys
-  const transactionsRes = await Promise.all(
+  const trxsRes = await Promise.all(
     chunk(Object.keys(initialPaymentCredentialMap), keyChainRange).map((keys) =>
-      getAllTransactionsByKeys(keys, absoluteSlot)
+      getAllTransactionsByKeys(keys, blockHeight)
     )
   );
-  transactionsRes.forEach((txRes) => {
+  trxsRes.forEach((txRes) => {
     transactions.push(...txRes.transactions);
     latestBlockHeight = Math.max(latestBlockHeight, txRes.blockHeight);
   });
 
   // fetch transactions for new avaialble keys
   let newPaymentCredentialsMap: Record<string, PaymentCredential> = {};
-  let lastSyncedKeyIndex = initialPaymentCredentials.length - 1;
+  let lastSyncedKeyIndex = initialPaymentCredentials.length
+    ? initialPaymentCredentials[initialPaymentCredentials.length - 1].path.index
+    : -1;
   let syncToKeyIndex = maxUsedKeyIndex + keyChainRange;
   while (syncToKeyIndex !== lastSyncedKeyIndex) {
     const currentPaymentKeysMap: Record<string, PaymentCredential> = {};
@@ -117,21 +119,20 @@ async function getSyncedTransactionsByChain(
         path: keyPath.path,
       };
     });
-    const { transactions: newTransactions, blockHeight } =
-      await getAllTransactionsByKeys(
-        Object.keys(currentPaymentKeysMap),
-        absoluteSlot
-      );
-    transactions.push(...newTransactions);
+    const trxRes = await getAllTransactionsByKeys(
+      Object.keys(currentPaymentKeysMap),
+      blockHeight
+    );
+    transactions.push(...trxRes.transactions);
 
     lastSyncedKeyIndex = syncToKeyIndex;
-    latestBlockHeight = Math.max(latestBlockHeight, blockHeight);
+    latestBlockHeight = Math.max(latestBlockHeight, trxRes.blockHeight);
     newPaymentCredentialsMap = Object.assign(
       {},
       newPaymentCredentialsMap,
       currentPaymentKeysMap
     );
-    maxUsedKeyIndex = newTransactions.reduce(
+    maxUsedKeyIndex = trxRes.transactions.reduce(
       (maxIndexA, { inputs, outputs }) =>
         [...inputs, ...outputs].reduce(
           (maxIndexB, io) =>
@@ -160,7 +161,7 @@ async function getSyncedTransactionsByChain(
 
   return {
     transactions,
-    blockHeight: latestBlockHeight,
+    latestBlockHeight,
     paymentCredentials: Object.values(availablePaymentCredentialsMap).sort(
       (aCred, bCred) => aCred.path.index - bCred.path.index
     ),
@@ -171,7 +172,7 @@ export async function getOperations(
   xpub: string,
   accountIndex: number,
   initialAccount: Account | undefined,
-  absoluteSlot: number
+  blockHeight: number
 ): Promise<{
   transactions: Array<ApiTypes.APITransaction>;
   blockHeight: number;
@@ -187,12 +188,12 @@ export async function getOperations(
   const [
     {
       transactions: externalKeyTransactions,
-      blockHeight: aBlockHeight,
+      latestBlockHeight: aBlockHeight,
       paymentCredentials: externalCredentials,
     },
     {
       transactions: internalKeyTransactions,
-      blockHeight: bBlockHeight,
+      latestBlockHeight: bBlockHeight,
       paymentCredentials: internalCredentials,
     },
   ] = await Promise.all([
@@ -200,14 +201,14 @@ export async function getOperations(
       accountPubKey,
       accountIndex,
       PaymentChain.external,
-      absoluteSlot,
+      blockHeight,
       oldExternalCredentials
     ),
     getSyncedTransactionsByChain(
       accountPubKey,
       accountIndex,
       PaymentChain.internal,
-      absoluteSlot,
+      blockHeight,
       oldInternalCredentials
     ),
   ]);

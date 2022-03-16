@@ -5,7 +5,6 @@ export type APITransaction = {
   hash: string;
   timestamp: string;
   blockHeight: number;
-  absSlot: number;
   inputs: Array<{
     txId: string;
     index: number;
