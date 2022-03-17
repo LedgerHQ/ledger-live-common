@@ -1,8 +1,8 @@
-name: Bot 'Tezos'
+name: Bot 'Cosmos JS'
 on:
   push:
     branches:
-      - tezos-js
+      - cosmos-js
 
 jobs:
   start-runner:
@@ -65,10 +65,9 @@ jobs:
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_WORKFLOW: ${{ github.workflow }}
           SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }}
-          SLACK_CHANNEL: ci-xtz-ll
-          BOT_FILTER_FAMILY: tezos
-          EXPERIMENTAL_EXPLORERS: true
-          EXPERIMENTAL_CURRENCIES_JS_BRIDGE: tezos
+          SLACK_CHANNEL: live-ft-atom-js
+          BOT_FILTER_FAMILY: cosmos
+          EXPERIMENTAL_CURRENCIES_JS_BRIDGE: cosmos
         run: COINAPPS=$PWD/coin-apps yarn ci-test-bot
         timeout-minutes: 120
       - name: Run coverage
@@ -80,3 +79,4 @@ jobs:
         with:
           name: bot-tests.txt
           path: bot-tests.txt
+
