@@ -382,6 +382,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
     id: accountId,
     xpub,
     balance: accountBalance,
+    spendableBalance: accountBalance,
     operations: accountOperations,
     // subAccounts,
     freshAddresses,
