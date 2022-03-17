@@ -167,10 +167,11 @@ export const buildTransaction = async (
 
   const transactionInputs: Array<TyphonTypes.Input> = [];
   const usedUtxoAdaAmount = new BigNumber(0);
-
+  // Add 5 ADA as buffer for utxo selection to cover the transaction fees.
+  const requiredInputAmount = t.amount.plus(5e6);
   for (
     let i = 0;
-    i < sortedUtxos.length && usedUtxoAdaAmount.lte(t.amount);
+    i < sortedUtxos.length && usedUtxoAdaAmount.lte(requiredInputAmount);
     i++
   ) {
     const utxo = sortedUtxos[i];
