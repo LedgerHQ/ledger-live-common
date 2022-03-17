@@ -8,10 +8,7 @@ import updateTransaction from "../js-updateTransaction";
 import { AccountBridge, CurrencyBridge, CryptoCurrency } from "../../../types";
 import type { CosmosValidatorItem, Transaction } from "../types";
 import { getValidators, hydrateValidators } from "../validators";
-import {
-  makeAccountBridgeReceive,
-  makeScanAccounts,
-} from "../../../bridge/jsHelpers";
+import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 import { broadcast } from "../api/Cosmos";
 import {
   asSafeCosmosPreloadData,

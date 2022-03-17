@@ -1,4 +1,4 @@
-import { Account, Operation, OperationType } from "../../types";
+import { Operation, OperationType } from "../../types";
 import { BigNumber } from "bignumber.js";
 import {
   makeSync,
