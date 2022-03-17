@@ -196,8 +196,8 @@ export const getAccountShapeWithAPI = async (
   const sortedStakes = flow(
     () => stakes,
     sortBy([
-      (stake) => -stake.withdrawable,
       (stake) => -(stake.delegation?.stake ?? 0),
+      (stake) => -stake.withdrawable,
       (stake) => -stake.stakeAccAddr,
     ])
   )();
