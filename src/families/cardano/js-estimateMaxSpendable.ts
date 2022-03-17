@@ -6,7 +6,11 @@ import { getMainAccount } from "../../account";
 import type { Transaction } from "./types";
 
 import { createTransaction } from "./js-transaction";
-import getEstimatedFees from "./js-getFeesForTransaction";
+import {
+  address as TyphonAddress,
+  types as TyphonTypes,
+} from "@stricahq/typhonjs";
+import { buildTransaction } from "./js-buildTransaction";
 
 /**
  * Returns the maximum possible amount for transaction
@@ -26,12 +30,23 @@ const estimateMaxSpendable = async ({
   const t = {
     ...createTransaction(),
     ...transaction,
-    amount: a.spendableBalance,
+    // amount field will not be used to build a transaction when useAllAmount is true
+    amount: new BigNumber(0),
+    useAllAmount: true,
   };
 
-  const fees = await getEstimatedFees({ a, t });
+  const typhonTransaction = await buildTransaction(a, t);
+  const transactionAmount = typhonTransaction
+    .getOutputs()
+    .filter(
+      (o) =>
+        !(o.address instanceof TyphonAddress.BaseAddress) ||
+        !(o.address.paymentCredential.type === TyphonTypes.HashType.ADDRESS) ||
+        o.address.paymentCredential.bipPath === undefined
+    )
+    .reduce((total, o) => total.plus(o.amount), new BigNumber(0));
 
-  return a.spendableBalance.minus(fees);
+  return transactionAmount;
 };
 
 export default estimateMaxSpendable;
