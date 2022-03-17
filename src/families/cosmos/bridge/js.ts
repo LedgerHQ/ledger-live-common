@@ -3,7 +3,7 @@ import estimateMaxSpendable from "../js-estimateMaxSpendable";
 import getTransactionStatus from "../js-getTransactionStatus";
 import prepareTransaction from "../js-prepareTransaction";
 import signOperation from "../js-signOperation";
-import { sync, getAccountShape } from "../js-synchronisation";
+import { sync, scanAccounts } from "../js-synchronisation";
 import updateTransaction from "../js-updateTransaction";
 import { AccountBridge, CurrencyBridge, CryptoCurrency } from "../../../types";
 import type { CosmosValidatorItem, Transaction } from "../types";
@@ -47,7 +47,7 @@ const currencyBridge: CurrencyBridge = {
     hydrateValidators(validators);
     setCosmosPreloadData(asSafeCosmosPreloadData(data));
   },
-  scanAccounts: makeScanAccounts(getAccountShape),
+  scanAccounts,
 };
 
 const accountBridge: AccountBridge<Transaction> = {
