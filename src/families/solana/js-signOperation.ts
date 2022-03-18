@@ -258,17 +258,14 @@ function optimisticOpForStakeCreateAccount(
 ): Operation {
   const opType: OperationType = "DELEGATE";
   const commons = optimisticOpcommons(commandDescriptor);
-  const recipients: string[] = [command.stakeAccAddress];
-
-  recipients.push(command.delegate.voteAccAddress);
 
   return {
     ...commons,
     id: encodeOperationId(account.id, "", opType),
     type: opType,
     accountId: account.id,
-    senders: [account.freshAddress],
-    recipients,
+    senders: [],
+    recipients: [],
     value: new BigNumber(command.amount).plus(commons.fee),
     extra: getOpExtras(command),
   };
@@ -318,8 +315,7 @@ function optimisticOpForStakeWithdraw(
   commandDescriptor: CommandDescriptor
 ): Operation {
   const commons = optimisticOpcommons(commandDescriptor);
-  // TODO: should we reuse existing op types or create specific ones for Solana?
-  const opType: OperationType = "WITHDRAW_UNBONDED";
+  const opType: OperationType = "IN";
   return {
     ...commons,
     id: encodeOperationId(account.id, "", opType),
@@ -338,7 +334,6 @@ function optimisticOpForStakeSplit(
   commandDescriptor: CommandDescriptor
 ): Operation {
   const commons = optimisticOpcommons(commandDescriptor);
-  // TODO: fix op type
   const opType: OperationType = "OUT";
   return {
     ...commons,

@@ -345,26 +345,28 @@ function txToMainAccOperation(
     balanceDelta,
   });
 
-  const { senders, recipients } = message.accountKeys.reduce(
-    (acc, account, i) => {
-      const delta = new BigNumber(postBalances[i]).minus(
-        new BigNumber(preBalances[i])
-      );
-      if (delta.lt(0)) {
-        const shouldConsiderAsSender = i > 0 || !delta.negated().eq(txFee);
-        if (shouldConsiderAsSender) {
-          acc.senders.push(account.pubkey.toBase58());
-        }
-      } else if (delta.gt(0)) {
-        acc.recipients.push(account.pubkey.toBase58());
-      }
-      return acc;
-    },
-    {
-      senders: [] as string[],
-      recipients: [] as string[],
-    }
-  );
+  const accum = {
+    senders: [] as string[],
+    recipients: [] as string[],
+  };
+
+  const { senders, recipients } =
+    opType === "IN" || opType === "OUT"
+      ? message.accountKeys.reduce((acc, account, i) => {
+          const delta = new BigNumber(postBalances[i]).minus(
+            new BigNumber(preBalances[i])
+          );
+          if (delta.lt(0)) {
+            const shouldConsiderAsSender = i > 0 || !delta.negated().eq(txFee);
+            if (shouldConsiderAsSender) {
+              acc.senders.push(account.pubkey.toBase58());
+            }
+          } else if (delta.gt(0)) {
+            acc.recipients.push(account.pubkey.toBase58());
+          }
+          return acc;
+        }, accum)
+      : accum;
 
   const txHash = tx.info.signature;
   const txDate = new Date(tx.info.blockTime * 1000);
@@ -488,42 +490,59 @@ function getMainAccOperationTypeFromTx(
   tx: ParsedTransaction
 ): OperationType | undefined {
   const { instructions } = tx.message;
-  const [mainIx, ...otherIxs] = instructions
+
+  const parsedIxs = instructions
     .map((ix) => parseQuiet(ix))
     .filter(({ program }) => program !== "spl-memo");
 
-  if (mainIx === undefined || otherIxs.length > 0) {
-    return undefined;
+  if (parsedIxs.length === 3) {
+    const [first, second, third] = parsedIxs;
+    if (
+      first.program === "system" &&
+      (first.instruction.type === "createAccountWithSeed" ||
+        first.instruction.type === "createAccount") &&
+      second.program === "stake" &&
+      second.instruction.type === "initialize" &&
+      third.program === "stake" &&
+      third.instruction.type === "delegate"
+    ) {
+      return "DELEGATE";
+    }
   }
 
-  switch (mainIx.program) {
-    case "spl-associated-token-account":
-      switch (mainIx.instruction.type) {
-        case "associate":
-          return "OPT_IN";
-      }
-      // needed for lint
-      break;
-    case "spl-token":
-      switch (mainIx.instruction.type) {
-        case "closeAccount":
-          return "OPT_OUT";
-      }
-      break;
-    // disabled until staking support
-    /*
-    case "stake":
-      switch (mainIx.instruction.type) {
-        case "delegate":
-          return "DELEGATE";
-        case "deactivate":
-          return "UNDELEGATE";
-      }
-      break;
-      */
-    default:
-      return undefined;
+  if (parsedIxs.length === 1) {
+    const first = parsedIxs[0];
+
+    switch (first.program) {
+      case "spl-associated-token-account":
+        switch (first.instruction.type) {
+          case "associate":
+            return "OPT_IN";
+        }
+        // needed for lint
+        break;
+      case "spl-token":
+        switch (first.instruction.type) {
+          case "closeAccount":
+            return "OPT_OUT";
+        }
+        break;
+      case "stake":
+        switch (first.instruction.type) {
+          case "delegate":
+            return "DELEGATE";
+          case "deactivate":
+            return "UNDELEGATE";
+          case "withdraw":
+            return "IN";
+        }
+        break;
+      default:
+        return undefined;
+    }
   }
+
+  return undefined;
 }
 
 function getTokenSendersRecipients({

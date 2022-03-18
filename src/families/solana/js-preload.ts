@@ -41,9 +41,13 @@ async function loadDevnetValidators(api: ChainAPI) {
 }
 
 export function hydrate(
-  data: SolanaPreloadData,
+  data: SolanaPreloadData | undefined,
   currency: CryptoCurrency
 ): void {
+  if (data === undefined) {
+    return;
+  }
+
   switch (data.version) {
     case "1":
       hydrateV1(data, currency);
