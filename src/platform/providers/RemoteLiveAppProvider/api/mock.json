@@ -985,8 +985,8 @@
     ]
   },
   {
-    "id": "playwright-test-live-app",
-    "name": "Playwright Test Live App",
+    "id": "dummy-live-app",
+    "name": "Dummy Live App",
     "url": "http://localhost:3001",
     "homepageUrl": "https://developers.ledger.com/",
     "icon": "",
@@ -1000,10 +1000,10 @@
     "currencies": "*",
     "content": {
       "shortDescription": {
-        "en": "App for testing the Platform apps and Live SDK in E2E (Playwright) tests"
+        "en": "Dummy app for testing the Platform apps and Live SDK in E2E (Playwright) tests"
       },
       "description": {
-        "en": "App for testing the Platform apps and Live SDK in E2E (Playwright) tests"
+        "en": "Dummy app for testing the Platform apps and Live SDK in E2E (Playwright) tests"
       }
     },
     "permissions": [

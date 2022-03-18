@@ -396,7 +396,7 @@
       "currencies": "*"
     },
     {
-      "appId": "dummyApp",
+      "appId": "dummy-live-app",
       "type": "LIVE_APP",
       "tags": [
         "tools"
