@@ -99,6 +99,29 @@ export type CardanoOutputRaw = {
   };
 };
 
+export type ProtocolParams = {
+  minFeeA: string;
+  minFeeB: string;
+  stakeKeyDeposit: string;
+  lovelacePerUtxoWord: string;
+  collateralPercent: string;
+  priceSteps: string;
+  priceMem: string;
+  languageView: TyphonTypes.LanguageView;
+};
+
+export type ProtocolParamsRaw = {
+  minFeeA: string;
+  minFeeB: string;
+  stakeKeyDeposit: string;
+  lovelacePerUtxoWord: string;
+  collateralPercent: string;
+  priceSteps: string;
+  priceMem: string;
+  // TyphonTypes.LanguageView is already a raw type
+  languageView: TyphonTypes.LanguageView;
+};
+
 /**
  * Cardano account resources
  */
@@ -106,6 +129,7 @@ export type CardanoResources = {
   externalCredentials: Array<PaymentCredential>;
   internalCredentials: Array<PaymentCredential>;
   utxos: Array<CardanoOutput>;
+  protocolParams: ProtocolParams;
 };
 
 /**
@@ -115,6 +139,7 @@ export type CardanoResourcesRaw = {
   externalCredentials: Array<PaymentCredentialRaw>;
   internalCredentials: Array<PaymentCredentialRaw>;
   utxos: Array<CardanoOutputRaw>;
+  protocolParams: ProtocolParamsRaw;
 };
 
 /**
@@ -137,17 +162,6 @@ export type TransactionRaw = TransactionCommonRaw & {
   fees?: string;
   memo?: string;
   // also the transaction fields as raw JSON data
-};
-
-export type ProtocolParams = {
-  minFeeA: string;
-  minFeeB: string;
-  stakeKeyDeposit: string;
-  lovelacePerUtxoWord: string;
-  collateralPercent: string;
-  priceSteps: string;
-  priceMem: string;
-  languageView: TyphonTypes.LanguageView;
 };
 
 export type CardanoLikeNetworkParameters = {

@@ -1,56 +1,169 @@
 import { BigNumber } from "bignumber.js";
 import type {
+  BipPath,
+  BipPathRaw,
   CardanoOutput,
   CardanoOutputRaw,
   CardanoResources,
   CardanoResourcesRaw,
   PaymentCredential,
   PaymentCredentialRaw,
+  ProtocolParams,
+  ProtocolParamsRaw,
   Token,
   TokenRaw,
 } from "./types";
 
-function toTokenRaw(r: Token): TokenRaw {
-  return { ...r, amount: r.amount.toString() };
-}
-
-function fromTokenRaw(r: TokenRaw): Token {
-  return { ...r, amount: new BigNumber(r.amount) };
-}
-
-function toPaymentCredentialRaw(r: PaymentCredential): PaymentCredentialRaw {
-  return r;
-}
-
-function fromPaymentCredentialRaw(r: PaymentCredentialRaw): PaymentCredential {
-  return r;
-}
-
-function toCardanoOutputRaw(r: CardanoOutput): CardanoOutputRaw {
+function toTokenRaw({ assetName, policyId, amount }: Token): TokenRaw {
   return {
-    ...r,
-    amount: r.amount.toString(),
-    tokens: r.tokens.map(toTokenRaw),
+    assetName,
+    policyId,
+    amount: amount.toString(),
   };
 }
 
-function fromCardanoOutputRaw(r: CardanoOutputRaw): CardanoOutput {
+function fromTokenRaw({ assetName, policyId, amount }: TokenRaw): Token {
   return {
-    ...r,
-    amount: new BigNumber(r.amount),
-    tokens: r.tokens.map(fromTokenRaw),
+    assetName,
+    policyId,
+    amount: new BigNumber(amount),
+  };
+}
+
+function toBipPathRaw({
+  purpose,
+  coin,
+  account,
+  chain,
+  index,
+}: BipPath): BipPathRaw {
+  return {
+    purpose,
+    coin,
+    account,
+    chain,
+    index,
+  };
+}
+
+function fromBipPathRaw({
+  purpose,
+  coin,
+  account,
+  chain,
+  index,
+}: BipPathRaw): BipPath {
+  return {
+    purpose,
+    coin,
+    account,
+    chain,
+    index,
+  };
+}
+
+function toPaymentCredentialRaw(r: PaymentCredential): PaymentCredentialRaw {
+  return {
+    isUsed: r.isUsed,
+    key: r.key,
+    path: toBipPathRaw(r.path),
+  };
+}
+
+function fromPaymentCredentialRaw(r: PaymentCredentialRaw): PaymentCredential {
+  return {
+    isUsed: r.isUsed,
+    key: r.key,
+    path: fromBipPathRaw(r.path),
+  };
+}
+
+function toCardanoOutputRaw({
+  hash,
+  index,
+  address,
+  amount,
+  tokens,
+  paymentCredential,
+}: CardanoOutput): CardanoOutputRaw {
+  return {
+    hash,
+    index,
+    address,
+    amount: amount.toString(),
+    tokens: tokens.map(toTokenRaw),
+    paymentCredential,
+  };
+}
+
+function fromCardanoOutputRaw({
+  hash,
+  index,
+  address,
+  amount,
+  tokens,
+  paymentCredential,
+}: CardanoOutputRaw): CardanoOutput {
+  return {
+    hash,
+    index,
+    address,
+    amount: new BigNumber(amount),
+    tokens: tokens.map(fromTokenRaw),
+    paymentCredential,
+  };
+}
+
+function toProtocolParamsRaw({
+  minFeeA,
+  minFeeB,
+  stakeKeyDeposit,
+  lovelacePerUtxoWord,
+  collateralPercent,
+  priceSteps,
+  priceMem,
+  languageView,
+}: ProtocolParams): ProtocolParamsRaw {
+  return {
+    minFeeA,
+    minFeeB,
+    stakeKeyDeposit,
+    lovelacePerUtxoWord,
+    collateralPercent,
+    priceSteps,
+    priceMem,
+    languageView,
+  };
+}
+
+function fromProtocolParamsRaw({
+  minFeeA,
+  minFeeB,
+  stakeKeyDeposit,
+  lovelacePerUtxoWord,
+  collateralPercent,
+  priceSteps,
+  priceMem,
+  languageView,
+}: ProtocolParamsRaw): ProtocolParams {
+  return {
+    minFeeA,
+    minFeeB,
+    stakeKeyDeposit,
+    lovelacePerUtxoWord,
+    collateralPercent,
+    priceSteps,
+    priceMem,
+    languageView,
   };
 }
 
 export function toCardanoResourceRaw(r: CardanoResources): CardanoResourcesRaw {
   return {
-    internalCredentials: r.internalCredentials.map((c) =>
-      toPaymentCredentialRaw(c)
-    ),
-    externalCredentials: r.externalCredentials.map((c) =>
-      toPaymentCredentialRaw(c)
-    ),
+    internalCredentials: r.internalCredentials.map(toPaymentCredentialRaw),
+    externalCredentials: r.externalCredentials.map(toPaymentCredentialRaw),
     utxos: r.utxos.map(toCardanoOutputRaw),
+    protocolParams: toProtocolParamsRaw(r.protocolParams),
   };
 }
 
@@ -58,12 +171,9 @@ export function fromCardanoResourceRaw(
   r: CardanoResourcesRaw
 ): CardanoResources {
   return {
-    internalCredentials: r.internalCredentials.map((c) =>
-      fromPaymentCredentialRaw(c)
-    ),
-    externalCredentials: r.externalCredentials.map((c) =>
-      fromPaymentCredentialRaw(c)
-    ),
+    internalCredentials: r.internalCredentials.map(fromPaymentCredentialRaw),
+    externalCredentials: r.externalCredentials.map(fromPaymentCredentialRaw),
     utxos: r.utxos.map(fromCardanoOutputRaw),
+    protocolParams: fromProtocolParamsRaw(r.protocolParams),
   };
 }

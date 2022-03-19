@@ -20,7 +20,6 @@ import {
   getTokenDiff,
   getTTL,
 } from "./logic";
-import { getCurrentCardanoPreloadData } from "./preload";
 import { getNetworkParameters } from "./networks";
 
 function getTyphonInputFromUtxo(utxo: CardanoOutput): TyphonTypes.Input {
@@ -50,9 +49,8 @@ export const buildTransaction = async (
   a: Account,
   t: Transaction
 ): Promise<TyphonTransaction> => {
-  const cardanoPreloadedData = getCurrentCardanoPreloadData();
-
   const cardanoResources = a.cardanoResources as CardanoResources;
+  const protocolParams = cardanoResources.protocolParams;
   // TODO: remove fix currencyId cardano_testnet
   // const networkParams = getNetworkParameters(account.currency.id);
   const networkParams = getNetworkParameters("cardano_testnet");
@@ -94,20 +92,14 @@ export const buildTransaction = async (
 
   const transaction = new TyphonTransaction({
     protocolParams: {
-      minFeeA: new BigNumber(cardanoPreloadedData.protocolParams.minFeeA),
-      minFeeB: new BigNumber(cardanoPreloadedData.protocolParams.minFeeB),
-      stakeKeyDeposit: new BigNumber(
-        cardanoPreloadedData.protocolParams.stakeKeyDeposit
-      ),
-      lovelacePerUtxoWord: new BigNumber(
-        cardanoPreloadedData.protocolParams.lovelacePerUtxoWord
-      ),
-      collateralPercent: new BigNumber(
-        cardanoPreloadedData.protocolParams.collateralPercent
-      ),
-      priceSteps: new BigNumber(cardanoPreloadedData.protocolParams.priceSteps),
-      priceMem: new BigNumber(cardanoPreloadedData.protocolParams.priceMem),
-      languageView: cardanoPreloadedData.protocolParams.languageView,
+      minFeeA: new BigNumber(protocolParams.minFeeA),
+      minFeeB: new BigNumber(protocolParams.minFeeB),
+      stakeKeyDeposit: new BigNumber(protocolParams.stakeKeyDeposit),
+      lovelacePerUtxoWord: new BigNumber(protocolParams.lovelacePerUtxoWord),
+      collateralPercent: new BigNumber(protocolParams.collateralPercent),
+      priceSteps: new BigNumber(protocolParams.priceSteps),
+      priceMem: new BigNumber(protocolParams.priceMem),
+      languageView: protocolParams.languageView,
     },
   });
 
@@ -142,7 +134,7 @@ export const buildTransaction = async (
     if (tokensToKeep.length) {
       const minAmountToSpendTokens = TyphonUtils.calculateMinUtxoAmount(
         tokensToKeep,
-        new BigNumber(cardanoPreloadedData.protocolParams.lovelacePerUtxoWord),
+        new BigNumber(protocolParams.lovelacePerUtxoWord),
         false
       );
       transaction.addOutput({

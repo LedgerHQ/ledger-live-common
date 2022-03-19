@@ -184,6 +184,16 @@ export function getTTL(networkName: string): number {
   return getAbsoluteSlot(networkName, new Date()) + TTL_GAP;
 }
 
+export function getEpoch(networkName: string, time: Date): number {
+  const networkParams = getNetworkParameters(networkName);
+  const chainTime = time.getTime() - networkParams.chainStartTime;
+  const epoch = Math.floor(
+    chainTime /
+      (networkParams.shelleySlotsPerEpoch * networkParams.shelleySlotDuration)
+  );
+  return epoch;
+}
+
 export function mergeTokens(
   tokens: Array<TyphonTypes.Token>
 ): Array<TyphonTypes.Token> {

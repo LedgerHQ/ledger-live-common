@@ -33,6 +33,7 @@ import { encodeOperationId } from "../../operation";
 import { getOperations } from "./api/getOperations";
 import groupBy from "lodash/groupBy";
 import { getNetworkParameters } from "./networks";
+import { getNetworkInfo } from "./api/getNetworkInfo";
 
 function getAccountChange(
   t: APITransaction,
@@ -377,6 +378,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
         stakeCred: stakeCredential,
       }).getBech32(),
     }));
+  const cardanoNetworkInfo = await getNetworkInfo(initialAccount);
 
   return {
     id: accountId,
@@ -393,6 +395,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
       utxos,
       externalCredentials,
       internalCredentials,
+      protocolParams: cardanoNetworkInfo.protocolParams,
     },
   };
 };

@@ -10,7 +10,6 @@ import {
 import getTransactionStatus from "../js-getTransactionStatus";
 import signOperation from "../js-signOperation";
 import broadcast from "../js-broadcast";
-import { hydrate, preload } from "../preload";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 
 const receive = makeAccountBridgeReceive();
@@ -29,8 +28,8 @@ const accountBridge: AccountBridge<Transaction> = {
 
 const currencyBridge: CurrencyBridge = {
   scanAccounts,
-  preload,
-  hydrate,
+  preload: async () => ({}),
+  hydrate: () => {},
 };
 
 export default { currencyBridge, accountBridge };

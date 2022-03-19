@@ -7,10 +7,9 @@ import {
   AmountRequired,
 } from "@ledgerhq/errors";
 import type { Account, TransactionStatus } from "../../types";
-import type { Transaction } from "./types";
+import type { CardanoResources, Transaction } from "./types";
 import { isValidAddress } from "./logic";
 import { utils as TyphonUtils } from "@stricahq/typhonjs";
-import { getCurrentCardanoPreloadData } from "./preload";
 import { CardanoMinAmountError } from "./errors";
 import { AccountAwaitingSendPendingOperations } from "../../errors";
 import { getNetworkParameters } from "./networks";
@@ -32,7 +31,7 @@ const getTransactionStatus = async (
     throw new AccountAwaitingSendPendingOperations();
   }
 
-  const cardanoPreloadedData = getCurrentCardanoPreloadData();
+  const cardanoResources = a.cardanoResources as CardanoResources;
   // TODO: remove fix currencyId cardano_testnet
   // const networkParams = getNetworkParameters(account.currency.id);
   const networkParams = getNetworkParameters("cardano_testnet");
@@ -49,7 +48,7 @@ const getTransactionStatus = async (
 
   const minTransactionAmount = TyphonUtils.calculateMinUtxoAmount(
     tokensToSend,
-    new BigNumber(cardanoPreloadedData.protocolParams.lovelacePerUtxoWord),
+    new BigNumber(cardanoResources.protocolParams.lovelacePerUtxoWord),
     false
   );
 
