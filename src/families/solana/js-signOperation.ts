@@ -323,7 +323,7 @@ function optimisticOpForStakeWithdraw(
     accountId: account.id,
     senders: [command.stakeAccAddr],
     recipients: [command.toAccAddr],
-    value: commons.fee,
+    value: new BigNumber(command.amount).minus(commons.fee),
     extra: getOpExtras(command),
   };
 }
