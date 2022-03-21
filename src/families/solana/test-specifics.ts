@@ -1,4 +1,4 @@
-import { AmountRequired, NotEnoughBalance } from "@ledgerhq/errors";
+import { NotEnoughBalance } from "@ledgerhq/errors";
 import BigNumber from "bignumber.js";
 import { Account, TransactionStatus } from "../../types";
 import { ChainAPI } from "./api";
@@ -41,29 +41,8 @@ type StakeTestSpec = {
  * to be determenistic.
  */
 export default () => {
-  // delegate, undelegate, nothing to withdraw, record mocks so it works with MOCK=true
   describe("solana staking", () => {
     test("stake.delegate :: status is error: stake account is not delegatable", async () => {
-      // active, activating : delegate -> not delegatable
-      // deactivating : delegate -> not delegatable
-      // inactive, deactivating: delegate -> not undelegatable
-      // no stake auth, no withdraw: delegate -> no stake auth
-      // no withdraw auth: withdraw -> no withdraw auth
-      //
-
-      // command      activation state    auth    error
-      //
-      // delegate     active              -       not delegatable
-      // delegate     activating          -       not delegatable
-      // delegate     -          no st or wd auth       no stake auth
-      //
-      // undelegate   inactive, deactivating            -       not undelegatable
-      // undelegate   activating    no st or wd auth       not delegatable
-      // undelegate   -             no st or wd auth       no stake auth
-
-      // withdraw     any           no wid auth       no wd auth
-      // withdraw     any           wd auth           nothing to wd if 0 able
-
       const stakeDelegateModel: Transaction["model"] & {
         kind: "stake.delegate";
       } = {
