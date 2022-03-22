@@ -27,7 +27,7 @@ import {
   getOperationType,
   getTokenAssetId,
   getTokenDiff,
-  // mergeTokens,
+  mergeTokens,
 } from "./logic";
 import { encodeOperationId } from "../../operation";
 import { getOperations } from "./api/getOperations";
@@ -343,7 +343,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
     (total, u) => total.plus(u.amount),
     new BigNumber(0)
   );
-  // const tokensBalance = mergeTokens(utxos.map((u) => u.tokens).flat());
+  const tokensBalance = mergeTokens(utxos.map((u) => u.tokens).flat());
 
   const allNewOperations = newTransactions
     .map((t) => mapApiTxToOperation(t, accountId, accountCredentialsMap))
@@ -356,13 +356,13 @@ export const getAccountShape: GetAccountShape = async (info) => {
     accountNewOperations
   );
 
-  // const subAccounts = prepareTokensAccounts({
-  //   parentAccountId: accountId,
-  //   parentCurrency: currency,
-  //   initialAccount,
-  //   tokensBalance,
-  //   operationsMap: newOperations,
-  // });
+  const subAccounts = prepareTokensAccounts({
+    parentAccountId: accountId,
+    parentCurrency: currency,
+    initialAccount,
+    tokensBalance,
+    operationsMap: newOperations,
+  });
 
   const stakeCredential = getAccountStakeCredential(xpub, accountIndex);
   // TODO: remove fix currencyId cardano_testnet
@@ -386,7 +386,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
     balance: accountBalance,
     spendableBalance: accountBalance,
     operations: accountOperations,
-    // subAccounts,
+    subAccounts,
     freshAddresses,
     freshAddress: freshAddresses[0].address,
     freshAddressPath: freshAddresses[0].derivationPath,
