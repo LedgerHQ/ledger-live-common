@@ -40,6 +40,16 @@ const envDefinitions = {
     parser: stringParser,
     desc: "Node API endpoint for algorand",
   },
+  API_CELO_INDEXER: {
+    def: "https://celo.coin.ledger.com/indexer/",
+    parser: stringParser,
+    desc: "Explorer API for celo",
+  },
+  API_CELO_NODE: {
+    def: "https://celo.coin.ledger.com/archive/",
+    parser: stringParser,
+    desc: "Node endpoint for celo",
+  },
   API_COSMOS_BLOCKCHAIN_EXPLORER_API_ENDPOINT: {
     def: "https://cosmoshub4.coin.ledger.com/",
     parser: stringParser,
@@ -120,6 +130,11 @@ const envDefinitions = {
     def: "https://tron.coin.ledger.com",
     desc: "proxy url for trongrid API",
   },
+  API_SOLANA_PROXY: {
+    parser: stringParser,
+    def: "https://solana.coin.ledger.com",
+    desc: "proxy url for solana API",
+  },
   BASE_SOCKET_URL: {
     def: "wss://scriptrunner.api.live.ledger.com/update",
     parser: stringParser,
@@ -141,7 +156,7 @@ const envDefinitions = {
     desc: "location of the compound API",
   },
   COSMOS_GAS_AMPLIFIER: {
-    def: 4,
+    def: 1.4,
     parser: intParser,
     desc: "estimate gas multiplier",
   },
@@ -151,7 +166,7 @@ const envDefinitions = {
     desc: "gasLimit * gasPrice to determine the fees price. A too low GAS_PRICE will get rejected before the transaction is broadcast",
   },
   CRYPTO_ORG_INDEXER: {
-    def: "https://crypto.org/explorer",
+    def: "https://cryptoorg-rpc-indexer.coin.ledger.com",
     parser: stringParser,
     desc: "location of the crypto.org indexer API",
   },
@@ -161,7 +176,7 @@ const envDefinitions = {
     desc: "location of the crypto.org indexer testnet API",
   },
   CRYPTO_ORG_RPC_URL: {
-    def: "https://rpc.mainnet.crypto.org",
+    def: "https://cryptoorg-rpc-node.coin.ledger.com",
     parser: stringParser,
     desc: "location of the crypto.org chain node",
   },
@@ -371,10 +386,14 @@ const envDefinitions = {
     parser: stringParser,
     desc: "mock the server response for the exchange KYC check, options are 'open', 'pending', 'closed' or 'approved'.",
   },
-  NFT: {
+  /**
+   * Note: the mocked cryptoassets config and test partner are signed with the
+   * Ledger test private key
+   */
+  MOCK_EXCHANGE_TEST_CONFIG: {
     def: false,
     parser: boolParser,
-    desc: "synchronizing nfts",
+    desc: "mock the cryptoassets config and test partner (in the context of app-exchange)",
   },
   NFT_CURRENCIES: {
     def: "ethereum",
@@ -521,6 +540,31 @@ const envDefinitions = {
     parser: stringParser,
     desc: "url used to fetch platform app manifests (staging)",
   },
+  PLATFORM_LOCAL_MANIFEST_JSON: {
+    def: "",
+    parser: stringParser,
+    desc: 'json manifest for a local (test) platform app manifests. How to use: PLATFORM_LOCAL_MANIFEST_JSON="$(cat /path/to/file.json)"',
+  },
+  PLATFORM_GLOBAL_CATALOG_API_URL: {
+    def: "https://cdn.live.ledger.com/platform/catalog/v1/data.json",
+    parser: stringParser,
+    desc: "url used to fetch platform app manifests",
+  },
+  PLATFORM_GLOBAL_CATALOG_STAGING_API_URL: {
+    def: "https://cdn.live.ledger-stg.com/platform/catalog/v1/data.json",
+    parser: stringParser,
+    desc: "url used to fetch platform app manifests (staging)",
+  },
+  PLATFORM_RAMP_CATALOG_API_URL: {
+    def: "https://cdn.live.ledger.com/platform/trade/v1/data.json",
+    parser: stringParser,
+    desc: "url used to fetch platform app manifests",
+  },
+  PLATFORM_RAMP_CATALOG_STAGING_API_URL: {
+    def: "https://cdn.live.ledger-stg.com/platform/trade/v1/data.json",
+    parser: stringParser,
+    desc: "url used to fetch platform app manifests (staging)",
+  },
   PLATFORM_API_URL: {
     def: "",
     parser: stringParser,
@@ -530,6 +574,16 @@ const envDefinitions = {
     def: 1,
     parser: intParser,
     desc: "version used for the platform api",
+  },
+  MARKET_API_URL: {
+    def: "https://proxycg.api.live.ledger.com/api/v3",
+    parser: stringParser,
+    desc: "Market data api",
+  },
+  USE_LEARN_STAGING_URL: {
+    def: false,
+    parser: boolParser,
+    desc: "use the staging URL for the learn page",
   },
 };
 

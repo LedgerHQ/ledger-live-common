@@ -2,7 +2,12 @@ import { BigNumber } from "bignumber.js";
 import { Observable } from "rxjs";
 import { FeeNotLoaded } from "@ledgerhq/errors";
 import Algorand from "@ledgerhq/hw-app-algorand";
-import type { Account, Operation, SignOperationEvent } from "../../types";
+import type {
+  Account,
+  Operation,
+  SignedOperation,
+  SignOperationEvent,
+} from "../../types";
 import { withDevice } from "../../hw/deviceAccess";
 import type { Transaction } from "./types";
 import {
@@ -31,7 +36,7 @@ export const signOperation = ({
 
         const algoTx = await buildTransactionPayload(account, transaction);
 
-        const toSign = await encodeToSign(algoTx);
+        const toSign = encodeToSign(algoTx);
 
         const hwApp = new Algorand(transport);
         const { freshAddressPath } = account;
@@ -48,7 +53,7 @@ export const signOperation = ({
           throw new Error("No signature");
         }
 
-        const toBroadcast = await encodeToBroadcast(algoTx, signature);
+        const toBroadcast = encodeToBroadcast(algoTx, signature);
 
         const operation = buildOptimisticOperation(account, transaction);
 
@@ -56,9 +61,9 @@ export const signOperation = ({
           type: "signed",
           signedOperation: {
             operation,
-            signature: toBroadcast,
+            signature: toBroadcast.toString("hex"),
             expirationDate: null,
-          },
+          } as SignedOperation,
         });
       }
 

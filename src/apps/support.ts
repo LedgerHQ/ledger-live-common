@@ -29,8 +29,9 @@ export function shouldUpgrade(
 const appVersionsRequired = {
   Cosmos: ">= 2.14",
   Algorand: ">= 1.2.9",
-  Polkadot: ">= 9.9140.0",
+  Polkadot: ">= 11.9170.0",
   Elrond: ">= 1.0.11",
+  Ethereum: ">= 1.9.17",
 };
 export function mustUpgrade(
   deviceModel: DeviceModelId,

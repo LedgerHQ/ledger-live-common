@@ -23,6 +23,10 @@ export const LowerThanMinimumRelayFee = createCustomErrorClass(
 export const TransactionRefusedOnDevice = createCustomErrorClass(
   "TransactionRefusedOnDevice"
 );
+export const DeviceNotOnboarded = createCustomErrorClass("DeviceNotOnboarded");
+export const InvalidAddressBecauseAlreadyDelegated = createCustomErrorClass(
+  "InvalidAddressBecauseAlreadyDelegated"
+);
 export const TronNoFrozenForBandwidth = createCustomErrorClass(
   "TronNoFrozenForBandwidth"
 );
@@ -137,6 +141,9 @@ export const SatStackDescriptorNotImported = createCustomErrorClass(
 );
 export const SwapNoAvailableProviders = createCustomErrorClass(
   "SwapNoAvailableProviders"
+);
+export const NoSuchAppOnProvider = createCustomErrorClass(
+  "NoSuchAppOnProvider"
 );
 export const SwapExchangeRateAmountTooLow = createCustomErrorClass(
   "SwapExchangeRateAmountTooLow"
