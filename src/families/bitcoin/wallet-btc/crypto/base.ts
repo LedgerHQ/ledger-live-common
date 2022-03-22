@@ -29,9 +29,8 @@ export function fallbackValidateAddress(address: string): boolean {
 class Base implements ICrypto {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   network: any;
-  protected static publickeyCache = {}; // xpub + account + index to publicKey
+  protected static bip32Cache = {}; // xpub + account + index to publicKey
   public static addressCache = {}; // derivationMode + xpub + account + index to address
-  protected static bech32Cache = {}; // xpub to bech32 interface
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor({ network }: { network: any }) {
@@ -46,13 +45,19 @@ class Base implements ICrypto {
     account: number,
     index: number
   ): Promise<Buffer> {
-    if (!Base.bech32Cache[`${this.network.name}-${xpub}`]) {
+    // a cache is stored in Base.bip32Cache to optimize the calculation
+    // at each step, we make sure the level has been calculated and calc if necessary
+
+    // 0: root level
+    const keyRoot = `${this.network.name}-${xpub}`;
+    let rootLevel = Base.bip32Cache[keyRoot]; // it's stored "in sync"
+    if (!rootLevel) {
       const buffer: Buffer = bs58.decode(xpub);
       const depth: number = buffer[4];
       const i: number = buffer.readUInt32BE(9);
       const chainCode: Buffer = buffer.slice(13, 45);
       const publicKey: Buffer = buffer.slice(45, 78);
-      Base.bech32Cache[`${this.network.name}-${xpub}`] = new BIP32(
+      Base.bip32Cache[keyRoot] = rootLevel = new BIP32(
         publicKey,
         chainCode,
         this.network,
@@ -60,33 +65,25 @@ class Base implements ICrypto {
         i
       );
     }
-    if (
-      Base.publickeyCache[`${this.network.name}-${xpub}-${account}-${index}`]
-    ) {
-      return Base.publickeyCache[
-        `${this.network.name}-${xpub}-${account}-${index}`
-      ];
+
+    // 1: account level
+    const keyAccount = `${keyRoot}-${account}`;
+    let accountLevelP = Base.bip32Cache[keyAccount]; // it's stored as promise
+    if (!accountLevelP) {
+      Base.bip32Cache[keyAccount] = accountLevelP = rootLevel.derive(account);
     }
-    if (Base.publickeyCache[`${this.network.name}-${xpub}-${account}`]) {
-      const publicKey = (
-        await Base.publickeyCache[
-          `${this.network.name}-${xpub}-${account}`
-        ].derive(index)
-      ).publicKey;
-      Base.publickeyCache[`${this.network.name}-${xpub}-${account}-${index}`] =
-        publicKey;
-      return publicKey;
+
+    // 2: index level
+    const keyIndex = `${keyAccount}-${index}`;
+    let indexLevelP = Base.bip32Cache[keyIndex]; // it's stored as promise
+    if (!indexLevelP) {
+      Base.bip32Cache[keyIndex] = indexLevelP = accountLevelP.then((a) =>
+        a.derive(index)
+      );
     }
-    Base.publickeyCache[`${this.network.name}-${xpub}-${account}`] =
-      await Base.bech32Cache[`${this.network.name}-${xpub}`].derive(account);
-    const publicKey = (
-      await Base.publickeyCache[
-        `${this.network.name}-${xpub}-${account}`
-      ].derive(index)
-    ).publicKey;
-    Base.publickeyCache[`${this.network.name}-${xpub}-${account}-${index}`] =
-      publicKey;
-    return publicKey;
+
+    // We can finally return the publicKey. in most case, indexLevelP will be "resolved"
+    return (await indexLevelP).publicKey;
   }
 
   // derive legacy address at account and index positions

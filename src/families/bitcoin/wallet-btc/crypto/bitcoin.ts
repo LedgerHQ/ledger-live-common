@@ -3,7 +3,7 @@
 import * as bech32 from "bech32";
 import { bech32m } from "../../bech32m";
 import * as bjs from "bitcoinjs-lib";
-import { publicKeyTweakAdd } from "./secp256k1";
+import { getSecp256k1Instance } from "./secp256k1";
 import { InvalidAddress } from "@ledgerhq/errors";
 import { DerivationModes } from "../types";
 import Base from "./base";
@@ -196,7 +196,7 @@ class Bitcoin extends Base {
 
     // Q = P + int(hash_TapTweak(bytes(P)))G
     const outputEcdsaKey = Buffer.from(
-      await publicKeyTweakAdd(evenEcdsaPubkey, tweak)
+      await getSecp256k1Instance().publicKeyTweakAdd(evenEcdsaPubkey, tweak)
     );
     // Convert to schnorr.
     const outputSchnorrKey = outputEcdsaKey.slice(1);
