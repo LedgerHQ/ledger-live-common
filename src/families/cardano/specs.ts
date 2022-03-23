@@ -12,18 +12,20 @@ const cardano: AppSpec<Transaction> = {
   appQuery: {
     model: DeviceModelId.nanoS,
     appName: "CardanoADA",
-    appVersion: "3.0.0",
   },
   mutations: [
     {
       name: "move ~50%",
-      maxRun: 2,
+      maxRun: 1,
       transaction: ({ account, siblings, bridge }) => {
         const sibling = pickSiblings(siblings, 4);
         const recipient = sibling.freshAddress;
         const transaction = bridge.createTransaction(account);
 
-        const updates = [{ amount: new BigNumber(1) }, { recipient }];
+        const updates = [
+          { amount: new BigNumber(account.balance.dividedBy(2)) },
+          { recipient },
+        ];
         return {
           transaction,
           updates,
