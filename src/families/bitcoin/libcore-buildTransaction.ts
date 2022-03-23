@@ -6,7 +6,7 @@ import { isValidRecipient } from "../../libcore/isValidRecipient";
 import { bigNumberToLibcoreAmount } from "../../libcore/buildBigNumber";
 import type { Core, CoreCurrency, CoreAccount } from "../../libcore/types";
 import type { CoreBitcoinLikeTransaction, Transaction } from "./types";
-import { getUTXOStatus } from "./transaction";
+import { getUTXOStatus } from "./logic";
 import { promiseAllBatched } from "../../promise";
 import { parseBitcoinUTXO, perCoinLogic } from "./transaction";
 

@@ -7,7 +7,6 @@ import type {
   FeeItems,
   FeeItemsRaw,
   BitcoinOutput,
-  UtxoStrategy,
   CoreBitcoinLikeOutput,
   CoreBitcoinLikeInput,
   BitcoinInput,
@@ -90,7 +89,7 @@ const formatNetworkInfo = (
 
 export const formatTransaction = (t: Transaction, account: Account): string => {
   const n = getEnv("DEBUG_UTXO_DISPLAY");
-  const { excludeUTXOs, strategy, pickUnconfirmedRBF } = t.utxoStrategy;
+  const { excludeUTXOs, strategy } = t.utxoStrategy;
   const displayAll = excludeUTXOs.length <= n;
   return `
 SEND ${
@@ -109,7 +108,7 @@ ${[
   Object.keys(bitcoinPickingStrategy).find(
     (k) => bitcoinPickingStrategy[k] === strategy
   ),
-  pickUnconfirmedRBF && "pick-unconfirmed",
+  "pick-unconfirmed",
   t.rbf && "RBF-enabled",
 ]
   .filter(Boolean)
@@ -200,14 +199,6 @@ export const perCoinLogic: Record<
     }),
   },
 };
-export type UTXOStatus =
-  | {
-      excluded: true;
-      reason: "pickUnconfirmedRBF" | "userExclusion";
-    }
-  | {
-      excluded: false;
-    };
 export async function parseBitcoinInput(
   input: CoreBitcoinLikeInput
 ): Promise<BitcoinInput> {
@@ -266,32 +257,6 @@ export async function parseBitcoinUTXO(
   const utxo = await parseBitcoinOutput(output);
   utxo.rbf = await output.isReplaceable();
   return utxo;
-}
-export function getUTXOStatus(
-  utxo: BitcoinOutput,
-  utxoStrategy: UtxoStrategy
-): UTXOStatus {
-  if (!utxoStrategy.pickUnconfirmedRBF && utxo.rbf && !utxo.blockHeight) {
-    return {
-      excluded: true,
-      reason: "pickUnconfirmedRBF",
-    };
-  }
-
-  if (
-    utxoStrategy.excludeUTXOs.some(
-      (u) => u.hash === utxo.hash && u.outputIndex === utxo.outputIndex
-    )
-  ) {
-    return {
-      excluded: true,
-      reason: "userExclusion",
-    };
-  }
-
-  return {
-    excluded: false,
-  };
 }
 export function isChangeOutput(output: BitcoinOutput): boolean {
   if (!output.path) return false;

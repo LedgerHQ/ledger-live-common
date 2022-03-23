@@ -96,7 +96,8 @@ const genericTest = ({
   // verify that no utxo that was supposed to be exploded were used
   expect(
     utxosPicked.filter(
-      (u) => getUTXOStatus(u, transaction.utxoStrategy).excluded
+      (u: BitcoinOutput) =>
+        u.blockHeight && getUTXOStatus(u, transaction.utxoStrategy).excluded
     )
   ).toEqual([]);
 };
@@ -243,7 +244,6 @@ const bitcoinLikeMutations = ({
           {
             utxoStrategy: {
               ...transaction.utxoStrategy,
-              pickUnconfirmedRBF: true,
             },
           },
           {
