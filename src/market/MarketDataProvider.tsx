@@ -21,7 +21,6 @@ import {
   SupportedCoins,
 } from "./types";
 import defaultFetchApi from "./api/api";
-
 type Props = {
   children: React.ReactNode;
   fetchApi?: MarketDataApi;
@@ -283,11 +282,7 @@ export const MarketDataProvider = ({
   }, [chartRequestParams, selectedCoinData, api, handleError, loadingChart]);
 
   useEffect(() => {
-    if (
-      chartRequestParams?.id &&
-      chartRequestParams?.counterCurrency &&
-      !loading
-    ) {
+    if (chartRequestParams?.id && chartRequestParams?.counterCurrency) {
       dispatch({ type: ACTIONS.SET_LOADING, payload: true });
       api
         .listPaginated({
