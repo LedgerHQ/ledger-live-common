@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - bot-silicium
+      - sunset-libcore
 
 jobs:
   start-runner:
