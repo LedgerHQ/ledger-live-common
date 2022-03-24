@@ -167,11 +167,6 @@ Usage: ledger-live getTransactionStatus # Prepare a transaction and returns 'Tra
      --fees <String>          : how much fees
  -f, --format <json>          : how to display the data
 
-Usage: ledger-live libcoreReset
-
-Usage: ledger-live libcoreSetPassword
-     --password <String>      : the new password
-
 Usage: ledger-live liveData   # utility for Ledger Live app.json file
      --device <String>        : provide a specific HID path of a device
      --xpub <String>          : use an xpub (alternatively to --device)

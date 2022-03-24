@@ -28,8 +28,6 @@ import genuineCheck from "./commands/genuineCheck";
 import getAccountNetworkInfo from "./commands/getAccountNetworkInfo";
 import getAddress from "./commands/getAddress";
 import getTransactionStatus from "./commands/getTransactionStatus";
-import libcoreReset from "./commands/libcoreReset";
-import libcoreSetPassword from "./commands/libcoreSetPassword";
 import liveData from "./commands/liveData";
 import makeCompoundSummary from "./commands/makeCompoundSummary";
 import managerListApps from "./commands/managerListApps";
@@ -83,8 +81,6 @@ export default {
   getAccountNetworkInfo,
   getAddress,
   getTransactionStatus,
-  libcoreReset,
-  libcoreSetPassword,
   liveData,
   makeCompoundSummary,
   managerListApps,

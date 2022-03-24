@@ -19,7 +19,7 @@
     "updateAppSupportsQuitApp": "node scripts/updateAppSupportsQuitApp.js",
     "prettier": "prettier --write 'src/**/*.?s' 'cli/src/**/*.?s'",
     "lint": "eslint src",
-    "jest": "rimraf libcoredb && mkdir libcoredb && cross-env TZ=America/New_York jest",
+    "jest": "cross-env TZ=America/New_York jest",
     "test": "yarn jest",
     "ci-lint": "yarn lint",
     "ci-test-common": "env-cmd -f ./.ci.env yarn test --ci --updateSnapshot && git diff --exit-code src",
