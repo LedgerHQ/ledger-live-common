@@ -8,9 +8,6 @@ import type {
   FeeItemsRaw,
   BitcoinOutput,
   UtxoStrategy,
-  CoreBitcoinLikeOutput,
-  CoreBitcoinLikeInput,
-  BitcoinInput,
   BitcoinResources,
 } from "./types";
 import type { Account } from "../../types";
@@ -23,7 +20,6 @@ import {
 import { getAccountUnit } from "../../account";
 import { formatCurrencyUnit } from "../../currencies";
 import type { CryptoCurrencyIds } from "../../types";
-import { libcoreAmountToBigNumber } from "../../libcore/buildBigNumber";
 
 const fromFeeItemsRaw = (fir: FeeItemsRaw): FeeItems => ({
   items: fir.items.map((fi) => ({
@@ -208,65 +204,7 @@ export type UTXOStatus =
   | {
       excluded: false;
     };
-export async function parseBitcoinInput(
-  input: CoreBitcoinLikeInput
-): Promise<BitcoinInput> {
-  const address = await input.getAddress();
-  const rawValue = await input.getValue();
-  const value = rawValue ? await libcoreAmountToBigNumber(rawValue) : null;
-  const previousTxHash = await input.getPreviousTxHash();
-  const previousOutputIndex = await input.getPreviousOutputIndex();
-  return {
-    address,
-    value,
-    previousTxHash,
-    previousOutputIndex,
-  };
-}
-export async function parseBitcoinOutput(
-  output: CoreBitcoinLikeOutput
-): Promise<BitcoinOutput> {
-  let blockHeight = await output.getBlockHeight();
 
-  if (!blockHeight || blockHeight < 0) {
-    blockHeight = undefined;
-  }
-
-  const hash = await output.getTransactionHash();
-  const outputIndex = await output.getOutputIndex();
-  const address = await output.getAddress();
-  const derivationPath = await output.getDerivationPath();
-  let path;
-
-  if (derivationPath) {
-    const isDerivationPathNull = await derivationPath.isNull();
-
-    if (!isDerivationPathNull) {
-      path = await derivationPath.toString();
-    }
-  }
-
-  const value = await libcoreAmountToBigNumber(await output.getValue());
-  const rbf = false; // this is unsafe to generically call this at the moment. libcore segfault.
-
-  return {
-    hash,
-    outputIndex,
-    blockHeight,
-    address,
-    isChange: false,
-    path,
-    value,
-    rbf,
-  };
-}
-export async function parseBitcoinUTXO(
-  output: CoreBitcoinLikeOutput
-): Promise<BitcoinOutput> {
-  const utxo = await parseBitcoinOutput(output);
-  utxo.rbf = await output.isReplaceable();
-  return utxo;
-}
 export function getUTXOStatus(
   utxo: BitcoinOutput,
   utxoStrategy: UtxoStrategy

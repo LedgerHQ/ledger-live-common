@@ -7,7 +7,6 @@ import flatMap from "lodash/flatMap";
 import { getEnv } from "../env";
 import allSpecs from "../generated/specs";
 import network from "../network";
-import { withLibcore } from "../libcore/access";
 import type { MutationReport, SpecReport } from "./types";
 import { promiseAllBatched } from "../promise";
 import {
@@ -35,10 +34,6 @@ const usd = getFiatCurrencyByTicker("USD");
 export async function bot({ currency, family, mutation }: Arg = {}) {
   const SEED = getEnv("SEED");
   invariant(SEED, "SEED required");
-  const libcoreVersion = await withLibcore((core) =>
-    core.LedgerCore.getStringVersion()
-  );
-  log("libcoreVersion", "libcore version " + libcoreVersion);
   const specs: any[] = [];
   const specsLogs: string[][] = [];
   const maybeCurrency = currency

@@ -16,8 +16,10 @@ import {
   InvalidAddressBecauseDestinationIsAlsoSource,
   RecommendUndelegation,
   NotEnoughBalanceBecauseDestinationNotCreated,
+  RecipientRequired,
+  InvalidAddress,
 } from "@ledgerhq/errors";
-import { validateRecipient } from "../../../bridge/shared";
+import { validateAddress, ValidationResult } from "@taquito/utils";
 import type {
   CurrencyBridge,
   AccountBridge,
@@ -41,11 +43,22 @@ import { log } from "@ledgerhq/logs";
 import { InvalidAddressBecauseAlreadyDelegated } from "../../../errors";
 import api from "../api/tzkt";
 
+const validateRecipient = (currency, recipient) => {
+  let recipientError = null;
+  const recipientWarning = null;
+  if (!recipient) {
+    recipientError = new RecipientRequired("");
+  } else if (validateAddress(recipient) !== ValidationResult.VALID) {
+    recipientError = new InvalidAddress(undefined, {
+      currencyName: currency.name,
+    });
+  }
+  return Promise.resolve({ recipientError, recipientWarning });
+};
+
 const receive = makeAccountBridgeReceive();
 
-const EXISTENTIAL_DEPOSIT = new BigNumber(
-  DEFAULT_STORAGE_LIMIT.ORIGINATION * 1000
-);
+const EXISTENTIAL_DEPOSIT = new BigNumber(275000);
 
 const createTransaction: () => Transaction = () => ({
   family: "tezos",
@@ -78,7 +91,7 @@ const getTransactionStatus = async (
     feeTooHigh?: Error;
     recipient?: Error;
   } = {};
-  let amountMustReset = false;
+  let resetTotalSpent = false;
 
   // Recipient validation logic
   if (t.mode !== "undelegate") {
@@ -102,7 +115,7 @@ const getTransactionStatus = async (
   const estimatedFees = t.estimatedFees || new BigNumber(0);
   if (t.mode === "send") {
     if (!errors.amount && t.amount.eq(0) && !t.useAllAmount) {
-      amountMustReset = true;
+      resetTotalSpent = true;
       errors.amount = new AmountRequired();
     } else if (t.amount.gt(0) && estimatedFees.times(10).gt(t.amount)) {
       warnings.feeTooHigh = new FeeTooHigh();
@@ -130,18 +143,8 @@ const getTransactionStatus = async (
     // remap taquito errors
     if (t.taquitoError.endsWith("balance_too_low")) {
       if (t.mode === "send") {
-        if (
-          (await api.getAccountByAddress(t.recipient)).type === "empty" &&
-          t.amount.lt(EXISTENTIAL_DEPOSIT)
-        ) {
-          amountMustReset = true;
-          errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {
-            minimalAmount: "0.275 XTZ",
-          });
-        } else {
-          amountMustReset = true;
-          errors.amount = new NotEnoughBalance();
-        }
+        resetTotalSpent = true;
+        errors.amount = new NotEnoughBalance();
       } else {
         errors.amount = new NotEnoughBalanceToDelegate();
       }
@@ -150,23 +153,36 @@ const getTransactionStatus = async (
     } else if (!errors.amount) {
       // unidentified error case
       errors.amount = new Error(t.taquitoError);
-      amountMustReset = true;
+      resetTotalSpent = true;
     }
   }
 
   if (!errors.amount && account.balance.lte(0)) {
-    amountMustReset = true;
+    resetTotalSpent = true;
     errors.amount = new NotEnoughBalance();
   }
 
-  const amount = amountMustReset ? new BigNumber(0) : t.amount;
+  // Catch a specific case that requires a minimum amount
+  if (
+    !errors.amount &&
+    t.mode === "send" &&
+    t.amount.lt(EXISTENTIAL_DEPOSIT) &&
+    (await api.getAccountByAddress(t.recipient)).type === "empty"
+  ) {
+    resetTotalSpent = true;
+    errors.amount = new NotEnoughBalanceBecauseDestinationNotCreated("", {
+      minimalAmount: "0.275 XTZ",
+    });
+  }
 
   const result = {
     errors,
     warnings,
     estimatedFees,
-    amount,
-    totalSpent: amount.plus(estimatedFees),
+    amount: t.amount,
+    totalSpent: resetTotalSpent
+      ? new BigNumber(0)
+      : t.amount.plus(estimatedFees),
   };
   return Promise.resolve(result);
 };
@@ -327,8 +343,8 @@ const estimateMaxSpendable = async ({
   const t = await prepareTransaction(mainAccount, {
     ...createTransaction(),
     ...transaction,
-    // this seed is empty (worse case scenario is to send to new). addr from: 1. eyebrow 2. odor 3. rice 4. attack 5. loyal 6. tray 7. letter 8. harbor 9. resemble 10. sphere 11. system 12. forward 13. onion 14. buffalo 15. crumble
-    recipient: transaction?.recipient || "tz1VJitLYB31fEC82efFkLRU4AQUH9QgH3q6",
+    // estimate using a burn address that exists so we don't enter into NotEnoughBalanceBecauseDestinationNotCreated
+    recipient: transaction?.recipient || "tz1burnburnburnburnburnburnburjAYjjX",
     useAllAmount: true,
   });
   const s = await getTransactionStatus(mainAccount, t);

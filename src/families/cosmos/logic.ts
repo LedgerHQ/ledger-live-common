@@ -160,6 +160,7 @@ export const getMaxEstimatedBalance = (
 
   return amount;
 };
+
 export function canUndelegate(account: Account): boolean {
   const { cosmosResources } = account;
   invariant(cosmosResources, "cosmosResources should exist");
