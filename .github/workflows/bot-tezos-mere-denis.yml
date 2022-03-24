@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - family/tezos
-      - sunset-libcore
 
 jobs:
   start-runner:

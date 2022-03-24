@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - cosmos-js
-      - sunset-libcore
 
 jobs:
   start-runner:
