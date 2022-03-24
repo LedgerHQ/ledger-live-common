@@ -295,7 +295,7 @@ export const accountDataToAccount = ({
   derivationMode: derivationModeStr,
   seedIdentifier,
 }: AccountData): Account => {
-  const { type, xpubOrAddress } = decodeAccountId(id); // TODO rename in AccountId xpubOrAddress
+  const { xpubOrAddress } = decodeAccountId(id); // TODO rename in AccountId xpubOrAddress
 
   const derivationMode = asDerivationMode(derivationModeStr);
   const currency = getCryptoCurrencyById(currencyId);
