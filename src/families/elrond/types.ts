@@ -1,5 +1,5 @@
 import type { BigNumber } from "bignumber.js";
-import { RangeRaw } from "../../range";
+import { Range, RangeRaw } from "../../range";
 import type {
   TransactionCommon,
   TransactionCommonRaw,
