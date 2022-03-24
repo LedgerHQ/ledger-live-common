@@ -20,6 +20,7 @@ import type {
   CryptoCurrencyIds,
   NFTMetadataResponse,
 } from ".";
+import { NFTMetadata } from "./nft";
 export type ScanAccountEvent = {
   type: "discovered";
   account: Account;
@@ -71,7 +72,7 @@ export interface CurrencyBridge {
     contract: string;
     tokenId: string;
     currencyId: string;
-    metadata?: any;
+    metadata?: NFTMetadata;
   }) => Promise<NFTMetadataResponse>;
 }
 // Abstraction related to an account

@@ -12,7 +12,13 @@ const nftMetadataResolver: CurrencyBridge["nftMetadataResolver"] = async ({
   contract,
   tokenId,
   currencyId,
+  metadata,
 }) => {
+  // This is for test/mock purposes
+  if (typeof metadata !== "undefined") {
+    return metadata;
+  }
+
   const currency = getCryptoCurrencyById(currencyId);
   const chainId = currency?.ethereumLikeInfo?.chainId;
 
