@@ -11,7 +11,7 @@ import type { ModeModule, Transaction } from "../types";
 import type { Account } from "../../../types";
 import { apiForCurrency } from "../../../api/Ethereum";
 
-const notOwnedNft = createCustomErrorClass("NotOwnedNft");
+const NotOwnedNft = createCustomErrorClass("NotOwnedNft");
 
 export type Modes = "erc721.transfer";
 
@@ -72,7 +72,7 @@ const erc721Transfer: ModeModule = {
           (n) => n.tokenId === t.tokenIds?.[0] && n.contract === t.collection
         )
       ) {
-        result.errors.amount = new notOwnedNft();
+        result.errors.amount = new NotOwnedNft();
       }
     }
   },
