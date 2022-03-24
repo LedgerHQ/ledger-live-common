@@ -976,10 +976,9 @@
     bignumber.js "^9.0.1"
     json-rpc-2.0 "^0.2.16"
 
-"@ledgerhq/live-common@^21.34.0":
-  version "21.34.0"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/live-common/-/live-common-21.34.0.tgz#2bd86b286b22cc31cfb788b8758195e91855f1f9"
-  integrity sha512-m7wlqEVLqlqwvB/y3D5aeadY55yUQ/qI1npjtUv74SK0fQd9/Yw9RsfDcoGlXEiXN5Pr5Xt60YJw7OPy6fNEKw==
+"@ledgerhq/live-common@https://github.com/LedgerHQ/ledger-live-common.git#31177aae3a559e17f8452ed8dc6e010cd1d6f41e":
+  version "21.32.4"
+  resolved "https://github.com/LedgerHQ/ledger-live-common.git#31177aae3a559e17f8452ed8dc6e010cd1d6f41e"
   dependencies:
     "@celo/contractkit" "^1.5.1"
     "@celo/wallet-base" "^1.5.1"
