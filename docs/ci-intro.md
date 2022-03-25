@@ -27,8 +27,7 @@ The folder will have this kind of structure:
 ├── transaction.ts # transaction specific fields
 ├── types.ts # family specific types
 # for tests
-├── test-dataset.ts
-└── test-specifics.ts
+└── test-dataset.ts
 ```
 
 most of these file are optional and you will typically see when a file implementation is missing when testing.

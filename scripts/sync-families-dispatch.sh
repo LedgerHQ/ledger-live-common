@@ -15,7 +15,6 @@ specs.ts \
 speculos-deviceActions.ts \
 deviceTransactionConfig.ts \
 test-dataset.ts \
-test-specifics.ts \
 mock.ts \
 account.ts \
 exchange.ts \
