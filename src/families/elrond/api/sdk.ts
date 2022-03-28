@@ -57,14 +57,31 @@ function getOperationType(
 /**
  * Map transaction to a correct Operation Value (affecting account balance)
  */
-function getOperationValue(transaction: Transaction, addr: string): BigNumber {
+function getOperationValue(
+  transaction: Transaction,
+  addr: string,
+  tokenIdentifier?: string
+): BigNumber {
   if (transaction.transfer === ElrondTransferOptions.esdt) {
     if (transaction.action) {
-      return new BigNumber(
-        transaction.action.arguments.transfers[0].value ?? 0
-      );
+      let token1, token2;
+      switch (transaction.action.name) {
+        case "transfer":
+          return new BigNumber(
+            transaction.action.arguments.transfers[0].value ?? 0
+          );
+        case "swap":
+          token1 = transaction.action.arguments.transfers[0];
+          token2 = transaction.action.arguments.transfers[1];
+          if (token1.token === tokenIdentifier) {
+            return new BigNumber(token1.value);
+          } else {
+            return new BigNumber(token2.value);
+          }
+        default:
+          return new BigNumber(transaction.tokenValue ?? 0);
+      }
     }
-    return new BigNumber(transaction.tokenValue ?? 0);
   }
 
   if (!isSender(transaction, addr)) {
@@ -80,14 +97,15 @@ function getOperationValue(transaction: Transaction, addr: string): BigNumber {
 function transactionToOperation(
   accountId: string,
   addr: string,
-  transaction: Transaction
+  transaction: Transaction,
+  tokenIdentifier?: string
 ): Operation {
   const type = getOperationType(transaction, addr);
   return {
     id: encodeOperationId(accountId, transaction.txHash ?? "", type),
     accountId,
     fee: new BigNumber(transaction.fee || 0),
-    value: getOperationValue(transaction, addr),
+    value: getOperationValue(transaction, addr, tokenIdentifier),
     type,
     hash: transaction.txHash ?? "",
     blockHash: transaction.miniBlockHash,
@@ -143,7 +161,7 @@ export const getAccountESDTOperations = async (
   );
 
   return accountESDTTransactions.map((transaction) =>
-    transactionToOperation(accountId, address, transaction)
+    transactionToOperation(accountId, address, transaction, tokenIdentifier)
   );
 };
 
