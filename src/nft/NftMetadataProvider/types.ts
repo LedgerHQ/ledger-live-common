@@ -48,6 +48,16 @@ export type NFTMetadataContextAPI = {
 export type NFTMetadataContextType = NFTMetadataContextState &
   NFTMetadataContextAPI;
 
+export type Batcher = {
+  load: ({
+    contract,
+    tokenId,
+  }: {
+    contract: string;
+    tokenId: string;
+  }) => Promise<NFTMetadataResponse>;
+};
+
 export type BatchElement = {
   couple: {
     contract: string;

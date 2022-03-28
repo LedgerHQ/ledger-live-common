@@ -3,7 +3,7 @@ import BigNumber from "bignumber.js";
 import { encodeNftId } from ".";
 import { decodeAccountId } from "../account";
 
-import type { Batch, BatchElement } from "./NftMetadataProvider/types";
+import type { Batch, BatchElement, Batcher } from "./NftMetadataProvider/types";
 import type {
   NFTMetadataResponse,
   Operation,
@@ -88,10 +88,17 @@ export const getNftKey = (
   return `${currencyId}-${contract}-${tokenId}`;
 };
 
-const batchersMap = new Map();
-const makeBatcher = (api: API, chainId: number) =>
+/**
+ * Factory to make a metadata API call batcher.
+ *
+ * It will wait for a complete `tick` to accumulate all the metadata requests
+ * before sending it as one call to a given API.
+ * Once the response is received, it will then spread the metadata to each request Promise,
+ * just like if each request had been made separately.
+ */
+const makeBatcher = (api: API, chainId: number): Batcher =>
   (() => {
-    const batch: BatchElement[] = [];
+    const queue: BatchElement[] = [];
 
     let debounce;
     const timeoutBatchCall = () => {
@@ -101,7 +108,7 @@ const makeBatcher = (api: API, chainId: number) =>
       // Schedule a new call with the whole batch
       debounce = setTimeout(() => {
         // Seperate each batch element properties into arrays by type and index
-        const { couples, resolvers, rejecters } = batch.reduce(
+        const { couples, resolvers, rejecters } = queue.reduce(
           (acc, { couple, resolve, reject }) => {
             acc.couples.push(couple);
             acc.resolvers.push(resolve);
@@ -111,8 +118,8 @@ const makeBatcher = (api: API, chainId: number) =>
           },
           { couples: [], resolvers: [], rejecters: [] } as Batch
         );
-        // Empty the batch
-        batch.length = 0;
+        // Empty the queue
+        queue.length = 0;
 
         // Make the call with all the couples of contract and tokenId at once
         api
@@ -138,14 +145,22 @@ const makeBatcher = (api: API, chainId: number) =>
         tokenId: string;
       }): Promise<NFTMetadataResponse> {
         return new Promise((resolve, reject) => {
-          batch.push({ couple: { contract, tokenId }, resolve, reject });
+          queue.push({ couple: { contract, tokenId }, resolve, reject });
           timeoutBatchCall();
         });
       },
     };
   })();
 
-export const metadataCallBatcher = (currency: CryptoCurrency) => {
+const batchersMap = new Map();
+
+/**
+ * In order to `instanciate`/make only 1 batcher by currency,
+ * they're `cached` in a Map and retrieved by this method
+ * This method is still EVM based for now but can be improved
+ * to implement an even more generic solution
+ */
+export const metadataCallBatcher = (currency: CryptoCurrency): Batcher => {
   const api: API = apiForCurrency(currency);
   const chainId = currency?.ethereumLikeInfo?.chainId;
 
