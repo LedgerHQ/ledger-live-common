@@ -54,6 +54,30 @@ export const acceptTransferTransaction: DeviceAction<Transaction, any> =
     ],
   });
 
+export const acceptStakeCreateAccountTransaction: DeviceAction<
+  Transaction,
+  any
+> = deviceActionFlow({
+  // unrecognized format on ledger nano device
+  steps: [],
+});
+
+export const acceptStakeDelegateTransaction: DeviceAction<Transaction, any> =
+  deviceActionFlow({
+    steps: [],
+  });
+
+export const acceptStakeUndelegateTransaction: DeviceAction<Transaction, any> =
+  deviceActionFlow({
+    steps: [],
+  });
+
+export const acceptStakeWithdrawTransaction: DeviceAction<Transaction, any> =
+  deviceActionFlow({
+    steps: [],
+  });
+
 export default {
   acceptTransferTransaction,
+  acceptStakeCreateAccountTransaction,
 };

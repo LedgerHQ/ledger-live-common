@@ -5,7 +5,13 @@ import { DeviceModelId } from "@ledgerhq/devices";
 import { pickSiblings } from "../../bot/specs";
 import { AppSpec, TransactionTestInput } from "../../bot/types";
 import { Transaction } from "./types";
-import { acceptTransferTransaction } from "./speculos-deviceActions";
+import {
+  acceptStakeCreateAccountTransaction,
+  acceptStakeDelegateTransaction,
+  acceptStakeUndelegateTransaction,
+  acceptStakeWithdrawTransaction,
+  acceptTransferTransaction,
+} from "./speculos-deviceActions";
 import { assertUnreachable } from "./utils";
 import { getCurrentSolanaPreloadData } from "./js-preload-data";
 import { sample } from "lodash/fp";
@@ -64,7 +70,7 @@ const solana: AppSpec<Transaction> = {
     {
       name: "Delegate",
       maxRun: 1,
-      deviceAction: undefined,
+      deviceAction: acceptStakeCreateAccountTransaction,
       transaction: ({ account, bridge }) => {
         const { solanaResources } = account;
         if (solanaResources === undefined) {
@@ -138,7 +144,7 @@ const solana: AppSpec<Transaction> = {
     {
       name: "Deactivate Activating Delegation",
       maxRun: 1,
-      deviceAction: undefined,
+      deviceAction: acceptStakeUndelegateTransaction,
       transaction: ({ account, bridge }) => {
         invariant(account.balance.gt(0), "not enough balance");
         const { solanaResources } = account;
@@ -200,7 +206,7 @@ const solana: AppSpec<Transaction> = {
     {
       name: "Deactivate Active Delegation",
       maxRun: 1,
-      deviceAction: undefined,
+      deviceAction: acceptStakeUndelegateTransaction,
       transaction: ({ account, bridge }) => {
         invariant(account.balance.gt(0), "not enough balance");
         const { solanaResources } = account;
@@ -262,7 +268,7 @@ const solana: AppSpec<Transaction> = {
     {
       name: "Reactivate Deactivating Delegation",
       maxRun: 1,
-      deviceAction: undefined,
+      deviceAction: acceptStakeDelegateTransaction,
       transaction: ({ account, bridge }) => {
         invariant(account.balance.gt(0), "not enough balance");
         const { solanaResources } = account;
@@ -331,7 +337,7 @@ const solana: AppSpec<Transaction> = {
     {
       name: "Activate Inactive Delegation",
       maxRun: 1,
-      deviceAction: undefined,
+      deviceAction: acceptStakeDelegateTransaction,
       transaction: ({ account, bridge }) => {
         invariant(account.balance.gt(0), "not enough balance");
         const { solanaResources } = account;
@@ -400,7 +406,7 @@ const solana: AppSpec<Transaction> = {
     {
       name: "Withdraw Delegation",
       maxRun: 1,
-      deviceAction: undefined,
+      deviceAction: acceptStakeWithdrawTransaction,
       transaction: ({ account, bridge }) => {
         invariant(account.balance.gt(0), "not enough balance");
         const { solanaResources } = account;
