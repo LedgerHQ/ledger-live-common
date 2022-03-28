@@ -3,7 +3,6 @@ import {
   accountFormatters,
   decodeAccountId,
 } from "@ledgerhq/live-common/lib/account";
-import { metadataCallBatcher } from "@ledgerhq/live-common/lib/nft";
 import { getCryptoCurrencyById } from "@ledgerhq/live-common/lib/currencies";
 import { getCurrencyBridge } from "@ledgerhq/live-common/lib/bridge";
 import { scan, scanCommonOpts } from "../scan";
