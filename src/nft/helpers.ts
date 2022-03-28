@@ -53,12 +53,21 @@ export const nftsFromOperations = (ops: Operation[]): ProtoNFT[] => {
   return Object.values(nftsMap);
 };
 
+/**
+ * Helper to group NFTs by their collection/contract.
+ *
+ * It will either return an object { [contract address]: NFT[] }
+ * or if you specify a collectionAddress it will simply filter
+ * your NFTs for this specific contract and return an NFT[].
+ *
+ * The grouping here can be done with ProtoNFT or NFT.
+ */
 export const nftsByCollections = (
   nfts: Array<ProtoNFT | NFT> = [],
   collectionAddress?: string
 ): Record<string, Array<ProtoNFT | NFT>> | Array<ProtoNFT | NFT> => {
   return collectionAddress
-    ? nfts?.filter((n) => n.contract === collectionAddress)
+    ? nfts.filter((n) => n.contract === collectionAddress)
     : nfts.reduce((acc, nft) => {
         const { contract } = nft;
 
