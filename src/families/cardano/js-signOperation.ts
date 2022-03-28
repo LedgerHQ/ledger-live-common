@@ -163,9 +163,7 @@ const signOperation = ({
         const auxiliaryDataHashHex =
           unsignedTransaction.getAuxiliaryDataHashHex();
 
-        // TODO: remove fix currencyId cardano_testnet
-        // const networkParams = getNetworkParameters(account.currency.id);
-        const networkParams = getNetworkParameters("cardano_testnet");
+        const networkParams = getNetworkParameters(account.currency.id);
         const network =
           networkParams.networkId === Networks.Mainnet.networkId
             ? Networks.Mainnet

@@ -246,6 +246,7 @@ const legacyDerivations: Record<CryptoCurrencyIds, DerivationMode[]> = {
   polkadot: ["polkadotbip44"],
   filecoin: ["filecoin"],
   cardano: ["cardano"],
+  cardano_testnet: ["cardano"],
 };
 
 const legacyDerivationsPerFamily: Record<string, DerivationMode[]> = {
@@ -428,12 +429,14 @@ const disableBIP44 = {
   polkadot: true,
   solana: true,
   cardano: true,
+  cardano_testnet: true,
 };
 const seedIdentifierPath = {
   neo: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
   filecoin: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
   solana: ({ purpose, coinType }) => `${purpose}'/${coinType}'`,
   cardano: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
+  cardano_testnet: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'/0/0`,
   _: ({ purpose, coinType }) => `${purpose}'/${coinType}'/0'`,
 };
 export const getSeedIdentifierDerivation = (

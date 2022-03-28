@@ -51,9 +51,7 @@ export const buildTransaction = async (
 ): Promise<TyphonTransaction> => {
   const cardanoResources = a.cardanoResources as CardanoResources;
   const protocolParams = cardanoResources.protocolParams;
-  // TODO: remove fix currencyId cardano_testnet
-  // const networkParams = getNetworkParameters(account.currency.id);
-  const networkParams = getNetworkParameters("cardano_testnet");
+  const networkParams = getNetworkParameters(a.currency.id);
 
   const unusedInternalCred = cardanoResources.internalCredentials.find(
     (cred) => !cred.isUsed
@@ -115,9 +113,7 @@ export const buildTransaction = async (
     transaction.setAuxiliaryData({ metadata });
   }
 
-  //TODO: remove fixed cardano_testnet
-  // const ttl = getTTL(a.currency.id);
-  const ttl = getTTL("cardano_testnet");
+  const ttl = getTTL(a.currency.id);
   transaction.setTTL(ttl);
 
   if (t.useAllAmount) {
