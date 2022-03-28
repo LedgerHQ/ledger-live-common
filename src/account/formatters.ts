@@ -142,29 +142,25 @@ const cliFormat = (account, level?: string) => {
     str += "\n";
 
     str += Object.entries(NFTCollections)
-      .map(
-        // nfts are set to any because there not just NFT, we added a metadata prop on the fly
-        // in the first step of the Rxjs flow to avoid having some async code here
-        ([contract, nfts]: [string, ProtoNFT[]]) => {
-          const tokenName = nfts?.[0]?.metadata?.tokenName;
-          const { bold, magenta, cyan, reverse } = styling;
+      .map(([contract, nfts]: [string, ProtoNFT[]]) => {
+        const tokenName = nfts?.[0]?.metadata?.tokenName;
+        const { bold, magenta, cyan, reverse } = styling;
 
-          return (
-            `${bold(tokenName ?? "Unknown Collection Name")} (${magenta(
-              contract
-            )}): ` +
-            nfts
-              .map((t) =>
-                t?.metadata?.nftName
-                  ? `\n  ${t.amount}x ${reverse(
-                      ` ${t?.metadata?.nftName} `
-                    )} ${cyan("#" + t.tokenId)}`
-                  : `\n  ${t.amount}x ${cyan("#" + t.tokenId)}`
-              )
-              .join()
-          );
-        }
-      )
+        return (
+          `${bold(tokenName ?? "Unknown Collection Name")} (${magenta(
+            contract
+          )}): ` +
+          nfts
+            .map((t) =>
+              t?.metadata?.nftName
+                ? `\n  ${t.amount}x ${reverse(
+                    ` ${t?.metadata?.nftName} `
+                  )} ${cyan("#" + t.tokenId)}`
+                : `\n  ${t.amount}x ${cyan("#" + t.tokenId)}`
+            )
+            .join()
+        );
+      })
       .join("\n");
   }
 
