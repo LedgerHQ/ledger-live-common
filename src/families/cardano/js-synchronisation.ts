@@ -317,7 +317,8 @@ export const getAccountShape: GetAccountShape = async (info) => {
     xpub,
     accountIndex,
     initialAccount,
-    syncFromBlockHeight
+    syncFromBlockHeight,
+    currency
   );
 
   const accountCredentialsMap = [
@@ -365,9 +366,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
   });
 
   const stakeCredential = getAccountStakeCredential(xpub, accountIndex);
-  // TODO: remove fix currencyId cardano_testnet
-  // const networkParams = getNetworkParameters(account.currency.id);
-  const networkParams = getNetworkParameters("cardano_testnet");
+  const networkParams = getNetworkParameters(currency.id);
   const freshAddresses = externalCredentials
     .filter((c) => !c.isUsed)
     .map((c) => ({
@@ -378,7 +377,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
         stakeCred: stakeCredential,
       }).getBech32(),
     }));
-  const cardanoNetworkInfo = await getNetworkInfo(initialAccount);
+  const cardanoNetworkInfo = await getNetworkInfo(initialAccount, currency);
 
   return {
     id: accountId,

@@ -1,4 +1,8 @@
-import { STAKING_ADDRESS_INDEX, TTL_GAP } from "./constants";
+import {
+  CARDANO_TESTNET_CURRENCY_ID,
+  STAKING_ADDRESS_INDEX,
+  TTL_GAP,
+} from "./constants";
 
 import {
   utils as TyphonUtils,
@@ -25,7 +29,7 @@ import { Bip32PublicKey } from "@stricahq/bip32ed25519";
 import bs58 from "bs58";
 import BigNumber from "bignumber.js";
 import { getNetworkParameters } from "./networks";
-import { OperationType } from "../../types";
+import { CryptoCurrency, OperationType } from "../../types";
 import groupBy from "lodash/groupBy";
 
 /**
@@ -361,4 +365,8 @@ export function getOperationType({
 
 export function getTokenAssetId(t: Token): string {
   return `${t.policyId}${t.assetName}`;
+}
+
+export function isTestnet(currency: CryptoCurrency): boolean {
+  return currency.id === CARDANO_TESTNET_CURRENCY_ID;
 }

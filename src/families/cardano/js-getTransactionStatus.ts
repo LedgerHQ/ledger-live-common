@@ -32,9 +32,7 @@ const getTransactionStatus = async (
   }
 
   const cardanoResources = a.cardanoResources as CardanoResources;
-  // TODO: remove fix currencyId cardano_testnet
-  // const networkParams = getNetworkParameters(account.currency.id);
-  const networkParams = getNetworkParameters("cardano_testnet");
+  const networkParams = getNetworkParameters(a.currency.id);
 
   if (!t.fees) {
     errors.fees = new FeeNotLoaded();

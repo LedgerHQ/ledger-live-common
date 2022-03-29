@@ -11,16 +11,14 @@ import { utils as TyphonUtils } from "@stricahq/typhonjs";
 import { address as TyphonAddress } from "@stricahq/typhonjs";
 import { getNetworkParameters } from "./networks";
 
-const resolver: Resolver = async (transport, { path, verify }) => {
+const resolver: Resolver = async (transport, { path, verify, currency }) => {
   const spendingPath = getBipPathFromString(path);
   const stakingPathString = getBipPathString({
     account: spendingPath.account,
     chain: StakeChain.stake,
     index: STAKING_ADDRESS_INDEX,
   });
-  // TODO: remove fix currencyId cardano_testnet
-  // const networkParams = getNetworkParameters(account.currency.id);
-  const networkParams = getNetworkParameters("cardano_testnet");
+  const networkParams = getNetworkParameters(currency.id);
   const network =
     networkParams.networkId === Networks.Mainnet.networkId
       ? Networks.Mainnet

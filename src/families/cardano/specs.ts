@@ -6,30 +6,56 @@ import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { DeviceModelId } from "@ledgerhq/devices";
 import BigNumber from "bignumber.js";
 
+//TODO: need to run the test and update mutations as required after speculos flow in working condition
+
 const cardano: AppSpec<Transaction> = {
   name: "cardano",
   currency: getCryptoCurrencyById("cardano"),
   appQuery: {
     model: DeviceModelId.nanoS,
     appName: "CardanoADA",
-    appVersion: "3.0.0",
   },
   mutations: [
     {
       name: "move ~50%",
-      maxRun: 2,
+      maxRun: 1,
       transaction: ({ account, siblings, bridge }) => {
         const sibling = pickSiblings(siblings, 4);
         const recipient = sibling.freshAddress;
         const transaction = bridge.createTransaction(account);
 
-        const updates = [{ amount: new BigNumber(1) }, { recipient }];
+        const updates = [
+          { amount: new BigNumber(account.balance.dividedBy(2)) },
+          { recipient },
+        ];
         return {
           transaction,
           updates,
         };
       },
-      test: ({ account, accountBeforeTransaction, operation }) => {
+      test: ({ account, accountBeforeTransaction, operation }): void => {
+        expect(account.balance.toString()).toBe(
+          accountBeforeTransaction.balance.minus(operation.value).toString()
+        );
+      },
+    },
+    {
+      name: "send max",
+      maxRun: 1,
+      transaction: ({ account, siblings, bridge }) => {
+        const sibling = pickSiblings(siblings, 4);
+        const recipient = sibling.freshAddress;
+        const transaction = bridge.createTransaction(account);
+
+        const updates = [{ useAllAmount: true }, { recipient }];
+
+        return {
+          transaction,
+          updates,
+        };
+      },
+      test: ({ account, accountBeforeTransaction, operation }): void => {
+        //TODO: add additional test to check operation amount
         expect(account.balance.toString()).toBe(
           accountBeforeTransaction.balance.minus(operation.value).toString()
         );

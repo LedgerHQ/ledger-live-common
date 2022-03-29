@@ -1,24 +1,30 @@
 import network from "../../../network";
-import { CARDANO_API_ENDPOINT } from "../constants";
-import { Account } from "../../../types";
+import { Account, CryptoCurrency } from "../../../types";
 import { APINetworkInfo } from "./api-types";
-import { getEpoch } from "../logic";
+import { getEpoch, isTestnet } from "../logic";
+import {
+  CARDANO_API_ENDPOINT,
+  CARDANO_TESTNET_API_ENDPOINT,
+} from "../constants";
 
-async function fetchNetworkInfo(): Promise<APINetworkInfo> {
+async function fetchNetworkInfo(
+  currency: CryptoCurrency
+): Promise<APINetworkInfo> {
   const res = await network({
     method: "GET",
-    url: `${CARDANO_API_ENDPOINT}/v1/network/info`,
+    url: isTestnet(currency)
+      ? `${CARDANO_TESTNET_API_ENDPOINT}/v1/network/info`
+      : `${CARDANO_API_ENDPOINT}/v1/network/info`,
   });
   return res && (res.data as APINetworkInfo);
 }
 
 export async function getNetworkInfo(
-  a: Account | undefined
+  a: Account | undefined,
+  currency: CryptoCurrency
 ): Promise<APINetworkInfo> {
   if (a && a.cardanoResources) {
-    // TODO: remove fix currencyId cardano_testnet
-    // const currencyId = a.currency.id;
-    const currencyId = "cardano_testnet";
+    const currencyId = a.currency.id;
     const currentEpoch = getEpoch(currencyId, new Date());
     const lastSyncedEpoch = getEpoch(currencyId, a.lastSyncDate);
 
@@ -28,5 +34,5 @@ export async function getNetworkInfo(
       };
     }
   }
-  return fetchNetworkInfo();
+  return fetchNetworkInfo(currency);
 }

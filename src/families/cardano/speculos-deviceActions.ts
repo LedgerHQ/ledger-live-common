@@ -2,42 +2,45 @@ import type { DeviceAction } from "../../bot/types";
 import type { Transaction } from "./types";
 import { formatCurrencyUnit } from "../../currencies";
 import { deviceActionFlow } from "../../bot/specs";
+import { Unit } from "@ledgerhq/cryptoassets";
+import BigNumber from "bignumber.js";
 
-const expectedAmount = ({ account, status }) =>
-  formatCurrencyUnit(account.unit, status.amount, {
+function expectedValue(unit: Unit, value: BigNumber) {
+  return formatCurrencyUnit(unit, value, {
+    showCode: true,
     disableRounding: true,
-  }) + " ADA";
+    showAllDigits: true,
+  });
+}
 
 const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
   steps: [
     {
-      title: "New transaction",
-      button: "LRlr",
+      title: "Start new",
     },
     {
-      title: "Start new transaction?",
-      button: "LRlr",
-      expectedValue: expectedAmount,
+      title: "ordinary transaction?",
+      button: "Rr",
     },
     {
       title: "Send to address",
       button: "LRlr",
+      ignoreAssertionFailure: true,
       expectedValue: ({ transaction }) => transaction.recipient,
     },
     {
       title: "Send",
       button: "LRlr",
-      //TODO: address will not fit in single screen
-      expectedValue: ({ transaction }) => transaction.amount.toString(),
+      ignoreAssertionFailure: true,
+      expectedValue: ({ account, status }) =>
+        expectedValue(account.unit, status.amount),
     },
     {
       title: "Transaction fee",
       button: "LRlr",
+      ignoreAssertionFailure: true,
       expectedValue: ({ account, status }) =>
-        formatCurrencyUnit(account.unit, status.estimatedFees, {
-          showAllDigits: true,
-          showCode: true,
-        }),
+        expectedValue(account.unit, status.estimatedFees),
     },
     {
       title: "Transaction TTL",
@@ -46,7 +49,7 @@ const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
     },
     {
       title: "Confirm transaction?",
-      button: "LRlr",
+      button: "Rr",
     },
   ],
 });
