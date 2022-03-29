@@ -7,9 +7,8 @@ import {
   getSolanaPreloadData,
 } from "./js-preload-data";
 import { SolanaPreloadDataV1, SolanaStake, SolanaStakeWithMeta } from "./types";
+import { LEDGER_VALIDATOR_ADDRESS } from "./utils";
 import { ValidatorsAppValidator } from "./validator-app";
-
-const LEDGER_VALIDATOR_ADDRESS = "26pV97Ce83ZQ6Kz9XT4td8tdoUFPTng8Fb8gPyc53dJx";
 
 export function useSolanaPreloadData(
   currency: CryptoCurrency

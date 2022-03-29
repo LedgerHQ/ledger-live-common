@@ -1,6 +1,9 @@
 import { Cluster, clusterApiUrl } from "@solana/web3.js";
 import { getEnv } from "../../env";
 
+export const LEDGER_VALIDATOR_ADDRESS =
+  "26pV97Ce83ZQ6Kz9XT4td8tdoUFPTng8Fb8gPyc53dJx";
+
 export const assertUnreachable = (_: never): never => {
   throw new Error("unreachable assertion failed");
 };
@@ -50,6 +53,24 @@ export function clusterByCurrencyId(currencyId: string): Cluster {
 
   if (currencyId in clusters) {
     return clusters[currencyId];
+  }
+
+  throw Error(
+    `unexpected currency id format <${currencyId}>, should be like solana[_(testnet | devnet)]`
+  );
+}
+
+export function defaultVoteAccAddrByCurrencyId(
+  currencyId: string
+): string | undefined {
+  const voteAccAddrs: Record<string, string | undefined> = {
+    solana: LEDGER_VALIDATOR_ADDRESS,
+    solana_devnet: undefined,
+    solana_testnet: undefined,
+  };
+
+  if (currencyId in voteAccAddrs) {
+    return voteAccAddrs[currencyId];
   }
 
   throw Error(
