@@ -7,7 +7,7 @@ import {
   getSolanaPreloadData,
 } from "./js-preload-data";
 import { SolanaPreloadDataV1, SolanaStake, SolanaStakeWithMeta } from "./types";
-import { LEDGER_VALIDATOR_ADDRESS } from "./utils";
+import { LEDGER_VALIDATOR_ADDRESS, swap } from "./utils";
 import { ValidatorsAppValidator } from "./validator-app";
 
 export function useSolanaPreloadData(
@@ -73,10 +73,8 @@ function reorderValidators(
     (v) => v.voteAccount === LEDGER_VALIDATOR_ADDRESS
   );
 
-  if (ledgerValidatorIdx > -1) {
-    const ledgerValidator = shuffledValidators[ledgerValidatorIdx];
-    shuffledValidators[ledgerValidatorIdx] = shuffledValidators[0];
-    shuffledValidators[0] = ledgerValidator;
+  if (ledgerValidatorIdx !== -1) {
+    swap(shuffledValidators, ledgerValidatorIdx, 0);
   }
 
   return shuffledValidators;
