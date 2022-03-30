@@ -1,5 +1,4 @@
-import type { CurrencyBridge } from "../../types";
-
+import { CurrencyBridge, NFTMetadataResponse } from "../../types";
 import { getCryptoCurrencyById } from "../../currencies";
 import { metadataCallBatcher } from "../../nft";
 
@@ -13,7 +12,7 @@ const nftMetadataResolver: CurrencyBridge["nftMetadataResolver"] = async ({
   tokenId,
   currencyId,
   metadata,
-}) => {
+}): Promise<NFTMetadataResponse> => {
   // This is for test/mock purposes
   if (typeof metadata !== "undefined") {
     return {
