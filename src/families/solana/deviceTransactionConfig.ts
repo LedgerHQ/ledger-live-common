@@ -69,18 +69,6 @@ function fieldsForTransfer(command: TransferCommand): DeviceTransactionField[] {
     label: "Transfer",
   });
 
-  fields.push({
-    type: "address",
-    address: command.sender,
-    label: "Sender",
-  });
-
-  fields.push({
-    type: "text",
-    label: "Fee payer",
-    value: "Sender",
-  });
-
   return fields;
 }
 function fieldsForTokenTransfer(
@@ -247,20 +235,8 @@ function fieldsForStakeDelegate(
 
   fields.push({
     type: "address",
-    label: "Authorized by",
-    address: command.authorizedAccAddr,
-  });
-
-  fields.push({
-    type: "address",
     label: "Vote account",
     address: command.voteAccAddr,
-  });
-
-  fields.push({
-    type: "text",
-    label: "Fee payer",
-    value: "authorizer",
   });
 
   return fields;
@@ -275,18 +251,6 @@ function fieldsForStakeUndelegate(
     type: "address",
     label: "Deactivate stake",
     address: command.stakeAccAddr,
-  });
-
-  fields.push({
-    type: "address",
-    label: "Authorized by",
-    address: command.authorizedAccAddr,
-  });
-
-  fields.push({
-    type: "address",
-    label: "Fee payer",
-    address: command.authorizedAccAddr,
   });
 
   return fields;
@@ -306,24 +270,6 @@ function fieldsForStakeWithdraw(
     type: "address",
     label: "From",
     address: command.stakeAccAddr,
-  });
-
-  fields.push({
-    type: "address",
-    label: "To",
-    address: command.toAccAddr,
-  });
-
-  fields.push({
-    type: "address",
-    label: "Authorized by",
-    address: command.authorizedAccAddr,
-  });
-
-  fields.push({
-    type: "address",
-    label: "Fee payer",
-    address: command.authorizedAccAddr,
   });
 
   return fields;
