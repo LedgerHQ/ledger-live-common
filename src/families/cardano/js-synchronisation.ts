@@ -1,10 +1,4 @@
-import type {
-  Account,
-  CryptoCurrency,
-  Operation,
-  SubAccount,
-  TokenAccount,
-} from "../../types";
+import type { Account, Operation, SubAccount, TokenAccount } from "../../types";
 import {
   GetAccountShape,
   makeScanAccounts,
@@ -27,6 +21,7 @@ import {
   getOperationType,
   getTokenAssetId,
   getTokenDiff,
+  getTokenId,
   mergeTokens,
 } from "./logic";
 import { encodeOperationId } from "../../operation";
@@ -34,6 +29,7 @@ import { getOperations } from "./api/getOperations";
 import groupBy from "lodash/groupBy";
 import { getNetworkParameters } from "./networks";
 import { getNetworkInfo } from "./api/getNetworkInfo";
+import { getTokenById } from "@ledgerhq/cryptoassets";
 
 function getAccountChange(
   t: APITransaction,
@@ -107,14 +103,15 @@ function mapApiTxToOperation(
   operations.push(mainOperation);
 
   accountChange.tokens.forEach((t) => {
-    const tokenAccountId = getTokenAssetId(t);
+    const assetId = getTokenAssetId(t);
+    const tokenId = getTokenId(assetId);
     const tokenOperationType = getOperationType({
       valueChange: t.amount,
       fees: new BigNumber(0), //TODO: check if this works in all cases
     });
     const tokenOperation: Operation = {
-      accountId: tokenAccountId,
-      id: encodeOperationId(tokenAccountId, tx.hash, tokenOperationType),
+      accountId: tokenId,
+      id: encodeOperationId(tokenId, tx.hash, tokenOperationType),
       hash: tx.hash,
       type: tokenOperationType,
       fee: new BigNumber(tx.fees),
@@ -180,15 +177,12 @@ function filterUtxos(
   return utxos;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function prepareTokensAccounts({
   initialAccount,
   parentAccountId,
   tokensBalance,
   operationsMap,
-  parentCurrency,
 }: {
-  parentCurrency: CryptoCurrency;
   parentAccountId: string;
   initialAccount: Account | undefined;
   tokensBalance: Array<Token>;
@@ -199,30 +193,12 @@ function prepareTokensAccounts({
     operations: Array<Operation>
   ): TokenAccount {
     const assetId = getTokenAssetId(token);
+    const tokenId = getTokenId(assetId);
     return {
       type: "TokenAccount",
-      id: assetId,
+      id: tokenId,
       parentId: parentAccountId,
-      token: {
-        type: "TokenCurrency",
-        name: token.assetName,
-        // TODO: get ticker from registry
-        ticker: "",
-        //TODO: get units from registry
-        units: [
-          {
-            name: token.assetName,
-            code: token.assetName,
-            magnitude: 0,
-            showAllDigits: true,
-          },
-        ],
-        id: assetId,
-        // using assetId as cardano do not have contractAddress
-        contractAddress: assetId,
-        parentCurrency,
-        tokenType: "", //TODO: give tokenType
-      },
+      token: getTokenById(tokenId),
       balance: token.amount,
       spendableBalance: token.amount,
       creationDate: new Date(),
@@ -359,7 +335,6 @@ export const getAccountShape: GetAccountShape = async (info) => {
 
   const subAccounts = prepareTokensAccounts({
     parentAccountId: accountId,
-    parentCurrency: currency,
     initialAccount,
     tokensBalance,
     operationsMap: newOperations,

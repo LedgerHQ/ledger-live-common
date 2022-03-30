@@ -370,3 +370,7 @@ export function getTokenAssetId(t: Token): string {
 export function isTestnet(currency: CryptoCurrency): boolean {
   return currency.id === CARDANO_TESTNET_CURRENCY_ID;
 }
+
+export function getTokenId(assetId: string): string {
+  return `cardano/native/${assetId}`;
+}
