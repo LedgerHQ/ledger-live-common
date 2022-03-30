@@ -61,7 +61,9 @@ function fieldsForCommand(
   }
 }
 
-function fieldsForTransfer(command: TransferCommand): DeviceTransactionField[] {
+function fieldsForTransfer(
+  _command: TransferCommand
+): DeviceTransactionField[] {
   const fields: Array<DeviceTransactionField> = [];
 
   fields.push({
