@@ -2,7 +2,12 @@ import type { Account, TokenAccount } from "../../types";
 import { encodeAccountId } from "../../account";
 import type { GetAccountShape } from "../../bridge/jsHelpers";
 import { makeSync, makeScanAccounts, mergeOps } from "../../bridge/jsHelpers";
-import { getAccount, getOperations, hasESDTTokens } from "./api";
+import {
+  getAccount,
+  getAccountDelegations,
+  getOperations,
+  hasESDTTokens,
+} from "./api";
 import elrondBuildESDTTokenAccounts from "./js-buildSubAccounts";
 import { reconciliateSubAccounts } from "./js-reconciliation";
 
@@ -26,7 +31,8 @@ const getAccountShape: GetAccountShape = async (info) => {
   const operations = mergeOps(oldOperations, newOperations);
 
   let subAccounts: TokenAccount[] | undefined = [];
-  if (await hasESDTTokens(address)) {
+  const hasTokens = await hasESDTTokens(address);
+  if (hasTokens) {
     const tokenAccounts = await elrondBuildESDTTokenAccounts({
       currency,
       accountId: accountId,
@@ -42,6 +48,8 @@ const getAccountShape: GetAccountShape = async (info) => {
     }
   }
 
+  const delegations = await getAccountDelegations(address);
+
   const shape = {
     id: accountId,
     balance,
@@ -50,6 +58,7 @@ const getAccountShape: GetAccountShape = async (info) => {
     blockHeight,
     elrondResources: {
       nonce,
+      delegations,
     },
     subAccounts,
   };

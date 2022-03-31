@@ -9,17 +9,21 @@ import {
   GAS,
 } from "../constants";
 import {
+  ElrondDelegation,
   ElrondProtocolTransaction,
   ElrondTransferOptions,
   ESDTToken,
   NetworkInfo,
   Transaction,
 } from "../types";
+import { decodeTransaction } from "./sdk";
 export default class ElrondApi {
   private API_URL: string;
+  private DELEGATION_API_URL: string;
 
-  constructor(API_URL: string) {
+  constructor(API_URL: string, DELEGATION_API_URL: string) {
     this.API_URL = API_URL;
+    this.DELEGATION_API_URL = DELEGATION_API_URL;
   }
 
   async getAccountDetails(addr: string) {
@@ -165,10 +169,14 @@ export default class ElrondApi {
     let from = 0;
     let before = Math.floor(Date.now() / 1000);
     while (from <= transactionsCount) {
-      const { data: transactions } = await network({
+      let { data: transactions } = await network({
         method: "GET",
         url: `${this.API_URL}/accounts/${addr}/transactions?after=${startAt}&before=${before}&size=${MAX_PAGINATION_SIZE}`,
       });
+
+      transactions = transactions.map((transaction) =>
+        decodeTransaction(transaction)
+      );
 
       allTransactions = [...allTransactions, ...transactions];
 
@@ -177,6 +185,15 @@ export default class ElrondApi {
     }
 
     return allTransactions;
+  }
+
+  async getAccountDelegations(addr: string): Promise<ElrondDelegation[]> {
+    const { data: delegations } = await network({
+      method: "GET",
+      url: `${this.DELEGATION_API_URL}/accounts/${addr}/delegations`,
+    });
+
+    return delegations;
   }
 
   async getESDTTransactionsForAddress(

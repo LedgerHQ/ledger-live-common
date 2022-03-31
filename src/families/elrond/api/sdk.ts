@@ -1,6 +1,7 @@
 import { BigNumber } from "bignumber.js";
 import ElrondApi from "./apiCalls";
 import {
+  ElrondDelegation,
   ElrondTransferOptions,
   ESDTToken,
   NetworkInfo,
@@ -11,7 +12,10 @@ import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";
 import { getTransactionParams } from "../cache";
 import { GAS } from "../constants";
-const api = new ElrondApi(getEnv("ELROND_API_ENDPOINT"));
+const api = new ElrondApi(
+  getEnv("ELROND_API_ENDPOINT"),
+  getEnv("ELROND_DELEGATION_API_ENDPOINT")
+);
 
 /**
  * Get account balances and nonce
@@ -51,6 +55,20 @@ function getOperationType(
   transaction: Transaction,
   addr: string
 ): OperationType {
+  if (transaction.mode !== "send") {
+    switch (transaction.mode) {
+      case "delegate":
+        return "DELEGATE";
+      case "unDelegate":
+        return "UNDELEGATE";
+      case "withdraw":
+        return "WITHDRAW_UNBONDED";
+      case "claimRewards":
+        return "REWARD";
+      case "reDelegateRewards":
+        return "REDELEGATE_REWARDS";
+    }
+  }
   return isSender(transaction, addr) ? "OUT" : "IN";
 }
 
@@ -145,6 +163,12 @@ export const getAccountESDTTokens = async (
   return await api.getESDTTokensForAddress(address);
 };
 
+export const getAccountDelegations = async (
+  address: string
+): Promise<ElrondDelegation[]> => {
+  return await api.getAccountDelegations(address);
+};
+
 export const hasESDTTokens = async (address: string): Promise<boolean> => {
   const tokensCount = await api.getESDTTokensCountForAddress(address);
   return tokensCount > 0;
@@ -213,4 +237,22 @@ export const broadcastTransaction = async (
   signature: string
 ): Promise<string> => {
   return await api.submit(operation, signature);
+};
+
+export const decodeTransaction = (transaction: any): Transaction => {
+  if (!transaction.action) {
+    return transaction;
+  }
+
+  if (!transaction.action.category) {
+    return transaction;
+  }
+
+  if (transaction.action.category !== "stake") {
+    return transaction;
+  }
+
+  transaction.mode = transaction.action.name;
+
+  return transaction;
 };

@@ -7,6 +7,8 @@ export type OperationType =
   | "NONE"
   | "CREATE"
   | "REVEAL"
+  // ELROND
+  | "REDELEGATE_REWARDS"
   // COSMOS
   | "DELEGATE"
   | "UNDELEGATE"

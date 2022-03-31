@@ -9,6 +9,21 @@ export type CoreOperationSpecifics = Record<string, never>;
 export type CoreCurrencySpecifics = Record<string, never>;
 export type ElrondResources = {
   nonce: number;
+  delegations: ElrondDelegation[];
+};
+
+export type ElrondDelegation = {
+  address: string;
+  contract: string;
+  userUnBondable: string;
+  userActiveStake: string;
+  claimableRewards: string;
+  userUndelegatedList: UserUndelegated[];
+};
+
+export type UserUndelegated = {
+  amount: string;
+  seconds: number;
 };
 
 /**
@@ -16,6 +31,7 @@ export type ElrondResources = {
  */
 export type ElrondResourcesRaw = {
   nonce: number;
+  delegations: ElrondDelegation[];
 };
 
 export type ElrondProtocolTransaction = {
