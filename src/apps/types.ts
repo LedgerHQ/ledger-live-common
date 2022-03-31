@@ -73,6 +73,10 @@ export type AppOp =
 export type Action =  // recover from an error
   | {
       type: "recover";
+    } // set a new give state to force refresh
+  | {
+      type: "reset";
+      state: State;
     } // wipe will remove all apps of the device
   | {
       type: "wipe";

@@ -228,6 +228,9 @@ export const reducer = (state: State, action: Action): State => {
     case "recover":
       return { ...state, currentError: null };
 
+    case "reset":
+      return action.state;
+
     case "wipe":
       return {
         ...state,
