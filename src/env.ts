@@ -569,15 +569,15 @@ const envDefinitions = {
     parser: stringParser,
     desc: "Market data api",
   },
-  USE_LEARN_STAGING_URL: {
-    def: false,
-    parser: boolParser,
-    desc: "use the staging URL for the learn page",
-  },
   USB_FW_UPDATE: {
     def: false,
     parser: boolParser,
     desc: "USB Firmware Update for LLM",
+  },
+  USE_LEARN_STAGING_URL: {
+    def: false,
+    parser: boolParser,
+    desc: "use the staging URL for the learn page",
   },
 };
 
