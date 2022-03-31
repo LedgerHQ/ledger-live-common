@@ -574,6 +574,11 @@ const envDefinitions = {
     parser: boolParser,
     desc: "use the staging URL for the learn page",
   },
+  USB_FW_UPDATE: {
+    def: false,
+    parser: boolParser,
+    desc: "USB Firmware Update for LLM",
+  },
 };
 
 const getDefinition = (name: string): EnvDef<any> | null | undefined =>
