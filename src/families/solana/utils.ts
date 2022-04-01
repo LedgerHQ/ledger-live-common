@@ -73,7 +73,7 @@ export function defaultVoteAccAddrByCurrencyId(
     return voteAccAddrs[currencyId];
   }
 
-  throw Error(
+  throw new Error(
     `unexpected currency id format <${currencyId}>, should be like solana[_(testnet | devnet)]`
   );
 }
