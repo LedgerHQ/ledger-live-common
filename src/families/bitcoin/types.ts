@@ -26,7 +26,6 @@ export type BitcoinOutput = {
   outputIndex: number;
   blockHeight: number | null | undefined;
   address: string | null | undefined;
-  path: string | null | undefined; // DEPRECATED - used only by legacy libcore implementation
   value: BigNumber;
   rbf: boolean;
   isChange: boolean;
@@ -35,7 +34,6 @@ export type BitcoinOutputRaw = [
   string,
   number,
   number | null | undefined,
-  string | null | undefined,
   string | null | undefined,
   string,
   number, // rbf 0/1 for compression

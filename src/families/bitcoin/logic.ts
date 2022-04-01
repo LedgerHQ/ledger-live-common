@@ -66,12 +66,6 @@ export const isValidRecipient = async (params: {
   }
   return Promise.resolve(null);
 };
-export function isChangeOutput(output: BitcoinOutput): boolean {
-  if (!output.path) return false;
-  const p = output.path.split("/");
-  return p[p.length - 2] === "1";
-}
-
 type UTXOStatus =
   | {
       excluded: true;
