@@ -203,6 +203,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
 
   for (const unbonding of unbondings) {
     unbondingBalance = unbondingBalance.plus(unbonding.amount);
+    balance = balance.plus(unbonding.amount);
   }
 
   let spendableBalance = balance.minus(unbondingBalance.plus(delegatedBalance));
