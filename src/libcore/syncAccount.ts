@@ -144,6 +144,7 @@ export function sync(
             cosmosResources: syncedAccount.cosmosResources,
             algorandResources: syncedAccount.algorandResources,
             bitcoinResources: syncedAccount.bitcoinResources,
+            solanaResources: syncedAccount.solanaResources,
           }),
           initialAccount
         )
