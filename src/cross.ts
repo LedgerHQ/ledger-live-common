@@ -313,7 +313,9 @@ export const accountDataToAccount = ({
     // In JS implementation, only Bitcoin-like currencies store the xpub
     xpub = xpubOrAddress;
   } else {
-    if (!freshAddress) {
+    if (currency.family === "tezos") {
+      xpub = xpubOrAddress;
+    } else if (!freshAddress) {
       // otherwise, it's the freshAddress
       freshAddress = xpubOrAddress;
     }
