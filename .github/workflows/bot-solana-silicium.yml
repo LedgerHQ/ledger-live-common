@@ -1,4 +1,4 @@
-name: Bot 'Solana on Carbone'
+name: Bot 'Solana on Silicium'
 on:
   push:
     branches:
@@ -56,7 +56,7 @@ jobs:
           yarn ci-setup-cli
       - name: BOT
         env:
-          SEED: ${{ secrets.SEED2 }}
+          SEED: ${{ secrets.SEED3 }}
           BOT_REPORT_FOLDER: botreport
           VERBOSE_FILE: botreport/logs.txt
           GITHUB_SHA: ${GITHUB_SHA}
