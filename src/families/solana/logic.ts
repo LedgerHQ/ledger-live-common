@@ -122,3 +122,11 @@ export function isStakeLockUpInForce({
   }
   return lockup.unixTimestamp > Date.now() / 1000 || lockup.epoch > epoch;
 }
+
+export function stakeActivePercent(stake: SolanaStake) {
+  const amount = stake.delegation?.stake;
+  if (amount === undefined || amount === 0) {
+    return 0;
+  }
+  return (stake.activation.active / amount) * 100;
+}

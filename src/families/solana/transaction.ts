@@ -96,7 +96,10 @@ function formatStakeCreateAccount(
   tx: Transaction,
   command: StakeCreateAccountCommand
 ) {
-  const amount = lamportsToSOL(mainAccount, command.amount);
+  const amount = lamportsToSOL(
+    mainAccount,
+    command.amount + command.stakeAccRentExemptAmount
+  );
   const str = [
     `  CREATE STAKE ACCOUNT: ${command.stakeAccAddress}`,
     `  FROM: ${command.fromAccAddress}`,

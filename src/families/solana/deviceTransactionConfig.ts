@@ -1,5 +1,9 @@
-import type { AccountLike, Account } from "../../types";
+import BigNumber from "bignumber.js";
+import { formatCurrencyUnit } from "../../currencies";
+import type { DeviceTransactionField } from "../../transaction";
+import type { Account, AccountLike } from "../../types";
 import type {
+  CommandDescriptor,
   StakeCreateAccountCommand,
   StakeDelegateCommand,
   StakeSplitCommand,
@@ -9,14 +13,13 @@ import type {
   TokenTransferCommand,
   Transaction,
   TransferCommand,
-  CommandDescriptor,
 } from "./types";
-import type { DeviceTransactionField } from "../../transaction";
 import { assertUnreachable } from "./utils";
 
 // do not show fields like 'To', 'Recipient', etc., as per Ledger policy
 
 function getDeviceTransactionConfig({
+  account,
   transaction,
 }: {
   account: AccountLike;
@@ -31,12 +34,14 @@ function getDeviceTransactionConfig({
     throw new Error("unexpected invalid command");
   }
 
-  return fieldsForCommand(commandDescriptor);
+  return fieldsForCommand(commandDescriptor, account);
 }
 
 export default getDeviceTransactionConfig;
+
 function fieldsForCommand(
-  commandDescriptor: CommandDescriptor
+  commandDescriptor: CommandDescriptor,
+  account: AccountLike
 ): DeviceTransactionField[] {
   const { command } = commandDescriptor;
   switch (command.kind) {
@@ -47,7 +52,7 @@ function fieldsForCommand(
     case "token.createATA":
       return fieldsForCreateATA(command);
     case "stake.createAccount":
-      return fieldsForStakeCreateAccount(command);
+      return fieldsForStakeCreateAccount(command, account);
     case "stake.delegate":
       return fieldsForStakeDelegate(command);
     case "stake.undelegate":
@@ -161,46 +166,36 @@ function fieldsForCreateATA(
   return fields;
 }
 function fieldsForStakeCreateAccount(
-  command: StakeCreateAccountCommand
+  command: StakeCreateAccountCommand,
+  account: AccountLike
 ): DeviceTransactionField[] {
-  const fields: Array<DeviceTransactionField> = [];
-
-  if (command.delegate) {
-    fields.push({
-      type: "text",
-      label: "Unrecognized format",
-      value: "Unrecognized format",
-    });
-    return fields;
+  if (account.type !== "Account") {
+    throw new Error("unsupported account type");
   }
+
+  const unit = account.currency.units[0];
+
+  const fields: Array<DeviceTransactionField> = [];
 
   fields.push({
     type: "address",
-    label: "Create stake acct",
+    label: "Delegate from",
     address: command.stakeAccAddress,
   });
 
-  fields.push({
-    type: "amount",
-    label: "Deposit",
-  });
-
-  fields.push({
-    type: "address",
-    label: "From",
-    address: command.fromAccAddress,
-  });
-
-  fields.push({
-    type: "address",
-    label: "Base",
-    address: command.fromAccAddress,
-  });
-
+  // not using 'amount' field here because the field should
+  // show sum of amount and rent exempt amount
   fields.push({
     type: "text",
-    label: "Seed",
-    value: command.seed,
+    label: "Deposit",
+    value: formatCurrencyUnit(
+      unit,
+      new BigNumber(command.amount + command.stakeAccRentExemptAmount),
+      {
+        disableRounding: true,
+        showCode: true,
+      }
+    ),
   });
 
   fields.push({
@@ -210,15 +205,9 @@ function fieldsForStakeCreateAccount(
   });
 
   fields.push({
-    type: "text",
-    label: "Lockup",
-    value: "None",
-  });
-
-  fields.push({
     type: "address",
-    label: "Fee payer",
-    address: command.fromAccAddress,
+    label: "Vote account",
+    address: command.delegate.voteAccAddress,
   });
 
   return fields;

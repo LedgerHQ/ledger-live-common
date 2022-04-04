@@ -26,7 +26,6 @@ import {
   toTokenMint,
   withdrawableFromStake,
 } from "./logic";
-/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import {
   compact,
   filter,
@@ -172,7 +171,10 @@ export const getAccountShapeWithAPI = async (
           stake === null
             ? undefined
             : {
-                stake: stake.delegation.stake.toNumber(),
+                stake:
+                  activation.state === "inactive"
+                    ? 0
+                    : stake.delegation.stake.toNumber(),
                 voteAccAddr: stake.delegation.voter.toBase58(),
               },
         activation,

@@ -1,6 +1,7 @@
 import { Cluster } from "@solana/web3.js";
 import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { compact } from "lodash/fp";
+import { getEnv } from "../../../env";
 import network from "../../../network";
 
 export type ValidatorsAppValidatorRaw = {
@@ -55,7 +56,8 @@ export type ValidatorsAppValidator = {
 const URLS = {
   validatorList: (cluster: Extract<Cluster, "mainnet-beta" | "testnet">) => {
     const clusterSlug = cluster === "mainnet-beta" ? "mainnet" : cluster;
-    return `https://www.validators.app/api/v1/validators/${clusterSlug}.json?order=score`;
+    const baseUrl = getEnv("SOLANA_VALIDATORS_APP_BASE_URL");
+    return `${baseUrl}/${clusterSlug}.json`;
   },
 };
 
