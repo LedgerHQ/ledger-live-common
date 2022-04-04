@@ -61,8 +61,64 @@ export const acceptStakeCreateAccountTransaction: DeviceAction<
   Transaction,
   any
 > = deviceActionFlow({
-  // unrecognized format on ledger nano device
-  steps: [],
+  steps: [
+    {
+      title: "Delegate from",
+      button: "Rr",
+      expectedValue: ({ transaction }) => {
+        const command = transaction.model.commandDescriptor?.command;
+        if (command?.kind === "stake.createAccount") {
+          return ellipsis(command.stakeAccAddress);
+        }
+
+        throwUnexpectedTransaction();
+      },
+    },
+    {
+      title: "Deposit",
+      button: "Rr",
+      expectedValue: ({ account, transaction }) => {
+        const command = transaction.model.commandDescriptor?.command;
+        if (command?.kind === "stake.createAccount") {
+          return formatAmount(
+            account.currency,
+            command.amount + command.stakeAccRentExemptAmount
+          );
+        }
+
+        throwUnexpectedTransaction();
+      },
+    },
+    {
+      title: "New authority",
+      button: "Rr",
+      expectedValue: ({ transaction }) => {
+        const command = transaction.model.commandDescriptor?.command;
+        if (command?.kind === "stake.createAccount") {
+          return ellipsis(command.fromAccAddress);
+        }
+
+        throwUnexpectedTransaction();
+      },
+    },
+    {
+      title: "Vote account",
+      button: "Rr",
+      expectedValue: ({ transaction }) => {
+        const command = transaction.model.commandDescriptor?.command;
+        if (command?.kind === "stake.createAccount") {
+          return ellipsis(command.delegate.voteAccAddress);
+        }
+
+        throwUnexpectedTransaction();
+      },
+    },
+    {
+      title: "Approve",
+      button: "LRlr",
+      final: true,
+    },
+  ],
 });
 
 export const acceptStakeDelegateTransaction: DeviceAction<Transaction, any> =

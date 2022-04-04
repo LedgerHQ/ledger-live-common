@@ -22,6 +22,7 @@ const solana: AppSpec<Transaction> = {
   appQuery: {
     model: DeviceModelId.nanoS,
     firmware: "2",
+    appVersion: "1.2.0",
     appName: "solana",
   },
   currency: getCryptoCurrencyById("solana"),
@@ -81,7 +82,7 @@ const solana: AppSpec<Transaction> = {
           "already enough delegations"
         );
 
-        invariant(account.balance.gte(0.003), "not enough balance");
+        invariant(account.balance.gte(30000000), "not enough balance");
 
         const { validators } = getCurrentSolanaPreloadData(account.currency);
 
@@ -111,7 +112,7 @@ const solana: AppSpec<Transaction> = {
               },
             },
             {
-              amount: new BigNumber(0.0001),
+              amount: new BigNumber(100000),
             },
           ],
         };
