@@ -135,12 +135,6 @@ export const acceptStakeDelegateTransaction: DeviceAction<Transaction, any> =
           throwUnexpectedTransaction();
         },
       },
-    ],
-  });
-
-export const acceptStakeUndelegateTransaction: DeviceAction<Transaction, any> =
-  deviceActionFlow({
-    steps: [
       {
         title: "Vote account",
         button: "Rr",
