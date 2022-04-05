@@ -5,7 +5,7 @@ import type {
   OperationType,
   SignOperationEvent,
 } from "../../types";
-import { open, close } from "../../hw";
+import { withDevice } from "../../hw/deviceAccess";
 import type {
   Command,
   CommandDescriptor,
@@ -58,49 +58,46 @@ export const signOperationWithAPI = (
   },
   api: () => Promise<ChainAPI>
 ): Observable<SignOperationEvent> =>
-  new Observable((subscriber) => {
-    const main = async () => {
-      const transport = await open(deviceId);
+  withDevice(deviceId)(
+    (transport) =>
+      new Observable((subscriber) => {
+        const main = async () => {
+          const [msgToHardwareBytes, signOnChainTransaction] =
+            await buildTransactionWithAPI(account, transaction, await api());
 
-      try {
-        const [msgToHardwareBytes, signOnChainTransaction] =
-          await buildTransactionWithAPI(account, transaction, await api());
+          const hwApp = new Solana(transport);
 
-        const hwApp = new Solana(transport);
+          subscriber.next({
+            type: "device-signature-requested",
+          });
 
-        subscriber.next({
-          type: "device-signature-requested",
-        });
+          const { signature } = await hwApp.signTransaction(
+            account.freshAddressPath,
+            msgToHardwareBytes
+          );
 
-        const { signature } = await hwApp.signTransaction(
-          account.freshAddressPath,
-          msgToHardwareBytes
+          subscriber.next({
+            type: "device-signature-granted",
+          });
+
+          const signedOnChainTxBytes = signOnChainTransaction(signature);
+
+          subscriber.next({
+            type: "signed",
+            signedOperation: {
+              operation: buildOptimisticOperation(account, transaction),
+              signature: signedOnChainTxBytes.toString("hex"),
+              expirationDate: null,
+            },
+          });
+        };
+
+        main().then(
+          () => subscriber.complete(),
+          (e) => subscriber.error(e)
         );
-
-        subscriber.next({
-          type: "device-signature-granted",
-        });
-
-        const signedOnChainTxBytes = signOnChainTransaction(signature);
-
-        subscriber.next({
-          type: "signed",
-          signedOperation: {
-            operation: buildOptimisticOperation(account, transaction),
-            signature: signedOnChainTxBytes.toString("hex"),
-            expirationDate: null,
-          },
-        });
-      } finally {
-        close(transport, deviceId);
-      }
-    };
-
-    main().then(
-      () => subscriber.complete(),
-      (e) => subscriber.error(e)
-    );
-  });
+      })
+  );
 
 function buildOptimisticOperationForCommand(
   account: Account,
