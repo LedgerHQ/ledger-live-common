@@ -39,7 +39,6 @@ import type {
 import type { CurrencyBridge, AccountBridge } from "../types/bridge";
 import getAddress from "../hw/getAddress";
 import type { Result, GetAddressOptions } from "../hw/getAddress/types";
-import { open, close } from "../hw";
 import { withDevice } from "../hw/deviceAccess";
 
 export type GetAccountShapeArg0 = {
@@ -225,254 +224,256 @@ export const makeScanAccounts =
     ) => (opts: GetAddressOptions) => Promise<Result>
   ): CurrencyBridge["scanAccounts"] =>
   ({ currency, deviceId, syncConfig }): Observable<ScanAccountEvent> =>
-    Observable.create((o) => {
-      let finished = false;
+    withDevice(deviceId)((transport) =>
+      Observable.create((o) => {
+        let finished = false;
 
-      const unsubscribe = () => {
-        finished = true;
-      };
-
-      const derivationsCache = {};
-
-      // in future ideally what we want is:
-      // return mergeMap(addressesObservable, address => fetchAccount(address))
-      async function stepAccount(
-        index,
-        { address, path: freshAddressPath, ...rest },
-        derivationMode,
-        seedIdentifier,
-        transport
-      ): Promise<Account | null | undefined> {
-        if (finished) return;
-
-        const accountShape: Partial<Account> = await getAccountShape(
-          {
-            transport,
-            currency,
-            index,
-            address,
-            derivationPath: freshAddressPath,
-            derivationMode,
-            rest,
-          },
-          syncConfig
-        );
-        if (finished) return;
-
-        const freshAddress = address;
-        const operations = accountShape.operations || [];
-        const operationsCount =
-          accountShape.operationsCount || operations.length;
-        const creationDate =
-          operations.length > 0
-            ? operations[operations.length - 1].date
-            : new Date();
-        const balance = accountShape.balance || new BigNumber(0);
-        const spendableBalance =
-          accountShape.spendableBalance || new BigNumber(0);
-        if (!accountShape.id) throw new Error("account ID must be provided");
-        if (balance.isNaN()) throw new Error("invalid balance NaN");
-        const initialAccount: Account = {
-          type: "Account",
-          id: accountShape.id,
-          seedIdentifier,
-          freshAddress,
-          freshAddressPath,
-          freshAddresses: [
-            {
-              address: freshAddress,
-              derivationPath: freshAddressPath,
-            },
-          ],
-          derivationMode,
-          name: "",
-          starred: false,
-          used: false,
-          index,
-          currency,
-          operationsCount,
-          operations: [],
-          swapHistory: [],
-          pendingOperations: [],
-          unit: currency.units[0],
-          lastSyncDate: new Date(),
-          creationDate,
-          // overrides
-          balance,
-          spendableBalance,
-          blockHeight: 0,
-          balanceHistoryCache: emptyHistoryCache,
+        const unsubscribe = () => {
+          finished = true;
         };
-        const account = { ...initialAccount, ...accountShape };
 
-        if (account.balanceHistoryCache === emptyHistoryCache) {
-          account.balanceHistoryCache = generateHistoryFromOperations(account);
-        }
+        const derivationsCache = {};
 
-        if (!account.used) {
-          account.used = !isAccountEmpty(account);
-        }
+        // in future ideally what we want is:
+        // return mergeMap(addressesObservable, address => fetchAccount(address))
+        async function stepAccount(
+          index,
+          { address, path: freshAddressPath, ...rest },
+          derivationMode,
+          seedIdentifier,
+          transport
+        ): Promise<Account | null | undefined> {
+          if (finished) return;
 
-        return account;
-      }
-
-      async function main() {
-        // TODO switch to withDevice
-        let transport;
-
-        try {
-          transport = await open(deviceId);
-          const getAddr = getAddressFn
-            ? getAddressFn(transport)
-            : (opts) => getAddress(transport, opts);
-          const derivationModes = getDerivationModesForCurrency(currency);
-
-          for (const derivationMode of derivationModes) {
-            if (finished) break;
-            const path = getSeedIdentifierDerivation(currency, derivationMode);
-            log(
-              "scanAccounts",
-              `scanning ${currency.id} on derivationMode=${derivationMode}`
-            );
-            let result = derivationsCache[path];
-
-            if (!result) {
-              try {
-                result = await getAddr({
-                  currency,
-                  path,
-                  derivationMode,
-                });
-                derivationsCache[path] = result;
-              } catch (e) {
-                if (e instanceof UnsupportedDerivation) {
-                  log(
-                    "scanAccounts",
-                    "ignore derivationMode=" + derivationMode
-                  );
-                  continue;
-                }
-                throw e;
-              }
-            }
-
-            if (!result) continue;
-            const seedIdentifier = result.publicKey;
-            let emptyCount = 0;
-            const mandatoryEmptyAccountSkip =
-              getMandatoryEmptyAccountSkip(derivationMode);
-            const derivationScheme = getDerivationScheme({
+          const accountShape: Partial<Account> = await getAccountShape(
+            {
+              transport,
+              currency,
+              index,
+              address,
+              derivationPath: freshAddressPath,
               derivationMode,
-              currency,
-            });
-            const showNewAccount = shouldShowNewAccount(
-              currency,
-              derivationMode
-            );
-            const stopAt = isIterableDerivationMode(derivationMode) ? 255 : 1;
-            const startsAt = getDerivationModeStartsAt(derivationMode);
+              rest,
+            },
+            syncConfig
+          );
+          if (finished) return;
 
-            log(
-              "debug",
-              `start scanning account process. MandatoryEmptyAccountSkip ${mandatoryEmptyAccountSkip} / StartsAt: ${startsAt} - StopAt: ${stopAt}`
-            );
+          const freshAddress = address;
+          const operations = accountShape.operations || [];
+          const operationsCount =
+            accountShape.operationsCount || operations.length;
+          const creationDate =
+            operations.length > 0
+              ? operations[operations.length - 1].date
+              : new Date();
+          const balance = accountShape.balance || new BigNumber(0);
+          const spendableBalance =
+            accountShape.spendableBalance || new BigNumber(0);
+          if (!accountShape.id) throw new Error("account ID must be provided");
+          if (balance.isNaN()) throw new Error("invalid balance NaN");
+          const initialAccount: Account = {
+            type: "Account",
+            id: accountShape.id,
+            seedIdentifier,
+            freshAddress,
+            freshAddressPath,
+            freshAddresses: [
+              {
+                address: freshAddress,
+                derivationPath: freshAddressPath,
+              },
+            ],
+            derivationMode,
+            name: "",
+            starred: false,
+            used: false,
+            index,
+            currency,
+            operationsCount,
+            operations: [],
+            swapHistory: [],
+            pendingOperations: [],
+            unit: currency.units[0],
+            lastSyncDate: new Date(),
+            creationDate,
+            // overrides
+            balance,
+            spendableBalance,
+            blockHeight: 0,
+            balanceHistoryCache: emptyHistoryCache,
+          };
+          const account = { ...initialAccount, ...accountShape };
 
-            for (let index = startsAt; index < stopAt; index++) {
-              log("debug", `start to scan a new account. Index: ${index}`);
+          if (account.balanceHistoryCache === emptyHistoryCache) {
+            account.balanceHistoryCache =
+              generateHistoryFromOperations(account);
+          }
 
-              if (finished) {
-                log("debug", `new account scanning process has been finished`);
-                break;
-              }
+          if (!account.used) {
+            account.used = !isAccountEmpty(account);
+          }
 
-              if (!derivationModeSupportsIndex(derivationMode, index)) continue;
-              const freshAddressPath = runDerivationScheme(
-                derivationScheme,
+          return account;
+        }
+
+        async function main() {
+          try {
+            const getAddr = getAddressFn
+              ? getAddressFn(transport)
+              : (opts) => getAddress(transport, opts);
+            const derivationModes = getDerivationModesForCurrency(currency);
+
+            for (const derivationMode of derivationModes) {
+              if (finished) break;
+              const path = getSeedIdentifierDerivation(
                 currency,
-                {
-                  account: index,
-                }
+                derivationMode
               );
-              let res = derivationsCache[freshAddressPath];
-
-              if (!res) {
-                res = await getAddress(transport, {
-                  currency,
-                  path: freshAddressPath,
-                  derivationMode,
-                });
-                derivationsCache[freshAddressPath] = res;
-              }
-
-              const account = await stepAccount(
-                index,
-                res,
-                derivationMode,
-                seedIdentifier,
-                transport
-              );
-              // Bitcoin needs to compute the freshAddressPath itself,
-              // so we update it afterwards
-              if (account?.freshAddressPath) {
-                res.address = account.freshAddress;
-                derivationsCache[account.freshAddressPath] = res;
-              }
-              log("scanAccounts", "derivationsCache", res);
-
               log(
                 "scanAccounts",
-                `scanning ${currency.id} at ${freshAddressPath}: ${
-                  res.address
-                } resulted of ${
-                  account
-                    ? `Account with ${account.operations.length} txs`
-                    : "no account"
-                }`
+                `scanning ${currency.id} on derivationMode=${derivationMode}`
               );
-              if (!account) return;
-              account.name = !account.used
-                ? getNewAccountPlaceholderName({
+              let result = derivationsCache[path];
+
+              if (!result) {
+                try {
+                  result = await getAddr({
                     currency,
-                    index,
-                    derivationMode,
-                  })
-                : getAccountPlaceholderName({
-                    currency,
-                    index,
+                    path,
                     derivationMode,
                   });
-
-              if (account.used || showNewAccount) {
-                log(
-                  "debug",
-                  `Emit 'discovered' event for a new account found. AccountUsed: ${account.used} - showNewAccount: ${showNewAccount}`
-                );
-                o.next({
-                  type: "discovered",
-                  account,
-                });
+                  derivationsCache[path] = result;
+                } catch (e) {
+                  if (e instanceof UnsupportedDerivation) {
+                    log(
+                      "scanAccounts",
+                      "ignore derivationMode=" + derivationMode
+                    );
+                    continue;
+                  }
+                  throw e;
+                }
               }
 
-              if (!account.used) {
-                if (emptyCount >= mandatoryEmptyAccountSkip) break;
-                emptyCount++;
+              if (!result) continue;
+              const seedIdentifier = result.publicKey;
+              let emptyCount = 0;
+              const mandatoryEmptyAccountSkip =
+                getMandatoryEmptyAccountSkip(derivationMode);
+              const derivationScheme = getDerivationScheme({
+                derivationMode,
+                currency,
+              });
+              const showNewAccount = shouldShowNewAccount(
+                currency,
+                derivationMode
+              );
+              const stopAt = isIterableDerivationMode(derivationMode) ? 255 : 1;
+              const startsAt = getDerivationModeStartsAt(derivationMode);
+
+              log(
+                "debug",
+                `start scanning account process. MandatoryEmptyAccountSkip ${mandatoryEmptyAccountSkip} / StartsAt: ${startsAt} - StopAt: ${stopAt}`
+              );
+
+              for (let index = startsAt; index < stopAt; index++) {
+                log("debug", `start to scan a new account. Index: ${index}`);
+
+                if (finished) {
+                  log(
+                    "debug",
+                    `new account scanning process has been finished`
+                  );
+                  break;
+                }
+
+                if (!derivationModeSupportsIndex(derivationMode, index))
+                  continue;
+                const freshAddressPath = runDerivationScheme(
+                  derivationScheme,
+                  currency,
+                  {
+                    account: index,
+                  }
+                );
+                let res = derivationsCache[freshAddressPath];
+
+                if (!res) {
+                  res = await getAddress(transport, {
+                    currency,
+                    path: freshAddressPath,
+                    derivationMode,
+                  });
+                  derivationsCache[freshAddressPath] = res;
+                }
+
+                const account = await stepAccount(
+                  index,
+                  res,
+                  derivationMode,
+                  seedIdentifier,
+                  transport
+                );
+                // Bitcoin needs to compute the freshAddressPath itself,
+                // so we update it afterwards
+                if (account?.freshAddressPath) {
+                  res.address = account.freshAddress;
+                  derivationsCache[account.freshAddressPath] = res;
+                }
+                log("scanAccounts", "derivationsCache", res);
+
+                log(
+                  "scanAccounts",
+                  `scanning ${currency.id} at ${freshAddressPath}: ${
+                    res.address
+                  } resulted of ${
+                    account
+                      ? `Account with ${account.operations.length} txs`
+                      : "no account"
+                  }`
+                );
+                if (!account) return;
+                account.name = !account.used
+                  ? getNewAccountPlaceholderName({
+                      currency,
+                      index,
+                      derivationMode,
+                    })
+                  : getAccountPlaceholderName({
+                      currency,
+                      index,
+                      derivationMode,
+                    });
+
+                if (account.used || showNewAccount) {
+                  log(
+                    "debug",
+                    `Emit 'discovered' event for a new account found. AccountUsed: ${account.used} - showNewAccount: ${showNewAccount}`
+                  );
+                  o.next({
+                    type: "discovered",
+                    account,
+                  });
+                }
+
+                if (!account.used) {
+                  if (emptyCount >= mandatoryEmptyAccountSkip) break;
+                  emptyCount++;
+                }
               }
             }
-          }
 
-          o.complete();
-        } catch (e) {
-          o.error(e);
-        } finally {
-          if (transport) {
-            close(transport, deviceId);
+            o.complete();
+          } catch (e) {
+            o.error(e);
           }
         }
-      }
 
-      main();
-      return unsubscribe;
-    });
+        main();
+        return unsubscribe;
+      })
+    );
 export function makeAccountBridgeReceive({
   injectGetAddressParams,
 }: {
