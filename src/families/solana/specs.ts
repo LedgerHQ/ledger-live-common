@@ -25,6 +25,7 @@ const solana: AppSpec<Transaction> = {
     appVersion: "1.2.0",
     appName: "solana",
   },
+  testTimeout: 2 * 60 * 1000,
   currency: getCryptoCurrencyById("solana"),
   mutations: [
     {
@@ -82,7 +83,7 @@ const solana: AppSpec<Transaction> = {
           "already enough delegations"
         );
 
-        invariant(account.balance.gte(30000000), "not enough balance");
+        invariant(account.balance.gte(3000000), "not enough balance");
 
         const { validators } = getCurrentSolanaPreloadData(account.currency);
 
