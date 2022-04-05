@@ -14,6 +14,7 @@ import { DeviceModelId } from "@ledgerhq/devices";
 const currency = getCryptoCurrencyById("algorand");
 // Minimum balance required for a new non-ASA account
 const minBalanceNewAccount = parseCurrencyUnit(currency.units[0], "0.1");
+const minBalanceToTransaction = parseCurrencyUnit(currency.units[0], "0.001");
 
 // Ensure that, when the recipient corresponds to an empty account,
 // the amount to send is greater or equal to the required minimum
@@ -77,7 +78,7 @@ const algorand: AppSpec<AlgorandTransaction> = {
       name: "move ~50%",
       maxRun: 2,
       transaction: ({ account, siblings, bridge, maxSpendable }) => {
-        invariant(maxSpendable.gt(0), "Spendable balance is too low");
+        invariant(maxSpendable.gt(minBalanceToTransaction), "Spendable balance is too low");
         const sibling = pickSiblings(siblings, 4);
         const recipient = sibling.freshAddress;
         const transaction = bridge.createTransaction(account);
@@ -110,7 +111,7 @@ const algorand: AppSpec<AlgorandTransaction> = {
       name: "send max",
       maxRun: 1,
       transaction: ({ account, siblings, bridge, maxSpendable }) => {
-        invariant(maxSpendable.gt(0), "Spendable balance is too low");
+        invariant(maxSpendable.gt(minBalanceToTransaction), "Spendable balance is too low");
         const sibling = pickSiblings(siblings, 4);
         // Send the full spendable balance
         const amount = maxSpendable;
@@ -138,7 +139,7 @@ const algorand: AppSpec<AlgorandTransaction> = {
       name: "send ASA ~50%",
       maxRun: 2,
       transaction: ({ account, siblings, bridge, maxSpendable }) => {
-        invariant(maxSpendable.gt(0), "Spendable balance is too low");
+        invariant(maxSpendable.gt(minBalanceToTransaction), "Spendable balance is too low");
         const subAccount = sample(getAssetsWithBalance(account));
         invariant(
           subAccount && subAccount.type === "TokenAccount",
@@ -235,7 +236,7 @@ const algorand: AppSpec<AlgorandTransaction> = {
         invariant(rewards && rewards.gt(0), "No pending rewards");
         // Ensure that the rewards can effectively be claimed
         // (fees have to be paid in order to claim the rewards)
-        invariant(maxSpendable.gt(0), "Spendable balance is too low");
+        invariant(maxSpendable.gt(minBalanceToTransaction), "Spendable balance is too low");
         const transaction = bridge.createTransaction(account);
         const mode = "claimReward";
         const updates: Array<Partial<AlgorandTransaction>> = [
