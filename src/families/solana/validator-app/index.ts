@@ -67,9 +67,6 @@ export async function getValidators(
   const config: AxiosRequestConfig = {
     method: "GET",
     url: URLS.validatorList(cluster),
-    headers: {
-      Token: "3Y5dGxVc7JS9SktzH6JL2eZX",
-    },
   };
 
   const response: AxiosResponse<ValidatorsAppValidatorRaw[]> = await network(
