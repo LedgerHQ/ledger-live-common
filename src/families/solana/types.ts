@@ -4,12 +4,6 @@ import type {
 } from "../../types/transaction";
 import { ValidatorsAppValidator } from "./validator-app";
 
-// for legacy reasons export the types
-export type CoreStatics = Record<string, never>;
-export type CoreAccountSpecifics = Record<string, never>;
-export type CoreOperationSpecifics = Record<string, never>;
-export type CoreCurrencySpecifics = Record<string, never>;
-
 export type TransferCommand = {
   kind: "transfer";
   sender: string;
@@ -245,5 +239,3 @@ export type SolanaValidatorWithMeta = {
     img?: string;
   };
 };
-
-export const reflect = (_declare: unknown): void => {};
