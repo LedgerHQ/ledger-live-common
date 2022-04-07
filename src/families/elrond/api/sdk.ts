@@ -4,18 +4,25 @@ import {
   ElrondDelegation,
   ElrondTransferOptions,
   ESDTToken,
-  NetworkInfo,
   Transaction,
 } from "../types";
 import type { Operation, OperationType } from "../../../types";
 import { getEnv } from "../../../env";
 import { encodeOperationId } from "../../../operation";
-import { getTransactionParams } from "../cache";
-import { GAS } from "../constants";
+import {
+  Address,
+  GasLimit,
+  NetworkConfig,
+  ProxyProvider,
+  Transaction as ElrondSdkTransaction,
+  TransactionPayload,
+} from "@elrondnetwork/erdjs/out";
 const api = new ElrondApi(
   getEnv("ELROND_API_ENDPOINT"),
   getEnv("ELROND_DELEGATION_API_ENDPOINT")
 );
+
+const proxy = new ProxyProvider(getEnv("ELROND_API_ENDPOINT"));
 
 /**
  * Get account balances and nonce
@@ -37,8 +44,10 @@ export const getValidators = async () => {
   };
 };
 
-export const getNetworkConfig = async (): Promise<NetworkInfo> => {
-  return await api.getNetworkConfig();
+export const getNetworkConfig = async (): Promise<NetworkConfig> => {
+  await NetworkConfig.getDefault().sync(proxy);
+
+  return NetworkConfig.getDefault();
 };
 
 /**
@@ -193,40 +202,18 @@ export const getAccountESDTOperations = async (
  * Obtain fees from blockchain
  */
 export const getFees = async (t: Transaction): Promise<BigNumber> => {
-  const transactionParams = await getTransactionParams();
-  const {
-    gasPerByte,
-    gasPriceModifier,
-    gasLimit: minGasLimit,
-  } = transactionParams;
-  let gasPrice = transactionParams.gasPrice;
+  await NetworkConfig.getDefault().sync(proxy);
 
-  let gasLimit = minGasLimit;
-  if (t.subAccountId) {
-    gasLimit = GAS.ESDT_TRANSFER;
-  }
+  const transaction = new ElrondSdkTransaction({
+    data: new TransactionPayload(t.data),
+    receiver: new Address(t.receiver),
+    chainID: NetworkConfig.getDefault().ChainID,
+    gasLimit: new GasLimit(t.gasLimit),
+  });
 
-  const transactionData = Buffer.from(t.data?.trim() || []);
+  const feesStr = transaction.computeFee(NetworkConfig.getDefault()).toFixed();
 
-  const moveBalanceGas = minGasLimit + transactionData.length * gasPerByte;
-
-  if (t.subAccountId) {
-    gasLimit = GAS.ESDT_TRANSFER;
-  }
-
-  gasPrice = new BigNumber(gasPrice);
-  const feeForMove = new BigNumber(moveBalanceGas).multipliedBy(gasPrice);
-  if (moveBalanceGas === gasLimit) {
-    return feeForMove;
-  }
-
-  const diff = new BigNumber(gasLimit - moveBalanceGas);
-  const modifiedGasPrice = gasPrice.multipliedBy(
-    new BigNumber(gasPriceModifier)
-  );
-  const processingFee = diff.multipliedBy(modifiedGasPrice);
-
-  return feeForMove.plus(processingFee);
+  return new BigNumber(feesStr);
 };
 
 /**
