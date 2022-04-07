@@ -1,6 +1,11 @@
-import { Account, Operation, OperationType } from "../../types";
+import { Operation, OperationType } from "../../types";
 import { BigNumber } from "bignumber.js";
-import { makeSync, GetAccountShape, mergeOps } from "../../bridge/jsHelpers";
+import {
+  makeSync,
+  makeScanAccounts,
+  GetAccountShape,
+  mergeOps,
+} from "../../bridge/jsHelpers";
 import { encodeAccountId } from "../../account";
 import { getAccountInfo } from "./api/Cosmos";
 import { pubkeyToAddress, decodeBech32Pubkey } from "@cosmjs/amino";
@@ -154,8 +159,6 @@ const txToOps = (info: any, id: string, txs: any): Operation[] => {
   return ops;
 };
 
-const postSync = (initial: Account, parent: Account) => parent;
-
 export const getAccountShape: GetAccountShape = async (info) => {
   const { address, currency, derivationMode, initialAccount } = info;
   let xpubOrAddress = address;
@@ -237,4 +240,5 @@ export const getAccountShape: GetAccountShape = async (info) => {
   return { ...shape, operations };
 };
 
-export const sync = makeSync(getAccountShape, postSync);
+export const scanAccounts = makeScanAccounts({ getAccountShape });
+export const sync = makeSync({ getAccountShape });

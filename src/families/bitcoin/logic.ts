@@ -1,5 +1,4 @@
 import cashaddr from "cashaddrjs";
-import bchaddr from "bchaddrjs";
 import { Currency, isValidAddress } from "./wallet-btc";
 import { RecipientRequired, InvalidAddress } from "@ledgerhq/errors";
 import type { Account, CryptoCurrency, CryptoCurrencyIds } from "./../../types";
@@ -133,8 +132,8 @@ type CoinLogic = {
   injectGetAddressParams?: (arg0: Account) => any;
 };
 
-const bchToCashaddrAddressWithoutPrefix = (recipient) =>
-  recipient ? bchaddr.toCashAddress(recipient).split(":")[1] : recipient;
+export const bchToCashaddrAddressWithoutPrefix = (recipient) =>
+  recipient ? recipient.substring(recipient.indexOf(":") + 1) : recipient;
 
 export const perCoinLogic: Record<
   CryptoCurrencyIds,
