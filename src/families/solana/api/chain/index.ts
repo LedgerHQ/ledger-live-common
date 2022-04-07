@@ -12,6 +12,7 @@ import {
   SignaturesForAddressOptions,
   StakeProgram,
 } from "@solana/web3.js";
+import { getEnv } from "../../../../env";
 import { Awaited } from "../../logic";
 
 export type Config = {
@@ -97,6 +98,9 @@ export function getChainAPI(
     return new Connection(config.endpoint, {
       commitment: "finalized",
       fetchMiddleware,
+      confirmTransactionInitialTimeout: getEnv(
+        "SOLANA_TX_CONFIRMATION_TIMEOUT"
+      ),
     });
   };
 
