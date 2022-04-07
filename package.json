@@ -46,6 +46,7 @@
     "@celo/wallet-base": "^1.5.1",
     "@celo/wallet-ledger": "^1.5.1",
     "@crypto-com/chain-jslib": "0.0.19",
+    "@elrondnetwork/erdjs": "^9.2.4",
     "@ethereumjs/common": "^2.6.0",
     "@ethereumjs/tx": "^3.4.0",
     "@ledgerhq/compressjs": "1.3.2",
