@@ -75,6 +75,7 @@ export type Transaction = TransactionCommon & {
   blockHeight?: number;
   timestamp?: number;
   nonce?: number;
+  gasLimit: number;
   status?: string;
   fee?: BigNumber;
   round?: number;
@@ -103,6 +104,7 @@ export type TransactionRaw = TransactionCommonRaw & {
   family: "elrond";
   mode: ElrondTransactionMode;
   fees: string | null | undefined;
+  gasLimit: number;
 };
 export type ElrondValidator = {
   bls: string;
@@ -140,4 +142,4 @@ export type NetworkInfoRaw = {
 export type ElrondPreloadData = {
   validators: Record<string, any>;
 };
-export const reflect = (_declare: any) => { };
+export const reflect = (_declare: any) => {};

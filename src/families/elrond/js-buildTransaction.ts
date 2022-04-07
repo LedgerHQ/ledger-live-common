@@ -1,8 +1,4 @@
-import type {
-  ElrondProtocolTransaction,
-  NetworkInfo,
-  Transaction,
-} from "./types";
+import type { ElrondProtocolTransaction, Transaction } from "./types";
 import type { Account, SubAccount } from "../../types";
 import { getNonce } from "./logic";
 import { getNetworkConfig } from "./api";
@@ -14,6 +10,7 @@ import {
 } from "./constants";
 import BigNumber from "bignumber.js";
 import { ElrondEncodeTransaction } from "./encode";
+import { NetworkConfig } from "@elrondnetwork/erdjs/out";
 /**
  *
  * @param {Account} a
@@ -26,15 +23,16 @@ export const buildTransaction = async (
 ): Promise<string> => {
   const address = a.freshAddress;
   const nonce = getNonce(a);
-  const networkConfig: NetworkInfo = await getNetworkConfig();
-  const { chainID, gasPrice } = networkConfig;
-  let gasLimit = networkConfig.gasLimit;
+  const networkConfig: NetworkConfig = await getNetworkConfig();
+  const chainID = networkConfig.ChainID.valueOf();
+  const gasPrice = networkConfig.MinGasPrice.valueOf();
+  t.gasLimit = networkConfig.MinGasLimit.valueOf();
 
   let transactionValue: BigNumber;
 
   if (ta) {
     t.data = ElrondEncodeTransaction.ESDTTransfer(t, ta);
-    gasLimit = GAS.ESDT_TRANSFER; //gasLimit for and ESDT transfer
+    t.gasLimit = GAS.ESDT_TRANSFER; //gasLimit for and ESDT transfer
 
     transactionValue = new BigNumber(0); //amount of EGLD to be sent should be 0 in an ESDT transfer
   } else {
@@ -50,24 +48,24 @@ export const buildTransaction = async (
           );
         }
 
-        gasLimit = GAS.DELEGATE;
+        t.gasLimit = GAS.DELEGATE;
         t.data = ElrondEncodeTransaction.delegate();
 
         break;
       case "claimRewards":
-        gasLimit = GAS.CLAIM;
+        t.gasLimit = GAS.CLAIM;
         t.data = ElrondEncodeTransaction.claimRewards();
 
         transactionValue = new BigNumber(0); //amount of EGLD to be sent should be 0 in a claimRewards transaction
         break;
       case "withdraw":
-        gasLimit = GAS.DELEGATE;
+        t.gasLimit = GAS.DELEGATE;
         t.data = ElrondEncodeTransaction.withdraw();
 
         transactionValue = new BigNumber(0); //amount of EGLD to be sent should be 0 in a withdraw transaction
         break;
       case "reDelegateRewards":
-        gasLimit = GAS.DELEGATE;
+        t.gasLimit = GAS.DELEGATE;
         t.data = ElrondEncodeTransaction.reDelegateRewards();
 
         transactionValue = new BigNumber(0); //amount of EGLD to be sent should be 0 in a reDelegateRewards transaction
@@ -79,7 +77,7 @@ export const buildTransaction = async (
           );
         }
 
-        gasLimit = GAS.DELEGATE;
+        t.gasLimit = GAS.DELEGATE;
         t.data = ElrondEncodeTransaction.unDelegate(t);
 
         transactionValue = new BigNumber(0); //amount of EGLD to be sent should be 0 in a unDelegate transaction
@@ -97,7 +95,7 @@ export const buildTransaction = async (
     receiver: t.recipient,
     sender: address,
     gasPrice,
-    gasLimit,
+    gasLimit: t.gasLimit,
     data: t.data,
     chainID,
     ...HASH_TRANSACTION,
