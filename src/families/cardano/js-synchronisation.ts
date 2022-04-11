@@ -1,88 +1,43 @@
-import type { Account, Operation, SubAccount, TokenAccount } from "../../types";
+import type { Operation } from "../../types";
 import {
   GetAccountShape,
   makeScanAccounts,
   mergeOps,
 } from "../../bridge/jsHelpers";
 import { makeSync } from "../../bridge/jsHelpers";
-import { emptyHistoryCache, encodeAccountId } from "../../account";
+import { encodeAccountId } from "../../account";
 
 import BigNumber from "bignumber.js";
 import Ada from "@cardano-foundation/ledgerjs-hw-app-cardano";
 import { str_to_path } from "@cardano-foundation/ledgerjs-hw-app-cardano/dist/utils";
 import { utils as TyphonUtils } from "@stricahq/typhonjs";
 import { APITransaction } from "./api/api-types";
-import { CardanoOutput, PaymentCredential, Token } from "./types";
-import uniqBy from "lodash/uniqBy";
+import { CardanoOutput, PaymentCredential } from "./types";
 import {
+  getAccountChange,
   getAccountStakeCredential,
   getBaseAddress,
   getBipPathString,
   getOperationType,
-  getTokenAssetId,
-  getTokenDiff,
-  getTokenId,
-  mergeTokens,
 } from "./logic";
 import { encodeOperationId } from "../../operation";
 import { getOperations } from "./api/getOperations";
-import groupBy from "lodash/groupBy";
 import { getNetworkParameters } from "./networks";
 import { getNetworkInfo } from "./api/getNetworkInfo";
-import { getTokenById } from "@ledgerhq/cryptoassets";
+import { buildSubAccounts } from "./buildSubAccounts";
+import uniqBy from "lodash/uniqBy";
 
-function getAccountChange(
-  t: APITransaction,
-  accountCredentialsMap: Record<string, PaymentCredential>
-): { ada: BigNumber; tokens: Array<Token> } {
-  let accountInputAda = new BigNumber(0);
-  const accountInputTokens: Array<Token> = [];
-  t.inputs.forEach((i) => {
-    if (accountCredentialsMap[i.paymentKey]) {
-      accountInputAda = accountInputAda.plus(i.value);
-      accountInputTokens.push(
-        ...i.tokens.map((t) => ({
-          assetName: t.assetName,
-          policyId: t.policyId,
-          amount: new BigNumber(t.value),
-        }))
-      );
-    }
-  });
-
-  let accountOutputAda = new BigNumber(0);
-  const accountOutputTokens: Array<Token> = [];
-  t.outputs.forEach((o) => {
-    if (accountCredentialsMap[o.paymentKey]) {
-      accountOutputAda = accountOutputAda.plus(o.value);
-      accountOutputTokens.push(
-        ...o.tokens.map((t) => ({
-          assetName: t.assetName,
-          policyId: t.policyId,
-          amount: new BigNumber(t.value),
-        }))
-      );
-    }
-  });
-
-  return {
-    ada: accountOutputAda.minus(accountInputAda),
-    tokens: getTokenDiff(accountOutputTokens, accountInputTokens),
-  };
-}
-
-function mapApiTxToOperation(
+function mapTxToAccountOperation(
   tx: APITransaction,
   accountId: string,
   accountCredentialsMap: Record<string, PaymentCredential>
-): Array<Operation> {
-  const operations: Array<Operation> = [];
+): Operation {
   const accountChange = getAccountChange(tx, accountCredentialsMap);
   const mainOperationType = getOperationType({
     valueChange: accountChange.ada,
     fees: new BigNumber(tx.fees),
   });
-  const mainOperation: Operation = {
+  return {
     accountId,
     id: encodeOperationId(accountId, tx.hash, mainOperationType),
     hash: tx.hash,
@@ -100,45 +55,15 @@ function mapApiTxToOperation(
     extra: {},
     blockHash: undefined,
   };
-  operations.push(mainOperation);
-
-  accountChange.tokens.forEach((t) => {
-    const assetId = getTokenAssetId(t);
-    const tokenId = getTokenId(assetId);
-    const tokenOperationType = getOperationType({
-      valueChange: t.amount,
-      fees: new BigNumber(0), //TODO: check if this works in all cases
-    });
-    const tokenOperation: Operation = {
-      accountId: tokenId,
-      id: encodeOperationId(tokenId, tx.hash, tokenOperationType),
-      hash: tx.hash,
-      type: tokenOperationType,
-      fee: new BigNumber(tx.fees),
-      value: t.amount.absoluteValue(),
-      senders: tx.inputs.map((i) =>
-        TyphonUtils.getAddressFromHex(i.address).getBech32()
-      ),
-      recipients: tx.outputs.map((o) =>
-        TyphonUtils.getAddressFromHex(o.address).getBech32()
-      ),
-      blockHeight: tx.blockHeight,
-      date: new Date(tx.timestamp),
-      extra: {},
-      blockHash: undefined,
-    };
-    operations.push(tokenOperation);
-  });
-
-  return operations;
 }
 
-function filterUtxos(
+function syncUtxos(
   newTransactions: Array<APITransaction>,
-  oldUtxos: Array<CardanoOutput>,
+  stableUtxos: Array<CardanoOutput>,
   accountCredentialsMap: Record<string, PaymentCredential>
 ): Array<CardanoOutput> {
   const newUtxos: Array<CardanoOutput> = [];
+  // spentUtxoKey = txId#index
   const spentUtxoKeys: Set<string> = new Set();
 
   newTransactions.forEach((t) => {
@@ -170,75 +95,11 @@ function filterUtxos(
   });
 
   const utxos = uniqBy(
-    [...oldUtxos, ...newUtxos],
+    [...stableUtxos, ...newUtxos],
     (u) => `${u.hash}#${u.index}`
   ).filter((u) => !spentUtxoKeys.has(`${u.hash}#${u.index}`));
 
   return utxos;
-}
-
-function prepareTokensAccounts({
-  initialAccount,
-  parentAccountId,
-  tokensBalance,
-  operationsMap,
-}: {
-  parentAccountId: string;
-  initialAccount: Account | undefined;
-  tokensBalance: Array<Token>;
-  operationsMap: Record<string, Array<Operation>>;
-}): Array<SubAccount> {
-  function getNewSubAccount(
-    token: Token,
-    operations: Array<Operation>
-  ): TokenAccount {
-    const assetId = getTokenAssetId(token);
-    const tokenId = getTokenId(assetId);
-    return {
-      type: "TokenAccount",
-      id: tokenId,
-      parentId: parentAccountId,
-      token: getTokenById(tokenId),
-      balance: token.amount,
-      spendableBalance: token.amount,
-      creationDate: new Date(),
-      operationsCount: operations.length,
-      operations,
-      pendingOperations: [],
-      starred: false,
-      balanceHistoryCache: emptyHistoryCache,
-      swapHistory: [],
-    };
-  }
-
-  const subAccountsMap = (initialAccount?.subAccounts || []).reduce(
-    (finalMap, subAccount) => {
-      finalMap[subAccount.id] = subAccount;
-      return finalMap;
-    },
-    {} as Record<string, SubAccount>
-  );
-
-  tokensBalance.forEach((t) => {
-    const tokenAccountId = getTokenAssetId(t);
-    if (subAccountsMap[tokenAccountId]) {
-      subAccountsMap[tokenAccountId].balance = t.amount;
-    } else {
-      subAccountsMap[tokenAccountId] = getNewSubAccount(t, []);
-    }
-  });
-
-  for (const tokenAccountId in operationsMap) {
-    if (subAccountsMap[tokenAccountId]) {
-      const oldOperations = subAccountsMap[tokenAccountId].operations;
-      const newOperations = operationsMap[tokenAccountId];
-
-      const operations = mergeOps(oldOperations, newOperations);
-      subAccountsMap[tokenAccountId].operations = operations;
-    }
-  }
-
-  return Object.values(subAccountsMap);
 }
 
 export const getAccountShape: GetAccountShape = async (info) => {
@@ -305,39 +166,40 @@ export const getAccountShape: GetAccountShape = async (info) => {
     return finalMap;
   }, {} as Record<string, PaymentCredential>);
 
-  const stableOperationsIds = {};
+  const stableOperationsIds: Record<string, Operation> = {};
   (initialAccount?.operations || []).forEach((o) => {
     if ((o.blockHeight as number) < syncFromBlockHeight) {
       stableOperationsIds[o.hash] = o;
     }
   });
 
-  const oldUtxos = (initialAccount?.cardanoResources?.utxos || []).filter(
+  const stableUtxos = (initialAccount?.cardanoResources?.utxos || []).filter(
     (u) => stableOperationsIds[u.hash]
   );
-  const utxos = filterUtxos(newTransactions, oldUtxos, accountCredentialsMap);
+
+  const utxos = syncUtxos(newTransactions, stableUtxos, accountCredentialsMap);
   const accountBalance = utxos.reduce(
     (total, u) => total.plus(u.amount),
     new BigNumber(0)
   );
-  const tokensBalance = mergeTokens(utxos.map((u) => u.tokens).flat());
-
-  const allNewOperations = newTransactions
-    .map((t) => mapApiTxToOperation(t, accountId, accountCredentialsMap))
-    .flat();
-
-  const newOperations = groupBy(allNewOperations, (o) => o.accountId);
-  const accountNewOperations = newOperations[accountId] || [];
-  const accountOperations = mergeOps(
-    Object.values(stableOperationsIds),
-    accountNewOperations
+  const newOperations = newTransactions.map((t) =>
+    mapTxToAccountOperation(t, accountId, accountCredentialsMap)
   );
 
-  const subAccounts = prepareTokensAccounts({
-    parentAccountId: accountId,
+  // const newOperationsById = groupBy(newOperations, (o) => o.accountId);
+  // const accountNewOperations = newOperationsById[accountId] || [];
+  const operations = mergeOps(
+    Object.values(stableOperationsIds),
+    newOperations
+  );
+
+  const subAccounts = buildSubAccounts({
     initialAccount,
-    tokensBalance,
-    operationsMap: newOperations,
+    parentAccountId: accountId,
+    parentCurrency: currency,
+    newTransactions,
+    utxos,
+    accountCredentialsMap,
   });
 
   const stakeCredential = getAccountStakeCredential(xpub, accountIndex);
@@ -359,7 +221,7 @@ export const getAccountShape: GetAccountShape = async (info) => {
     xpub,
     balance: accountBalance,
     spendableBalance: accountBalance,
-    operations: accountOperations,
+    operations: operations,
     subAccounts,
     freshAddresses,
     freshAddress: freshAddresses[0].address,
