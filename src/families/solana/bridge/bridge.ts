@@ -42,23 +42,7 @@ function makePrepare(getChainAPI: (config: Config) => Promise<ChainAPI>) {
     return prepareTransactionWithAPI(mainAccount, transaction, chainAPI);
   }
 
-  const cacheKeyByAccTx = (account: Account, tx: Transaction) =>
-    hash({
-      account: {
-        id: account.id,
-        address: account.freshAddress,
-        syncDate: account.lastSyncDate.toISOString(),
-      },
-      tx: {
-        recipient: tx.recipient,
-        amount: tx.amount.toNumber(),
-        useAllAmount: tx.useAllAmount,
-        subAccountId: tx.subAccountId,
-        model: tx.model,
-      },
-    });
-
-  return makeLRUCache(prepareTransaction, cacheKeyByAccTx, seconds(30));
+  return prepareTransaction;
 }
 
 function makeSyncAndScan(getChainAPI: (config: Config) => Promise<ChainAPI>) {
