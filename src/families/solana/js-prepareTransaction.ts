@@ -19,21 +19,21 @@ import {
 import {
   SolanaAccountNotFunded,
   SolanaAddressOffEd25519,
-  SolanaMemoIsTooLong,
-  SolanaTokenAccountHoldsAnotherToken,
-  SolanaRecipientAssociatedTokenAccountWillBeFunded,
-  SolanaTokenRecipientIsSenderATA,
-  SolanaTokenAccounNotInitialized,
   SolanaInvalidValidator,
-  SolanaValidatorRequired,
-  SolanaStakeAccountRequired,
+  SolanaMemoIsTooLong,
+  SolanaRecipientAssociatedTokenAccountWillBeFunded,
+  SolanaStakeAccountIsNotDelegatable,
+  SolanaStakeAccountIsNotUndelegatable,
   SolanaStakeAccountNotFound,
   SolanaStakeAccountNothingToWithdraw,
-  SolanaStakeAccountIsNotDelegatable,
+  SolanaStakeAccountRequired,
   SolanaStakeAccountValidatorIsUnchangeable,
-  SolanaStakeAccountIsNotUndelegatable,
-  SolanaStakeNoWithdrawAuth,
   SolanaStakeNoStakeAuth,
+  SolanaStakeNoWithdrawAuth,
+  SolanaTokenAccounNotInitialized,
+  SolanaTokenAccountHoldsAnotherToken,
+  SolanaTokenRecipientIsSenderATA,
+  SolanaValidatorRequired,
 } from "./errors";
 import {
   decodeAccountIdWithTokenAccountAddress,
@@ -41,7 +41,6 @@ import {
   isValidBase58Address,
   MAX_MEMO_LENGTH,
 } from "./logic";
-
 import type {
   CommandDescriptor,
   SolanaStake,
@@ -387,8 +386,11 @@ async function deriveStakeCreateAccountCommandDescriptor(
 
   await validateValidatorCommon(delegate.voteAccAddress, errors, api);
 
-  const { addr: stakeAccAddress, seed: stakeAccAddressSeed } =
-    await nextStakeAccAddr(mainAccount);
+  const stakeAccAddressSeed = `stake:${Math.random().toString()}`;
+  const stakeAccAddress = await getStakeAccountAddressWithSeed({
+    fromAddress: mainAccount.freshAddress,
+    seed: stakeAccAddressSeed,
+  });
 
   return {
     command: {
@@ -583,8 +585,11 @@ async function deriveStakeSplitCommandDescriptor(
 
   const commandFees = await getStakeAccountMinimumBalanceForRentExemption(api);
 
-  const { addr: splitStakeAccAddr, seed: splitStakeAccAddrSeed } =
-    await nextStakeAccAddr(mainAccount);
+  const splitStakeAccAddrSeed = `stake:${Math.random().toString()}`;
+  const splitStakeAccAddr = await getStakeAccountAddressWithSeed({
+    fromAddress: mainAccount.freshAddress,
+    seed: splitStakeAccAddrSeed,
+  });
 
   return {
     command: {
@@ -625,42 +630,6 @@ async function isAccountFunded(
 ): Promise<boolean> {
   const balance = await api.getBalance(address);
   return balance > 0;
-}
-
-async function nextStakeAccAddr(account: Account, base = "stake") {
-  const usedStakeAccAddrs = (account.solanaResources?.stakes ?? []).map(
-    (s) => s.stakeAccAddr
-  );
-
-  return nextStakeAccAddrRoutine(
-    account.freshAddress,
-    new Set(usedStakeAccAddrs),
-    base,
-    0
-  );
-}
-
-async function nextStakeAccAddrRoutine(
-  fromAddress: string,
-  usedAddresses: Set<string>,
-  base: string,
-  idx: number
-): Promise<{
-  seed: string;
-  addr: string;
-}> {
-  const seed = `${base}:${idx}`;
-  const addr = await getStakeAccountAddressWithSeed({
-    fromAddress,
-    seed,
-  });
-
-  return usedAddresses.has(addr)
-    ? nextStakeAccAddrRoutine(fromAddress, usedAddresses, base, idx + 1)
-    : {
-        seed,
-        addr,
-      };
 }
 
 async function validateRecipientCommon(
