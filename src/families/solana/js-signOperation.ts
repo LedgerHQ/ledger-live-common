@@ -39,11 +39,18 @@ const buildOptimisticOperation = (
     throw new Error("invalid command");
   }
 
-  return buildOptimisticOperationForCommand(
+  const optimisticOp = buildOptimisticOperationForCommand(
     account,
     transaction,
     commandDescriptor
   );
+
+  const lastPendingOpSeqNumber =
+    account.pendingOperations[0]?.transactionSequenceNumber ?? 0;
+
+  optimisticOp.transactionSequenceNumber = lastPendingOpSeqNumber + 1;
+
+  return optimisticOp;
 };
 
 export const signOperationWithAPI = (
