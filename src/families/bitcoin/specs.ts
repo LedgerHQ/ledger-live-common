@@ -13,7 +13,6 @@ import { LowerThanMinimumRelayFee } from "../../errors";
 import {
   getMinRelayFee,
   getUTXOStatus,
-  isChangeOutput,
   bchToCashaddrAddressWithoutPrefix,
 } from "./logic";
 import { DeviceModelId } from "@ledgerhq/devices";
@@ -84,7 +83,7 @@ const genericTest = ({
     log(
       "bch",
       `account currency id address: ${txOutputs
-        .filter((o) => o.address && !o.isChange && !isChangeOutput(o))
+        .filter((o) => o.address && !o.isChange)
         .map((o) =>
           account.currency.id === "bitcoincash"
             ? bchToCashaddrAddressWithoutPrefix(o.address)
@@ -99,7 +98,7 @@ const genericTest = ({
         ? operation.senders
         : txInputs.map((t) => t.address).filter(Boolean),
       recipients: txOutputs
-        .filter((o) => o.address && !o.isChange && !isChangeOutput(o))
+        .filter((o) => o.address && !o.isChange)
         .map((o) =>
           account.currency.id === "bitcoincash"
             ? bchToCashaddrAddressWithoutPrefix(o.address)
