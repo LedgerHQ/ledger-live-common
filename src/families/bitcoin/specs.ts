@@ -78,7 +78,21 @@ const genericTest = ({
     senders: opShape.senders.slice(0).sort(),
     recipients: opShape.recipients.slice(0).sort(),
   });
-
+  log("bch", `account currency id ${account.currency}`);
+  if (account.currency.id === "bitcoincash") {
+    log("bch", `account currency id bch address: ${asSorted(operation)}`);
+    log(
+      "bch",
+      `account currency id address: ${txOutputs
+        .filter((o) => o.address && !o.isChange && !isChangeOutput(o))
+        .map((o) =>
+          account.currency.id === "bitcoincash"
+            ? bchToCashaddrAddressWithoutPrefix(o.address)
+            : o.address
+        )
+        .filter(Boolean)}`
+    );
+  }
   expect(asSorted(operation)).toMatchObject(
     asSorted({
       senders: nonDeterministicPicking
