@@ -11601,8 +11601,14 @@ Array [
     },
     Object {
       "accountId": "js:2:dash:drkvjRicQKXd21b4fiTjSfm4SMoVE5q6DhCopUQ4pBYU9WT1dTVSUHoF91sfFkfgR9MdXqiPGgpNV45VrGFrVfVGn8vH7jroquD34qyYuHbj6Dk:",
-      "blockHash": "000000000000002396cd2d3c9f9bef3d225eb9df4b64f8d75f66e70637348fa1",
-      "blockHeight": 1050455,
+      "blockHash": "000000000000000c4cc9d89f170d8f5a8cf9387a039079de140eccba3fcba523",
+      "blockHeight": 1082207,
+      "contract": undefined,
+      "extra": Object {},
+      "fee": "452",
+      "hasFailed": false,
+      "hash": "6146118608ef57d08338b244455a00ca95e7b7ece14b42f58496eed15e397d58",
+      "id": "js:2:dash:drkvjRicQKXd21b4fiTjSfm4SMoVE5q6DhCopUQ4pBYU9WT1dTVSUHoF91sfFkfgR9MdXqiPGgpNV45VrGFrVfVGn8vH7jroquD34qyYuHbj6Dk:-6146118608ef57d08338b244455a00ca95e7b7ece14b42f58496eed15e397d58-OUT",
       "operator": undefined,
       "recipients": Array [
         "XpZJycPoozw4qvbkbVmrTdoCjKcdzWTyUZ",
