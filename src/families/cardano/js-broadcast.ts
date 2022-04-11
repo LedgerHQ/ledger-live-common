@@ -10,10 +10,9 @@ const broadcast: BroadcastFnSignature = async ({
   signedOperation,
   account,
 }) => {
-  const trx = signedOperation.signatureRaw as { hash: string; payload: string };
+  const signedTx = signedOperation.signature;
   const pendingTransaction = await submitTransaction({
-    hash: trx.hash,
-    transaction: trx.payload,
+    transaction: signedTx,
     currency: account.currency,
   });
 

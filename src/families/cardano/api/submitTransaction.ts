@@ -8,11 +8,9 @@ import { isTestnet } from "../logic";
 import { APITransaction } from "./api-types";
 
 export async function submitTransaction({
-  hash,
   transaction,
   currency,
 }: {
-  hash: string;
   transaction: string;
   currency: CryptoCurrency;
 }): Promise<APITransaction> {
@@ -22,7 +20,6 @@ export async function submitTransaction({
       ? `${CARDANO_TESTNET_API_ENDPOINT}/v1/transaction/submit`
       : `${CARDANO_API_ENDPOINT}/v1/transaction/submit`,
     data: {
-      id: hash,
       transaction: transaction,
     },
   });

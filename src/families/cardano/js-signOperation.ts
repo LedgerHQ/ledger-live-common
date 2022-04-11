@@ -196,6 +196,7 @@ const signOperation = ({
         const appAda = new Ada(transport);
         const r = await appAda.signTransaction(trxOptions);
         const signed = signTx(unsignedTransaction, accountPubKey, r.witnesses);
+
         o.next({ type: "device-signature-granted" });
 
         const operation = buildOptimisticOperation(
@@ -208,7 +209,6 @@ const signOperation = ({
           signedOperation: {
             operation,
             signature: signed.payload,
-            signatureRaw: signed,
             expirationDate: null,
           } as SignedOperation,
         });
