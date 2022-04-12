@@ -1,5 +1,5 @@
 import { PlatformAccount } from "../types";
-import minimatch from "minimatch";
+import { makeRe } from "minimatch";
 
 export type AccountFilters = {
   currencies?: string[];
@@ -11,9 +11,7 @@ export function filterPlatformAccounts(
 ): PlatformAccount[] {
   return accounts.filter((account) => {
     if (filters.currencies) {
-      const regexes = filters.currencies.map((filter) =>
-        minimatch.makeRe(filter)
-      );
+      const regexes = filters.currencies.map((filter) => makeRe(filter));
 
       if (regexes.every((regex) => !account.currency.match(regex))) {
         return false;
