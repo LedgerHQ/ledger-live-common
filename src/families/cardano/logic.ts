@@ -11,6 +11,7 @@ import {
 } from "@stricahq/typhonjs";
 import {
   AddressType,
+  AssetGroup,
   TxInput,
   TxOutput,
   TxOutputDestination,
@@ -31,6 +32,7 @@ import BigNumber from "bignumber.js";
 import { getNetworkParameters } from "./networks";
 import { CryptoCurrency, OperationType } from "../../types";
 import groupBy from "lodash/groupBy";
+import { APITransaction } from "./api/api-types";
 
 /**
  *  returns BipPath object with account, chain and index field for cardano
@@ -291,10 +293,20 @@ export function prepareLedgerOutput(
     };
   }
 
+  const tokenBundle: Array<AssetGroup> = Object.values(
+    groupBy(output.tokens, ({ policyId }) => policyId)
+  ).map((tokens) => ({
+    policyIdHex: tokens[0].policyId,
+    tokens: tokens.map((token) => ({
+      assetNameHex: token.assetName,
+      amount: token.amount.toString(),
+    })),
+  }));
+
   return {
     amount: output.amount.toString(),
     destination,
-    tokenBundle: [],
+    tokenBundle,
   };
 }
 
@@ -363,14 +375,46 @@ export function getOperationType({
     : "NONE";
 }
 
-export function getTokenAssetId(t: Token): string {
-  return `${t.policyId}${t.assetName}`;
-}
-
 export function isTestnet(currency: CryptoCurrency): boolean {
   return currency.id === CARDANO_TESTNET_CURRENCY_ID;
 }
 
-export function getTokenId(assetId: string): string {
-  return `cardano/native/${assetId}`;
+export function getAccountChange(
+  t: APITransaction,
+  accountCredentialsMap: Record<string, PaymentCredential>
+): { ada: BigNumber; tokens: Array<Token> } {
+  let accountInputAda = new BigNumber(0);
+  const accountInputTokens: Array<Token> = [];
+  t.inputs.forEach((i) => {
+    if (accountCredentialsMap[i.paymentKey]) {
+      accountInputAda = accountInputAda.plus(i.value);
+      accountInputTokens.push(
+        ...i.tokens.map((t) => ({
+          assetName: t.assetName,
+          policyId: t.policyId,
+          amount: new BigNumber(t.value),
+        }))
+      );
+    }
+  });
+
+  let accountOutputAda = new BigNumber(0);
+  const accountOutputTokens: Array<Token> = [];
+  t.outputs.forEach((o) => {
+    if (accountCredentialsMap[o.paymentKey]) {
+      accountOutputAda = accountOutputAda.plus(o.value);
+      accountOutputTokens.push(
+        ...o.tokens.map((t) => ({
+          assetName: t.assetName,
+          policyId: t.policyId,
+          amount: new BigNumber(t.value),
+        }))
+      );
+    }
+  });
+
+  return {
+    ada: accountOutputAda.minus(accountInputAda),
+    tokens: getTokenDiff(accountOutputTokens, accountInputTokens),
+  };
 }

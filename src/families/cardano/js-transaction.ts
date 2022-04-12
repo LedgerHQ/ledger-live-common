@@ -7,6 +7,7 @@ import {
 } from "@stricahq/typhonjs";
 
 import { buildTransaction } from "./js-buildTransaction";
+import { NotEnoughBalance } from "@ledgerhq/errors";
 
 /**
  * Create an empty transaction
@@ -43,22 +44,32 @@ export const prepareTransaction = async (
   a: Account,
   t: Transaction
 ): Promise<Transaction> => {
-  const transaction = await buildTransaction(a, t);
+  let transaction;
+  try {
+    transaction = await buildTransaction(a, t);
+  } catch (error: any) {
+    if (
+      error.message.toLowerCase() === "not enough ada" ||
+      error.message.toLowerCase() === "not enough tokens"
+    ) {
+      throw new NotEnoughBalance();
+    }
+  }
 
   const transactionFees = transaction.getFee();
-  const transactionAmount = transaction
-    .getOutputs()
-    .filter(
-      (o) =>
-        !(o.address instanceof TyphonAddress.BaseAddress) ||
-        !(o.address.paymentCredential.type === TyphonTypes.HashType.ADDRESS) ||
-        o.address.paymentCredential.bipPath === undefined
-    )
-    .reduce((total, o) => total.plus(o.amount), new BigNumber(0));
-
-  if (transactionFees.eq(t.fees || 0) && transactionAmount.eq(t.amount)) {
-    return t;
-  }
+  const transactionAmount = t.subAccountId
+    ? t.amount
+    : transaction
+        .getOutputs()
+        .filter(
+          (o) =>
+            !(o.address instanceof TyphonAddress.BaseAddress) ||
+            !(
+              o.address.paymentCredential.type === TyphonTypes.HashType.ADDRESS
+            ) ||
+            o.address.paymentCredential.bipPath === undefined
+        )
+        .reduce((total, o) => total.plus(o.amount), new BigNumber(0));
 
   return { ...t, fees: transactionFees, amount: transactionAmount };
 };

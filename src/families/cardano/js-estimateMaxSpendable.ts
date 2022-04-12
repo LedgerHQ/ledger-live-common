@@ -26,6 +26,10 @@ const estimateMaxSpendable = async ({
   parentAccount?: Account;
   transaction?: Transaction;
 }): Promise<BigNumber> => {
+  if (account.type === "TokenAccount") {
+    return account.balance;
+  }
+
   const a = getMainAccount(account, parentAccount);
   const t = {
     ...createTransaction(),
