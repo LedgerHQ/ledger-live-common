@@ -37,7 +37,6 @@ import {
   uniqBy,
   flow,
   sortBy,
-  maxBy,
 } from "lodash/fp";
 import { parseQuiet } from "./api/chain/program";
 import {

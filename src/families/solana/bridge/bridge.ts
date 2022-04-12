@@ -1,9 +1,11 @@
+import BigNumber from "bignumber.js";
 import {
   GetAccountShape,
   makeAccountBridgeReceive,
-  makeSync as makeSyncHelper,
   makeScanAccounts as makeScanHelper,
+  makeSync as makeSyncHelper,
 } from "../../../bridge/jsHelpers";
+import { makeLRUCache } from "../../../cache";
 import type {
   Account,
   AccountBridge,
@@ -13,21 +15,18 @@ import type {
   CurrencyBridge,
   SignOperationFnSignature,
 } from "../../../types";
-import type { Transaction } from "../types";
-import { getAccountShapeWithAPI } from "../js-synchronization";
-import getTransactionStatus from "../js-getTransactionStatus";
-import estimateMaxSpendableWithAPI from "../js-estimateMaxSpendable";
-import createTransaction, { updateTransaction } from "../js-createTransaction";
-import { signOperationWithAPI } from "../js-signOperation";
-import { broadcastWithAPI } from "../js-broadcast";
-import { prepareTransaction as prepareTransactionWithAPI } from "../js-prepareTransaction";
-import { hydrate, preloadWithAPI } from "../js-preload";
 import { ChainAPI, Config } from "../api";
-import { makeLRUCache } from "../../../cache";
+import { minutes } from "../api/cached";
+import { broadcastWithAPI } from "../js-broadcast";
+import createTransaction, { updateTransaction } from "../js-createTransaction";
+import estimateMaxSpendableWithAPI from "../js-estimateMaxSpendable";
+import getTransactionStatus from "../js-getTransactionStatus";
+import { hydrate, preloadWithAPI } from "../js-preload";
+import { prepareTransaction as prepareTransactionWithAPI } from "../js-prepareTransaction";
+import { signOperationWithAPI } from "../js-signOperation";
+import { getAccountShapeWithAPI } from "../js-synchronization";
+import type { Transaction } from "../types";
 import { endpointByCurrencyId } from "../utils";
-import { minutes, seconds } from "../api/cached";
-import hash from "object-hash";
-import BigNumber from "bignumber.js";
 
 function makePrepare(getChainAPI: (config: Config) => Promise<ChainAPI>) {
   async function prepareTransaction(
