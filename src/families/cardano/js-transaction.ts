@@ -54,6 +54,7 @@ export const prepareTransaction = async (
     ) {
       throw new NotEnoughBalance();
     }
+    throw error;
   }
 
   const transactionFees = transaction.getFee();

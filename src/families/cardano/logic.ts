@@ -148,7 +148,10 @@ export const isValidAddress = (address: string, networkId: number): boolean => {
 
   try {
     // check if it is byron address
-    bs58.decode(address);
+    const addr = bs58.decode(address).toString("hex");
+    if (addr[0] !== "8") {
+      return false;
+    }
   } catch (error) {
     try {
       const hexAddress = TyphonUtils.decodeBech32(address);
