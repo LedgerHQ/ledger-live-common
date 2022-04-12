@@ -5,7 +5,7 @@ export type AccountFilters = {
   currencies?: string[];
 };
 
-export function filterAccount(
+export function filterPlatformAccounts(
   accounts: PlatformAccount[],
   filters: AccountFilters
 ): PlatformAccount[] {
