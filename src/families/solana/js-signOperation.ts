@@ -45,10 +45,12 @@ const buildOptimisticOperation = (
     commandDescriptor
   );
 
-  const lastPendingOpSeqNumber =
-    account.pendingOperations[0]?.transactionSequenceNumber ?? 0;
+  const lastOpSeqNumber =
+    account.pendingOperations[0]?.transactionSequenceNumber ??
+    account.operations[0]?.transactionSequenceNumber ??
+    0;
 
-  optimisticOp.transactionSequenceNumber = lastPendingOpSeqNumber + 1;
+  optimisticOp.transactionSequenceNumber = lastOpSeqNumber + 1;
 
   return optimisticOp;
 };

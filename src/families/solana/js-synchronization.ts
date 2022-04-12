@@ -37,6 +37,7 @@ import {
   uniqBy,
   flow,
   sortBy,
+  maxBy,
 } from "lodash/fp";
 import { parseQuiet } from "./api/chain/program";
 import {
@@ -212,8 +213,20 @@ export const getAccountShapeWithAPI = async (
     api
   );
 
+  const lastOpSeqNumber =
+    mainInitialAcc?.operations?.[0]?.transactionSequenceNumber ?? 0;
+  const newOpsCount = newMainAccTxs.length;
+
   const newMainAccOps = newMainAccTxs
-    .map((tx) => txToMainAccOperation(tx, mainAccountId, mainAccAddress))
+    .map((tx, i) =>
+      txToMainAccOperation(
+        tx,
+        mainAccountId,
+        mainAccAddress,
+        // transactions are ordered by date (0'th - most recent tx)
+        lastOpSeqNumber + newOpsCount - i
+      )
+    )
     .filter((op): op is Operation => op !== undefined);
 
   const mainAccTotalOperations = mergeOps(
@@ -315,7 +328,8 @@ function patchedSubAcc({
 function txToMainAccOperation(
   tx: TransactionDescriptor,
   accountId: string,
-  accountAddress: string
+  accountAddress: string,
+  txSeqNumber: number
 ): Operation | undefined {
   if (!tx.info.blockTime || !tx.parsed.meta) {
     return undefined;
@@ -392,6 +406,7 @@ function txToMainAccOperation(
     date: txDate,
     value: opValue,
     fee: opFee,
+    transactionSequenceNumber: txSeqNumber,
   };
 }
 
