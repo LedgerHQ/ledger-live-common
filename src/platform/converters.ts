@@ -54,12 +54,13 @@ export function currencyToPlatformCurrency(
     }
 
     return {
-      type: "ERC20TokenCurrency",
+      type: "TokenCurrency",
+      standard: "ERC20",
       id: currency.id,
       ticker: currency.ticker,
       contract: currency.contractAddress,
       name: currency.name,
-      chain: currency.parentCurrency.id,
+      parent: currency.parentCurrency.id,
       color: currency.parentCurrency.color,
       units: currency.units.map((unit) => ({
         name: unit.name,
