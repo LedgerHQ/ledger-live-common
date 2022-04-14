@@ -13,6 +13,7 @@ import Cosmos from "@ledgerhq/hw-app-cosmos";
 import { AminoTypes } from "@cosmjs/stargate";
 import { buildTransaction, postBuildTransaction } from "./js-buildTransaction";
 import BigNumber from "bignumber.js";
+import { Secp256k1Signature } from "@cosmjs/crypto";
 
 const aminoTypes = new AminoTypes({ prefix: "cosmos" });
 
@@ -82,17 +83,23 @@ const signOperation = ({
 
         const { signature } = await hwApp.sign(
           account.freshAddressPath,
-          JSON.stringify(message)
+          JSON.stringify(sortedObject(message))
         );
-        // need to clarify, it seems that we have to
-        // remove the 5 first bytes from "signature"
+
+        if (!signature) {
+          throw new Error("Cosmos: no Signature Found");
+        }
+
+        const secp256k1Signature = Secp256k1Signature.fromDer(
+          new Uint8Array(signature)
+        ).toFixedLength();
 
         const tx_bytes = await postBuildTransaction(
           account,
           transaction,
           pubkey,
           unsignedPayload,
-          new Uint8Array(signature || new Buffer(""))
+          secp256k1Signature
         );
 
         const signed = Buffer.from(tx_bytes).toString("hex");
@@ -178,5 +185,24 @@ const signOperation = ({
       };
     })
   );
+
+const sortedObject = (obj) => {
+  if (typeof obj !== "object" || obj === null) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(sortedObject);
+  }
+
+  const sortedKeys = Object.keys(obj).sort();
+  const result = {};
+
+  sortedKeys.forEach((key) => {
+    result[key] = sortedObject(obj[key]);
+  });
+
+  return result;
+};
 
 export default signOperation;
