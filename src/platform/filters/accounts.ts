@@ -13,7 +13,7 @@ export function filterPlatformAccounts(
     if (filters.currencies) {
       const regexes = filters.currencies.map((filter) => makeRe(filter));
 
-      if (regexes.every((regex) => !account.currency.match(regex))) {
+      if (!regexes.some((regex) => account.currency.match(regex))) {
         return false;
       }
     }
