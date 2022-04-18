@@ -75,7 +75,7 @@ function getOperationType(
       case "claimRewards":
         return "REWARD";
       case "reDelegateRewards":
-        return "REDELEGATE_REWARDS";
+        return "DELEGATE";
     }
   }
   return isSender(transaction, addr) ? "OUT" : "IN";
