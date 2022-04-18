@@ -4,6 +4,8 @@ import { getMainAccount } from "../../account";
 import type { Transaction } from "./types";
 import { createTransaction } from "./js-transaction";
 import getEstimatedFees from "./js-getFeesForTransaction";
+import { GAS } from "./constants";
+import { ElrondEncodeTransaction } from "./encode";
 
 /**
  * Returns the maximum possible amount for transaction
@@ -35,13 +37,45 @@ const estimateMaxSpendable = async ({
     return tokenAccount.balance;
   }
 
+  switch (tx?.mode) {
+    case "reDelegateRewards":
+      tx.gasLimit = GAS.DELEGATE;
+
+      tx.data = ElrondEncodeTransaction.reDelegateRewards();
+      break;
+    case "withdraw":
+      tx.gasLimit = GAS.DELEGATE;
+
+      tx.data = ElrondEncodeTransaction.withdraw();
+      break;
+    case "unDelegate":
+      tx.gasLimit = GAS.DELEGATE;
+
+      tx.data = ElrondEncodeTransaction.unDelegate(tx);
+      break;
+    case "delegate":
+      tx.gasLimit = GAS.DELEGATE;
+
+      tx.data = ElrondEncodeTransaction.delegate();
+      break;
+
+    case "claimRewards":
+      tx.gasLimit = GAS.CLAIM;
+
+      tx.data = ElrondEncodeTransaction.claimRewards();
+      break;
+
+    default:
+      break;
+  }
+
   const fees = await getEstimatedFees(tx);
 
   if (fees.gt(mainAccount.balance)) {
     return new BigNumber(0);
   }
 
-  return mainAccount.spendableBalance;
+  return mainAccount.spendableBalance.minus(fees);
 };
 
 export default estimateMaxSpendable;
