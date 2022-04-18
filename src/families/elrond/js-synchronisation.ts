@@ -10,6 +10,7 @@ import {
 } from "./api";
 import elrondBuildESDTTokenAccounts from "./js-buildSubAccounts";
 import { reconciliateSubAccounts } from "./js-reconciliation";
+import { FEES_BALANCE } from "./constants";
 
 const getAccountShape: GetAccountShape = async (info) => {
   const { address, initialAccount, currency, derivationMode } = info;
@@ -53,7 +54,7 @@ const getAccountShape: GetAccountShape = async (info) => {
   const shape = {
     id: accountId,
     balance,
-    spendableBalance: balance,
+    spendableBalance: balance.minus(FEES_BALANCE),
     operationsCount: operations.length,
     blockHeight,
     elrondResources: {
