@@ -21,12 +21,19 @@ export async function preloadWithAPI(
   const data: SolanaPreloadData = {
     version: "1",
     validatorsWithMeta: [],
-    validators,
+    validators:
+      cluster === "mainnet-beta"
+        ? profitableValidators(validators)
+        : validators,
   };
 
   setPreloadData(data, currency);
 
   return data;
+}
+
+function profitableValidators(validators: ValidatorsAppValidator[]) {
+  return validators.filter((v) => v.commission < 100);
 }
 
 async function loadDevnetValidators(api: ChainAPI) {
