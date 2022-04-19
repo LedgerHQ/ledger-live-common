@@ -1,7 +1,7 @@
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  Token,
   TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  getMinimumBalanceForRentExemptAccount,
 } from "@solana/spl-token";
 import {
   Connection,
@@ -179,16 +179,15 @@ export function getChainAPI(
       });
     },
 
-    findAssocTokenAccAddress: (owner: string, mint: string) =>
-      Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
+    findAssocTokenAccAddress: (owner: string, mint: string) => {
+      return getAssociatedTokenAddress(
         new PublicKey(mint),
         new PublicKey(owner)
-      ).then((r) => r.toBase58()),
+      ).then((r) => r.toBase58());
+    },
 
     getAssocTokenAccMinNativeBalance: () =>
-      Token.getMinBalanceRentForExemptAccount(connection()),
+      getMinimumBalanceForRentExemptAccount(connection()),
 
     getMinimumBalanceForRentExemption: (dataLength: number) =>
       connection().getMinimumBalanceForRentExemption(dataLength),
