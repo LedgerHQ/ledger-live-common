@@ -42,8 +42,7 @@ const signOperation = ({
         o.next({ type: "device-signature-requested" });
 
         const { publicKey } = await hwApp.getAddress(
-          // is valid?
-          account.freshAddresses[0].derivationPath,
+          account.freshAddressPath,
           "cosmos",
           false
         );
