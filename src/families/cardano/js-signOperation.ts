@@ -38,7 +38,8 @@ import { getNetworkParameters } from "./networks";
 
 const buildOptimisticOperation = (
   account: Account,
-  transaction: TyphonTransaction
+  transaction: TyphonTransaction,
+  t: Transaction
 ): Operation => {
   const cardanoResources = account.cardanoResources as CardanoResources;
   const accountCreds = new Set(
@@ -76,7 +77,7 @@ const buildOptimisticOperation = (
   });
   const transactionHash = transaction.getTransactionHash().toString("hex");
 
-  const operation: Operation = {
+  const op: Operation = {
     id: encodeOperationId(account.id, transactionHash, type),
     hash: transactionHash,
     type,
@@ -91,7 +92,30 @@ const buildOptimisticOperation = (
     extra: {},
   };
 
-  return operation;
+  const tokenAccount = t.subAccountId
+    ? account.subAccounts?.find((ta) => ta.id === t.subAccountId)
+    : null;
+
+  if (tokenAccount) {
+    op.subOperations = [
+      {
+        id: encodeOperationId(tokenAccount.id, transactionHash, type),
+        hash: transactionHash,
+        type,
+        value: t.useAllAmount ? tokenAccount.balance : t.amount,
+        fee: t.fees as BigNumber,
+        blockHash: undefined,
+        blockHeight: null,
+        senders: transaction.getInputs().map((i) => i.address.getBech32()),
+        recipients: transaction.getOutputs().map((o) => o.address.getBech32()),
+        accountId: tokenAccount.id,
+        date: new Date(),
+        extra: {},
+      },
+    ];
+  }
+
+  return op;
 };
 
 /**
@@ -201,7 +225,8 @@ const signOperation = ({
 
         const operation = buildOptimisticOperation(
           account,
-          unsignedTransaction
+          unsignedTransaction,
+          transaction
         );
 
         o.next({
