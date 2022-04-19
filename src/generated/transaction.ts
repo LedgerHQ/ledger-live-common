@@ -16,6 +16,8 @@ import filecoin from "../families/filecoin/transaction";
 
 import neo from "../families/neo/transaction";
 
+import osmosis from "../families/osmosis/transaction";
+
 import polkadot from "../families/polkadot/transaction";
 
 import ripple from "../families/ripple/transaction";
@@ -39,6 +41,7 @@ export default {
   ethereum,
   filecoin,
   neo,
+  osmosis,
   polkadot,
   ripple,
   solana,

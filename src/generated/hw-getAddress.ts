@@ -16,6 +16,8 @@ import filecoin from "../families/filecoin/hw-getAddress";
 
 import neo from "../families/neo/hw-getAddress";
 
+import osmosis from "../families/osmosis/hw-getAddress";
+
 import polkadot from "../families/polkadot/hw-getAddress";
 
 import ripple from "../families/ripple/hw-getAddress";
@@ -39,6 +41,7 @@ export default {
   ethereum,
   filecoin,
   neo,
+  osmosis,
   polkadot,
   ripple,
   solana,
