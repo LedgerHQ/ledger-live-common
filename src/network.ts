@@ -191,19 +191,18 @@ const implementation = (
     headers: {
       "content-type": "application/json",
     },
+    responseType: "json",
     json: arg.data,
     ...arg,
   };
 
   delete options.data;
 
-  return got(options as OptionsOfJSONResponseBody)
-    .json()
-    .then((response: any) => ({
-      ...response,
-      data: response.body,
-      statusCode: response.status,
-    })) as CancelableRequest<NetworkResponse<any>>;
+  return got(options as OptionsOfJSONResponseBody).then((response: any) => ({
+    ...response,
+    data: response.body,
+    statusCode: response.status,
+  })) as CancelableRequest<NetworkResponse<any>>;
 };
 
 export default implementation;
