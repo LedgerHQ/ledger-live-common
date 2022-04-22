@@ -285,6 +285,11 @@ const envDefinitions = {
     parser: boolParser,
     desc: "enable an experimental swap interface",
   },
+  EXPERIMENTAL_ENABLE_TOR_PROXY: {
+    def: "127.0.0.1:9150",
+    parser: stringParser,
+    desc: "enable experimental support of Tor proxy",
+  },
   EXPLORER: {
     def: "https://explorers.api.live.ledger.com",
     parser: stringParser,
