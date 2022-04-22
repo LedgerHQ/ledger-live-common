@@ -2,33 +2,33 @@
 // - first of all, compound api is not that fast and we are not optimized by pulling for each trade
 // - secondly, we need to implement the "historical over time" changes.
 // IDEA: to me we need to reborn the idea that we will pull daily rates and just stick to it (even if it means some approximation)
-import URL from "url";
+import { AmountRequired, NotEnoughBalance } from "@ledgerhq/errors";
 import { log } from "@ledgerhq/logs";
-import invariant from "invariant";
 import { BigNumber } from "bignumber.js";
 import abi from "ethereumjs-abi";
+import invariant from "invariant";
 import values from "lodash/values";
-import { NotEnoughBalance, AmountRequired } from "@ledgerhq/errors";
-import type {
-  TokenAccount,
-  CryptoCurrency,
-  TokenCurrency,
-  OperationType,
-} from "../../../types";
-import type { ModeModule } from "../types";
+import URL from "url";
+import { emptyHistoryCache } from "../../../account";
+import { apiForCurrency } from "../../../api/Ethereum";
+import { mergeOps } from "../../../bridge/jsHelpers";
 import {
-  getTokenById,
   findCompoundToken,
   formatCurrencyUnit,
+  getTokenById,
 } from "../../../currencies";
-import { emptyHistoryCache } from "../../../account";
+import { getEnv } from "../../../env";
 import network from "../../../network";
 import { promiseAllBatched } from "../../../promise";
-import { mergeOps } from "../../../bridge/jsHelpers";
-import { apiForCurrency } from "../../../api/Ethereum";
-import { inferTokenAccount } from "../transaction";
-import { getEnv } from "../../../env";
 import { DeviceTransactionField } from "../../../transaction";
+import type {
+  CryptoCurrency,
+  OperationType,
+  TokenAccount,
+  TokenCurrency,
+} from "../../../types";
+import { inferTokenAccount } from "../transaction";
+import type { ModeModule } from "../types";
 // global state that exists when compound is loaded
 let compoundPreloadedValue: CurrentRate[] | null | undefined;
 const compoundWhitelist = [
@@ -543,7 +543,6 @@ export async function digestTokenAccounts(
 
 const fetch = (path, query = {}) =>
   network({
-    type: "get",
     url: URL.format({
       pathname: `${getEnv("COMPOUND_API")}/api/v2${path}`,
       query,

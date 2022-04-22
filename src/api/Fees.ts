@@ -1,10 +1,9 @@
-import invariant from "invariant";
-
 import { FeeEstimationFailed } from "@ledgerhq/errors";
-import type { CryptoCurrency } from "../types";
+import invariant from "invariant";
 import { makeLRUCache } from "../cache";
-import { blockchainBaseURL } from "./Ledger";
 import network from "../network";
+import type { CryptoCurrency } from "../types";
+import { blockchainBaseURL } from "./Ledger";
 
 export type Fees = Record<string, number>;
 
@@ -13,7 +12,7 @@ export const getEstimatedFees: (currency: CryptoCurrency) => Promise<Fees> =
     async (currency) => {
       const baseURL = blockchainBaseURL(currency);
       invariant(baseURL, `Fees for ${currency.id} are not supported`);
-      const { data, status } = await network({
+      const { data, statusCode } = await network({
         method: "GET",
         url: `${baseURL}/fees`,
       });
@@ -22,8 +21,8 @@ export const getEstimatedFees: (currency: CryptoCurrency) => Promise<Fees> =
         return data;
       }
 
-      throw new FeeEstimationFailed(`FeeEstimationFailed ${status}`, {
-        httpStatus: status,
+      throw new FeeEstimationFailed(`FeeEstimationFailed ${statusCode}`, {
+        httpStatus: statusCode,
       });
     },
     (c) => c.id

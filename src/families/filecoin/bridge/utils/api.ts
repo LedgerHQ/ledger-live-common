@@ -1,6 +1,6 @@
 import { log } from "@ledgerhq/logs";
-import { AxiosRequestConfig, AxiosResponse } from "axios";
-
+import { getEnv } from "../../../../env";
+import network, { NetworkOptions, NetworkResponse } from "../../../../network";
 import {
   BalanceResponse,
   BroadcastTransactionRequest,
@@ -11,8 +11,6 @@ import {
   TransactionResponse,
   TransactionsResponse,
 } from "./types";
-import network from "../../../../network";
-import { getEnv } from "../../../../env";
 
 const getFilecoinURL = (path?: string): string => {
   const baseUrl = getEnv("API_FILECOIN_ENDPOINT");
@@ -25,14 +23,14 @@ const fetch = async <T>(path: string) => {
   const url = getFilecoinURL(path);
 
   // We force data to this way as network func is not using the correct param type. Changing that func will generate errors in other implementations
-  const opts: AxiosRequestConfig = {
+  const opts: NetworkOptions = {
     method: "GET",
     url,
   };
   const rawResponse = await network(opts);
 
   // We force data to this way as network func is not using the correct param type. Changing that func will generate errors in other implementations
-  const { data } = rawResponse as AxiosResponse<T>;
+  const { data } = rawResponse as NetworkResponse<T>;
 
   log("http", url);
   return data;
@@ -41,7 +39,7 @@ const fetch = async <T>(path: string) => {
 const send = async <T>(path: string, data: Record<string, any>) => {
   const url = getFilecoinURL(path);
 
-  const opts: AxiosRequestConfig = {
+  const opts: NetworkOptions = {
     method: "POST",
     url,
     data: JSON.stringify(data),
@@ -51,7 +49,7 @@ const send = async <T>(path: string, data: Record<string, any>) => {
   const rawResponse = await network(opts);
 
   // We force data to this way as network func is not using generics. Changing that func will generate errors in other implementations
-  const { data: responseData } = rawResponse as AxiosResponse<T>;
+  const { data: responseData } = rawResponse as NetworkResponse<T>;
 
   log("http", url);
   return responseData;

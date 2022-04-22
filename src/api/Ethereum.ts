@@ -1,15 +1,15 @@
-import URL from "url";
-import invariant from "invariant";
-import { BigNumber } from "bignumber.js";
 import { LedgerAPINotAvailable } from "@ledgerhq/errors";
 import JSONBigNumber from "@ledgerhq/json-bignumber";
-import type { CryptoCurrency, NFTMetadataResponse } from "../types";
-import type { EthereumGasLimitRequest } from "../families/ethereum/types";
-import network from "../network";
-import { blockchainBaseURL } from "./Ledger";
-import { FeeEstimationFailed } from "../errors";
+import { BigNumber } from "bignumber.js";
+import invariant from "invariant";
+import URL from "url";
 import { makeLRUCache } from "../cache";
 import { getEnv } from "../env";
+import { FeeEstimationFailed } from "../errors";
+import type { EthereumGasLimitRequest } from "../families/ethereum/types";
+import network from "../network";
+import type { CryptoCurrency, NFTMetadataResponse } from "../types";
+import { blockchainBaseURL } from "./Ledger";
 
 export type Block = {
   height: BigNumber;
@@ -142,7 +142,7 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
             block_hash,
           },
         }),
-        transformResponse: JSONBigNumber.parse,
+        parseJson: JSONBigNumber.parse,
       });
 
       // v3 have a bug that still includes the tx of the paginated block_hash, we're cleaning it up
@@ -162,7 +162,7 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
       const { data } = await network({
         method: "GET",
         url: `${baseURL}/blocks/current`,
-        transformResponse: JSONBigNumber.parse,
+        parseJson: JSONBigNumber.parse,
       });
       return data;
     },
@@ -190,7 +190,7 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
       const { data } = await network({
         method: "GET",
         url: `${baseURL}/addresses/${address}/balance`,
-        transformResponse: JSONBigNumber.parse,
+        parseJson: JSONBigNumber.parse,
       });
       return new BigNumber(data[0].balance);
     },
@@ -199,7 +199,7 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
       const { data } = await network({
         method: "POST",
         url: `${baseURL}/erc20/balances`,
-        transformResponse: JSONBigNumber.parse,
+        parseJson: JSONBigNumber.parse,
         data: input,
       });
       return data;
@@ -253,7 +253,7 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
       const { data } = await network({
         method: "GET",
         url: `${baseURL}/addresses/${address}/estimate-gas-limit`,
-        transformResponse: JSONBigNumber.parse,
+        parseJson: JSONBigNumber.parse,
       });
       return new BigNumber(data.estimated_gas_limit);
     },
@@ -269,7 +269,7 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
         method: "POST",
         url: `${baseURL}/addresses/${address}/estimate-gas-limit`,
         data: post,
-        transformResponse: JSONBigNumber.parse,
+        parseJson: JSONBigNumber.parse,
       });
 
       if (data.error_message) {

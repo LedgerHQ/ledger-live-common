@@ -1,18 +1,12 @@
+import JSONBigNumber from "@ledgerhq/json-bignumber";
 import type { AxiosRequestConfig } from "axios";
 import axios, { AxiosInstance } from "axios";
 import axiosRetry, { isNetworkOrIdempotentRequestError } from "axios-retry";
 import BigNumber from "bignumber.js";
 import genericPool, { Pool } from "generic-pool";
-
-import JSONBigNumber from "@ledgerhq/json-bignumber";
 import { Address, Block, TX } from "../storage/types";
 import EventEmitter from "../utils/eventemitter";
 import { IExplorer } from "./types";
-import {
-  requestInterceptor,
-  responseInterceptor,
-  errorInterceptor,
-} from "../../../../network";
 
 class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
   client: Pool<{ client: AxiosInstance }>;
@@ -78,8 +72,8 @@ class BitcoinLikeExplorer extends EventEmitter implements IExplorer {
     }
 
     // Logging
-    client.interceptors.request.use(requestInterceptor);
-    client.interceptors.response.use(responseInterceptor, errorInterceptor);
+    // client.interceptors.request.use(requestInterceptor);
+    // client.interceptors.response.use(responseInterceptor, errorInterceptor);
   }
 
   async broadcast(tx: string) {

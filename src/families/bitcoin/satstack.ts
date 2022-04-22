@@ -1,22 +1,22 @@
 import { log } from "@ledgerhq/logs";
-import { Observable, interval, from } from "rxjs";
+import { from, interval, Observable } from "rxjs";
+import { filter, share, switchMap } from "rxjs/operators";
 import semver from "semver";
 import url from "url";
-import { share, switchMap, filter } from "rxjs/operators";
+import { getCurrencyExplorer } from "../../api/Ledger";
+import { getCryptoCurrencyById } from "../../currencies";
+import { getEnv } from "../../env";
 import {
-  SatStackVersionTooOld,
+  RPCHostInvalid,
+  RPCHostRequired,
+  RPCPassRequired,
+  RPCUserRequired,
   SatStackAccessDown,
   SatStackStillSyncing,
-  RPCHostRequired,
-  RPCUserRequired,
-  RPCPassRequired,
-  RPCHostInvalid,
+  SatStackVersionTooOld,
 } from "../../errors";
-import { getCryptoCurrencyById } from "../../currencies";
 import network from "../../network";
 import type { AccountDescriptor } from "./descriptor";
-import { getEnv } from "../../env";
-import { getCurrencyExplorer } from "../../api/Ledger";
 const minVersionMatch = ">=0.11.1";
 
 function isAcceptedVersion(version: string | null | undefined) {
@@ -103,10 +103,8 @@ export async function checkRPCNodeConfig(config: RPCNodeConfig): Promise<void> {
       method: "getblockchaininfo",
       params: [],
     },
-    auth: {
-      username,
-      password,
-    },
+    username,
+    password,
   });
 }
 export type SatStackConfig = {
@@ -252,7 +250,6 @@ export async function fetchSatStackStatus(): Promise<SatStackStatus> {
 
   const ce = getCurrencyExplorer(getCryptoCurrencyById("bitcoin"));
   const r = await network({
-    type: "GET",
     url: `${ce.endpoint}/blockchain/${ce.version}/explorer/status`,
   }).catch(() => null);
 

@@ -1,88 +1,96 @@
-import invariant from "invariant";
-import axios, { AxiosResponse } from "axios";
-import type { AxiosError, AxiosRequestConfig } from "axios";
+import { LedgerAPI4xx, LedgerAPI5xx, NetworkDown } from "@ledgerhq/errors";
 import { log } from "@ledgerhq/logs";
-import { NetworkDown, LedgerAPI5xx, LedgerAPI4xx } from "@ledgerhq/errors";
-import { retry } from "./promise";
+import got, {
+  CancelableRequest,
+  Options,
+  OptionsOfJSONResponseBody,
+  RequestError,
+  Response,
+} from "got-cjs";
+import invariant from "invariant";
+import ResponseLike from "responselike";
 import { getEnv } from "./env";
 
+type Promisable<T> = T | Promise<T>;
 type Metadata = { startTime: number };
-type ExtendedXHRConfig = AxiosRequestConfig & { metadata?: Metadata };
 
 export const requestInterceptor = (
-  request: AxiosRequestConfig
-): ExtendedXHRConfig => {
-  const { baseURL, url, method = "", data } = request;
-  log("network", `${method} ${baseURL || ""}${url}`, { data });
+  options: Options
+): Promisable<void | Response | ResponseLike> => {
+  const { prefixUrl, url, method = "", json } = options;
+  log("network", `${method} ${prefixUrl || ""}${url}`, { json });
 
-  // $FlowFixMe (LLD side)
-  const req: ExtendedXHRConfig = request;
+  // // $FlowFixMe (LLD side)
+  // const req: ExtendedOptions = options;
 
-  req.metadata = {
+  options.context = {
     startTime: Date.now(),
   };
-
-  return req;
 };
 
 export const responseInterceptor = (
-  response: {
-    config: ExtendedXHRConfig;
-  } & AxiosResponse<any>
-) => {
-  const { baseURL, url, method = "", metadata } = response.config;
-  const { startTime = 0 } = metadata || {};
+  response: Response
+): Promisable<Response | CancelableRequest<Response>> => {
+  const { prefixUrl, url, method = "", context } = response.request.options;
+  const { startTime = 0 } = (context || {}) as Metadata;
 
   log(
     "network-success",
-    `${response.status} ${method} ${baseURL || ""}${url} (${(
+    `${response.statusCode} ${method} ${prefixUrl || ""}${url} (${(
       Date.now() - startTime
     ).toFixed(0)}ms)`,
-    getEnv("DEBUG_HTTP_RESPONSE") ? { data: response.data } : undefined
+    getEnv("DEBUG_HTTP_RESPONSE") ? { body: response.body } : undefined
   );
 
   return response;
 };
 
-export const errorInterceptor = (error: AxiosError<any>) => {
-  const config = error?.response?.config as ExtendedXHRConfig | null;
-  if (!config) throw error;
-  const { baseURL, url, method = "", metadata } = config;
-  const { startTime = 0 } = metadata || {};
+export const errorInterceptor = (
+  error: RequestError
+): Promisable<RequestError> => {
+  const options = error.request?.options;
+  if (!options) throw error;
+  const { prefixUrl, url, method = "", context } = options;
+  const { startTime = 0 } = (context || {}) as Metadata;
 
   let errorToThrow;
   if (error.response) {
     // The request was made and the server responded with a status code
     // that falls out of the range of 2xx
-    const { data, status } = error.response;
+    const { body, statusCode } = error.response;
     let msg;
     try {
-      if (data && typeof data === "string") {
-        msg = extractErrorMessage(data);
-      } else if (data && typeof data === "object") {
-        msg = getErrorMessage(data);
+      if (body && typeof body === "string") {
+        msg = extractErrorMessage(body);
+      } else if (body && typeof body === "object") {
+        msg = getErrorMessage(body);
       }
     } catch (e) {
       log("warn", "can't parse server result " + String(e));
     }
 
     if (msg) {
-      errorToThrow = makeError(msg, status, url, method);
+      errorToThrow = makeError(msg, statusCode, url, method);
     } else {
-      errorToThrow = makeError(`API HTTP ${status}`, status, url, method);
+      errorToThrow = makeError(
+        `API HTTP ${statusCode}`,
+        statusCode,
+        url,
+        method
+      );
     }
     log(
       "network-error",
-      `${status} ${method} ${baseURL || ""}${url} (${(
+      `${statusCode} ${method} ${prefixUrl || ""}${url} (${(
         Date.now() - startTime
       ).toFixed(0)}ms): ${errorToThrow.message}`,
-      getEnv("DEBUG_HTTP_RESPONSE") ? { data: data } : {}
+      getEnv("DEBUG_HTTP_RESPONSE") ? { body } : {}
     );
     throw errorToThrow;
   } else if (error.request) {
     log(
       "network-down",
-      `DOWN ${method} ${baseURL || ""}${url} (${(
+      `DOWN ${method} ${prefixUrl || ""}${url} (${(
         Date.now() - startTime
       ).toFixed(0)}ms)`
     );
@@ -90,11 +98,6 @@ export const errorInterceptor = (error: AxiosError<any>) => {
   }
   throw error;
 };
-
-axios.interceptors.request.use(requestInterceptor);
-
-// $FlowFixMe LLD raise issues here
-axios.interceptors.response.use(responseInterceptor, errorInterceptor);
 
 const makeError = (msg, status, url, method) => {
   const obj = {
@@ -142,23 +145,65 @@ const extractErrorMessage = (raw: string): string | undefined => {
   return;
 };
 
-const implementation = (arg: any): Promise<any> => {
-  invariant(typeof arg === "object", "network takes an object as parameter");
-  let promise;
+export interface NetworkResponse<T = any> extends Response<T> {
+  /**
+  The mapping of the reponse body on data.
+  */
+  data: T;
 
-  if (arg.method === "GET") {
-    if (!("timeout" in arg)) {
-      arg.timeout = getEnv("GET_CALLS_TIMEOUT");
-    }
+  statusCode: number;
+}
 
-    promise = retry(() => axios(arg), {
-      maxRetry: getEnv("GET_CALLS_RETRY"),
-    });
-  } else {
-    promise = axios(arg);
+type Except<ObjectType, KeysType extends keyof ObjectType> = Pick<
+  ObjectType,
+  Exclude<keyof ObjectType, KeysType>
+>;
+type Merge<FirstType, SecondType> = Except<
+  FirstType,
+  Extract<keyof FirstType, keyof SecondType>
+> &
+  SecondType;
+export type NetworkOptions = Merge<
+  OptionsOfJSONResponseBody,
+  {
+    data?: any;
   }
+>;
 
-  return promise;
+const implementation = (
+  arg: NetworkOptions
+): CancelableRequest<NetworkResponse<any>> => {
+  invariant(typeof arg === "object", "network takes an object as parameter");
+
+  const options: NetworkOptions = {
+    timeout: {
+      request: getEnv("GET_CALLS_TIMEOUT"),
+    },
+    retry: {
+      limit: getEnv("GET_CALLS_RETRY"),
+      methods: ["get"],
+    },
+    hooks: {
+      beforeRequest: [requestInterceptor],
+      afterResponse: [responseInterceptor],
+      beforeError: [errorInterceptor],
+    },
+    headers: {
+      "content-type": "application/json",
+    },
+    json: arg.data,
+    ...arg,
+  };
+
+  delete options.data;
+
+  return got(options as OptionsOfJSONResponseBody)
+    .json()
+    .then((response: any) => ({
+      ...response,
+      data: response.body,
+      statusCode: response.status,
+    })) as CancelableRequest<NetworkResponse<any>>;
 };
 
 export default implementation;

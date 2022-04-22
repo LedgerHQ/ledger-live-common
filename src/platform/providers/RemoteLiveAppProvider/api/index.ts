@@ -1,5 +1,5 @@
-import network from "../../../../network";
 import { getEnv } from "../../../../env";
+import network from "../../../../network";
 import type { LiveAppManifest } from "../../types";
 import mockData from "./mock.json";
 
@@ -20,7 +20,9 @@ export const providers = [
   },
 ];
 
-export function getProviderURL(value: string): RemotePlatformAppProvider {
+export function getProviderURL(
+  value: string
+): RemotePlatformAppProvider["url"] {
   const provider = providers.find((provider) => provider.value === value);
 
   if (!provider) {
