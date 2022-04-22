@@ -16,8 +16,6 @@ import polkadot from "../families/polkadot/test-dataset";
 
 import ripple from "../families/ripple/test-dataset";
 
-import solana from "../families/solana/test-dataset";
-
 import stellar from "../families/stellar/test-dataset";
 
 import tezos from "../families/tezos/test-dataset";
@@ -35,7 +33,6 @@ export default {
   filecoin,
   polkadot,
   ripple,
-  solana,
   stellar,
   tezos,
   tron,

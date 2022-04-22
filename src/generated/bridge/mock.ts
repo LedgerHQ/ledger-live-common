@@ -8,8 +8,6 @@ import ethereum from "../../families/ethereum/bridge/mock";
 
 import ripple from "../../families/ripple/bridge/mock";
 
-import solana from "../../families/solana/bridge/mock";
-
 import stellar from "../../families/stellar/bridge/mock";
 
 import tezos from "../../families/tezos/bridge/mock";
@@ -21,7 +19,6 @@ export default {
   cosmos,
   ethereum,
   ripple,
-  solana,
   stellar,
   tezos,
 };

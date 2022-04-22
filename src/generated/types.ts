@@ -20,8 +20,6 @@ import { Transaction as polkadotTransaction } from "../families/polkadot/types";
 import { TransactionRaw as polkadotTransactionRaw } from "../families/polkadot/types";
 import { Transaction as rippleTransaction } from "../families/ripple/types";
 import { TransactionRaw as rippleTransactionRaw } from "../families/ripple/types";
-import { Transaction as solanaTransaction } from "../families/solana/types";
-import { TransactionRaw as solanaTransactionRaw } from "../families/solana/types";
 import { Transaction as stellarTransaction } from "../families/stellar/types";
 import { TransactionRaw as stellarTransactionRaw } from "../families/stellar/types";
 import { Transaction as tezosTransaction } from "../families/tezos/types";
@@ -41,7 +39,6 @@ export type Transaction =
   | neoTransaction
   | polkadotTransaction
   | rippleTransaction
-  | solanaTransaction
   | stellarTransaction
   | tezosTransaction
   | tronTransaction
@@ -57,7 +54,6 @@ export type TransactionRaw =
   | neoTransactionRaw
   | polkadotTransactionRaw
   | rippleTransactionRaw
-  | solanaTransactionRaw
   | stellarTransactionRaw
   | tezosTransactionRaw
   | tronTransactionRaw

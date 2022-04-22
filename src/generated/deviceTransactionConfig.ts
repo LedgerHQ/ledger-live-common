@@ -18,8 +18,6 @@ import polkadot from "../families/polkadot/deviceTransactionConfig";
 
 import ripple from "../families/ripple/deviceTransactionConfig";
 
-import solana from "../families/solana/deviceTransactionConfig";
-
 import stellar from "../families/stellar/deviceTransactionConfig";
 
 import tezos from "../families/tezos/deviceTransactionConfig";
@@ -38,7 +36,6 @@ export default {
   filecoin,
   polkadot,
   ripple,
-  solana,
   stellar,
   tezos,
   tron,

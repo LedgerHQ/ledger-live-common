@@ -20,8 +20,6 @@ import polkadot from "../../families/polkadot/bridge/js";
 
 import ripple from "../../families/ripple/bridge/js";
 
-import solana from "../../families/solana/bridge/js";
-
 import stellar from "../../families/stellar/bridge/js";
 
 import tezos from "../../families/tezos/bridge/js";
@@ -41,7 +39,6 @@ export default {
   neo,
   polkadot,
   ripple,
-  solana,
   stellar,
   tezos,
   tron,
