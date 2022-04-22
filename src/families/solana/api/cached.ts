@@ -53,8 +53,8 @@ export function cached(api: ChainAPI): ChainAPI {
       seconds(30)
     ),
 
-    getParsedConfirmedTransactions: makeLRUCache(
-      api.getParsedConfirmedTransactions,
+    getParsedTransactions: makeLRUCache(
+      api.getParsedTransactions,
       cacheKeyTransactions,
       seconds(30)
     ),
@@ -95,8 +95,8 @@ export function cached(api: ChainAPI): ChainAPI {
       minutes(1)
     ),
 
-    getRecentBlockhash: makeLRUCache(
-      api.getRecentBlockhash,
+    getLatestBlockhash: makeLRUCache(
+      api.getLatestBlockhash,
       cacheKeyEmpty,
       seconds(5)
     ),
@@ -105,6 +105,12 @@ export function cached(api: ChainAPI): ChainAPI {
       api.getTxFeeCalculator,
       cacheKeyEmpty,
       minutes(5)
+    ),
+
+    getFeeForMessage: makeLRUCache(
+      api.getFeeForMessage,
+      (msg) => msg.serialize().toString(),
+      minutes(1)
     ),
 
     getSignaturesForAddress: makeLRUCache(

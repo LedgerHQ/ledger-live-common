@@ -41,7 +41,7 @@ import {
 import { parseQuiet } from "./api/chain/program";
 import {
   InflationReward,
-  ParsedConfirmedTransactionMeta,
+  ParsedTransactionMeta,
   ParsedMessageAccount,
   ParsedTransaction,
   StakeActivationData,
@@ -565,7 +565,7 @@ function getTokenSendersRecipients({
   meta,
   accounts,
 }: {
-  meta: ParsedConfirmedTransactionMeta;
+  meta: ParsedTransactionMeta;
   accounts: ParsedMessageAccount[];
 }) {
   const { preTokenBalances, postTokenBalances } = meta;

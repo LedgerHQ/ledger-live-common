@@ -7,6 +7,7 @@ import {
   Connection,
   FeeCalculator,
   FetchMiddleware,
+  Message,
   PublicKey,
   sendAndConfirmRawTransaction,
   SignaturesForAddressOptions,
@@ -22,9 +23,11 @@ export type Config = {
 export type ChainAPI = Readonly<{
   getBalance: (address: string) => Promise<number>;
 
-  getRecentBlockhash: () => Promise<string>;
+  getLatestBlockhash: () => Promise<string>;
 
   getTxFeeCalculator: () => Promise<FeeCalculator>;
+
+  getFeeForMessage: (message: Message) => Promise<number>;
 
   getBalanceAndContext: (
     address: string
@@ -57,9 +60,9 @@ export type ChainAPI = Readonly<{
     opts?: SignaturesForAddressOptions
   ) => ReturnType<Connection["getSignaturesForAddress"]>;
 
-  getParsedConfirmedTransactions: (
+  getParsedTransactions: (
     signatures: string[]
-  ) => ReturnType<Connection["getParsedConfirmedTransactions"]>;
+  ) => ReturnType<Connection["getParsedTransactions"]>;
 
   getAccountInfo: (
     address: string
@@ -108,15 +111,20 @@ export function getChainAPI(
     getBalance: (address: string) =>
       connection().getBalance(new PublicKey(address)),
 
-    getRecentBlockhash: () =>
+    getLatestBlockhash: () =>
       connection()
-        .getRecentBlockhash()
+        .getLatestBlockhash()
         .then((r) => r.blockhash),
 
     getTxFeeCalculator: () =>
       connection()
         .getRecentBlockhash()
         .then((r) => r.feeCalculator),
+
+    getFeeForMessage: (msg: Message) =>
+      connection()
+        .getFeeForMessage(msg)
+        .then((r) => r.value),
 
     getBalanceAndContext: (address: string) =>
       connection().getBalanceAndContext(new PublicKey(address)),
@@ -165,8 +173,8 @@ export function getChainAPI(
       opts?: SignaturesForAddressOptions
     ) => connection().getSignaturesForAddress(new PublicKey(address), opts),
 
-    getParsedConfirmedTransactions: (signatures: string[]) =>
-      connection().getParsedConfirmedTransactions(signatures),
+    getParsedTransactions: (signatures: string[]) =>
+      connection().getParsedTransactions(signatures),
 
     getAccountInfo: (address: string) =>
       connection()

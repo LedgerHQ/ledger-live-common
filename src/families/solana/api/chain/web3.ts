@@ -6,11 +6,10 @@ import {
 import {
   ConfirmedSignatureInfo,
   Connection,
-  ParsedConfirmedTransaction,
+  ParsedTransactionWithMeta,
   PublicKey,
   StakeProgram,
   SystemProgram,
-  Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
 import { chunk } from "lodash";
@@ -77,7 +76,7 @@ export function toStakeAccountWithInfo(
 }
 
 export type TransactionDescriptor = {
-  parsed: ParsedConfirmedTransaction;
+  parsed: ParsedTransactionWithMeta;
   info: ConfirmedSignatureInfo;
 };
 
@@ -97,7 +96,7 @@ async function* getTransactionsBatched(
   const batchSize = 100;
 
   for (const signaturesInfoBatch of chunk(signatures, batchSize)) {
-    const transactions = await api.getParsedConfirmedTransactions(
+    const transactions = await api.getParsedTransactions(
       signaturesInfoBatch.map((tx) => tx.signature)
     );
     const txsDetails = transactions.reduce((acc, tx, index) => {
@@ -218,20 +217,6 @@ export const buildTokenTransferInstructions = (
   }
 
   return instructions;
-};
-
-export const addSignatureToTransaction = ({
-  tx,
-  address,
-  signature,
-}: {
-  tx: Transaction;
-  address: string;
-  signature: Buffer;
-}): Transaction => {
-  tx.addSignature(new PublicKey(address), signature);
-
-  return tx;
 };
 
 export async function findAssociatedTokenAccountPubkey(
