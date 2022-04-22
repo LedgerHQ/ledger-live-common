@@ -113,6 +113,10 @@ export type API = {
     input: NFTCollectionMetadataInput,
     chainId: string
   ) => Promise<NFTCollectionMetadataResponse[]>;
+  getNFTCollectionFloorPrice: (
+    contract: string,
+    chainId: string
+  ) => Promise<{ ticker: string; value: string }>;
   getAccountBalance: (address: string) => Promise<BigNumber>;
   roughlyEstimateGasLimit: (address: string) => Promise<BigNumber>;
   getERC20ApprovalsPerContract: (
@@ -243,6 +247,15 @@ export const apiForCurrency = (currency: CryptoCurrency): API => {
           data: input,
         }
       );
+
+      return data;
+    },
+
+    async getNFTCollectionFloorPrice(contract, chainId) {
+      const { data } = await network({
+        method: "GET",
+        url: `https://nft.api.live.ledger.com/v1/marketdata/ethereum/${chainId}/contract/${contract}/floor-price`,
+      });
 
       return data;
     },
