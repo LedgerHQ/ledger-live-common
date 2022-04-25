@@ -344,6 +344,8 @@ class Xpub extends EventEmitter {
           isChange: true,
         });
       } else {
+        // change output is too huge and we should split it
+        // fees should be higher since we have multiple change output now
         const fixedFees =
           fee +
           params.feePerByte *
