@@ -336,14 +336,42 @@ class Xpub extends EventEmitter {
       needChangeoutput &&
       total.minus(params.amount).minus(fee) > dustAmount
     ) {
-      outputs.push({
-        script: this.crypto.toOutputScript(params.changeAddress.address),
-        value: total.minus(params.amount).minus(fee),
-        address: params.changeAddress.address,
-        isChange: true,
-      });
+      if (total.minus(params.amount).minus(fee).lte(this.OUTPUT_VALUE_MAX)) {
+        outputs.push({
+          script: this.crypto.toOutputScript(params.changeAddress.address),
+          value: total.minus(params.amount).minus(fee),
+          address: params.changeAddress.address,
+          isChange: true,
+        });
+      } else {
+        const fixedFees =
+          fee +
+          params.feePerByte *
+            utils.outputWeight(this.derivationMode) *
+            total
+              .minus(params.amount)
+              .dividedToIntegerBy(this.OUTPUT_VALUE_MAX)
+              .toNumber();
+        const changeOutputSum = total.minus(params.amount).minus(fixedFees);
+        while (changeOutputSum.gt(this.OUTPUT_VALUE_MAX)) {
+          outputs.push({
+            script: this.crypto.toOutputScript(params.changeAddress.address),
+            value: new BigNumber(this.OUTPUT_VALUE_MAX),
+            address: params.changeAddress.address,
+            isChange: true,
+          });
+          changeOutputSum.minus(this.OUTPUT_VALUE_MAX);
+        }
+        if (changeOutputSum.gt(dustAmount)) {
+          outputs.push({
+            script: this.crypto.toOutputScript(params.changeAddress.address),
+            value: changeOutputSum,
+            address: params.changeAddress.address,
+            isChange: true,
+          });
+        }
+      }
     }
-
     const outputsValue: BigNumber = outputs.reduce(
       (cur, o) => cur.plus(o.value),
       new BigNumber(0)

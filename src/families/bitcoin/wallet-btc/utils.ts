@@ -119,7 +119,7 @@ function inputWeight(derivationMode: string): number {
   return inputWeight;
 }
 
-function outputWeight(derivationMode: string): number {
+export function outputWeight(derivationMode: string): number {
   let outputSize = 8 + 1; // amount + script size
   if (derivationMode === DerivationModes.TAPROOT) {
     outputSize += 34; // "1" + PUSH32 + <32 bytes>
