@@ -15,7 +15,10 @@ const estimateMaxSpendableWithAPI = async (
 
   switch (account.type) {
     case "Account": {
-      const forTransfer = BigNumber.max(account.balance.minus(txFee), 0);
+      const forTransfer = BigNumber.max(
+        account.spendableBalance.minus(txFee),
+        0
+      );
       if (!transaction) {
         return forTransfer;
       }
@@ -24,7 +27,7 @@ const estimateMaxSpendableWithAPI = async (
           const stakeAccRentExempt =
             await getStakeAccountMinimumBalanceForRentExemption(api);
           return BigNumber.max(
-            account.balance.minus(txFee).minus(stakeAccRentExempt),
+            account.spendableBalance.minus(txFee).minus(stakeAccRentExempt),
             0
           );
         }
@@ -33,7 +36,7 @@ const estimateMaxSpendableWithAPI = async (
       }
     }
     case "TokenAccount":
-      return account.balance;
+      return account.spendableBalance;
   }
 
   throw new Error("not supported account type");

@@ -85,18 +85,26 @@ function makeEstimateMaxSpendable(
     return estimateMaxSpendableWithAPI(arg, api);
   }
 
-  const cacheKeyByAccBalance = ({
+  const cacheKeyByAccSpendableBalance = ({
     account,
     transaction,
   }: {
     account: AccountLike;
     transaction?: Transaction | null;
-  }) =>
-    `${account.id}:${account.balance.toString()}:tx:${
+  }) => {
+    if (account.type === "ChildAccount") {
+      throw new Error("unsupported account type");
+    }
+    return `${account.id}:${account.spendableBalance.toString()}:tx:${
       transaction?.model.kind ?? "<no transaction>"
     }`;
+  };
 
-  return makeLRUCache(estimateMaxSpendable, cacheKeyByAccBalance, minutes(5));
+  return makeLRUCache(
+    estimateMaxSpendable,
+    cacheKeyByAccSpendableBalance,
+    minutes(5)
+  );
 }
 
 function makeBroadcast(

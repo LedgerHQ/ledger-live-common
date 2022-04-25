@@ -324,7 +324,7 @@ async function deriveTransferCommandDescriptor(
   const fee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 
   const txAmount = tx.useAllAmount
-    ? BigNumber.max(mainAccount.balance.minus(fee), 0)
+    ? BigNumber.max(mainAccount.spendableBalance.minus(fee), 0)
     : tx.amount;
 
   if (tx.useAllAmount) {
@@ -334,7 +334,7 @@ async function deriveTransferCommandDescriptor(
   } else {
     if (txAmount.lte(0)) {
       errors.amount = new AmountRequired();
-    } else if (txAmount.plus(fee).gt(mainAccount.balance)) {
+    } else if (txAmount.plus(fee).gt(mainAccount.spendableBalance)) {
       errors.amount = new NotEnoughBalance();
     }
   }
@@ -373,10 +373,10 @@ async function deriveStakeCreateAccountCommandDescriptor(
   const fee = txFee + stakeAccRentExemptAmount;
 
   const amount = tx.useAllAmount
-    ? BigNumber.max(mainAccount.balance.minus(fee), 0)
+    ? BigNumber.max(mainAccount.spendableBalance.minus(fee), 0)
     : tx.amount;
 
-  if (!errors.amount && mainAccount.balance.lt(amount.plus(fee))) {
+  if (!errors.amount && mainAccount.spendableBalance.lt(amount.plus(fee))) {
     errors.amount = new NotEnoughBalance();
   }
 
@@ -449,7 +449,7 @@ async function deriveStakeDelegateCommandDescriptor(
 
   const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 
-  if (mainAccount.balance.lt(txFee)) {
+  if (mainAccount.spendableBalance.lt(txFee)) {
     errors.fee = new NotEnoughBalance();
   }
 
@@ -501,7 +501,7 @@ async function deriveStakeUndelegateCommandDescriptor(
 
   const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 
-  if (mainAccount.balance.lt(txFee)) {
+  if (mainAccount.spendableBalance.lt(txFee)) {
     errors.fee = new NotEnoughBalance();
   }
 
@@ -542,7 +542,7 @@ async function deriveStakeWithdrawCommandDescriptor(
 
   const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
 
-  if (mainAccount.balance.lt(txFee)) {
+  if (mainAccount.spendableBalance.lt(txFee)) {
     errors.fee = new NotEnoughBalance();
   }
 

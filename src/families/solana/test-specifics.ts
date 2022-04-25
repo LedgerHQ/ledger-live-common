@@ -13,6 +13,7 @@ import { SolanaStake, Transaction } from "./types";
 
 const baseAccount = {
   balance: new BigNumber(0),
+  spendableBalance: new BigNumber(0),
 } as Account;
 
 const baseTx = {
