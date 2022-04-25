@@ -354,7 +354,7 @@ class Xpub extends EventEmitter {
               .minus(params.amount)
               .dividedToIntegerBy(this.OUTPUT_VALUE_MAX)
               .toNumber();
-        const changeOutputSum = total.minus(params.amount).minus(fixedFees);
+        let changeOutputSum = total.minus(params.amount).minus(fixedFees);
         while (changeOutputSum.gt(this.OUTPUT_VALUE_MAX)) {
           outputs.push({
             script: this.crypto.toOutputScript(params.changeAddress.address),
@@ -362,7 +362,7 @@ class Xpub extends EventEmitter {
             address: params.changeAddress.address,
             isChange: true,
           });
-          changeOutputSum.minus(this.OUTPUT_VALUE_MAX);
+          changeOutputSum = changeOutputSum.minus(this.OUTPUT_VALUE_MAX);
         }
         if (changeOutputSum.gt(dustAmount)) {
           outputs.push({
