@@ -33,6 +33,7 @@ import {
   SolanaTokenAccounNotInitialized,
   SolanaTokenAccountHoldsAnotherToken,
   SolanaTokenRecipientIsSenderATA,
+  SolanaUseAllAmountStakeWarning,
   SolanaValidatorRequired,
 } from "./errors";
 import {
@@ -361,6 +362,7 @@ async function deriveStakeCreateAccountCommandDescriptor(
   api: ChainAPI
 ): Promise<CommandDescriptor> {
   const errors: Record<string, Error> = {};
+  const warnings: Record<string, Error> = {};
 
   if (!tx.useAllAmount && tx.amount.lte(0)) {
     errors.amount = new AmountRequired();
@@ -378,6 +380,10 @@ async function deriveStakeCreateAccountCommandDescriptor(
 
   if (!errors.amount && mainAccount.spendableBalance.lt(amount.plus(fee))) {
     errors.amount = new NotEnoughBalance();
+  }
+
+  if (!errors.amount && tx.useAllAmount) {
+    warnings.amount = new SolanaUseAllAmountStakeWarning();
   }
 
   const {
@@ -403,7 +409,7 @@ async function deriveStakeCreateAccountCommandDescriptor(
       seed: stakeAccAddressSeed,
     },
     fee,
-    warnings: {},
+    warnings,
     errors,
   };
 }
