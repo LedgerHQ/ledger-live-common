@@ -23,10 +23,8 @@ const baseTx = {
 } as Transaction;
 
 const baseAPI = {
-  getTxFeeCalculator: () =>
-    Promise.resolve({
-      lamportsPerSignature: testOnChainData.fees.lamportsPerSignature,
-    }),
+  getFeeForMessage: (_msg: unknown) =>
+    Promise.resolve(testOnChainData.fees.lamportsPerSignature),
 } as ChainAPI;
 
 type StakeTestSpec = {

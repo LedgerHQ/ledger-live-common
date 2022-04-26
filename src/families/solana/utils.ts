@@ -130,3 +130,7 @@ export function swap(arr: any[], i: number, j: number) {
   arr[i] = arr[j];
   arr[j] = tmp;
 }
+
+export type Functions<T> = keyof {
+  [K in keyof T as T[K] extends Function ? K : never]: T[K];
+};

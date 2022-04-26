@@ -5,7 +5,6 @@ import {
 } from "@solana/spl-token";
 import {
   Connection,
-  FeeCalculator,
   FetchMiddleware,
   Message,
   PublicKey,
@@ -24,8 +23,6 @@ export type ChainAPI = Readonly<{
   getBalance: (address: string) => Promise<number>;
 
   getLatestBlockhash: () => Promise<string>;
-
-  getTxFeeCalculator: () => Promise<FeeCalculator>;
 
   getFeeForMessage: (message: Message) => Promise<number>;
 
@@ -115,11 +112,6 @@ export function getChainAPI(
       connection()
         .getLatestBlockhash()
         .then((r) => r.blockhash),
-
-    getTxFeeCalculator: () =>
-      connection()
-        .getRecentBlockhash()
-        .then((r) => r.feeCalculator),
 
     getFeeForMessage: (msg: Message) =>
       connection()

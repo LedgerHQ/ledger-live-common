@@ -42,6 +42,7 @@ import {
   isValidBase58Address,
   MAX_MEMO_LENGTH,
 } from "./logic";
+import { estimateTxFee } from "./tx-fees";
 import type {
   CommandDescriptor,
   SolanaStake,
@@ -186,8 +187,8 @@ const deriveTokenTransferCommandDescriptor = async (
       ? defaultRecipientDescriptor
       : recipientDescriptorOrError;
 
-  // TODO: check if SOL balance enough to pay fees
-  const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
+  const txFee = await estimateTxFee(api, mainAccount, "token.transfer");
+
   const assocAccRentExempt =
     recipientDescriptor.shouldCreateAsAssociatedTokenAccount
       ? await api.getAssocTokenAccMinNativeBalance()
@@ -289,7 +290,7 @@ async function deriveCreateAssociatedTokenAccountCommandDescriptor(
     mint
   );
 
-  const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
+  const txFee = await estimateTxFee(api, mainAccount, "token.createATA");
   const assocAccRentExempt = await api.getAssocTokenAccMinNativeBalance();
 
   return {
@@ -322,7 +323,7 @@ async function deriveTransferCommandDescriptor(
     validateMemoCommon(memo, errors);
   }
 
-  const fee = (await api.getTxFeeCalculator()).lamportsPerSignature;
+  const fee = await estimateTxFee(api, mainAccount, "transfer");
 
   const txAmount = tx.useAllAmount
     ? BigNumber.max(mainAccount.spendableBalance.minus(fee), 0)
@@ -368,7 +369,8 @@ async function deriveStakeCreateAccountCommandDescriptor(
     errors.amount = new AmountRequired();
   }
 
-  const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
+  const txFee = await estimateTxFee(api, mainAccount, "stake.createAccount");
+
   const stakeAccRentExemptAmount =
     await getStakeAccountMinimumBalanceForRentExemption(api);
 
@@ -453,7 +455,7 @@ async function deriveStakeDelegateCommandDescriptor(
     }
   }
 
-  const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
+  const txFee = await estimateTxFee(api, mainAccount, "stake.delegate");
 
   if (mainAccount.spendableBalance.lt(txFee)) {
     errors.fee = new NotEnoughBalance();
@@ -505,7 +507,7 @@ async function deriveStakeUndelegateCommandDescriptor(
     }
   }
 
-  const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
+  const txFee = await estimateTxFee(api, mainAccount, "stake.undelegate");
 
   if (mainAccount.spendableBalance.lt(txFee)) {
     errors.fee = new NotEnoughBalance();
@@ -546,7 +548,7 @@ async function deriveStakeWithdrawCommandDescriptor(
     }
   }
 
-  const txFee = (await api.getTxFeeCalculator()).lamportsPerSignature;
+  const txFee = await estimateTxFee(api, mainAccount, "stake.withdraw");
 
   if (mainAccount.spendableBalance.lt(txFee)) {
     errors.fee = new NotEnoughBalance();

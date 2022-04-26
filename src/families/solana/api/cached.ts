@@ -101,12 +101,6 @@ export function cached(api: ChainAPI): ChainAPI {
       seconds(5)
     ),
 
-    getTxFeeCalculator: makeLRUCache(
-      api.getTxFeeCalculator,
-      cacheKeyEmpty,
-      minutes(5)
-    ),
-
     getFeeForMessage: makeLRUCache(
       api.getFeeForMessage,
       (msg) => msg.serialize().toString(),
