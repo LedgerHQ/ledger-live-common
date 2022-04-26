@@ -71,16 +71,16 @@ const buildOptimisticOperation = (
     );
 
   const accountChange = accountOutput.minus(accountInput);
-  const type = getOperationType({
+  const opType = getOperationType({
     valueChange: accountChange,
     fees: transaction.getFee(),
   });
   const transactionHash = transaction.getTransactionHash().toString("hex");
 
   const op: Operation = {
-    id: encodeOperationId(account.id, transactionHash, type),
+    id: encodeOperationId(account.id, transactionHash, opType),
     hash: transactionHash,
-    type,
+    type: opType,
     value: accountChange.absoluteValue(),
     fee: transaction.getFee(),
     blockHash: undefined,
@@ -96,12 +96,12 @@ const buildOptimisticOperation = (
     ? account.subAccounts?.find((ta) => ta.id === t.subAccountId)
     : null;
 
-  if (tokenAccount) {
+  if (tokenAccount && opType === "OUT") {
     op.subOperations = [
       {
-        id: encodeOperationId(tokenAccount.id, transactionHash, type),
+        id: encodeOperationId(tokenAccount.id, transactionHash, opType),
         hash: transactionHash,
-        type,
+        type: opType,
         value: t.useAllAmount ? tokenAccount.balance : t.amount,
         fee: t.fees as BigNumber,
         blockHash: undefined,

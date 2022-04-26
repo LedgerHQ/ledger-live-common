@@ -1,11 +1,11 @@
-import type { Operation } from "../../types";
+import type { Operation, TokenAccount } from "../../types";
 import {
   GetAccountShape,
   makeScanAccounts,
   mergeOps,
 } from "../../bridge/jsHelpers";
 import { makeSync } from "../../bridge/jsHelpers";
-import { encodeAccountId } from "../../account";
+import { encodeAccountId, inferSubOperations } from "../../account";
 
 import BigNumber from "bignumber.js";
 import Ada from "@cardano-foundation/ledgerjs-hw-app-cardano";
@@ -19,6 +19,7 @@ import {
   getBaseAddress,
   getBipPathString,
   getOperationType,
+  mergeTokens,
 } from "./logic";
 import { encodeOperationId } from "../../operation";
 import { getOperations } from "./api/getOperations";
@@ -30,13 +31,17 @@ import uniqBy from "lodash/uniqBy";
 function mapTxToAccountOperation(
   tx: APITransaction,
   accountId: string,
-  accountCredentialsMap: Record<string, PaymentCredential>
+  accountCredentialsMap: Record<string, PaymentCredential>,
+  subAccounts: Array<TokenAccount>
 ): Operation {
   const accountChange = getAccountChange(tx, accountCredentialsMap);
   const mainOperationType = getOperationType({
     valueChange: accountChange.ada,
     fees: new BigNumber(tx.fees),
   });
+
+  const subOperations = inferSubOperations(tx.hash, subAccounts);
+
   return {
     accountId,
     id: encodeOperationId(accountId, tx.hash, mainOperationType),
@@ -50,6 +55,7 @@ function mapTxToAccountOperation(
     recipients: tx.outputs.map((o) =>
       TyphonUtils.getAddressFromHex(o.address).getBech32()
     ),
+    subOperations,
     blockHeight: tx.blockHeight,
     date: new Date(tx.timestamp),
     extra: {},
@@ -182,25 +188,24 @@ export const getAccountShape: GetAccountShape = async (info) => {
     (total, u) => total.plus(u.amount),
     new BigNumber(0)
   );
-  const newOperations = newTransactions.map((t) =>
-    mapTxToAccountOperation(t, accountId, accountCredentialsMap)
-  );
-
-  // const newOperationsById = groupBy(newOperations, (o) => o.accountId);
-  // const accountNewOperations = newOperationsById[accountId] || [];
-  const operations = mergeOps(
-    Object.values(stableOperationsIds),
-    newOperations
-  );
-
+  const tokenBalance = mergeTokens(utxos.map((u) => u.tokens).flat());
   const subAccounts = buildSubAccounts({
     initialAccount,
     parentAccountId: accountId,
     parentCurrency: currency,
     newTransactions,
-    utxos,
+    tokens: tokenBalance,
     accountCredentialsMap,
   });
+
+  const newOperations = newTransactions.map((t) =>
+    mapTxToAccountOperation(t, accountId, accountCredentialsMap, subAccounts)
+  );
+
+  const operations = mergeOps(
+    Object.values(stableOperationsIds),
+    newOperations
+  );
 
   const stakeCredential = getAccountStakeCredential(xpub, accountIndex);
   const networkParams = getNetworkParameters(currency.id);

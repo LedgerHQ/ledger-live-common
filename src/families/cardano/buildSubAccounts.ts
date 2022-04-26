@@ -1,17 +1,11 @@
 import BigNumber from "bignumber.js";
 import { encodeOperationId } from "../../operation";
-import {
-  Account,
-  CryptoCurrency,
-  Operation,
-  SubAccount,
-  TokenAccount,
-} from "../../types";
+import { Account, CryptoCurrency, Operation, TokenAccount } from "../../types";
 import { APITransaction } from "./api/api-types";
-import { getAccountChange, mergeTokens } from "./logic";
-import { CardanoOutput, PaymentCredential } from "./types";
+import { getAccountChange } from "./logic";
+import { PaymentCredential, Token } from "./types";
 import { utils as TyphonUtils } from "@stricahq/typhonjs";
-import { findTokenById, TokenCurrency } from "@ledgerhq/cryptoassets";
+import { findTokenById } from "@ledgerhq/cryptoassets";
 import {
   decodeTokenAccountId,
   emptyHistoryCache,
@@ -118,20 +112,26 @@ export function buildSubAccounts({
   parentAccountId,
   parentCurrency,
   newTransactions,
-  utxos,
+  tokens,
   accountCredentialsMap,
 }: {
   initialAccount: Account | undefined;
   parentAccountId: string;
   parentCurrency: CryptoCurrency;
   newTransactions: Array<APITransaction>;
-  utxos: Array<CardanoOutput>;
+  tokens: Array<Token>;
   accountCredentialsMap: Record<string, PaymentCredential>;
-}): Array<SubAccount> {
-  const initialTokenAccountsById = keyBy(
-    initialAccount?.subAccounts || [],
-    (a) => a.id
-  );
+}): Array<TokenAccount> {
+  const tokenAccountsById: Record<string, TokenAccount> = {};
+
+  if (initialAccount && initialAccount.subAccounts) {
+    for (const existingAccount of initialAccount.subAccounts) {
+      if (existingAccount.type === "TokenAccount") {
+        tokenAccountsById[existingAccount.id] = existingAccount;
+      }
+    }
+  }
+
   const tokenOperations: Array<Operation> = mapTxToTokenAccountOperation({
     parentAccountId,
     parentCurrency,
@@ -139,38 +139,28 @@ export function buildSubAccounts({
     accountCredentialsMap,
   });
   const tokenOperationsByAccId = groupBy(tokenOperations, (o) => o.accountId);
-
-  const tokensBalanceByAssetId = keyBy(
-    mergeTokens(utxos.map((u) => u.tokens).flat()),
-    (t) => getTokenAssetId(t)
-  );
-
+  const tokensBalanceByAssetId = keyBy(tokens, (t) => getTokenAssetId(t));
   for (const tokenAccountId in tokenOperationsByAccId) {
-    const tokenAccount = initialTokenAccountsById[tokenAccountId] as
-      | TokenAccount
-      | undefined;
-    const tokenCurrency = decodeTokenAccountId(tokenAccountId)
-      .token as TokenCurrency;
-    const assetId = tokenCurrency.contractAddress;
-    const balance = tokensBalanceByAssetId[assetId]?.amount || new BigNumber(0);
-    const oldOperations = tokenAccount?.operations || [];
-    const newOperations = tokenOperationsByAccId[tokenAccountId];
+    const initialTokenAccount = tokenAccountsById[tokenAccountId];
+    const oldOperations = initialTokenAccount?.operations || [];
+    const newOperations = tokenOperationsByAccId[tokenAccountId] || [];
     const operations = mergeOps(oldOperations, newOperations);
-
-    if (tokenAccount) {
-      tokenAccount.balance = balance;
-      tokenAccount.spendableBalance = balance;
-      tokenAccount.operations = operations;
-      tokenAccount.operationsCount = operations.length;
-    } else {
-      const newTokenAccount: SubAccount = {
+    const { token: tokenCurrency } = decodeTokenAccountId(tokenAccountId);
+    if (tokenCurrency) {
+      const accountBalance =
+        tokensBalanceByAssetId[tokenCurrency.contractAddress]?.amount ||
+        new BigNumber(0);
+      const tokenAccount: TokenAccount = {
         type: "TokenAccount",
         id: tokenAccountId,
         parentId: parentAccountId,
         token: tokenCurrency,
-        balance,
-        spendableBalance: balance,
-        creationDate: new Date(),
+        balance: accountBalance,
+        spendableBalance: accountBalance,
+        creationDate:
+          operations.length > 0
+            ? operations[operations.length - 1].date
+            : new Date(),
         operationsCount: operations.length,
         operations,
         pendingOperations: [],
@@ -178,9 +168,8 @@ export function buildSubAccounts({
         balanceHistoryCache: emptyHistoryCache,
         swapHistory: [],
       };
-      initialTokenAccountsById[tokenAccountId] = newTokenAccount;
+      tokenAccountsById[tokenAccountId] = tokenAccount;
     }
   }
-
-  return Object.values(initialTokenAccountsById);
+  return Object.values(tokenAccountsById);
 }
