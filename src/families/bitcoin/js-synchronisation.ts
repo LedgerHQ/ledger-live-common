@@ -65,7 +65,6 @@ const fromWalletUtxo = (
     value: new BigNumber(utxo.value),
     rbf: utxo.rbf,
     isChange: changeAddresses.has(utxo.address),
-    path: "",
   };
 };
 
@@ -98,7 +97,7 @@ const mapTxToOperations = (
   changeAddresses: Set<string>
 ): $Shape<Operation[]> => {
   const operations: Operation[] = [];
-  const hash = tx.hash;
+  const txId = tx.id;
   const fee = new BigNumber(tx.fees);
   const blockHeight = tx.block?.height;
   const blockHash = tx.block?.hash;
@@ -193,8 +192,8 @@ const mapTxToOperations = (
 
     type = "OUT";
     operations.push({
-      id: encodeOperationId(accountId, hash, type),
-      hash,
+      id: encodeOperationId(accountId, txId, type),
+      hash: txId,
       type,
       value,
       fee,
@@ -227,8 +226,8 @@ const mapTxToOperations = (
       value = finalAmount;
       type = "IN";
       operations.push({
-        id: encodeOperationId(accountId, hash, type),
-        hash,
+        id: encodeOperationId(accountId, txId, type),
+        hash: txId,
         type,
         value,
         fee,
@@ -411,5 +410,8 @@ const getAddressFn = (transport) => {
   return (opts) => getAddressWithBtcInstance(transport, btc, opts);
 };
 
-export const scanAccounts = makeScanAccounts(getAccountShape, getAddressFn);
-export const sync = makeSync(getAccountShape, postSync);
+export const scanAccounts = makeScanAccounts({
+  getAccountShape,
+  getAddressFn,
+});
+export const sync = makeSync({ getAccountShape, postSync });
