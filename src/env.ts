@@ -569,11 +569,6 @@ const envDefinitions = {
     parser: stringParser,
     desc: "Market data api",
   },
-  USB_FW_UPDATE: {
-    def: false,
-    parser: boolParser,
-    desc: "USB Firmware Update for LLM",
-  },
   USE_LEARN_STAGING_URL: {
     def: false,
     parser: boolParser,
