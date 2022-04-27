@@ -21,16 +21,32 @@ const getAccountShape: GetAccountShape = async (info) => {
 
   const { blockHeight, balance } = await getAccount(address);
 
-  // Merge new operations with the previously synced ones
-  let startAt = 0;
-  let maxIteration = 20;
   let operations = oldOperations;
 
-  let newOperations = await getOperations(accountId, address, startAt);
-  do {
-    operations = mergeOps(operations, newOperations);
-    newOperations = await getOperations(accountId, address, startAt++);
-  } while (--maxIteration && newOperations.length != 0);
+  // TODO fetch the date of the last operation from oldOperations and only fetch new operations based on it
+  let lastOperationDate: Date | null = null;
+  if (operations.length > 0) {
+    operations.forEach((o) => {
+      if (o.date != null) {
+        if (lastOperationDate !== null) {
+          if (o.date.valueOf() > lastOperationDate.valueOf()) {
+            lastOperationDate = o.date;
+          }
+        } else {
+          lastOperationDate = o.date;
+        }
+      }
+    });
+  }
+
+  const newOperations = await getOperations(
+    accountId,
+    address,
+    lastOperationDate
+  );
+
+  // Merge new operations with the previously synced ones
+  operations = mergeOps(operations, newOperations);
 
   const shape = {
     id: accountId,

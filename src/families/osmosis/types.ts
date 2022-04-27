@@ -4,16 +4,12 @@ import type {
   TransactionCommonRaw,
 } from "../../types/transaction";
 
-import type { CosmosMessage } from "../cosmos/types";
-
 export type NetworkInfo = {
   family: "osmosis";
 };
 export type NetworkInfoRaw = {
   family: "osmosis";
 };
-
-export type OsmosisMessage = CosmosMessage;
 
 export type Transaction = TransactionCommon & {
   family: "osmosis";

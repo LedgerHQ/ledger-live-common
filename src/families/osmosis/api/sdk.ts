@@ -125,7 +125,7 @@ export const getMicroOsmoAmountCosmosType = (
 };
 
 /**
- * Map the send history transaction to a Ledger Live Operation
+ * Map a send transaction as returned by the indexer to a Ledger Live Operation
  */
 function convertTransactionToOperation(
   accountId: string,
@@ -165,22 +165,26 @@ function convertTransactionToOperation(
 export const getOperations = async (
   accountId: string,
   addr: string,
+  startDate: Date | null,
   startAt = 0,
   transactionsLimit: number = DEFAULT_TRANSACTIONS_LIMIT
 ): Promise<Operation[]> => {
+  const now = new Date().toISOString();
   const operations: Operation[] = [];
   const { data } = await network({
     method: "POST",
     url: getIndexerUrl(`/transactions_search/`),
     data: {
       network: "osmosis",
+      type: ["send"],
       account: [addr],
+      before_time: now,
+      after_time: startDate !== null ? startDate.toISOString() : null,
       limit: transactionsLimit,
       offset: startAt,
     },
   });
   if (data == null) {
-    // throw new Error("Error retrieving transaction data");
     return operations;
   }
   const accountTransactions = data;
@@ -198,12 +202,28 @@ export const getOperations = async (
         transactionType
       ) {
         case OsmosisAccountTransactionTypeEnum.Send: {
-          const eventContent: OsmosisEventContent = events[j].sub;
+          // Check sub array exists. Sub array contains transactions messages. If there isn't one, skip
+          if (!Object.prototype.hasOwnProperty.call(events[j], "sub")) {
+            break;
+          }
+
+          const eventContent: OsmosisEventContent[] = events[j].sub;
+          // Check that sub array is not empty
+          if (!(eventContent.length > 0)) break;
+
+          // Check eventContent contains at least one entry of type "send" using find() and retrieve it.
+          // More in depth: find() retrieves the (first) message, which contains sender, recipient and amount info
+          // First message because typically "send" transactions only have one sender and one recipient
+          // If no messages are found, skips the transaction altogether
+          const sendEvent = eventContent.find(
+            (event) => event.type[0] === OsmosisAccountTransactionTypeEnum.Send
+          );
+          if (sendEvent == null) break;
           operations.push(
             convertTransactionToOperation(
               accountId,
               addr,
-              eventContent[0],
+              sendEvent,
               accountTransactions[i],
               memoTransaction
             )
@@ -211,13 +231,6 @@ export const getOperations = async (
           break;
         }
         default:
-          // TODO Get feedback on what we want to do here. Maybe just silently ignore
-          // or consider adding the operation with type "NONE", described in operation.ts
-          // throw new Error("encountered error while parsing transaction type");
-          // console.log(
-          //   "skipping transaction, because transaction type is: ",
-          //   transactionType
-          // );
           break;
       }
     }

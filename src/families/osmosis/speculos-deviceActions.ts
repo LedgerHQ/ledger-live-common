@@ -1,7 +1,6 @@
 import type { DeviceAction } from "../../bot/types";
 import type { Transaction } from "./types";
 import { deviceActionFlow } from "../../bot/specs";
-// import { formatCurrencyUnit } from "../../currencies";
 
 const typeWording = {
   send: "Send",
@@ -30,11 +29,6 @@ const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
       title: "Amount",
       button: "Rr",
       expectedValue: ({ account, status }) => {
-        // const formattedValue =
-        //   formatCurrencyUnit(account.currency.units[1], status.amount, {
-        //     disableRounding: true,
-        //   }) + " uosmo";
-        // return formattedValue;
         const denom = account.currency.units[1].code;
         const amount = status.amount.toString();
         return `${amount} ${denom}`;
@@ -59,11 +53,6 @@ const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
       title: "Fee",
       button: "Rr",
       expectedValue: ({ account, status }) => {
-        // const formattedValue =
-        //   formatCurrencyUnit(account.unit, status.estimatedFees, {
-        //     disableRounding: true,
-        //   }) + " uosmo";
-        // return formattedValue;
         const denom = account.currency.units[1].code;
         const amount = status.estimatedFees.toString();
         return `${amount} ${denom}`;
