@@ -3,6 +3,8 @@ import BigNumber from "bignumber.js";
 import type { Account } from "../../types";
 import type { Transaction } from "./types";
 
+export const estimatedFeeSafetyRate = 2;
+
 export async function calculateAmount({
   account,
   transaction,

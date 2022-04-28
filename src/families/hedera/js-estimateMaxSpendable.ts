@@ -1,4 +1,5 @@
 import BigNumber from "bignumber.js";
+import { estimatedFeeSafetyRate } from './utils';
 import type { Account, AccountLike } from "../../types";
 import type { Transaction } from "./types";
 
@@ -22,7 +23,7 @@ export default function estimateMaxSpendable({
 
   // as fees are based on a currency conversion, we stay
   // on the safe side here and double the estimate for "max spendable"
-  estimatedFees = estimatedFees.multipliedBy(2);
+  estimatedFees = estimatedFees.multipliedBy(estimatedFeeSafetyRate);
 
   return Promise.resolve(balance.minus(estimatedFees));
 }
