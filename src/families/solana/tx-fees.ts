@@ -4,6 +4,8 @@ import { buildTransactionWithAPI } from "./js-buildTransaction";
 import createTransaction from "./js-createTransaction";
 import { Transaction, TransactionModel } from "./types";
 import { assertUnreachable } from "./utils";
+import { Transaction as OnChainTransaction } from "@solana/web3.js";
+import { log } from "@ledgerhq/logs";
 
 export async function estimateTxFee(
   api: ChainAPI,
@@ -12,9 +14,13 @@ export async function estimateTxFee(
 ) {
   const tx = createDummyTx(account, kind);
   const [onChainTx] = await buildTransactionWithAPI(account, tx, api);
+
   const fee = await api.getFeeForMessage(onChainTx.compileMessage());
+
   if (typeof fee !== "number") {
-    throw new Error(`unexpected fee: ${fee}`);
+    log("error", `api.getFeeForMessage returned invalid fee: <${fee}>`);
+    // TEMP HACK: sometimes fee is not a number, retrying with a next blockhash
+    return retryWithNewBlockhash(api, onChainTx);
   }
   return fee;
 }
@@ -154,3 +160,47 @@ const randomAddresses = [
   "FvbvvXMY4Rf1AtGG7UHJUesjt8FFgPnPy6o83Dna9mXK",
   "AEtRo9MKfLqGtjvxdz8H93R7SQxXLEkibVSJbs9XKnD1",
 ];
+
+async function retryWithNewBlockhash(
+  api: ChainAPI,
+  onChainTx: OnChainTransaction
+) {
+  if (onChainTx.recentBlockhash === undefined) {
+    throw new Error("expected recentBlockhash");
+  }
+
+  onChainTx.recentBlockhash = await waitNextBlockhash(
+    api,
+    onChainTx.recentBlockhash
+  );
+
+  const fee = await api.getFeeForMessage(onChainTx.compileMessage());
+
+  if (typeof fee !== "number") {
+    throw new Error(
+      `unexpected fee: <${fee}>, after retry with a new blockhash`
+    );
+  }
+
+  return fee;
+}
+
+function sleep(durationMS: number): Promise<void> {
+  return new Promise((res) => setTimeout(res, durationMS));
+}
+
+async function waitNextBlockhash(api: ChainAPI, currentBlockhash: string) {
+  const sleepTimeMS = 5000;
+  for (let i = 0; i < 5; i++) {
+    log("info", `sleeping for ${sleepTimeMS} ms, waiting for a new blockhash`);
+    await sleep(sleepTimeMS);
+    const blockhash = await api.getLatestBlockhash();
+    if (blockhash !== currentBlockhash) {
+      log("info", "got a new blockhash");
+      return blockhash;
+    }
+    log("info", "got same blockhash");
+  }
+
+  throw new Error("next blockhash timeout");
+}
