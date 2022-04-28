@@ -74,7 +74,7 @@
     "@polkadot/types": "7.8.1",
     "@polkadot/types-known": "7.8.1",
     "@solana/spl-token": "^0.2.0",
-    "@solana/web3.js": "^1.39.1",
+    "@solana/web3.js": "^1.41.0",
     "@taquito/ledger-signer": "stablelib",
     "@taquito/taquito": "stablelib",
     "@types/bchaddrjs": "^0.4.0",
