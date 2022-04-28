@@ -1,8 +1,14 @@
 import { CryptoCurrency } from "@ledgerhq/cryptoassets";
+import { flow } from "lodash/fp";
 import { ChainAPI } from "./api";
-import { SolanaPreloadData, SolanaPreloadDataV1 } from "./types";
-import { assertUnreachable, clusterByCurrencyId } from "./utils";
 import { setSolanaPreloadData as setPreloadData } from "./js-preload-data";
+import { SolanaPreloadData, SolanaPreloadDataV1 } from "./types";
+import {
+  assertUnreachable,
+  clusterByCurrencyId,
+  ledgerFirstValidators,
+  profitableValidators,
+} from "./utils";
 import { getValidators, ValidatorsAppValidator } from "./validator-app";
 
 export async function preloadWithAPI(
@@ -23,7 +29,7 @@ export async function preloadWithAPI(
     validatorsWithMeta: [],
     validators:
       cluster === "mainnet-beta"
-        ? profitableValidators(validators)
+        ? preprocessMainnetValidators(validators)
         : validators,
   };
 
@@ -32,8 +38,10 @@ export async function preloadWithAPI(
   return data;
 }
 
-function profitableValidators(validators: ValidatorsAppValidator[]) {
-  return validators.filter((v) => v.commission < 100);
+function preprocessMainnetValidators(
+  validators: ValidatorsAppValidator[]
+): ValidatorsAppValidator[] {
+  return flow(() => validators, profitableValidators, ledgerFirstValidators)();
 }
 
 async function loadDevnetValidators(api: ChainAPI) {

@@ -98,7 +98,7 @@ export function cached(api: ChainAPI): ChainAPI {
     getLatestBlockhash: makeLRUCache(
       api.getLatestBlockhash,
       cacheKeyEmpty,
-      seconds(5)
+      seconds(30)
     ),
 
     getFeeForMessage: makeLRUCache(

@@ -12,7 +12,11 @@ export async function estimateTxFee(
 ) {
   const tx = createDummyTx(account, kind);
   const [onChainTx] = await buildTransactionWithAPI(account, tx, api);
-  return api.getFeeForMessage(onChainTx.compileMessage());
+  const fee = await api.getFeeForMessage(onChainTx.compileMessage());
+  if (typeof fee !== "number") {
+    throw new Error(`unexpected fee: ${fee}`);
+  }
+  return fee;
 }
 
 const createDummyTx = (account: Account, kind: TransactionModel["kind"]) => {
