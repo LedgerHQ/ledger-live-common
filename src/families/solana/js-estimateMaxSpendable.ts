@@ -31,7 +31,7 @@ const estimateMaxSpendableWithAPI = async (
           );
         }
         default:
-          return BigNumber.max(account.balance.minus(txFee), 0);
+          return BigNumber.max(account.spendableBalance.minus(txFee), 0);
       }
     }
     case "TokenAccount":
