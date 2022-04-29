@@ -53,11 +53,11 @@ export function validateRPCNodeConfig(config: RPCNodeConfig): Array<{
       field: "host",
       error: new RPCHostRequired(),
     });
-  } else if (!isValidHost(config.host)) {
-    errors.push({
-      field: "host",
-      error: new RPCHostInvalid(),
-    });
+//  } else if (!isValidHost(config.host)) {
+//    errors.push({
+//      field: "host",
+//      error: new RPCHostInvalid(),
+//    });
   }
 
   if (!config.username) {
