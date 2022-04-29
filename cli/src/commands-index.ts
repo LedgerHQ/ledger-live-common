@@ -27,6 +27,7 @@ import generateTestTransaction from "./commands/generateTestTransaction";
 import genuineCheck from "./commands/genuineCheck";
 import getAddress from "./commands/getAddress";
 import getTransactionStatus from "./commands/getTransactionStatus";
+import i18n from "./commands/i18n";
 import liveData from "./commands/liveData";
 import makeCompoundSummary from "./commands/makeCompoundSummary";
 import managerListApps from "./commands/managerListApps";
@@ -78,6 +79,7 @@ export default {
   genuineCheck,
   getAddress,
   getTransactionStatus,
+  i18n,
   liveData,
   makeCompoundSummary,
   managerListApps,
