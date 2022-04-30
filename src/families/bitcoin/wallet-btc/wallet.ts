@@ -242,11 +242,11 @@ class BitcoinLikeWallet {
     }
     const buffer = Buffer.allocUnsafe(length);
     let bufferOffset = 0;
-    utils.writeVarInt({
+    bufferOffset = utils.writeVarInt(
       buffer,
-      i: txInfo.outputs.length,
-      offset: bufferOffset,
-    });
+      txInfo.outputs.length,
+      bufferOffset
+    );
     txInfo.outputs.forEach((txOut) => {
       // refer to https://github.com/bitcoinjs/bitcoinjs-lib/blob/master/ts_src/bufferutils.ts#L26
       buffer.writeInt32LE(
@@ -259,14 +259,14 @@ class BitcoinLikeWallet {
       );
       bufferOffset += 8;
       if (additionals && additionals.includes("decred")) {
-        utils.writeVarInt({ buffer, i: 0, offset: bufferOffset });
-        utils.writeVarInt({ buffer, i: 0, offset: bufferOffset });
+        bufferOffset = utils.writeVarInt(buffer, 0, bufferOffset);
+        bufferOffset = utils.writeVarInt(buffer, 0, bufferOffset);
       }
-      utils.writeVarInt({
+      bufferOffset = utils.writeVarInt(
         buffer,
-        i: txOut.script.length,
-        offset: bufferOffset,
-      });
+        txOut.script.length,
+        bufferOffset
+      );
       bufferOffset += txOut.script.copy(buffer, bufferOffset);
     });
     const outputScriptHex = buffer.toString("hex");

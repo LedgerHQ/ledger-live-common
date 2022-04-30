@@ -263,12 +263,9 @@ export function isTaprootAddress(address: string, currency?: Currency) {
   }
 }
 
-export function writeVarInt(Bufferutil: {
-  buffer: Buffer;
-  i: number;
-  offset: number;
-}) {
+export function writeVarInt(buffer: Buffer, i: number, offset: number) {
   // refer to https://github.com/bitcoinjs/bitcoinjs-lib/blob/1f44f722d30cd14a1861c8546e6b455f73862c1e/src/bufferutils.js#L78
-  varuint.encode(Bufferutil.i, Bufferutil.buffer, Bufferutil.offset);
-  Bufferutil.offset += varuint.encode.bytes;
+  varuint.encode(i, buffer, offset);
+  offset += varuint.encode.bytes;
+  return offset;
 }
