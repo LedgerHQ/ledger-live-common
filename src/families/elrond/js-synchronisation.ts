@@ -54,7 +54,9 @@ const getAccountShape: GetAccountShape = async (info) => {
   const shape = {
     id: accountId,
     balance,
-    spendableBalance: balance.minus(FEES_BALANCE),
+    spendableBalance: balance.gt(FEES_BALANCE)
+      ? balance.minus(FEES_BALANCE)
+      : balance,
     operationsCount: operations.length,
     blockHeight,
     elrondResources: {
