@@ -13,6 +13,7 @@ import {
   isSelfTransaction,
   computeTransactionValue,
 } from "./logic";
+import { DECIMALS_LIMIT } from "./constants";
 
 const getTransactionStatus = async (
   a: Account,
@@ -51,6 +52,9 @@ const getTransactionStatus = async (
   if (tokenAccount) {
     if (totalSpent.gt(tokenAccount.balance)) {
       errors.amount = new NotEnoughBalance();
+    }
+    if (!totalSpent.decimalPlaces(DECIMALS_LIMIT).isEqualTo(totalSpent)) {
+      errors.amount = new Error(`Maximum '${DECIMALS_LIMIT}' decimals allowed`);
     }
   } else {
     if (totalSpent.gt(a.balance)) {

@@ -17,3 +17,4 @@ export const MIN_DELEGATION_AMOUNT: BigNumber = new BigNumber(
 );
 export const MIN_DELEGATION_AMOUNT_DENOMINATED: BigNumber = new BigNumber(1);
 export const FEES_BALANCE: BigNumber = new BigNumber("5000000000000000"); // 0.005 EGLD for future transactions
+export const DECIMALS_LIMIT = 18;
