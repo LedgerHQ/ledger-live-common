@@ -152,3 +152,21 @@ export function ledgerFirstValidators(
 export function profitableValidators(validators: ValidatorsAppValidator[]) {
   return validators.filter((v) => v.commission < 100);
 }
+
+// https://stackoverflow.com/a/60132060
+export const tupleOfUnion =
+  <T>() =>
+  <U extends T[]>(
+    array: U &
+      ([T] extends [U[number]]
+        ? unknown
+        : "The array must contain all union values")
+  ) =>
+    array;
+
+export function sweetch<T extends keyof any, R>(
+  caze: T,
+  cases: Record<T, R>
+): R {
+  return cases[caze];
+}
