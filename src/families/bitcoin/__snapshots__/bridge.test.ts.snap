@@ -11368,6 +11368,7 @@ Array [
 ]
 `;
 
+<<<<<<< HEAD
 <<<<<<< HEAD:src/__tests__/__snapshots__/all.libcore.ts.snap
 exports[`cosmos currency bridge scanAccounts cosmos seed 1 1`] = `
 Array [
@@ -12526,6 +12527,8 @@ Array [
 
 =======
 >>>>>>> 8b92f128824a7d392c071d45e663f833a348a071:src/families/bitcoin/__snapshots__/bridge.test.ts.snap
+=======
+>>>>>>> 8b92f128824a7d392c071d45e663f833a348a071
 exports[`dash currency bridge scanAccounts dash seed 1 1`] = `
 Array [
   Object {

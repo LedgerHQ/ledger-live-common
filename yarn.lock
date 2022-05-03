@@ -6696,15 +6696,10 @@ json-parse-even-better-errors@^2.3.0:
   resolved "https://registry.yarnpkg.com/json-parse-even-better-errors/-/json-parse-even-better-errors-2.3.1.tgz#7c47805a94319928e05777405dc12e1f7a4ee02d"
   integrity sha512-xyFwyhro/JEof6Ghe2iz2NcXoj2sloNsWr/XsERDK/oiPCfaNhl5ONfp+jQdAZRQQ0IJWNzH9zIZF7li91kh2w==
 
-json-rpc-2.0@^0.2.19:
+json-rpc-2.0@^0.2.16, json-rpc-2.0@^0.2.19:
   version "0.2.19"
   resolved "https://registry.yarnpkg.com/json-rpc-2.0/-/json-rpc-2.0-0.2.19.tgz#082957f0d22d22f03473dbf5ffeeb20dcdeb1faa"
   integrity sha512-tegZKneDQjWintJS5Zlw8xNvJK0/xq4sct2M5AgfFmcCJFMjvrLgk1noH7OPfFgEQ+ScueuWdaGfikCPr+qBtg==
-
-json-rpc-2.0@^1.0.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/json-rpc-2.0/-/json-rpc-2.0-1.1.0.tgz#891eb5fd89de6a909444a2d81ae804655b757c29"
-  integrity sha512-A4v62rLgwC2U+G3hA1PKRgAXKS55ItTtjUJVbIq68yccD+AUJZSdjayxd0PLQD8i3ustyLvvaYKW6+DglScrjA==
 
 json-schema-traverse@^0.4.1:
   version "0.4.1"
