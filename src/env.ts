@@ -77,7 +77,7 @@ const envDefinitions = {
   },
   API_FILECOIN_ENDPOINT: {
     parser: stringParser,
-    def: "https://filecoin.coin.ledger.com/blockchain/filecoin",
+    def: "https://filecoin.coin.ledger.com",
     desc: "Filecoin API url",
   },
   API_POLKADOT_INDEXER: {
