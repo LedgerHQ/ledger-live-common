@@ -25,7 +25,7 @@
     "ci-test-common": "env-cmd -f ./.ci.env yarn test --ci --updateSnapshot && git diff --exit-code src",
     "ci-setup-cli": "yalc publish && cd cli && yalc add @ledgerhq/live-common && yarn && yarn build && yarn link",
     "ci-test-bot": "env-cmd -f ./.ci.env yarn jest --testMatch '**/*.bot.ts'",
-    "ci-setup-rn": "yalc publish && cd bot-react-native && yalc add @ledgerhq/live-common && yarn --network-timeout 100000 --network-concurrency 1 --prefer-offline --no-audit"
+    "ci-setup-rn": "yalc publish && cd bot-react-native && yalc add @ledgerhq/live-common && yarn --no-audit"
   },
   "files": [
     "lib",
