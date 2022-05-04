@@ -627,8 +627,8 @@ const envDefinitions = {
   BOT_SPECULOS_PROXY_TOKEN: {
     def: "",
     parser: stringParser,
-    desc: "CI Bot Spec",    
-  }
+    desc: "CI Bot Spec",
+  },
 };
 
 const getDefinition = (name: string): EnvDef<any> | null | undefined =>
