@@ -72,6 +72,26 @@ jobs:
           yarn ci-setup-cli
           yarn ci-setup-rn
 
+      - name: Metro Bundler Cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.workflow-variables.outputs.metro-cache }}
+          key: ${{ runner.os }}-metro-v1-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-metro-v1
+
+      - name: Pre-fetch Javascript bundle
+        working-directory: bot-react-native
+        run: |
+          nohup ./node_modules/.bin/react-native start --no-interactive &
+          printf 'Waiting for packager to come online'
+          until curl --output /dev/null --silent --head --fail http://localhost:8081/status; do
+            printf '.'
+            sleep 2
+          done
+          echo "Packager is online! Preparing bundle..."
+          curl --output /dev/null --silent --head --fail "http://localhost:8081/index.bundle?platform=ios&dev=true&minify=false&inlineSourceMap=true"
+          echo "...javascript bundle ready"
+
       - name: LOGGER
         env:
           BOT_LOG_PROXY_FILE: ../botreport/logs.txt
@@ -79,6 +99,7 @@ jobs:
           mkdir botreport
           cd cli
           node ./bin/index botLogProxy -p 8331 &
+          cd ..
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -132,25 +153,6 @@ jobs:
           yarn detox build --configuration ios.debug
           ccache -s
         shell: bash
-
-      - name: Metro Bundler Cache
-        uses: actions/cache@v2
-        with:
-          path: ${{ steps.workflow-variables.outputs.metro-cache }}
-          key: ${{ runner.os }}-metro-v1-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-metro-v1
-
-      - name: Pre-fetch Javascript bundle
-        run: |
-          nohup ./node_modules/.bin/react-native start --no-interactive &
-          printf 'Waiting for packager to come online'
-          until curl --output /dev/null --silent --head --fail http://localhost:8081/status; do
-            printf '.'
-            sleep 2
-          done
-          echo "Packager is online! Preparing bundle..."
-          curl --output /dev/null --silent --head --fail "http://localhost:8081/index.bundle?platform=ios&dev=true&minify=false&inlineSourceMap=true"
-          echo "...javascript bundle ready"
 
       - name: Detox Test
         timeout-minutes: 60
