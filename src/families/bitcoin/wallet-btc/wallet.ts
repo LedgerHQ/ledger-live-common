@@ -248,8 +248,8 @@ class BitcoinLikeWallet {
       bufferOffset
     );
     txInfo.outputs.forEach((txOut) => {
-      // refer to https://github.com/bitcoinjs/bitcoinjs-lib/blob/master/ts_src/bufferutils.ts#L26
-      buffer.writeInt32LE(
+      // refer to https://github.com/bitcoinjs/bitcoinjs-lib/blob/59b21162a2c4645c64271ca004c7a3755a3d72fb/ts_src/bufferutils.ts#L26
+      buffer.writeUInt32LE(
         txOut.value.modulo(new BigNumber(0x100000000)).toNumber(),
         bufferOffset
       );
