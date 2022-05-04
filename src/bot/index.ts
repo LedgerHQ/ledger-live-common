@@ -1,33 +1,31 @@
 /* eslint-disable no-console */
-import fs from "fs";
-import path from "path";
-import { BigNumber } from "bignumber.js";
-import groupBy from "lodash/groupBy";
 import { log } from "@ledgerhq/logs";
-import invariant from "invariant";
+import { BigNumber } from "bignumber.js";
 import flatMap from "lodash/flatMap";
+import groupBy from "lodash/groupBy";
+import { isAccountEmpty } from "../account";
+import {
+  calculate,
+  inferTrackingPairForAccounts,
+  initialState,
+  loadCountervalues,
+} from "../countervalues/logic";
+import {
+  findCryptoCurrencyByKeyword,
+  formatCurrencyUnit,
+  getFiatCurrencyByTicker,
+  isCurrencySupported,
+} from "../currencies";
 import { getEnv } from "../env";
 import allSpecs from "../generated/specs";
 import network from "../network";
-import { Account } from "../types";
-import type { MutationReport, SpecReport } from "./types";
-import { promiseAllBatched } from "../promise";
-import {
-  findCryptoCurrencyByKeyword,
-  isCurrencySupported,
-  formatCurrencyUnit,
-  getFiatCurrencyByTicker,
-} from "../currencies";
-import { isAccountEmpty, toAccountRaw } from "../account";
-import { runWithAppSpec } from "./engine";
-import { formatReportForConsole, formatError } from "./formatters";
-import {
-  initialState,
-  calculate,
-  loadCountervalues,
-  inferTrackingPairForAccounts,
-} from "../countervalues/logic";
 import { getPortfolio } from "../portfolio";
+import { promiseAllBatched } from "../promise";
+import { botReportFolder } from "./botReportFolder";
+import { runWithAppSpec } from "./engine";
+import { formatError, formatReportForConsole } from "./formatters";
+import type { MutationReport, SpecReport } from "./types";
+
 type Arg = Partial<{
   currency: string;
   family: string;
@@ -35,24 +33,7 @@ type Arg = Partial<{
 }>;
 const usd = getFiatCurrencyByTicker("USD");
 
-function makeAppJSON(accounts: Account[]) {
-  const jsondata = {
-    data: {
-      settings: {
-        hasCompletedOnboarding: true,
-      },
-      accounts: accounts.map((account) => ({
-        data: toAccountRaw(account),
-        version: 1,
-      })),
-    },
-  };
-  return JSON.stringify(jsondata);
-}
-
 export async function bot({ currency, family, mutation }: Arg = {}) {
-  const SEED = getEnv("SEED");
-  invariant(SEED, "SEED required");
   const specs: any[] = [];
   const specsLogs: string[][] = [];
   const maybeCurrency = currency
@@ -212,8 +193,10 @@ export async function bot({ currency, family, mutation }: Arg = {}) {
           (s.mutations && s.mutations.every((r) => !r.mutation)))
     )
     .map((s) => s.spec.name);
-  const { GITHUB_SHA, GITHUB_TOKEN, GITHUB_RUN_ID, GITHUB_WORKFLOW } =
-    process.env;
+  const GITHUB_SHA = getEnv("GITHUB_SHA");
+  const GITHUB_TOKEN = getEnv("GITHUB_TOKEN");
+  const GITHUB_RUN_ID = getEnv("GITHUB_RUN_ID");
+  const GITHUB_WORKFLOW = getEnv("GITHUB_WORKFLOW");
 
   if (GITHUB_TOKEN && GITHUB_SHA) {
     log("github", "will send a report to " + GITHUB_SHA);
@@ -416,26 +399,17 @@ export async function bot({ currency, family, mutation }: Arg = {}) {
     });
     body += "\n</details>\n\n";
 
-    const { SLACK_API_TOKEN, SLACK_CHANNEL, BOT_REPORT_FOLDER } = process.env;
+    const SLACK_API_TOKEN = getEnv("SLACK_API_TOKEN");
+    const SLACK_CHANNEL = getEnv("SLACK_CHANNEL");
+    const BOT_REPORT_FOLDER = getEnv("BOT_REPORT_FOLDER");
 
     if (BOT_REPORT_FOLDER) {
-      await Promise.all([
-        fs.promises.writeFile(
-          path.join(BOT_REPORT_FOLDER, "full-report.md"),
-          body,
-          "utf-8"
-        ),
-        fs.promises.writeFile(
-          path.join(BOT_REPORT_FOLDER, "before-app.json"),
-          makeAppJSON(allAccountsBefore),
-          "utf-8"
-        ),
-        fs.promises.writeFile(
-          path.join(BOT_REPORT_FOLDER, "after-app.json"),
-          makeAppJSON(allAccountsAfter),
-          "utf-8"
-        ),
-      ]);
+      await botReportFolder(
+        BOT_REPORT_FOLDER,
+        body,
+        allAccountsBefore,
+        allAccountsAfter
+      );
     }
 
     const { data: githubComment } = await network({
@@ -486,5 +460,7 @@ export async function bot({ currency, family, mutation }: Arg = {}) {
     });
     // throw new Error(txt);
     console.error(txt);
+    return -1;
   }
+  return 1;
 }

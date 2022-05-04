@@ -1,0 +1,110 @@
+name: Bot IOS
+on:
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@master
+        with:
+          node-version: 14.x
+
+      - name: install yarn
+        run: npm i -g yarn
+      - name: kill apt-get
+        run: sudo killall -w apt-get apt || echo OK
+
+      - name: env
+        working-directory: bot-react-native
+        run: |
+          echo GITHUB_SHA=${GITHUB_SHA} >> .ci.env
+          echo GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} >> .ci.env
+          echo GITHUB_RUN_ID=${{ github.run_id }} >> .ci.env
+          echo GITHUB_WORKFLOW=${{ github.workflow }} >> .ci.env
+          echo SLACK_API_TOKEN=${{ secrets.SLACK_API_TOKEN }} >> .ci.env
+          echo SLACK_CHANNEL=live-bot-mobile >> .ci.env
+
+      - name: Set workflow variables
+        id: workflow-variables
+        run: |
+          echo "::set-output name=metro-cache::$HOME/.metro"
+          echo "::set-output name=yarn-cache-dir::$(yarn cache dir)"
+          echo "::set-output name=tempdir::$TMPDIR"
+
+      - uses: actions/cache@v2
+        name: Yarn Cache
+        id: yarn-cache
+        with:
+          path: ${{ steps.workflow-variables.outputs.yarn-cache-dir }}
+          key: ${{ runner.os }}-yarn-v1-${{ hashFiles('**/package.json') }}
+          restore-keys: ${{ runner.os }}-yarn-v1
+      - uses: actions/cache@v2
+        name: Detox Framework Cache
+        id: detox-cache
+        with:
+          path: ~/Library/Detox/ios
+          key: ${{ runner.os }}-detox-framework-cache-${{ steps.workflow-variables.outputs.xcode-version }}
+
+      # Detox is compiled during yarn install, using Xcode, set up cache first
+      - uses: hendrikmuhs/ccache-action@v1
+        name: Xcode Compile Cache
+        with:
+          key: ${{ runner.os }}-v2 # makes a unique key w/related restore key internally
+          max-size: 750M
+      - name: Cache Pods
+        uses: actions/cache@v2
+        id: podcache
+        with:
+          path: bot-react-native/ios/Pods
+          key: ${{ runner.os }}-pods-v2-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: ${{ runner.os }}-pods-v2
+
+
+      - name: Install dependencies
+        run: |
+          yarn global add yalc
+          yarn --frozen-lockfile --network-timeout 100000 --network-concurrency 1
+          yarn ci-setup-cli
+      - name: LOGGER
+        env:
+          BOT_LOG_PROXY_FILE: ../botreport/logs.txt
+        run: |
+          mkdir botreport
+          cd cli
+          node ./bin/index botLogProxy -p 8331 &
+
+      - name: Install dependencies of BOT
+        run: |
+          yarn global add yalc
+          yarn --frozen-lockfile --network-timeout 100000 --network-concurrency 1
+          yarn ci-setup-rn
+      - name: Rebuild detox
+        working-directory: bot-react-native
+        if: steps.cache.outputs.cache-hit == 'true'
+        run: yarn detox clean-framework-cache && yarn detox build-framework-cache
+        timeout-minutes: 120
+
+      - name: Update Pods
+        working-directory: bot-react-native
+        run: |
+          gem update cocoapods xcodeproj
+          cd ios && pod install && cd ..
+
+      - run: brew tap wix/brew
+      - run: brew install applesimutils
+
+      - name: build bot
+        working-directory: bot-react-native
+        run: yarn detox build e2e --configuration ios
+      - name: run test bot
+        working-directory: bot-react-native
+        run: yarn detox test e2e --configuration ios --cleanup
+
+      - name: upload logs
+        if: failure() || success()
+        uses: actions/upload-artifact@v1
+        with:
+          name: botreport
+          path: botreport/
