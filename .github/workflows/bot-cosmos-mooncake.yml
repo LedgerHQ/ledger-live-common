@@ -2,7 +2,7 @@ name: Bot 'Cosmos JS'
 on:
   push:
     branches:
-      - cosmos-js
+      - family/cosmos
 
 jobs:
   start-runner:
@@ -44,7 +44,7 @@ jobs:
       - name: install yarn
         run: npm i -g yarn
       - name: pull docker image
-        run: docker pull ghcr.io/ledgerhq/speculos
+        run: docker pull ghcr.io/ledgerhq/speculos:sha-5a8e49b
       - name: kill apt-get
         run: sudo killall -w apt-get apt || echo OK
       - name: Install linux deps
@@ -66,7 +66,7 @@ jobs:
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_WORKFLOW: ${{ github.workflow }}
           SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }}
-          SLACK_CHANNEL: live-ft-atom-js
+          SLACK_CHANNEL: ci-atom-ll
           BOT_FILTER_FAMILY: cosmos
           EXPERIMENTAL_CURRENCIES_JS_BRIDGE: cosmos
         run: mkdir botreport; COINAPPS=$PWD/coin-apps yarn ci-test-bot
@@ -80,4 +80,3 @@ jobs:
         with:
           name: botreport
           path: botreport/
-
