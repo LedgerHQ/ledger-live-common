@@ -27,6 +27,7 @@ import { getNetworkParameters } from "./networks";
 import { getNetworkInfo } from "./api/getNetworkInfo";
 import { buildSubAccounts } from "./buildSubAccounts";
 import uniqBy from "lodash/uniqBy";
+import postSyncPatch from "./postSyncPatch";
 
 function mapTxToAccountOperation(
   tx: APITransaction,
@@ -243,4 +244,4 @@ export const getAccountShape: GetAccountShape = async (info) => {
 
 export const scanAccounts = makeScanAccounts(getAccountShape);
 
-export const sync = makeSync(getAccountShape);
+export const sync = makeSync(getAccountShape, postSyncPatch);
