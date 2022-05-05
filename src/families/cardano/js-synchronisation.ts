@@ -242,6 +242,6 @@ export const getAccountShape: GetAccountShape = async (info) => {
   };
 };
 
-export const scanAccounts = makeScanAccounts(getAccountShape);
+export const scanAccounts = makeScanAccounts({ getAccountShape });
 
-export const sync = makeSync(getAccountShape, postSyncPatch);
+export const sync = makeSync({ getAccountShape, postSync: postSyncPatch });
