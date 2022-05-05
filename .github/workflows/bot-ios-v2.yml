@@ -36,6 +36,16 @@ jobs:
           echo "::set-output name=xcode-version::$(xcodebuild -version|tail -1|cut -f3 -d' ')"
           echo "::set-output name=yarn-cache-dir::$(yarn cache dir)"
 
+      - name: add env to .ci.env
+        working-directory: bot-react-native
+        run: |
+          echo GITHUB_SHA=${GITHUB_SHA} >> .ci.env
+          echo GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} >> .ci.env
+          echo GITHUB_RUN_ID=${{ github.run_id }} >> .ci.env
+          echo GITHUB_WORKFLOW=${{ github.workflow }} >> .ci.env
+          echo SLACK_API_TOKEN=${{ secrets.SLACK_API_TOKEN }} >> .ci.env
+          echo SLACK_CHANNEL=live-bot-mobile >> .ci.env
+
       - uses: actions/cache@v2
         name: Yarn Cache
         id: yarn-cache
