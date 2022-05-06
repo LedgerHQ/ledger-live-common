@@ -1,5 +1,5 @@
-import { PlatformCurrency } from "../types";
 import { makeRe } from "minimatch";
+import { PlatformCurrency } from "../types";
 
 export type CurrencyFilters = {
   includeTokens?: boolean;

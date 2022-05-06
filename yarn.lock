@@ -1550,9 +1550,9 @@
   dependencies:
     bignumber.js "^9.0.1"
 
-"@ledgerhq/live-app-sdk@git+ssh://git@github.com:LedgerHQ/live-app-sdk.git#60c347d810d1b83cbaa8a14120d175393d40b09e":
+"@ledgerhq/live-app-sdk@git+ssh://git@github.com:LedgerHQ/live-app-sdk.git#78d3579":
   version "0.5.0"
-  resolved "git+ssh://git@github.com:LedgerHQ/live-app-sdk.git#60c347d810d1b83cbaa8a14120d175393d40b09e"
+  resolved "git+ssh://git@github.com:LedgerHQ/live-app-sdk.git#78d35797cd79183cc5a018a86a99d93b6e59c05c"
   dependencies:
     bignumber.js "^9.0.1"
     json-rpc-2.0 "^0.2.16"

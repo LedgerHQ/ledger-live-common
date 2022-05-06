@@ -1,36 +1,47 @@
 import byFamily from "../generated/platformAdapter";
-
-import type {
-  Account,
-  CryptoCurrency,
-  TokenAccount,
-  TokenCurrency,
-  Transaction,
-} from "../types";
-import type {
+import { getParentAccount, isTokenAccount, isSubAccount } from "../account";
+import { AccountLike, Transaction } from "../types";
+import {
   PlatformAccount,
   PlatformCurrency,
   PlatformTransaction,
+  PlatformCurrencyType,
+  PlatformTokenStandard,
+  PlatformSupportedCurrency,
 } from "./types";
 
 export function accountToPlatformAccount(
-  account: Account | TokenAccount,
-  parentAccount?: Account
+  account: AccountLike,
+  accounts: AccountLike[]
 ): PlatformAccount {
-  if (account.type === "TokenAccount") {
+  if (isSubAccount(account)) {
+    const parentAccount = getParentAccount(account, accounts);
+
     if (!parentAccount) {
       throw new Error("No 'parentAccount' account provided for token account");
     }
 
-    return {
+    const shared = {
       id: account.id,
-      name: `${parentAccount.name} (${account.token.ticker})`,
       address: parentAccount.freshAddress,
-      currency: account.token.id,
       balance: account.balance,
-      spendableBalance: account.spendableBalance,
       blockHeight: parentAccount.blockHeight,
       lastSyncDate: parentAccount.lastSyncDate,
+    };
+
+    return {
+      ...shared,
+      ...(isTokenAccount(account)
+        ? {
+            name: `${parentAccount.name} (${account.token.ticker})`,
+            currency: account.token.id,
+            spendableBalance: account.spendableBalance,
+          }
+        : {
+            name: account.name,
+            currency: account.currency.id,
+            spendableBalance: parentAccount.spendableBalance,
+          }),
     };
   }
 
@@ -46,7 +57,7 @@ export function accountToPlatformAccount(
   };
 }
 export function currencyToPlatformCurrency(
-  currency: CryptoCurrency | TokenCurrency
+  currency: PlatformSupportedCurrency
 ): PlatformCurrency {
   if (currency.type === "TokenCurrency") {
     if (currency.parentCurrency.family !== "ethereum") {
@@ -54,8 +65,8 @@ export function currencyToPlatformCurrency(
     }
 
     return {
-      type: "TokenCurrency",
-      standard: "ERC20",
+      type: PlatformCurrencyType.TokenCurrency,
+      standard: PlatformTokenStandard.ERC20,
       id: currency.id,
       ticker: currency.ticker,
       contract: currency.contractAddress,
@@ -71,7 +82,7 @@ export function currencyToPlatformCurrency(
   }
 
   return {
-    type: currency.type,
+    type: PlatformCurrencyType.CryptoCurrency,
     id: currency.id,
     ticker: currency.ticker,
     name: currency.name,

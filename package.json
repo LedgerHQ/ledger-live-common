@@ -69,7 +69,7 @@
     "@ledgerhq/hw-transport-mocker": "6.27.1",
     "@ledgerhq/hw-transport-node-speculos": "6.27.1",
     "@ledgerhq/json-bignumber": "^1.1.0",
-    "@ledgerhq/live-app-sdk": "git+ssh://git@github.com:LedgerHQ/live-app-sdk.git#60c347d810d1b83cbaa8a14120d175393d40b09e",
+    "@ledgerhq/live-app-sdk": "git+ssh://git@github.com:LedgerHQ/live-app-sdk.git#78d3579",
     "@ledgerhq/logs": "6.10.0",
     "@polkadot/types": "8.1.1",
     "@polkadot/types-known": "8.1.1",
