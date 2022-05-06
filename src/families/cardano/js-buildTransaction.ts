@@ -12,7 +12,12 @@ import {
   utils as TyphonUtils,
 } from "@stricahq/typhonjs";
 import BigNumber from "bignumber.js";
-import { getAccountStakeCredential, getBaseAddress, getTTL } from "./logic";
+import {
+  getAccountStakeCredential,
+  getBaseAddress,
+  getTTL,
+  mergeTokens,
+} from "./logic";
 import { getNetworkParameters } from "./networks";
 import {
   decodeTokenAssetId,
@@ -39,20 +44,19 @@ function getTyphonInputFromUtxo(utxo: CardanoOutput): TyphonTypes.Input {
 const buildSendTokenTransaction = async ({
   a,
   t,
+  tokenAccount,
   typhonTx,
   receiverAddress,
   changeAddress,
 }: {
   a: Account;
   t: Transaction;
+  tokenAccount: TokenAccount;
   typhonTx: TyphonTransaction;
   receiverAddress: TyphonTypes.CardanoAddress;
   changeAddress: TyphonTypes.CardanoAddress;
 }): Promise<TyphonTransaction> => {
   const cardanoResources = a.cardanoResources as CardanoResources;
-  const tokenAccount = (a.subAccounts || []).find((a) => {
-    return a.id === t.subAccountId;
-  }) as TokenAccount;
 
   const { assetId } = decodeTokenCurrencyId(tokenAccount.token.id);
   const { policyId, assetName } = decodeTokenAssetId(assetId);
@@ -148,7 +152,9 @@ const buildSendAdaTransaction = async ({
       typhonTx.addInput(getTyphonInputFromUtxo(u))
     );
 
-    const tokenBalance = cardanoResources.utxos.map((u) => u.tokens).flat();
+    const tokenBalance = mergeTokens(
+      cardanoResources.utxos.map((u) => u.tokens).flat()
+    );
 
     // if account holds any tokens then add it to changeAddress,
     // with minimum required ADA to spend those tokens
@@ -250,6 +256,7 @@ export const buildTransaction = async (
   const unusedInternalCred = cardanoResources.internalCredentials.find(
     (cred) => !cred.isUsed
   ) as PaymentCredential;
+
   const changeAddress = getBaseAddress({
     networkId: networkParams.networkId,
     paymentCred: unusedInternalCred,
@@ -257,9 +264,20 @@ export const buildTransaction = async (
   });
 
   if (t.subAccountId) {
+    const tokenAccount = a.subAccounts
+      ? a.subAccounts.find((a) => {
+          return a.id === t.subAccountId;
+        })
+      : undefined;
+
+    if (!tokenAccount || tokenAccount.type !== "TokenAccount") {
+      throw new Error("TokenAccount not found");
+    }
+
     return buildSendTokenTransaction({
       a,
       t,
+      tokenAccount,
       typhonTx,
       receiverAddress,
       changeAddress,
@@ -268,7 +286,7 @@ export const buildTransaction = async (
   return buildSendAdaTransaction({
     a,
     t,
-    typhonTx: typhonTx,
+    typhonTx,
     receiverAddress,
     changeAddress,
   });
