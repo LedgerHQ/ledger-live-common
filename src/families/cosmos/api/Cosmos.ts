@@ -117,7 +117,10 @@ const getAllBalances = async (
   return amount;
 };
 
-const getDelegations = async (address: string, currency: CryptoCurrency): Promise<any> => {
+const getDelegations = async (
+  address: string,
+  currency: CryptoCurrency
+): Promise<any> => {
   const delegations: Array<any> = [];
 
   const { data: data1 } = await network({
