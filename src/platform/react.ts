@@ -21,28 +21,32 @@ import {
 
 export function usePlatformUrl(
   manifest: AppManifest,
-  style: { background: string; text: string },
+  params: { background: string; text: string; loadDate?: Date },
   inputs: Record<string, string>
 ): URL {
   return useMemo(() => {
-    const urlObj = new URL(manifest.url.toString());
+    const url = new URL(manifest.url.toString());
 
     if (inputs) {
       for (const key in inputs) {
         if (Object.prototype.hasOwnProperty.call(inputs, key)) {
-          urlObj.searchParams.set(key, inputs[key]);
+          url.searchParams.set(key, inputs[key]);
         }
       }
     }
 
-    urlObj.searchParams.set("backgroundColor", style.background);
-    urlObj.searchParams.set("textColor", style.text);
-    if (manifest.params) {
-      urlObj.searchParams.set("params", JSON.stringify(manifest.params));
+    url.searchParams.set("backgroundColor", params.background);
+    url.searchParams.set("textColor", params.text);
+    if (params.loadDate) {
+      url.searchParams.set("loadDate", params.loadDate.valueOf().toString());
     }
 
-    return urlObj;
-  }, [manifest.url, manifest.params, style, inputs]);
+    if (manifest.params) {
+      url.searchParams.set("params", JSON.stringify(manifest.params));
+    }
+
+    return url;
+  }, [manifest.url, manifest.params, params, inputs]);
 }
 
 export function useListPlatformAccounts(
