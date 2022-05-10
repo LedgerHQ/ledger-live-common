@@ -78,6 +78,9 @@ export type FirmwareInfo = {
   mcuTargetId?: number;
   seTargetId?: number;
   flags: Buffer;
+  bootloaderVersion?: string;
+  hardwareVersion?: string;
+  languageId?: number;
 };
 type BaseFirmware = {
   id: Id;

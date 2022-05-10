@@ -63,22 +63,30 @@ const exec = async (opts: i18nJobOps) => {
           }
           return from([]);
         }
+        
+        console.log({deviceInfo});
+
+        return from([]);
+
 
         // Due to the modification to the e0010000 we have access to the language pack info,
         // we need to incorporate this information to the getDeviceInfo command above, but since
         // this is CLI and not live-common, imma hack it here for now. We only delete the id found.
         // Following https://ledgerhq.atlassian.net/wiki/spaces/TA/pages/3560375295/ARCH+Firmware+Internationalization#Package-identification
         // We attempt to extract the device locale stuff.
+        // Gab comment: is this get app and version? don't we already have this abstracted and typed?
+        // ansswer: yes: src\hw\getVersion
         const res = await transport.send(0xe0, 0x01, 0x00, 0x00);
-        const data = res.slice(0, res.length - 2);
+        const data = res.slice(0, res.length - 2); // why remove the last 2 bytes?
         let i = 4; // targetId
+        //  why the 1 + ... ? looks weird, seems like we're adding 2 + the size of the data each time, since  we also have i++
         i += 1 + data[i++]; // version
         i += 1 + data[i++]; // flags
         i += 1 + data[i++]; // mcu version
         i += 1 + data[i++]; // bootloader version
         i += 1 + 1; // hardware version
 
-        // Prefixed ++ since we skip the side of the language id
+        // Prefixed ++ since we skip the size of the language id
         const languageId = data.readUIntBE(++i, 1); // <- We can extract this to deviceInfo to use in UI
         console.log(
           "i18n: Identified selected language as",
@@ -172,11 +180,13 @@ const exec = async (opts: i18nJobOps) => {
         console.log("i18n:", `Entering apdu bulk exchange`);
         for (let i = 0; i < apdus.length; i++) {
           if (apdus[i].startsWith("e030")) {
+            // Gab comment: emit event about user confirmation to the ui?
             console.log(
               "i18n:",
               "Getting user confirmation to install the package"
             );
           }
+          // Gab comment: does this await only comes back after the user confirms or denies?
           const response = await transport.exchange(
             Buffer.from(apdus[i], "hex")
           );
