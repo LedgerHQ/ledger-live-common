@@ -32,6 +32,9 @@ export type DeviceInfo = {
   mcuTargetId?: number;
   seTargetId?: number;
   onboarded?: boolean;
+  bootloaderVersion?: string;
+  hardwareVersion?: string;
+  languageId?: number;
 };
 export type DeviceModelInfo = {
   modelId: DeviceModelId;
