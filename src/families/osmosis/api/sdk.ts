@@ -13,7 +13,7 @@ import {
   OsmosisEventNestedContent,
 } from "./sdk.types";
 
-const DEFAULT_TRANSACTIONS_LIMIT = 200;
+const DEFAULT_TRANSACTIONS_LIMIT = 100;
 const NAMESPACE = "cosmos";
 const VERSION = "v1beta1";
 
