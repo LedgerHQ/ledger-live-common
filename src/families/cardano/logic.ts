@@ -421,3 +421,22 @@ export function getAccountChange(
     tokens: getTokenDiff(accountOutputTokens, accountInputTokens),
   };
 }
+
+export function getMemoFromTx(tx: APITransaction): string | undefined {
+  let memo;
+  const metadataValue = tx.metadata?.data.find((m) => m.label === "674");
+  if (metadataValue) {
+    try {
+      const parsedValue = JSON.parse(metadataValue.value);
+      if (
+        parsedValue.msg &&
+        Array.isArray(parsedValue.msg) &&
+        parsedValue.msg.length
+      ) {
+        memo = parsedValue.msg.join(", ");
+      }
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
+  }
+  return memo;
+}

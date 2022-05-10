@@ -2,6 +2,8 @@ import { ProtocolParams } from "../types";
 
 type APIToken = { assetName: string; policyId: string; value: string };
 
+type APIMetadata = { label: string; value: string };
+
 export type APITransaction = {
   fees: string;
   hash: string;
@@ -21,6 +23,9 @@ export type APITransaction = {
     paymentKey: string;
     tokens: Array<APIToken>;
   }>;
+  metadata?: {
+    data: Array<APIMetadata>;
+  };
 };
 
 export type APINetworkInfo = {

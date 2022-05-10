@@ -18,6 +18,7 @@ import {
   getAccountStakeCredential,
   getBaseAddress,
   getBipPathString,
+  getMemoFromTx,
   getOperationType,
   mergeTokens,
 } from "./logic";
@@ -42,6 +43,7 @@ function mapTxToAccountOperation(
   });
 
   const subOperations = inferSubOperations(tx.hash, subAccounts);
+  const memo = getMemoFromTx(tx);
 
   return {
     accountId,
@@ -59,7 +61,9 @@ function mapTxToAccountOperation(
     subOperations,
     blockHeight: tx.blockHeight,
     date: new Date(tx.timestamp),
-    extra: {},
+    extra: {
+      memo,
+    },
     blockHash: undefined,
   };
 }

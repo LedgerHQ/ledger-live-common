@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 import { encodeOperationId } from "../../operation";
 import { Account, CryptoCurrency, Operation, TokenAccount } from "../../types";
 import { APITransaction } from "./api/api-types";
-import { getAccountChange } from "./logic";
+import { getAccountChange, getMemoFromTx } from "./logic";
 import { PaymentCredential, Token } from "./types";
 import { utils as TyphonUtils } from "@stricahq/typhonjs";
 import { findTokenById } from "@ledgerhq/cryptoassets";
@@ -82,6 +82,7 @@ const mapTxToTokenAccountOperation = ({
       );
 
       const tokenOperationType = token.amount.lt(0) ? "OUT" : "IN";
+      const memo = getMemoFromTx(tx);
       const operation: Operation = {
         accountId: tokenAccountId,
         id: encodeOperationId(tokenAccountId, tx.hash, tokenOperationType),
@@ -97,7 +98,9 @@ const mapTxToTokenAccountOperation = ({
         ),
         blockHeight: tx.blockHeight,
         date: new Date(tx.timestamp),
-        extra: {},
+        extra: {
+          memo,
+        },
         blockHash: undefined,
       };
       operations.push(operation);
