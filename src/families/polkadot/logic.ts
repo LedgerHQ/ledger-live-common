@@ -3,7 +3,7 @@ import type { Account, OperationType } from "../../types";
 import type { Transaction } from "./types";
 import { getCurrentPolkadotPreloadData } from "./preload";
 
-export const EXISTENTIAL_DEPOSIT = new BigNumber(10000000000);
+export const EXISTENTIAL_DEPOSIT = new BigNumber(11000000000);
 export const MAX_NOMINATIONS = 16;
 export const MAX_UNLOCKINGS = 32;
 export const PRELOAD_MAX_AGE = 60 * 1000;

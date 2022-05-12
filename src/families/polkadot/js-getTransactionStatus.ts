@@ -77,7 +77,9 @@ const getSendTransactionStatus = async (
   const minimumBalanceExistential = getMinimumBalance(a);
   const leftover = a.spendableBalance.minus(totalSpent);
 
-  if (
+  if (a.spendableBalance.lte(EXISTENTIAL_DEPOSIT)) {
+    errors.amount = new NotEnoughBalance();
+  } else if (
     minimumBalanceExistential.gt(0) &&
     leftover.lt(minimumBalanceExistential) &&
     leftover.gt(0)
