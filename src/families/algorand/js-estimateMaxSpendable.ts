@@ -5,6 +5,7 @@ import type { AlgorandTransaction } from "./types";
 import { computeAlgoMaxSpendable } from "./logic";
 import { createTransaction } from "./js-prepareTransaction";
 import { getAbandonSeedAddress } from "@ledgerhq/cryptoassets";
+import { getEstimatedFees } from "./js-getFeesForTransaction";
 
 export const estimateMaxSpendable = async ({
   account,
@@ -29,6 +30,8 @@ export const estimateMaxSpendable = async ({
       transaction?.recipient || getAbandonSeedAddress(mainAccount.currency.id),
     useAllAmount: true,
   };
+
+  tx.fees = await getEstimatedFees(mainAccount, tx);
 
   const tokenAccount =
     tx.subAccountId &&
