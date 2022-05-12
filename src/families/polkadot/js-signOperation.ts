@@ -29,6 +29,7 @@ const MODE_TO_TYPE = {
 };
 const MODE_TO_PALLET_METHOD = {
   send: "balances.transferKeepAlive",
+  sendMax: "balances.transfer",
   bond: "staking.bond",
   bondExtra: "staking.bondExtra",
   unbond: "staking.unbond",
@@ -51,6 +52,10 @@ const getExtra = (type: string, account: Account, transaction: Transaction) => {
           ],
       }
     : {};
+
+  if (transaction.mode == "send" && transaction.useAllAmount) {
+    extra.palletMethod = MODE_TO_PALLET_METHOD["sendMax"];
+  }
 
   switch (type) {
     case "OUT":
