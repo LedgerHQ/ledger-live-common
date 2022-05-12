@@ -8,12 +8,13 @@ import {
 import type { DatasetTest } from "../../types";
 import type { Transaction } from "./types";
 import { fromTransactionRaw } from "../filecoin/transaction";
+import { CurrenciesData } from "../../types";
 
 const SEED_IDENTIFIER = "f1zx43cf6qb6rd5e4okl7lexnjumxe5toqj6vtr3i";
 const ACCOUNT_1 = "t1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const filecoin = {
+const filecoin: CurrenciesData<Transaction> = {
   FIXME_ignoreAccountFields: [],
   scanAccounts: [
     {
@@ -41,7 +42,7 @@ const filecoin = {
         id: `js:2:filecoin:${SEED_IDENTIFIER}:filecoin`,
         seedIdentifier: SEED_IDENTIFIER,
         name: "Filecoin 1",
-        derivationMode: "filecoin",
+        derivationMode: "glifnormal",
         index: 0,
         freshAddress: SEED_IDENTIFIER,
         freshAddressPath: "44'/461'/0'/0/0",
@@ -142,8 +143,7 @@ const filecoin = {
 const dataset: DatasetTest<Transaction> = {
   implementations: ["js"],
   currencies: {
-    // FIXME please enable again when test pass again
-    // filecoin,
+    filecoin,
   },
 };
 export default dataset;
