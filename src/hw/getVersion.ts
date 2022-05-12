@@ -34,7 +34,7 @@ export default async function getVersion(transport: Transport): Promise<Firmware
   let mcuBlVersion: string | undefined;
   let seVersion: string | undefined;
   let bootloaderVersion: string | undefined;
-  let hardwareVersion: string | undefined;
+  let hardwareVersion: number | undefined;
   let mcuTargetId: number | undefined;
   let seTargetId: number | undefined;
   let languageId: number | undefined;
@@ -72,7 +72,6 @@ export default async function getVersion(transport: Transport): Promise<Firmware
     let mcuVersionBuf: Buffer = Buffer.from(data.slice(i, i + mcuVersionLength));
     i += mcuVersionLength;
 
-    // gab comment, wtf is this if for?
     if (mcuVersionBuf[mcuVersionBuf.length - 1] === 0) {
       mcuVersionBuf = mcuVersionBuf.slice(0, mcuVersionBuf.length - 1);
     }
@@ -87,9 +86,12 @@ export default async function getVersion(transport: Transport): Promise<Firmware
     }
     bootloaderVersion = bootloaderVersionBuf.toString();
 
-    // skip the size of the hardware version, will always be 1
-    hardwareVersion = data[++i].toString(); // ?? string? number?
-    languageId = data.readUIntBE(++i, 1);
+    const hardwareVersionLength = data[i++];
+    hardwareVersion = data.slice(i, i + hardwareVersionLength).readUIntBE(0, 1); // ?? string? number?
+    i += hardwareVersionLength;
+
+    const languageIdLength = data[i++];
+    languageId = data.slice(i, i + languageIdLength).readUIntBE(0, 1);
   }
 
   return {

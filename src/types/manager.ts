@@ -33,7 +33,7 @@ export type DeviceInfo = {
   seTargetId?: number;
   onboarded?: boolean;
   bootloaderVersion?: string;
-  hardwareVersion?: string;
+  hardwareVersion?: number;
   languageId?: number;
 };
 export type DeviceModelInfo = {
@@ -82,7 +82,7 @@ export type FirmwareInfo = {
   seTargetId?: number;
   flags: Buffer;
   bootloaderVersion?: string;
-  hardwareVersion?: string;
+  hardwareVersion?: number;
   languageId?: number;
 };
 type BaseFirmware = {
