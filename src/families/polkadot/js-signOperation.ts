@@ -42,19 +42,14 @@ const MODE_TO_PALLET_METHOD = {
 };
 
 const getExtra = (type: string, account: Account, transaction: Transaction) => {
-  const extra = MODE_TO_PALLET_METHOD[transaction.mode]
-    ? {
-        palletMethod:
-          MODE_TO_PALLET_METHOD[
-            transaction.mode === "bond" && !isFirstBond(account)
-              ? "bondExtra"
-              : transaction.mode
-          ],
-      }
-    : {};
+  const extra = {
+    palletMethod: MODE_TO_PALLET_METHOD[transaction.mode],
+  };
 
   if (transaction.mode == "send" && transaction.useAllAmount) {
     extra.palletMethod = MODE_TO_PALLET_METHOD["sendMax"];
+  } else if (transaction.mode === "bond" && !isFirstBond(account)) {
+    extra.palletMethod = MODE_TO_PALLET_METHOD["bondExtra"];
   }
 
   switch (type) {
