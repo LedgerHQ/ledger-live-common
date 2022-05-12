@@ -39,10 +39,10 @@ const filecoin: CurrenciesData<Transaction> = {
     {
       FIXME_tests: ["balance is sum of ops"],
       raw: {
-        id: `js:2:filecoin:${SEED_IDENTIFIER}:filecoin`,
+        id: `js:2:filecoin:${SEED_IDENTIFIER}:glif`,
         seedIdentifier: SEED_IDENTIFIER,
         name: "Filecoin 1",
-        derivationMode: "glifnormal",
+        derivationMode: "glif" as const,
         index: 0,
         freshAddress: SEED_IDENTIFIER,
         freshAddressPath: "44'/461'/0'/0/0",
