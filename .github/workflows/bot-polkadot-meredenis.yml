@@ -1,4 +1,4 @@
-name: Bot 'Polkadot on Silicium'
+name: Bot 'Polkadot on Mere Denis'
 on:
   push:
     branches:
@@ -56,7 +56,7 @@ jobs:
           yarn ci-setup-cli
       - name: BOT
         env:
-          SEED: ${{ secrets.SEED4 }}
+          SEED: ${{ secrets.SEED1 }}
           BOT_REPORT_FOLDER: botreport
           VERBOSE_FILE: botreport/logs.txt
           GITHUB_SHA: ${GITHUB_SHA}
