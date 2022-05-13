@@ -17,13 +17,14 @@ import {
   canNominate,
   isFirstBond,
   getMinimumAmountToBond,
+  hasMinimumBondBalance,
 } from "../../families/polkadot/logic";
 import { DeviceModelId } from "@ledgerhq/devices";
 
 const currency = getCryptoCurrencyById("polkadot");
 // FIXME Should be replaced with EXISTENTIAL_DEPOSIT_RECOMMENDED_MARGIN in logic.ts
 const POLKADOT_MIN_SAFE = parseCurrencyUnit(currency.units[0], "0.1");
-// FIXME SHould be replaced with EXISTENTIAL_DEPOSIT in logic.ts
+// FIXME Should be replaced with EXISTENTIAL_DEPOSIT in logic.ts
 const EXISTENTIAL_DEPOSIT = parseCurrencyUnit(currency.units[0], "1.0");
 const MIN_LOCKED_BALANCE_REQ = parseCurrencyUnit(currency.units[0], "1.0");
 const polkadot: AppSpec<Transaction> = {
@@ -88,13 +89,7 @@ const polkadot: AppSpec<Transaction> = {
       transaction: ({ account, bridge }) => {
         invariant(account.polkadotResources, "polkadot");
         invariant(canBond(account), "can't bond");
-        const { minimumBondBalance } = getCurrentPolkadotPreloadData();
-        invariant(
-          new BigNumber(100000).gt(
-            getMinimumAmountToBond(account, new BigNumber(minimumBondBalance))
-          ),
-          "not enough balance to bond"
-        );
+        invariant(hasMinimumBondBalance(account), "not enough balance to bond");
         const options: {
           recipient?: string;
           rewardDestination?: string;
