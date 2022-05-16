@@ -16,7 +16,6 @@ import {
   canUnbond,
   canNominate,
   isFirstBond,
-  getMinimumAmountToBond,
   hasMinimumBondBalance,
 } from "../../families/polkadot/logic";
 import { DeviceModelId } from "@ledgerhq/devices";
