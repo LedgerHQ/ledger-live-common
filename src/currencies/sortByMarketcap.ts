@@ -107,3 +107,36 @@ export const useCurrenciesByMarketcap = <C extends Currency>(
   const tickers = useMarketcapTickers();
   return tickers ? sortByMarketcap(currencies, tickers) : currencies;
 };
+
+type CurrenciesByMarketcapResult = {
+  loading: boolean;
+  error?: Error;
+  currencies?: any[];
+};
+
+export const useCurrenciesByMarketcapWithStatus = <C extends Currency>(
+  currencies: C[]
+): CurrenciesByMarketcapResult => {
+  const [status, setStatus] = useState<CurrenciesByMarketcapResult>({
+    loading: false,
+  });
+
+  useEffect(() => {
+    function getCurrenciesByMarketcap() {
+      setStatus({ loading: true });
+      getMarketcapTickers()
+        .then((tickers) => {
+          setStatus({
+            loading: false,
+            currencies: sortByMarketcap(currencies, tickers),
+          });
+        })
+        .catch((error: Error) => {
+          setStatus({ loading: false, error, currencies });
+        });
+    }
+    getCurrenciesByMarketcap();
+  }, []);
+
+  return status;
+};
