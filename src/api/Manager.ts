@@ -39,6 +39,7 @@ import type {
 } from "../types/manager";
 import { makeLRUCache } from "../cache";
 import { getUserHashes } from "../user";
+import { LanguagePackage } from "../types/languages";
 
 declare global {
   namespace NodeJS {
@@ -198,6 +199,28 @@ const findBestMCU = (compatibleMCU: McuVersion[]): McuVersion | undefined => {
   }
 
   return best;
+};
+
+const getLanguagePackages = async (
+  device_version: number,
+  current_se_firmware_final_version: number
+): Promise<LanguagePackage[]> => {
+  console.log({ device_version, current_se_firmware_final_version });
+  const { data }: { data: LanguagePackage[] } = await network({
+    method: "POST",
+    url: URL.format({
+      // TODO use the production key 
+      pathname: `https://appstore-k8s.staging.aws.ledger.fr/api/language-packages`,
+      query: {
+        livecommonversion,
+      },
+    }),
+    data: {
+      device_version,
+      current_se_firmware_final_version,
+    },
+  });
+  return data;
 };
 
 const getLatestFirmware: (arg0: {
@@ -523,6 +546,7 @@ const API = {
   listInstalledApps,
   listCategories,
   getMcus,
+  getLanguagePackages,
   getLatestFirmware,
   getCurrentOSU,
   compatibleMCUForDeviceInfo,

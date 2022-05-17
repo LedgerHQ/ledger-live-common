@@ -1,6 +1,6 @@
-type Language = "french" | "english" | "spanish";
+export type Language = "french" | "english" | "spanish";
 
-type LanguagePackage = {
+export type LanguagePackage = {
   language: Language;
   languagePackageVersionId: number;
   version: string; // "0.0.1"
@@ -14,7 +14,7 @@ type LanguagePackage = {
   date_last_modified: string;
 };
 
-const languageIds: { [key in Language]: number } = {
+export const languageIds: { [key in Language]: number } = {
     english: 0x00,
     french: 0x01,
     spanish: 0x02,
