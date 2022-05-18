@@ -5,6 +5,7 @@ import { pickSiblings } from "../../bot/specs";
 import { getCryptoCurrencyById } from "@ledgerhq/cryptoassets";
 import { DeviceModelId } from "@ledgerhq/devices";
 import BigNumber from "bignumber.js";
+import invariant from "invariant";
 
 //TODO: need to run the test and update mutations as required after speculos flow in working condition
 
@@ -19,15 +20,17 @@ const cardano: AppSpec<Transaction> = {
     {
       name: "move ~50%",
       maxRun: 1,
-      transaction: ({ account, siblings, bridge }) => {
+      transaction: ({ account, siblings, bridge, maxSpendable }) => {
+        invariant(maxSpendable.gt(0), "balance is too low");
         const sibling = pickSiblings(siblings, 4);
         const recipient = sibling.freshAddress;
         const transaction = bridge.createTransaction(account);
 
         const updates = [
-          { amount: new BigNumber(account.balance.dividedBy(2)) },
+          { amount: new BigNumber(account.balance.dividedBy(2)).dp(0, 1) },
           { recipient },
         ];
+
         return {
           transaction,
           updates,

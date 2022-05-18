@@ -48,7 +48,13 @@ const acceptTransaction: DeviceAction<Transaction, any> = deviceActionFlow({
       //TODO: expectedValue TTL from builtTransaction
     },
     {
-      title: "Confirm transaction?",
+      title: "...",
+    },
+    {
+      title: "Confirm",
+    },
+    {
+      title: "transaction?",
       button: "Rr",
     },
   ],
