@@ -23,7 +23,8 @@ const getAccountShape: GetAccountShape = async (info) => {
 
   let operations = oldOperations;
 
-  // TODO fetch the date of the last operation from oldOperations and only fetch new operations based on it
+  // For indexer efficiency reasons, only fetch new operations starting from the datetime
+  // of the last operation previously fetched
   let lastOperationDate: Date | null = null;
   if (operations.length > 0) {
     operations.forEach((o) => {
