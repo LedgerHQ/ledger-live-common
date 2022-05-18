@@ -81,7 +81,11 @@ const genericTest = ({
         : txInputs.map((t) => t.address).filter(Boolean),
       recipients: txOutputs
         .filter((o) => o.address && !o.isChange)
-        .map((o) => o.address)
+        .map((o) =>
+          account.currency.id === "bitcoin_cash"
+            ? bchToCashaddrAddressWithoutPrefix(o.address)
+            : o.address
+        )
         .filter(Boolean),
     })
   );
