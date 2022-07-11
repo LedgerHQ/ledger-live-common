@@ -7,6 +7,7 @@ import {
   useMarketcapTickers,
   currenciesByMarketcap,
   useCurrenciesByMarketcap,
+  useCurrenciesByMarketcapWithStatus,
 } from "./sortByMarketcap";
 import {
   listFiatCurrencies,
@@ -54,6 +55,7 @@ export {
   useMarketcapTickers,
   currenciesByMarketcap,
   useCurrenciesByMarketcap,
+  useCurrenciesByMarketcapWithStatus,
   listFiatCurrencies,
   listCryptoCurrencies,
   getFiatCurrencyByTicker,
