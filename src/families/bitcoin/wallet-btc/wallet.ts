@@ -2,15 +2,10 @@
 // @ts-ignore
 import { flatten } from "lodash";
 import BigNumber from "bignumber.js";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import { BufferWriter } from "bitcoinjs-lib/src/bufferutils";
-
 import Btc from "@ledgerhq/hw-app-btc";
 import { log } from "@ledgerhq/logs";
 import { Transaction } from "@ledgerhq/hw-app-btc/lib/types";
 import { Currency } from "./crypto/types";
-
 import { TransactionInfo, DerivationModes } from "./types";
 import { Account, SerializedAccount } from "./account";
 import Xpub from "./xpub";
@@ -229,7 +224,6 @@ class BitcoinLikeWallet {
       btc,
       fromAccount,
       txInfo,
-      hasTimestamp,
       initialTimestamp,
       additionals,
       hasExtraData,
@@ -237,7 +231,7 @@ class BitcoinLikeWallet {
       onDeviceSignatureGranted,
       onDeviceStreaming,
     } = params;
-
+    let hasTimestamp = params.hasTimestamp;
     let length = txInfo.outputs.reduce((sum, output) => {
       return sum + 8 + output.script.length + 1;
     }, 1);
@@ -247,16 +241,33 @@ class BitcoinLikeWallet {
       length += 2 * txInfo.outputs.length;
     }
     const buffer = Buffer.allocUnsafe(length);
-    const bufferWriter = new BufferWriter(buffer, 0);
-    bufferWriter.writeVarInt(txInfo.outputs.length);
+    let bufferOffset = 0;
+    bufferOffset = utils.writeVarInt(
+      buffer,
+      txInfo.outputs.length,
+      bufferOffset
+    );
     txInfo.outputs.forEach((txOut) => {
-      // xpub splits output into smaller outputs than SAFE_MAX_INT anyway
-      bufferWriter.writeUInt64(txOut.value.toNumber());
+      // refer to https://github.com/bitcoinjs/bitcoinjs-lib/blob/59b21162a2c4645c64271ca004c7a3755a3d72fb/ts_src/bufferutils.ts#L26
+      buffer.writeUInt32LE(
+        txOut.value.modulo(new BigNumber(0x100000000)).toNumber(),
+        bufferOffset
+      );
+      buffer.writeUInt32LE(
+        txOut.value.dividedToIntegerBy(new BigNumber(0x100000000)).toNumber(),
+        bufferOffset + 4
+      );
+      bufferOffset += 8;
       if (additionals && additionals.includes("decred")) {
-        bufferWriter.writeVarInt(0);
-        bufferWriter.writeVarInt(0);
+        bufferOffset = utils.writeVarInt(buffer, 0, bufferOffset);
+        bufferOffset = utils.writeVarInt(buffer, 0, bufferOffset);
       }
-      bufferWriter.writeVarSlice(txOut.script);
+      bufferOffset = utils.writeVarInt(
+        buffer,
+        txOut.script.length,
+        bufferOffset
+      );
+      bufferOffset += txOut.script.copy(buffer, bufferOffset);
     });
     const outputScriptHex = buffer.toString("hex");
     const associatedKeysets = txInfo.associatedDerivations.map(
@@ -270,6 +281,11 @@ class BitcoinLikeWallet {
       number | null | undefined
     ][];
     const inputs: Inputs = txInfo.inputs.map((i) => {
+      if (additionals && additionals.includes("peercoin")) {
+        // remove timestamp for new version of peercoin input, refer to https://github.com/peercoin/rfcs/issues/5 and https://github.com/LedgerHQ/ledgerjs/issues/701
+        const version = i.txHex.substring(0, 8);
+        hasTimestamp = version === "01000000" || version === "02000000";
+      }
       log("hw", `splitTransaction`, {
         transactionHex: i.txHex,
         isSegwitSupported: true,

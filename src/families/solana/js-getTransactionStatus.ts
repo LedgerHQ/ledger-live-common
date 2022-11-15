@@ -1,75 +1,69 @@
 import { BigNumber } from "bignumber.js";
 import type { Account, TransactionStatus } from "../../types";
-import type { Command, Transaction } from "./types";
+import type { Command, CommandDescriptor, Transaction } from "./types";
 import { assertUnreachable } from "./utils";
 
 const getTransactionStatus = async (
-  _: Account,
+  _account: Account,
   tx: Transaction
 ): Promise<TransactionStatus> => {
-  const txFees = new BigNumber(tx.feeCalculator?.lamportsPerSignature ?? 0);
-
   const { commandDescriptor } = tx.model;
 
   if (commandDescriptor === undefined) {
     return {
-      amount: new BigNumber(tx.amount),
+      amount: tx.amount,
+      estimatedFees: new BigNumber(0),
+      totalSpent: tx.amount,
       errors: {},
       warnings: {},
-      estimatedFees: txFees,
-      totalSpent: new BigNumber(tx.amount),
     };
   }
-  switch (commandDescriptor.status) {
-    case "invalid":
-      return {
-        amount: new BigNumber(tx.amount),
-        errors: commandDescriptor.errors,
-        warnings: commandDescriptor.warnings ?? {},
-        estimatedFees: txFees,
-        totalSpent: new BigNumber(0),
-      };
-    case "valid": {
-      const { command } = commandDescriptor;
-      const estimatedFees = txFees.plus(commandDescriptor.fees ?? 0);
-      const amount = getAmount(tx, command);
-      const totalSpent = getTotalSpent(command, amount, estimatedFees);
 
-      return {
-        amount,
-        estimatedFees,
-        totalSpent,
-        warnings: commandDescriptor.warnings ?? {},
-        errors: {},
-      };
-    }
-    default:
-      return assertUnreachable(commandDescriptor);
-  }
+  const { command, fee, errors, warnings } = commandDescriptor;
+
+  const amount = new BigNumber(getAmount(command));
+  const estimatedFees = new BigNumber(fee);
+  const totalSpent = new BigNumber(getTotalSpent(commandDescriptor));
+
+  return {
+    amount,
+    estimatedFees,
+    totalSpent,
+    warnings,
+    errors,
+  };
 };
 
-function getAmount(tx: Transaction, command: Command) {
+function getAmount(command: Command) {
   switch (command.kind) {
     case "transfer":
     case "token.transfer":
-      return new BigNumber(command.amount);
+    case "stake.createAccount":
+    case "stake.withdraw":
+      return command.amount;
+    case "token.createATA":
+    case "stake.delegate":
+    case "stake.undelegate":
+    case "stake.split":
+      return 0;
     default:
-      return tx.amount;
+      return assertUnreachable(command);
   }
 }
 
-function getTotalSpent(
-  command: Command,
-  amount: BigNumber,
-  estimatedFees: BigNumber
-) {
+function getTotalSpent({ command, fee }: CommandDescriptor) {
   switch (command.kind) {
     case "transfer":
-      return amount.plus(estimatedFees);
+    case "stake.createAccount":
+      return command.amount < 0 ? 0 : command.amount + fee;
     case "token.transfer":
-      return amount;
+      return Math.max(command.amount, 0);
     case "token.createATA":
-      return estimatedFees;
+    case "stake.delegate":
+    case "stake.undelegate":
+    case "stake.withdraw":
+    case "stake.split":
+      return fee;
     default:
       return assertUnreachable(command);
   }

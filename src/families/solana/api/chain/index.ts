@@ -4,17 +4,18 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import {
-  Cluster,
-  clusterApiUrl,
   Connection,
   FeeCalculator,
+  FetchMiddleware,
   PublicKey,
+  sendAndConfirmRawTransaction,
   SignaturesForAddressOptions,
+  StakeProgram,
 } from "@solana/web3.js";
 import { Awaited } from "../../logic";
 
 export type Config = {
-  readonly cluster: Cluster;
+  readonly endpoint: string;
 };
 
 export type ChainAPI = Readonly<{
@@ -31,6 +32,24 @@ export type ChainAPI = Readonly<{
   getParsedTokenAccountsByOwner: (
     address: string
   ) => ReturnType<Connection["getParsedTokenAccountsByOwner"]>;
+
+  getStakeAccountsByStakeAuth: (
+    authAddr: string
+  ) => ReturnType<Connection["getParsedProgramAccounts"]>;
+
+  getStakeAccountsByWithdrawAuth: (
+    authAddr: string
+  ) => ReturnType<Connection["getParsedProgramAccounts"]>;
+
+  getStakeActivation: (
+    stakeAccAddr: string
+  ) => ReturnType<Connection["getStakeActivation"]>;
+
+  getInflationReward: (
+    addresses: string[]
+  ) => ReturnType<Connection["getInflationReward"]>;
+
+  getVoteAccounts: () => ReturnType<Connection["getVoteAccounts"]>;
 
   getSignaturesForAddress: (
     address: string,
@@ -55,12 +74,31 @@ export type ChainAPI = Readonly<{
 
   getAssocTokenAccMinNativeBalance: () => Promise<number>;
 
+  getMinimumBalanceForRentExemption: (dataLength: number) => Promise<number>;
+
+  getEpochInfo: () => ReturnType<Connection["getEpochInfo"]>;
+
   config: Config;
 }>;
 
-export function getChainAPI(config: Config): ChainAPI {
-  const connection = () =>
-    new Connection(clusterApiUrl(config.cluster), "finalized");
+export function getChainAPI(
+  config: Config,
+  logger?: (url: string, options: any) => void
+): ChainAPI {
+  const fetchMiddleware: FetchMiddleware | undefined =
+    logger === undefined
+      ? undefined
+      : (url, options, fetch) => {
+          logger(url, options);
+          fetch(url, options);
+        };
+
+  const connection = () => {
+    return new Connection(config.endpoint, {
+      commitment: "finalized",
+      fetchMiddleware,
+    });
+  };
 
   return {
     getBalance: (address: string) =>
@@ -83,6 +121,41 @@ export function getChainAPI(config: Config): ChainAPI {
       connection().getParsedTokenAccountsByOwner(new PublicKey(address), {
         programId: TOKEN_PROGRAM_ID,
       }),
+
+    getStakeAccountsByStakeAuth: (authAddr: string) =>
+      connection().getParsedProgramAccounts(StakeProgram.programId, {
+        filters: [
+          {
+            memcmp: {
+              offset: 12,
+              bytes: authAddr,
+            },
+          },
+        ],
+      }),
+
+    getStakeAccountsByWithdrawAuth: (authAddr: string) =>
+      connection().getParsedProgramAccounts(StakeProgram.programId, {
+        filters: [
+          {
+            memcmp: {
+              offset: 44,
+              bytes: authAddr,
+            },
+          },
+        ],
+      }),
+
+    getStakeActivation: (stakeAccAddr: string) =>
+      connection().getStakeActivation(new PublicKey(stakeAccAddr)),
+
+    getInflationReward: (addresses: string[]) =>
+      connection().getInflationReward(
+        addresses.map((addr) => new PublicKey(addr))
+      ),
+
+    getVoteAccounts: () => connection().getVoteAccounts(),
+
     getSignaturesForAddress: (
       address: string,
       opts?: SignaturesForAddressOptions
@@ -96,8 +169,11 @@ export function getChainAPI(config: Config): ChainAPI {
         .getParsedAccountInfo(new PublicKey(address))
         .then((r) => r.value),
 
-    sendRawTransaction: (buffer: Buffer) =>
-      connection().sendRawTransaction(buffer),
+    sendRawTransaction: (buffer: Buffer) => {
+      return sendAndConfirmRawTransaction(connection(), buffer, {
+        commitment: "confirmed",
+      });
+    },
 
     findAssocTokenAccAddress: (owner: string, mint: string) =>
       Token.getAssociatedTokenAddress(
@@ -109,6 +185,11 @@ export function getChainAPI(config: Config): ChainAPI {
 
     getAssocTokenAccMinNativeBalance: () =>
       Token.getMinBalanceRentForExemptAccount(connection()),
+
+    getMinimumBalanceForRentExemption: (dataLength: number) =>
+      connection().getMinimumBalanceForRentExemption(dataLength),
+
+    getEpochInfo: () => connection().getEpochInfo(),
 
     config,
   };
